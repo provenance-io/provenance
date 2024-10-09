@@ -85,7 +85,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		case scopeAddr.Empty():
 			scopeAddr = scopeAddr2
 		case !scopeAddr.Equals(scopeAddr2):
-			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s is not part of scope %s", recordAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s is not part of scope %s", recordAddr, scopeAddr)
 		}
 	}
 
@@ -94,7 +94,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	scope, found := k.GetScope(ctx, scopeAddr)
+	scope, found := k.GetScopeWithValueOwner(ctx, scopeAddr)
 	if found {
 		retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 	} else {
@@ -159,9 +159,9 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 	prefixStore := prefix.NewStore(kvStore, types.ScopeKeyPrefix)
 
 	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var scope types.Scope
-		vErr := scope.Unmarshal(value)
+		scope, vErr := k.readScopeBz(value)
 		if vErr == nil {
+			k.PopulateScopeValueOwner(ctx, &scope)
 			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope, incInfo))
 			return nil
 		}
@@ -300,7 +300,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	}
 
 	if req.IncludeScope {
-		scope, found := k.GetScope(ctx, scopeAddr)
+		scope, found := k.GetScopeWithValueOwner(ctx, scopeAddr)
 		if found {
 			retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 		} else {
@@ -485,7 +485,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	}
 
 	if req.IncludeScope {
-		scope, found := k.GetScope(ctx, scopeAddr)
+		scope, found := k.GetScopeWithValueOwner(ctx, scopeAddr)
 		if found {
 			retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 		} else {
@@ -637,25 +637,14 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	scopeStore := prefix.NewStore(store, types.GetValueOwnerScopeCacheIteratorPrefix(addr))
 
-	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
-		var ma types.MetadataAddress
-		if mErr := ma.Unmarshal(key); mErr != nil {
-			return mErr
-		}
-		scopeID, sErr := ma.ScopeUUID()
-		if sErr != nil {
-			return sErr
-		}
-		retval.ScopeUuids = append(retval.ScopeUuids, scopeID.String())
-		return nil
-	})
+	var links types.AccMDLinks
+	links, retval.Pagination, err = k.bankKeeper.GetScopesForValueOwner(ctx, addr, req.Pagination)
 	if err != nil {
-		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("paginate: %v", err)
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error collecting results: %v", err)
 	}
-	retval.Pagination = pageRes
+	retval.ScopeUuids = links.GetPrimaryUUIDs()
+
 	return &retval, nil
 }
 
@@ -991,7 +980,7 @@ func (k Keeper) GetByAddr(c context.Context, req *types.GetByAddrRequest) (*type
 		}
 		switch hrp {
 		case types.PrefixScope:
-			scope, found := k.GetScope(ctx, id)
+			scope, found := k.GetScopeWithValueOwner(ctx, id)
 			if found {
 				retval.Scopes = append(retval.Scopes, &scope)
 			} else {

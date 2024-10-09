@@ -8,13 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
-
-func FreshCtx(app *simapp.App) sdk.Context {
-	return keeper.AddAuthzCacheToContext(app.BaseApp.NewContext(false))
-}
 
 func TestValidateSetAccountData(t *testing.T) {
 	app := simapp.Setup(t)
@@ -80,7 +76,7 @@ func TestValidateSetAccountData(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := app.MetadataKeeper.ValidateSetAccountData(FreshCtx(app), tc.msg)
-			AssertErrorValue(t, err, tc.exp, "ValidateSetAccountData")
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateSetAccountData")
 		})
 	}
 }

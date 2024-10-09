@@ -72,7 +72,7 @@ func (s *SpecKeeperTestSuite) SetupTest() {
 }
 
 func (s *SpecKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
+	return FreshCtx(s.app)
 }
 
 func containsMetadataAddress(arr []types.MetadataAddress, newVal types.MetadataAddress) bool {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/hex"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 type ScopeTestSuite struct {
@@ -42,6 +45,12 @@ func OwnerPartyList(addresses ...string) []Party {
 }
 
 func (s *ScopeTestSuite) TestScopeValidateBasic() {
+	newUUID := func(i string) uuid.UUID {
+		uid := strings.ReplaceAll("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "x", i)
+		rv, err := uuid.Parse(uid)
+		s.Require().NoError(err, "uuid.Parse(%q)", uid)
+		return rv
+	}
 	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
 		return &Scope{
 			ScopeId:            scopeID,
@@ -53,9 +62,9 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 		}
 	}
 	tests := []struct {
-		name  string
-		scope *Scope
-		want  string
+		name   string
+		scope  *Scope
+		expErr string
 	}{
 		{
 			"valid scope one owner",
@@ -78,24 +87,29 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 			"invalid scope owners: at least one party is required",
 		},
 		{
-			"invalid scope id",
-			ns(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
-			"invalid scope identifier (expected: scope, got scopespec)",
+			name:   "invalid scope id",
+			scope:  ns(MetadataAddress{0xa0, 0x1, 0x2}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			expErr: "invalid scope metadata address MetadataAddress{0xa0, 0x1, 0x2}: invalid metadata address type: 160",
 		},
 		{
-			"invalid scope id - wrong address type",
-			ns(MetadataAddress{0x85}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
-			"invalid metadata address type: 133",
+			name:   "invalid scope id - wrong address type",
+			scope:  ns(ScopeSpecMetadataAddress(newUUID("1")), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			expErr: "invalid scope id \"" + ScopeSpecMetadataAddress(newUUID("1")).String() + "\": wrong type",
 		},
 		{
-			"invalid spec id",
-			ns(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
-			"invalid scope specification identifier (expected: scopespec, got scope)",
+			name:   "nil spec id",
+			scope:  ns(ScopeMetadataAddress(uuid.New()), nil, []Party{}, []string{}, ""),
+			expErr: "invalid scope specification metadata address MetadataAddress(nil): address is empty",
 		},
 		{
-			"invalid spec id - wrong address type",
-			ns(ScopeMetadataAddress(uuid.New()), MetadataAddress{0x85}, []Party{}, []string{}, ""),
-			"invalid metadata address type: 133",
+			name:   "invalid spec id",
+			scope:  ns(ScopeMetadataAddress(uuid.New()), MetadataAddress{0xa0, 0x1, 0x2}, []Party{}, []string{}, ""),
+			expErr: "invalid scope specification metadata address MetadataAddress{0xa0, 0x1, 0x2}: invalid metadata address type: 160",
+		},
+		{
+			name:   "invalid spec id - wrong address type",
+			scope:  ns(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(newUUID("2")), []Party{}, []string{}, ""),
+			expErr: "invalid scope specification id \"" + ScopeMetadataAddress(newUUID("2")).String() + "\": wrong type",
 		},
 		{
 			"invalid owner on scope",
@@ -118,18 +132,18 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 				ValueOwnerAddress:  "",
 				RequirePartyRollup: false,
 			},
-			want: "parties can only be optional when require_party_rollup = true",
+			expErr: "parties can only be optional when require_party_rollup = true",
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := tc.scope.ValidateBasic()
-			if len(tc.want) > 0 {
-				s.Assert().EqualError(err, tc.want, "ValidateBasic")
-			} else {
-				s.Assert().NoError(err, "ValidateBasic")
+			var err error
+			testFunc := func() {
+				err = tc.scope.ValidateBasic()
 			}
+			s.Require().NotPanics(testFunc, "ValidateBasic")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "error from ValidateBasic")
 		})
 	}
 }
@@ -1328,6 +1342,201 @@ func (s *ScopeTestSuite) TestEqualParties() {
 			assert.Equal(t, tc.expected, actual, "result")
 			assert.Equal(t, op1, tc.p1, "p1")
 			assert.Equal(t, op2, tc.p2, "p2")
+		})
+	}
+}
+
+func TestFindMissingParties(t *testing.T) {
+	// pz is just a shorter way to define a []Party
+	pz := func(parties ...Party) []Party {
+		return parties
+	}
+
+	pOne3Req := Party{Address: "one", Role: 3, Optional: false}
+	pOne3Opt := Party{Address: "one", Role: 3, Optional: true}
+	pOne4Req := Party{Address: "one", Role: 4, Optional: false}
+	pOne4Opt := Party{Address: "one", Role: 4, Optional: true}
+	pTwo3Req := Party{Address: "two", Role: 3, Optional: false}
+	pTwo3Opt := Party{Address: "two", Role: 3, Optional: true}
+	pTwo4Req := Party{Address: "two", Role: 4, Optional: false}
+	pTwo4Opt := Party{Address: "two", Role: 4, Optional: true}
+
+	// Note: PartyType_PARTY_TYPE_INVESTOR = 3, PartyType_PARTY_TYPE_CUSTODIAN = 4
+
+	tests := []struct {
+		name     string
+		required []Party
+		toCheck  []Party
+		expected []Party
+	}{
+		{
+			name:     "nil nil",
+			required: nil,
+			toCheck:  nil,
+			expected: nil,
+		},
+		{
+			name:     "empty nil",
+			required: pz(),
+			toCheck:  nil,
+			expected: nil,
+		},
+		{
+			name:     "nil empty",
+			required: nil,
+			toCheck:  pz(),
+			expected: nil,
+		},
+		{
+			name:     "empty empty",
+			required: pz(),
+			toCheck:  pz(),
+			expected: nil,
+		},
+
+		{
+			name:     "nil VS one3",
+			required: nil,
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+		{
+			name:     "empty VS one3",
+			required: pz(),
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+
+		{
+			name:     "one3req VS one3req",
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3req VS one3opt",
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Opt),
+			expected: nil,
+		},
+		{
+			name:     "one3opt VS one3req",
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3opt VS one3opt",
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Opt),
+			expected: nil,
+		},
+
+		{
+			name:     "one3 one4 two3 two4 req VS one4 one3 two4 two3 req",
+			required: pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			toCheck:  pz(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3 one4 two3 two4 req VS one4 one3 two4 two3 opt",
+			required: pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			toCheck:  pz(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
+			expected: nil,
+		},
+		{
+			name:     "one3 one4 two3 two4 opt vs one4 one3 two4 two3 req",
+			required: pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3 one4 two3 two4 opt vs one4 one3 two4 two3 opt",
+			required: pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
+			expected: nil,
+		},
+
+		{
+			name:     "one3 two4 VS nil",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  nil,
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS empty",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(),
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS one3",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pOne3Req),
+			expected: pz(pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS one4",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pOne4Opt),
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS two3",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo3Opt),
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS two4",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo4Opt),
+			expected: pz(pOne3Opt),
+		},
+
+		{
+			name:     "one3req two4opt VS two4req one3opt",
+			required: pz(pOne3Req, pTwo4Opt),
+			toCheck:  pz(pTwo4Req, pOne3Opt),
+			expected: nil,
+		},
+		{
+			name:     "one3opt two4req VS two4opt one3req",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo4Opt, pOne3Req),
+			expected: nil,
+		},
+
+		{
+			name:     "one3opt VS all others req",
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			expected: nil,
+		},
+		{
+			name:     "one3req VS all others opt",
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			expected: nil,
+		},
+		{
+			name:     "all req VS two3Opt",
+			required: pz(pOne4Req, pTwo3Req, pOne3Req, pTwo4Req),
+			toCheck:  pz(pTwo3Opt),
+			expected: pz(pOne4Req, pOne3Req, pTwo4Req),
+		},
+		{
+			name:     "all opt VS two3Req",
+			required: pz(pOne4Opt, pOne3Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pTwo3Req),
+			expected: pz(pOne4Opt, pOne3Opt, pTwo4Opt),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := FindMissingParties(tc.required, tc.toCheck)
+			assert.Equal(t, tc.expected, actual, "findMissingParties")
 		})
 	}
 }

@@ -27,15 +27,6 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// ModuleName is the public name of this module
-const ModuleName = types.ModuleName
-
-// RouterKey is the public routing key of this module
-const RouterKey = types.RouterKey
-
-// StoreKey is the public key-value store key of this module.
-const StoreKey = types.StoreKey
-
 // type check to ensure the interface is properly implemented
 var (
 	_ module.AppModuleBasic      = (*AppModule)(nil)
@@ -129,6 +120,11 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	m := keeper.NewMigrator(am.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3To4); err != nil {
+		panic(fmt.Sprintf("failed to register x/metadata migration from version 3 to 4: %v", err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the metadata module. It returns no validator updates.
@@ -171,4 +167,4 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 3 }
+func (AppModule) ConsensusVersion() uint64 { return 4 }

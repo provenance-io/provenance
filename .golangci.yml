@@ -85,6 +85,7 @@ linters-settings:
 
           - cosmossdk.io/api
           - cosmossdk.io/client/v2/autocli
+          - cosmossdk.io/collections
           - cosmossdk.io/core
           - cosmossdk.io/errors
           - cosmossdk.io/log

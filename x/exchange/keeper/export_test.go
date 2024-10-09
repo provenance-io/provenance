@@ -42,6 +42,12 @@ func (k Keeper) WithMarkerKeeper(markerKeeper exchange.MarkerKeeper) Keeper {
 	return k
 }
 
+// WithMetadataKeeper is a test-only method that returns a new Keeper that uses the provided MetadataKeeper.
+func (k Keeper) WithMetadataKeeper(metadataKeeper exchange.MetadataKeeper) Keeper {
+	k.metadataKeeper = metadataKeeper
+	return k
+}
+
 // GetStore is a test-only exposure of getStore.
 func (k Keeper) GetStore(ctx sdk.Context) storetypes.KVStore {
 	return k.getStore(ctx)

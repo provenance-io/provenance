@@ -112,6 +112,23 @@ func ownerPartyList(addresses ...string) []types.Party {
 	return retval
 }
 
+// addrsToStrings returns the bech32 address of each of the provided addrs.
+func addrsToStrings(addrs []sdk.AccAddress) []string {
+	if addrs == nil {
+		return nil
+	}
+	rv := make([]string, len(addrs))
+	for i, v := range addrs {
+		rv[i] = v.String()
+	}
+	return rv
+}
+
+// FreshCtx returns a new sdk.Context with a types.AuthzCache in it.
+func FreshCtx(app *simapp.App) sdk.Context {
+	return types.AddAuthzCacheToContext(app.NewContext(false))
+}
+
 func (s *KeeperTestSuite) TestParams() {
 	s.T().Run("os param tests", func(t *testing.T) {
 		osp := s.app.MetadataKeeper.GetOSLocatorParams(s.ctx)
@@ -214,7 +231,6 @@ func (s *KeeperTestSuite) TestDeleteOSLocator() {
 		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
 		s.Require().Empty(r)
 		s.Require().False(found)
-
 	})
 }
 

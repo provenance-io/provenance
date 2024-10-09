@@ -12,10 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,10 +22,15 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
+
+func TestAuthzTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthzTestSuite))
+}
 
 type AuthzTestSuite struct {
 	suite.Suite
@@ -70,18 +72,7 @@ func (s *AuthzTestSuite) SetupTest() {
 }
 
 func (s *AuthzTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()}))
-}
-
-// AssertErrorValue asserts that:
-//   - If errorString is empty, theError must be nil
-//   - If errorString is not empty, theError must equal the errorString.
-func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndArgs ...interface{}) bool {
-	t.Helper()
-	if len(errorString) > 0 {
-		return assert.EqualError(t, theError, errorString, msgAndArgs...)
-	}
-	return assert.NoError(t, theError, msgAndArgs...)
+	return FreshCtx(s.app).WithBlockTime(time.Now())
 }
 
 // AssertErrorValue asserts that:
@@ -89,11 +80,33 @@ func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndAr
 //   - If errorString is not empty, theError must equal the errorString.
 func (s *AuthzTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
-	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+	return assertions.AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
 }
 
-func TestAuthzTestSuite(t *testing.T) {
-	suite.Run(t, new(AuthzTestSuite))
+// partiesCopy creates a new []*types.PartyDetails with copies of each provided entry.
+// Nil in = nil out.
+func partiesCopy(parties []*types.PartyDetails) []*types.PartyDetails {
+	if parties == nil {
+		return nil
+	}
+	rv := make([]*types.PartyDetails, len(parties))
+	for i, party := range parties {
+		rv[i] = party.Copy()
+	}
+	return rv
+}
+
+// partiesReversed creates a new []*types.PartyDetails with copies of each provided entry
+// in the opposite order as provided. Nil in = nil out.
+func partiesReversed(parties []*types.PartyDetails) []*types.PartyDetails {
+	if parties == nil {
+		return nil
+	}
+	rv := make([]*types.PartyDetails, len(parties))
+	for i, party := range parties {
+		rv[len(rv)-i-1] = party.Copy()
+	}
+	return rv
 }
 
 func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
@@ -161,15 +174,17 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 		name     string
 		existing *types.Scope
 		msg      *types.MsgWriteScopeRequest
-		exp      string
+		expAddrs []sdk.AccAddress
+		expErr   string
 	}{
 		{
 			// Alice makes a call to the Sam that causes Sam to try to change Bob's Scope's value owner to Alice.
-			// That must fail.
+			// This is why it's a bad idea to authz grant a smart contract. We allow this since both Alice and Bob
+			// have authz granted the smart contract to be able to so.
 			name:     "smart contract updating value owner of wrong scope",
 			existing: newScope(addrBob),
 			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
-			exp:      "missing signature from existing value owner " + addrBob.String(),
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// Bob makes a call to Sam to do stuff that causes Sam to try to change Alice's Scope's value owner to Bob.
@@ -177,28 +192,28 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			name:     "smart contract updating value owner of other scope but invoker is authorized",
 			existing: newScope(addrAlice),
 			msg:      newMsg(addrBob, addrSam.String(), addrBob.String()),
-			exp:      "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Alice by Alice invoking the smart contract
 			name:     "value owner is smart contract updating to invoker",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
-			exp:      "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Bob by Alice invoking the smart contract
 			name:     "value owner is smart contract updating to non-invoker",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrBob, addrSam.String(), addrAlice.String()),
-			exp:      "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Alice by Bob invoking the smart contract
 			name:     "value owner is smart contract updating to non-invoker with authz",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrAlice, addrSam.String(), addrBob.String()),
-			exp:      "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 	}
 
@@ -207,8 +222,18 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			authKeeper.ClearResults()
 			authzKeeper.ClearResults()
 
-			err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.existing, tc.msg)
-			s.AssertErrorValue(err, tc.exp, "ValidateWriteScope")
+			if tc.existing != nil {
+				defer WriteTempScope(s.T(), s.app.MetadataKeeper, s.FreshCtx(), *tc.existing)()
+			}
+
+			var addrs []sdk.AccAddress
+			var err error
+			testFunc := func() {
+				addrs, err = mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.msg)
+			}
+			s.Require().NotPanics(testFunc, "ValidateWriteScope")
+			s.AssertErrorValue(err, tc.expErr, "error from ValidateWriteScope")
+			s.Assert().Equal(tc.expAddrs, addrs, "addresses from ValidateWriteScope")
 		})
 	}
 }
@@ -477,7 +502,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 		msg              types.MetadataMsg
 		authKeeper       *MockAuthKeeper
 		authzKeeper      *MockAuthzKeeper
-		expParties       []*keeper.PartyDetails
+		expParties       []*types.PartyDetails
 		expErr           string
 	}{
 		{
@@ -488,7 +513,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 			msg:              newMsg("signer1"),
 			authKeeper:       NewMockAuthKeeper(),
 			authzKeeper:      NewMockAuthzKeeper(),
-			expParties:       []*keeper.PartyDetails{},
+			expParties:       []*types.PartyDetails{},
 			expErr:           "",
 		},
 		{
@@ -620,8 +645,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 			msg:              newMsg("party1"),
 			authKeeper:       NewMockAuthKeeper(),
 			authzKeeper:      NewMockAuthzKeeper(),
-			expParties: []*keeper.PartyDetails{
-				keeper.TestablePartyDetails{
+			expParties: []*types.PartyDetails{
+				types.TestablePartyDetails{
 					Address:         accStr("party1"),
 					Role:            provenance,
 					Optional:        false,
@@ -644,8 +669,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 				NewGetAccountCall(acc("party1"), scAcct("party1")),
 			),
 			authzKeeper: NewMockAuthzKeeper(),
-			expParties: []*keeper.PartyDetails{
-				keeper.TestablePartyDetails{
+			expParties: []*types.PartyDetails{
+				types.TestablePartyDetails{
 					Address:         accStr("party1"),
 					Role:            owner,
 					Optional:        false,
@@ -723,8 +748,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 		},
 	}
 	reqRoles := []types.PartyType{types.PartyType_PARTY_TYPE_VALIDATOR}
-	expDetails := []*keeper.PartyDetails{
-		keeper.TestablePartyDetails{
+	expDetails := []*types.PartyDetails{
+		types.TestablePartyDetails{
 			Address:         accStr(party1),
 			Role:            types.PartyType_PARTY_TYPE_VALIDATOR,
 			Optional:        true,
@@ -734,7 +759,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 			CanBeUsedBySpec: true,
 			UsedBySpec:      true,
 		}.Real(),
-		keeper.TestablePartyDetails{
+		types.TestablePartyDetails{
 			Address:         accStr(party1),
 			Role:            types.PartyType_PARTY_TYPE_OWNER,
 			Optional:        false,
@@ -744,7 +769,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 			CanBeUsedBySpec: false,
 			UsedBySpec:      false,
 		}.Real(),
-		keeper.TestablePartyDetails{
+		types.TestablePartyDetails{
 			Address:         accStr(party2),
 			Role:            types.PartyType_PARTY_TYPE_SERVICER,
 			Optional:        false,
@@ -786,8 +811,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 
 func TestAssociateSigners(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:   address,
 			Acc:       acc,
 			Signer:    signer,
@@ -795,8 +820,8 @@ func TestAssociateSigners(t *testing.T) {
 		}.Real()
 	}
 	// pdz is a shorter varargs way to define a []*keeper.PartyDetails.
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -820,11 +845,11 @@ func TestAssociateSigners(t *testing.T) {
 	}
 
 	// partyStr gets a string of the golang code that would make the provided party for these tests.
-	partyStr := func(p *keeper.PartyDetails) string {
+	partyStr := func(p *types.PartyDetails) string {
 		if p == nil {
 			return "nil"
 		}
-		party := p.Testable()
+		party := types.NewTestablePartyDetails(p)
 		var addrVal string
 		addrAcc, err := sdk.AccAddressFromBech32(party.Address)
 		if err == nil {
@@ -850,7 +875,7 @@ func TestAssociateSigners(t *testing.T) {
 		return fmt.Sprintf("pd(%s, %s, %s, %s)", addrVal, accVal, sigVal, sigAccVal)
 	}
 	// partiesStr gets a string of the golang code that would make the provided parties for these tests.
-	partiesStr := func(parties []*keeper.PartyDetails) string {
+	partiesStr := func(parties []*types.PartyDetails) string {
 		if parties == nil {
 			return "nil"
 		}
@@ -905,16 +930,16 @@ func TestAssociateSigners(t *testing.T) {
 	// Both parties and expParties must have the same length and if one is nil, the other must be too.
 	// The entries are shuffled in tandem. E.g. if parties becomes [1, 0, 2] then expParties will also have the order [1, 0, 2].
 	// Nil in = nil out.
-	partiesShuffled := func(r *rand.Rand, parties, expParties []*keeper.PartyDetails) ([]*keeper.PartyDetails, []*keeper.PartyDetails) {
+	partiesShuffled := func(r *rand.Rand, parties, expParties []*types.PartyDetails) ([]*types.PartyDetails, []*types.PartyDetails) {
 		if (parties == nil && expParties != nil) || (parties != nil && expParties == nil) || (len(parties) != len(expParties)) {
 			panic("test definition failure: parties and expParties should always have the same number of entries")
 		}
 		if parties == nil {
 			return nil, nil
 		}
-		rvp := make([]*keeper.PartyDetails, 0, len(parties))
+		rvp := make([]*types.PartyDetails, 0, len(parties))
 		rvp = append(rvp, parties...)
-		rve := make([]*keeper.PartyDetails, 0, len(expParties))
+		rve := make([]*types.PartyDetails, 0, len(expParties))
 		rve = append(rve, expParties...)
 		r.Shuffle(len(rve), func(i, j int) {
 			rve[i], rve[j] = rve[j], rve[i]
@@ -925,9 +950,9 @@ func TestAssociateSigners(t *testing.T) {
 
 	type testCase struct {
 		name       string
-		parties    []*keeper.PartyDetails
+		parties    []*types.PartyDetails
 		signers    *keeper.SignersWrapper
-		expParties []*keeper.PartyDetails
+		expParties []*types.PartyDetails
 	}
 
 	tests := []testCase{
@@ -1246,8 +1271,8 @@ func TestAssociateSigners(t *testing.T) {
 
 func TestFindUnsignedRequired(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(address string, optional bool, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(address string, optional bool, signer string, signerAcc sdk.AccAddress) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:   address,
 			Optional:  optional,
 			Signer:    signer,
@@ -1255,8 +1280,8 @@ func TestFindUnsignedRequired(t *testing.T) {
 		}.Real()
 	}
 	// pdz is just a shorter way to define a []*keeper.PartyDetails
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -1266,8 +1291,8 @@ func TestFindUnsignedRequired(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		parties []*keeper.PartyDetails
-		exp     []*keeper.PartyDetails
+		parties []*types.PartyDetails
+		exp     []*types.PartyDetails
 	}{
 		{
 			name:    "nil",
@@ -1396,8 +1421,8 @@ func TestFindUnsignedRequired(t *testing.T) {
 
 func TestAssociateRequiredRoles(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(role types.PartyType, canBeUsed, isUsed bool, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(role types.PartyType, canBeUsed, isUsed bool, signer string, signerAcc sdk.AccAddress) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Role:            role,
 			Signer:          signer,
 			SignerAcc:       signerAcc,
@@ -1406,8 +1431,8 @@ func TestAssociateRequiredRoles(t *testing.T) {
 		}.Real()
 	}
 	// pdz is just a shorter way to define a []*keeper.PartyDetails
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -1441,10 +1466,10 @@ func TestAssociateRequiredRoles(t *testing.T) {
 
 	type testCase struct {
 		name       string
-		parties    []*keeper.PartyDetails
+		parties    []*types.PartyDetails
 		reqRoles   []types.PartyType
 		exp        []types.PartyType
-		expParties []*keeper.PartyDetails
+		expParties []*types.PartyDetails
 	}
 
 	tests := []testCase{
@@ -1457,10 +1482,10 @@ func TestAssociateRequiredRoles(t *testing.T) {
 		},
 		{
 			name:       "empty nil",
-			parties:    []*keeper.PartyDetails{},
+			parties:    []*types.PartyDetails{},
 			reqRoles:   nil,
 			exp:        nil,
-			expParties: []*keeper.PartyDetails{},
+			expParties: []*types.PartyDetails{},
 		},
 		{
 			name:       "nil empty",
@@ -1471,10 +1496,10 @@ func TestAssociateRequiredRoles(t *testing.T) {
 		},
 		{
 			name:       "empty empty",
-			parties:    []*keeper.PartyDetails{},
+			parties:    []*types.PartyDetails{},
 			reqRoles:   []types.PartyType{},
 			exp:        nil,
-			expParties: []*keeper.PartyDetails{},
+			expParties: []*types.PartyDetails{},
 		},
 		{
 			name:       "2 req nil parties",
@@ -1875,15 +1900,15 @@ func TestAssociateRequiredRoles(t *testing.T) {
 
 func TestMissingRolesString(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(role types.PartyType, used bool) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(role types.PartyType, used bool) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Role:       role,
 			UsedBySpec: used,
 		}.Real()
 	}
 	// pdz is just a shorter way to define a []*keeper.PartyDetails
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -1926,8 +1951,8 @@ func TestMissingRolesString(t *testing.T) {
 		return rv
 	}
 	// partiesForDeterministismTests returns two parties for each role (1 used, 1 not) in a random order.
-	partiesForDeterministismTests := func() []*keeper.PartyDetails {
-		var rv []*keeper.PartyDetails
+	partiesForDeterministismTests := func() []*types.PartyDetails {
+		var rv []*types.PartyDetails
 		for i := range types.PartyType_name {
 			role := types.PartyType(i)
 			rv = append(rv, pd(role, true), pd(role, false))
@@ -1957,11 +1982,11 @@ func TestMissingRolesString(t *testing.T) {
 		return fmt.Sprintf("rz(%s)", strings.Join(strs, ", "))
 	}
 	// partyStr gets a string of the golang code that would make the provided party for these tests.
-	partyStr := func(party *keeper.PartyDetails) string {
+	partyStr := func(party *types.PartyDetails) string {
 		return fmt.Sprintf("pd(%s, %t)", roleStr(party.GetRole()), party.IsUsed())
 	}
 	// partiesStr gets a string of the golang code that would make the provided parties for these tests.
-	partiesStr := func(parties []*keeper.PartyDetails) string {
+	partiesStr := func(parties []*types.PartyDetails) string {
 		if parties == nil {
 			return "nil"
 		}
@@ -1999,11 +2024,11 @@ func TestMissingRolesString(t *testing.T) {
 		return rv
 	}
 	// partiesShuffled copies each of the provided party and returns them in a random order. Nil in = nil out.
-	partiesShuffled := func(r *rand.Rand, parties []*keeper.PartyDetails) []*keeper.PartyDetails {
+	partiesShuffled := func(r *rand.Rand, parties []*types.PartyDetails) []*types.PartyDetails {
 		if parties == nil {
 			return nil
 		}
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		r.Shuffle(len(rv), func(i, j int) {
 			rv[i], rv[j] = rv[j], rv[i]
@@ -2013,7 +2038,7 @@ func TestMissingRolesString(t *testing.T) {
 
 	type testCase struct {
 		name     string
-		parties  []*keeper.PartyDetails
+		parties  []*types.PartyDetails
 		reqRoles []types.PartyType
 		exp      string
 	}
@@ -2430,17 +2455,15 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 		}
 		return url[lastDot+1:]
 	}
-	getName := func(tc testCase) string {
-		if tc.name != "" {
-			return tc.name
+	newCase := func(url string, also ...string) testCase {
+		desc := " (boring)"
+		if len(also) > 0 {
+			desc = " (special)"
 		}
-		return getMsgName(tc.url)
-	}
-	boringCase := func(url string) testCase {
 		return testCase{
-			name:     "boring " + getMsgName(url),
+			name:     getMsgName(url) + desc,
 			url:      url,
-			expected: []string{url},
+			expected: append([]string{url}, also...),
 		}
 	}
 
@@ -2455,66 +2478,33 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 			url:      "random",
 			expected: []string{"random"},
 		},
-		boringCase(types.TypeURLMsgWriteScopeRequest),
-		boringCase(types.TypeURLMsgDeleteScopeRequest),
-		{
-			url:      types.TypeURLMsgAddScopeDataAccessRequest,
-			expected: []string{types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteScopeDataAccessRequest,
-			expected: []string{types.TypeURLMsgDeleteScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgAddScopeOwnerRequest,
-			expected: []string{types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteScopeOwnerRequest,
-			expected: []string{types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgUpdateValueOwnersRequest,
-			expected: []string{types.TypeURLMsgUpdateValueOwnersRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgMigrateValueOwnerRequest,
-			expected: []string{types.TypeURLMsgMigrateValueOwnerRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		boringCase(types.TypeURLMsgWriteSessionRequest),
-		{
-			url:      types.TypeURLMsgWriteRecordRequest,
-			expected: []string{types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest},
-		},
-		boringCase(types.TypeURLMsgDeleteRecordRequest),
-		boringCase(types.TypeURLMsgWriteScopeSpecificationRequest),
-		boringCase(types.TypeURLMsgDeleteScopeSpecificationRequest),
-		boringCase(types.TypeURLMsgWriteContractSpecificationRequest),
-		boringCase(types.TypeURLMsgDeleteContractSpecificationRequest),
-		{
-			url:      types.TypeURLMsgAddContractSpecToScopeSpecRequest,
-			expected: []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest,
-			expected: []string{types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest},
-		},
-		{
-			url:      types.TypeURLMsgWriteRecordSpecificationRequest,
-			expected: []string{types.TypeURLMsgWriteRecordSpecificationRequest, types.TypeURLMsgWriteContractSpecificationRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteRecordSpecificationRequest,
-			expected: []string{types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest},
-		},
-		boringCase(types.TypeURLMsgBindOSLocatorRequest),
-		boringCase(types.TypeURLMsgDeleteOSLocatorRequest),
-		boringCase(types.TypeURLMsgModifyOSLocatorRequest),
-		boringCase(types.TypeURLMsgSetAccountDataRequest),
+		newCase(types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgDeleteScopeRequest),
+		newCase(types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgDeleteScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgUpdateValueOwnersRequest),
+		newCase(types.TypeURLMsgMigrateValueOwnerRequest),
+		newCase(types.TypeURLMsgWriteSessionRequest),
+		newCase(types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest),
+		newCase(types.TypeURLMsgDeleteRecordRequest),
+		newCase(types.TypeURLMsgWriteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgWriteContractSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteContractSpecificationRequest),
+		newCase(types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgWriteRecordSpecificationRequest, types.TypeURLMsgWriteContractSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest),
+		newCase(types.TypeURLMsgBindOSLocatorRequest),
+		newCase(types.TypeURLMsgDeleteOSLocatorRequest),
+		newCase(types.TypeURLMsgModifyOSLocatorRequest),
+		newCase(types.TypeURLMsgSetAccountDataRequest),
 	}
 
 	for _, tc := range tests {
-		t.Run(getName(tc), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.GetAuthzMessageTypeURLs(tc.url)
 			assert.Equal(t, tc.expected, actual, "getAuthzMessageTypeURLs(%q)", tc.url)
 		})
@@ -3144,23 +3134,23 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 	}
 	// pd is a short way to create a *keeper.PartyDetails with the info needed in these tests.
 	// The provided strings are passed through accStr.
-	pd := func(address, signer string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(address, signer string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address: accStr(address),
 			Signer:  accStr(signer),
 		}.Real()
 	}
 	// pde is pd "expected". It allows setting the addrAcc and signerAcc values too.
-	pde := func(address, addrAcc, signer, signerAcc string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pde := func(address, addrAcc, signer, signerAcc string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:   accStr(address),
 			Acc:       acc(addrAcc),
 			Signer:    accStr(signer),
 			SignerAcc: acc(signerAcc),
 		}.Real()
 	}
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -3188,11 +3178,11 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 
 	tests := []struct {
 		name        string
-		parties     []*keeper.PartyDetails
+		parties     []*types.PartyDetails
 		signers     *keeper.SignersWrapper
 		authzKeeper *MockAuthzKeeper
 		expErr      string
-		expParties  []*keeper.PartyDetails
+		expParties  []*types.PartyDetails
 		expGetAuth  []*GetAuthorizationCall
 	}{
 		{
@@ -3223,11 +3213,11 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 		},
 		{
 			name:        "1 party not bech32",
-			parties:     pdz(keeper.TestablePartyDetails{Address: "not-correct"}.Real()),
+			parties:     pdz(types.TestablePartyDetails{Address: "not-correct"}.Real()),
 			signers:     sw("signer1"),
 			authzKeeper: NewMockAuthzKeeper(),
 			expErr:      "",
-			expParties:  pdz(keeper.TestablePartyDetails{Address: "not-correct"}.Real()),
+			expParties:  pdz(types.TestablePartyDetails{Address: "not-correct"}.Real()),
 			expGetAuth:  nil,
 		},
 		{
@@ -3445,8 +3435,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 
 	s.Run("onAssociation with counter", func() {
 		counter := 0
-		var partiesAssociated []*keeper.PartyDetails
-		onAssoc := func(party *keeper.PartyDetails) bool {
+		var partiesAssociated []*types.PartyDetails
+		onAssoc := func(party *types.PartyDetails) bool {
 			counter++
 			partiesAssociated = append(partiesAssociated, party)
 			return false
@@ -3509,8 +3499,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 	s.Run("onAssociation stop early", func() {
 		counter := 0
 		stopAt := 3
-		var partiesAssociated []*keeper.PartyDetails
-		onAssoc := func(party *keeper.PartyDetails) bool {
+		var partiesAssociated []*types.PartyDetails
+		onAssoc := func(party *types.PartyDetails) bool {
 			counter++
 			partiesAssociated = append(partiesAssociated, party)
 			return counter >= stopAt
@@ -3542,7 +3532,7 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 				GetAuthorizationCall{
 					GrantInfo: GrantInfo{
 						Grantee: acc("signer"),
-						Granter: sdk.MustAccAddressFromBech32(party.Testable().Address),
+						Granter: sdk.MustAccAddressFromBech32(types.NewTestablePartyDetails(party).Address),
 						MsgType: theMsgType,
 					},
 					Result: GetAuthorizationResult{
@@ -3588,8 +3578,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 	}
 	// pdu creates a usable, unsigned *keeper.PartyDetails.
 	// The provided strings are passed through accStr.
-	pdu := func(address string, role types.PartyType) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pdu := func(address string, role types.PartyType) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         accStr(address),
 			Acc:             acc(address),
 			Role:            role,
@@ -3598,8 +3588,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 		}.Real()
 	}
 	// pdx creates a *keeper.PartyDetails that isn't usable.
-	pdx := func(address string, role types.PartyType) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pdx := func(address string, role types.PartyType) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         accStr(address),
 			Acc:             acc(address),
 			Role:            role,
@@ -3608,8 +3598,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 		}.Real()
 	}
 	// pdus creates a *keeper.PartyDetails that was usable but now has a signer and is used.
-	pdus := func(address string, role types.PartyType, signer string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pdus := func(address string, role types.PartyType, signer string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         accStr(address),
 			Acc:             acc(address),
 			Role:            role,
@@ -3618,8 +3608,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 			SignerAcc:       acc(signer),
 		}.Real()
 	}
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -3686,12 +3676,12 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 	tests := []struct {
 		name        string
 		roles       []types.PartyType
-		parties     []*keeper.PartyDetails
+		parties     []*types.PartyDetails
 		signers     *keeper.SignersWrapper
 		authzKeeper *MockAuthzKeeper
 		expMissing  bool
 		expErr      string
-		expParties  []*keeper.PartyDetails
+		expParties  []*types.PartyDetails
 		expGetAuth  []*GetAuthorizationCall
 	}{
 		{
@@ -4214,15 +4204,15 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 	accStr := func(addr string) string {
 		return acc(addr).String()
 	}
-	pd := func(canBeUsed bool, role types.PartyType, address string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(canBeUsed bool, role types.PartyType, address string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			CanBeUsedBySpec: canBeUsed,
 			Role:            role,
 			Address:         address,
 		}.Real()
 	}
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -4272,7 +4262,7 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 
 	tests := []struct {
 		name       string
-		parties    []*keeper.PartyDetails
+		parties    []*types.PartyDetails
 		authKeeper *MockAuthKeeper
 		expErr     string
 		expGetAcc  []*GetAccountCall
@@ -4718,7 +4708,7 @@ func (s *AuthzTestSuite) TestIsWasmAccount() {
 		authKeeper.ClearResults()
 
 		// Make sure they're cached.
-		cache := keeper.GetAuthzCache(ctx)
+		cache := types.GetAuthzCache(ctx)
 		for _, tc := range isWasmTests {
 			hasEntry := cache.HasIsWasm(tc.addr)
 			s.Assert().True(hasEntry, "cache HasIsWasm(%s)", tc.name)
@@ -4802,7 +4792,7 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 
 	tests := []struct {
 		name        string
-		usedSigners keeper.UsedSignersMap
+		usedSigners types.UsedSignersMap
 		msg         types.MetadataMsg
 		authK       *MockAuthKeeper
 		authzK      *MockAuthzKeeper
@@ -5060,926 +5050,554 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 	}
 }
 
-func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
-	acc := func(addr string) sdk.AccAddress {
-		return sdk.AccAddress(addr)
+func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
+	addr1 := sdk.AccAddress("1addr_______________") // cosmos1x9skgerjta047h6lta047h6lta047h6l4429yc
+	addr2 := sdk.AccAddress("2addr_______________") // cosmos1xfskgerjta047h6lta047h6lta047h6lh0rr9a
+	addr3 := sdk.AccAddress("3addr_______________") // cosmos1xdskgerjta047h6lta047h6lta047h6lw7ypa7
+	addr4 := sdk.AccAddress("4addr_______________") // cosmos1x3skgerjta047h6lta047h6lta047h6lnj308h
+	addr5 := sdk.AccAddress("5addr_______________") // cosmos1x4skgerjta047h6lta047h6lta047h6l2rkdl5
+	addr6 := sdk.AccAddress("6addr_______________") // cosmos1xeskgerjta047h6lta047h6lta047h6lgelt73
+
+	type msgMaker struct {
+		name    string
+		msgType string
+		make    func(signers []sdk.AccAddress) types.MetadataMsg
 	}
-	accStr := func(addr string) string {
-		return acc(addr).String()
-	}
-
-	withdrawAddrAcc := acc("withdraw_address____")
-	noWithdrawAddrAcc := acc("no_withdraw_address_")
-	depositAddrAcc := acc("deposit_address_____")
-	noDepositAddrAcc := acc("no_deposit_address__")
-	allAddrAcc := acc("all_address_________")
-	noneAddrAcc := acc("none_address________")
-
-	withdrawAddr := withdrawAddrAcc.String()
-	noWithdrawAddr := noWithdrawAddrAcc.String()
-	depositAddr := depositAddrAcc.String()
-	noDepositAddr := noDepositAddrAcc.String()
-	allAddr := allAddrAcc.String()
-	noneAddr := noneAddrAcc.String()
-
-	marker1 := &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{},
-		Manager:     "",
-		AccessControl: []markertypes.AccessGrant{
-			{Address: withdrawAddr, Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
-			{
-				Address: noWithdrawAddr,
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn,
-					markertypes.Access_Deposit,
-					markertypes.Access_Delete, markertypes.Access_Admin, markertypes.Access_Transfer,
-				},
-			},
-			{Address: depositAddr, Permissions: markertypes.AccessList{markertypes.Access_Deposit}},
-			{
-				Address: noDepositAddr,
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn,
-					markertypes.Access_Withdraw,
-					markertypes.Access_Delete, markertypes.Access_Admin, markertypes.Access_Transfer,
-				},
-			},
-			{
-				Address: allAddr,
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn,
-					markertypes.Access_Deposit, markertypes.Access_Withdraw,
-					markertypes.Access_Delete, markertypes.Access_Admin, markertypes.Access_Transfer,
-				},
-			},
+	msgMakerUpdate := msgMaker{
+		name:    "update",
+		msgType: types.TypeURLMsgUpdateValueOwnersRequest,
+		make: func(signers []sdk.AccAddress) types.MetadataMsg {
+			return &types.MsgUpdateValueOwnersRequest{Signers: mapToStrings(signers)}
 		},
-		Status:     markertypes.StatusActive,
-		Denom:      "onecoin",
-		Supply:     sdkmath.OneInt(),
-		MarkerType: markertypes.MarkerType_RestrictedCoin,
 	}
-	marker1AddrAcc, marker1AddrErr := markertypes.MarkerAddress(marker1.Denom)
-	s.Require().NoError(marker1AddrErr, "MarkerAddress(%q)", marker1.Denom)
-	marker1.BaseAccount.Address = marker1AddrAcc.String()
-	marker1Addr := marker1AddrAcc.String()
-
-	marker2 := &markertypes.MarkerAccount{
-		BaseAccount:   &authtypes.BaseAccount{},
-		Manager:       "",
-		AccessControl: marker1.AccessControl,
-		Status:        markertypes.StatusActive,
-		Denom:         "twocoin",
-		Supply:        sdkmath.OneInt(),
-		MarkerType:    markertypes.MarkerType_RestrictedCoin,
+	msgMakerMigrate := msgMaker{
+		name:    "migrate",
+		msgType: types.TypeURLMsgMigrateValueOwnerRequest,
+		make: func(signers []sdk.AccAddress) types.MetadataMsg {
+			return &types.MsgMigrateValueOwnerRequest{Signers: mapToStrings(signers)}
+		},
 	}
-	marker2AddrAcc, marker2AddrErr := markertypes.MarkerAddress(marker2.Denom)
-	s.Require().NoError(marker2AddrErr, "MarkerAddress(%q)", marker2.Denom)
-	marker2.BaseAccount.Address = marker2AddrAcc.String()
-	marker2Addr := marker2AddrAcc.String()
+	msgMakerWriteScope := msgMaker{
+		name:    "write",
+		msgType: types.TypeURLMsgWriteScopeRequest,
+		make: func(signers []sdk.AccAddress) types.MetadataMsg {
+			return &types.MsgWriteScopeRequest{Signers: mapToStrings(signers)}
+		},
+	}
+	msgMakerDeleteScope := msgMaker{
+		name:    "delete",
+		msgType: types.TypeURLMsgDeleteScopeRequest,
+		make: func(signers []sdk.AccAddress) types.MetadataMsg {
+			return &types.MsgDeleteScopeRequest{Signers: mapToStrings(signers)}
+		},
+	}
+	allMsgMakers := []msgMaker{msgMakerUpdate, msgMakerMigrate, msgMakerWriteScope, msgMakerDeleteScope}
 
-	mockAuthWithMarkers := func() *MockAuthKeeper {
-		return NewMockAuthKeeper().WithGetAccountResults(
-			NewGetAccountCall(marker1AddrAcc, marker1),
-			NewGetAccountCall(marker2AddrAcc, marker2),
-		)
+	missingSig := func(addr sdk.AccAddress) string {
+		return "missing signature from existing value owner \"" + addr.String() + "\""
 	}
 
-	normalMsg := func(signers ...string) types.MetadataMsg {
-		rv := &types.MsgWriteScopeRequest{
-			Signers: make([]string, 0, len(signers)),
+	injectedErrorStr := "just some injected error message"
+	authzErr := func(addr sdk.AccAddress) string {
+		return "authz error with existing value owner \"" + addr.String() + "\": " + injectedErrorStr
+	}
+
+	tests := []struct {
+		name             string
+		msgMakers        []msgMaker
+		authzGrants      []GrantInfo // The MsgType field will be populated appropriately if not defined.
+		authzErrs        []GrantInfo // The MsgType field will be populated appropriately if not defined.
+		wasmAddrs        []sdk.AccAddress
+		markerAddrs      []sdk.AccAddress
+		existingOwners   []sdk.AccAddress
+		proposed         string
+		signers          []sdk.AccAddress
+		expAddrs         []sdk.AccAddress
+		expUsedSigners   types.UsedSignersMap
+		expErr           string
+		expIsMarkerCalls []sdk.AccAddress
+	}{
+		{
+			name:             "nil existing owners",
+			existingOwners:   nil,
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr1},
+			expAddrs:         []sdk.AccAddress{addr1},
+			expUsedSigners:   types.NewUsedSignersMap(),
+			expErr:           "",
+			expIsMarkerCalls: nil,
+		},
+		{
+			name:             "empty existing owners",
+			existingOwners:   []sdk.AccAddress{},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr1},
+			expAddrs:         []sdk.AccAddress{addr1},
+			expUsedSigners:   types.NewUsedSignersMap(),
+			expErr:           "",
+			expIsMarkerCalls: nil,
+		},
+		{
+			name:             "one existing owner that equals proposed",
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr1.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expAddrs:         nil,
+			expUsedSigners:   types.NewUsedSignersMap(),
+			expErr:           "",
+			expIsMarkerCalls: nil,
+		},
+		{
+			name:             "no msg signers",
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr6.String(),
+			expErr:           "missing signature from existing value owner \"" + addr1.String() + "\"",
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:             "different signer from existing value owner",
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr2.String(),
+			signers:          []sdk.AccAddress{addr2},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:             "first signer is wasm second is existing value owner",
+			wasmAddrs:        []sdk.AccAddress{addr2},
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr2, addr1},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:           "only signer is existing value owner",
+			existingOwners: []sdk.AccAddress{addr1},
+			proposed:       addr2.String(),
+			signers:        []sdk.AccAddress{addr1},
+			expAddrs:       []sdk.AccAddress{addr1},
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String()),
+		},
+		{
+			name:           "only signer is wasm and is also existing value owner",
+			wasmAddrs:      []sdk.AccAddress{addr1},
+			existingOwners: []sdk.AccAddress{addr1},
+			proposed:       addr2.String(),
+			signers:        []sdk.AccAddress{addr1},
+			expAddrs:       []sdk.AccAddress{addr1},
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String()),
+		},
+		{
+			name: "only signer is wasm with authz grants from existing value owners",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr5},
+				{Granter: addr2, Grantee: addr5},
+				{Granter: addr3, Grantee: addr5},
+				{Granter: addr4, Grantee: addr5},
+			},
+			wasmAddrs:        []sdk.AccAddress{addr5},
+			existingOwners:   []sdk.AccAddress{addr1, addr2, addr3, addr4},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr5},
+			expAddrs:         []sdk.AccAddress{addr5},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr5.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2, addr3, addr4},
+		},
+		{
+			name: "only signer is wasm with authz grants from all but one existing value owner",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr5},
+				{Granter: addr2, Grantee: addr5},
+				{Granter: addr4, Grantee: addr5},
+			},
+			wasmAddrs:        []sdk.AccAddress{addr5},
+			existingOwners:   []sdk.AccAddress{addr1, addr2, addr3, addr4},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr5},
+			expErr:           missingSig(addr3),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2, addr3},
+		},
+		{
+			name: "one existing is marker: first signer is wasm so the others are not returned",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr5},
+				{Granter: addr2, Grantee: addr5},
+				{Granter: addr3, Grantee: addr5},
+				{Granter: addr4, Grantee: addr5},
+			},
+			wasmAddrs:        []sdk.AccAddress{addr5},
+			markerAddrs:      []sdk.AccAddress{addr2},
+			existingOwners:   []sdk.AccAddress{addr1, addr2, addr3, addr4},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
+			expAddrs:         []sdk.AccAddress{addr5},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr5.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2, addr3, addr4},
+		},
+		{
+			name:           "first signer is not wasm so all are returned",
+			wasmAddrs:      []sdk.AccAddress{addr1, addr3}, // Shouldn't matter since the first signer is all that's checked.
+			markerAddrs:    []sdk.AccAddress{addr2},
+			existingOwners: []sdk.AccAddress{addr1, addr2, addr3, addr4},
+			proposed:       addr6.String(),
+			signers:        []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
+			expAddrs:       []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String(), addr2.String(), addr3.String(), addr4.String()),
+		},
+		{
+			name:             "four existing, two are signers, other two are markers",
+			markerAddrs:      []sdk.AccAddress{addr1, addr4},
+			existingOwners:   []sdk.AccAddress{addr1, addr2, addr3, addr4},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr2, addr3},
+			expAddrs:         []sdk.AccAddress{addr2, addr3},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr2.String(), addr3.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr4},
+		},
+		{
+			name:             "two existing value owners: only first is signer",
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr1},
+			expErr:           missingSig(addr2),
+			expIsMarkerCalls: []sdk.AccAddress{addr2},
+		},
+		{
+			name:             "two existing value owners: only second is signer",
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr2},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:           "two existing value owners: both are signers",
+			existingOwners: []sdk.AccAddress{addr1, addr2},
+			proposed:       addr6.String(),
+			signers:        []sdk.AccAddress{addr1, addr2},
+			expAddrs:       []sdk.AccAddress{addr1, addr2},
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String(), addr2.String()),
+		},
+		{
+			name:           "two existing value owners: both are signers in opposite order",
+			existingOwners: []sdk.AccAddress{addr1, addr2},
+			proposed:       addr6.String(),
+			signers:        []sdk.AccAddress{addr2, addr1},
+			expAddrs:       []sdk.AccAddress{addr2, addr1},
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String(), addr2.String()),
+		},
+		{
+			name: "authz: two existing value owners to same other signer",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3},
+				{Granter: addr2, Grantee: addr3},
+			},
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expAddrs:         []sdk.AccAddress{addr3},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr3.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
+		},
+		{
+			name:             "authz: two existing value owners only first gave grant",
+			authzGrants:      []GrantInfo{{Granter: addr1, Grantee: addr3}},
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           missingSig(addr2),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
+		},
+		{
+			name:             "authz: two existing value owners only second gave grant",
+			authzGrants:      []GrantInfo{{Granter: addr2, Grantee: addr3}},
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name: "authz: two existing value owners to two different signers",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3},
+				{Granter: addr2, Grantee: addr4},
+			},
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr4, addr3},
+			expAddrs:         []sdk.AccAddress{addr4, addr3},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr3.String(), addr4.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
+		},
+		{
+			name: "authz: two existing value owners first is signer and second gave grant to first",
+			authzGrants: []GrantInfo{
+				{Granter: addr2, Grantee: addr1},
+			},
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr1},
+			expAddrs:         []sdk.AccAddress{addr1},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr1.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr2},
+		},
+		{
+			name: "authz: two existing value owners second is signer and first gave grant to second",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr2},
+			},
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr2},
+			expAddrs:         []sdk.AccAddress{addr2},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr2.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name: "authz: error from authorization followup",
+			authzErrs: []GrantInfo{
+				{Granter: addr2, Grantee: addr3},
+			},
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3},
+			},
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           authzErr(addr2),
+			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
+		},
+		{
+			name:      "only authz grant is for migrate",
+			msgMakers: []msgMaker{msgMakerUpdate, msgMakerWriteScope, msgMakerDeleteScope},
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3, MsgType: msgMakerMigrate.msgType},
+			},
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:      "only authz grant is for update",
+			msgMakers: []msgMaker{msgMakerMigrate, msgMakerWriteScope, msgMakerDeleteScope},
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3, MsgType: msgMakerUpdate.msgType},
+			},
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:      "only authz grant is for write scope",
+			msgMakers: []msgMaker{msgMakerUpdate, msgMakerMigrate, msgMakerDeleteScope},
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3, MsgType: msgMakerWriteScope.msgType},
+			},
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:      "only authz grant is for delete scope",
+			msgMakers: []msgMaker{msgMakerUpdate, msgMakerMigrate, msgMakerWriteScope},
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3, MsgType: msgMakerDeleteScope.msgType},
+			},
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           missingSig(addr1),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name: "invalid first signer",
+			msgMakers: []msgMaker{
+				{
+					name:    msgMakerUpdate.name,
+					msgType: msgMakerUpdate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgUpdateValueOwnersRequest{Signers: []string{"nope"}}
+					},
+				},
+				{
+					name:    msgMakerMigrate.name,
+					msgType: msgMakerMigrate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgMigrateValueOwnerRequest{Signers: []string{"nope"}}
+					},
+				},
+				{
+					name:    msgMakerWriteScope.name,
+					msgType: msgMakerWriteScope.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgWriteScopeRequest{Signers: []string{"nope"}}
+					},
+				},
+				{
+					name:    msgMakerDeleteScope.name,
+					msgType: msgMakerDeleteScope.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgDeleteScopeRequest{Signers: []string{"nope"}}
+					},
+				},
+			},
+			existingOwners: []sdk.AccAddress{addr1},
+			proposed:       addr6.String(),
+			expErr:         "invalid signer address \"nope\": decoding bech32 failed: invalid bech32 string length 4",
+		},
+		{
+			name: "invalid second signer",
+			msgMakers: []msgMaker{
+				{
+					name:    msgMakerUpdate.name,
+					msgType: msgMakerUpdate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgUpdateValueOwnersRequest{Signers: []string{addr1.String(), "nope"}}
+					},
+				},
+				{
+					name:    msgMakerMigrate.name,
+					msgType: msgMakerMigrate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgMigrateValueOwnerRequest{Signers: []string{addr1.String(), "nope"}}
+					},
+				},
+				{
+					name:    msgMakerWriteScope.name,
+					msgType: msgMakerWriteScope.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgWriteScopeRequest{Signers: []string{addr1.String(), "nope"}}
+					},
+				},
+				{
+					name:    msgMakerDeleteScope.name,
+					msgType: msgMakerDeleteScope.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgDeleteScopeRequest{Signers: []string{addr1.String(), "nope"}}
+					},
+				},
+			},
+			existingOwners: []sdk.AccAddress{addr1},
+			proposed:       addr6.String(),
+			expErr:         "invalid signer[1] address \"nope\": decoding bech32 failed: invalid bech32 string length 4",
+		},
+		{
+			name: "authz grant on marker account",
+			authzErrs: []GrantInfo{
+				// Set the grant up to fail because it shouldn't actually be involved.
+				{Granter: addr1, Grantee: addr3},
+			},
+			markerAddrs:      []sdk.AccAddress{addr1},
+			existingOwners:   []sdk.AccAddress{addr1},
+			proposed:         addr6.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expAddrs:         []sdk.AccAddress{addr3},
+			expUsedSigners:   types.NewUsedSignersMap(),
+			expIsMarkerCalls: []sdk.AccAddress{addr1},
+		},
+		{
+			name:             "three existing: signer, marker, proposed",
+			markerAddrs:      []sdk.AccAddress{addr2},
+			existingOwners:   []sdk.AccAddress{addr1, addr2, addr3},
+			proposed:         addr3.String(),
+			signers:          []sdk.AccAddress{addr1},
+			expAddrs:         []sdk.AccAddress{addr1},
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr1.String()),
+			expIsMarkerCalls: []sdk.AccAddress{addr2},
+		},
+		{
+			name:             "two existing: first is proposed, second is NOT signer",
+			existingOwners:   []sdk.AccAddress{addr1, addr2},
+			proposed:         addr1.String(),
+			signers:          []sdk.AccAddress{addr3},
+			expErr:           missingSig(addr2),
+			expIsMarkerCalls: []sdk.AccAddress{addr2},
+		},
+	}
+
+	for i, tc := range tests {
+		if len(tc.msgMakers) == 0 {
+			tc.msgMakers = allMsgMakers
 		}
-		rv.Signers = append(rv.Signers, signers...)
-		return rv
-	}
-	normalMsgType := types.TypeURLMsgWriteScopeRequest
+		for m, maker := range tc.msgMakers {
+			s.Run(fmt.Sprintf("%d %s: %s", i, maker.name, tc.name), func() {
+				kpr := s.app.MetadataKeeper
 
-	errMissingSigRem := func(marker *markertypes.MarkerAccount) string {
-		return fmt.Sprintf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", marker.Address, marker.Denom)
-	}
-	errMissingSigAdd := func(marker *markertypes.MarkerAccount) string {
-		return fmt.Sprintf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", marker.Address, marker.Denom)
-	}
-	errMissingSig := func(addr string) string {
-		return fmt.Sprintf("missing signature from existing value owner %s", addr)
-	}
-
-	tests := []struct {
-		name          string
-		existing      string
-		proposed      string
-		msg           types.MetadataMsg
-		authKeeper    *MockAuthKeeper
-		authzKeeper   *MockAuthzKeeper
-		expErr        string
-		expUsed       keeper.UsedSignersMap
-		expGetAccount []*GetAccountCall
-		expGetAuth    []*GetAuthorizationCall
-	}{
-		{
-			name:     "both empty",
-			existing: "",
-			proposed: "",
-			expErr:   "",
-		},
-		{
-			name:     "existing equals proposed",
-			existing: "same",
-			proposed: "same",
-			expErr:   "",
-		},
-		{
-			name:          "empty to non-marker",
-			existing:      "",
-			proposed:      accStr("new-proposed"),
-			msg:           normalMsg(),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("new-proposed"), nil)},
-		},
-		{
-			name:          "empty to non-bech32",
-			existing:      "",
-			proposed:      "proposed value owner string",
-			msg:           normalMsg(),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
-			expGetAccount: []*GetAccountCall{},
-		},
-		{
-			name:          "empty to marker no signers",
-			existing:      "",
-			proposed:      marker2Addr,
-			msg:           normalMsg(),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigAdd(marker2),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "empty to marker 1 signer only withdraw permission",
-			existing:      "",
-			proposed:      marker2Addr,
-			msg:           normalMsg(withdrawAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigAdd(marker2),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "empty to marker 1 signer only deposit permission",
-			existing:      "",
-			proposed:      marker2Addr,
-			msg:           normalMsg(depositAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
-			expUsed:       map[string]bool{depositAddr: true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "empty to marker 1 signer all permissions except deposit",
-			existing:      "",
-			proposed:      marker2Addr,
-			msg:           normalMsg(noDepositAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigAdd(marker2),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "empty to marker 1 signer all permissions",
-			existing:      "",
-			proposed:      marker2Addr,
-			msg:           normalMsg(allAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
-			expUsed:       map[string]bool{allAddr: true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "empty to marker three signers none with deposit",
-			existing:      "",
-			proposed:      marker2Addr,
-			msg:           normalMsg(noneAddr, accStr("some_other_addr"), noDepositAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigAdd(marker2),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "empty to marker three signers one with deposit",
-			existing:      "",
-			proposed:      marker2Addr,
-			msg:           normalMsg(noneAddr, noDepositAddr, depositAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
-			expUsed:       map[string]bool{depositAddr: true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "marker to empty no signers",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker1),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:       "marker to empty 1 signer only withdraw permission",
-			existing:   marker1Addr,
-			proposed:   "",
-			msg:        normalMsg(withdrawAddr),
-			authKeeper: mockAuthWithMarkers(),
-			expErr:     "",
-			expUsed:    map[string]bool{withdrawAddr: true},
-
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to empty 1 signer only deposit permission",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(depositAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker1),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to empty 1 signer all permissions except withdraw",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(noWithdrawAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker1),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to empty 1 signer all permissions",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(allAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
-			expUsed:       map[string]bool{allAddr: true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to empty three signers none with withdraw",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(noneAddr, accStr("some_other_addr"), noWithdrawAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker1),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to empty three signers one with withdraw",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(noneAddr, noWithdrawAddr, withdrawAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
-			expUsed:       map[string]bool{withdrawAddr: true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to marker no signers",
-			existing:      marker1Addr,
-			proposed:      marker2Addr,
-			msg:           normalMsg(),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker1),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to marker 1 signer no permissions",
-			existing:      marker1Addr,
-			proposed:      marker2Addr,
-			msg:           normalMsg(noneAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker1),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:          "marker to marker 1 signer only deposit permission",
-			existing:      marker1Addr,
-			proposed:      marker2Addr,
-			msg:           normalMsg(depositAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker1),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
-		},
-		{
-			name:       "marker to marker 1 signer only withdraw permission",
-			existing:   marker1Addr,
-			proposed:   marker2Addr,
-			msg:        normalMsg(withdrawAddr),
-			authKeeper: mockAuthWithMarkers(),
-			expErr:     errMissingSigAdd(marker2),
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(marker1AddrAcc, marker1),
-				NewGetAccountCall(marker2AddrAcc, marker2),
-			},
-		},
-		{
-			name:       "marker to marker 1 signer all permissions",
-			existing:   marker1Addr,
-			proposed:   marker2Addr,
-			msg:        normalMsg(allAddr),
-			authKeeper: mockAuthWithMarkers(),
-			expErr:     "",
-			expUsed:    map[string]bool{allAddr: true},
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(marker1AddrAcc, marker1),
-				NewGetAccountCall(marker2AddrAcc, marker2),
-			},
-		},
-		{
-			name:       "marker to marker 2 signers only deposit then only withdraw",
-			existing:   marker1Addr,
-			proposed:   marker2Addr,
-			msg:        normalMsg(depositAddr, withdrawAddr),
-			authKeeper: mockAuthWithMarkers(),
-			expErr:     "",
-			expUsed:    map[string]bool{depositAddr: true, withdrawAddr: true},
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(marker1AddrAcc, marker1),
-				NewGetAccountCall(marker2AddrAcc, marker2),
-			},
-		},
-		{
-			name:       "marker to marker 2 signers only withdraw then only deposit",
-			existing:   marker1Addr,
-			proposed:   marker2Addr,
-			msg:        normalMsg(withdrawAddr, depositAddr),
-			authKeeper: mockAuthWithMarkers(),
-			expErr:     "",
-			expUsed:    map[string]bool{withdrawAddr: true, depositAddr: true},
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(marker1AddrAcc, marker1),
-				NewGetAccountCall(marker2AddrAcc, marker2),
-			},
-		},
-		{
-			name:       "marker to marker 3 signers one with withdraw one with deposit one with nothing",
-			existing:   marker1Addr,
-			proposed:   marker2Addr,
-			msg:        normalMsg(withdrawAddr, noneAddr, depositAddr),
-			authKeeper: mockAuthWithMarkers(),
-			expErr:     "",
-			expUsed:    map[string]bool{withdrawAddr: true, depositAddr: true},
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(marker1AddrAcc, marker1),
-				NewGetAccountCall(marker2AddrAcc, marker2),
-			},
-		},
-		{
-			name:       "marker to non-marker 1 signer only withdraw",
-			existing:   marker2Addr,
-			proposed:   accStr("something_else"),
-			msg:        normalMsg(withdrawAddr),
-			authKeeper: mockAuthWithMarkers(),
-			expErr:     "",
-			expUsed:    map[string]bool{withdrawAddr: true},
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(marker2AddrAcc, marker2),
-				NewGetAccountCall(acc("something_else"), nil),
-			},
-		},
-		{
-			name:          "marker to non-marker 1 signer no withdraw",
-			existing:      marker2Addr,
-			proposed:      accStr("something_else"),
-			msg:           normalMsg(noWithdrawAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        errMissingSigRem(marker2),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
-		},
-		{
-			name:          "non-bech32 to empty in signers somehow",
-			existing:      "existing_value_owner_string",
-			proposed:      "",
-			msg:           normalMsg(noneAddr, allAddr, "existing_value_owner_string", depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{"existing_value_owner_string": true},
-			expGetAccount: []*GetAccountCall{},
-		},
-		{
-			name:          "non-bech32 to empty not in signers",
-			existing:      "existing_value_owner_string",
-			proposed:      "",
-			msg:           normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        errMissingSig("existing_value_owner_string"),
-			expGetAccount: []*GetAccountCall{},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:          "addr to empty in signers",
-			existing:      accStr("existing"),
-			proposed:      "",
-			msg:           normalMsg(accStr("existing")),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{accStr("existing"): true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:        "addr to other in signers",
-			existing:    accStr("existing"),
-			proposed:    accStr("proposed"),
-			msg:         normalMsg(accStr("existing")),
-			authKeeper:  NewMockAuthKeeper(),
-			authzKeeper: NewMockAuthzKeeper(),
-			expErr:      "",
-			expUsed:     map[string]bool{accStr("existing"): true},
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(acc("existing"), nil),
-				NewGetAccountCall(acc("proposed"), nil),
-			},
-			expGetAuth: []*GetAuthorizationCall{},
-		},
-		{
-			name:        "addr to other not in signer",
-			existing:    accStr("existing"),
-			proposed:    accStr("proposed"),
-			msg:         normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:  NewMockAuthKeeper(),
-			authzKeeper: NewMockAuthzKeeper(),
-			expErr:      errMissingSig(accStr("existing")),
-			expUsed:     nil,
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(acc("existing"), nil),
-				NewGetAccountCall(noneAddrAcc, nil),
-				NewGetAccountCall(allAddrAcc, nil),
-				NewGetAccountCall(depositAddrAcc, nil),
-			},
-			expGetAuth: []*GetAuthorizationCall{
-				NewNotFoundGetAuthorizationCall(noneAddrAcc, acc("existing"), normalMsgType),
-				NewNotFoundGetAuthorizationCall(allAddrAcc, acc("existing"), normalMsgType),
-				NewNotFoundGetAuthorizationCall(depositAddrAcc, acc("existing"), normalMsgType),
-			},
-		},
-		{
-			name:       "addr to empty with authz",
-			existing:   accStr("existing"),
-			proposed:   "",
-			msg:        normalMsg(allAddr, noneAddr, depositAddr),
-			authKeeper: NewMockAuthKeeper(),
-			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
-				GetAuthorizationCall{
-					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result: GetAuthorizationResult{
-						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
-						Exp:  nil,
-					},
-				},
-			),
-			expErr:  "",
-			expUsed: map[string]bool{noneAddr: true},
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(acc("existing"), nil),
-				NewGetAccountCall(allAddrAcc, nil),
-				NewGetAccountCall(noneAddrAcc, nil),
-				NewGetAccountCall(depositAddrAcc, nil),
-			},
-			expGetAuth: []*GetAuthorizationCall{
-				{
-					GrantInfo: GrantInfo{Grantee: allAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
-				},
-				{
-					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result: GetAuthorizationResult{
-						Auth: NewMockAuthorization("one",
-							authz.AcceptResponse{Accept: true},
-							nil).WithAcceptCalls(normalMsg(allAddr, noneAddr, depositAddr)),
-						Exp: nil,
-					},
-				},
-			},
-		},
-		{
-			name:        "addr to empty not authorized",
-			existing:    accStr("existing"),
-			proposed:    "",
-			msg:         normalMsg(allAddr, withdrawAddr, depositAddr),
-			authKeeper:  NewMockAuthKeeper(),
-			authzKeeper: NewMockAuthzKeeper(),
-			expErr:      errMissingSig(accStr("existing")),
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(acc("existing"), nil),
-				NewGetAccountCall(allAddrAcc, nil),
-				NewGetAccountCall(withdrawAddrAcc, nil),
-				NewGetAccountCall(depositAddrAcc, nil),
-			},
-			expGetAuth: []*GetAuthorizationCall{
-				{
-					GrantInfo: GrantInfo{Grantee: allAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
-				},
-				{
-					GrantInfo: GrantInfo{Grantee: withdrawAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
-				},
-				{
-					GrantInfo: GrantInfo{Grantee: depositAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
-				},
-			},
-		},
-		{
-			name:       "addr to empty authz error",
-			existing:   accStr("existing"),
-			proposed:   "",
-			msg:        normalMsg(noneAddr),
-			authKeeper: NewMockAuthKeeper(),
-			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
-				GetAuthorizationCall{
-					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result: GetAuthorizationResult{
-						Auth: NewMockAuthorization("one",
-							authz.AcceptResponse{
-								Accept:  true,
-								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+				authzK := NewMockAuthzKeeper()
+				if len(tc.authzGrants) > 0 {
+					entries := make([]GetAuthorizationCall, len(tc.authzGrants))
+					for g, grant := range tc.authzGrants {
+						msgType := grant.MsgType
+						if len(msgType) == 0 {
+							msgType = maker.msgType
+						}
+						authName := fmt.Sprintf("good_%d_%d_%d", i, m, g)
+						entries[g] = NewAcceptedGetAuthorizationCall(grant.Grantee, grant.Granter, msgType, authName)
+					}
+					authzK = authzK.WithGetAuthorizationResults(entries...)
+				}
+				if len(tc.authzErrs) > 0 {
+					getEntries := make([]GetAuthorizationCall, len(tc.authzErrs))
+					delEntries := make([]DeleteGrantCall, len(tc.authzErrs))
+					for g, grant := range tc.authzErrs {
+						msgType := grant.MsgType
+						if len(msgType) == 0 {
+							msgType = maker.msgType
+						}
+						authName := fmt.Sprintf("bad_%d_%d_%d", i, m, g)
+						getEntries[g] = GetAuthorizationCall{
+							GrantInfo: GrantInfo{Granter: grant.Granter, Grantee: grant.Grantee, MsgType: msgType},
+							Result: GetAuthorizationResult{
+								Auth: NewMockAuthorization(authName, authz.AcceptResponse{Accept: true, Delete: true}, nil),
 							},
-							nil),
-						Exp: nil,
-					},
-				},
-			).WithSaveGrantResults(
-				SaveGrantCall{
-					Grantee: noneAddrAcc,
-					Granter: acc("existing"),
-					Auth:    NewMockAuthorization("two", authz.AcceptResponse{}, nil),
-					Exp:     nil,
-					Result:  errors.New("test error from SaveGrant"),
-				},
-			),
-			expErr: fmt.Sprintf("authz error with existing value owner %q: %s", accStr("existing"), "test error from SaveGrant"),
-			expGetAccount: []*GetAccountCall{
-				NewGetAccountCall(acc("existing"), nil),
-				NewGetAccountCall(noneAddrAcc, nil),
-			},
-			expGetAuth: []*GetAuthorizationCall{
-				{
-					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
-					Result: GetAuthorizationResult{
-						Auth: NewMockAuthorization("one",
-							authz.AcceptResponse{
-								Accept:  true,
-								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
-							},
-							nil).WithAcceptCalls(normalMsg(noneAddr)),
-						Exp: nil,
-					},
-				},
-			},
-		},
-	}
+						}
+						delEntries[g] = DeleteGrantCall{
+							GrantInfo: GrantInfo{Granter: grant.Granter, Grantee: grant.Grantee, MsgType: msgType},
+							Result:    errors.New(injectedErrorStr),
+						}
+					}
+					authzK = authzK.WithGetAuthorizationResults(getEntries...)
+					authzK = authzK.WithDeleteGrantResults(delEntries...)
+				}
+				defer kpr.SetAuthzKeeper(kpr.SetAuthzKeeper(authzK))
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			k := s.app.MetadataKeeper
-			origAuthKeeper := k.SetAuthKeeper(tc.authKeeper)
-			origAuthzKeeper := k.SetAuthzKeeper(tc.authzKeeper)
-			defer func() {
-				k.SetAuthKeeper(origAuthKeeper)
-				k.SetAuthzKeeper(origAuthzKeeper)
-			}()
-			if tc.expGetAccount != nil {
-				s.Require().NotNil(tc.authKeeper, "expGetAccount defined but test case does not have an authKeeper defined")
-				tc.authKeeper.GetAccountCalls = make([]*GetAccountCall, 0, len(tc.expGetAccount))
-			}
-			if tc.expGetAuth != nil {
-				s.Require().NotNil(tc.authzKeeper, "expGetAuth defined but test case does not have an authzKeeper defined")
-				tc.authzKeeper.GetAuthorizationCalls = make([]*GetAuthorizationCall, 0, len(tc.expGetAuth))
-			}
-			if tc.expUsed == nil && len(tc.expErr) == 0 {
-				tc.expUsed = keeper.NewUsedSignersMap()
-			}
+				markerK := NewMockMarkerKeeper()
+				if len(tc.markerAddrs) > 0 {
+					markerK = markerK.WithIsMarkerAccountResults(tc.markerAddrs...)
+				}
+				defer kpr.SetMarkerKeeper(kpr.SetMarkerKeeper(markerK))
 
-			used, err := k.ValidateScopeValueOwnerUpdate(s.FreshCtx(), tc.existing, tc.proposed, tc.msg)
-			s.AssertErrorValue(err, tc.expErr, "ValidateScopeValueOwnerUpdate")
-			s.Assert().Equal(tc.expUsed, used, "ValidateScopeValueOwnerUpdate used signatures map")
+				msg := maker.make(tc.signers)
 
-			if tc.expGetAccount != nil {
-				getAccountCalls := tc.authKeeper.GetAccountCalls
-				s.Assert().Equal(tc.expGetAccount, getAccountCalls, "calls made to GetAccount")
-			}
-			if tc.expGetAuth != nil {
-				getAuthCalls := tc.authzKeeper.GetAuthorizationCalls
-				s.Assert().Equal(tc.expGetAuth, getAuthCalls, "calls made to GetAuthorization")
-			}
-		})
-	}
-}
+				ctx := s.FreshCtx()
+				if len(tc.wasmAddrs) > 0 {
+					cache := types.GetAuthzCache(ctx)
+					for _, addr := range tc.wasmAddrs {
+						cache.SetIsWasm(addr, true)
+					}
+				}
 
-func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeFromExisting() {
-	markerDenom := "vochange"
-	markerAddr := markertypes.MustGetMarkerAddress(markerDenom)
-	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
-	addrAllButWithdraw := sdk.AccAddress("addrAllButWithdraw__")
-	addrOther := sdk.AccAddress("addrOther___________")
-	addrRand1 := sdk.AccAddress("addrRand1___________")
-	addrRand2 := sdk.AccAddress("addrRand1___________")
-	addrWithWithdrawStr := addrWithWithdraw.String()
-	addrAllButWithdrawStr := addrAllButWithdraw.String()
-	addrOtherStr := addrOther.String()
-	addrRand1Str := addrRand1.String()
-	addrRand2Str := addrRand2.String()
-
-	marker := &markertypes.MarkerAccount{
-		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
-		Status:      markertypes.StatusActive,
-		Denom:       markerDenom,
-		Supply:      sdkmath.NewInt(1000),
-		MarkerType:  markertypes.MarkerType_RestrictedCoin,
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address:     addrWithWithdrawStr,
-				Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
-			{
-				Address: addrAllButWithdrawStr,
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn,
-					markertypes.Access_Deposit, markertypes.Access_Delete,
-					markertypes.Access_Admin, markertypes.Access_Transfer,
-				},
-			},
-		},
-	}
-
-	sw := func(addrs ...string) *keeper.SignersWrapper {
-		return keeper.NewSignersWrapper(addrs)
-	}
-	used := func(addrs ...string) keeper.UsedSignersMap {
-		return keeper.NewUsedSignersMap().Use(addrs...)
-	}
-
-	msg := &types.MsgWriteScopeRequest{}
-	msgType := types.TypeURLMsgWriteScopeRequest
-
-	missingSig := func(addr string) string {
-		return "missing signature from existing value owner " + addr
-	}
-
-	tests := []struct {
-		name          string
-		existing      string
-		signers       *keeper.SignersWrapper
-		authKeeper    *MockAuthKeeper
-		authzKeeper   *MockAuthzKeeper
-		expErr        string
-		expUsed       keeper.UsedSignersMap
-		expAuthzCalls []*GetAuthorizationCall
-	}{
-		{
-			name:     "no existing",
-			existing: "",
-			expErr:   "",
-		},
-		{
-			name:       "is marker does not have withdraw",
-			existing:   markerAddr.String(),
-			signers:    sw(addrAllButWithdrawStr),
-			authKeeper: NewMockAuthKeeper().WithGetAccountResults(NewGetAccountCall(markerAddr, marker)),
-			expErr:     fmt.Sprintf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", markerAddr.String(), markerDenom),
-		},
-		{
-			name:       "is marker has withdraw",
-			existing:   markerAddr.String(),
-			signers:    sw(addrWithWithdrawStr),
-			authKeeper: NewMockAuthKeeper().WithGetAccountResults(NewGetAccountCall(markerAddr, marker)),
-			expUsed:    used(addrWithWithdrawStr),
-		},
-		{
-			name:     "is only signer",
-			existing: addrOtherStr,
-			signers:  sw(addrOtherStr),
-			expErr:   "",
-			expUsed:  used(addrOtherStr),
-		},
-		{
-			name:     "is 1st of 3 signers",
-			existing: addrOtherStr,
-			signers:  sw(addrOtherStr, addrRand1Str, addrRand2Str),
-			expUsed:  used(addrOtherStr),
-		},
-		{
-			name:     "is 2nd of 3 signers",
-			existing: addrOtherStr,
-			signers:  sw(addrRand1Str, addrOtherStr, addrRand2Str),
-			expUsed:  used(addrOtherStr),
-		},
-		{
-			name:     "is 3rd of 3 signers",
-			existing: addrOtherStr,
-			signers:  sw(addrRand1Str, addrRand2Str, addrOtherStr),
-			expUsed:  used(addrOtherStr),
-		},
-		{
-			name:     "isn't signer isn't bech32",
-			existing: "not-a-bech32",
-			signers:  sw(addrOtherStr),
-			expErr:   missingSig("not-a-bech32"),
-		},
-		{
-			name:     "isn't signer but authed a signer",
-			existing: addrOtherStr,
-			signers:  sw(addrRand1Str),
-			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
-				NewAcceptedGetAuthorizationCall(addrRand1, addrOther, msgType, "one"),
-			),
-			expUsed: used(addrRand1Str),
-			expAuthzCalls: []*GetAuthorizationCall{
-				NewAcceptedGetAuthorizationCall(addrRand1, addrOther, msgType, "one").WithAcceptCalls(msg),
-			},
-		},
-		{
-			name:       "isn't signer but authed smart contract signer",
-			existing:   addrOtherStr,
-			signers:    sw(addrRand2Str),
-			authKeeper: NewMockAuthKeeper().WithGetAccountResults(NewWasmGetAccountCall(addrRand2)),
-			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
-				NewAcceptedGetAuthorizationCall(addrRand2, addrOther, msgType, "one"),
-			),
-			expErr:        missingSig(addrOtherStr),
-			expAuthzCalls: nil, // should not have checked authz.
-		},
-		{
-			name:     "isn't signer no auth",
-			existing: addrOtherStr,
-			signers:  sw(addrRand1Str, addrRand2Str),
-			expErr:   missingSig(addrOtherStr),
-			expAuthzCalls: []*GetAuthorizationCall{
-				NewNotFoundGetAuthorizationCall(addrRand1, addrOther, msgType),
-				NewNotFoundGetAuthorizationCall(addrRand2, addrOther, msgType),
-			},
-		},
-		{
-			name:     "error from authorization",
-			existing: addrOtherStr,
-			signers:  sw(addrRand1Str),
-			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
-				GetAuthorizationCall{
-					GrantInfo: GrantInfo{
-						Grantee: addrRand1,
-						Granter: addrOther,
-						MsgType: msgType,
-					},
-					Result: GetAuthorizationResult{
-						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true, Delete: true}, nil),
-						Exp:  nil,
-					},
-				},
-			).WithDeleteGrantResults(DeleteGrantCall{
-				GrantInfo: GrantInfo{
-					Grantee: addrRand1,
-					Granter: addrOther,
-					MsgType: msgType,
-				},
-				Result: fmt.Errorf("test error upon delete"),
-			}),
-			expErr: "authz error with existing value owner \"" + addrOtherStr + "\": test error upon delete",
-			expAuthzCalls: []*GetAuthorizationCall{
-				{
-					GrantInfo: GrantInfo{
-						Grantee: addrRand1,
-						Granter: addrOther,
-						MsgType: msgType,
-					},
-					Result: GetAuthorizationResult{
-						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true, Delete: true}, nil).WithAcceptCalls(msg),
-						Exp:  nil,
-					},
-				},
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			if tc.authKeeper == nil {
-				tc.authKeeper = NewMockAuthKeeper()
-			}
-			if tc.authzKeeper == nil {
-				tc.authzKeeper = NewMockAuthzKeeper()
-			}
-			if tc.expUsed == nil && len(tc.expErr) == 0 {
-				tc.expUsed = keeper.NewUsedSignersMap()
-			}
-			mdKeeper := s.app.MetadataKeeper
-			origAuthKeeper := mdKeeper.SetAuthKeeper(tc.authKeeper)
-			origAuthzKeeper := mdKeeper.SetAuthzKeeper(tc.authzKeeper)
-			defer func() {
-				mdKeeper.SetAuthKeeper(origAuthKeeper)
-				mdKeeper.SetAuthzKeeper(origAuthzKeeper)
-			}()
-
-			usedSigners, err := mdKeeper.ValidateScopeValueOwnerChangeFromExisting(s.FreshCtx(), tc.existing, tc.signers, msg)
-			s.AssertErrorValue(err, tc.expErr, "validateScopeValueOwnerChangeFromExisting error")
-			s.Assert().Equal(tc.expUsed, usedSigners, "validateScopeValueOwnerChangeFromExisting used address map")
-
-			authCalls := tc.authzKeeper.GetAuthorizationCalls
-			s.Assert().Equal(tc.expAuthzCalls, authCalls)
-		})
-	}
-}
-
-func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeToProposed() {
-	markerDenom := "vochange"
-	markerAddr := markertypes.MustGetMarkerAddress(markerDenom)
-	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
-	addrAllButDeposit := sdk.AccAddress("addrAllButDeposit___")
-	addrOther := sdk.AccAddress("addrOther___________")
-	addrWithDepositStr := addrWithDeposit.String()
-	addrAllButDepositStr := addrAllButDeposit.String()
-	addrOtherStr := addrOther.String()
-
-	marker := &markertypes.MarkerAccount{
-		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
-		Status:      markertypes.StatusActive,
-		Denom:       markerDenom,
-		Supply:      sdkmath.NewInt(1000),
-		MarkerType:  markertypes.MarkerType_RestrictedCoin,
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address:     addrWithDepositStr,
-				Permissions: markertypes.AccessList{markertypes.Access_Deposit}},
-			{
-				Address: addrAllButDepositStr,
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn,
-					markertypes.Access_Withdraw, markertypes.Access_Delete,
-					markertypes.Access_Admin, markertypes.Access_Transfer,
-				},
-			},
-		},
-	}
-
-	sw := func(addrs ...string) *keeper.SignersWrapper {
-		return keeper.NewSignersWrapper(addrs)
-	}
-	used := func(addrs ...string) keeper.UsedSignersMap {
-		return keeper.NewUsedSignersMap().Use(addrs...)
-	}
-
-	tests := []struct {
-		name     string
-		proposed string
-		signers  *keeper.SignersWrapper
-		expErr   string
-		expUsed  keeper.UsedSignersMap
-	}{
-		{
-			name:     "no proposed",
-			proposed: "",
-			signers:  sw(addrOtherStr),
-			expErr:   "",
-			expUsed:  used(),
-		},
-		{
-			name:     "is marker does not have deposit",
-			proposed: markerAddr.String(),
-			signers:  sw(addrAllButDepositStr),
-			expErr:   fmt.Sprintf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", markerAddr.String(), markerDenom),
-			expUsed:  nil,
-		},
-		{
-			name:     "is marker has deposit",
-			proposed: markerAddr.String(),
-			signers:  sw(addrWithDepositStr),
-			expErr:   "",
-			expUsed:  used(addrWithDepositStr),
-		},
-		{
-			name:     "is not marker",
-			proposed: sdk.AccAddress("some_other_address__").String(),
-			signers:  sw(addrOtherStr),
-			expErr:   "",
-			expUsed:  used(),
-		},
-		{
-			name:     "is not bech32",
-			proposed: "not a bech32 address string",
-			signers:  sw(addrOtherStr),
-			expErr:   "",
-			expUsed:  used(),
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			authKeeper := NewMockAuthKeeper().WithGetAccountResults(NewGetAccountCall(markerAddr, marker))
-			mdKeeper := s.app.MetadataKeeper
-			origAuthKeeper := mdKeeper.SetAuthKeeper(authKeeper)
-			defer mdKeeper.SetAuthKeeper(origAuthKeeper)
-
-			usedSigners, err := mdKeeper.ValidateScopeValueOwnerChangeToProposed(s.FreshCtx(), tc.proposed, tc.signers)
-			s.AssertErrorValue(err, tc.expErr, "validateScopeValueOwnerChangeToProposed error")
-			s.Assert().Equal(tc.expUsed, usedSigners, "validateScopeValueOwnerChangeToProposed used signers")
-		})
+				var actAddrs []sdk.AccAddress
+				var actUsedAddrs types.UsedSignersMap
+				var actErr error
+				testFunc := func() {
+					actAddrs, actUsedAddrs, actErr = kpr.ValidateScopeValueOwnersSigners(ctx, tc.existingOwners, tc.proposed, msg)
+				}
+				s.Require().NotPanics(testFunc, "ValidateScopeValueOwnersSigners")
+				s.AssertErrorValue(actErr, tc.expErr, "error from ValidateScopeValueOwnersSigners")
+				s.Assert().Equal(tc.expAddrs, actAddrs, "addresses from ValidateScopeValueOwnersSigners")
+				s.Assert().Equal(tc.expUsedSigners, actUsedAddrs, "UsedSignersMap from ValidateScopeValueOwnersSigners")
+				markerK.AssertIsMarkerAccountCalls(s.T(), tc.expIsMarkerCalls)
+			})
+		}
 	}
 }
 
@@ -6094,8 +5712,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 	randAddr3 := sdk.AccAddress("random_address_3____").String()
 
 	// expFoundSigner creates a PartyDetails for a party found as a signer.
-	expFoundSigner := func(addr string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	expFoundSigner := func(addr string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         addr,
 			Role:            types.PartyType_PARTY_TYPE_UNSPECIFIED,
 			Optional:        false,
@@ -6107,8 +5725,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 		}.Real()
 	}
 	// expFoundAuthz creates a PartyDetails for a party found via authz.
-	expFoundAuthz := func(addr string, signer sdk.AccAddress) *keeper.PartyDetails {
-		rv := keeper.TestablePartyDetails{
+	expFoundAuthz := func(addr string, signer sdk.AccAddress) *types.PartyDetails {
+		rv := types.TestablePartyDetails{
 			Address:         addr,
 			Role:            types.PartyType_PARTY_TYPE_UNSPECIFIED,
 			Optional:        false,
@@ -6122,7 +5740,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 		return rv
 	}
 	// pdz is just a shorter way of creating a slice of PartyDetails.
-	pdz := func(details ...*keeper.PartyDetails) []*keeper.PartyDetails {
+	pdz := func(details ...*types.PartyDetails) []*types.PartyDetails {
 		return details
 	}
 
@@ -6130,7 +5748,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 		name     string
 		owners   []string
 		msg      types.MetadataMsg
-		exp      []*keeper.PartyDetails
+		exp      []*types.PartyDetails
 		errorMsg string
 	}{
 		{
@@ -6279,7 +5897,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			actual, err := s.app.MetadataKeeper.ValidateAllRequiredSigned(s.FreshCtx(), tc.owners, tc.msg)
-			AssertErrorValue(t, err, tc.errorMsg, "ValidateSignersWithoutParties unexpected error")
+			s.AssertErrorValue(err, tc.errorMsg, "ValidateSignersWithoutParties unexpected error")
 			assert.Equal(t, tc.exp, actual, "ValidateSignersWithoutParties validated parties")
 		})
 	}
@@ -6566,7 +6184,7 @@ func TestValidateRolesPresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidateRolesPresent(tc.parties, tc.reqRoles)
-			AssertErrorValue(t, err, tc.exp, "validateRolesPresent")
+			assertions.AssertErrorValue(t, err, tc.exp, "validateRolesPresent")
 		})
 	}
 }
@@ -6667,175 +6285,7 @@ func TestValidatePartiesArePresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidatePartiesArePresent(tc.required, tc.available)
-			AssertErrorValue(t, err, tc.exp, "validatePartiesArePresent")
-		})
-	}
-}
-
-func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
-	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
-	marker := markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address:       markerAddr,
-			AccountNumber: 23,
-		},
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address:     s.user1,
-				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
-			},
-			{
-				Address:     s.user2,
-				Permissions: markertypes.AccessListByNames("burn,mint"),
-			},
-		},
-		Denom:      "testcoin",
-		Supply:     sdkmath.NewInt(1000),
-		MarkerType: markertypes.MarkerType_Coin,
-		Status:     markertypes.StatusActive,
-	}
-	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.FreshCtx(), &marker), "AddMarkerAccount")
-	// s.user1 has an account created in TestSetup.
-
-	tests := []struct {
-		name      string
-		addr      string
-		signers   []string
-		role      markertypes.Access
-		expMarker markertypes.MarkerAccountI
-		expHasAcc bool
-		expSig    string
-	}{
-		{name: "invalid address", addr: "invalid", expMarker: nil},
-		{name: "account does not exist", addr: sdk.AccAddress("does-not-exist").String(), expMarker: nil},
-		{name: "account exists but is not marker", addr: s.user1, expMarker: nil},
-		{
-			name:      "is marker does not have signer",
-			addr:      markerAddr,
-			signers:   []string{s.user3},
-			expMarker: &marker,
-			expHasAcc: false,
-		},
-		{
-			name:      "is marker with signer 1 but not role",
-			addr:      markerAddr,
-			signers:   []string{s.user1},
-			role:      markertypes.Access_Transfer,
-			expMarker: &marker,
-			expHasAcc: false,
-		},
-		{
-			name:      "is marker with signer 1 with role other user has",
-			addr:      markerAddr,
-			signers:   []string{s.user1},
-			role:      markertypes.Access_Burn,
-			expMarker: &marker,
-			expHasAcc: false,
-		},
-		{
-			name:      "is marker with signer 1 and role 1",
-			addr:      markerAddr,
-			signers:   []string{s.user1},
-			role:      markertypes.Access_Deposit,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user1,
-		},
-		{
-			name:      "is marker with signer 1 and role 2",
-			addr:      markerAddr,
-			signers:   []string{s.user1},
-			role:      markertypes.Access_Withdraw,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user1,
-		},
-		{
-			name:      "is marker with signer 2 but not role",
-			addr:      markerAddr,
-			signers:   []string{s.user2},
-			role:      markertypes.Access_Transfer,
-			expMarker: &marker,
-			expHasAcc: false,
-		},
-		{
-			name:      "is marker with signer 2 with role other user has",
-			addr:      markerAddr,
-			signers:   []string{s.user2},
-			role:      markertypes.Access_Deposit,
-			expMarker: &marker,
-			expHasAcc: false,
-		},
-		{
-			name:      "is marker with signer 2 and role 1",
-			addr:      markerAddr,
-			signers:   []string{s.user2},
-			role:      markertypes.Access_Burn,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user2,
-		},
-		{
-			name:      "is marker with signer 2 and role 2",
-			addr:      markerAddr,
-			signers:   []string{s.user2},
-			role:      markertypes.Access_Mint,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user2,
-		},
-		{
-			name:      "is marker both signers role from first",
-			addr:      markerAddr,
-			signers:   []string{s.user1, s.user2},
-			role:      markertypes.Access_Withdraw,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user1,
-		},
-		{
-			name:      "is marker both signers role from second",
-			addr:      markerAddr,
-			signers:   []string{s.user1, s.user2},
-			role:      markertypes.Access_Mint,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user2,
-		},
-		{
-			name:      "is marker both signers neither have role",
-			addr:      markerAddr,
-			signers:   []string{s.user1, s.user2},
-			role:      markertypes.Access_Transfer,
-			expMarker: &marker,
-			expHasAcc: false,
-		},
-		{
-			name:      "is marker two signers first has role",
-			addr:      markerAddr,
-			signers:   []string{s.user1, s.user3},
-			role:      markertypes.Access_Withdraw,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user1,
-		},
-		{
-			name:      "is marker two signers second has role",
-			addr:      markerAddr,
-			signers:   []string{s.user3, s.user2},
-			role:      markertypes.Access_Burn,
-			expMarker: &marker,
-			expHasAcc: true,
-			expSig:    s.user2,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			actualMarker, actualHasAcc, actualSig := s.app.MetadataKeeper.GetMarkerAndCheckAuthority(s.FreshCtx(), tc.addr, tc.signers, tc.role)
-			s.Assert().Equal(tc.expMarker, actualMarker, "GetMarkerAndCheckAuthority marker")
-			s.Assert().Equal(tc.expHasAcc, actualHasAcc, "GetMarkerAndCheckAuthority has access")
-			s.Assert().Equal(tc.expSig, actualSig, "GetMarkerAndCheckAuthority signer")
+			assertions.AssertErrorValue(t, err, tc.exp, "validatePartiesArePresent")
 		})
 	}
 }

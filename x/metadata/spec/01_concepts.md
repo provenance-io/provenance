@@ -33,7 +33,7 @@ See [Specifications](02_state.md#specifications) for details.
 ## Metadata Addresses
 
 Entries and Specifications must each have a unique metadata address.
-These addresses are byte arrays that are commonly referered to as "ids".
+These addresses are byte arrays that are commonly referred to as "ids".
 As strings, they should be represented using the bech32 address format.
 The addresses for the different messages have specific formats that help facilitate grouping and indexing.
 All addresses start with a single byte that identifies the type, and are followed by 16 bytes commonly called a UUID.
@@ -105,6 +105,7 @@ The following are requirements related to smart contract usage of the `x/metadat
 * When a smart contract signs a message, it MUST be first or have only smart-contract signers before it, and SHOULD include the invoker address(es) after.
 * When a smart contract is a signer, it must either be a party/owner, or have authorizations (via `x/authz`) from all signers after it.
 * If a smart contract is a signer, but not a party, it cannot be the only signer, and cannot be the last signer.
+* A smart contract cannot be used to change the value owner of a scope unless the smart contract is the value owner itself.
 
 ### With Party Rollup Required
 

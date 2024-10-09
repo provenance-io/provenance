@@ -208,6 +208,7 @@ var (
 		wasmtypes.ModuleName:      {authtypes.Burner},
 		triggertypes.ModuleName:   nil,
 		oracletypes.ModuleName:    nil,
+		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -582,7 +583,7 @@ func New(
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper,
+		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper, app.BankKeeper,
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
@@ -592,6 +593,7 @@ func New(
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
 		app.AccountKeeper, app.AttributeKeeper, app.BankKeeper, app.HoldKeeper, app.MarkerKeeper,
+		app.MetadataKeeper,
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
@@ -1312,15 +1314,6 @@ func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router, swaggerEnabled bool) 
 	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
 
 	return nil
-}
-
-// GetMaccPerms returns a copy of the module account permissions
-func GetMaccPerms() map[string][]string {
-	dupMaccPerms := make(map[string][]string)
-	for k, v := range maccPerms {
-		dupMaccPerms[k] = v
-	}
-	return dupMaccPerms
 }
 
 // initParamsKeeper init params keeper and its subspaces

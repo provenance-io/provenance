@@ -427,3 +427,12 @@ func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
 func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
 	return k.reqAttrBypassAddrs.Has(addr)
 }
+
+// IsMarkerAccount returns true if the provided address is one for a marker account.
+func (k Keeper) IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
+	if len(addr) == 0 {
+		return false
+	}
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.MarkerStoreKey(addr))
+}
