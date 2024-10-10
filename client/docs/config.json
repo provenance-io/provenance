@@ -266,7 +266,8 @@
       },
       "paths": {
         "exclude": [
-          "cosmos/nft/.*"
+          "cosmos/nft/.*",
+          "cosmos/params/.*"
         ]
       }
     }
