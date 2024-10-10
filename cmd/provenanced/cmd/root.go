@@ -438,18 +438,30 @@ func getIAVLCacheSize(options servertypes.AppOptions) int {
 	return iavlCacheSize
 }
 
-// isTestnetFlagSet returns true if the command was invoked with the --testnet flag.
-// This should be the same as viper.Get("testnet"), but can be used without needing
-// to set up viper.
+// isTestnetFlagSet returns true if the args or env vars say to use testnet values.
+// It differs from viper.Get("testnet") in that this will not look into any config files.
+// That shouldn't be a problem because it's not in any of the templates. So someone would
+// need to have it in a custom.toml file, which I don't think anyone utilizes.
+//
+// We need this because the SDK requires an address codec in order to create most of their
+// cobra commands. Those commands need to be created and added to the root command well
+// before we get to the point where we're ready to read in config files. But that address
+// codec needs to have the HRP defined, which depends on the --testnet flag.
 func isTestnetFlagSet() bool {
-	ev := os.Getenv("PIO_TESTNET")
-	if len(ev) > 0 {
-		return cast.ToBool(ev)
-	}
 	for _, arg := range os.Args[1:] {
 		if arg == "-t" || arg == "--testnet" {
 			return true
 		}
+		if strings.HasPrefix(arg, "-t=") {
+			return cast.ToBool(arg[3:])
+		}
+		if strings.HasPrefix(arg, "--testnet=") {
+			return cast.ToBool(arg[10:])
+		}
+	}
+	ev := os.Getenv("PIO_TESTNET")
+	if len(ev) > 0 {
+		return cast.ToBool(ev)
 	}
 	return false
 }
