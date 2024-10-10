@@ -13,12 +13,14 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	cmtconfig "github.com/cometbft/cometbft/config"
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -305,6 +307,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 	return app.New(
 		logger, db, traceStore, true, appOpts,
+		setStoreMetrics(getTelemetryGlobalLabels(logger, appOpts)),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -464,4 +467,72 @@ func isTestnetFlagSet(args []string) bool {
 		return cast.ToBool(ev)
 	}
 	return false
+}
+
+// setStoreMetrics returns a baseapp option func that will set the store metrics if enabled.
+func setStoreMetrics(globalLabels [][]string, enabled bool) func(*baseapp.BaseApp) {
+	return func(bApp *baseapp.BaseApp) {
+		if enabled {
+			bApp.SetStoreMetrics(metrics.NewMetrics(globalLabels))
+		}
+	}
+}
+
+// These keys are used to get specific telemetry config values.
+// The "telemetry" part is the mapstruct name of the Telemetry field in the serverconfig.Config struct.
+// The second part is the mapstruct name of the desired field in the Telemetry.Config struct.
+const (
+	// telEnabledKey is the field name for the serverconfig.Config.Telemetry.Enabled field.
+	telEnabledKey = "telemetry.enabled"
+	// telGlobalLabelsKey is the field name for the serverconfig.Config.Telemetry.GlobalLabels field.
+	telGlobalLabelsKey = "telemetry.global-labels"
+)
+
+// getTelemetryGlobalLabels will extract the telemetry.global-labels and telemetry.enabled info from the appOpts.
+func getTelemetryGlobalLabels(logger log.Logger, appOpts servertypes.AppOptions) ([][]string, bool) {
+	if appOpts == nil {
+		logger.Debug("getTelemetryGlobalLabels: No app options available.")
+		return nil, false
+	}
+
+	// Most of the time appOpts is just a Viper instance, but there's no guarantee that it is.
+	// If it is, we can use the SDK's stuff to identify the telemetry config values.
+	// Otherwise, we'll try getting what we need directly from appOpts (which is less certain to be right).
+	if vpr, ok := appOpts.(*viper.Viper); ok {
+		appCfg, err := serverconfig.ParseConfig(vpr)
+		if err == nil {
+			logger.Debug("getTelemetryGlobalLabels: Using Telemetry config from app config.",
+				telEnabledKey, appCfg.Telemetry.Enabled,
+				telGlobalLabelsKey, appCfg.Telemetry.GlobalLabels)
+			return appCfg.Telemetry.GlobalLabels, appCfg.Telemetry.Enabled
+		}
+		logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: (ignoring) Error parsing app config to get telemetry config: %v.", err))
+		// I've no clue what might cause that error, but let's try getting stuff the hard way.
+	}
+
+	// There's some unit tests that don't use viper for the appOpts, but this is mostly here in case
+	// the SDK decides not to use viper for the appOpts in all situations that get us here.
+
+	enabled := cast.ToBool(appOpts.Get(telEnabledKey))
+	logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: App options %q = %t.", telEnabledKey, enabled))
+	if !enabled {
+		return nil, enabled
+	}
+
+	glRaw := appOpts.Get(telGlobalLabelsKey)
+	if glRaw == nil {
+		logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: App option %q is not available.", telGlobalLabelsKey))
+		return nil, enabled
+	}
+
+	gl, ok := glRaw.([][]string)
+	if !ok {
+		logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: App option %q is not [][]string, is %T", telGlobalLabelsKey, glRaw),
+			"telemetry.global-labels", glRaw)
+		return nil, enabled
+	}
+
+	logger.Debug("getTelemetryGlobalLabels: Extracted telemetry setup from app options.",
+		telEnabledKey, enabled, telGlobalLabelsKey, gl)
+	return gl, enabled
 }

@@ -334,3 +334,7 @@ func appendIfNew(slice []string, elems ...string) []string {
 	}
 	return slice
 }
+
+// TODO[telemetry]: func TestIsTestnetFlagSet(t *testing.T) {}
+
+// TODO[telemetry]: func TestGetTelemetryGlobalLabels(t *testing.T) {}
