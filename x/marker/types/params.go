@@ -45,7 +45,6 @@ func (p Params) Validate() error {
 	}
 	_, err := regexp.Compile(fmt.Sprintf(`^%s$`, exp))
 	return err
-
 }
 
 func StringToBigInt(val string) sdkmath.Int {
