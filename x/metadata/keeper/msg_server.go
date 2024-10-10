@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -33,7 +32,7 @@ func (k msgServer) WriteScope(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeRequest,
 ) (*types.MsgWriteScopeResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScope")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteScope")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
@@ -70,7 +69,7 @@ func (k msgServer) DeleteScope(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeRequest,
 ) (*types.MsgDeleteScopeResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteScope")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	transferAgents, err := k.ValidateDeleteScope(ctx, msg)
@@ -94,7 +93,7 @@ func (k msgServer) AddScopeDataAccess(
 	goCtx context.Context,
 	msg *types.MsgAddScopeDataAccessRequest,
 ) (*types.MsgAddScopeDataAccessResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeDataAccess")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "AddScopeDataAccess")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
@@ -122,7 +121,7 @@ func (k msgServer) DeleteScopeDataAccess(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeDataAccessRequest,
 ) (*types.MsgDeleteScopeDataAccessResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeDataAccess")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteScopeDataAccess")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
@@ -150,7 +149,7 @@ func (k msgServer) AddScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgAddScopeOwnerRequest,
 ) (*types.MsgAddScopeOwnerResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeOwner")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "AddScopeOwner")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -186,7 +185,7 @@ func (k msgServer) DeleteScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeOwnerRequest,
 ) (*types.MsgDeleteScopeOwnerResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeOwner")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteScopeOwner")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -222,7 +221,7 @@ func (k msgServer) UpdateValueOwners(
 	goCtx context.Context,
 	msg *types.MsgUpdateValueOwnersRequest,
 ) (*types.MsgUpdateValueOwnersResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "UpdateValueOwners")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "UpdateValueOwners")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	links, err := k.GetScopeValueOwners(ctx, msg.ScopeIds)
@@ -249,7 +248,7 @@ func (k msgServer) MigrateValueOwner(
 	goCtx context.Context,
 	msg *types.MsgMigrateValueOwnerRequest,
 ) (*types.MsgMigrateValueOwnerResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "MigrateValueOwner")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "MigrateValueOwner")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	addr, err := sdk.AccAddressFromBech32(msg.Existing)
@@ -284,7 +283,7 @@ func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,
 ) (*types.MsgWriteSessionResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteSession")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteSession")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
@@ -313,7 +312,7 @@ func (k msgServer) WriteRecord(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordRequest,
 ) (*types.MsgWriteRecordResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecord")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteRecord")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
@@ -351,7 +350,7 @@ func (k msgServer) DeleteRecord(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordRequest,
 ) (*types.MsgDeleteRecordResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecord")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteRecord")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := k.ValidateDeleteRecord(ctx, msg.RecordId, msg); err != nil {
@@ -369,7 +368,7 @@ func (k msgServer) WriteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeSpecificationRequest,
 ) (*types.MsgWriteScopeSpecificationResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
@@ -397,7 +396,7 @@ func (k msgServer) DeleteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeSpecificationRequest,
 ) (*types.MsgDeleteScopeSpecificationResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeSpecification")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteScopeSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
@@ -421,7 +420,7 @@ func (k msgServer) WriteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteContractSpecificationRequest,
 ) (*types.MsgWriteContractSpecificationResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteContractSpecification")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteContractSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
@@ -449,7 +448,7 @@ func (k msgServer) DeleteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteContractSpecificationRequest,
 ) (*types.MsgDeleteContractSpecificationResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecification")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteContractSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetContractSpecification(ctx, msg.SpecificationId)
@@ -498,7 +497,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	goCtx context.Context,
 	msg *types.MsgAddContractSpecToScopeSpecRequest,
 ) (*types.MsgAddContractSpecToScopeSpecResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddContractSpecToScopeSpec")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "AddContractSpecToScopeSpec")
 	ctx := UnwrapMetadataContext(goCtx)
 	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
 	if !found {
@@ -531,7 +530,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 	goCtx context.Context,
 	msg *types.MsgDeleteContractSpecFromScopeSpecRequest,
 ) (*types.MsgDeleteContractSpecFromScopeSpecResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecFromScopeSpec")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteContractSpecFromScopeSpec")
 	ctx := UnwrapMetadataContext(goCtx)
 	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
 	if !found {
@@ -567,7 +566,7 @@ func (k msgServer) WriteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordSpecificationRequest,
 ) (*types.MsgWriteRecordSpecificationResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
@@ -606,7 +605,7 @@ func (k msgServer) DeleteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordSpecificationRequest,
 ) (*types.MsgDeleteRecordSpecificationResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecordSpecification")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteRecordSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	_, found := k.GetRecordSpecification(ctx, msg.SpecificationId)
@@ -639,7 +638,7 @@ func (k msgServer) BindOSLocator(
 	goCtx context.Context,
 	msg *types.MsgBindOSLocatorRequest,
 ) (*types.MsgBindOSLocatorResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "BindOSLocator")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "BindOSLocator")
 	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
@@ -673,7 +672,7 @@ func (k msgServer) DeleteOSLocator(
 	goCtx context.Context,
 	msg *types.MsgDeleteOSLocatorRequest,
 ) (*types.MsgDeleteOSLocatorResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteOSLocator")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "DeleteOSLocator")
 	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
@@ -709,7 +708,7 @@ func (k msgServer) ModifyOSLocator(
 	goCtx context.Context,
 	msg *types.MsgModifyOSLocatorRequest,
 ) (*types.MsgModifyOSLocatorResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "ModifyOSLocator")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "ModifyOSLocator")
 	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {

@@ -2,7 +2,6 @@ package marker
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,7 @@ import (
 
 // BeginBlocker returns the begin blocker for the marker module.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk bankkeeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 	// Iterate through all marker accounts and check for supply above or below expected targets.
 	var err error
 	k.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
