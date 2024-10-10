@@ -80,7 +80,7 @@ func assertMockRunAssertResult(t *testing.T, funcName string, tb *mockTB, succes
 		assert.False(t, success, "%s result", funcName)
 		assert.True(t, tb.isFailed, "%s is failed", funcName)
 		for _, exp := range expOutput {
-			assert.Contains(t, tb.output, exp, "%s output", funcName)
+			assert.Contains(t, tb.output, exp, "%s output, looking for %q", funcName, exp)
 		}
 		assert.Contains(t, tb.output, expMsgAndArgs, "%s output has msgAndArgs", funcName)
 	} else {
@@ -95,7 +95,7 @@ func assertMockRunRequireResult(t *testing.T, funcName string, tb *mockTB, exite
 	if len(expOutput) > 0 {
 		assert.True(t, tb.isFailed, "%s is failed", funcName)
 		for _, exp := range expOutput {
-			assert.Contains(t, tb.output, exp, "%s output", funcName)
+			assert.Contains(t, tb.output, exp, "%s output, looking for %q", funcName, exp)
 		}
 		assert.Contains(t, tb.output, expMsgAndArgs, "%s output has msgAndArgs", funcName)
 		assert.True(t, exited, "%s exited", funcName)
