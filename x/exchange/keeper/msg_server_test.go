@@ -1621,9 +1621,9 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.eventCoinSpent(s.addr1, "13apple"),
 				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.addr2, "10apple"),
-				s.eventTransfer(s.addr2, nil, "10apple"),
 				s.eventCoinReceived(s.addr3, "3apple"),
-				s.eventTransfer(s.addr3, nil, "3apple"),
+				s.eventTransfer(s.addr2, s.addr1, "10apple"),
+				s.eventTransfer(s.addr3, s.addr1, "3apple"),
 
 				// Price transfer events.
 				s.eventCoinSpent(s.addr2, "50pear"),
@@ -1631,7 +1631,8 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.eventCoinSpent(s.addr3, "20pear"),
 				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr1, "70pear"),
-				s.eventTransfer(s.addr1, nil, "70pear"),
+				s.eventTransfer(s.addr1, s.addr2, "50pear"),
+				s.eventTransfer(s.addr1, s.addr3, "20pear"),
 
 				// Settlement fee transfer events.
 				s.eventCoinSpent(s.addr2, "35fig"),
@@ -1641,7 +1642,9 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.eventCoinSpent(s.addr1, "9pear"),
 				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.marketAddr1, "67fig,9pear"),
-				s.eventTransfer(s.marketAddr1, nil, "67fig,9pear"),
+				s.eventTransfer(s.marketAddr1, s.addr2, "35fig"),
+				s.eventTransfer(s.marketAddr1, s.addr3, "32fig"),
+				s.eventTransfer(s.marketAddr1, s.addr1, "9pear"),
 
 				// Transfer of exchange portion of settlement fee.
 				s.eventCoinSpent(s.marketAddr1, "4fig,1pear"),
@@ -2109,15 +2112,16 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.eventCoinSpent(s.addr3, "3apple"),
 				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr1, "13apple"),
-				s.eventTransfer(s.addr1, nil, "13apple"),
+				s.eventTransfer(s.addr1, s.addr2, "10apple"),
+				s.eventTransfer(s.addr1, s.addr3, "3apple"),
 
 				// Price transfer events.
 				s.eventCoinSpent(s.addr1, "70pear"),
 				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.addr2, "50pear"),
-				s.eventTransfer(s.addr2, nil, "50pear"),
 				s.eventCoinReceived(s.addr3, "20pear"),
-				s.eventTransfer(s.addr3, nil, "20pear"),
+				s.eventTransfer(s.addr2, s.addr1, "50pear"),
+				s.eventTransfer(s.addr3, s.addr1, "20pear"),
 
 				// Settlement fee transfer events.
 				s.eventCoinSpent(s.addr2, "8pear"),
@@ -2127,7 +2131,9 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.eventCoinSpent(s.addr1, "37fig"),
 				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.marketAddr1, "49fig,10pear"),
-				s.eventTransfer(s.marketAddr1, nil, "49fig,10pear"),
+				s.eventTransfer(s.marketAddr1, s.addr2, "8pear"),
+				s.eventTransfer(s.marketAddr1, s.addr3, "12fig,2pear"),
+				s.eventTransfer(s.marketAddr1, s.addr1, "37fig"),
 
 				// Transfer of exchange portion of settlement fee.
 				s.eventCoinSpent(s.marketAddr1, "3fig,1pear"),
@@ -2397,9 +2403,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr3, "11apple"),
 				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr2, "10apple"),
-				s.eventTransfer(s.addr2, nil, "10apple"),
 				s.eventCoinReceived(s.addr4, "1apple"),
-				s.eventTransfer(s.addr4, nil, "1apple"),
+				s.eventTransfer(s.addr2, s.addr3, "10apple"),
+				s.eventTransfer(s.addr4, s.addr3, "1apple"),
 
 				s.eventCoinSpent(s.addr1, "7apple"),
 				s.eventCoinReceived(s.addr4, "7apple"),
@@ -2415,9 +2421,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr4, "85pear"),
 				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.addr3, "9pear"),
-				s.eventTransfer(s.addr3, nil, "9pear"),
 				s.eventCoinReceived(s.addr1, "76pear"),
-				s.eventTransfer(s.addr1, nil, "76pear"),
+				s.eventTransfer(s.addr3, s.addr4, "9pear"),
+				s.eventTransfer(s.addr1, s.addr4, "76pear"),
 
 				// Orders filled (24-27)
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -2571,9 +2577,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr3, "11apple"),
 				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr2, "10apple"),
-				s.eventTransfer(s.addr2, nil, "10apple"),
 				s.eventCoinReceived(s.addr4, "1apple"),
-				s.eventTransfer(s.addr4, nil, "1apple"),
+				s.eventTransfer(s.addr2, s.addr3, "10apple"),
+				s.eventTransfer(s.addr4, s.addr3, "1apple"),
 
 				s.eventCoinSpent(s.addr1, "7apple"),
 				s.eventCoinReceived(s.addr4, "7apple"),
@@ -2589,9 +2595,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr4, "85pear"),
 				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.addr3, "9pear"),
-				s.eventTransfer(s.addr3, nil, "9pear"),
 				s.eventCoinReceived(s.addr1, "76pear"),
-				s.eventTransfer(s.addr1, nil, "76pear"),
+				s.eventTransfer(s.addr3, s.addr4, "9pear"),
+				s.eventTransfer(s.addr1, s.addr4, "76pear"),
 
 				// Orders filled (24-27)
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -2689,26 +2695,28 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinReceived(s.addr4, "7apple"),
 				s.eventTransfer(s.addr4, s.addr1, "7apple"),
 				s.eventMessageSender(s.addr1),
+
 				s.eventCoinSpent(s.addr3, "11apple"),
 				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr4, "1apple"),
-				s.eventTransfer(s.addr4, nil, "1apple"),
 				s.eventCoinReceived(s.addr2, "10apple"),
-				s.eventTransfer(s.addr2, nil, "10apple"),
+				s.eventTransfer(s.addr4, s.addr3, "1apple"),
+				s.eventTransfer(s.addr2, s.addr3, "10apple"),
 
 				// Price transfers
 				s.eventCoinSpent(s.addr4, "85pear"),
 				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.addr1, "75pear"),
-				s.eventTransfer(s.addr1, nil, "75pear"),
 				s.eventCoinReceived(s.addr3, "10pear"),
-				s.eventTransfer(s.addr3, nil, "10pear"),
+				s.eventTransfer(s.addr1, s.addr4, "75pear"),
+				s.eventTransfer(s.addr3, s.addr4, "10pear"),
+
 				s.eventCoinSpent(s.addr2, "100pear"),
 				s.eventMessageSender(s.addr2),
 				s.eventCoinReceived(s.addr3, "98pear"),
-				s.eventTransfer(s.addr3, nil, "98pear"),
 				s.eventCoinReceived(s.addr1, "2pear"),
-				s.eventTransfer(s.addr1, nil, "2pear"),
+				s.eventTransfer(s.addr3, s.addr2, "98pear"),
+				s.eventTransfer(s.addr1, s.addr2, "2pear"),
 
 				// Orders filled
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -3031,26 +3039,28 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinReceived(s.addr2, "7apple"),
 				s.eventTransfer(s.addr2, s.addr1, "7apple"),
 				s.eventMessageSender(s.addr1),
+
 				s.eventCoinSpent(s.addr3, "11apple"),
 				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr2, "3apple"),
-				s.eventTransfer(s.addr2, nil, "3apple"),
 				s.eventCoinReceived(s.addr4, "8apple"),
-				s.eventTransfer(s.addr4, nil, "8apple"),
+				s.eventTransfer(s.addr2, s.addr3, "3apple"),
+				s.eventTransfer(s.addr4, s.addr3, "8apple"),
 
 				// Price transfers
 				s.eventCoinSpent(s.addr2, "100pear"),
 				s.eventMessageSender(s.addr2),
 				s.eventCoinReceived(s.addr1, "75pear"),
-				s.eventTransfer(s.addr1, nil, "75pear"),
 				s.eventCoinReceived(s.addr3, "25pear"),
-				s.eventTransfer(s.addr3, nil, "25pear"),
+				s.eventTransfer(s.addr1, s.addr2, "75pear"),
+				s.eventTransfer(s.addr3, s.addr2, "25pear"),
+
 				s.eventCoinSpent(s.addr4, "85pear"),
 				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.addr3, "83pear"),
-				s.eventTransfer(s.addr3, nil, "83pear"),
 				s.eventCoinReceived(s.addr1, "2pear"),
-				s.eventTransfer(s.addr1, nil, "2pear"),
+				s.eventTransfer(s.addr3, s.addr4, "83pear"),
+				s.eventTransfer(s.addr1, s.addr4, "2pear"),
 
 				// Fee transfers to market
 				s.eventCoinSpent(s.addr1, "10fig,8pear"),
@@ -3062,7 +3072,10 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr4, "10pear"),
 				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.marketAddr2, "30fig,34pear"),
-				s.eventTransfer(s.marketAddr2, nil, "30fig,34pear"),
+				s.eventTransfer(s.marketAddr2, s.addr1, "10fig,8pear"),
+				s.eventTransfer(s.marketAddr2, s.addr3, "16pear"),
+				s.eventTransfer(s.marketAddr2, s.addr2, "20fig"),
+				s.eventTransfer(s.marketAddr2, s.addr4, "10pear"),
 
 				// Transfers of exchange portion of fees
 				s.eventCoinSpent(s.marketAddr2, "2fig,2pear"),
@@ -3219,11 +3232,11 @@ func (s *TestSuite) TestMsgServer_MarketCommitmentSettle() {
 				s.eventCoinSpent(s.addr1, "95apple"),
 				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.addr2, "57apple"),
-				s.eventTransfer(s.addr2, nil, "57apple"),
 				s.eventCoinReceived(s.addr3, "12apple"),
-				s.eventTransfer(s.addr3, nil, "12apple"),
 				s.eventCoinReceived(s.addr4, "26apple"),
-				s.eventTransfer(s.addr4, nil, "26apple"),
+				s.eventTransfer(s.addr2, s.addr1, "57apple"),
+				s.eventTransfer(s.addr3, s.addr1, "12apple"),
+				s.eventTransfer(s.addr4, s.addr1, "26apple"),
 
 				// Transfer from addr2
 				s.eventCoinSpent(s.addr2, "50plum"),
@@ -3235,9 +3248,9 @@ func (s *TestSuite) TestMsgServer_MarketCommitmentSettle() {
 				s.eventCoinSpent(s.addr3, "77plum"),
 				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr1, "40plum"),
-				s.eventTransfer(s.addr1, nil, "40plum"),
 				s.eventCoinReceived(s.addr4, "37plum"),
-				s.eventTransfer(s.addr4, nil, "37plum"),
+				s.eventTransfer(s.addr1, s.addr3, "40plum"),
+				s.eventTransfer(s.addr4, s.addr3, "37plum"),
 
 				// Fee Transfer
 				s.eventCoinSpent(s.addr1, "2cherry"),
@@ -3245,7 +3258,8 @@ func (s *TestSuite) TestMsgServer_MarketCommitmentSettle() {
 				s.eventCoinSpent(s.addr2, "3cherry"),
 				s.eventMessageSender(s.addr2),
 				s.eventCoinReceived(s.marketAddr3, "5cherry"),
-				s.eventTransfer(s.marketAddr3, nil, "5cherry"),
+				s.eventTransfer(s.marketAddr3, s.addr1, "2cherry"),
+				s.eventTransfer(s.marketAddr3, s.addr2, "3cherry"),
 
 				// re-commits
 				s.eventHoldAddedCommitment(s.addr1, "90plum", 3),

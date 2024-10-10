@@ -231,6 +231,9 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.Equal(t, "provenanced", app.Name())
+	if !simcli.FlagSigverifyTxValue {
+		app.SetNotSigverifyTx()
+	}
 
 	fmt.Printf("running provenance full app simulation\n")
 
@@ -275,6 +278,9 @@ func TestSimple(t *testing.T) {
 	}
 	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.Equal(t, "provenanced", app.Name())
+	if !simcli.FlagSigverifyTxValue {
+		app.SetNotSigverifyTx()
+	}
 
 	// run randomized simulation
 	_, _, simErr := simulation.SimulateFromSeed(
@@ -328,6 +334,9 @@ func TestAppImportExport(t *testing.T) {
 	}
 	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.Equal(t, "provenanced", app.Name())
+	if !simcli.FlagSigverifyTxValue {
+		app.SetNotSigverifyTx()
+	}
 
 	fmt.Printf("running provenance test import export\n")
 
@@ -457,6 +466,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		baseapp.SetChainID(config.ChainID),
 	}
 	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
+	if !simcli.FlagSigverifyTxValue {
+		app.SetNotSigverifyTx()
+	}
 
 	// Run randomized simulation
 	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
@@ -582,6 +594,9 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			db := dbm.NewMemDB()
 			app := New(logger, db, nil, true, appOpts, interBlockCacheOpt(), baseapp.SetChainID(config.ChainID))
+			if !simcli.FlagSigverifyTxValue {
+				app.SetNotSigverifyTx()
+			}
 
 			fmt.Printf(
 				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

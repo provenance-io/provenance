@@ -23,7 +23,9 @@ func PrependToEach(prefix string, lines []string) []string {
 func EventsToStrings(events sdk.Events) []string {
 	var rv []string
 	for i, event := range events {
-		rv = append(rv, PrependToEach(fmt.Sprintf("[%d]", i), EventToStrings(event))...)
+		eventLines := PrependToEach(fmt.Sprintf(" [%d]", i), EventToStrings(event))
+		eventLines[0] = ">" + eventLines[0][1:]
+		rv = append(rv, eventLines...)
 	}
 	return rv
 }
@@ -80,7 +82,12 @@ func AssertEqualEvents(t TB, expected, actual sdk.Events, msgAndArgs ...interfac
 	// This converts them to strings for the comparison so that the failure output is significantly easier to read and understand.
 	expectedStrs := EventsToStrings(expected)
 	actualStrs := EventsToStrings(actual)
-	return assert.Equal(t, expectedStrs, actualStrs, msgAndArgs...)
+	if assert.Equal(t, expectedStrs, actualStrs, msgAndArgs...) {
+		return true
+	}
+	// Log the actual events list for easier comparison with the pre-defined expected ones.
+	t.Logf("Actual events:\n%s", strings.Join(actualStrs, "\n"))
+	return false
 }
 
 // RequireEqualEvents asserts that the expected events equal the actual events.

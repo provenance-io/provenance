@@ -78,7 +78,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
 		WithHomeDir(app.DefaultNodeHome).
-		WithViper("PIO")
+		WithViper(app.EnvPrefix)
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
 
 	rootCmd := &cobra.Command{
