@@ -607,8 +607,7 @@ func (s *UpgradeTestSuite) TestViridian() {
 	s.AssertUpgradeHandlerLogs("viridian", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestMetadataMigration() {
-	// TODO: Delete this test with the rest of the viridian stuff.
+func (s *UpgradeTestSuite) TestMetadataMigration() { // TODO[viridian]: Delete this test after the upgrade.
 	newAddr := func(name string) sdk.AccAddress {
 		switch {
 		case len(name) < 20:

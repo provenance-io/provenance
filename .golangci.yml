@@ -145,6 +145,9 @@ linters-settings:
           - github.com/rs/zerolog
 
           - sigs.k8s.io/yaml
+        deny:
+          - pkg: "github.com/cosmos/cosmos-sdk/x/params"
+            desc: "The params module is no more."
       test:
         files:
           - "$test"

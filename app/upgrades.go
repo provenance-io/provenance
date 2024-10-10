@@ -30,15 +30,15 @@ type appUpgrade struct {
 // If there's nothing that needs to be done for an upgrade, there still needs to be an
 // entry in this map, but it can just be {}.
 //
-// On the same line as the key, there should be a comment indicating the software version.
-// Entries currently in use (e.g. on mainnet or testnet) cannot be deleted.
-// Entries should be in chronological order, earliest first. E.g. quicksilver-rc1 went to
-// testnet first, then quicksilver-rc2 went to testnet, then quicksilver went to mainnet.
-//
 // If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
 // or vice versa, please add comments explaining why in both entries.
+//
+// On the same line as the key, there should be a comment indicating the software version.
+// Entries should be in chronological/alphabetical order, earliest first.
+// I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"viridian-rc1": { // upgrade for v1.20.0-rc1
+		Deleted: []string{paramsName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
@@ -52,6 +52,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"viridian": { // upgrade for v1.20.0
+		Deleted: []string{paramsName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
@@ -64,7 +65,6 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	// TODO - Add new upgrade definitions here.
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
