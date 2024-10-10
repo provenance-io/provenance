@@ -32,11 +32,12 @@ type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 
-	accountKeeper exchange.AccountKeeper
-	attrKeeper    exchange.AttributeKeeper
-	bankKeeper    exchange.BankKeeper
-	holdKeeper    exchange.HoldKeeper
-	markerKeeper  exchange.MarkerKeeper
+	accountKeeper  exchange.AccountKeeper
+	attrKeeper     exchange.AttributeKeeper
+	bankKeeper     exchange.BankKeeper
+	holdKeeper     exchange.HoldKeeper
+	markerKeeper   exchange.MarkerKeeper
+	metadataKeeper exchange.MetadataKeeper
 
 	authority        string
 	feeCollectorName string
@@ -45,6 +46,7 @@ type Keeper struct {
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollectorName string,
 	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
 	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper, markerKeeper exchange.MarkerKeeper,
+	metadataKeeper exchange.MetadataKeeper,
 ) Keeper {
 	rv := Keeper{
 		cdc:              cdc,
@@ -54,6 +56,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 		bankKeeper:       bankKeeper,
 		holdKeeper:       holdKeeper,
 		markerKeeper:     markerKeeper,
+		metadataKeeper:   metadataKeeper,
 		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		feeCollectorName: feeCollectorName,
 	}

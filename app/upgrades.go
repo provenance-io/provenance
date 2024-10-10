@@ -161,6 +161,32 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"viridian-rc1": { // upgrade for v1.20.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			return vm, nil
+		},
+	},
+	"viridian": { // upgrade for v1.20.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			return vm, nil
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 

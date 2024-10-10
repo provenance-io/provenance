@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/internal/provutils"
 )
 
 const (
@@ -44,22 +46,15 @@ func (s Scope) Equals(t Scope) bool {
 
 // ValidateBasic performs basic format checking of data within a scope
 func (s Scope) ValidateBasic() error {
-	prefix, err := VerifyMetadataAddressFormat(s.ScopeId)
-	if err != nil {
+	var err error
+	if err = s.ScopeId.ValidateIsScopeAddress(); err != nil {
 		return err
 	}
-	if prefix != PrefixScope {
-		return fmt.Errorf("invalid scope identifier (expected: %s, got %s)", PrefixScope, prefix)
+
+	if err = s.SpecificationId.ValidateIsScopeSpecificationAddress(); err != nil {
+		return err
 	}
-	if !s.SpecificationId.Empty() {
-		prefix, err = VerifyMetadataAddressFormat(s.SpecificationId)
-		if err != nil {
-			return err
-		}
-		if prefix != PrefixScopeSpecification {
-			return fmt.Errorf("invalid scope specification identifier (expected: %s, got %s)", PrefixScopeSpecification, prefix)
-		}
-	}
+
 	if err = s.ValidateOwnersBasic(); err != nil {
 		return err
 	}
@@ -534,6 +529,12 @@ p1Loop:
 		return false
 	}
 	return true
+}
+
+// FindMissingParties returns all parties from the required list that don't have a same party in the toCheck list.
+// Uses the SamePartiers function to evaluate sameness.
+func FindMissingParties(required, toCheck []Party) []Party {
+	return provutils.FindMissingFunc(required, toCheck, func(r, c Party) bool { return SamePartiers(&r, &c) })
 }
 
 // GetPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.

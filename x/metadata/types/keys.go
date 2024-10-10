@@ -14,9 +14,6 @@ const (
 
 	// RouterKey to be used for routing msgs
 	RouterKey = ModuleName
-
-	// DefaultParamspace is the name used for the parameter subspace for this module.
-	DefaultParamspace = ModuleName
 )
 
 // KVStore Key Prefixes used for iterator/scans against the store and identification of key types
@@ -73,8 +70,6 @@ var (
 	AddressScopeCacheKeyPrefix = []byte{0x17}
 	// ScopeSpecScopeCacheKeyPrefix for scope to scope specification cache lookup
 	ScopeSpecScopeCacheKeyPrefix = []byte{0x11}
-	// ValueOwnerScopeCacheKeyPrefix for scope to value owner address cache lookup
-	ValueOwnerScopeCacheKeyPrefix = []byte{0x18}
 
 	// AddressScopeSpecCacheKeyPrefix for scope spec lookup by address
 	AddressScopeSpecCacheKeyPrefix = []byte{0x19}
@@ -113,16 +108,6 @@ func GetScopeSpecScopeCacheKey(scopeSpecID MetadataAddress, scopeID MetadataAddr
 	return append(GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID), scopeID.Bytes()...)
 }
 
-// GetValueOwnerScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
-func GetValueOwnerScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(ValueOwnerScopeCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
-}
-
-// GetValueOwnerScopeCacheKey returns the store key for an address cache entry
-func GetValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
-	return append(GetValueOwnerScopeCacheIteratorPrefix(addr), scopeID.Bytes()...)
-}
-
 // GetAddressScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given address
 func GetAddressScopeSpecCacheIteratorPrefix(addr sdk.AccAddress) []byte {
 	return append(AddressScopeSpecCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
@@ -158,7 +143,7 @@ func GetOSLocatorKey(addr sdk.AccAddress) []byte {
 	return append(OSLocatorAddressKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
-// NetAssetValueKey returns key [prefix][scope address] for scope net asset values
+// NetAssetValueKeyPrefix returns the [prefix][scope address] part of a scope net asset values key.
 func NetAssetValueKeyPrefix(scopeAddr MetadataAddress) []byte {
 	return append(NetAssetValuePrefix, address.MustLengthPrefix(scopeAddr.Bytes())...)
 }

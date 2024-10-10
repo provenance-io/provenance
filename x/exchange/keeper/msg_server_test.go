@@ -1293,7 +1293,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
-				s.navSetEvent("10apple", "50pear", 3),
+				s.markerNavSetEvent("10apple", "50pear", 3),
 			},
 		},
 		{
@@ -1351,7 +1351,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
-				s.navSetEvent("10apple", "50pear", 3),
+				s.markerNavSetEvent("10apple", "50pear", 3),
 			},
 		},
 		{
@@ -1668,7 +1668,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				}),
 
 				// The net-asset-value event.
-				s.navSetEvent("13apple", "70pear", 1),
+				s.markerNavSetEvent("13apple", "70pear", 1),
 
 				// Order creation fee events.
 				s.eventCoinSpent(s.addr1, "10fig"),
@@ -1780,7 +1780,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
-				s.navSetEvent("10apple", "50pear", 3),
+				s.markerNavSetEvent("10apple", "50pear", 3),
 			},
 		},
 		{
@@ -1838,7 +1838,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
-				s.navSetEvent("10apple", "50pear", 3),
+				s.markerNavSetEvent("10apple", "50pear", 3),
 			},
 		},
 		{
@@ -2154,7 +2154,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				}),
 
 				// The net-asset-value event.
-				s.navSetEvent("13apple", "70pear", 1),
+				s.markerNavSetEvent("13apple", "70pear", 1),
 
 				// Order creation fee events.
 				s.eventCoinSpent(s.addr1, "10fig"),
@@ -2434,7 +2434,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}),
 
 				// The net-asset-value event (28).
-				s.navSetEvent("18apple", "185pear", 1),
+				s.markerNavSetEvent("18apple", "185pear", 1),
 			},
 		},
 		{
@@ -2608,7 +2608,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}),
 
 				// The net-asset-value event (28).
-				s.navSetEvent("18apple", "185pear", 1),
+				s.markerNavSetEvent("18apple", "185pear", 1),
 			},
 		},
 		{
@@ -2725,7 +2725,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}),
 
 				// The net-asset-value event.
-				s.navSetEvent("18apple", "185pear", 1),
+				s.markerNavSetEvent("18apple", "185pear", 1),
 			},
 		},
 		{
@@ -2801,7 +2801,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}),
 
 				// The net-asset-value event.
-				s.navSetEvent("7apple", "75pear", 3),
+				s.markerNavSetEvent("7apple", "75pear", 3),
 			},
 		},
 		{
@@ -2877,7 +2877,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}),
 
 				// The net-asset-value event.
-				s.navSetEvent("7apple", "70pear", 3),
+				s.markerNavSetEvent("7apple", "70pear", 3),
 			},
 		},
 		{
@@ -3085,7 +3085,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}),
 
 				// The net-asset-value event.
-				s.navSetEvent("18apple", "185pear", 2),
+				s.markerNavSetEvent("18apple", "185pear", 2),
 			},
 		},
 	}

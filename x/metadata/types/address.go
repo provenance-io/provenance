@@ -31,6 +31,9 @@ const (
 	PrefixContractSpecification = "contractspec"
 	// PrefixRecordSpecification is the address human readable prefix used with bech32 encoding of RecordSpecification IDs
 	PrefixRecordSpecification = "recspec"
+
+	// DenomPrefix is the string prepended to a metadata address to create the denom for that metadata object.
+	DenomPrefix = "nft/"
 )
 
 var (
@@ -88,6 +91,33 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		}
 	}
 	return hrp, nil
+}
+
+// getNameForHRP returns the more formal name used for each metadata hrp.
+// E.g. if the hrp is PrefixRecordSpecification (i.e. "recspec"), this will return "record specification".
+func getNameForHRP(hrp string) string {
+	switch hrp {
+	case PrefixScope, PrefixSession, PrefixRecord:
+		return hrp
+	case PrefixScopeSpecification, PrefixContractSpecification:
+		return strings.TrimSuffix(hrp, "spec") + " specification"
+	case PrefixRecordSpecification:
+		return "record specification"
+	}
+	return fmt.Sprintf("<%q>", hrp)
+}
+
+// VerifyMetadataAddressHasType makes sure that the provided ma is a valid MetadataAddress
+// and that it has the provided type (e.g. PrefixScope or PrefixContractSpecification, etc.).
+func VerifyMetadataAddressHasType(ma MetadataAddress, expHRP string) error {
+	hrp, err := VerifyMetadataAddressFormat(ma)
+	if err != nil {
+		return fmt.Errorf("invalid %s metadata address %#v: %w", getNameForHRP(expHRP), ma, err)
+	}
+	if hrp != expHRP {
+		return fmt.Errorf("invalid %s id %q: wrong type", getNameForHRP(expHRP), ma)
+	}
+	return nil
 }
 
 // ConvertHashToAddress constructs a MetadataAddress using the provided type code and the raw bytes of the
@@ -171,6 +201,19 @@ func ParseMetadataAddressFromBech32(address string) (MetadataAddress, string, er
 func MetadataAddressFromBech32(address string) (addr MetadataAddress, err error) {
 	bz, _, err := ParseMetadataAddressFromBech32(address)
 	return bz, err
+}
+
+// MetadataAddressFromDenom gets the MetadataAddress that the provided denom is for.
+func MetadataAddressFromDenom(denom string) (MetadataAddress, error) {
+	id := strings.TrimPrefix(denom, DenomPrefix)
+	if id == denom {
+		return nil, fmt.Errorf("denom %q is not a MetadataAddress denom", denom)
+	}
+	rv, err := MetadataAddressFromBech32(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid metadata address in denom %q: %w", denom, err)
+	}
+	return rv, nil
 }
 
 // ScopeMetadataAddress creates a MetadataAddress instance for the given scope by its uuid
@@ -353,7 +396,9 @@ func (ma MetadataAddress) String() string {
 
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	if err != nil {
-		panic(err)
+		// Be careful changing this. The %#v path in MetadataAddress.Format does NOT call this String method,
+		// but %v, %q and %s do. So there would be infinite recursion with some other formatter directives.
+		return fmt.Sprintf("%#v", ma)
 	}
 
 	bech32Addr, err := bech32.ConvertAndEncode(hrp, ma.Bytes())
@@ -644,7 +689,8 @@ func (ma MetadataAddress) Format(s fmt.State, verb rune) {
 			out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
 		}
 	default:
-		// The 'p' (pointer) and 'T' (type) verbs are never processed using this Format method.
+		// The other verbs (e.g. c b o O d x X U) should behave just like if this were a []byte.
+		// Note that the 'p' (pointer) and 'T' (type) verbs are never processed using this Format method.
 		// That's how %T returns the correct type even though it would actually return "[]byte" if run through this.
 		out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
 	}
@@ -704,6 +750,16 @@ func (ma MetadataAddress) isTypeOneOf(options ...[]byte) bool {
 	return false
 }
 
+// ValidateIsScopeAddress returns an error if this isn't a valid MetadataAddress or if it's not a scope.
+func (ma MetadataAddress) ValidateIsScopeAddress() error {
+	return VerifyMetadataAddressHasType(ma, PrefixScope)
+}
+
+// ValidateIsScopeSpecificationAddress returns an error if this isn't a valid MetadataAddress or if it's not a scope specification.
+func (ma MetadataAddress) ValidateIsScopeSpecificationAddress() error {
+	return VerifyMetadataAddressHasType(ma, PrefixScopeSpecification)
+}
+
 // MetadataAddressDetails contains a breakdown of the components in a MetadataAddress.
 type MetadataAddressDetails struct {
 	// Address is the full MetadataAddress in question.
@@ -739,6 +795,7 @@ type MetadataAddressDetails struct {
 	ParentAddress MetadataAddress
 }
 
+// GetDetails breaks this MetadataAddress down into its various components, and returns all the details.
 func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 	// Copying this MetadataAddress to prevent weird behavior.
 	addr := make(MetadataAddress, len(ma))
@@ -800,4 +857,172 @@ func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 		}
 	}
 	return retval
+}
+
+// Denom gets the denom string for this MetadataAddress.
+func (ma MetadataAddress) Denom() string {
+	return DenomPrefix + ma.String()
+}
+
+// Coin creates the singular coin that represents this MetadataAddress.
+func (ma MetadataAddress) Coin() sdk.Coin {
+	return sdk.NewInt64Coin(ma.Denom(), 1)
+}
+
+// Coins creates a Coins with just the singular coin that represents this MetadataAddress.
+func (ma MetadataAddress) Coins() sdk.Coins {
+	return sdk.Coins{sdk.NewInt64Coin(ma.Denom(), 1)}
+}
+
+// AccMDLink associates an account address with a metadata address.
+type AccMDLink struct {
+	AccAddr sdk.AccAddress
+	MDAddr  MetadataAddress
+}
+
+// NewAccMDLink creates a new association between an account address and a metadata address.
+func NewAccMDLink(accAddr sdk.AccAddress, mdAddr MetadataAddress) *AccMDLink {
+	return &AccMDLink{
+		AccAddr: accAddr,
+		MDAddr:  mdAddr,
+	}
+}
+
+const (
+	// nilStr is a string indicating that something is nil.
+	nilStr = "<nil>"
+	// emptyStr is a string indicating that something is empty.
+	emptyStr = "<empty>"
+)
+
+// String returns a string representation of this AccMDLink in the format <AccAddr>:<MDAddr> using bech32 strings.
+func (l *AccMDLink) String() string {
+	if l == nil {
+		return nilStr
+	}
+	return accStr(l.AccAddr) + ":" + mdStr(l.MDAddr)
+}
+
+// accStr returns a string representation of an AccAddress, either bech32 or a string indicating nil or empty.
+func accStr(acc sdk.AccAddress) string {
+	if len(acc) > 0 {
+		return acc.String()
+	}
+	if acc == nil {
+		return nilStr
+	}
+	return emptyStr
+}
+
+// accStr returns a string representation of a MetadataAddress, either bech32 or a string indicating nil or empty.
+func mdStr(md MetadataAddress) string {
+	if len(md) > 0 {
+		return md.String()
+	}
+	if md == nil {
+		return nilStr
+	}
+	return emptyStr
+}
+
+// AccMDLinks is a slice of AccMDLink.
+type AccMDLinks []*AccMDLink
+
+// String returns a string representation of this AccMDLinks.
+func (a AccMDLinks) String() string {
+	if len(a) > 0 {
+		strs := make([]string, len(a))
+		for i, link := range a {
+			strs[i] = link.String()
+		}
+		return "[" + strings.Join(strs, ", ") + "]"
+	}
+	if a == nil {
+		return nilStr
+	}
+	return emptyStr
+}
+
+// ValidateForScopes returns an error in the following cases:
+//   - An entry is nil.
+//   - An entry does not have an AccAddr.
+//   - An entry does not have a MDAddr.
+//   - An MDAddr is not a valid scope id.
+//   - Any MDAddr appears more than once.
+func (a AccMDLinks) ValidateForScopes() error {
+	if len(a) == 0 {
+		return nil
+	}
+
+	seenMDAddrs := make(map[string]int8)
+	for _, link := range a {
+		if link == nil {
+			return errors.New("nil entry not allowed")
+		}
+
+		key := string(link.MDAddr)
+		switch seenMDAddrs[key] {
+		case 0:
+			seenMDAddrs[key] = 1
+			if err := link.MDAddr.ValidateIsScopeAddress(); err != nil {
+				return err
+			}
+		case 1:
+			seenMDAddrs[key] = 2
+			return fmt.Errorf("duplicate metadata address %q not allowed", link.MDAddr)
+		}
+
+		if len(link.AccAddr) == 0 {
+			return fmt.Errorf("no account address associated with metadata address %q", link.MDAddr)
+		}
+	}
+
+	return nil
+}
+
+// GetAccAddrs returns a list of all AccAddr values from this AccMDLinks.
+// Each entry will appear only once and in the order it first appears in this list.
+// Empty and nil entries are ignored.
+func (a AccMDLinks) GetAccAddrs() []sdk.AccAddress {
+	seen := make(map[string]bool)
+	var rv []sdk.AccAddress
+	for _, link := range a {
+		if link == nil || len(link.AccAddr) == 0 {
+			continue
+		}
+		if !seen[string(link.AccAddr)] {
+			seen[string(link.AccAddr)] = true
+			rv = append(rv, link.AccAddr)
+		}
+	}
+	return rv
+}
+
+// GetPrimaryUUIDs extracts the primary UUID out of each MDAddr and converts each to a string.
+// If the MDAddr is nil, empty, or invalid, it's corresponding result will be "".
+func (a AccMDLinks) GetPrimaryUUIDs() []string {
+	if a == nil {
+		return nil
+	}
+	rv := make([]string, len(a))
+	for i, link := range a {
+		if link != nil && len(link.MDAddr) > 0 {
+			id, err := link.MDAddr.PrimaryUUID()
+			if err == nil {
+				rv[i] = id.String()
+			}
+		}
+	}
+	return rv
+}
+
+// GetMDAddrsForAccAddr returns all of the MDAddrs associated with the provided AccAddr.
+func (a AccMDLinks) GetMDAddrsForAccAddr(addr string) []MetadataAddress {
+	var rv []MetadataAddress
+	for _, link := range a {
+		if link != nil && addr == link.AccAddr.String() {
+			rv = append(rv, link.MDAddr)
+		}
+	}
+	return rv
 }

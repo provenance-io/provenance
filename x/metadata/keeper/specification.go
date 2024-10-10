@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -284,7 +285,7 @@ func getMissingContractSpecIndexValues(required, found *contractSpecIndexValues)
 		return *required
 	}
 	rv.SpecificationID = required.SpecificationID
-	rv.OwnerAddresses = findMissing(required.OwnerAddresses, found.OwnerAddresses)
+	rv.OwnerAddresses = provutils.FindMissing(required.OwnerAddresses, found.OwnerAddresses)
 	return rv
 }
 
@@ -512,7 +513,7 @@ func getMissingScopeSpecIndexValues(required, found *scopeSpecIndexValues) scope
 		return *required
 	}
 	rv.SpecificationID = required.SpecificationID
-	rv.OwnerAddresses = findMissing(required.OwnerAddresses, found.OwnerAddresses)
+	rv.OwnerAddresses = provutils.FindMissing(required.OwnerAddresses, found.OwnerAddresses)
 	rv.ContractSpecIDs = FindMissingMdAddr(required.ContractSpecIDs, found.ContractSpecIDs)
 	return rv
 }

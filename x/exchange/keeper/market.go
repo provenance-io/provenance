@@ -1548,7 +1548,7 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 		return fmt.Errorf("%s is not allowed to receive funds", toAddr)
 	}
 	marketAddr := exchange.GetMarketAddress(marketID)
-	xferCtx := markertypes.WithTransferAgent(ctx, admin)
+	xferCtx := markertypes.WithTransferAgents(ctx, admin)
 	if toAddr.Equals(admin) {
 		xferCtx = quarantine.WithBypass(xferCtx)
 	}

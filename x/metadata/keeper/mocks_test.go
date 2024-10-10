@@ -2,14 +2,21 @@ package keeper_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // This file houses mock stuff for use in unit tests.
@@ -325,14 +332,323 @@ func (a *MockAuthorization) Reset() {
 
 // String returns a string of this MockAuthorization and satisfies the authz.Authorization interface.
 func (a *MockAuthorization) String() string {
-	_ = MockAuthorization{
-		Name:              "",
-		AcceptResponse:    authz.AcceptResponse{},
-		AcceptResponseErr: nil,
-		AcceptCalls:       nil,
-	}
 	return fmt.Sprintf("MockAuthorization{%q, %v, %v, %d}", a.Name, a.AcceptResponse, a.AcceptResponseErr, a.AcceptCalls)
 }
 
 // ProtoMessage satisfies the authz.Authorization interface.
 func (a *MockAuthorization) ProtoMessage() {}
+
+var _ keeper.MarkerKeeper = (*MockMarkerKeeper)(nil)
+
+// MockMarkerKeeper is a mocked keeper.MarkerKeeper.
+type MockMarkerKeeper struct {
+	IsMarkerAccountResults map[string]bool
+	IsMarkerAccountCalls   []sdk.AccAddress
+}
+
+func NewMockMarkerKeeper() *MockMarkerKeeper {
+	return &MockMarkerKeeper{
+		IsMarkerAccountResults: make(map[string]bool),
+	}
+}
+
+// WithIsMarkerAccountResults sets up the provided addrs to return true from IsMarkerAccount.
+func (k *MockMarkerKeeper) WithIsMarkerAccountResults(addrs ...sdk.AccAddress) *MockMarkerKeeper {
+	for _, addr := range addrs {
+		k.IsMarkerAccountResults[string(addr)] = true
+	}
+	return k
+}
+
+// ClearResults clears previously recorded calls but leaves the desired results intact.
+func (k *MockMarkerKeeper) ClearResults() {
+	k.IsMarkerAccountCalls = nil
+}
+
+// AssertIsMarkerAccountCalls asserts that calls made to IsMarkerAccount are as expected.
+func (k *MockMarkerKeeper) AssertIsMarkerAccountCalls(t *testing.T, exp []sdk.AccAddress) bool {
+	t.Helper()
+	act := k.IsMarkerAccountCalls
+	if assert.Equal(t, exp, act, "Addrs provided to IsMarkerAccount") {
+		return true
+	}
+	expStrs := addrsCastToStrings(exp)
+	actStrs := addrsCastToStrings(act)
+	assert.Equal(t, expStrs, actStrs, "Addrs (as strings) provided to IsMarkerAccount")
+	return false
+}
+
+func (k *MockMarkerKeeper) GetMarkerByDenom(_ sdk.Context, _ string) (markertypes.MarkerAccountI, error) {
+	panic("MockMarkerKeeper.GetMarkerByDenom not implemented")
+}
+
+func (k *MockMarkerKeeper) IsMarkerAccount(_ sdk.Context, addr sdk.AccAddress) bool {
+	k.IsMarkerAccountCalls = append(k.IsMarkerAccountCalls, addr)
+	return k.IsMarkerAccountResults[string(addr)]
+}
+
+// ensure that the MockBankKeeper implements keeper.BankKeeper.
+var _ keeper.BankKeeper = (*MockBankKeeper)(nil)
+
+// MockBankKeeper is a mocked keeper.BankKeeper.
+type MockBankKeeper struct {
+	BlockedAddrResults map[string]bool
+	MintCoinsResults   []string
+	BurnCoinsResults   []string
+	SendCoinsResults   map[string]string
+	DenomOwnerResults  map[string]DenomOwnerResult
+
+	Calls BankKeeperCalls
+}
+
+// BankKeeperCalls contains records of calls made to the mock bank keeper.
+type BankKeeperCalls struct {
+	BlockedAddr []sdk.AccAddress
+	MintCoins   []*MintBurnCall
+	BurnCoins   []*MintBurnCall
+	SendCoins   []*SendCoinsCall
+	DenomOwner  []string
+}
+
+// NewMockBankKeeper creates a new MockBankKeeper.
+// Usually followed by calls to WithBlockedAddr, WithMintCoinsErrors, WithBurnCoinsErrors,
+// SendCoinsErrors, WithDenomOwnerResult, and/or WithDenomOwnerError.
+func NewMockBankKeeper() *MockBankKeeper {
+	return &MockBankKeeper{
+		BlockedAddrResults: make(map[string]bool),
+		SendCoinsResults:   make(map[string]string),
+		DenomOwnerResults:  make(map[string]DenomOwnerResult),
+	}
+}
+
+// WithBlockedAddr makes the provided addr report as blocked.
+func (k *MockBankKeeper) WithBlockedAddr(addr sdk.AccAddress) *MockBankKeeper {
+	k.BlockedAddrResults[string(addr)] = true
+	return k
+}
+
+// WithMintCoinsErrors queues up the provided strings as errors to return from MintCoins.
+// An entry of "" means no error will be returned for that entry.
+func (k *MockBankKeeper) WithMintCoinsErrors(errs ...string) *MockBankKeeper {
+	k.MintCoinsResults = append(k.MintCoinsResults, errs...)
+	return k
+}
+
+// WithBurnCoinsErrors queues up the provided strings as errors to return from BurnCoins.
+// An entry of "" means no error will be returned for that entry.
+func (k *MockBankKeeper) WithBurnCoinsErrors(errs ...string) *MockBankKeeper {
+	k.BurnCoinsResults = append(k.BurnCoinsResults, errs...)
+	return k
+}
+
+// WithSendCoinsError makes the SendCoins return the provided err for the given fromAddr.
+// An err of "" means no error will be returned for that fromAddr.
+func (k *MockBankKeeper) WithSendCoinsError(fromAddr sdk.AccAddress, err string) *MockBankKeeper {
+	k.SendCoinsResults[string(fromAddr)] = err
+	return k
+}
+
+// WithDenomOwnerResult makes DenomOwner return the given accAddr for the given scope (with nil error).
+func (k *MockBankKeeper) WithDenomOwnerResult(mdAddr types.MetadataAddress, accAddr sdk.AccAddress) *MockBankKeeper {
+	k.DenomOwnerResults[mdAddr.Denom()] = DenomOwnerResult{Owner: accAddr}
+	return k
+}
+
+// WithDenomOwnerError makes DenomOwner return the given err for the given scope (with nil AccAddress).
+func (k *MockBankKeeper) WithDenomOwnerError(mdAddr types.MetadataAddress, err string) *MockBankKeeper {
+	k.DenomOwnerResults[mdAddr.Denom()] = DenomOwnerResult{Err: err}
+	return k
+}
+
+// AssertCalls asserts that all calls made using this bank keeper are equal to the provided expected calls.
+func (k *MockBankKeeper) AssertCalls(t *testing.T, exp BankKeeperCalls) bool {
+	t.Helper()
+	rv := k.AssertBlockedAddrCalls(t, exp.BlockedAddr)
+	rv = k.AssertMintCoinsCalls(t, exp.MintCoins) && rv
+	rv = k.AssertBurnCoinsCalls(t, exp.BurnCoins) && rv
+	rv = k.AssertSendCoinsCalls(t, exp.SendCoins) && rv
+	rv = k.AssertDenomOwnerCalls(t, exp.DenomOwner) && rv
+	return rv
+}
+
+// AssertBlockedAddrCalls asserts that calls made to BlockedAddr are as expected.
+func (k *MockBankKeeper) AssertBlockedAddrCalls(t *testing.T, exp []sdk.AccAddress) bool {
+	t.Helper()
+	act := k.Calls.BlockedAddr
+	if assert.Equal(t, exp, act, "Addrs provided to BlockedAddr") {
+		return true
+	}
+	expStrs := addrsCastToStrings(exp)
+	actStrs := addrsCastToStrings(act)
+	assert.Equal(t, expStrs, actStrs, "Addrs (as strings) provided to BlockedAddr")
+	return false
+}
+
+// AssertMintCoinsCalls asserts that calls made to MintCoins are as expected.
+func (k *MockBankKeeper) AssertMintCoinsCalls(t *testing.T, exp []*MintBurnCall) bool {
+	t.Helper()
+	act := k.Calls.MintCoins
+	if assert.Equal(t, exp, act, "Calls made to MintCoins") {
+		return true
+	}
+	expStrs := mapToStrings(exp)
+	actStrs := mapToStrings(act)
+	assert.Equal(t, expStrs, actStrs, "Calls (as strings) made to MintCoins")
+	return false
+}
+
+// AssertBurnCoinsCalls asserts that calls made to BurnCoins are as expected.
+func (k *MockBankKeeper) AssertBurnCoinsCalls(t *testing.T, exp []*MintBurnCall) bool {
+	t.Helper()
+	act := k.Calls.BurnCoins
+	if assert.Equal(t, exp, act, "Calls made to BurnCoins") {
+		return true
+	}
+	expStrs := mapToStrings(exp)
+	actStrs := mapToStrings(act)
+	assert.Equal(t, expStrs, actStrs, "Calls (as strings) made to BurnCoins")
+	return false
+}
+
+// AssertSendCoinsCalls asserts that calls made to SendCoins are as expected.
+func (k *MockBankKeeper) AssertSendCoinsCalls(t *testing.T, exp []*SendCoinsCall) bool {
+	t.Helper()
+	act := k.Calls.SendCoins
+	if assert.Equal(t, exp, act, "Calls made to SendCoins") {
+		return true
+	}
+	expStrs := mapToStrings(exp)
+	actStrs := mapToStrings(act)
+	assert.Equal(t, expStrs, actStrs, "Calls (as strings) made to SendCoins")
+	return false
+}
+
+// AssertDenomOwnerCalls asserts that calls made to DenomOwner are as expected.
+func (k *MockBankKeeper) AssertDenomOwnerCalls(t *testing.T, exp []string) bool {
+	t.Helper()
+	return assert.Equal(t, exp, k.Calls.DenomOwner, "Calls made to DenomOwner")
+}
+
+// MintBurnCall is the args provided to either MintCoins or BurnCoins.
+type MintBurnCall struct {
+	ModuleName string
+	Coins      sdk.Coins
+}
+
+func (c MintBurnCall) String() string {
+	return c.ModuleName + "_" + c.Coins.String()
+}
+
+func NewMintBurnCall(moduleName string, coins sdk.Coins) *MintBurnCall {
+	return &MintBurnCall{
+		ModuleName: moduleName,
+		Coins:      coins,
+	}
+}
+
+// SendCoinsCall is the args provided to SendCoins.
+type SendCoinsCall struct {
+	FromAddr sdk.AccAddress
+	ToAddr   sdk.AccAddress
+	Amt      sdk.Coins
+}
+
+func (c SendCoinsCall) String() string {
+	return string(c.FromAddr) + "->" + string(c.ToAddr) + ":" + c.Amt.String()
+}
+
+func NewSendCoinsCall(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsCall {
+	return &SendCoinsCall{
+		FromAddr: fromAddr,
+		ToAddr:   toAddr,
+		Amt:      amt,
+	}
+}
+
+// DenomOwnerResult is the args returned by DenomOwner.
+type DenomOwnerResult struct {
+	Owner sdk.AccAddress
+	Err   string
+}
+
+func (k *MockBankKeeper) BlockedAddr(addr sdk.AccAddress) bool {
+	k.Calls.BlockedAddr = append(k.Calls.BlockedAddr, addr)
+	return k.BlockedAddrResults[string(addr)]
+}
+
+func (k *MockBankKeeper) MintCoins(_ context.Context, moduleName string, amt sdk.Coins) error {
+	k.Calls.MintCoins = append(k.Calls.MintCoins, NewMintBurnCall(moduleName, amt))
+	if len(k.MintCoinsResults) > 0 {
+		err := k.MintCoinsResults[0]
+		k.MintCoinsResults = k.MintCoinsResults[1:]
+		if len(err) > 0 {
+			return errors.New(err)
+		}
+	}
+	return nil
+}
+
+func (k *MockBankKeeper) BurnCoins(_ context.Context, moduleName string, amt sdk.Coins) error {
+	k.Calls.BurnCoins = append(k.Calls.BurnCoins, NewMintBurnCall(moduleName, amt))
+	if len(k.BurnCoinsResults) > 0 {
+		err := k.BurnCoinsResults[0]
+		k.BurnCoinsResults = k.BurnCoinsResults[1:]
+		if len(err) > 0 {
+			return errors.New(err)
+		}
+	}
+	return nil
+}
+
+func (k *MockBankKeeper) SendCoins(_ context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	k.Calls.SendCoins = append(k.Calls.SendCoins, NewSendCoinsCall(fromAddr, toAddr, amt))
+	err := k.SendCoinsResults[string(fromAddr)]
+	if len(err) > 0 {
+		return errors.New(err)
+	}
+	return nil
+}
+
+func (k *MockBankKeeper) DenomOwner(_ context.Context, denom string) (sdk.AccAddress, error) {
+	k.Calls.DenomOwner = append(k.Calls.DenomOwner, denom)
+	result, found := k.DenomOwnerResults[denom]
+	if found {
+		if len(result.Err) > 0 {
+			return nil, errors.New(result.Err)
+		}
+		return result.Owner, nil
+	}
+	return nil, nil
+}
+
+func (k *MockBankKeeper) GetScopesForValueOwner(_ context.Context, _ sdk.AccAddress, _ *query.PageRequest) (types.AccMDLinks, *query.PageResponse, error) {
+	panic("not implemented")
+}
+
+// addrsCastToStrings casts each of the provided addrs to strings.
+// This does NOT create bech32 address strings.
+// It's handy when the bytes of the address are known, but not the bech32,
+// but you want to do a string comparison on the slices.
+//
+// To convert them to bech32 address strings, use mapToStrings.
+func addrsCastToStrings(addrs []sdk.AccAddress) []string {
+	if addrs == nil {
+		return nil
+	}
+	rv := make([]string, len(addrs))
+	for i, v := range addrs {
+		rv[i] = string(v)
+	}
+	return rv
+}
+
+func mapToStrings[S ~[]E, E fmt.Stringer](vals S) []string {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]string, len(vals))
+	for i, v := range vals {
+		rv[i] = v.String()
+	}
+	return rv
+}
