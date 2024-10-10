@@ -1,23 +1,8 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
-
-// Parameter store keys.
-// TODO: remove with the umber (v1.19.x) handlers.
-var (
-	KeyAsyncAckAllowList = []byte("AsyncAckAllowList")
-
-	_ paramtypes.ParamSet = &Params{}
-)
-
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
 
 func NewParams(allowedAsyncAckContracts []string) Params {
 	return Params{
@@ -32,30 +17,12 @@ func DefaultParams() Params {
 	}
 }
 
-// ParamSetPairs implements params.ParamSet.
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyAsyncAckAllowList, &p.AllowedAsyncAckContracts, validateAsyncAckAllowList),
-	}
-}
-
 // Validate params.
 func (p Params) Validate() error {
-	return validateAsyncAckAllowList(p.AllowedAsyncAckContracts)
-}
-
-func validateAsyncAckAllowList(i interface{}) error {
-	allowedContracts, ok := i.([]string)
-
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	for _, contract := range allowedContracts {
+	for _, contract := range p.AllowedAsyncAckContracts {
 		if _, err := sdk.AccAddressFromBech32(contract); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
