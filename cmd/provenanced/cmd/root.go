@@ -64,7 +64,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	sdk.SetAddrCacheEnabled(false)
 	defer sdk.SetAddrCacheEnabled(true)
 
-	app.SetConfig(isTestnetFlagSet(), false)
+	app.SetConfig(isTestnetFlagSet(os.Args[1:]), false)
 
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	encodingConfig := tempApp.GetEncodingConfig()
@@ -447,8 +447,8 @@ func getIAVLCacheSize(options servertypes.AppOptions) int {
 // cobra commands. Those commands need to be created and added to the root command well
 // before we get to the point where we're ready to read in config files. But that address
 // codec needs to have the HRP defined, which depends on the --testnet flag.
-func isTestnetFlagSet() bool {
-	for _, arg := range os.Args[1:] {
+func isTestnetFlagSet(args []string) bool {
+	for _, arg := range args {
 		if arg == "-t" || arg == "--testnet" {
 			return true
 		}
