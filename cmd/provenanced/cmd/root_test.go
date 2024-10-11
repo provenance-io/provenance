@@ -10,20 +10,22 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/client/debug"
-
 	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
 
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal"
 )
 
 func TestIAVLConfig(t *testing.T) {
@@ -333,4 +335,376 @@ func appendIfNew(slice []string, elems ...string) []string {
 		}
 	}
 	return slice
+}
+
+func TestIsTestnetFlagSet(t *testing.T) {
+	envVar := "PIO_TESTNET"
+
+	tests := []struct {
+		name    string
+		envArgs map[string]string
+		args    []string
+		exp     bool
+	}{
+		{
+			name: "no env, nil args",
+			args: nil,
+			exp:  false,
+		},
+		{
+			name: "no env, empty args",
+			args: make([]string, 0),
+			exp:  false,
+		},
+		{
+			name: "one arg: -t",
+			args: []string{"-t"},
+			exp:  true,
+		},
+		{
+			name: "one arg: -t=true",
+			args: []string{"-t=true"},
+			exp:  true,
+		},
+		{
+			name: "one arg: -t=false",
+			args: []string{"-t=false"},
+			exp:  false,
+		},
+		{
+			name: "one arg: -t=xxx",
+			args: []string{"-t=xxx"},
+			exp:  false,
+		},
+		{
+			name: "one arg: --testnet",
+			args: []string{"--testnet"},
+			exp:  true,
+		},
+		{
+			name: "one arg: --testnet=true",
+			args: []string{"--testnet=true"},
+			exp:  true,
+		},
+		{
+			name: "one arg: --testnet=false",
+			args: []string{"--testnet=false"},
+			exp:  false,
+		},
+		{
+			name: "one arg: --testnet=xxx",
+			args: []string{"--testnet=xxx"},
+			exp:  false,
+		},
+		{
+			name: "five args: -t first",
+			args: []string{"-t", "two", "three", "four", "five"},
+			exp:  true,
+		},
+		{
+			name: "five args: --testnet third",
+			args: []string{"one", "two", "--testnet", "four", "five"},
+			exp:  true,
+		},
+		{
+			name: "five args: --testnet=true fifth",
+			args: []string{"one", "two", "three", "four", "--testnet=true"},
+			exp:  true,
+		},
+		{
+			name: "five args: none of interest",
+			args: []string{"one", "two", "three", "four", "five"},
+			exp:  false,
+		},
+		{
+			name: "two args: --testnet=true --testnet=false",
+			args: []string{"--testnet=true", "--testnet=false"},
+			exp:  false,
+		},
+		{
+			name: "two args: --testnet=false --testnet",
+			args: []string{"--testnet=false", "--testnet"},
+			exp:  true,
+		},
+		{
+			name:    "env var: true",
+			envArgs: map[string]string{envVar: "true"},
+			exp:     true,
+		},
+		{
+			name:    "env var: false",
+			envArgs: map[string]string{envVar: "false"},
+			exp:     false,
+		},
+		{
+			name:    "env var: xxx",
+			envArgs: map[string]string{envVar: "xxx"},
+			exp:     false,
+		},
+		{
+			name:    "env var but lower-case",
+			envArgs: map[string]string{strings.ToLower(envVar): "true"},
+			exp:     false,
+		},
+		{
+			name:    "env var false, args true",
+			envArgs: map[string]string{envVar: "false"},
+			args:    []string{"-t"},
+			exp:     true,
+		},
+		{
+			name:    "env var true, args false",
+			envArgs: map[string]string{envVar: "true"},
+			args:    []string{"--testnet=false"},
+			exp:     false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			for k, v := range tc.envArgs {
+				t.Setenv(k, v)
+			}
+			var actual bool
+			testFunc := func() {
+				actual = isTestnetFlagSet(tc.args)
+			}
+			require.NotPanics(t, testFunc, "isTestnetFlagSet")
+			assert.Equal(t, tc.exp, actual, "result from isTestnetFlagSet")
+		})
+	}
+}
+
+func TestGetTelemetryGlobalLabels(t *testing.T) {
+	newTestOpts := func(enabled, globalLabels interface{}) servertypes.AppOptions {
+		return testOpts{
+			telEnabledKey:      enabled,
+			telGlobalLabelsKey: globalLabels,
+		}
+	}
+	newViperOpts := func(enabled, globalLabels interface{}) servertypes.AppOptions {
+		vpr := viper.New()
+		if enabled != nil {
+			vpr.Set(telEnabledKey, enabled)
+		}
+		if globalLabels != nil {
+			vpr.Set(telGlobalLabelsKey, globalLabels)
+		}
+		return vpr
+	}
+
+	funcLogKV := "function=getTelemetryGlobalLabels"
+
+	tests := []struct {
+		name            string
+		appOpts         servertypes.AppOptions
+		expGlobalLabels [][]string
+		expEnabled      bool
+		expLogLines     []string
+	}{
+		{
+			name:            "nil appOpts",
+			appOpts:         nil,
+			expGlobalLabels: nil,
+			expEnabled:      false,
+			expLogLines:     []string{"DBG No app options available. " + funcLogKV},
+		},
+		{
+			name:            "viper: empty",
+			appOpts:         newViperOpts(nil, nil),
+			expGlobalLabels: make([][]string, 0),
+			expEnabled:      false,
+			expLogLines: []string{"DBG Using Telemetry config from app config. " + funcLogKV +
+				" " + telEnabledKey + "=false " + telGlobalLabelsKey + "=[]"},
+		},
+		{
+			name:            "viper: only enabled true",
+			appOpts:         newViperOpts(true, nil),
+			expGlobalLabels: make([][]string, 0),
+			expEnabled:      true,
+			expLogLines: []string{"DBG Using Telemetry config from app config. " + funcLogKV +
+				" " + telEnabledKey + "=true " + telGlobalLabelsKey + "=[]"},
+		},
+		{
+			name:            "viper: only enabled false",
+			appOpts:         newViperOpts(false, nil),
+			expGlobalLabels: make([][]string, 0),
+			expEnabled:      false,
+			expLogLines: []string{"DBG Using Telemetry config from app config. " + funcLogKV +
+				" " + telEnabledKey + "=false " + telGlobalLabelsKey + "=[]"},
+		},
+		{
+			name:            "viper: only global labels",
+			appOpts:         newViperOpts(nil, [][]string{{"arg1", "arg2"}}),
+			expGlobalLabels: [][]string{{"arg1", "arg2"}},
+			expEnabled:      false,
+			expLogLines: []string{"DBG Using Telemetry config from app config. " + funcLogKV +
+				" " + telEnabledKey + "=false " + telGlobalLabelsKey + "=[[\"arg1\",\"arg2\"]]"},
+		},
+		{
+			name:            "viper: enabled true and global labels",
+			appOpts:         newViperOpts(true, [][]string{{"arg1", "arg2"}, {"arg3", "arg4", "arg5"}}),
+			expGlobalLabels: [][]string{{"arg1", "arg2"}, {"arg3", "arg4", "arg5"}},
+			expEnabled:      true,
+			expLogLines: []string{"DBG Using Telemetry config from app config. " + funcLogKV +
+				" " + telEnabledKey + "=true " + telGlobalLabelsKey + "=[[\"arg1\",\"arg2\"],[\"arg3\",\"arg4\",\"arg5\"]]"},
+		},
+		{
+			name:            "viper: enabled false and global labels",
+			appOpts:         newViperOpts(false, [][]string{{"arg1", "arg2"}}),
+			expGlobalLabels: [][]string{{"arg1", "arg2"}},
+			expEnabled:      false,
+			expLogLines: []string{"DBG Using Telemetry config from app config. " + funcLogKV +
+				" " + telEnabledKey + "=false " + telGlobalLabelsKey + "=[[\"arg1\",\"arg2\"]]"},
+		},
+		{
+			name:            "viper: error parsing",
+			appOpts:         newViperOpts(true, struct{}{}),
+			expGlobalLabels: nil,
+			expEnabled:      true,
+			expLogLines: []string{
+				"DBG Error parsing app config to get telemetry config (ignoring). " +
+					"error=\"1 error(s) decoding:\\n\\n* '" + telGlobalLabelsKey + "[0][0]' expected type 'string', " +
+					"got unconvertible type 'struct {}', value: '{}'\" " + funcLogKV,
+				"DBG App option " + telGlobalLabelsKey + " is not [][]string, is struct {} " + funcLogKV +
+					" " + telGlobalLabelsKey + "={}",
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=true " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: empty",
+			appOpts:         newTestOpts(nil, nil),
+			expGlobalLabels: nil,
+			expEnabled:      false,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=false " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: only enabled true",
+			appOpts:         newTestOpts(true, nil),
+			expGlobalLabels: nil,
+			expEnabled:      true,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=true " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: only enabled false",
+			appOpts:         newTestOpts(false, nil),
+			expGlobalLabels: nil,
+			expEnabled:      false,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=false " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: only global labels, right type",
+			appOpts:         newTestOpts(nil, [][]string{{"val1", "valtwo"}}),
+			expGlobalLabels: nil, // not returned because it's not enabled.
+			expEnabled:      false,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=false " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: only global labels, wrong type",
+			appOpts:         newTestOpts(nil, struct{}{}),
+			expGlobalLabels: nil, // not returned because it's not enabled.
+			expEnabled:      false,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=false " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: enabled true and global labels, right type",
+			appOpts:         newTestOpts(true, [][]string{{"val1", "valtwo"}}),
+			expGlobalLabels: [][]string{{"val1", "valtwo"}}, // not returned because it's not enabled.
+			expEnabled:      true,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=true " + telGlobalLabelsKey + "=[[\"val1\",\"valtwo\"]]",
+			},
+		},
+		{
+			name:            "not-viper: enabled true and global labels, wrong type",
+			appOpts:         newTestOpts(true, struct{}{}),
+			expGlobalLabels: nil,
+			expEnabled:      true,
+			expLogLines: []string{
+				"DBG App option " + telGlobalLabelsKey + " is not [][]string, is struct {} " + funcLogKV +
+					" " + telGlobalLabelsKey + "={}",
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=true " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: enabled false and global labels, right type",
+			appOpts:         newTestOpts(false, [][]string{{"val1", "valtwo"}}),
+			expGlobalLabels: nil, // not returned because it's not enabled.
+			expEnabled:      false,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=false " + telGlobalLabelsKey + "=null",
+			},
+		},
+		{
+			name:            "not-viper: enabled false and global labels, wrong type",
+			appOpts:         newTestOpts(false, struct{}{}),
+			expGlobalLabels: nil, // not returned because it's not enabled.
+			expEnabled:      false,
+			expLogLines: []string{
+				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
+					telEnabledKey + "=false " + telGlobalLabelsKey + "=null",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var logBuffer bytes.Buffer
+			logger := internal.NewBufferedDebugLogger(&logBuffer)
+			var actGlobalLabels [][]string
+			var actEnabled bool
+			testFunc := func() {
+				actGlobalLabels, actEnabled = getTelemetryGlobalLabels(logger, tc.appOpts)
+			}
+			require.NotPanics(t, testFunc, "getTelemetryGlobalLabels")
+			logs := logBuffer.String()
+			assert.Equal(t, tc.expGlobalLabels, actGlobalLabels, "global labels from getTelemetryGlobalLabels")
+			assert.Equal(t, tc.expEnabled, actEnabled, "enabled bool from getTelemetryGlobalLabels")
+			logLines := internal.SplitLogLines(logs)
+			if !assert.Equal(t, tc.expLogLines, logLines, "lines logged during getTelemetryGlobalLabels") {
+				t.Logf("full logs from getTelemetryGlobalLabels:\n%s", logs)
+			}
+		})
+	}
+}
+
+func TestTelemetryKeysCanary(t *testing.T) {
+	// This test will hopefully fail if the SDK ever makes a change that would mess up getTelemetryGlobalLabels.
+	// So if this test fails, you'll need to update getTelemetryGlobalLabels (and this) to account for the changes.
+
+	// Get all of the app config field names so that we can ensure that the ones we use in
+	// getTelemetryGlobalLabels still exist. Also, make sure they have the expected types.
+	appCfg := serverconfig.Config{}
+	appCfgMap := config.MakeFieldValueMap(appCfg, true)
+
+	if assert.Contains(t, appCfgMap, telEnabledKey, "Field %q does not exist in the app config.", telEnabledKey) {
+		expType := "bool"
+		actType := fmt.Sprintf("%T", appCfg.Telemetry.Enabled)
+		assert.Equal(t, expType, actType, "type of appCfg.Telemetry.Enabled")
+	}
+
+	if assert.Contains(t, appCfgMap, telGlobalLabelsKey, "Field %q does not exist in the app config.", telGlobalLabelsKey) {
+		expType := "[][]string"
+		actType := fmt.Sprintf("%T", appCfg.Telemetry.GlobalLabels)
+		assert.Equal(t, expType, actType, "type of appCfg.Telemetry.GlobalLabels")
+	}
 }

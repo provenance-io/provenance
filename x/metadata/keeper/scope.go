@@ -147,10 +147,8 @@ func (k Keeper) writeScopeToState(ctx sdk.Context, scope types.Scope) {
 
 	var oldScope *types.Scope
 	var event proto.Message = types.NewEventScopeCreated(scope.ScopeId)
-	action := types.TLAction_Created
 	if store.Has(scope.ScopeId) {
 		event = types.NewEventScopeUpdated(scope.ScopeId)
-		action = types.TLAction_Updated
 		if oldScopeBytes := store.Get(scope.ScopeId); len(oldScopeBytes) > 0 {
 			os, err := k.readScopeBz(oldScopeBytes)
 			if err != nil {
@@ -165,7 +163,6 @@ func (k Keeper) writeScopeToState(ctx sdk.Context, scope types.Scope) {
 	store.Set(scope.ScopeId, b)
 	k.indexScope(store, &scope, oldScope)
 	k.EmitEvent(ctx, event)
-	defer types.GetIncObjFunc(types.TLType_Scope, action)
 }
 
 // RemoveScope removes a scope from the module kv store along with all its records and sessions.
@@ -197,7 +194,6 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) error {
 	k.indexScope(store, nil, &scope)
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
-	defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Deleted)
 	return nil
 }
 
