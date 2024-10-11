@@ -1,12 +1,9 @@
 package types
 
 import (
-	"fmt"
-
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
@@ -22,20 +19,6 @@ func DefaultFloorGasPrice() sdk.Coin {
 
 var DefaultNhashPerUsdMil = uint64(25_000_000)
 
-// TODO: remove with the umber (v1.19.x) handlers.
-var (
-	// ParamStoreKeyFloorGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
-	// and additional fees.
-	ParamStoreKeyFloorGasPrice      = []byte("FloorGasPrice")
-	ParamStoreKeyNhashPerUsdMil     = []byte("NhashPerUsdMil")
-	ParamStoreKeyConversionFeeDenom = []byte("ConversionFeeDenom")
-)
-
-// ParamKeyTable for marker module
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
-
 // NewParams creates a new parameter object
 func NewParams(
 	floorGasPrice sdk.Coin,
@@ -49,15 +32,6 @@ func NewParams(
 	}
 }
 
-// ParamSetPairs - Implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateCoinParam),
-		paramtypes.NewParamSetPair(ParamStoreKeyNhashPerUsdMil, &p.NhashPerUsdMil, validateNhashPerUsdMilParam),
-		paramtypes.NewParamSetPair(ParamStoreKeyConversionFeeDenom, &p.ConversionFeeDenom, validateConversionFeeDenomParam),
-	}
-}
-
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return NewParams(
@@ -65,57 +39,4 @@ func DefaultParams() Params {
 		DefaultNhashPerUsdMil,
 		pioconfig.GetProvenanceConfig().FeeDenom,
 	)
-}
-
-// Equal returns true if the given value is equivalent to the current instance of params
-func (p *Params) Equal(that interface{}) bool {
-	if that == nil {
-		return p == nil
-	}
-
-	that1, ok := that.(*Params)
-	if !ok {
-		that2, ok := that.(Params)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return p == nil
-	} else if p == nil {
-		return false
-	}
-	return true
-}
-
-func validateCoinParam(i interface{}) error {
-	coin, ok := i.(sdk.Coin)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	// validate appropriate Coin
-	if coin.Validate() != nil {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	return nil
-}
-
-func validateNhashPerUsdMilParam(i interface{}) error {
-	_, ok := i.(uint64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
-func validateConversionFeeDenomParam(i interface{}) error {
-	_, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
 }

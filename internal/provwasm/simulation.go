@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -52,10 +51,10 @@ type Wrapper struct {
 	wk   *wasmkeeper.Keeper
 }
 
-func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router wasmkeeper.MessageRouter, ss exported.Subspace) *Wrapper {
+func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router wasmkeeper.MessageRouter) *Wrapper {
 	return &Wrapper{
 		cdc:  cdc,
-		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
+		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, nil),
 		ak:   ak,
 		bk:   bk,
 		nk:   nk,
