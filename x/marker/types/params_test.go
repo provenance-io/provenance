@@ -14,8 +14,6 @@ import (
 func TestDefaultParams(t *testing.T) {
 	p := DefaultParams()
 
-	require.NotNil(t, ParamKeyTable())
-
 	require.NotNil(t, p)
 	require.Equal(t, DefaultUnrestrictedDenomRegex, p.UnrestrictedDenomRegex)
 	require.Equal(t, DefaultEnableGovernance, p.EnableGovernance)
@@ -45,47 +43,6 @@ func TestParamString(t *testing.T) {
 	p := DefaultParams()
 	actual := p.String()
 	require.Equal(t, expected, actual)
-}
-
-func TestParamSetPairs(t *testing.T) {
-	p := DefaultParams()
-	pairs := p.ParamSetPairs()
-	require.Equal(t, 4, len(pairs))
-
-	for i := range pairs {
-		switch string(pairs[i].Key) {
-		case string(ParamStoreKeyEnableGovernance):
-			require.Error(t, pairs[i].ValidatorFn("foo"))
-			require.NoError(t, pairs[i].ValidatorFn(true))
-		case string(ParamStoreKeyMaxTotalSupply):
-			require.Error(t, pairs[i].ValidatorFn("foo"))
-			require.Error(t, pairs[i].ValidatorFn(-1000))
-			require.NoError(t, pairs[i].ValidatorFn(uint64(1000)))
-		case string(ParamStoreKeyMaxSupply):
-			require.Error(t, pairs[i].ValidatorFn("foo"))
-			require.Error(t, pairs[i].ValidatorFn(-1000))
-			require.Error(t, pairs[i].ValidatorFn(1000))
-			bigint, _ := sdkmath.NewIntFromString("1944674407370955516150")
-			require.NoError(t, pairs[i].ValidatorFn(bigint))
-			require.NoError(t, pairs[i].ValidatorFn(sdkmath.NewInt(1000)))
-		case string(ParamStoreKeyUnrestrictedDenomRegex):
-			require.Error(t, pairs[i].ValidatorFn(1))
-			require.Error(t, pairs[i].ValidatorFn("\\!(")) // invalid regex
-			require.NoError(t, pairs[i].ValidatorFn("[a-z].*"))
-
-			// Prohibit use of anchors (these are always enforced and will be added to every expression)
-			require.Error(t, pairs[i].ValidatorFn("^[a-z].*"))
-			require.Error(t, pairs[i].ValidatorFn("^[a-z].*$"))
-			require.Error(t, pairs[i].ValidatorFn("[a-z].*$"))
-
-			// If the expression contains the anchors but they are not at the end of the expression that is allowed (however unrealistic)
-			require.NoError(t, pairs[i].ValidatorFn("[a-z].*$."))
-			require.NoError(t, pairs[i].ValidatorFn(".^[a-z].*$."))
-
-		default:
-			require.Fail(t, "unexpected param set pair")
-		}
-	}
 }
 
 func TestStringToBigInt(t *testing.T) {
