@@ -492,8 +492,9 @@ const (
 
 // getTelemetryGlobalLabels will extract the telemetry.global-labels and telemetry.enabled info from the appOpts.
 func getTelemetryGlobalLabels(logger log.Logger, appOpts servertypes.AppOptions) ([][]string, bool) {
+	logger = logger.With("function", "getTelemetryGlobalLabels")
 	if appOpts == nil {
-		logger.Debug("getTelemetryGlobalLabels: No app options available.")
+		logger.Debug("No app options available.")
 		return nil, false
 	}
 
@@ -503,12 +504,12 @@ func getTelemetryGlobalLabels(logger log.Logger, appOpts servertypes.AppOptions)
 	if vpr, ok := appOpts.(*viper.Viper); ok {
 		appCfg, err := serverconfig.ParseConfig(vpr)
 		if err == nil {
-			logger.Debug("getTelemetryGlobalLabels: Using Telemetry config from app config.",
+			logger.Debug("Using Telemetry config from app config.",
 				telEnabledKey, appCfg.Telemetry.Enabled,
 				telGlobalLabelsKey, appCfg.Telemetry.GlobalLabels)
 			return appCfg.Telemetry.GlobalLabels, appCfg.Telemetry.Enabled
 		}
-		logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: (ignoring) Error parsing app config to get telemetry config: %v.", err))
+		logger.Debug("Error parsing app config to get telemetry config (ignoring).", "error", err)
 		// I've no clue what might cause that error, but let's try getting stuff the hard way.
 	}
 
@@ -516,25 +517,18 @@ func getTelemetryGlobalLabels(logger log.Logger, appOpts servertypes.AppOptions)
 	// the SDK decides not to use viper for the appOpts in all situations that get us here.
 
 	enabled := cast.ToBool(appOpts.Get(telEnabledKey))
-	logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: App options %q = %t.", telEnabledKey, enabled))
-	if !enabled {
-		return nil, enabled
+	var globalLabels [][]string
+	if enabled {
+		if glRaw := appOpts.Get(telGlobalLabelsKey); glRaw != nil {
+			var ok bool
+			globalLabels, ok = glRaw.([][]string)
+			if !ok {
+				logger.Debug(fmt.Sprintf("App option %s is not [][]string, is %T", telGlobalLabelsKey, glRaw),
+					"telemetry.global-labels", glRaw)
+			}
+		}
 	}
 
-	glRaw := appOpts.Get(telGlobalLabelsKey)
-	if glRaw == nil {
-		logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: App option %q is not available.", telGlobalLabelsKey))
-		return nil, enabled
-	}
-
-	gl, ok := glRaw.([][]string)
-	if !ok {
-		logger.Debug(fmt.Sprintf("getTelemetryGlobalLabels: App option %q is not [][]string, is %T", telGlobalLabelsKey, glRaw),
-			"telemetry.global-labels", glRaw)
-		return nil, enabled
-	}
-
-	logger.Debug("getTelemetryGlobalLabels: Extracted telemetry setup from app options.",
-		telEnabledKey, enabled, telGlobalLabelsKey, gl)
-	return gl, enabled
+	logger.Debug("Extracted telemetry setup from app options.", telEnabledKey, enabled, telGlobalLabelsKey, globalLabels)
+	return globalLabels, enabled
 }
