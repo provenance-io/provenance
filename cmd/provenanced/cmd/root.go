@@ -13,12 +13,14 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	cmtconfig "github.com/cometbft/cometbft/config"
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -64,7 +66,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	sdk.SetAddrCacheEnabled(false)
 	defer sdk.SetAddrCacheEnabled(true)
 
-	app.SetConfig(isTestnetFlagSet(), false)
+	app.SetConfig(isTestnetFlagSet(os.Args[1:]), false)
 
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	encodingConfig := tempApp.GetEncodingConfig()
@@ -305,6 +307,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 	return app.New(
 		logger, db, traceStore, true, appOpts,
+		setStoreMetrics(getTelemetryGlobalLabels(logger, appOpts)),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -438,18 +441,94 @@ func getIAVLCacheSize(options servertypes.AppOptions) int {
 	return iavlCacheSize
 }
 
-// isTestnetFlagSet returns true if the command was invoked with the --testnet flag.
-// This should be the same as viper.Get("testnet"), but can be used without needing
-// to set up viper.
-func isTestnetFlagSet() bool {
+// isTestnetFlagSet returns true if the args or env vars say to use testnet values.
+// It differs from viper.Get("testnet") in that this will not look into any config files.
+// That shouldn't be a problem because it's not in any of the templates. So someone would
+// need to have it in a custom.toml file, which I don't think anyone utilizes.
+//
+// We need this because the SDK requires an address codec in order to create most of their
+// cobra commands. Those commands need to be created and added to the root command well
+// before we get to the point where we're ready to read in config files. But that address
+// codec needs to have the HRP defined, which depends on the --testnet flag.
+func isTestnetFlagSet(args []string) bool {
+	// Go through the args backwards so that if multiple testnet flags are provided, the last one is used.
+	for i := len(args) - 1; i >= 0; i-- {
+		arg := args[i]
+		if arg == "-t" || arg == "--testnet" {
+			return true
+		}
+		if strings.HasPrefix(arg, "-t=") {
+			return cast.ToBool(arg[3:])
+		}
+		if strings.HasPrefix(arg, "--testnet=") {
+			return cast.ToBool(arg[10:])
+		}
+	}
 	ev := os.Getenv("PIO_TESTNET")
 	if len(ev) > 0 {
 		return cast.ToBool(ev)
 	}
-	for _, arg := range os.Args[1:] {
-		if arg == "-t" || arg == "--testnet" {
-			return true
+	return false
+}
+
+// setStoreMetrics returns a baseapp option func that will set the store metrics if enabled.
+func setStoreMetrics(globalLabels [][]string, enabled bool) func(*baseapp.BaseApp) {
+	return func(bApp *baseapp.BaseApp) {
+		if enabled {
+			bApp.SetStoreMetrics(metrics.NewMetrics(globalLabels))
 		}
 	}
-	return false
+}
+
+// These keys are used to get specific telemetry config values.
+// The "telemetry" part is the mapstruct name of the Telemetry field in the serverconfig.Config struct.
+// The second part is the mapstruct name of the desired field in the Telemetry.Config struct.
+const (
+	// telEnabledKey is the field name for the serverconfig.Config.Telemetry.Enabled field.
+	telEnabledKey = "telemetry.enabled"
+	// telGlobalLabelsKey is the field name for the serverconfig.Config.Telemetry.GlobalLabels field.
+	telGlobalLabelsKey = "telemetry.global-labels"
+)
+
+// getTelemetryGlobalLabels will extract the telemetry.global-labels and telemetry.enabled info from the appOpts.
+func getTelemetryGlobalLabels(logger log.Logger, appOpts servertypes.AppOptions) ([][]string, bool) {
+	logger = logger.With("function", "getTelemetryGlobalLabels")
+	if appOpts == nil {
+		logger.Debug("No app options available.")
+		return nil, false
+	}
+
+	// Most of the time appOpts is just a Viper instance, but there's no guarantee that it is.
+	// If it is, we can use the SDK's stuff to identify the telemetry config values.
+	// Otherwise, we'll try getting what we need directly from appOpts (which is less certain to be right).
+	if vpr, ok := appOpts.(*viper.Viper); ok {
+		appCfg, err := serverconfig.ParseConfig(vpr)
+		if err == nil {
+			logger.Debug("Using Telemetry config from app config.",
+				telEnabledKey, appCfg.Telemetry.Enabled,
+				telGlobalLabelsKey, appCfg.Telemetry.GlobalLabels)
+			return appCfg.Telemetry.GlobalLabels, appCfg.Telemetry.Enabled
+		}
+		logger.Debug("Error parsing app config to get telemetry config (ignoring).", "error", err)
+		// I've no clue what might cause that error, but let's try getting stuff the hard way.
+	}
+
+	// There's some unit tests that don't use viper for the appOpts, but this is mostly here in case
+	// the SDK decides not to use viper for the appOpts in all situations that get us here.
+
+	enabled := cast.ToBool(appOpts.Get(telEnabledKey))
+	var globalLabels [][]string
+	if enabled {
+		if glRaw := appOpts.Get(telGlobalLabelsKey); glRaw != nil {
+			var ok bool
+			globalLabels, ok = glRaw.([][]string)
+			if !ok {
+				logger.Debug(fmt.Sprintf("App option %s is not [][]string, is %T", telGlobalLabelsKey, glRaw),
+					"telemetry.global-labels", glRaw)
+			}
+		}
+	}
+
+	logger.Debug("Extracted telemetry setup from app options.", telEnabledKey, enabled, telGlobalLabelsKey, globalLabels)
+	return globalLabels, enabled
 }
