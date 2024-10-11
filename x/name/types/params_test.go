@@ -9,8 +9,6 @@ import (
 func TestDefaultParams(t *testing.T) {
 	p := DefaultParams()
 
-	require.NotNil(t, ParamKeyTable())
-
 	require.NotNil(t, p)
 	require.Equal(t, DefaultMinSegmentLength, p.MinSegmentLength)
 	require.Equal(t, DefaultMaxSegmentLength, p.MaxSegmentLength)
@@ -31,32 +29,4 @@ func TestDefaultParams(t *testing.T) {
 func TestParamString(t *testing.T) {
 	p := DefaultParams()
 	require.Equal(t, `max_segment_length:32 min_segment_length:2 max_name_levels:16 allow_unrestricted_names:true `, p.String())
-}
-
-func TestParamSetPairs(t *testing.T) {
-	p := DefaultParams()
-	pairs := p.ParamSetPairs()
-	require.Equal(t, 4, len(pairs))
-
-	for i := range pairs {
-		switch string(pairs[i].Key) {
-		case string(ParamStoreKeyAllowUnrestrictedNames):
-			require.Error(t, pairs[i].ValidatorFn("foo"))
-			require.NoError(t, pairs[i].ValidatorFn(true))
-		case string(ParamStoreKeyMaxSegmentLength):
-			require.Error(t, pairs[i].ValidatorFn("foo"))
-			require.Error(t, pairs[i].ValidatorFn(-1000))
-			require.NoError(t, pairs[i].ValidatorFn(uint32(1000)))
-		case string(ParamStoreKeyMinSegmentLength):
-			require.Error(t, pairs[i].ValidatorFn("foo"))
-			require.Error(t, pairs[i].ValidatorFn(-1000))
-			require.NoError(t, pairs[i].ValidatorFn(uint32(1000)))
-		case string(ParamStoreKeyMaxNameLevels):
-			require.Error(t, pairs[i].ValidatorFn("foo"))
-			require.Error(t, pairs[i].ValidatorFn(-1000))
-			require.NoError(t, pairs[i].ValidatorFn(uint32(1000)))
-		default:
-			require.Fail(t, "unexpected param set pair")
-		}
-	}
 }

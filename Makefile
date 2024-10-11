@@ -519,7 +519,7 @@ proto-format:
 			-not -path './vendor/*' \
 			-not -path './protoBindings/*' \
 			-name '*.proto' \
-			-exec clang-format -i {} \; ; \
+			-exec clang-format -i {} \; ;
 
 proto-lint:
 	@echo "Linting Protobuf files"
