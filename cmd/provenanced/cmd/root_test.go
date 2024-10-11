@@ -335,6 +335,142 @@ func appendIfNew(slice []string, elems ...string) []string {
 	return slice
 }
 
-// TODO[telemetry]: func TestIsTestnetFlagSet(t *testing.T) {}
+func TestIsTestnetFlagSet(t *testing.T) {
+	envVar := "PIO_TESTNET"
+
+	tests := []struct {
+		name    string
+		envArgs map[string]string
+		args    []string
+		exp     bool
+	}{
+		{
+			name: "no env, nil args",
+			args: nil,
+			exp:  false,
+		},
+		{
+			name: "no env, empty args",
+			args: make([]string, 0),
+			exp:  false,
+		},
+		{
+			name: "one arg: -t",
+			args: []string{"-t"},
+			exp:  true,
+		},
+		{
+			name: "one arg: -t=true",
+			args: []string{"-t=true"},
+			exp:  true,
+		},
+		{
+			name: "one arg: -t=false",
+			args: []string{"-t=false"},
+			exp:  false,
+		},
+		{
+			name: "one arg: -t=xxx",
+			args: []string{"-t=xxx"},
+			exp:  false,
+		},
+		{
+			name: "one arg: --testnet",
+			args: []string{"--testnet"},
+			exp:  true,
+		},
+		{
+			name: "one arg: --testnet=true",
+			args: []string{"--testnet=true"},
+			exp:  true,
+		},
+		{
+			name: "one arg: --testnet=false",
+			args: []string{"--testnet=false"},
+			exp:  false,
+		},
+		{
+			name: "one arg: --testnet=xxx",
+			args: []string{"--testnet=xxx"},
+			exp:  false,
+		},
+		{
+			name: "five args: -t first",
+			args: []string{"-t", "two", "three", "four", "five"},
+			exp:  true,
+		},
+		{
+			name: "five args: --testnet third",
+			args: []string{"one", "two", "--testnet", "four", "five"},
+			exp:  true,
+		},
+		{
+			name: "five args: --testnet=true fifth",
+			args: []string{"one", "two", "three", "four", "--testnet=true"},
+			exp:  true,
+		},
+		{
+			name: "five args: none of interest",
+			args: []string{"one", "two", "three", "four", "five"},
+			exp:  false,
+		},
+		{
+			name: "two args: --testnet=true --testnet=false",
+			args: []string{"--testnet=true", "--testnet=false"},
+			exp:  false,
+		},
+		{
+			name: "two args: --testnet=false --testnet",
+			args: []string{"--testnet=false", "--testnet"},
+			exp:  true,
+		},
+		{
+			name:    "env var: true",
+			envArgs: map[string]string{envVar: "true"},
+			exp:     true,
+		},
+		{
+			name:    "env var: false",
+			envArgs: map[string]string{envVar: "false"},
+			exp:     false,
+		},
+		{
+			name:    "env var: xxx",
+			envArgs: map[string]string{envVar: "xxx"},
+			exp:     false,
+		},
+		{
+			name:    "env var but lower-case",
+			envArgs: map[string]string{strings.ToLower(envVar): "true"},
+			exp:     false,
+		},
+		{
+			name:    "env var false, args true",
+			envArgs: map[string]string{envVar: "false"},
+			args:    []string{"-t"},
+			exp:     true,
+		},
+		{
+			name:    "env var true, args false",
+			envArgs: map[string]string{envVar: "true"},
+			args:    []string{"--testnet=false"},
+			exp:     false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			for k, v := range tc.envArgs {
+				t.Setenv(k, v)
+			}
+			var actual bool
+			testFunc := func() {
+				actual = isTestnetFlagSet(tc.args)
+			}
+			require.NotPanics(t, testFunc, "isTestnetFlagSet")
+			assert.Equal(t, tc.exp, actual, "result from isTestnetFlagSet")
+		})
+	}
+}
 
 // TODO[telemetry]: func TestGetTelemetryGlobalLabels(t *testing.T) {}

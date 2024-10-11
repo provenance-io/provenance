@@ -451,7 +451,9 @@ func getIAVLCacheSize(options servertypes.AppOptions) int {
 // before we get to the point where we're ready to read in config files. But that address
 // codec needs to have the HRP defined, which depends on the --testnet flag.
 func isTestnetFlagSet(args []string) bool {
-	for _, arg := range args {
+	// Go through the args backwards so that if multiple testnet flags are provided, the last one is used.
+	for i := len(args) - 1; i >= 0; i-- {
+		arg := args[i]
 		if arg == "-t" || arg == "--testnet" {
 			return true
 		}
