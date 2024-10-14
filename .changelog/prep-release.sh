@@ -280,7 +280,7 @@ if [[ "$v_patch" -ne '0' ]]; then
         handle_invalid_version 'Patch number is not sequential. Previous version: [%s].' "$prev_ver"
     fi
 elif [[ "$v_minor" -ne '0' ]]; then
-    if [[ "v${v_major}.$(( v_minor - 1 ))." != "$( sed -E 's/[^.]+$/' <<< "$prev_ver" )" ]]; then
+    if [[ "v${v_major}.$(( v_minor - 1 ))." != "$( sed -E 's/[^.]+$//' <<< "$prev_ver" )" ]]; then
         handle_invalid_version 'Minor number is not sequential. Previous version: [%s].' "$prev_ver"
     fi
 else
