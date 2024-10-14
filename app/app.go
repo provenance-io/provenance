@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -22,6 +21,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
+	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -308,14 +308,11 @@ type App struct {
 }
 
 func init() {
-	DefaultNodeHome = os.ExpandEnv("$PIO_HOME")
-
-	if strings.TrimSpace(DefaultNodeHome) == "" {
-		configDir, err := os.UserConfigDir()
-		if err != nil {
-			panic(err)
-		}
-		DefaultNodeHome = filepath.Join(configDir, "Provenance")
+	clienthelpers.EnvPrefix = EnvPrefix
+	var err error
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory("Provenance")
+	if err != nil {
+		panic(err)
 	}
 
 	// 614,400 = 600 * 1024 = our wasm params maxWasmCodeSize value before it was removed in wasmd v0.27.
@@ -343,7 +340,14 @@ func New(
 	})
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	legacyAmino := codec.NewLegacyAmino()
-	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
+	txConfigOpts := authtx.ConfigOptions{
+		EnabledSignModes: authtx.DefaultSignModes,
+		SigningOptions:   &signingOptions,
+	}
+	txConfig, err := authtx.NewTxConfigWithOptions(appCodec, txConfigOpts)
+	if err != nil {
+		panic(err)
+	}
 
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
@@ -440,15 +444,13 @@ func New(
 	)
 
 	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
-	enabledSignModes := authtx.DefaultSignModes
-	enabledSignModes = append(enabledSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := authtx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
-	}
-	var err error
+	txConfigOpts.EnabledSignModes = append(txConfigOpts.EnabledSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper)
 	txConfig, err = authtx.NewTxConfigWithOptions(appCodec, txConfigOpts)
 	if err != nil {
+		panic(err)
+	}
+	if err = txConfig.SigningContext().Validate(); err != nil {
 		panic(err)
 	}
 	app.txConfig = txConfig

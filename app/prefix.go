@@ -10,6 +10,9 @@ const (
 	CoinTypeMainNet             = uint32(505)
 	CoinTypeTestNet             = uint32(1)
 	Purpose                     = 44
+
+	// EnvPrefix is the prefix added to config/flag names to get its environment variable name.
+	EnvPrefix = "PIO"
 )
 
 var (

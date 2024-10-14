@@ -325,7 +325,7 @@ fi
 if [[ "${#messages[@]}" -eq '0' ]]; then
     if [[ "$section" == "dependencies" ]]; then
         [[ -n "$verbose" ]] && printf 'Using get-dep-changes.sh for new entry.\n'
-        "${where_i_am}/get-valid-sections.sh" "$num_type_flag" "$num" --id "$id" --force
+        "${where_i_am}/get-dep-changes.sh" "$num_type_flag" "$num" --id "$id" --force
         exit $?
     fi
     messages+=( "TODO: Write me." )

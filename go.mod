@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/store v1.1.0
+	cosmossdk.io/store v1.1.1
 	cosmossdk.io/x/circuit v0.1.1
 	cosmossdk.io/x/evidence v0.1.1
 	cosmossdk.io/x/feegrant v0.1.1
@@ -214,7 +214,7 @@ replace (
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
 	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.52.0-pio-1
 
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.7-pio-1
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.10-pio-1
 
 	// Replace iavl to fix the node stop/start app hash problem. This can be removed once upstream is off v1.1.2
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.0

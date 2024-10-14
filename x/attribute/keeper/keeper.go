@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
-	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -87,7 +86,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetAllAttributes gets all attributes for an address.
 func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribute, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "get_all")
 
 	pred := func(string) bool { return true }
 	return k.prefixScan(ctx, types.AddrStrAttributesKeyPrefix(addr), pred)
@@ -95,7 +94,7 @@ func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribut
 
 // GetAllAttributesAddr gets all attributes for an AccAddress or MetadataAddress.
 func (k Keeper) GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]types.Attribute, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "get_all")
 
 	pred := func(string) bool { return true }
 	return k.prefixScan(ctx, types.AddrAttributesKeyPrefix(addr), pred)
@@ -103,7 +102,7 @@ func (k Keeper) GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]types.Attr
 
 // GetAttributes gets all attributes with the given name from an account.
 func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]types.Attribute, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "get")
 
 	name = strings.ToLower(strings.TrimSpace(name))
 	if _, err := k.nameKeeper.GetRecordByName(ctx, name); err != nil { // Ensure name exists (ie was bound to an address)
@@ -137,7 +136,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 func (k Keeper) SetAttribute(
 	ctx sdk.Context, attr types.Attribute, owner sdk.AccAddress,
 ) error {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "set")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "set")
 
 	if err := k.ValidateExpirationDate(ctx, attr); err != nil {
 		return err
@@ -216,7 +215,7 @@ func (k Keeper) DecAttrNameAddressLookup(ctx sdk.Context, name string, addrBytes
 // UpdateAttribute updates an attribute under the given account. The attribute name must resolve to the given owner address and value must resolve to an existing attribute.
 func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribute, updateAttribute types.Attribute, owner sdk.AccAddress,
 ) error {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "update")
 
 	var err error
 
@@ -299,7 +298,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 // UpdateAttributeExpiration updates the expiration date on an attribute.
 func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types.Attribute, owner sdk.AccAddress,
 ) error {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update_expiration")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "update_expiration")
 
 	if err := k.ValidateExpirationDate(ctx, updateAttribute); err != nil {
 		return err
@@ -372,7 +371,7 @@ func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []s
 
 // DeleteAttribute removes attributes under the given account from the state store.
 func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value *[]byte, owner sdk.AccAddress) error {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
+	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "delete")
 
 	var deleteDistinct bool
 	if value != nil {
