@@ -579,6 +579,11 @@ rm "$new_ver_dir/.gitkeep" > /dev/null 2>&1
 [[ -n "$verbose" ]] && printf 'Creating new unreleased dir: [%s].\n' "$unreleased_dir"
 mkdir -p "$unreleased_dir" || clean_exit 1
 touch "$unreleased_dir/.gitkeep"
+if [[ -n "$v_rc" ]]; then
+    # If this was an rc, copy the summary back into unreleased.
+    [[ -n "$verbose" ]] && printf 'Copying summary.md back into unreleased.\n'
+    cp "${new_ver_dir}/summary.md" "$unreleased_sum_file" || clean_exit 1
+fi
 
 printf 'Done.\n'
 clean_exit 0
