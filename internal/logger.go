@@ -31,6 +31,14 @@ func NewBufferedInfoLogger(buffer *bytes.Buffer) log.Logger {
 	return NewBufferedLogger(buffer, zerolog.InfoLevel)
 }
 
+// NewBufferedDebugLogger creates a new logger with level debug that writes to the provided buffer.
+// Error log lines will start with "ERR ".
+// Info log lines will start with "INF ".
+// Debug log lines will start with "DBG ".
+func NewBufferedDebugLogger(buffer *bytes.Buffer) log.Logger {
+	return NewBufferedLogger(buffer, zerolog.DebugLevel)
+}
+
 // SplitLogLines splits the provided logs string into its individual lines.
 func SplitLogLines(logs string) []string {
 	rv := strings.Split(logs, "\n")
