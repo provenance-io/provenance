@@ -1,5 +1,7 @@
 #!/bin/bash
 # This script will update the changelog stuff to mark a release.
+# The following script(s) must be in the same dir as this one:
+#   combine-dep-lines.awk
 
 show_usage () {
     cat << EOF
@@ -95,6 +97,15 @@ if [[ -z "$repo_root" ]]; then
     fi
 fi
 [[ -n "$verbose" ]] && printf ' Repo root dir: [%s].\n' "$repo_root"
+
+# Define the path to the dependency combiner awk script, allowing for it to be defined by env var instead.
+combine_dep_lines_awk="${COMBINE_DEP_LINES_AWK:-${where_i_am}/combine-dep-lines.awk}"
+if [[ ! -f "$combine_dep_lines_awk" ]]; then
+  printf 'Could not find the combine-dep-lines awk script: %s\n' "$combine_dep_lines_awk"
+  exit 1
+fi
+
+
 
 changelog_file="${repo_root}/CHANGELOG.md"
 if [[ ! -f "$changelog_file" ]]; then
@@ -280,7 +291,7 @@ if [[ "$v_patch" -ne '0' ]]; then
         handle_invalid_version 'Patch number is not sequential. Previous version: [%s].' "$prev_ver"
     fi
 elif [[ "$v_minor" -ne '0' ]]; then
-    if [[ "v${v_major}.$(( v_minor - 1 ))." != "$( sed -E 's/[^.]+$/' <<< "$prev_ver" )" ]]; then
+    if [[ "v${v_major}.$(( v_minor - 1 ))." != "$( sed -E 's/[^.]+$//' <<< "$prev_ver" )" ]]; then
         handle_invalid_version 'Minor number is not sequential. Previous version: [%s].' "$prev_ver"
     fi
 else
@@ -452,17 +463,31 @@ while IFS="" read -r line || [[ -n "$line" ]]; do
     fi
 done < "$links_fixed_file"
 
-# Sort the entries of the dependencies section.
-# They have the format "* `<library>` <action> <version> ..." where <action> is one of "added at" "bumped to" or "removed at".
+# Clean, sort, and combine the entries of the dependencies section.
 # So, if we just sort them using version sort, it'll end up sorting them by library and version, which a handy way to view them.
 dep_file="${temp_dir}/3-section-dependencies.md"
 if [[ -f "$dep_file" ]]; then
-    [[ -n "$verbose" ]] && printf 'Sorting the dependency entries: [%s].\n' "$dep_file"
-    orig_dep_file="${dep_file}.orig"
+    # Move the existing one to a backup so we can create a new one in its place (but still have the original for reference).
+    orig_dep_file="${dep_file}.1_orig"
+    [[ -n "$verbose" ]] && printf 'Backing up original dependencies section file [%s] as [%s].\n' "$dep_file" "$orig_dep_file"
     mv "$dep_file" "$orig_dep_file"
-    head -n 2 "$orig_dep_file" > "$dep_file"
-    grep -E '^[[:space:]]*[-*]' "$orig_dep_file" | sed -E 's/^[[:space:]]+//; s/^(.)[[:space:]]+/\1 /;' | sort --version-sort >> "$dep_file"
-    printf '\n' >> "$dep_file"
+
+    # Entry format: "* `<library>` <action> <version> ..." where <action> is one of "added at" "bumped to" or "removed at".
+    # First, make sure that the bullet point is the first char and there's exactly one space between it and the text; also
+    # remove all trailing whitespace. Then, apply version sort to sort them by library (alphabetically), then
+    # action (alphabetically, i.e. "added" then "bumped" then "replaced"), then by version (in version order).
+    sorted_dep_file="${dep_file}.2_sorted"
+    [[ -n "$verbose" ]] && printf 'Cleaning and sorting dependencies into [%s].\n' "$sorted_dep_file"
+    grep -E '^[[:space:]]*[-*]' "$orig_dep_file" | sed -E 's/^[[:space:]]+//; s/^(.)[[:space:]]+/\1 /;' | sort --version-sort > "$sorted_dep_file"
+
+    combined_dep_file="${dep_file}.3_combined"
+    [[ -n "$verbose" ]] && printf 'Combining the sorted dependencies using [%s] into [%s].\n' "$combine_dep_lines_awk" "$combined_dep_file"
+    awk -f "$combine_dep_lines_awk" "$sorted_dep_file" > "$combined_dep_file"
+
+    [[ -n "$verbose" ]] && printf 'Creating final dependencies section file: [%s].\n' "$dep_file"
+    head -n 2 "$orig_dep_file" > "$dep_file" # Copy the original header line and following empty line.
+    cat "$combined_dep_file" >> "$dep_file"  # Append the cleaned, sorted, and combined entries.
+    printf '\n' >> "$dep_file"               # And add an empty line to the end of the section.
 fi
 
 [[ -n "$verbose" ]] && printf 'Determining desired order for sections.\n'
@@ -492,13 +517,13 @@ add_to_section_order top \
     dependencies
 [[ -n "$verbose" ]] && printf 'Including sections in this order (%d): [%s].\n' "${#section_order[@]}" "${section_order[*]}"
 
-new_cl_entry_file="${temp_dir}/4-release-notes.md"
+new_cl_entry_file="${temp_dir}/4-version-release-notes.md"
 [[ -n "$verbose" ]] && printf 'Re-combining sections with proper order: [%s].\n' "$new_cl_entry_file"
 
 s=0
 for section in "${section_order[@]}"; do
     s=$(( s + 1 ))
-    s_id="[${s}/${#}=${section}]"
+    s_id="[${s}/${#section_order[@]}=${section}]"
     s_file="${temp_dir}/3-section-${section}.md"
     if [[ ! -f "$s_file" ]]; then
         [[ -n "$verbose" ]] && printf '%s: No section file to include: [%s].\n' "$s_id" "$s_file"
@@ -525,7 +550,7 @@ clean_versions () {
 
 # If this is an rc and there's an existing release notes, append those to the end, removing any existing section for this version.
 # If it's not an rc, or there isn't an existing one, just use what we've already got.
-new_rl_file="${temp_dir}/5-release-notes.md"
+new_rl_file="${temp_dir}/5-full-release-notes.md"
 release_notes_file="${repo_root}/RELEASE_NOTES.md"
 cp "$new_cl_entry_file" "$new_rl_file"
 if [[ -n "$v_rc" && -f "$release_notes_file" ]]; then
@@ -579,6 +604,11 @@ rm "$new_ver_dir/.gitkeep" > /dev/null 2>&1
 [[ -n "$verbose" ]] && printf 'Creating new unreleased dir: [%s].\n' "$unreleased_dir"
 mkdir -p "$unreleased_dir" || clean_exit 1
 touch "$unreleased_dir/.gitkeep"
+if [[ -n "$v_rc" ]]; then
+    # If this was an rc, copy the summary back into unreleased.
+    [[ -n "$verbose" ]] && printf 'Copying summary.md back into unreleased.\n'
+    cp "${new_ver_dir}/summary.md" "$unreleased_sum_file" || clean_exit 1
+fi
 
 printf 'Done.\n'
 clean_exit 0
