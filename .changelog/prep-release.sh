@@ -280,7 +280,7 @@ if [[ "$v_patch" -ne '0' ]]; then
         handle_invalid_version 'Patch number is not sequential. Previous version: [%s].' "$prev_ver"
     fi
 elif [[ "$v_minor" -ne '0' ]]; then
-    if [[ "v${v_major}.$(( v_minor - 1 ))." != "$( sed -E 's/[^.]+$/' <<< "$prev_ver" )" ]]; then
+    if [[ "v${v_major}.$(( v_minor - 1 ))." != "$( sed -E 's/[^.]+$//' <<< "$prev_ver" )" ]]; then
         handle_invalid_version 'Minor number is not sequential. Previous version: [%s].' "$prev_ver"
     fi
 else
@@ -579,6 +579,11 @@ rm "$new_ver_dir/.gitkeep" > /dev/null 2>&1
 [[ -n "$verbose" ]] && printf 'Creating new unreleased dir: [%s].\n' "$unreleased_dir"
 mkdir -p "$unreleased_dir" || clean_exit 1
 touch "$unreleased_dir/.gitkeep"
+if [[ -n "$v_rc" ]]; then
+    # If this was an rc, copy the summary back into unreleased.
+    [[ -n "$verbose" ]] && printf 'Copying summary.md back into unreleased.\n'
+    cp "${new_ver_dir}/summary.md" "$unreleased_sum_file" || clean_exit 1
+fi
 
 printf 'Done.\n'
 clean_exit 0
