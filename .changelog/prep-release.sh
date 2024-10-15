@@ -551,7 +551,7 @@ clean_versions () {
 # If this is an rc and there's an existing release notes, append those to the end, removing any existing section for this version.
 # If it's not an rc, or there isn't an existing one, just use what we've already got.
 new_rl_file="${temp_dir}/5-full-release-notes.md"
-release_notes_file="${repo_root}/RELEASE_NOTES.md"
+release_notes_file="${repo_root}/RELEASE_CHANGELOG.md"
 cp "$new_cl_entry_file" "$new_rl_file"
 if [[ -n "$v_rc" && -f "$release_notes_file" ]]; then
     [[ -n "$verbose" ]] && printf 'Including existing release notes: [%s].\n' "$release_notes_file"
