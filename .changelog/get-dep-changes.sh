@@ -334,6 +334,7 @@ for lib in "${libs[@]}"; do
     [[ -n "$verbose" ]] && printf '[%d/%d]:   %s="%s"  %s="%s"  %s="%s"\n' "$i" "${#libs[@]}" 'new' "$new" 'was' "$was" 'warning' "$warning"
 
     # Now generate the changelog line for this library.
+    # There's stuff in prep-release.sh that depends on these formats.
     if [[ -n "$new" && -n "$was" ]]; then
         if [[ "$new" != "$was" ]]; then
             [[ -n "$verbose" ]] && printf '[%d/%d]: Creating bump line.\n' "$i" "${#libs[@]}"
