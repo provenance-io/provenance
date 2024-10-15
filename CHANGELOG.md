@@ -52,6 +52,19 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.20.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc2) 2024-10-15
+
+### Bug Fixes
+
+* Rename the RELEASE_NOTES.md file to RELEASE_CHANGELOG.md [PR 2182](https://github.com/provenance-io/provenance/pull/2182).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.20.0-rc1...v1.20.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.19.1...v1.20.0-rc2
+
+---
+
 ## [v1.20.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc1) 2024-10-14
 
 ### Features
