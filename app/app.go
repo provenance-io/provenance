@@ -211,9 +211,7 @@ var (
 // the params module can be deleted. But I don't want the imports, so they're copied here.
 // TODO[viridian]: Delete these params constants after the upgrade.
 const (
-	paramsName = "params"           // = paramstypes.ModuleName
-	paramsKey  = paramsName         // = paramstypes.StoreKey
-	paramsTKey = "transient_params" // paramstypes.TStoreKey
+	paramsName = "params" // = paramstypes.ModuleName
 )
 
 // WasmWrapper allows us to use namespacing in the config file
@@ -362,7 +360,7 @@ func New(
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, consensusparamtypes.StoreKey, paramsKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey, circuittypes.StoreKey,
 		authzkeeper.StoreKey, group.StoreKey, crisistypes.StoreKey,
 
@@ -386,7 +384,7 @@ func New(
 		hold.StoreKey,
 		exchange.StoreKey,
 	)
-	tkeys := storetypes.NewTransientStoreKeys(paramsTKey)
+	tkeys := storetypes.NewTransientStoreKeys()
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
