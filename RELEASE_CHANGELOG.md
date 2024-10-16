@@ -1,3 +1,22 @@
+## [v1.20.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc3) 2024-10-16
+
+Building or installing `provenanced` from source now requires you to use [Go 1.23](https://golang.org/dl/).
+Linting now requires `golangci-lint` v1.60.2. You can update yours using `make golangci-lint-update` or install it using `make golangci-lint`.
+
+Version `v1.20.0-rc3` should be used in place of `v1.20.0-rc2`. Version `v1.20.0-rc2` doesn't allow restarting a node once it has been stopped (after applying the `viridian-rc1` upgrade). Switching to `v1.20.0-rc3` will fix the error `failed to load latest version: version of store params mismatch root store's version`. It is also safe to use `v1.20.0-rc3` to apply the upgrade (even though the upgrade says to use `v1.20.0-rc2`).
+
+### Bug Fixes
+
+* Remove the params store key and transient store key from the app [PR 2189](https://github.com/provenance-io/provenance/pull/2189).
+  This fixes a problem in `v1.20.0-rc2` that prevented nodes from restarting if stopped after the upgrade.
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.20.0-rc2...v1.20.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.19.1...v1.20.0-rc3
+
+---
+
 ## [v1.20.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc2) 2024-10-16
 
 Building or installing `provenanced` from source now requires you to use [Go 1.23](https://golang.org/dl/).

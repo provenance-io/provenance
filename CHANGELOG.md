@@ -52,6 +52,20 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.20.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc3) 2024-10-16
+
+### Bug Fixes
+
+* Remove the params store key and transient store key from the app [PR 2189](https://github.com/provenance-io/provenance/pull/2189).
+  This fixes a problem in `v1.20.0-rc2` that prevented nodes from restarting if stopped after the upgrade.
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.20.0-rc2...v1.20.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.19.1...v1.20.0-rc3
+
+---
+
 ## [v1.20.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc2) 2024-10-16
 
 ### Bug Fixes
