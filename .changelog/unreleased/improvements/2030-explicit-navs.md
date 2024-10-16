@@ -1,1 +1,0 @@
-* Only set a NAV record when explicitly provided. [#2030](https://github.com/provenance-io/provenance/issues/2030).
