@@ -43,7 +43,7 @@ Byte Array Length: `17`
 #### Scope Values
 <!-- link message: Scope -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/scope.proto#L70-L102
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/scope.proto#L70-L102
 
 ```protobuf
 // Scope defines a root reference for a collection of records owned by one or more parties.
@@ -129,7 +129,7 @@ Byte Array Length: `33`
 #### Session Values
 <!-- link message: Session -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/scope.proto#L104-L123
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/scope.proto#L104-L123
 
 ```protobuf
 // Session defines an execution context against a specific specification instance.
@@ -186,7 +186,7 @@ Byte Array Length: `33`
 #### Record Values
 <!-- link message: Record -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/scope.proto#L125-L142
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/scope.proto#L125-L142
 
 ```protobuf
 // A record (of fact) is attached to a session or each consideration output from a contract
@@ -242,7 +242,7 @@ Byte Array Length: `17`
 #### Scope Specification Values
 <!-- link message: ScopeSpecification -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/specification.proto#L36-L51
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/specification.proto#L36-L51
 
 ```protobuf
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
@@ -307,7 +307,7 @@ Byte Array Length: `17`
 #### Contract Specification Values
 <!-- link message: ContractSpecification -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/specification.proto#L53-L76
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/specification.proto#L53-L76
 
 ```protobuf
 // ContractSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
@@ -374,7 +374,7 @@ Byte Array Length: `33`
 #### Record Specification Values
 <!-- link message: RecordSpecification -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/specification.proto#L78-L95
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/specification.proto#L78-L95
 
 ```protobuf
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
@@ -420,7 +420,7 @@ Byte Array Length: `21`
 #### Object Store Locator Values
 <!-- link message: ObjectStoreLocator -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/objectstore.proto#L12-L23
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/objectstore.proto#L12-L23
 
 ```protobuf
 // Defines an Locator object stored on chain, which represents a owner( blockchain address) associated with a endpoint

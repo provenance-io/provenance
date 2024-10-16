@@ -220,7 +220,7 @@ Commitment Settlement Bips is stored as a uint16.
 Each market has an associated `MarketAccount` with an address derived from the `market_id`.
 Each `MarketAccount` is stored using the `Accounts` module.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/exchange/v1/market.proto#L14-L26
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/market.proto#L14-L26
 
 
 ### Market Details
