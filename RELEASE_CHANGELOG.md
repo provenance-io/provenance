@@ -1,4 +1,4 @@
-## [v1.20.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc2) 2024-10-15
+## [v1.20.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc2) 2024-10-16
 
 Building or installing `provenanced` from source now requires you to use [Go 1.23](https://golang.org/dl/).
 Linting now requires `golangci-lint` v1.60.2. You can update yours using `make golangci-lint-update` or install it using `make golangci-lint`.
@@ -6,6 +6,7 @@ Linting now requires `golangci-lint` v1.60.2. You can update yours using `make g
 ### Bug Fixes
 
 * Rename the RELEASE_NOTES.md file to RELEASE_CHANGELOG.md [PR 2182](https://github.com/provenance-io/provenance/pull/2182).
+* Fix the heighliner build [PR 2184](https://github.com/provenance-io/provenance/pull/2184).
 
 ### Full Commit History
 
