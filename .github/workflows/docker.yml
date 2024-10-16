@@ -49,14 +49,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # use forked branch until https://github.com/strangelove-ventures/heighliner/issues/253 is fixed
-      # heighliner does not support the wasmvm pathing yet so a "pre-build" step is required
-      # lock to "linux/amd64" only for now due to differing "pre-build" steps
-      # https://github.com/CosmWasm/wasmvm/blob/main/docs/MIGRATING.md
+      # lock to "linux/amd64" only for now since cross compilation is throwing errors
       - uses: strangelove-ventures/heighliner-build-action@main
         with:
-          heighliner-owner: ProvLabs
-          heighliner-tag: v1.6.3
+          heighliner-tag: v1.7.0
           chain: provenance
           local: true
           tag: ${{ steps.meta.outputs.version }}
@@ -64,12 +60,9 @@ jobs:
           platform: linux/amd64
           dockerfile: cosmos
           build-target: |
-            cd ..
             make install
           binaries: |
             - /go/bin/provenanced
-          pre-build: |
-            cp /lib/libwasmvm_muslc.a /lib/libwasmvm_muslc.x86_64.a
           build-env: |
             - "WITH_LEDGER=false"
             - "BUILD_TAGS=muslc musl dynamic"
