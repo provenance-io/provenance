@@ -230,7 +230,7 @@ If the entry isn't part of a release candidate, then in step 4 it gets moved to 
 When preparing to mark a release, you should use the `.changelog/prep-release.sh` script.
 
 That script will:
-1. Create or Update the `RELEASE_NOTES.md` file.
+1. Create or Update the `RELEASE_CHANGELOG.md` file.
 2. Add the new version to the `CHANGELOG.md` file.
 3. Create a new version directory in the `.changelog/` folder with content from `unreleased/` and any rcs for this version.
 
@@ -240,14 +240,14 @@ That is, the `.changelog/<version>` directories should only ever exist on the `.
 This is primarily to reduce confusion if there is a discrepancy between the `CHANGELOG.md` content and an entry file's content.
 It also helps keep things tidy and file counts lower.
 
-If you need to make tweaks or clarifications to the content, you should make the changes in the `RELEASE_NOTES.md` file first, then copy/paste those into the `CHANGELOG.md` file.
+If you need to make tweaks or clarifications to the content, you should make the changes in the `RELEASE_CHANGELOG.md` file first, then copy/paste those into the `CHANGELOG.md` file.
 You should NOT update the changelog entry files, though (other than moving them).
 
-And to reiterate, the `RELEASE_NOTES.md` file and `.changelog/<version>` directories should never exist on `main`, only in the `.x` branch.
+And to reiterate, the `RELEASE_CHANGELOG.md` file and `.changelog/<version>` directories should never exist on `main`, only in the `.x` branch.
 
 If you can't, or don't want to use the `.changelog/prep-release.sh` script, here's how to do things manually.
 
-To manually create the new `RELEASE_NOTES.md` file:
+To manually create the new `RELEASE_CHANGELOG.md` file:
 
 1. If this is a full version and there were release candidates, move all the rc content into unreleased.
 2. Run `unclog build --unreleased` to get the preliminary content.
