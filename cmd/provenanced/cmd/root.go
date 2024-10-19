@@ -222,6 +222,7 @@ func queryCommand() *cobra.Command {
 	)
 
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
+	cmd.PersistentFlags().String(flags.FlagNode, "","The node to connect to (IP:Port)")
 
 	return cmd
 }
