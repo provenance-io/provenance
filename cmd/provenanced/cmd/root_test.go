@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -339,6 +340,21 @@ func appendIfNew(slice []string, elems ...string) []string {
 
 func TestIsTestnetFlagSet(t *testing.T) {
 	envVar := "PIO_TESTNET"
+
+	// Go runs tests inside an environment that might already have some environment variables defined. E.g. if you
+	// have `export PIO_TESTNET=true` in your environment, and run `make test`, then, when this test runs, it will
+	// start with a `PIO_TESTNET` value of `true`. But that can mess up these tests that expect to start without a
+	// PIO_TESTNET env var set. So we defer to put it back like it is now, then unset it before running the tests.
+	// I don't use t.Setenv for this part because I want it to start unset instead of set to an empty string.
+	origEnvVarVal, hadOrigEnvVar := os.LookupEnv(envVar)
+	defer func() {
+		if hadOrigEnvVar {
+			os.Setenv(envVar, origEnvVarVal)
+		} else {
+			os.Unsetenv(envVar)
+		}
+	}()
+	os.Unsetenv(envVar)
 
 	tests := []struct {
 		name    string
