@@ -1471,9 +1471,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 			expOut: []string{indent(s.recordSpecAsText, 4)},
 		},
 		{
-			name:   "rec spec id does not exist",
-			args:   []string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			expOut: []string{"record_specifications: []"},
+			name: "rec spec id does not exist",
+			args: []string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
+			expOut: []string{
+				"      contract_spec_addr: contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn",
+				"    record_spec_addr: recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44",
+				"  specification: null",
+			},
 		},
 		{
 			name:   "record specs from contract spec id as json",
