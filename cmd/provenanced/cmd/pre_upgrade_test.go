@@ -252,6 +252,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	appCfgD := config.DefaultAppConfig()
 	cmtCfgD := config.DefaultCmtConfig()
+	cmtCfgD.Consensus.TimeoutCommit = 3500 * time.Millisecond
 	clientCfgD := config.DefaultClientConfig()
 
 	appCfgC := config.DefaultAppConfig()
