@@ -37,6 +37,8 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	// pulling the context into its own variable.
 	// I'd just have to call it again later anyway because deeper stuff will probably update it.
 	vpr := client.GetClientContextFromCmd(cmd).Viper
+	// Hard-code the consensus.timeout_commit value.
+	vpr.Set("consensus.timeout_commit", DefaultConsensusTimeoutCommit.String())
 
 	// And now, set up Viper a little more.
 	if err := bindFlagsAndEnv(cmd, vpr); err != nil {
