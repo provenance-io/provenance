@@ -267,6 +267,9 @@ func TestPreUpgradeCmd(t *testing.T) {
 	clientCfgAsync := config.DefaultClientConfig()
 	clientCfgAsync.BroadcastMode = "async"
 
+	cmtCfgT := config.DefaultCmtConfig()
+	cmtCfgT.Consensus.TimeoutCommit = 777 * time.Second
+
 	successMsg := "pre-upgrade successful"
 	updatingBlocksyncMsg := "Updating the broadcast_mode config value to \"sync\" (from \"block\", which is no longer an option)."
 
@@ -432,6 +435,56 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expAppCfg:    appCfgD,
 			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgAsync,
+		},
+		{
+			name: "unpacked mainnet timeout commit",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHome(t, "unpacked_mainnet_timeout_commit", appCfgD, cmtCfgT, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "packed mainnet timeout commit",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "packed_mainnet_timeout_commit", appCfgD, cmtCfgT, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "unpacked testnet timeout commit",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHome(t, "unpacked_testnet_timeout_commit", appCfgD, cmtCfgT, clientCfgD)
+				return home, nil, success
+			},
+			args:         []string{"--testnet"},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgT,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "packed testnet timeout commit",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "packed_testnet_timeout_commit", appCfgD, cmtCfgT, clientCfgD)
+				return home, nil, success
+			},
+			args:         []string{"--testnet"},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgT,
+			expClientCfg: clientCfgD,
 		},
 	}
 
