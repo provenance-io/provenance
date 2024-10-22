@@ -37,8 +37,6 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	// pulling the context into its own variable.
 	// I'd just have to call it again later anyway because deeper stuff will probably update it.
 	vpr := client.GetClientContextFromCmd(cmd).Viper
-	// Hard-code the consensus.timeout_commit value.
-	vpr.Set("consensus.timeout_commit", DefaultConsensusTimeoutCommit.String())
 
 	// And now, set up Viper a little more.
 	if err := bindFlagsAndEnv(cmd, vpr); err != nil {
@@ -60,6 +58,9 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	//  2. The config is packed and we're filling in the missing with defaults.
 	if vpr.GetBool(EnvTypeFlag) {
 		DefaultKeyringBackend = "test"
+	} else {
+		// Hard-code the consensus.timeout_commit value for non-testnets.
+		vpr.Set("consensus.timeout_commit", "3.5s")
 	}
 	// Read the configs into viper and the contexts.
 	return LoadConfigFromFiles(cmd)
