@@ -132,6 +132,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	}
 
 	fixTxWasmInstantiate2Aliases(rootCmd)
+	fixQueryWasmBuildAddressFlags(rootCmd)
 
 	return rootCmd, encodingConfig
 }
@@ -534,4 +535,17 @@ func getTelemetryGlobalLabels(logger log.Logger, appOpts servertypes.AppOptions)
 
 	logger.Debug("Extracted telemetry setup from app options.", telEnabledKey, enabled, telGlobalLabelsKey, globalLabels)
 	return globalLabels, enabled
+}
+
+// fixQueryWasmBuildAddressFlags resolves an issue where the Wasm build-address query failed to recognize the node flag.
+func fixQueryWasmBuildAddressFlags(rootCmd *cobra.Command) {
+	// Find the "build-address" command.
+	cmd, _, err := rootCmd.Find([]string{"query", "wasm", "build-address"})
+	if err != nil || cmd == nil {
+		// If the command doesn't exist, there's nothing to do.
+		return
+	}
+
+	// Apply query flags to the command.
+	flags.AddQueryFlagsToCmd(cmd)
 }
