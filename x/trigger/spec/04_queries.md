@@ -18,13 +18,13 @@ The `QueryTriggerByID` query is used to obtain the content of a specific Trigger
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/query.proto#L25-L29
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/trigger/v1/query.proto#L25-L29
 
 The `id` is the unique identifier for the Trigger.
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/query.proto#L31-L35
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/trigger/v1/query.proto#L31-L35
 
 
 ---
@@ -34,8 +34,8 @@ The `QueryTriggers` query is used to obtain all Triggers.
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/query.proto#L37-L41
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/trigger/v1/query.proto#L37-L41
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/query.proto#L43-L49
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/trigger/v1/query.proto#L43-L49
