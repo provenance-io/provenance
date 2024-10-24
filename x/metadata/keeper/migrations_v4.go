@@ -10,12 +10,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/gogoproto/proto"
 
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // Migrate3To4 will update the metadata store from version 3 to version 4. This should be part of the viridian upgrade.
 func (m Migrator) Migrate3To4(ctx sdk.Context) error {
+	// This migration emits too many events and can cause problems with nodes due to its size.
+	// So we'll just throw all of them away by swapping in a different event manager here.
+	// But the testnet migration already ran using v1.20.0-rc2 which included all of the events in the block result.
+	// So, to keep v1.20.0-rc2 and v1.20.0 state compatible, we only throw out the events when not on a testnet.
+	if sdk.GetConfig().GetBech32AccountAddrPrefix() != "tp" {
+		ctx = ctx.WithEventManager(internalsdk.NewNoOpEventManager())
+	}
 	logger := m.keeper.Logger(ctx)
 	logger.Info("Starting migration of x/metadata from 3 to 4.")
 	if err := migrateValueOwners(ctx, newKeeper3To4(m.keeper)); err != nil {
