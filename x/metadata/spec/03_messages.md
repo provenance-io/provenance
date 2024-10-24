@@ -48,7 +48,7 @@ Scopes are identified using their `scope_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L93-L119
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L93-L119
 
 The `scope_uuid` field is optional.
 It should be a uuid formatted as a string using the standard UUID format.
@@ -64,7 +64,7 @@ a value owner, it will always have a value owner (until the scope is deleted); i
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L121-L125
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L121-L125
 
 #### Expected failures
 
@@ -84,11 +84,11 @@ A scope is deleted using the `DeleteScope` service method.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L127-L136
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L127-L136
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L138-L139
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L138-L139
 
 #### Expected failures
 
@@ -103,11 +103,11 @@ Addresses can be added to a scope's data access list using the `AddScopeDataAcce
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L141-L154
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L141-L154
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L156-L157
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L156-L157
 
 #### Expected failures
 
@@ -123,11 +123,11 @@ Addresses can be deleted from a scope's data access list using the `DeleteScopeD
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L159-L172
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L159-L172
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L174-L175
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L174-L175
 
 #### Expected failures
 
@@ -142,11 +142,11 @@ Scope owners can be added to a scope using the `AddScopeOwner` service method.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L177-L190
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L177-L190
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L192-L193
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L192-L193
 
 #### Expected failures
 
@@ -163,11 +163,11 @@ All owner parties with any of the provided addresses will be removed from the sc
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L195-L208
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L195-L208
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L210-L211
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L210-L211
 
 #### Expected failures
 
@@ -183,11 +183,11 @@ The value owner address of one or more scopes can be updated using the `UpdateVa
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L213-L225
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L213-L225
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L227-L228
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L227-L228
 
 #### Expected failures
 
@@ -203,11 +203,11 @@ All scopes with a given existing value owner address can be updated to have a ne
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L230-L242
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L230-L242
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L244-L245
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L244-L245
 
 #### Expected failures
 
@@ -225,7 +225,7 @@ Sessions are identified using their `session_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L247-L272
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L247-L272
 
 The `session_id_components` field is optional.
 If supplied, it will be used to generate the appropriate session id for use in the `session.session_id` field.
@@ -236,7 +236,7 @@ If supplied, it will be used to generate the appropriate contract specification 
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L287-L291
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L287-L291
 
 #### Expected failures
 
@@ -263,7 +263,7 @@ Records are identified using their `name` and `session_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L293-L323
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L293-L323
 
 The `session_id_components` field is optional.
 If supplied, it will be used to generate the appropriate session id for use in the `record.session_id` field.
@@ -274,7 +274,7 @@ If supplied, it will be used with `record.name` to generate the appropriate reco
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L325-L329
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L325-L329
 
 #### Expected failures
 
@@ -316,11 +316,11 @@ A record is deleted using the `DeleteRecord` service method.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L331-L340
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L331-L340
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L342-L343
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L342-L343
 
 #### Expected failures
 
@@ -341,7 +341,7 @@ Scope specifications are identified using their `specification_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L345-L363
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L345-L363
 
 The `spec_uuid` field is optional.
 It should be a uuid formatted as a string using the standard UUID format.
@@ -349,7 +349,7 @@ If supplied, it will be used to generate the appropriate scope specification id 
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L365-L369
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L365-L369
 
 #### Expected failures
 
@@ -373,11 +373,11 @@ A scope specification is deleted using the `DeleteScopeSpecification` service me
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L371-L380
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L371-L380
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L382-L383
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L382-L383
 
 #### Expected failures
 
@@ -394,7 +394,7 @@ Contract specifications are identified using their `specification_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L385-L403
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L385-L403
 
 The `spec_uuid` field is optional.
 It should be a uuid formatted as a string using the standard UUID format.
@@ -402,7 +402,7 @@ If supplied, it will be used to generate the appropriate contract specification 
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L405-L410
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L405-L410
 
 #### Expected failures
 
@@ -430,11 +430,11 @@ This will also delete all record specifications associated with this contract sp
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L447-L456
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L447-L456
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L458-L459
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L458-L459
 
 #### Expected failures
 
@@ -450,11 +450,11 @@ A contract specification can be added to a scope specification using the `AddCon
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L412-L424
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L412-L424
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L426-L427
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L426-L427
 
 #### Expected failures
 
@@ -473,11 +473,11 @@ A contract specification can be removed from a scope specification using the `Ad
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L429-L441
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L429-L441
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L443-L445
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L443-L445
 
 #### Expected failures
 
@@ -497,7 +497,7 @@ Record specifications are identified using their `specification_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L461-L479
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L461-L479
 
 The `contract_spec_uuid` field is optional.
 It should be a uuid formatted as a string using the standard UUID format.
@@ -505,7 +505,7 @@ If supplied, it will be used with the `specification.name` to generate the appro
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L481-L486
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L481-L486
 
 #### Expected failures
 
@@ -532,11 +532,11 @@ A record specification is deleted using the `DeleteRecordSpecification` service 
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L488-L497
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L488-L497
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L499-L500
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L499-L500
 
 #### Expected failures
 
@@ -554,11 +554,11 @@ An Object Store Locator entry is created using the `BindOSLocator` service metho
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L502-L509
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L502-L509
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L511-L514
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L511-L514
 
 #### Expected failures
 
@@ -577,11 +577,11 @@ An Object Store Locator entry is deleted using the `DeleteOSLocator` service met
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L516-L524
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L516-L524
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L526-L529
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L526-L529
 
 #### Expected failures
 
@@ -602,11 +602,11 @@ Object Store Locators are identified by their `owner`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L531-L538
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L531-L538
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L540-L543
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L540-L543
 
 #### Expected failures
 
@@ -625,9 +625,9 @@ This service message is expected to fail if:
 
 Simple data (a string) can be associated with scopes using the `SetAccountData` service method.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L545-L558
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L545-L558
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L560-L561
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/metadata/v1/tx.proto#L560-L561
 
 This service message is expected to fail if:
 * The provided address is not a scope id.
