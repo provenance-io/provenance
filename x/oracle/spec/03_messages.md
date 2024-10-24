@@ -18,11 +18,11 @@ The oracle's address is modified by proposing the `MsgUpdateOracleRequest` messa
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/oracle/v1/tx.proto#L40-L49
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/oracle/v1/tx.proto#L40-L49
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/oracle/v1/tx.proto#L51-L52
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/oracle/v1/tx.proto#L51-L52
 
 The message will fail under the following conditions:
 * The authority does not match the gov module.
@@ -34,11 +34,11 @@ Sends a query to another chain's `Oracle` using `ICQ`.
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/oracle/v1/tx.proto#L22-L32
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/oracle/v1/tx.proto#L22-L32
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/oracle/v1/tx.proto#L34-L38
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/oracle/v1/tx.proto#L34-L38
 
 The message will fail under the following conditions:
 * The authority does not pass basic integrity and format checks.

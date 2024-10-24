@@ -443,7 +443,7 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 			if len(args) > 1 {
 				name = trimSpaceAndJoin(args[1:], " ")
 			}
-			if len(name) == 0 {
+			if len(name) == 0 && !strings.HasPrefix(strings.ToLower(arg0), types.PrefixRecordSpecification) {
 				return outputRecordSpecsForContractSpec(cmd, arg0)
 			}
 			return outputRecordSpec(cmd, arg0, name)
