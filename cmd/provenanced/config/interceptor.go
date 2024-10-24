@@ -23,6 +23,11 @@ const (
 	EnvTypeFlag = "testnet"
 	// CoinTypeFlag is a flag for indicating coin type.
 	CoinTypeFlag = "coin-type"
+
+	ConsensusTimeoutCommitKey       = "consensus.timeout_commit"
+	ConsensusTimeoutCommitValue     = "3.5s"
+	ConsensusSkipTimeoutCommitKey   = "consensus.skip_timeout_commit"
+	ConsensusSkipTimeoutCommitValue = "false"
 )
 
 // InterceptConfigsPreRunHandler performs a pre-run function for all commands.
@@ -58,6 +63,10 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	//  2. The config is packed and we're filling in the missing with defaults.
 	if vpr.GetBool(EnvTypeFlag) {
 		DefaultKeyringBackend = "test"
+	} else {
+		// Hard-code the consensus.timeout_commit value for non-testnets.
+		vpr.Set(ConsensusTimeoutCommitKey, ConsensusTimeoutCommitValue)
+		vpr.Set(ConsensusSkipTimeoutCommitKey, ConsensusSkipTimeoutCommitValue)
 	}
 	// Read the configs into viper and the contexts.
 	return LoadConfigFromFiles(cmd)

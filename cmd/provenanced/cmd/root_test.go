@@ -26,6 +26,7 @@ import (
 
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal"
+	"github.com/provenance-io/provenance/testutil"
 )
 
 func TestIAVLConfig(t *testing.T) {
@@ -50,17 +51,19 @@ func (o panicOpts) Get(key string) interface{} {
 
 func TestWarnAboutSettings(t *testing.T) {
 	keyChainID := flags.FlagChainID
-	keySkipTimeoutCommit := "consensus.skip_timeout_commit"
-	keyTimeoutCommit := "consensus.timeout_commit"
+	keySkipTimeoutCommit := config.ConsensusSkipTimeoutCommitKey
+	keyTimeoutCommit := config.ConsensusTimeoutCommitKey
 
-	upperLimit := config.DefaultConsensusTimeoutCommit + 2*time.Second
-	overUpperLimit := upperLimit + 1*time.Millisecond
+	expTimeoutCommit := cast.ToDuration(config.ConsensusTimeoutCommitValue)
+	lowTimeoutCommit := expTimeoutCommit - 2*time.Millisecond
+	highTimeoutCommit := expTimeoutCommit + 3*time.Millisecond
+
 	mainnetChainID := "pio-mainnet-1"
 	notMainnetChainID := "not-" + mainnetChainID
 
-	tooHighMsg := func(timeoutCommit time.Duration) string {
-		return fmt.Sprintf("ERR Your consensus.timeout_commit config value is too high and should be decreased to at most %q. The recommended value is %q. Your current value is %q.",
-			upperLimit, config.DefaultConsensusTimeoutCommit, timeoutCommit)
+	badSkipMsg := fmt.Sprintf("ERR Your %s config value should be false, but is true.", config.ConsensusSkipTimeoutCommitKey)
+	badTimeoutMsg := func(curVal string) string {
+		return fmt.Sprintf("ERR Your %s config value should be 3.5s, but is %s.", config.ConsensusTimeoutCommitKey, curVal)
 	}
 
 	mainnetOpts := func(skipTimeoutCommit bool, timeoutCommit time.Duration) testOpts {
@@ -84,89 +87,104 @@ func TestWarnAboutSettings(t *testing.T) {
 		expLogged []string
 	}{
 		{
-			name:      "mainnet not skipped value over upper limit",
-			appOpts:   mainnetOpts(false, overUpperLimit),
-			expLogged: []string{tooHighMsg(overUpperLimit)},
-		},
-		{
-			name:    "mainnet not skipped value at limit",
-			appOpts: mainnetOpts(false, upperLimit),
-		},
-		{
-			name:    "mainnet not skipped value at default",
-			appOpts: mainnetOpts(false, config.DefaultConsensusTimeoutCommit),
-		},
-		{
-			name:    "mainnet not skipped value at zero",
-			appOpts: mainnetOpts(false, 0),
-		},
-		{
-			name:    "mainnet skipped value over upper limit",
-			appOpts: mainnetOpts(true, overUpperLimit),
-		},
-		{
-			name:    "mainnet skipped value at upper limit",
-			appOpts: mainnetOpts(true, upperLimit),
-		},
-		{
-			name:    "mainnet skipped value at default",
-			appOpts: mainnetOpts(true, config.DefaultConsensusTimeoutCommit),
-		},
-		{
-			name:    "mainnet skipped value at zero",
-			appOpts: mainnetOpts(true, 0),
-		},
-		{
-			name:    "not mainnet not skipped value over upper limit",
-			appOpts: notMainnetOpts(false, overUpperLimit),
-		},
-		{
-			name:    "not mainnet not skipped value at upper limit",
-			appOpts: notMainnetOpts(false, upperLimit),
-		},
-		{
-			name:    "not mainnet not skipped value at default",
-			appOpts: notMainnetOpts(false, config.DefaultConsensusTimeoutCommit),
-		},
-		{
-			name:    "not mainnet not skipped value at zero",
-			appOpts: notMainnetOpts(false, 0),
-		},
-		{
-			name:    "not mainnet skipped value over upper limit",
-			appOpts: notMainnetOpts(true, overUpperLimit),
-		},
-		{
-			name:    "not mainnet skipped value at upper limit",
-			appOpts: notMainnetOpts(true, upperLimit),
-		},
-		{
-			name:    "not mainnet skipped value at default",
-			appOpts: notMainnetOpts(true, config.DefaultConsensusTimeoutCommit),
-		},
-		{
-			name:    "not mainnet skipped value at zero",
-			appOpts: notMainnetOpts(true, 0),
-		},
-		{
-			name:    "timeout commit opt not a duration",
-			appOpts: testOpts{keyChainID: mainnetChainID, keySkipTimeoutCommit: false, keyTimeoutCommit: "nope"},
-		},
-		{
 			name:    "empty opts",
 			appOpts: testOpts{},
 		},
 		{
-			name:    "only chain-id mainnet",
-			appOpts: testOpts{keyChainID: mainnetChainID},
+			name:      "only chain-id mainnet",
+			appOpts:   testOpts{keyChainID: mainnetChainID},
+			expLogged: []string{badTimeoutMsg("0s")},
 		},
 		{
 			name:    "only chain-id not mainnet",
-			appOpts: testOpts{keyChainID: mainnetChainID},
+			appOpts: testOpts{keyChainID: notMainnetChainID},
 		},
 		{
-			name:    "mainnet not skipped no timeout commit opt",
-			appOpts: testOpts{keyChainID: mainnetChainID, keySkipTimeoutCommit: false},
+			name:      "mainnet, only skip false",
+			appOpts:   testOpts{keyChainID: mainnetChainID, keySkipTimeoutCommit: false},
+			expLogged: []string{badTimeoutMsg("0s")},
+		},
+		{
+			name:      "mainnet, only skip true",
+			appOpts:   testOpts{keyChainID: mainnetChainID, keySkipTimeoutCommit: true},
+			expLogged: []string{badSkipMsg, badTimeoutMsg("0s")},
+		},
+		{
+			name:      "mainnet, only skip invalid",
+			appOpts:   testOpts{keyChainID: mainnetChainID, keySkipTimeoutCommit: "abcd"},
+			expLogged: []string{badTimeoutMsg("0s")},
+		},
+		{
+			name:      "mainnet, only low timeout",
+			appOpts:   testOpts{keyChainID: mainnetChainID, keyTimeoutCommit: lowTimeoutCommit},
+			expLogged: []string{badTimeoutMsg(lowTimeoutCommit.String())},
+		},
+		{
+			name:    "mainnet, only right timeout",
+			appOpts: testOpts{keyChainID: mainnetChainID, keyTimeoutCommit: expTimeoutCommit},
+		},
+		{
+			name:      "mainnet, only high timeout",
+			appOpts:   testOpts{keyChainID: mainnetChainID, keyTimeoutCommit: highTimeoutCommit},
+			expLogged: []string{badTimeoutMsg(highTimeoutCommit.String())},
+		},
+		{
+			name:      "mainnet, only invalid timeout",
+			appOpts:   testOpts{keyChainID: mainnetChainID, keyTimeoutCommit: "xyz"},
+			expLogged: []string{badTimeoutMsg("0s")},
+		},
+		{
+			name:      "mainnet, skip false, low timeout",
+			appOpts:   mainnetOpts(false, lowTimeoutCommit),
+			expLogged: []string{badTimeoutMsg(lowTimeoutCommit.String())},
+		},
+		{
+			name:    "mainnet, skip false, right timeout",
+			appOpts: mainnetOpts(false, expTimeoutCommit),
+		},
+		{
+			name:      "mainnet, skip false, high timeout",
+			appOpts:   mainnetOpts(false, highTimeoutCommit),
+			expLogged: []string{badTimeoutMsg(highTimeoutCommit.String())},
+		},
+		{
+			name:      "mainnet, skip true, low timeout",
+			appOpts:   mainnetOpts(true, lowTimeoutCommit),
+			expLogged: []string{badSkipMsg, badTimeoutMsg(lowTimeoutCommit.String())},
+		},
+		{
+			name:      "mainnet, skip true, right timeout",
+			appOpts:   mainnetOpts(true, expTimeoutCommit),
+			expLogged: []string{badSkipMsg},
+		},
+		{
+			name:      "mainnet, skip true, high timeout",
+			appOpts:   mainnetOpts(true, highTimeoutCommit),
+			expLogged: []string{badSkipMsg, badTimeoutMsg(highTimeoutCommit.String())},
+		},
+		{
+			name:    "not mainnet, skip false, low timeout",
+			appOpts: notMainnetOpts(false, lowTimeoutCommit),
+		},
+		{
+			name:    "not mainnet, skip false, right timeout",
+			appOpts: notMainnetOpts(false, expTimeoutCommit),
+		},
+		{
+			name:    "not mainnet, skip false, high timeout",
+			appOpts: notMainnetOpts(false, highTimeoutCommit),
+		},
+		{
+			name:    "not mainnet, skip true, low timeout",
+			appOpts: notMainnetOpts(true, lowTimeoutCommit),
+		},
+		{
+			name:    "not mainnet, skip true, right timeout",
+			appOpts: notMainnetOpts(true, expTimeoutCommit),
+		},
+		{
+			name:    "not mainnet, skip true, high timeout",
+			appOpts: notMainnetOpts(true, highTimeoutCommit),
 		},
 		{
 			name:    "panic from getter",
@@ -339,6 +357,9 @@ func appendIfNew(slice []string, elems ...string) []string {
 
 func TestIsTestnetFlagSet(t *testing.T) {
 	envVar := "PIO_TESTNET"
+
+	// Don't let a pre-existing PIO_TESTNET environment variable affect the tests.
+	defer testutil.UnsetTestnetEnvVar()()
 
 	tests := []struct {
 		name    string
