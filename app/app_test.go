@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,6 +17,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +25,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	paramprops "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -439,4 +443,86 @@ func TestMsgServerProtoAnnotations(t *testing.T) {
 	require.NoError(t, err, "proto.MergedRegistry()")
 	err = msgservice.ValidateProtoAnnotations(protoFiles)
 	assertions.AssertErrorValue(t, err, expErr, "ValidateProtoAnnotations")
+}
+
+func TestParamChangeInGovProp(t *testing.T) {
+	paramChangeProp := &paramprops.ParameterChangeProposal{
+		Title:       "Test Prop Change",
+		Description: "A proposal for testing decoding",
+		Changes: []paramprops.ParamChange{
+			{
+				Subspace: "mymodule",
+				Key:      "favorite_flower",
+				Value:    "fuchsia",
+			},
+		},
+	}
+	paramChangePropAny, err := codectypes.NewAnyWithValue(paramChangeProp)
+	require.NoError(t, err, "codectypes.NewAnyWithValue(paramChangeProp)")
+	t.Logf("paramChangePropAny.TypeUrl = %q", paramChangePropAny.TypeUrl)
+
+	execLeg := &govtypesv1.MsgExecLegacyContent{
+		Content:   paramChangePropAny,
+		Authority: "jerry",
+	}
+
+	execLegAny, err := codectypes.NewAnyWithValue(execLeg)
+	require.NoError(t, err, "codectypes.NewAnyWithValue(execLeg)")
+
+	submitTime := time.Unix(1618935600, 0)
+	depositEndTime := submitTime.Add(1 * time.Minute)
+	votingStartTime := depositEndTime.Add(3500 * time.Millisecond)
+	votingEndTime := votingStartTime.Add(48 * time.Hour)
+
+	prop := govtypesv1.Proposal{
+		Id:               123,
+		Messages:         []*codectypes.Any{execLegAny},
+		Status:           govtypesv1.StatusPassed,
+		FinalTallyResult: &govtypesv1.TallyResult{YesCount: "5", AbstainCount: "1", NoCount: "0", NoWithVetoCount: "0"},
+		SubmitTime:       &submitTime,
+		DepositEndTime:   &depositEndTime,
+		TotalDeposit:     []sdk.Coin{sdk.NewInt64Coin("pink", 1000)},
+		VotingStartTime:  &votingStartTime,
+		VotingEndTime:    &votingEndTime,
+		Metadata:         "Prop metadata",
+		Title:            "The prop title",
+		Summary:          "The prop summary",
+		Proposer:         sdk.AccAddress("proposer____________").String(),
+	}
+
+	expJSON := `{"id":"123",` +
+		`"messages":[{"@type":"/cosmos.gov.v1.MsgExecLegacyContent",` +
+		`"content":{"@type":"/cosmos.params.v1beta1.ParameterChangeProposal",` +
+		`"title":"Test Prop Change",` +
+		`"description":"A proposal for testing decoding",` +
+		`"changes":[{"subspace":"mymodule","key":"favorite_flower","value":"fuchsia"}]},` +
+		`"authority":"jerry"}],` +
+		`"status":"PROPOSAL_STATUS_PASSED",` +
+		`"final_tally_result":{"yes_count":"5","abstain_count":"1","no_count":"0","no_with_veto_count":"0"},` +
+		`"submit_time":"2021-04-20T16:20:00Z",` +
+		`"deposit_end_time":"2021-04-20T16:21:00Z",` +
+		`"total_deposit":[{"denom":"pink","amount":"1000"}],` +
+		`"voting_start_time":"2021-04-20T16:21:03.500Z",` +
+		`"voting_end_time":"2021-04-22T16:21:03.500Z",` +
+		`"metadata":"Prop metadata",` +
+		`"title":"The prop title",` +
+		`"summary":"The prop summary",` +
+		`"proposer":"cosmos1wpex7ur0wdjhyh6lta047h6lta047h6ljkx24t",` +
+		`"expedited":false,` +
+		`"failed_reason":""}`
+
+	propBz, err := prop.Marshal()
+	require.NoError(t, err, "prop.Marshal()")
+
+	encCfg := MakeTestEncodingConfig(t)
+
+	var actProp govtypesv1.Proposal
+	err = encCfg.Marshaler.Unmarshal(propBz, &actProp)
+	require.NoError(t, err, "encCfg.Marshaler.Unmarshal(propBz, &actProp)")
+
+	propJSONBz, err := encCfg.Marshaler.MarshalJSON(&actProp)
+	require.NoError(t, err, "encCfg.Marshaler.MarshalJSON(&actProp)")
+	propJSON := string(propJSONBz)
+	t.Logf("prop JSON:\n%s", propJSON)
+	assert.Equal(t, expJSON, propJSON, "proposal JSON")
 }
