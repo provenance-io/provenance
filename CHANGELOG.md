@@ -52,6 +52,28 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.20.0-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc4) 2024-10-25
+
+### Improvements
+
+* Hard code the mainnet `consensus.timeout_commit` config value to 3.5s [#2121](https://github.com/provenance-io/provenance/issues/2121).
+* Update the prep-release script to combine dependency changelog entries [PR 2181](https://github.com/provenance-io/provenance/pull/2181).
+* Update the proto file links in the spec docs to point to `v1.20.0` (instead of `v1.19.0`) [PR 2192](https://github.com/provenance-io/provenance/pull/2192).
+* Suppress the events emitted during the metadata migration that changes how scope value owners are recorded [PR 2195](https://github.com/provenance-io/provenance/pull/2195).
+
+### Bug Fixes
+
+* Fix the query metadata recordspec command to use the RecordSpecification query when provided a recspec id [#2148](https://github.com/provenance-io/provenance/issues/2148).
+* Register the params types with the codecs so old gov props can be read [PR 2198](https://github.com/provenance-io/provenance/pull/2198).
+* Add the query flags to the query wasm build-addr command [PR 2199](https://github.com/provenance-io/provenance/pull/2199).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.20.0-rc3...v1.20.0-rc4
+* https://github.com/provenance-io/provenance/compare/v1.19.1...v1.20.0-rc4
+
+---
+
 ## [v1.20.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.20.0-rc3) 2024-10-16
 
 ### Bug Fixes
