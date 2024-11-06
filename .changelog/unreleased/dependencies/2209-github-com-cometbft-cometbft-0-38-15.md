@@ -1,0 +1,9 @@
+* `github.com/cometbft/cometbft` bumped to v0.38.15 (from v0.38.13) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `github.com/decred/dcrd/dcrec/secp256k1/v4` bumped to v4.3.0 (from v4.2.0) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `github.com/prometheus/client_golang` bumped to v1.20.5 (from v1.20.4) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `github.com/prometheus/common` bumped to v0.60.1 (from v0.59.1) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `golang.org/x/crypto` bumped to v0.28.0 (from v0.27.0) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `golang.org/x/net` bumped to v0.30.0 (from v0.29.0) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `golang.org/x/oauth2` bumped to v0.23.0 (from v0.22.0) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `golang.org/x/sys` bumped to v0.26.0 (from v0.25.0) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
+* `golang.org/x/term` bumped to v0.25.0 (from v0.24.0) [PR 2209](https://github.com/provenance-io/provenance/pull/2209).
