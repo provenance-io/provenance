@@ -52,6 +52,18 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.20.2](https://github.com/provenance-io/provenance/releases/tag/v1.20.2) 2024-11-21
+
+### Dependencies
+
+* `cosmossdk.io/math` bumped to v1.4.0 (from v1.3.0) [PR 2219](https://github.com/provenance-io/provenance/pull/2219).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.20.1...v1.20.2
+
+---
+
 ## [v1.20.1](https://github.com/provenance-io/provenance/releases/tag/v1.20.1) 2024-11-07
 
 ### Dependencies
