@@ -475,8 +475,8 @@ func TestPartyDetails_Copy(t *testing.T) {
 			require.NotPanics(t, testFunc, "Copy()")
 			require.Equal(t, tc.pd, actual, "result of Copy()")
 			if tc.pd != nil && actual != nil {
-				assert.NotSame(t, tc.pd, actual, "result of Copy()")
-				assert.NotSame(t, tc.pd.acc, actual.acc, "acc field")
+				assert.NotSame(t, &tc.pd, &actual, "result of Copy()")
+				assert.NotSame(t, &tc.pd.acc, &actual.acc, "acc field")
 				if len(actual.acc) > 0 {
 					// Change the first byte in the copy to make sure it doesn't also change in the original.
 					actual.acc[0] = actual.acc[0] + 1
@@ -484,7 +484,7 @@ func TestPartyDetails_Copy(t *testing.T) {
 					// And put it back so we don't mess up anything else.
 					actual.acc[0] = actual.acc[0] - 1
 				}
-				assert.NotSame(t, tc.pd.signerAcc, actual.signerAcc, "signerAcc field")
+				assert.NotSame(t, &tc.pd.signerAcc, &actual.signerAcc, "signerAcc field")
 				if len(actual.signerAcc) > 0 {
 					// Change the first byte in the copy to make sure it doesn't also change in the original.
 					actual.signerAcc[0] = actual.signerAcc[0] + 1
@@ -1825,10 +1825,10 @@ func TestNewTestablePartyDetails(t *testing.T) {
 		}
 		require.NotPanics(t, testFunc, "NewTestablePartyDetails")
 		assert.Equal(t, expected, actual, "result of NewTestablePartyDetails")
-		assert.NotSame(t, pd.acc, actual.Acc, "the acc field")
+		assert.NotSame(t, &pd.acc, &actual.Acc, "the acc field")
 		actual.Acc[0] = actual.Acc[0] + 1
 		assert.NotEqual(t, pd.acc, actual.Acc, "the acc field after a change to it in the result")
-		assert.NotSame(t, pd.signerAcc, actual.SignerAcc, "the signerAcc field")
+		assert.NotSame(t, &pd.signerAcc, &actual.SignerAcc, "the signerAcc field")
 		actual.SignerAcc[0] = actual.SignerAcc[0] + 1
 		assert.NotEqual(t, pd.signerAcc, actual.SignerAcc, "the signerAcc field after a change to it in the result")
 	})
@@ -2067,8 +2067,8 @@ func TestNewAuthzCache(t *testing.T) {
 	assert.Empty(t, c1.isWasm, "isWasm map")
 
 	assert.NotSame(t, c1, c2, "NewAuthzCache twice")
-	assert.NotSame(t, c1.acceptable, c2.acceptable, "acceptable maps of two NewAuthzCache")
-	assert.NotSame(t, c1.isWasm, c2.isWasm, "isWasm maps of two NewAuthzCache")
+	assert.NotSame(t, &c1.acceptable, &c2.acceptable, "acceptable maps of two NewAuthzCache")
+	assert.NotSame(t, &c1.isWasm, &c2.isWasm, "isWasm maps of two NewAuthzCache")
 }
 
 func TestAuthzCache_Clear(t *testing.T) {
@@ -2274,7 +2274,7 @@ func TestAuthzCache_GetAcceptableMap(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "GetAcceptableMap")
 			if expected != nil && actual != nil {
-				require.NotSame(t, tc.cache.acceptable, actual, "result from GetAcceptableMap")
+				require.NotSame(t, &tc.cache.acceptable, &actual, "result from GetAcceptableMap")
 			}
 			require.Equal(t, expected, actual, "result from GetAcceptableMap")
 			if len(actual) > 0 {
@@ -2370,7 +2370,7 @@ func TestAuthzCache_GetIsWasmMap(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "GetIsWasmMap")
 			if expected != nil && actual != nil {
-				require.NotSame(t, tc.cache.isWasm, actual, "result from GetIsWasmMap")
+				require.NotSame(t, &tc.cache.isWasm, &actual, "result from GetIsWasmMap")
 			}
 			require.Equal(t, expected, actual, "result from GetIsWasmMap")
 			if len(actual) > 0 {

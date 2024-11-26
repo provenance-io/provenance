@@ -2947,9 +2947,9 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 		expected := app.MarkerKeeper.GetReqAttrBypassAddrs()
 		actual := app.MarkerKeeper.GetReqAttrBypassAddrs()
 		if assert.Equal(t, expected, actual, "GetReqAttrBypassAddrs()") {
-			if assert.NotSame(t, expected, actual, "GetReqAttrBypassAddrs()") {
+			if assert.NotSame(t, &expected, &actual, "GetReqAttrBypassAddrs()") {
 				for i := range expected {
-					assert.NotSame(t, expected[i], actual[i], "GetReqAttrBypassAddrs()[%d]", i)
+					assert.NotSame(t, &expected[i], &actual[i], "GetReqAttrBypassAddrs()[%d]", i)
 				}
 			}
 		}
