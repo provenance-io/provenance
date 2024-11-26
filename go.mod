@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/client/v2 v2.0.0-beta.5
+	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.2
 	cosmossdk.io/errors v1.0.1
@@ -44,7 +44,7 @@ require (
 	golang.org/x/text v0.20.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 	sigs.k8s.io/yaml v1.4.0
 )
 
