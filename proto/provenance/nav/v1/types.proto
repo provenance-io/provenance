@@ -1,0 +1,50 @@
+syntax = "proto3";
+package provenance.nav.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/nav";
+
+option java_package        = "io.provenance.nav.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+
+// NetAssetValue defines the price of assets. Modules that want to record NAV
+// info should use this type in their Tx endpoints.
+message NetAssetValue {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)            = true;
+
+  // assets are the volume and denom that has value.
+  cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
+  // price is the amount that the assets are worth.
+  cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
+}
+
+// NetAssetValueRecord defines the price of assets as well as the height and
+// who/what was responsible for creating the record. This is used to actually
+// store the info in state, and also as the return type for the queries.
+message NetAssetValueRecord {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)            = true;
+
+  // assets are the volume and denom that has value.
+  cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
+  // price is the amount that the assets are worth.
+  cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
+  // record_height is the height of the chain when this record was recorded.
+  uint64 record_height = 3;
+  // recorded_by describes who or what created this record. It might contain
+  // an address, but might also be some sort of descriptor string.
+  // Max Length = 100 bytes.
+  string recorded_by = 4;
+}
+
+// GenesisState is the data that should be loaded into the nav module during genesis.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // navs are all the net asset values to put into state at genesis.
+  repeated NetAssetValueRecord navs = 1;
+}
