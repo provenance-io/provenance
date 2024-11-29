@@ -292,6 +292,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/provenance/nav/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "NAV"
+        ]
+      }
+    },
+    {
       "url": "./client/docs/swagger_third_party.yaml",
       "dereference": {
         "circular": "ignore"

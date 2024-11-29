@@ -475,6 +475,19 @@
 - [provenance/ibcratelimit/v1/params.proto](#provenance_ibcratelimit_v1_params-proto)
     - [Params](#provenance-ibcratelimit-v1-Params)
   
+- [provenance/nav/v1/types.proto](#provenance_nav_v1_types-proto)
+    - [GenesisState](#provenance-nav-v1-GenesisState)
+    - [NetAssetValue](#provenance-nav-v1-NetAssetValue)
+    - [NetAssetValueRecord](#provenance-nav-v1-NetAssetValueRecord)
+  
+- [provenance/nav/v1/query.proto](#provenance_nav_v1_query-proto)
+    - [QueryGetAllNAVsRequest](#provenance-nav-v1-QueryGetAllNAVsRequest)
+    - [QueryGetAllNAVsResponse](#provenance-nav-v1-QueryGetAllNAVsResponse)
+    - [QueryGetNAVRequest](#provenance-nav-v1-QueryGetNAVRequest)
+    - [QueryGetNAVResponse](#provenance-nav-v1-QueryGetNAVResponse)
+  
+    - [Query](#provenance-nav-v1-Query)
+  
 - [provenance/marker/v1/tx.proto](#provenance_marker_v1_tx-proto)
     - [MsgActivateRequest](#provenance-marker-v1-MsgActivateRequest)
     - [MsgActivateResponse](#provenance-marker-v1-MsgActivateResponse)
@@ -7072,6 +7085,164 @@ Params defines the parameters for the ibcratelimit module.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_nav_v1_types-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/nav/v1/types.proto
+
+
+
+<a name="provenance-nav-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState is the data that should be loaded into the nav module during genesis.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `navs` | [NetAssetValueRecord](#provenance-nav-v1-NetAssetValueRecord) | repeated | navs are all the net asset values to put into state at genesis. |
+
+
+
+
+
+
+<a name="provenance-nav-v1-NetAssetValue"></a>
+
+### NetAssetValue
+NetAssetValue defines the price of assets. Modules that want to record NAV
+info should use this type in their Tx endpoints.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | assets are the volume and denom that has value. |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | price is the amount that the assets are worth. |
+
+
+
+
+
+
+<a name="provenance-nav-v1-NetAssetValueRecord"></a>
+
+### NetAssetValueRecord
+NetAssetValueRecord defines the price of assets as well as the height and
+who/what was responsible for creating the record. This is used to actually
+store the info in state, and also as the return type for the queries.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | assets are the volume and denom that has value. |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | price is the amount that the assets are worth. |
+| `record_height` | [uint64](#uint64) |  | record_height is the height of the chain when this record was recorded. |
+| `recorded_by` | [string](#string) |  | recorded_by describes who or what created this record. It might contain an address, but might also be some sort of descriptor string. Max Length = 100 bytes. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_nav_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/nav/v1/query.proto
+
+
+
+<a name="provenance-nav-v1-QueryGetAllNAVsRequest"></a>
+
+### QueryGetAllNAVsRequest
+QueryGetAllNAVsRequest is the request type for the GetAllNAVs query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_denom` | [string](#string) |  | asset_denom is an optional denom. If provided, the query will only return NAVs that have this asset_denom. Otherwise, all NAVs will be returned. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the query. |
+
+
+
+
+
+
+<a name="provenance-nav-v1-QueryGetAllNAVsResponse"></a>
+
+### QueryGetAllNAVsResponse
+QueryGetAllNAVsResponse is the response type of the GetAllNAVs query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `navs` | [NetAssetValueRecord](#provenance-nav-v1-NetAssetValueRecord) | repeated | navs is a page of the requested net asset value entries. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
+<a name="provenance-nav-v1-QueryGetNAVRequest"></a>
+
+### QueryGetNAVRequest
+QueryGetNAVRequest is the request type for the GetNAV query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_denom` | [string](#string) |  | asset_denom is the denomination of the assets that you want the NAV for. |
+| `price_denom` | [string](#string) |  | price_denom is the denomination of the price that you want the NAV for. |
+
+
+
+
+
+
+<a name="provenance-nav-v1-QueryGetNAVResponse"></a>
+
+### QueryGetNAVResponse
+QueryGetNAVResponse is the response type of the GetNAV query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nav` | [NetAssetValueRecord](#provenance-nav-v1-NetAssetValueRecord) |  | nav is the requested net asset value. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-nav-v1-Query"></a>
+
+### Query
+Query is the service for nav module's query endpoints.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `GetNAV` | [QueryGetNAVRequest](#provenance-nav-v1-QueryGetNAVRequest) | [QueryGetNAVResponse](#provenance-nav-v1-QueryGetNAVResponse) | GetNAV returns the single Net Asset Value entry requested. |
+| `GetAllNAVs` | [QueryGetAllNAVsRequest](#provenance-nav-v1-QueryGetAllNAVsRequest) | [QueryGetAllNAVsResponse](#provenance-nav-v1-QueryGetAllNAVsResponse) | GetAllNAVs returns a page of all Net Asset Value entries, possibly limited to a single asset denom. |
 
  <!-- end services -->
 
