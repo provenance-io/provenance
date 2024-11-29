@@ -1,9 +1,11 @@
 package provutils
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // stringSame is a string with an IsSameAs(stringSame) function.
@@ -467,4 +469,215 @@ func TestFindMissingFunc(t *testing.T) {
 			})
 		}
 	})
+}
+
+// stringThing is a string with a String() method and a couple different validation methods.
+type stringThing string
+
+func (s stringThing) String() string {
+	return "'" + string(s) + "'"
+}
+
+func (s stringThing) ValidateIsEmpty() error {
+	if len(s) == 0 {
+		return nil
+	}
+	return errors.New(string(s))
+}
+
+func (s stringThing) ValidateNotEmpty() error {
+	if len(s) != 0 {
+		return nil
+	}
+	return errors.New("empty entry not allowed")
+}
+
+func TestSliceString(t *testing.T) {
+	tests := []struct {
+		name string
+		vals []stringThing
+		exp  string
+	}{
+		{
+			name: "nil",
+			vals: nil,
+			exp:  "<nil>",
+		},
+		{
+			name: "empty",
+			vals: []stringThing{},
+			exp:  "[]",
+		},
+		{
+			name: "one thing",
+			vals: []stringThing{"one"},
+			exp:  "['one']",
+		},
+		{
+			name: "two things",
+			vals: []stringThing{"one", "two"},
+			exp:  "['one','two']",
+		},
+		{
+			name: "five things",
+			vals: []stringThing{"one", "two", "three", "four", "five"},
+			exp:  "['one','two','three','four','five']",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var act string
+			testFunc := func() {
+				act = SliceString(tc.vals)
+			}
+			require.NotPanics(t, testFunc, "SliceString")
+			assert.Equal(t, tc.exp, act, "SliceString result")
+		})
+	}
+}
+
+func TestValidateSlice(t *testing.T) {
+	tests := []struct {
+		name      string
+		vals      []stringThing
+		validator func(stringThing) error
+		expErr    string
+	}{
+		{
+			name:      "nil",
+			vals:      nil,
+			validator: stringThing.ValidateNotEmpty,
+			expErr:    "",
+		},
+		{
+			name:      "empty",
+			vals:      []stringThing{},
+			validator: stringThing.ValidateNotEmpty,
+			expErr:    "",
+		},
+		{
+			name:      "one thing: no error",
+			vals:      []stringThing{"one"},
+			validator: stringThing.ValidateNotEmpty,
+			expErr:    "",
+		},
+		{
+			name:      "one thing: error",
+			vals:      []stringThing{"one"},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one",
+		},
+		{
+			name:      "two things: no error",
+			vals:      []stringThing{"one", "two"},
+			validator: stringThing.ValidateNotEmpty,
+			expErr:    "",
+		},
+		{
+			name:      "two things: error from first",
+			vals:      []stringThing{"one", ""},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one",
+		},
+		{
+			name:      "two things: error from second",
+			vals:      []stringThing{"", "two"},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "1: two",
+		},
+		{
+			name:      "two things: error from both",
+			vals:      []stringThing{"", ""},
+			validator: stringThing.ValidateNotEmpty,
+			expErr:    "0: empty entry not allowed\n1: empty entry not allowed",
+		},
+		{
+			name:      "three things: no errors",
+			vals:      []stringThing{"one", "two", "three"},
+			validator: stringThing.ValidateNotEmpty,
+			expErr:    "",
+		},
+		{
+			name:      "three things: error from first",
+			vals:      []stringThing{"one", "", ""},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one",
+		},
+		{
+			name:      "three things: error from second",
+			vals:      []stringThing{"", "two", ""},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "1: two",
+		},
+		{
+			name:      "three things: error from third",
+			vals:      []stringThing{"", "", "three"},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "2: three",
+		},
+		{
+			name:      "three things: errors from first and second",
+			vals:      []stringThing{"one", "two", ""},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one\n1: two",
+		},
+		{
+			name:      "three things: errors from first and third",
+			vals:      []stringThing{"one", "", "three"},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one\n2: three",
+		},
+		{
+			name:      "three things: errors from second and third",
+			vals:      []stringThing{"", "two", "three"},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "1: two\n2: three",
+		},
+		{
+			name:      "three things: errors from all",
+			vals:      []stringThing{"one", "two", "three"},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one\n1: two\n2: three",
+		},
+		{
+			name:      "five things: no error",
+			vals:      []stringThing{"one", "two", "three", "four", "five"},
+			validator: stringThing.ValidateNotEmpty,
+			expErr:    "",
+		},
+		{
+			name:      "five things: error from fourth",
+			vals:      []stringThing{"", "", "", "four", ""},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "3: four",
+		},
+		{
+			name:      "five things: errors from first, third, fourth",
+			vals:      []stringThing{"one", "", "three", "four", ""},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one\n2: three\n3: four",
+		},
+		{
+			name:      "five things: errors from all",
+			vals:      []stringThing{"one", "two", "three", "four", "five"},
+			validator: stringThing.ValidateIsEmpty,
+			expErr:    "0: one\n1: two\n2: three\n3: four\n4: five",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateSlice(tc.vals, tc.validator)
+			}
+			require.NotPanics(t, testFunc, "ValidateSlice")
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ValidateSlice result")
+			} else {
+				assert.NoError(t, err, "ValidateSlice result")
+			}
+		})
+	}
 }
