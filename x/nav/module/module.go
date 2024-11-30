@@ -88,21 +88,18 @@ func (AppModule) IsOnePerModuleType() {}
 // IsAppModule is a dummy function that satisfies the AppModule interface.
 func (AppModule) IsAppModule() {}
 
-// InitGenesis performs genesis initialization for the NAV module. It returns
-// no validator updates.
+// InitGenesis performs genesis initialization for the NAV module. It returns no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	panic(nav.NotYetImplemented)
-	// var genesisState GenesisState
-	// cdc.MustUnmarshalJSON(data, &genesisState)
-	// am.keeper.InitGenesis(ctx, &genesisState)
-	// return []abci.ValidatorUpdate{}
+	var genesisState nav.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	am.keeper.InitGenesis(ctx, &genesisState)
+	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the NAV module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	panic(nav.NotYetImplemented)
-	// gs := am.keeper.ExportGenesis(ctx)
-	// return cdc.MustMarshalJSON(gs)
+	gs := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // RegisterServices registers module services.

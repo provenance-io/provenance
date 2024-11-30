@@ -33,7 +33,7 @@ message NetAssetValueRecord {
   // price is the amount that the assets are worth.
   cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
   // record_height is the height of the chain when this record was recorded.
-  uint64 record_height = 3;
+  int64 record_height = 3;
   // recorded_by describes who or what created this record. It might contain
   // an address, but might also be some sort of descriptor string.
   // Max Length = 100 bytes.

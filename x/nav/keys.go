@@ -12,4 +12,6 @@ const (
 
 	// RecordedByMaxLen is the maximum number of bytes the NetAssetValueRecord.RecordedBy field can have.
 	RecordedByMaxLen = 100
+
+	StorePrefixNAVs = byte(0x01)
 )

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
+
 	"github.com/provenance-io/provenance/internal/provutils"
 )
 
@@ -33,7 +35,7 @@ func (n *NetAssetValue) Validate() error {
 }
 
 // AsRecord returns a NetAssetValueRecord for this NetAssetValue including the provided info.
-func (n *NetAssetValue) AsRecord(height uint64, recordedBy string) *NetAssetValueRecord {
+func (n *NetAssetValue) AsRecord(height int64, recordedBy string) *NetAssetValueRecord {
 	return &NetAssetValueRecord{
 		Assets:       n.Assets,
 		Price:        n.Price,
@@ -53,6 +55,28 @@ func (n NAVs) String() string {
 // Validate returns an error if there's something wrong with any of these navs.
 func (n NAVs) Validate() error {
 	return provutils.ValidateSlice(n, (*NetAssetValue).Validate)
+}
+
+// ValidateNAVs is the same as navs.Validate().
+func ValidateNAVs(navs NAVs) error {
+	return navs.Validate()
+}
+
+// AsRecords converts each of the provided navs into a NetAssetValueRecord with the provided info.
+func (n NAVs) AsRecords(height int64, recordedBy string) NAVRecords {
+	if n == nil {
+		return nil
+	}
+	rv := make(NAVRecords, len(n))
+	for i, entry := range n {
+		rv[i] = entry.AsRecord(height, recordedBy)
+	}
+	return rv
+}
+
+// NAVsAsRecords converts each of the provided navs into a NetAssetValueRecord with the provided info.
+func NAVsAsRecords(navs NAVs, height int64, recordedBy string) NAVRecords {
+	return navs.AsRecords(height, recordedBy)
 }
 
 // String returns a string representation of this nav record.
@@ -77,10 +101,21 @@ func (n *NetAssetValueRecord) Validate() error {
 	if err := n.Price.Validate(); err != nil {
 		return fmt.Errorf("invalid price %q: %w", n.Price, err)
 	}
-	if len(n.RecordedBy) > RecordedByMaxLen {
+	if err := ValidateRecordedBy(n.RecordedBy); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ValidateRecordedBy returns an error if the provided string cannot be used as a RecordedBy string.
+func ValidateRecordedBy(recordedBy string) error {
+	if len(recordedBy) == 0 {
+		return fmt.Errorf("invalid recorded_by %q: cannot be empty", recordedBy)
+	}
+	if len(recordedBy) > RecordedByMaxLen {
 		return fmt.Errorf("invalid recorded_by %q: length %d exceeds max %d",
-			n.RecordedBy[:7]+"..."+n.RecordedBy[:len(n.RecordedBy)-6],
-			len(n.RecordedBy), RecordedByMaxLen)
+			recordedBy[:7]+"..."+recordedBy[:len(recordedBy)-6],
+			len(recordedBy), RecordedByMaxLen)
 	}
 	return nil
 }
@@ -91,6 +126,11 @@ func (n *NetAssetValueRecord) AsNAV() *NetAssetValue {
 		Assets: n.Assets,
 		Price:  n.Price,
 	}
+}
+
+// Key returns the state store key for this NAV.
+func (n *NetAssetValueRecord) Key() collections.Pair[string, string] {
+	return collections.Join(n.Assets.Denom, n.Price.Denom)
 }
 
 // NAVRecords is a slice of NetAssetValueRecord entries.
@@ -104,6 +144,11 @@ func (n NAVRecords) String() string {
 // Validate returns an error if there's something wrong with any of these nav records.
 func (n NAVRecords) Validate() error {
 	return provutils.ValidateSlice(n, (*NetAssetValueRecord).Validate)
+}
+
+// ValidateNAVRecords is the same as navs.Validate().
+func ValidateNAVRecords(navs NAVRecords) error {
+	return navs.Validate()
 }
 
 // DefaultGenesisState returns the default NAV module genesis state.
