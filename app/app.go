@@ -42,6 +42,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/provenance-io/provenance/x/nav"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -164,6 +165,8 @@ import (
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	navkeeper "github.com/provenance-io/provenance/x/nav/keeper"
+	navmodule "github.com/provenance-io/provenance/x/nav/module"
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -269,6 +272,7 @@ type App struct {
 	ICQKeeper          icqkeeper.Keeper
 	RateLimitingKeeper *ibcratelimitkeeper.Keeper
 
+	NAVKeeper       *navkeeper.Keeper
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
@@ -378,6 +382,7 @@ func New(
 		ibchookstypes.StoreKey,
 		ibcratelimit.StoreKey,
 
+		nav.StoreKey,
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
 		attributetypes.StoreKey,
@@ -563,6 +568,8 @@ func New(
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.AccountKeeper, &app.NameKeeper,
 	)
+
+	app.NAVKeeper = navkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[nav.StoreKey]), logger)
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
@@ -762,6 +769,7 @@ func New(
 		circuit.NewAppModule(appCodec, app.CircuitKeeper),
 
 		// PROVENANCE
+		navmodule.NewAppModule(appCodec, app.NAVKeeper),
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
@@ -880,6 +888,7 @@ func New(
 		metadatatypes.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName, // must be after the hold module.
+		nav.ModuleName,
 
 		vaulttypes.ModuleName,
 
@@ -936,6 +945,7 @@ func New(
 		nametypes.ModuleName,
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
+		nav.ModuleName,
 
 		vaulttypes.ModuleName,
 

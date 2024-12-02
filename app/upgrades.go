@@ -86,6 +86,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	// TODO: Add the nav module in the next upgrade.
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.

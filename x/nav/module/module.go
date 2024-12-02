@@ -72,10 +72,10 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
-func NewAppModule(cdc codec.Codec, navKeeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, navKeeper *keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         navKeeper,
@@ -104,7 +104,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	nav.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
+	nav.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(*am.keeper))
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
