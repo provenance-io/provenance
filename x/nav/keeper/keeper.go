@@ -35,26 +35,26 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, logger 
 	}
 }
 
-// SetNAVs stores the provided navs in state. All will have the provided recordedBy and the height from the ctx.
-// An error is returned if the recordedBy or any navs are invalid.
-func (k Keeper) SetNAVs(ctx context.Context, recordedBy string, navs ...*nav.NetAssetValue) error {
+// SetNAVs stores the provided navs in state. All will have the provided source and the height from the ctx.
+// An error is returned if the source or any navs are invalid.
+func (k Keeper) SetNAVs(ctx context.Context, source string, navs ...*nav.NetAssetValue) error {
 	height := sdk.UnwrapSDKContext(ctx).BlockHeight()
-	return k.SetNAVsAtHeight(ctx, recordedBy, height, navs...)
+	return k.SetNAVsAtHeight(ctx, source, height, navs...)
 }
 
-// SetNAVsAtHeight stores the provided navs in state. All with have the provided recordedBy and height.
-// An error is returned if the recordedBy or any navs are invalid.
-func (k Keeper) SetNAVsAtHeight(ctx context.Context, recordedBy string, height int64, navs ...*nav.NetAssetValue) error {
+// SetNAVsAtHeight stores the provided navs in state. All with have the provided info.
+// An error is returned if the source or any navs are invalid.
+func (k Keeper) SetNAVsAtHeight(ctx context.Context, source string, height int64, navs ...*nav.NetAssetValue) error {
 	if len(navs) == 0 {
 		return nil
 	}
-	if err := nav.ValidateRecordedBy(recordedBy); err != nil {
+	if err := nav.ValidateSource(source); err != nil {
 		return err
 	}
 	if err := nav.ValidateNAVs(navs); err != nil {
 		return err
 	}
-	nrs := nav.NAVsAsRecords(navs, height, recordedBy)
+	nrs := nav.NAVsAsRecords(navs, height, source)
 	return k.setNAVRecordsRaw(ctx, nrs)
 }
 
@@ -72,11 +72,17 @@ func (k Keeper) SetNAVRecords(ctx context.Context, navs nav.NAVRecords) error {
 
 // setNAVRecordsRaw does the actual storage of NAVs in state (without any validation).
 func (k Keeper) setNAVRecordsRaw(ctx context.Context, navs nav.NAVRecords) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for i, navr := range navs {
 		key := navr.Key()
 		err := k.navs.Set(ctx, key, *navr)
 		if err != nil {
 			return fmt.Errorf("error setting nav[%d]: %w", i, err)
+		}
+
+		err = sdkCtx.EventManager().EmitTypedEvent(nav.NewEventSetNetAssetValue(navr))
+		if err != nil {
+			k.logger.Error(fmt.Sprintf("Error emitting NAV event: %v", err), "NAV", navr)
 		}
 	}
 	return nil

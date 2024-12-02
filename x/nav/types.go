@@ -35,12 +35,12 @@ func (n *NetAssetValue) Validate() error {
 }
 
 // AsRecord returns a NetAssetValueRecord for this NetAssetValue including the provided info.
-func (n *NetAssetValue) AsRecord(height int64, recordedBy string) *NetAssetValueRecord {
+func (n *NetAssetValue) AsRecord(height int64, source string) *NetAssetValueRecord {
 	return &NetAssetValueRecord{
-		Assets:       n.Assets,
-		Price:        n.Price,
-		RecordHeight: height,
-		RecordedBy:   recordedBy,
+		Assets: n.Assets,
+		Price:  n.Price,
+		Height: height,
+		Source: source,
 	}
 }
 
@@ -63,20 +63,20 @@ func ValidateNAVs(navs NAVs) error {
 }
 
 // AsRecords converts each of the provided navs into a NetAssetValueRecord with the provided info.
-func (n NAVs) AsRecords(height int64, recordedBy string) NAVRecords {
+func (n NAVs) AsRecords(height int64, source string) NAVRecords {
 	if n == nil {
 		return nil
 	}
 	rv := make(NAVRecords, len(n))
 	for i, entry := range n {
-		rv[i] = entry.AsRecord(height, recordedBy)
+		rv[i] = entry.AsRecord(height, source)
 	}
 	return rv
 }
 
 // NAVsAsRecords converts each of the provided navs into a NetAssetValueRecord with the provided info.
-func NAVsAsRecords(navs NAVs, height int64, recordedBy string) NAVRecords {
-	return navs.AsRecords(height, recordedBy)
+func NAVsAsRecords(navs NAVs, height int64, source string) NAVRecords {
+	return navs.AsRecords(height, source)
 }
 
 // String returns a string representation of this nav record.
@@ -84,7 +84,7 @@ func (n *NetAssetValueRecord) String() string {
 	if n == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("%s=%s@%d by %q", n.Assets, n.Price, n.RecordHeight, n.RecordedBy)
+	return fmt.Sprintf("%s=%s@%d by %q", n.Assets, n.Price, n.Height, n.Source)
 }
 
 // Validate returns an error if something about this nav record is wrong.
@@ -101,21 +101,21 @@ func (n *NetAssetValueRecord) Validate() error {
 	if err := n.Price.Validate(); err != nil {
 		return fmt.Errorf("invalid price %q: %w", n.Price, err)
 	}
-	if err := ValidateRecordedBy(n.RecordedBy); err != nil {
+	if err := ValidateSource(n.Source); err != nil {
 		return err
 	}
 	return nil
 }
 
-// ValidateRecordedBy returns an error if the provided string cannot be used as a RecordedBy string.
-func ValidateRecordedBy(recordedBy string) error {
-	if len(recordedBy) == 0 {
-		return fmt.Errorf("invalid recorded_by %q: cannot be empty", recordedBy)
+// ValidateSource returns an error if the provided string cannot be used as a Source string.
+func ValidateSource(source string) error {
+	if len(source) == 0 {
+		return fmt.Errorf("invalid source %q: cannot be empty", source)
 	}
-	if len(recordedBy) > RecordedByMaxLen {
-		return fmt.Errorf("invalid recorded_by %q: length %d exceeds max %d",
-			recordedBy[:7]+"..."+recordedBy[:len(recordedBy)-6],
-			len(recordedBy), RecordedByMaxLen)
+	if len(source) > SourceMaxLen {
+		return fmt.Errorf("invalid source %q: length %d exceeds max %d",
+			source[:7]+"..."+source[:len(source)-6],
+			len(source), SourceMaxLen)
 	}
 	return nil
 }
@@ -162,4 +162,13 @@ func (g GenesisState) Validate() error {
 		return fmt.Errorf("invalid navs: %w", err)
 	}
 	return nil
+}
+
+// NewEventSetNetAssetValue creates a new EventSetNetAssetValue for the provided nav record.
+func NewEventSetNetAssetValue(nav *NetAssetValueRecord) *EventSetNetAssetValue {
+	return &EventSetNetAssetValue{
+		Assets: nav.Assets.String(),
+		Price:  nav.Price.String(),
+		Source: nav.Source,
+	}
 }

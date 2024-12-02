@@ -32,12 +32,12 @@ message NetAssetValueRecord {
   cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
   // price is the amount that the assets are worth.
   cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
-  // record_height is the height of the chain when this record was recorded.
-  int64 record_height = 3;
-  // recorded_by describes who or what created this record. It might contain
+  // height is the block height of the chain when this record was recorded.
+  int64 height = 3;
+  // source describes who or what created this record. It might contain
   // an address, but might also be some sort of descriptor string.
   // Max Length = 100 bytes.
-  string recorded_by = 4;
+  string source = 4;
 }
 
 // GenesisState is the data that should be loaded into the nav module during genesis.
@@ -47,4 +47,14 @@ message GenesisState {
 
   // navs are all the net asset values to put into state at genesis.
   repeated NetAssetValueRecord navs = 1;
+}
+
+// EventSetNetAssetValue is an event emitted when a Net Asset Value is updated or added.
+message EventSetNetAssetValue {
+  // assets is a coin string of the volume and denom that has value
+  string assets = 1;
+  // price is the coin string of what the assets are worth.
+  string price = 2;
+  // source is a string indicating who or what created this record.
+  string source = 3;
 }

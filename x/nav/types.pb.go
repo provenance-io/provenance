@@ -87,12 +87,12 @@ type NetAssetValueRecord struct {
 	Assets types.Coin `protobuf:"bytes,1,opt,name=assets,proto3" json:"assets"`
 	// price is the amount that the assets are worth.
 	Price types.Coin `protobuf:"bytes,2,opt,name=price,proto3" json:"price"`
-	// record_height is the height of the chain when this record was recorded.
-	RecordHeight int64 `protobuf:"varint,3,opt,name=record_height,json=recordHeight,proto3" json:"record_height,omitempty"`
-	// recorded_by describes who or what created this record. It might contain
+	// height is the block height of the chain when this record was recorded.
+	Height int64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
+	// source describes who or what created this record. It might contain
 	// an address, but might also be some sort of descriptor string.
 	// Max Length = 100 bytes.
-	RecordedBy string `protobuf:"bytes,4,opt,name=recorded_by,json=recordedBy,proto3" json:"recorded_by,omitempty"`
+	Source string `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
 }
 
 func (m *NetAssetValueRecord) Reset()      { *m = NetAssetValueRecord{} }
@@ -141,16 +141,16 @@ func (m *NetAssetValueRecord) GetPrice() types.Coin {
 	return types.Coin{}
 }
 
-func (m *NetAssetValueRecord) GetRecordHeight() int64 {
+func (m *NetAssetValueRecord) GetHeight() int64 {
 	if m != nil {
-		return m.RecordHeight
+		return m.Height
 	}
 	return 0
 }
 
-func (m *NetAssetValueRecord) GetRecordedBy() string {
+func (m *NetAssetValueRecord) GetSource() string {
 	if m != nil {
-		return m.RecordedBy
+		return m.Source
 	}
 	return ""
 }
@@ -194,39 +194,106 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
+// EventSetNetAssetValue is an event emitted when a Net Asset Value is updated or added.
+type EventSetNetAssetValue struct {
+	// assets is a coin string of the volume and denom that has value
+	Assets string `protobuf:"bytes,1,opt,name=assets,proto3" json:"assets,omitempty"`
+	// price is the coin string of what the assets are worth.
+	Price string `protobuf:"bytes,2,opt,name=price,proto3" json:"price,omitempty"`
+	// source is a string indicating who or what created this record.
+	Source string `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+}
+
+func (m *EventSetNetAssetValue) Reset()         { *m = EventSetNetAssetValue{} }
+func (m *EventSetNetAssetValue) String() string { return proto.CompactTextString(m) }
+func (*EventSetNetAssetValue) ProtoMessage()    {}
+func (*EventSetNetAssetValue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_102b31885aca08a6, []int{3}
+}
+func (m *EventSetNetAssetValue) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventSetNetAssetValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventSetNetAssetValue.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventSetNetAssetValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSetNetAssetValue.Merge(m, src)
+}
+func (m *EventSetNetAssetValue) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventSetNetAssetValue) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSetNetAssetValue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventSetNetAssetValue proto.InternalMessageInfo
+
+func (m *EventSetNetAssetValue) GetAssets() string {
+	if m != nil {
+		return m.Assets
+	}
+	return ""
+}
+
+func (m *EventSetNetAssetValue) GetPrice() string {
+	if m != nil {
+		return m.Price
+	}
+	return ""
+}
+
+func (m *EventSetNetAssetValue) GetSource() string {
+	if m != nil {
+		return m.Source
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*NetAssetValue)(nil), "provenance.nav.v1.NetAssetValue")
 	proto.RegisterType((*NetAssetValueRecord)(nil), "provenance.nav.v1.NetAssetValueRecord")
 	proto.RegisterType((*GenesisState)(nil), "provenance.nav.v1.GenesisState")
+	proto.RegisterType((*EventSetNetAssetValue)(nil), "provenance.nav.v1.EventSetNetAssetValue")
 }
 
 func init() { proto.RegisterFile("provenance/nav/v1/types.proto", fileDescriptor_102b31885aca08a6) }
 
 var fileDescriptor_102b31885aca08a6 = []byte{
-	// 366 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x52, 0x31, 0x4f, 0xc2, 0x40,
-	0x14, 0xee, 0x09, 0x12, 0x3c, 0x60, 0xb0, 0x32, 0x54, 0x12, 0x5b, 0x82, 0x89, 0xa9, 0x83, 0x77,
-	0x29, 0xc6, 0x98, 0xb0, 0x89, 0x83, 0x4e, 0xc6, 0x54, 0xe3, 0xa0, 0x03, 0xb9, 0x96, 0x4b, 0xb9,
-	0x44, 0xee, 0x9a, 0xde, 0xd1, 0xc8, 0x3f, 0xd0, 0xcd, 0xd1, 0x91, 0x9f, 0xc3, 0xc8, 0x62, 0xe2,
-	0x64, 0x0c, 0x2c, 0xfe, 0x0c, 0xd3, 0x16, 0x03, 0x06, 0x07, 0x27, 0xb7, 0xf7, 0x7d, 0xef, 0x7d,
-	0xdf, 0xbd, 0x77, 0xef, 0xc1, 0x9d, 0x30, 0x12, 0x31, 0xe5, 0x84, 0xfb, 0x14, 0x73, 0x12, 0xe3,
-	0xd8, 0xc1, 0x6a, 0x18, 0x52, 0x89, 0xc2, 0x48, 0x28, 0xa1, 0x6f, 0x2e, 0xd2, 0x88, 0x93, 0x18,
-	0xc5, 0x4e, 0xcd, 0xf4, 0x85, 0xec, 0x0b, 0x89, 0x3d, 0x22, 0x29, 0x8e, 0x1d, 0x8f, 0x2a, 0xe2,
-	0x60, 0x5f, 0x30, 0x9e, 0x49, 0x6a, 0xd5, 0x40, 0x04, 0x22, 0x0d, 0x71, 0x12, 0x65, 0x6c, 0xe3,
-	0x09, 0xc0, 0xca, 0x05, 0x55, 0x27, 0x52, 0x52, 0x75, 0x43, 0xee, 0x07, 0x54, 0x3f, 0x86, 0x05,
-	0x92, 0x20, 0x69, 0x80, 0x3a, 0xb0, 0x4b, 0xcd, 0x6d, 0x94, 0x19, 0xa3, 0xc4, 0x18, 0xcd, 0x8d,
-	0xd1, 0xa9, 0x60, 0xbc, 0x9d, 0x1f, 0xbf, 0x5b, 0x9a, 0x3b, 0x2f, 0xd7, 0x8f, 0xe0, 0x7a, 0x18,
-	0x31, 0x9f, 0x1a, 0x6b, 0x7f, 0xd3, 0x65, 0xd5, 0xad, 0xe2, 0xcb, 0xc8, 0xd2, 0x3e, 0x47, 0x16,
-	0x68, 0xbc, 0x02, 0xb8, 0xf5, 0xa3, 0x17, 0x97, 0xfa, 0x22, 0xea, 0xfe, 0x77, 0x47, 0xfa, 0x2e,
-	0xac, 0x44, 0xe9, 0xcb, 0x9d, 0x1e, 0x65, 0x41, 0x4f, 0x19, 0xb9, 0x3a, 0xb0, 0x73, 0x6e, 0x39,
-	0x23, 0xcf, 0x53, 0x4e, 0xb7, 0x60, 0x29, 0xc3, 0xb4, 0xdb, 0xf1, 0x86, 0x46, 0xbe, 0x0e, 0xec,
-	0x0d, 0x17, 0x7e, 0x53, 0xed, 0xe1, 0xd2, 0x5c, 0xd7, 0xb0, 0x7c, 0x46, 0x39, 0x95, 0x4c, 0x5e,
-	0x29, 0xa2, 0xa8, 0xde, 0x82, 0x79, 0x4e, 0xe2, 0x64, 0x9a, 0x9c, 0x5d, 0x6a, 0xee, 0xa1, 0x95,
-	0x5d, 0xa2, 0x5f, 0x7e, 0xc1, 0x4d, 0x35, 0xad, 0xe2, 0x63, 0xe6, 0xaa, 0xb5, 0xef, 0xc6, 0x53,
-	0x13, 0x4c, 0xa6, 0x26, 0xf8, 0x98, 0x9a, 0xe0, 0x79, 0x66, 0x6a, 0x93, 0x99, 0xa9, 0xbd, 0xcd,
-	0x4c, 0x0d, 0x56, 0x99, 0x58, 0xf5, 0xbc, 0x04, 0xb7, 0xfb, 0x01, 0x53, 0xbd, 0x81, 0x87, 0x7c,
-	0xd1, 0xc7, 0x8b, 0xfc, 0x01, 0x13, 0x4b, 0x08, 0x3f, 0x24, 0xe7, 0xe6, 0x15, 0xd2, 0xeb, 0x38,
-	0xfc, 0x0a, 0x00, 0x00, 0xff, 0xff, 0xc4, 0x40, 0x4c, 0xa8, 0x87, 0x02, 0x00, 0x00,
+	// 388 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x52, 0x31, 0x6f, 0xd3, 0x40,
+	0x14, 0xf6, 0xe1, 0x10, 0x25, 0x17, 0x18, 0x30, 0x21, 0x32, 0x91, 0x70, 0xa2, 0x0c, 0xc8, 0x0c,
+	0xdc, 0xc9, 0x41, 0x08, 0x29, 0x1b, 0x41, 0x88, 0x0d, 0x21, 0x07, 0x31, 0x80, 0x18, 0xce, 0xe6,
+	0xc9, 0x39, 0x89, 0xdc, 0x59, 0xbe, 0xcb, 0xa9, 0xfd, 0x07, 0xed, 0xd6, 0xb1, 0x63, 0xfe, 0x49,
+	0xd7, 0x8c, 0x19, 0x3b, 0x55, 0x55, 0xb2, 0xf4, 0x67, 0x54, 0x8e, 0xad, 0xc6, 0x51, 0x3a, 0x74,
+	0xea, 0x76, 0xdf, 0x7b, 0xef, 0xfb, 0xf4, 0x7d, 0xf7, 0x1e, 0x7e, 0x93, 0x66, 0xd2, 0x80, 0x60,
+	0x22, 0x06, 0x2a, 0x98, 0xa1, 0x26, 0xa0, 0xfa, 0x38, 0x05, 0x45, 0xd2, 0x4c, 0x6a, 0xe9, 0xbc,
+	0xd8, 0xb5, 0x89, 0x60, 0x86, 0x98, 0xa0, 0xeb, 0xc5, 0x52, 0xcd, 0xa4, 0xa2, 0x11, 0x53, 0x40,
+	0x4d, 0x10, 0x81, 0x66, 0x01, 0x8d, 0x25, 0x17, 0x05, 0xa5, 0xdb, 0x4e, 0x64, 0x22, 0xb7, 0x4f,
+	0x9a, 0xbf, 0x8a, 0xea, 0xe0, 0x14, 0xe1, 0xe7, 0xdf, 0x41, 0x7f, 0x56, 0x0a, 0xf4, 0x2f, 0xf6,
+	0x7f, 0x0e, 0xce, 0x27, 0x5c, 0x67, 0x39, 0x52, 0x2e, 0xea, 0x23, 0xbf, 0x35, 0x7c, 0x4d, 0x0a,
+	0x61, 0x92, 0x0b, 0x93, 0x52, 0x98, 0x7c, 0x91, 0x5c, 0x8c, 0x6b, 0xcb, 0xab, 0x9e, 0x15, 0x96,
+	0xe3, 0xce, 0x47, 0xfc, 0x34, 0xcd, 0x78, 0x0c, 0xee, 0x93, 0x87, 0xf1, 0x8a, 0xe9, 0x51, 0xe3,
+	0x7c, 0xd1, 0xb3, 0x6e, 0x16, 0x3d, 0x34, 0xb8, 0x40, 0xf8, 0xe5, 0x9e, 0x97, 0x10, 0x62, 0x99,
+	0xfd, 0x7b, 0x6c, 0x47, 0x4e, 0x07, 0xd7, 0xa7, 0xc0, 0x93, 0xa9, 0x76, 0xed, 0x3e, 0xf2, 0xed,
+	0xb0, 0x44, 0x79, 0x5d, 0xc9, 0x79, 0x16, 0x83, 0x5b, 0xeb, 0x23, 0xbf, 0x19, 0x96, 0xa8, 0x92,
+	0xe0, 0x27, 0x7e, 0xf6, 0x0d, 0x04, 0x28, 0xae, 0x26, 0x9a, 0x69, 0x70, 0x46, 0xb8, 0x26, 0x98,
+	0xc9, 0x7d, 0xdb, 0x7e, 0x6b, 0xf8, 0x96, 0x1c, 0x6c, 0x8d, 0xdc, 0x93, 0x37, 0xdc, 0x72, 0x46,
+	0x8d, 0x93, 0x42, 0xd5, 0x1a, 0xfc, 0xc5, 0xaf, 0xbe, 0x1a, 0x10, 0x7a, 0x02, 0x7a, 0x7f, 0x55,
+	0x9d, 0xbd, 0x8f, 0x69, 0xde, 0xe5, 0x6e, 0x57, 0x73, 0x37, 0x2b, 0xb1, 0x4a, 0xfb, 0x76, 0xd5,
+	0xfe, 0xf8, 0xcf, 0x72, 0xed, 0xa1, 0xd5, 0xda, 0x43, 0xd7, 0x6b, 0x0f, 0x9d, 0x6d, 0x3c, 0x6b,
+	0xb5, 0xf1, 0xac, 0xcb, 0x8d, 0x67, 0xe1, 0x36, 0x97, 0x87, 0x96, 0x7f, 0xa0, 0xdf, 0xef, 0x12,
+	0xae, 0xa7, 0xf3, 0x88, 0xc4, 0x72, 0x46, 0x77, 0xfd, 0xf7, 0x5c, 0x56, 0x10, 0x3d, 0xca, 0xef,
+	0x36, 0xaa, 0x6f, 0xcf, 0xec, 0xc3, 0x6d, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd3, 0x5a, 0x84, 0xba,
+	0xd0, 0x02, 0x00, 0x00,
 }
 
 func (this *NetAssetValue) Equal(that interface{}) bool {
@@ -281,10 +348,10 @@ func (this *NetAssetValueRecord) Equal(that interface{}) bool {
 	if !this.Price.Equal(&that1.Price) {
 		return false
 	}
-	if this.RecordHeight != that1.RecordHeight {
+	if this.Height != that1.Height {
 		return false
 	}
-	if this.RecordedBy != that1.RecordedBy {
+	if this.Source != that1.Source {
 		return false
 	}
 	return true
@@ -352,15 +419,15 @@ func (m *NetAssetValueRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.RecordedBy) > 0 {
-		i -= len(m.RecordedBy)
-		copy(dAtA[i:], m.RecordedBy)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.RecordedBy)))
+	if len(m.Source) > 0 {
+		i -= len(m.Source)
+		copy(dAtA[i:], m.Source)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Source)))
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.RecordHeight != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.RecordHeight))
+	if m.Height != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.Height))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -424,6 +491,50 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *EventSetNetAssetValue) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventSetNetAssetValue) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventSetNetAssetValue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Source) > 0 {
+		i -= len(m.Source)
+		copy(dAtA[i:], m.Source)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Source)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Price) > 0 {
+		i -= len(m.Price)
+		copy(dAtA[i:], m.Price)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Price)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Assets) > 0 {
+		i -= len(m.Assets)
+		copy(dAtA[i:], m.Assets)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Assets)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTypes(v)
 	base := offset
@@ -458,10 +569,10 @@ func (m *NetAssetValueRecord) Size() (n int) {
 	n += 1 + l + sovTypes(uint64(l))
 	l = m.Price.Size()
 	n += 1 + l + sovTypes(uint64(l))
-	if m.RecordHeight != 0 {
-		n += 1 + sovTypes(uint64(m.RecordHeight))
+	if m.Height != 0 {
+		n += 1 + sovTypes(uint64(m.Height))
 	}
-	l = len(m.RecordedBy)
+	l = len(m.Source)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -479,6 +590,27 @@ func (m *GenesisState) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovTypes(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *EventSetNetAssetValue) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Assets)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Price)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Source)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
 }
@@ -702,9 +834,9 @@ func (m *NetAssetValueRecord) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordHeight", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
 			}
-			m.RecordHeight = 0
+			m.Height = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -714,14 +846,14 @@ func (m *NetAssetValueRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.RecordHeight |= int64(b&0x7F) << shift
+				m.Height |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordedBy", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Source", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -749,7 +881,7 @@ func (m *NetAssetValueRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RecordedBy = string(dAtA[iNdEx:postIndex])
+			m.Source = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -834,6 +966,152 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if err := m.Navs[len(m.Navs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventSetNetAssetValue) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventSetNetAssetValue: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventSetNetAssetValue: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Assets", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Assets = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Price = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Source", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Source = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

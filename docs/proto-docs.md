@@ -476,6 +476,7 @@
     - [Params](#provenance-ibcratelimit-v1-Params)
   
 - [provenance/nav/v1/types.proto](#provenance_nav_v1_types-proto)
+    - [EventSetNetAssetValue](#provenance-nav-v1-EventSetNetAssetValue)
     - [GenesisState](#provenance-nav-v1-GenesisState)
     - [NetAssetValue](#provenance-nav-v1-NetAssetValue)
     - [NetAssetValueRecord](#provenance-nav-v1-NetAssetValueRecord)
@@ -7097,6 +7098,23 @@ Params defines the parameters for the ibcratelimit module.
 
 
 
+<a name="provenance-nav-v1-EventSetNetAssetValue"></a>
+
+### EventSetNetAssetValue
+EventSetNetAssetValue is an event emitted when a Net Asset Value is updated or added.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [string](#string) |  | assets is a coin string of the volume and denom that has value |
+| `price` | [string](#string) |  | price is the coin string of what the assets are worth. |
+| `source` | [string](#string) |  | source is a string indicating who or what created this record. |
+
+
+
+
+
+
 <a name="provenance-nav-v1-GenesisState"></a>
 
 ### GenesisState
@@ -7141,8 +7159,8 @@ store the info in state, and also as the return type for the queries.
 | ----- | ---- | ----- | ----------- |
 | `assets` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | assets are the volume and denom that has value. |
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | price is the amount that the assets are worth. |
-| `record_height` | [int64](#int64) |  | record_height is the height of the chain when this record was recorded. |
-| `recorded_by` | [string](#string) |  | recorded_by describes who or what created this record. It might contain an address, but might also be some sort of descriptor string. Max Length = 100 bytes. |
+| `height` | [int64](#int64) |  | height is the block height of the chain when this record was recorded. |
+| `source` | [string](#string) |  | source describes who or what created this record. It might contain an address, but might also be some sort of descriptor string. Max Length = 100 bytes. |
 
 
 
