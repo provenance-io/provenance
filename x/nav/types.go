@@ -6,8 +6,68 @@ import (
 
 	"cosmossdk.io/collections"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/provutils"
 )
+
+// baseNAV is an interface that has accessors for all NAV types.
+type baseNAV interface {
+	GetAssets() sdk.Coin
+	GetPrice() sdk.Coin
+	String() string
+}
+
+var (
+	_ baseNAV = (*NetAssetValue)(nil)
+	_ baseNAV = (*NetAssetValueRecord)(nil)
+)
+
+// validateBaseNAV returns an error if there's something wrong with the provided NAV.
+func validateBaseNAV(nav baseNAV) error {
+	if nav == nil {
+		return errors.New("nav cannot be nil")
+	}
+
+	assets := nav.GetAssets()
+	if err := assets.Validate(); err != nil {
+		return fmt.Errorf("invalid assets %q: %w", assets, err)
+	}
+	if assets.IsZero() {
+		return fmt.Errorf("invalid assets %q: cannot be zero", assets)
+	}
+
+	price := nav.GetPrice()
+	if err := price.Validate(); err != nil {
+		return fmt.Errorf("invalid price %q: %w", price, err)
+	}
+	if assets.Denom == price.Denom {
+		return fmt.Errorf("nav assets %q and price %q must have different denoms", assets.String(), price.String())
+	}
+	return nil
+}
+
+// validateNoDups returns an error if two (or more) of the provided navs have the same assets and price denoms.
+func validateNoDups[S ~[]E, E baseNAV](navs S) error {
+	all := make(map[string]S)
+	keys := make([]string, 0, len(navs))
+	for _, nav := range navs {
+		key := nav.GetAssets().Denom + " " + nav.GetPrice().Denom
+		if _, have := all[key]; !have {
+			keys = append(keys, key)
+		}
+		all[key] = append(all[key], nav)
+	}
+
+	var errs []error
+	for _, key := range keys {
+		if len(all[key]) > 1 {
+			errs = append(errs, fmt.Errorf("cannot have multiple (%d) navs with the same asset (%q) and price (%q)",
+				len(all[key]), all[key][0].GetAssets().Denom, all[key][0].GetPrice().Denom))
+		}
+	}
+	return errors.Join(errs...)
+}
 
 // String returns a string representation of this nav.
 func (n *NetAssetValue) String() string {
@@ -19,19 +79,7 @@ func (n *NetAssetValue) String() string {
 
 // Validate returns an error if something about this nav is wrong.
 func (n *NetAssetValue) Validate() error {
-	if n == nil {
-		return errors.New("nav cannot be nil")
-	}
-	if err := n.Assets.Validate(); err != nil {
-		return fmt.Errorf("invalid assets %q: %w", n.Assets, err)
-	}
-	if n.Assets.IsZero() {
-		return fmt.Errorf("invalid assets %q: cannot be zero", n.Assets)
-	}
-	if err := n.Price.Validate(); err != nil {
-		return fmt.Errorf("invalid price %q: %w", n.Price, err)
-	}
-	return nil
+	return validateBaseNAV(n)
 }
 
 // AsRecord returns a NetAssetValueRecord for this NetAssetValue including the provided info.
@@ -54,7 +102,10 @@ func (n NAVs) String() string {
 
 // Validate returns an error if there's something wrong with any of these navs.
 func (n NAVs) Validate() error {
-	return provutils.ValidateSlice(n, (*NetAssetValue).Validate)
+	if err := provutils.ValidateSlice(n, (*NetAssetValue).Validate); err != nil {
+		return err
+	}
+	return validateNoDups(n)
 }
 
 // ValidateNAVs is the same as navs.Validate().
@@ -89,17 +140,8 @@ func (n *NetAssetValueRecord) String() string {
 
 // Validate returns an error if something about this nav record is wrong.
 func (n *NetAssetValueRecord) Validate() error {
-	if n == nil {
-		return errors.New("nav record cannot be nil")
-	}
-	if err := n.Assets.Validate(); err != nil {
-		return fmt.Errorf("invalid assets %q: %w", n.Assets, err)
-	}
-	if n.Assets.IsZero() {
-		return fmt.Errorf("invalid assets %q: cannot be zero", n.Assets)
-	}
-	if err := n.Price.Validate(); err != nil {
-		return fmt.Errorf("invalid price %q: %w", n.Price, err)
+	if err := validateBaseNAV(n); err != nil {
+		return err
 	}
 	if err := ValidateSource(n.Source); err != nil {
 		return err
@@ -143,7 +185,10 @@ func (n NAVRecords) String() string {
 
 // Validate returns an error if there's something wrong with any of these nav records.
 func (n NAVRecords) Validate() error {
-	return provutils.ValidateSlice(n, (*NetAssetValueRecord).Validate)
+	if err := provutils.ValidateSlice(n, (*NetAssetValueRecord).Validate); err != nil {
+		return err
+	}
+	return validateNoDups(n)
 }
 
 // ValidateNAVRecords is the same as navs.Validate().
@@ -158,7 +203,7 @@ func DefaultGenesisState() *GenesisState {
 
 // Validate returns an error if anything is wrong with this GenesisState.
 func (g GenesisState) Validate() error {
-	if err := NAVRecords(g.Navs).Validate(); err != nil {
+	if err := ValidateNAVRecords(g.Navs); err != nil {
 		return fmt.Errorf("invalid navs: %w", err)
 	}
 	return nil
