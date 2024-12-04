@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 
@@ -16,6 +17,7 @@ import (
 	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/nav"
 )
 
 // Handler is a handler function for use with IterateRecords.
@@ -60,6 +62,7 @@ type Keeper struct {
 	attrKeeper types.AttrKeeper
 	// To access names and normalize required attributes
 	nameKeeper types.NameKeeper
+	navKeeper  types.NAVKeeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
@@ -105,6 +108,7 @@ func NewKeeper(
 	attrKeeper types.AttrKeeper,
 	nameKeeper types.NameKeeper,
 	ibcTransferServer types.IbcTransferMsgServer,
+	navKeeper types.NAVKeeper,
 	reqAttrBypassAddrs []sdk.AccAddress,
 	checker types.GroupChecker,
 ) Keeper {
@@ -115,6 +119,7 @@ func NewKeeper(
 		feegrantKeeper:        feegrantKeeper,
 		attrKeeper:            attrKeeper,
 		nameKeeper:            nameKeeper,
+		navKeeper:             navKeeper,
 		storeKey:              key,
 		cdc:                   cdc,
 		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -275,25 +280,21 @@ func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) []sd
 // AddSetNetAssetValues adds a set of net asset values to a marker
 func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue, source string) error {
 	var errs []error
-	for _, nav := range netAssetValues {
-		if nav.Price.Denom == marker.GetDenom() {
+	for _, mnav := range netAssetValues {
+		if mnav.Price.Denom == marker.GetDenom() {
 			errs = append(errs, fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom()))
 			continue
 		}
 
-		if nav.Price.Denom != types.UsdDenom {
-			_, err := k.GetMarkerByDenom(ctx, nav.Price.Denom)
+		if mnav.Price.Denom != types.UsdDenom {
+			_, err := k.GetMarkerByDenom(ctx, mnav.Price.Denom)
 			if err != nil {
-				if err2 := nav.Validate(); err2 == nil {
-					navEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), nav.Price, nav.Volume, source)
-					_ = ctx.EventManager().EmitTypedEvent(navEvent)
-				}
 				errs = append(errs, fmt.Errorf("net asset value denom does not exist: %w", err))
 				continue
 			}
 		}
 
-		if err := k.SetNetAssetValue(ctx, marker, nav, source); err != nil {
+		if err := k.SetNetAssetValue(ctx, marker, mnav, source); err != nil {
 			errs = append(errs, fmt.Errorf("cannot set net asset value: %w", err))
 		}
 	}
@@ -302,25 +303,10 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 
 // SetNetAssetValue adds/updates a net asset value to marker
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error {
-	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
-	if err := netAssetValue.Validate(); err != nil {
-		return err
-	}
-
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
-	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
-		return err
-	}
-
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
-	bz, err := k.cdc.Marshal(&netAssetValue)
-	if err != nil {
-		return err
-	}
-	store := ctx.KVStore(k.storeKey)
-	store.Set(key, bz)
-
-	return nil
+	return k.navKeeper.SetNAVs(ctx, source, &nav.NetAssetValue{
+		Assets: sdk.NewCoin(marker.GetDenom(), sdkmath.NewIntFromUint64(netAssetValue.Volume)),
+		Price:  netAssetValue.Price,
+	})
 }
 
 // SetNetAssetValueWithBlockHeight adds/updates a net asset value to marker with a specific block height

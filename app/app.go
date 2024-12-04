@@ -583,7 +583,7 @@ func New(
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.AccountKeeper,
 		app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
-		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper,
+		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, app.NAVKeeper,
 		markerReqAttrBypassAddrs, NewGroupCheckerFunc(app.GroupKeeper),
 	)
 

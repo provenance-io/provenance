@@ -12,6 +12,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/nav"
 )
 
 // AccountKeeper defines the auth/account functionality needed by the marker keeper.
@@ -72,6 +73,10 @@ type AttrKeeper interface {
 // NameKeeper defines the name keeper functionality needed by the marker module.
 type NameKeeper interface {
 	Normalize(ctx sdk.Context, name string) (string, error)
+}
+
+type NAVKeeper interface {
+	SetNAVs(ctx context.Context, source string, navs ...*nav.NetAssetValue) error
 }
 
 // IbcTransferMsgServer defines the message server functionality needed by the marker module.
