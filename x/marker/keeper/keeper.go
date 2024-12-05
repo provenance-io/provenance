@@ -62,7 +62,8 @@ type Keeper struct {
 	attrKeeper types.AttrKeeper
 	// To access names and normalize required attributes
 	nameKeeper types.NameKeeper
-	navKeeper  types.NAVKeeper
+	// navKeeper manages NetAssetValue info.
+	navKeeper types.NAVKeeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
@@ -311,29 +312,34 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 
 // SetNetAssetValueWithBlockHeight adds/updates a net asset value to marker with a specific block height
 func (k Keeper) SetNetAssetValueWithBlockHeight(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string, blockHeight uint64) error {
-	netAssetValue.UpdatedBlockHeight = blockHeight
-	if err := netAssetValue.Validate(); err != nil {
-		return err
-	}
-
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
-	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
-		return err
-	}
-
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
-	bz, err := k.cdc.Marshal(&netAssetValue)
-	if err != nil {
-		return err
-	}
-	store := ctx.KVStore(k.storeKey)
-	store.Set(key, bz)
-
-	return nil
+	return k.navKeeper.SetNAVsAtHeight(ctx, source, blockHeight, &nav.NetAssetValue{
+		Assets: sdk.NewCoin(marker.GetDenom(), sdkmath.NewIntFromUint64(netAssetValue.Volume)),
+		Price:  netAssetValue.Price,
+	})
 }
 
 // GetNetAssetValue gets the NetAssetValue for a marker denom with a specific price denom.
 func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
+	// TODO: Remove the error return value from GetNetAssetValue.
+	navr := k.navKeeper.GetNAVRecord(ctx, markerDenom, priceDenom)
+	if navr == nil {
+		return nil, nil
+	}
+	rv := &types.NetAssetValue{
+		Price:              navr.Price,
+		UpdatedBlockHeight: navr.Height,
+	}
+	if navr.Assets.Amount.IsUint64() {
+		rv.Volume = navr.Assets.Amount.Uint64()
+	}
+	// TODO: Stop using the marker module's NetAssetValue type for anything since it can't handle very large volumes.
+	return rv, nil
+}
+
+// GetNetAssetValueOld is the old version of GetNetAssetValue. This looks in the marker module's state for the info.
+// This exists only for migration purposes.
+func (k Keeper) GetNetAssetValueOld(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
+	// TODO: Move this GetNetAssetValueOld (and other stuff) into a migration file.
 	store := ctx.KVStore(k.storeKey)
 	markerAddr, err := types.MarkerAddress(markerDenom)
 	if err != nil {

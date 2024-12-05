@@ -77,6 +77,8 @@ type NameKeeper interface {
 
 type NAVKeeper interface {
 	SetNAVs(ctx context.Context, source string, navs ...*nav.NetAssetValue) error
+	SetNAVsAtHeight(ctx context.Context, source string, height uint64, navs ...*nav.NetAssetValue) error
+	GetNAVRecord(ctx context.Context, assetDenom, priceDenom string) *nav.NetAssetValueRecord
 }
 
 // IbcTransferMsgServer defines the message server functionality needed by the marker module.
