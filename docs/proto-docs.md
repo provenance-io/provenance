@@ -7159,7 +7159,7 @@ store the info in state, and also as the return type for the queries.
 | ----- | ---- | ----- | ----------- |
 | `assets` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | assets are the volume and denom that has value. |
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | price is the amount that the assets are worth. |
-| `height` | [int64](#int64) |  | height is the block height of the chain when this record was recorded. |
+| `height` | [uint64](#uint64) |  | height is the block height of the chain when this record was recorded. |
 | `source` | [string](#string) |  | source describes who or what created this record. It might contain an address, but might also be some sort of descriptor string. Max Length = 100 bytes. |
 
 

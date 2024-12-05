@@ -39,12 +39,15 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, logger 
 // An error is returned if the source or any navs are invalid.
 func (k Keeper) SetNAVs(ctx context.Context, source string, navs ...*nav.NetAssetValue) error {
 	height := sdk.UnwrapSDKContext(ctx).BlockHeight()
-	return k.SetNAVsAtHeight(ctx, source, height, navs...)
+	if height < 0 {
+		panic(fmt.Errorf("context has height %d: cannot be less than zero", height))
+	}
+	return k.SetNAVsAtHeight(ctx, source, uint64(height), navs...)
 }
 
 // SetNAVsAtHeight stores the provided navs in state. All with have the provided info.
 // An error is returned if the source or any navs are invalid.
-func (k Keeper) SetNAVsAtHeight(ctx context.Context, source string, height int64, navs ...*nav.NetAssetValue) error {
+func (k Keeper) SetNAVsAtHeight(ctx context.Context, source string, height uint64, navs ...*nav.NetAssetValue) error {
 	if len(navs) == 0 {
 		return nil
 	}

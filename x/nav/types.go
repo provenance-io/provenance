@@ -83,7 +83,7 @@ func (n *NetAssetValue) Validate() error {
 }
 
 // AsRecord returns a NetAssetValueRecord for this NetAssetValue including the provided info.
-func (n *NetAssetValue) AsRecord(height int64, source string) *NetAssetValueRecord {
+func (n *NetAssetValue) AsRecord(height uint64, source string) *NetAssetValueRecord {
 	return &NetAssetValueRecord{
 		Assets: n.Assets,
 		Price:  n.Price,
@@ -114,7 +114,7 @@ func ValidateNAVs(navs NAVs) error {
 }
 
 // AsRecords converts each of the provided navs into a NetAssetValueRecord with the provided info.
-func (n NAVs) AsRecords(height int64, source string) NAVRecords {
+func (n NAVs) AsRecords(height uint64, source string) NAVRecords {
 	if n == nil {
 		return nil
 	}
@@ -126,7 +126,7 @@ func (n NAVs) AsRecords(height int64, source string) NAVRecords {
 }
 
 // NAVsAsRecords converts each of the provided navs into a NetAssetValueRecord with the provided info.
-func NAVsAsRecords(navs NAVs, height int64, source string) NAVRecords {
+func NAVsAsRecords(navs NAVs, height uint64, source string) NAVRecords {
 	return navs.AsRecords(height, source)
 }
 
