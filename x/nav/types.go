@@ -25,10 +25,6 @@ var (
 
 // validateBaseNAV returns an error if there's something wrong with the provided NAV.
 func validateBaseNAV(nav baseNAV) error {
-	if nav == nil {
-		return errors.New("nav cannot be nil")
-	}
-
 	assets := nav.GetAssets()
 	if err := assets.Validate(); err != nil {
 		return fmt.Errorf("invalid assets %q: %w", assets, err)
@@ -62,11 +58,16 @@ func validateNoDups[S ~[]E, E baseNAV](navs S) error {
 	var errs []error
 	for _, key := range keys {
 		if len(all[key]) > 1 {
-			errs = append(errs, fmt.Errorf("cannot have multiple (%d) navs with the same asset (%q) and price (%q)",
+			errs = append(errs, fmt.Errorf("cannot have multiple (%d) navs with the same asset (%q) and price (%q) denoms",
 				len(all[key]), all[key][0].GetAssets().Denom, all[key][0].GetPrice().Denom))
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// baseNAVString returns a string representing this base nav.
+func baseNAVString(nav baseNAV) string {
+	return fmt.Sprintf("%s=%s", nav.GetAssets(), nav.GetPrice())
 }
 
 // String returns a string representation of this nav.
@@ -74,19 +75,22 @@ func (n *NetAssetValue) String() string {
 	if n == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("%s=%s", n.Assets, n.Price)
+	return baseNAVString(n)
 }
 
 // Validate returns an error if something about this nav is wrong.
 func (n *NetAssetValue) Validate() error {
+	if n == nil {
+		return errors.New("nav cannot be nil")
+	}
 	return validateBaseNAV(n)
 }
 
 // AsRecord returns a NetAssetValueRecord for this NetAssetValue including the provided info.
 func (n *NetAssetValue) AsRecord(height uint64, source string) *NetAssetValueRecord {
 	return &NetAssetValueRecord{
-		Assets: n.Assets,
-		Price:  n.Price,
+		Assets: n.GetAssets(),
+		Price:  n.GetPrice(),
 		Height: height,
 		Source: source,
 	}
@@ -135,11 +139,14 @@ func (n *NetAssetValueRecord) String() string {
 	if n == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("%s=%s@%d by %q", n.Assets, n.Price, n.Height, n.Source)
+	return baseNAVString(n) + fmt.Sprintf("@%d by %q", n.Height, n.Source)
 }
 
 // Validate returns an error if something about this nav record is wrong.
 func (n *NetAssetValueRecord) Validate() error {
+	if n == nil {
+		return errors.New("nav record cannot be nil")
+	}
 	if err := validateBaseNAV(n); err != nil {
 		return err
 	}
@@ -156,7 +163,7 @@ func ValidateSource(source string) error {
 	}
 	if len(source) > SourceMaxLen {
 		return fmt.Errorf("invalid source %q: length %d exceeds max %d",
-			source[:7]+"..."+source[:len(source)-6],
+			source[:7]+"..."+source[len(source)-6:],
 			len(source), SourceMaxLen)
 	}
 	return nil
@@ -165,14 +172,14 @@ func ValidateSource(source string) error {
 // AsNAV returns a NetAssetValue representation of this NetAssetValueRecord.
 func (n *NetAssetValueRecord) AsNAV() *NetAssetValue {
 	return &NetAssetValue{
-		Assets: n.Assets,
-		Price:  n.Price,
+		Assets: n.GetAssets(),
+		Price:  n.GetPrice(),
 	}
 }
 
 // Key returns the state store key for this NAV.
 func (n *NetAssetValueRecord) Key() collections.Pair[string, string] {
-	return collections.Join(n.Assets.Denom, n.Price.Denom)
+	return collections.Join(n.GetAssets().Denom, n.GetPrice().Denom)
 }
 
 // NAVRecords is a slice of NetAssetValueRecord entries.
@@ -212,8 +219,8 @@ func (g GenesisState) Validate() error {
 // NewEventSetNetAssetValue creates a new EventSetNetAssetValue for the provided nav record.
 func NewEventSetNetAssetValue(nav *NetAssetValueRecord) *EventSetNetAssetValue {
 	return &EventSetNetAssetValue{
-		Assets: nav.Assets.String(),
-		Price:  nav.Price.String(),
-		Source: nav.Source,
+		Assets: nav.GetAssets().String(),
+		Price:  nav.GetPrice().String(),
+		Source: nav.GetSource(),
 	}
 }
