@@ -40,7 +40,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, logger 
 func (k Keeper) SetNAVs(ctx context.Context, source string, navs ...*nav.NetAssetValue) error {
 	height := sdk.UnwrapSDKContext(ctx).BlockHeight()
 	if height < 0 {
-		panic(fmt.Errorf("context has height %d: cannot be less than zero", height))
+		return fmt.Errorf("context has height %d: cannot be less than zero", height)
 	}
 	return k.SetNAVsAtHeight(ctx, source, uint64(height), navs...)
 }
