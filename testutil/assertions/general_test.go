@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 const (
@@ -242,6 +243,266 @@ func TestRequireNotPanicsNoErrorf(t *testing.T) {
 			}
 			tb := mockRun(t, testFunc)
 			require.True(t, tc.fCalled, "%s called test func", funcName)
+
+			assertMockRunRequireResult(t, funcName, tb, exited, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}
+
+func TestPrefixMsgAndArgs(t *testing.T) {
+	tests := []struct {
+		name       string
+		pre        string
+		msgAndArgs []interface{}
+		exp        []interface{}
+	}{
+		{
+			name:       "empty pre: nil args",
+			pre:        "",
+			msgAndArgs: nil,
+			exp:        nil,
+		},
+		{
+			name:       "empty pre: empty args",
+			pre:        "",
+			msgAndArgs: []interface{}{},
+			exp:        []interface{}{},
+		},
+		{
+			name:       "empty pre: one arg",
+			pre:        "",
+			msgAndArgs: []interface{}{"one"},
+			exp:        []interface{}{"one"},
+		},
+		{
+			name:       "empty pre: three args",
+			pre:        "",
+			msgAndArgs: []interface{}{"one", "two", "three"},
+			exp:        []interface{}{"one", "two", "three"},
+		},
+		{
+			name:       "nil msgAndArgs",
+			pre:        "addme",
+			msgAndArgs: nil,
+			exp:        []interface{}{"addme"},
+		},
+		{
+			name:       "empty msgAndArgs",
+			pre:        "addme",
+			msgAndArgs: []interface{}{},
+			exp:        []interface{}{"addme"},
+		},
+		{
+			name:       "one msgAndArgs: string",
+			pre:        "plusone",
+			msgAndArgs: []interface{}{"arg0"},
+			exp:        []interface{}{"plusone: arg0"},
+		},
+		{
+			name:       "one msgAndArgs: not string",
+			pre:        "plusone",
+			msgAndArgs: []interface{}{77},
+			exp:        []interface{}{77},
+		},
+		{
+			name:       "three args: first is string",
+			pre:        "label",
+			msgAndArgs: []interface{}{"thingy with %d and %q", 99, "bananas"},
+			exp:        []interface{}{"label: thingy with %d and %q", 99, "bananas"},
+		},
+		{
+			name:       "three args: first is not string",
+			pre:        "label",
+			msgAndArgs: []interface{}{4, "thingy with %d and %q", 99, "bananas"},
+			exp:        []interface{}{4, "thingy with %d and %q", 99, "bananas"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var act []interface{}
+			testFunc := func() {
+				act = prefixMsgAndArgs(tc.pre, tc.msgAndArgs)
+			}
+			require.NotPanics(t, testFunc, "prefixMsgAndArgs(%q, %#v)", tc.pre, tc.msgAndArgs)
+			assert.Equal(t, tc.exp, act, "prefixMsgAndArgs(%q, %#v) result", tc.pre, tc.msgAndArgs)
+		})
+	}
+}
+
+func TestPrefixMsg(t *testing.T) {
+	tests := []struct {
+		name string
+		pre  string
+		msg  string
+		exp  string
+	}{
+		{name: "both are empty", pre: "", msg: "", exp: ""},
+		{name: "only empty pre", pre: "", msg: "the message", exp: "the message"},
+		{name: "only empty msg", pre: "daprefix", msg: "", exp: "daprefix"},
+		{name: "both have value", pre: "label", msg: "content", exp: "label: content"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var act string
+			testFunc := func() {
+				act = prefixMsg(tc.pre, tc.msg)
+			}
+			require.NotPanics(t, testFunc, "prefixMsg(%q, %q)", tc.pre, tc.msg)
+			assert.Equal(t, tc.exp, act, "prefixMsg(%q, %q) result", tc.pre, tc.msg)
+		})
+	}
+}
+
+// equalPageResponsesTestCase is a test case for the [Assert|Require]EqualPageResponses[f]? functions.
+type equalPageResponsesTestCase struct {
+	name      string
+	exp       *query.PageResponse
+	act       *query.PageResponse
+	errLabel  string
+	expOutput []string
+}
+
+// getEqualPageResponsesTestCases returns all the tests cases for the [Assert|Require]EqualPageResponses[f]? functions.
+func getEqualPageResponsesTestCases() []*equalPageResponsesTestCase {
+	return []*equalPageResponsesTestCase{
+		{
+			name:      "both nil",
+			exp:       nil,
+			act:       nil,
+			expOutput: nil,
+		},
+		{
+			name:     "exp nil, act not",
+			exp:      nil,
+			act:      &query.PageResponse{},
+			errLabel: "PageResponse",
+			expOutput: []string{
+				errorLead + "Expected nil, but got: &query.PageResponse{NextKey:[]uint8(nil), Total:0x0}",
+			},
+		},
+		{
+			name:     "act nil, exp not",
+			exp:      &query.PageResponse{},
+			act:      nil,
+			errLabel: "PageResponse",
+			expOutput: []string{
+				errorLead + "Expected value not to be nil.",
+			},
+		},
+		{
+			name:     "different next keys, same totals",
+			exp:      &query.PageResponse{NextKey: []byte("gofor1"), Total: 10},
+			act:      &query.PageResponse{NextKey: []byte("gofor2"), Total: 10},
+			errLabel: "PageResponse.NextKey",
+			expOutput: []string{
+				errorLead + "Not equal: ",
+				blankLead + "expected: \"gofor1\"",
+				blankLead + "actual  : \"gofor2\"",
+			},
+		},
+		{
+			name:     "same next keys, different totals",
+			exp:      &query.PageResponse{NextKey: []byte("gofor1"), Total: 10},
+			act:      &query.PageResponse{NextKey: []byte("gofor1"), Total: 11},
+			errLabel: "PageResponse.Total",
+			expOutput: []string{
+				errorLead + "Not equal: ",
+				blankLead + "expected: \"10\"",
+				blankLead + "actual  : \"11\"",
+			},
+		},
+		{
+			name:     "different next keys and totals",
+			exp:      &query.PageResponse{NextKey: []byte{0x01, 0x70, 0x72, 0x6F, 0x76, 0x07, 0x31}, Total: 44},
+			act:      &query.PageResponse{NextKey: []byte{0x01, 0x50, 0x52, 0x4F, 0x56, 0x07, 0x31}, Total: 74},
+			errLabel: "PageResponse.NextKey",
+			expOutput: []string{
+				errorLead + "Not equal: ",
+				blankLead + `expected: "\\x01prov\\a1"`,
+				blankLead + `actual  : "\\x01PROV\\a1"`,
+				blankLead + "expected: \"44\"",
+				blankLead + "actual  : \"74\"",
+			},
+		},
+	}
+}
+
+func TestAssertEqualPageResponses(t *testing.T) {
+	funcName := "AssertEqualPageResponses"
+	for _, tc := range getEqualPageResponsesTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "a message with %d args: %v %v %v"
+			args := []interface{}{3, "arg 1", "arg 2", "arg 3"}
+			msgAndArgs := append([]interface{}{msg}, args...)
+			expMsgAndArgs := "Messages:   \t" + tc.errLabel + ": " + fmt.Sprintf(msg, args...)
+
+			var success bool
+			testFunc := func(testTB TB) {
+				success = AssertEqualPageResponses(testTB, tc.exp, tc.act, msgAndArgs...)
+			}
+			tb := mockRun(t, testFunc)
+
+			assertMockRunAssertResult(t, funcName, tb, success, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}
+
+func TestRequireEqualPageResponses(t *testing.T) {
+	funcName := "RequireEqualPageResponses"
+	for _, tc := range getEqualPageResponsesTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "a message with %d args: %v %v %v"
+			args := []interface{}{3, "arg 1", "arg 2", "arg 3"}
+			msgAndArgs := append([]interface{}{msg}, args...)
+			expMsgAndArgs := "Messages:   \t" + tc.errLabel + ": " + fmt.Sprintf(msg, args...)
+
+			exited := true
+			testFunc := func(testTB TB) {
+				RequireEqualPageResponses(testTB, tc.exp, tc.act, msgAndArgs...)
+				exited = false
+			}
+			tb := mockRun(t, testFunc)
+
+			assertMockRunRequireResult(t, funcName, tb, exited, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}
+
+func TestAssertEqualPageResponsesf(t *testing.T) {
+	funcName := "AssertEqualPageResponsesf"
+	for _, tc := range getEqualPageResponsesTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "a message with %d args: %v %v %v"
+			args := []interface{}{3, "arg 1", "arg 2", "arg 3"}
+			expMsgAndArgs := "Messages:   \t" + tc.errLabel + ": " + fmt.Sprintf(msg, args...)
+
+			var success bool
+			testFunc := func(testTB TB) {
+				success = AssertEqualPageResponsesf(testTB, tc.exp, tc.act, msg, args...)
+			}
+			tb := mockRun(t, testFunc)
+
+			assertMockRunAssertResult(t, funcName, tb, success, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}
+
+func TestRequireEqualPageResponsesf(t *testing.T) {
+	funcName := "RequireEqualPageResponsesf"
+	for _, tc := range getEqualPageResponsesTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "a message with %d args: %v %v %v"
+			args := []interface{}{3, "arg 1", "arg 2", "arg 3"}
+			expMsgAndArgs := "Messages:   \t" + tc.errLabel + ": " + fmt.Sprintf(msg, args...)
+
+			exited := true
+			testFunc := func(testTB TB) {
+				RequireEqualPageResponsesf(testTB, tc.exp, tc.act, msg, args...)
+				exited = false
+			}
+			tb := mockRun(t, testFunc)
 
 			assertMockRunRequireResult(t, funcName, tb, exited, tc.expOutput, expMsgAndArgs)
 		})
