@@ -52,7 +52,7 @@ grpcurl -plaintext localhost:9090 list
 
 #### Describe service methods
 
-Descrie available methods of the `bank` service.
+Describe available methods of the `bank` service.
 
 ```shell
 grpcurl \

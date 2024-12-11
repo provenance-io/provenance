@@ -4,7 +4,7 @@ In this tutorial we will learn how to submit a proposal and then vote on it. Pro
 ## Author
 - Matthew Witkowski
 
-## Prequisites
+## Prerequisites
 The reader should first have understanding of what Provenance is and how to use its CLI. Additionally, the user should have the following setup.
 
 - A local Provence directory that can be built and run
@@ -30,7 +30,7 @@ This will allow users to vote on a proposal for a minute. This should be more th
 A new proposal can be made if the voting time expires.
 
 ## Creating the Proposal
-In order to propose we need a json file containing our messages to run if the proposal passes. We can make use of the `--generate-only` flag on a transaction to easily give us the JSON. In this example, the `wasm store` transaction is being proposed. The code for the contract will only be stored if the proposal passes. In order to obtain the JSON for this transaction the following command can be ran.
+In order to propose we need a json file containing our messages to run if the proposal passes. We can make use of the `--generate-only` flag on a transaction to easily give us the JSON. In this example, the `wasm store` transaction is being proposed. The code for the contract will only be stored if the proposal passes. In order to obtain the JSON for this transaction the following command can be run.
 
 `provenanced -t tx wasm store contract.wasm --from $ACCOUNT --gas auto --gas-adjustment 1.5 --gas-prices 1905nhash --instantiate-everybody "true" --generate-only`
 
@@ -72,7 +72,7 @@ The only remaining issue is the `sender`. In order for the transaction to pass i
 Update the sender and save the file as `proposal.json`
 
 ## Proposing
-The json file has been written to disk, but the proposal has not yet been sent out to Provenance. To propose it the following command can be ran:
+The json file has been written to disk, but the proposal has not yet been sent out to Provenance. To propose it the following command can be run:
 
 `provenanced -t tx gov submit-proposal proposal.json --gas-prices 1905nhash --gas auto --gas-adjustment 1.5 --from $ACCOUNT`
 
