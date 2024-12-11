@@ -75,7 +75,7 @@ cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
 
 # setup sync node
 # PIO_RPC="$( host rpc.test.provenance.io | awk '{print $4}' ):26657"
-# (Temporary workaround due to how the tesntet hosts are currently configured)
+# (Temporary workaround due to how the testnet hosts are currently configured)
 PIO_RPC=34.66.209.228:26657
 
 # State Sync Configuration Options
