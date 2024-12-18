@@ -49,18 +49,18 @@ func TestImmutableAccAddresses(t *testing.T) {
 			// address was copied to a new slice too.
 			addrs := iAddrs.GetSlice()
 			require.Equal(t, tc.addrs, addrs, "GetSlice() compared to expected")
-			require.NotSame(t, tc.addrs, addrs, "GetSlice() compared to expected")
+			require.NotSame(t, &tc.addrs, &addrs, "GetSlice() compared to expected")
 			for i := range tc.addrs {
-				require.NotSame(t, tc.addrs[i], addrs[i], "GetSlice()[%d] compared to expected", i)
+				require.NotSame(t, &tc.addrs[i], &addrs[i], "GetSlice()[%d] compared to expected", i)
 			}
 
 			// Get the slice five more times and make sure each one is a fresh copy.
 			for x := 1; x <= 5; x++ {
 				addrs2 := iAddrs.GetSlice()
 				require.Equal(t, addrs, addrs2, "[%d]: GetSlice() compared to previous result", x)
-				require.NotSame(t, addrs, addrs2, "[%d]: GetSlice() compared to previous result", x)
+				require.NotSame(t, &addrs, &addrs2, "[%d]: GetSlice() compared to previous result", x)
 				for i := range tc.addrs {
-					require.NotSame(t, addrs[i], addrs2[i], "[%d]: GetSlice()[%d] compared to previous result", x, i)
+					require.NotSame(t, &addrs[i], &addrs2[i], "[%d]: GetSlice()[%d] compared to previous result", x, i)
 				}
 				addrs = addrs2
 			}
@@ -168,9 +168,9 @@ func TestDeepCopyAccAddresses(t *testing.T) {
 			// Make sure the result is equal to what was provided, but in a different slice.
 			// Also make sure each entry slice was also copied.
 			if assert.Equal(t, tc.orig, actual, "deepCopyAccAddresses result") {
-				if assert.NotSame(t, tc.orig, actual, "deepCopyAccAddresses result") {
+				if assert.NotSame(t, &tc.orig, &actual, "deepCopyAccAddresses result") {
 					for i := range tc.orig {
-						assert.NotSame(t, tc.orig[i], actual[i], "deepCopyAccAddresses result[%d]", i)
+						assert.NotSame(t, &tc.orig[i], &actual[i], "deepCopyAccAddresses result[%d]", i)
 					}
 				}
 			}
