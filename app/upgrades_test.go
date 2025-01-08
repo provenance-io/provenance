@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -23,8 +22,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
-	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type UpgradeTestSuite struct {
@@ -240,8 +237,8 @@ func (s *UpgradeTestSuite) CreateAndFundAccount(coin sdk.Coin) sdk.AccAddress {
 	return addr2
 }
 
-// CreateValidator creates a new validator in the app.
-func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakingtypes.BondStatus) stakingtypes.Validator {
+// CreateUnbondedValidator creates a new validator in the app with the provided unbonded time.
+func (s *UpgradeTestSuite) CreateUnbondedValidator(unbondedTime time.Time, status stakingtypes.BondStatus) stakingtypes.Validator {
 	key := secp256k1.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
@@ -396,7 +393,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 	s.Run("one unbonded validator with a delegation", func() {
 		// single unbonded validator with 1 delegations, should be removed
-		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+		unbondedVal1 := s.CreateUnbondedValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		unbondedVal1Addr := s.GetOperatorAddr(unbondedVal1)
 		addr1Balance := s.app.BankKeeper.GetBalance(s.ctx, addr1, "stake")
 		s.DelegateToValidator(unbondedVal1Addr, addr1, delegationCoin)
@@ -426,7 +423,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 	s.Run("one unbonded validator with 2 delegations", func() {
 		// single unbonded validator with 2 delegations
-		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+		unbondedVal1 := s.CreateUnbondedValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		unbondedVal1Addr := s.GetOperatorAddr(unbondedVal1)
 		addr1Balance := s.app.BankKeeper.GetBalance(s.ctx, addr1, "stake")
 		addr2Balance := s.app.BankKeeper.GetBalance(s.ctx, addr2, "stake")
@@ -469,7 +466,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 	s.Run("two unbonded validators to be removed", func() {
 		// 2 unbonded validators with delegations past inactive time, both should be removed
-		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+		unbondedVal1 := s.CreateUnbondedValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		unbondedVal1Addr := s.GetOperatorAddr(unbondedVal1)
 		s.DelegateToValidator(unbondedVal1Addr, addr1, delegationCoin)
 		s.DelegateToValidator(unbondedVal1Addr, addr2, delegationCoin)
@@ -478,7 +475,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().NoError(err, "Setup: GetValidator(unbondedVal1) found")
 		s.Require().Equal(delegationCoinAmt.Add(delegationCoinAmt), unbondedVal1.DelegatorShares, "Setup: shares delegated to unbondedVal1")
 
-		unbondedVal2 := s.CreateValidator(s.startTime.Add(-29*24*time.Hour), stakingtypes.Unbonded)
+		unbondedVal2 := s.CreateUnbondedValidator(s.startTime.Add(-29*24*time.Hour), stakingtypes.Unbonded)
 		unbondedVal2Addr := s.GetOperatorAddr(unbondedVal2)
 		s.DelegateToValidator(unbondedVal2Addr, addr1, delegationCoin)
 		s.DelegateToValidator(unbondedVal2Addr, addr2, delegationCoin)
@@ -519,7 +516,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 	s.Run("two unbonded validators one too recently", func() {
 		// 2 unbonded validators, 1 under the inactive day count, should only remove one
-		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+		unbondedVal1 := s.CreateUnbondedValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		unbondedVal1Addr := s.GetOperatorAddr(unbondedVal1)
 		s.DelegateToValidator(unbondedVal1Addr, addr1, delegationCoin)
 		s.DelegateToValidator(unbondedVal1Addr, addr2, delegationCoin)
@@ -528,7 +525,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().NoError(err, "Setup: GetValidator(unbondedVal1) found")
 		s.Require().Equal(delegationCoinAmt.Add(delegationCoinAmt), unbondedVal1.DelegatorShares, "Setup: shares delegated to unbondedVal1")
 
-		unbondedVal2 := s.CreateValidator(s.startTime.Add(-20*24*time.Hour), stakingtypes.Unbonded)
+		unbondedVal2 := s.CreateUnbondedValidator(s.startTime.Add(-20*24*time.Hour), stakingtypes.Unbonded)
 		unbondedVal2Addr := s.GetOperatorAddr(unbondedVal2)
 		s.DelegateToValidator(unbondedVal2Addr, addr1, delegationCoin)
 		unbondedVal2, err = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2Addr)
@@ -570,7 +567,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 	s.Run("unbonded without delegators", func() {
 		// create a unbonded validator with out delegators, should not remove
-		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+		unbondedVal1 := s.CreateUnbondedValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
 		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 empty unbonded")
@@ -589,234 +586,104 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
-func (s *UpgradeTestSuite) TestViridianRC1() {
+func (s *UpgradeTestSuite) TestWisteriaRC1() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing inactive validator delegations.",
+		"INF Updating the commissions for all validators to 60% with 60% max.",
+		"INF Setting minimum commission to 60%.",
 	}
-	s.AssertUpgradeHandlerLogs("viridian-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("wisteria-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestViridian() {
+func (s *UpgradeTestSuite) TestWisteria() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing inactive validator delegations.",
+		"INF Updating the commissions for all validators to 60% with 60% max.",
+		"INF Setting minimum commission to 60%.",
 	}
-	s.AssertUpgradeHandlerLogs("viridian", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("wisteria", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestMetadataMigration() { // TODO[viridian]: Delete this test after the upgrade.
-	newAddr := func(name string) sdk.AccAddress {
-		switch {
-		case len(name) < 20:
-			// If it's less than 19 bytes long, pad it to 20 chars.
-			return sdk.AccAddress(name + strings.Repeat("_", 20-len(name)))
-		case len(name) > 20 && len(name) < 32:
-			// If it's 21 to 31 bytes long, pad it to 32 chars.
-			return sdk.AccAddress(name + strings.Repeat("_", 32-len(name)))
-		}
-		// If the name is exactly 20 long already, or longer than 32, don't include any padding.
-		return sdk.AccAddress(name)
-	}
-	addrs := make([]string, 1000)
-	for i := range addrs {
-		addrs[i] = newAddr(fmt.Sprintf("%03d", i)).String()
-	}
+// CreateValidator creates a new validator in the app.
+func (s *UpgradeTestSuite) CreateValidatorWithComission(rate, maxRate sdkmath.LegacyDec) string {
+	key := secp256k1.GenPrivKey()
+	pub := key.PubKey()
+	addr := sdk.AccAddress(pub.Address())
+	valAddr := sdk.ValAddress(addr)
+	validator, err := stakingtypes.NewValidator(valAddr.String(), pub, stakingtypes.NewDescription(valAddr.String(), "", "", "", ""))
+	s.Require().NoError(err, "could not init new validator")
+	validator.Commission.Rate = rate
+	validator.Commission.MaxRate = maxRate
+	err = s.app.StakingKeeper.SetValidator(s.ctx, validator)
+	s.Require().NoError(err, "could not SetValidator ")
+	err = s.app.StakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
+	s.Require().NoError(err, "could not SetValidatorByConsAddr ")
+	err = s.app.StakingKeeper.Hooks().AfterValidatorCreated(s.ctx, valAddr)
+	s.Require().NoError(err, "could not AfterValidatorCreated")
+	return validator.OperatorAddress
+}
 
-	newUUID := func(i int) uuid.UUID {
-		// Sixteen 9's is the largest number we can handle; one more and it's 17 digits.
-		s.Require().LessOrEqual(i, 9999999999999999, "value provided to newScopeID")
-		str := fmt.Sprintf("________________%d", i)
-		str = str[len(str)-16:]
-		rv, err := uuid.FromBytes([]byte(str))
-		s.Require().NoError(err, "uuid.FromBytes([]byte(%q))", str)
-		return rv
-	}
-	newScopeID := func(i int) metadatatypes.MetadataAddress {
-		return metadatatypes.ScopeMetadataAddress(newUUID(i))
-	}
-	newSpecID := func(i int) metadatatypes.MetadataAddress {
-		// The spec id shouldn't really matter in here, but I want it different from a scope's index.
-		// So I do some math to make it seem kind of random, but is still deterministic.
-		// 7, 39, and 79 were picked randomly and have no special meaning.
-		// 4,999 was chosen so that there's 3,333 possible results.
-		// This will overflow at 2,097,112, but it shouldn't get bigger than 300,000 in here, so we ignore that.
-		j := ((i + 7) * (i + 39) * (i + 79)) % 49_999
-		return metadatatypes.ScopeSpecMetadataAddress(newUUID(j))
-	}
-	newScope := func(i int) metadatatypes.Scope {
-		rv := metadatatypes.Scope{
-			ScopeId:            newScopeID(i),
-			SpecificationId:    newSpecID(i),
-			RequirePartyRollup: i%6 > 2, // 50% chance, three false, then three true, repeated.
-		}
+func (s *UpgradeTestSuite) TestUpdateValidatorCommissions() {
+	// This test will create several validators with various rates and max rates.
+	// Then it'll run updateValidatorCommissions and check that all of them are as expected.
 
-		// 1 in 7 does not have a value owner.
-		incVO := i%7 != 0
-		if incVO {
-			rv.ValueOwnerAddress = addrs[i%len(addrs)]
-		}
-
-		// Include 1 to 5 owners and make one of them the value owner in just under 1 in 11 scopes.
-		ownerCount := (i % 5) + 1
-		incVOInOwners := incVO && i%11 == 0
-		incVOAt := i % ownerCount
-		rv.Owners = make([]metadatatypes.Party, ownerCount)
-		for o := range rv.Owners {
-			a := i + (o+1)*300
-			if incVOInOwners && o == incVOAt {
-				a = i
-			}
-			rv.Owners[o].Address = addrs[a%len(addrs)]
-			rv.Owners[o].Role = metadatatypes.PartyType(1 + (i+o)%11) // 11 different roles, 1 to 11.
-		}
-
-		daCount := (i % 3) // 0 to 2.
-		for d := 0; d < daCount; d++ {
-			a := i + (d+1)*33
-			rv.DataAccess = append(rv.DataAccess, addrs[a%len(addrs)])
-		}
-
-		return rv
-	}
-	voInOwners := func(scope metadatatypes.Scope) bool {
-		if len(scope.ValueOwnerAddress) == 0 {
-			return false
-		}
-		for _, owner := range scope.Owners {
-			if owner.Address == scope.ValueOwnerAddress {
-				return true
-			}
-		}
-		return false
+	sixtyPct := sdkmath.LegacyMustNewDecFromStr("0.60")
+	amounts := []sdkmath.LegacyDec{
+		sdkmath.LegacyZeroDec(),
+		sdkmath.LegacyMustNewDecFromStr("0.10"),
+		sdkmath.LegacyMustNewDecFromStr("0.59"),
+		sixtyPct,
+		sdkmath.LegacyMustNewDecFromStr("0.61"),
+		sdkmath.LegacyOneDec(),
 	}
 
-	// Create 300,005 scopes and write them to state.
-	// 6 of 7 have a value owner = 257_147 = 300_005 * 6 / 7 (truncated).
-	// 1 of 7 do not = 42_858 = 300_005 - 257_147 .
-	// There's 23,377 scopes that have the value owner in owners.
-	// So we expect 490,917 keys to delete = 257,147 * 2 - 23,377.
-	expCoin := make([]metadatatypes.MetadataAddress, 0, 257_147)
-	expNoCoin := make([]metadatatypes.MetadataAddress, 0, 42_858)
-	expDelInds := make([][]byte, 0, 490_917)
-	expBals := make(map[string]sdk.Coins)
-	t1 := time.Now()
-	for i := 0; i < 300_005; i++ {
-		scope := newScope(i)
-		s.Require().NoError(s.app.MetadataKeeper.V3WriteNewScope(s.ctx, scope), "[%d]: V3WriteNewScope", i)
-
-		if len(scope.ValueOwnerAddress) == 0 {
-			expNoCoin = append(expNoCoin, scope.ScopeId)
-			continue
-		}
-
-		expCoin = append(expCoin, scope.ScopeId)
-
-		vo := scope.ValueOwnerAddress
-		voAddr := sdk.MustAccAddressFromBech32(vo)
-		expDelInds = append(expDelInds, metadatakeeper.GetValueOwnerScopeCacheKey(voAddr, scope.ScopeId))
-		if !voInOwners(scope) {
-			expDelInds = append(expDelInds, metadatatypes.GetAddressScopeCacheKey(voAddr, scope.ScopeId))
-		}
-
-		expBals[vo] = expBals[vo].Add(scope.ScopeId.Coin())
+	// This maps the operator address to a description of that validator with respects to this test.
+	valDescs := make(map[string]string)
+	// Make note of all the existing validators.
+	iniVals, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Require().NoError(err, "GetAllValidators at start")
+	for _, val := range iniVals {
+		valDescs[val.OperatorAddress] = "initial"
 	}
-	t2 := time.Now()
-	s.T().Logf("setup took %s", t2.Sub(t1))
-	s.T().Logf("len(expDelInds) = %d", len(expDelInds))
-	s.T().Logf("len(expCoin) = %d", len(expCoin))
-	s.T().Logf("len(expNoCoin) = %d", len(expNoCoin))
-
-	mdStore := s.ctx.KVStore(s.app.GetKey(metadatatypes.ModuleName))
-	for _, ind := range expDelInds {
-		has := mdStore.Has(ind)
-		s.Assert().True(has, "mdStore.Has(%v) before running the migrations", ind)
-	}
-	mdStore = nil
-
-	expLogs := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Starting migration of x/metadata from 3 to 4. module=x/metadata",
-		"INF Moving scope value owner data into x/bank ledger. module=x/metadata",
-		"INF Progress update: module=x/metadata scopes=10000 value owners=8571",
-		"INF Progress update: module=x/metadata scopes=20000 value owners=17143",
-		"INF Progress update: module=x/metadata scopes=30000 value owners=25714",
-		"INF Progress update: module=x/metadata scopes=40000 value owners=34286",
-		"INF Progress update: module=x/metadata scopes=50000 value owners=42857",
-		"INF Progress update: module=x/metadata scopes=60000 value owners=51428",
-		"INF Progress update: module=x/metadata scopes=70000 value owners=60000",
-		"INF Progress update: module=x/metadata scopes=80000 value owners=68571",
-		"INF Progress update: module=x/metadata scopes=90000 value owners=77143",
-		"INF Progress update: module=x/metadata scopes=100000 value owners=85714",
-		"INF Progress update: module=x/metadata scopes=110000 value owners=94286",
-		"INF Progress update: module=x/metadata scopes=120000 value owners=102857",
-		"INF Progress update: module=x/metadata scopes=130000 value owners=111428",
-		"INF Progress update: module=x/metadata scopes=140000 value owners=120000",
-		"INF Progress update: module=x/metadata scopes=150000 value owners=128571",
-		"INF Progress update: module=x/metadata scopes=160000 value owners=137143",
-		"INF Progress update: module=x/metadata scopes=170000 value owners=145714",
-		"INF Progress update: module=x/metadata scopes=180000 value owners=154286",
-		"INF Progress update: module=x/metadata scopes=190000 value owners=162857",
-		"INF Progress update: module=x/metadata scopes=200000 value owners=171428",
-		"INF Progress update: module=x/metadata scopes=210000 value owners=180000",
-		"INF Progress update: module=x/metadata scopes=220000 value owners=188572",
-		"INF Progress update: module=x/metadata scopes=230000 value owners=197143",
-		"INF Progress update: module=x/metadata scopes=240000 value owners=205714",
-		"INF Progress update: module=x/metadata scopes=250000 value owners=214286",
-		"INF Progress update: module=x/metadata scopes=260000 value owners=222857",
-		"INF Progress update: module=x/metadata scopes=270000 value owners=231429",
-		"INF Progress update: module=x/metadata scopes=280000 value owners=240000",
-		"INF Progress update: module=x/metadata scopes=290000 value owners=248572",
-		"INF Progress update: module=x/metadata scopes=300000 value owners=257143",
-		"INF Done moving scope value owners into bank module. module=x/metadata scopes=300005 value owners=257147",
-		"INF Done migrating x/metadata from 3 to 4. module=x/metadata",
-		"INF Module migrations completed.",
-	}
-
-	vm, err := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
-	s.Require().NoError(err, "GetModuleVersionMap")
-	s.Require().Equal(4, int(vm[metadatatypes.ModuleName]), "%s module version", metadatatypes.ModuleName)
-	// Drop it back to 3 so the migration runs.
-	vm[metadatatypes.ModuleName] = 3
-
-	runner := func() {
-		t1 = time.Now()
-		vm, err = runModuleMigrations(s.ctx, s.app, vm)
-		t2 = time.Now()
-	}
-	s.ExecuteAndAssertLogs(runner, expLogs, nil, true, "runModuleMigrations")
-	s.Assert().NoError(err, "error from runModuleMigrations")
-	s.Assert().Equal(4, int(vm[metadatatypes.ModuleName]), "vm[metadatatypes.ModuleName]")
-	s.T().Logf("runModuleMigrations took %s", t2.Sub(t1))
-
-	for _, scopeID := range expCoin {
-		denom := scopeID.Denom()
-		supply := s.app.BankKeeper.GetSupply(s.ctx, denom)
-		s.Assert().Equal("1"+denom, supply.String(), "GetSupply(%q)", denom)
-	}
-
-	for _, scopeID := range expNoCoin {
-		denom := scopeID.Denom()
-		supply := s.app.BankKeeper.GetSupply(s.ctx, denom)
-		s.Assert().Equal("0"+denom, supply.String(), "GetSupply(%q)", denom)
-	}
-
-	for i, addr := range addrs {
-		accAddr := sdk.MustAccAddressFromBech32(addr)
-		actBal := s.app.BankKeeper.GetAllBalances(s.ctx, accAddr)
-		for _, expCoin := range expBals[addr] {
-			found, actCoin := actBal.Find(expCoin.Denom)
-			if s.Assert().True(found, "[%d]%q: found bool from actBal.Find(%q)", i, addr, expCoin.Denom) {
-				s.Assert().Equal(expCoin.String(), actCoin.String(), "[%d]%q: balance coin for %q", i, addr, expCoin.Denom)
-			}
+	// Create a bunch more with various rates and max rates.
+	for i, rate := range amounts {
+		for j := i; j < len(amounts); j++ {
+			maxRate := amounts[j]
+			opAddr := s.CreateValidatorWithComission(rate, maxRate)
+			valDescs[opAddr] = fmt.Sprintf("rate = %s, max rate = %s", rate, maxRate)
 		}
 	}
 
-	mdStore = s.ctx.KVStore(s.app.GetKey(metadatatypes.ModuleName))
-	for _, ind := range expDelInds {
-		has := mdStore.Has(ind)
-		s.Assert().False(has, "mdStore.Has(%v) after running the migrations", ind)
+	testFunc := func() {
+		err = updateValidatorCommissions(s.ctx, s.app)
 	}
+	s.Require().NotPanics(testFunc, "updateValidatorCommissions")
+	s.Require().NoError(err, "updateValidatorCommissions")
+
+	actualVals, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Require().NoError(err, "GetAllValidators after updateValidatorCommissions")
+	for _, val := range actualVals {
+		desc := valDescs[val.OperatorAddress]
+		s.Assert().NotEmpty(desc, "validator %q was not previously known", val.OperatorAddress)
+		s.Assert().Equal(sixtyPct, val.Commission.Rate, "Commission.Rate: %s", desc)
+		s.Assert().Equal(sixtyPct, val.Commission.MaxRate, "Commission.Rate: %s", desc)
+	}
+	s.Assert().Equal(len(valDescs), len(actualVals), "number of validators")
+}
+
+func (s *UpgradeTestSuite) TestIncreaseMinCommission() {
+	sixtyPct := sdkmath.LegacyMustNewDecFromStr("0.60")
+
+	var err error
+	testFunc := func() {
+		err = increaseMinCommission(s.ctx, s.app)
+	}
+	s.Require().NotPanics(testFunc, "increaseMinCommission")
+	s.Require().NoError(err, "increaseMinCommission error")
+
+	params, err := s.app.StakingKeeper.GetParams(s.ctx)
+	s.Require().NoError(err, "StakingKeeper.GetParams")
+	s.Assert().Equal(sixtyPct, params.MinCommissionRate, "MinCommissionRate")
 }
