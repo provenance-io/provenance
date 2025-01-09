@@ -208,13 +208,6 @@ var (
 	_ servertypes.Application = (*App)(nil)
 )
 
-// These are some values defined in the params module that we still need so that
-// the params module can be deleted. But I don't want the imports, so they're copied here.
-// TODO[viridian]: Delete these params constants after the upgrade.
-const (
-	paramsName = "params" // = paramstypes.ModuleName
-)
-
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/wasm expects WasmConfig
 type WasmWrapper struct {
