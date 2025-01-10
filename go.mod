@@ -33,7 +33,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-metrics v0.5.3
+	github.com/hashicorp/go-metrics v0.5.4
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
