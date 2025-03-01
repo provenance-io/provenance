@@ -3,7 +3,6 @@ package module
 import (
 	"bytes"
 	"encoding/json"
-	ibcerrors "github.com/cosmos/ibc-go/v8/modules/core/errors"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -14,6 +13,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	ibcerrors "github.com/cosmos/ibc-go/v8/modules/core/errors"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	"github.com/provenance-io/provenance/internal/ibc"
