@@ -2,9 +2,9 @@ package oracle
 
 import (
 	"bytes"
+
 	cerrs "cosmossdk.io/errors"
 
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
@@ -15,6 +15,7 @@ import (
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 	ibcerrors "github.com/cosmos/ibc-go/v8/modules/core/errors"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
@@ -146,7 +147,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	}
 	bz := transfertypes.ModuleCdc.MustMarshalJSON(&ack)
 	if !bytes.Equal(bz, acknowledgement) {
-		return errorsmod.Wrapf(ibcerrors.ErrInvalidType, "acknowledgement did not marshal to expected bytes: %X ≠ %X", bz, acknowledgement)
+		return cerrs.Wrapf(ibcerrors.ErrInvalidType, "acknowledgement did not marshal to expected bytes: %X ≠ %X", bz, acknowledgement)
 	}
 	return am.keeper.OnAcknowledgementPacket(ctx, modulePacket, ack)
 }
