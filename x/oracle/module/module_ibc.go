@@ -1,17 +1,20 @@
 package oracle
 
 import (
+	"bytes"
 	cerrs "cosmossdk.io/errors"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	ibcerrors "github.com/cosmos/ibc-go/v8/modules/core/errors"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
@@ -138,10 +141,13 @@ func (am AppModule) OnAcknowledgementPacket(
 	_ sdk.AccAddress,
 ) error {
 	var ack channeltypes.Acknowledgement
-	if err := am.cdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
+	if err := transfertypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return cerrs.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet acknowledgement: %v", err)
 	}
-
+	bz := transfertypes.ModuleCdc.MustMarshalJSON(&ack)
+	if !bytes.Equal(bz, acknowledgement) {
+		return errorsmod.Wrapf(ibcerrors.ErrInvalidType, "acknowledgement did not marshal to expected bytes: %X ≠ %X", bz, acknowledgement)
+	}
 	return am.keeper.OnAcknowledgementPacket(ctx, modulePacket, ack)
 }
 

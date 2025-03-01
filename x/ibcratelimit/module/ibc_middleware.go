@@ -1,7 +1,9 @@
 package module
 
 import (
+	"bytes"
 	"encoding/json"
+	ibcerrors "github.com/cosmos/ibc-go/v8/modules/core/errors"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -159,6 +161,11 @@ func (im *IBCMiddleware) OnAcknowledgementPacket(
 	var ack channeltypes.Acknowledgement
 	if err := json.Unmarshal(acknowledgement, &ack); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+	}
+
+	bz := transfertypes.ModuleCdc.MustMarshalJSON(&ack)
+	if !bytes.Equal(bz, acknowledgement) {
+		return errorsmod.Wrapf(ibcerrors.ErrInvalidType, "acknowledgement did not marshal to expected bytes: %X ≠ %X", bz, acknowledgement)
 	}
 
 	if ibc.IsAckError(acknowledgement) {
