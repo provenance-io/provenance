@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"bytes"
 	cerrs "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,8 +11,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	ibcerrors "github.com/cosmos/ibc-go/v8/modules/core/errors"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
@@ -142,6 +143,10 @@ func (am AppModule) OnAcknowledgementPacket(
 		return cerrs.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet acknowledgement: %v", err)
 	}
 
+	bz := am.cdc.MustMarshalJSON(&ack)
+	if !bytes.Equal(bz, acknowledgement) {
+		return cerrs.Wrapf(ibcerrors.ErrInvalidType, "acknowledgement did not marshal to expected bytes: %X ≠ %X", bz, acknowledgement)
+	}
 	return am.keeper.OnAcknowledgementPacket(ctx, modulePacket, ack)
 }
 
