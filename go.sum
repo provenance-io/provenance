@@ -920,8 +920,8 @@ github.com/provenance-io/cosmos-sdk v0.50.12-pio-1 h1:lbLQQOzM1fv9zp+SB+i370IRb4
 github.com/provenance-io/cosmos-sdk v0.50.12-pio-1/go.mod h1:hrWEFMU1eoXqLJeE6VVESpJDQH67FS1nnMrQIjO2daw=
 github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1 h1:p+7pxHB0ukO2aow+M6uW9gHgeQl7YJyYGyMSKHZ5My8=
 github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1/go.mod h1:tObW9uxibh5Z22CtOaHVeTDotCSMyc/2B4MrYdaViBo=
-github.com/provenance-io/ibc-go/v8 v8.3.3-0.20250228223400-d279bf9d32a2 h1:5aWXwBcrx3p0M2/PBo4Vv9zPtxvDhX+mWFE/h8dlmGQ=
-github.com/provenance-io/ibc-go/v8 v8.3.3-0.20250228223400-d279bf9d32a2/go.mod h1:Hd3kDFNOhQ/EnYt8qb84/r78tA/lOYC3IkLMbpurs3I=
+github.com/provenance-io/ibc-go/v8 v8.6.1-pio-1 h1:UxoldL0jEaRRPmyLEeac6TGdPY6GRlupw2yQr2xiYZU=
+github.com/provenance-io/ibc-go/v8 v8.6.1-pio-1/go.mod h1:Hd3kDFNOhQ/EnYt8qb84/r78tA/lOYC3IkLMbpurs3I=
 github.com/provenance-io/wasmd v0.52.0-pio-1 h1:dptBg/BB0aCHxO0Yqk8Jvkxr01tYLUFg4ybat7TdWBw=
 github.com/provenance-io/wasmd v0.52.0-pio-1/go.mod h1:hyy1wt7c589Cs4kOK2cYdtphzCd2Xo20q/t7tfby7oI=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=

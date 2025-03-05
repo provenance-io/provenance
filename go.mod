@@ -232,8 +232,7 @@ replace (
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
 
 	// TODO: Update or change once a tag is made containing a fix for https://github.com/cosmos/ibc-go/issues/6375
-	// TODO :update when reviewed tag is ready.
-	github.com/cosmos/ibc-go/v8 => github.com/provenance-io/ibc-go/v8 v8.3.3-0.20250228223400-d279bf9d32a2
+	github.com/cosmos/ibc-go/v8 => github.com/provenance-io/ibc-go/v8 v8.6.1-pio-1
 
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
