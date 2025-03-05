@@ -52,6 +52,15 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.21.2](https://github.com/provenance-io/provenance/releases/tag/v1.21.2) 2025-03-04
+
+### Improvements
+* Updated ibc-go to v8.6.1 [#2290](https://github.com/provenance-io/provenance/pull/2290)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.21.1...v1.21.2
+
 ## [v1.21.1](https://github.com/provenance-io/provenance/releases/tag/v1.21.1) 2025-02-21
 
 ### Dependencies
