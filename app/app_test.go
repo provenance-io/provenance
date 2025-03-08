@@ -507,7 +507,7 @@ func TestParamChangeInGovProp(t *testing.T) {
 		`"metadata":"Prop metadata",` +
 		`"title":"The prop title",` +
 		`"summary":"The prop summary",` +
-		`"proposer":"cosmos1wpex7ur0wdjhyh6lta047h6lta047h6ljkx24t",` +
+		`"proposer":"` + prop.Proposer + `",` +
 		`"expedited":false,` +
 		`"failed_reason":""}`
 
