@@ -41,14 +41,14 @@ func NewBufferedDebugLogger(buffer *bytes.Buffer) log.Logger {
 
 // SplitLogLines splits the provided logs string into its individual lines.
 func SplitLogLines(logs string) []string {
-	rv := strings.Split(logs, "\n")
+	lines := strings.Split(logs, "\n")
 	// Trim spaces from each line.
-	for i, line := range rv {
-		rv[i] = strings.TrimSpace(line)
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(line)
 	}
 	// Remove empty lines from the end (at least one gets added due to a final newline in the logs).
-	for len(rv) > 0 && len(rv[len(rv)-1]) == 0 {
-		rv = rv[:len(rv)-1]
+	for len(lines) > 0 && len(lines[len(lines)-1]) == 0 {
+		lines = lines[:len(lines)-1]
 	}
-	return rv
+	return lines
 }
