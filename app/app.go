@@ -525,8 +525,8 @@ func New(
 		app.IbcHooks,
 	)
 
-	rateLimtingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimit.StoreKey], nil)
-	app.RateLimitingKeeper = &rateLimtingKeeper
+	rateLimitingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimit.StoreKey], nil)
+	app.RateLimitingKeeper = &rateLimitingKeeper
 
 	// Create Transfer Keepers
 	rateLimitingTransferModule := ibcratelimitmodule.NewIBCMiddleware(nil, app.HooksICS4Wrapper, app.RateLimitingKeeper)
