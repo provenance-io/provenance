@@ -1,6 +1,7 @@
 module github.com/provenance-io/provenance
 
-go 1.23
+go 1.23.1
+
 toolchain go1.23.5
 
 require (
