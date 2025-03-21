@@ -97,7 +97,7 @@ $ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordReque
 			if proposalType != "remove" {
 				additionalFee, errMinFee := flagSet.GetString(FlagMinFee)
 				if errMinFee != nil {
-					return err
+					return errMinFee
 				}
 				if additionalFee != "" {
 					addFee, err = sdk.ParseCoinNormalized(additionalFee)
