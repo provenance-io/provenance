@@ -32,7 +32,7 @@ func (k Keeper) Enqueue(ctx sdk.Context, item types.QueuedTrigger) {
 	k.setQueueLength(ctx, length+1)
 }
 
-// DequeueTrigger Removes the first item from the queue and updates the internal counters.
+// Dequeue Removes the first item from the queue and updates the internal counters.
 func (k Keeper) Dequeue(ctx sdk.Context) {
 	if k.QueueIsEmpty(ctx) {
 		panic("unable to dequeue from empty queue.")
