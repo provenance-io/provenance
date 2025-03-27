@@ -586,104 +586,20 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
-func (s *UpgradeTestSuite) TestWisteriaRC1() {
+func (s *UpgradeTestSuite) TestXenonRC1() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing inactive validator delegations.",
-		"INF Updating the commissions for all validators to 60% with 60% max.",
-		"INF Setting minimum commission to 60%.",
 	}
-	s.AssertUpgradeHandlerLogs("wisteria-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("xenon-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestWisteria() {
+func (s *UpgradeTestSuite) TestXenon() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing inactive validator delegations.",
-		"INF Updating the commissions for all validators to 60% with 60% max.",
-		"INF Setting minimum commission to 60%.",
 	}
-	s.AssertUpgradeHandlerLogs("wisteria", expInLog, nil)
-}
-
-// CreateValidator creates a new validator in the app.
-func (s *UpgradeTestSuite) CreateValidatorWithComission(rate, maxRate sdkmath.LegacyDec) string {
-	key := secp256k1.GenPrivKey()
-	pub := key.PubKey()
-	addr := sdk.AccAddress(pub.Address())
-	valAddr := sdk.ValAddress(addr)
-	validator, err := stakingtypes.NewValidator(valAddr.String(), pub, stakingtypes.NewDescription(valAddr.String(), "", "", "", ""))
-	s.Require().NoError(err, "could not init new validator")
-	validator.Commission.Rate = rate
-	validator.Commission.MaxRate = maxRate
-	err = s.app.StakingKeeper.SetValidator(s.ctx, validator)
-	s.Require().NoError(err, "could not SetValidator ")
-	err = s.app.StakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
-	s.Require().NoError(err, "could not SetValidatorByConsAddr ")
-	err = s.app.StakingKeeper.Hooks().AfterValidatorCreated(s.ctx, valAddr)
-	s.Require().NoError(err, "could not AfterValidatorCreated")
-	return validator.OperatorAddress
-}
-
-func (s *UpgradeTestSuite) TestUpdateValidatorCommissions() {
-	// This test will create several validators with various rates and max rates.
-	// Then it'll run updateValidatorCommissions and check that all of them are as expected.
-
-	sixtyPct := sdkmath.LegacyMustNewDecFromStr("0.60")
-	amounts := []sdkmath.LegacyDec{
-		sdkmath.LegacyZeroDec(),
-		sdkmath.LegacyMustNewDecFromStr("0.10"),
-		sdkmath.LegacyMustNewDecFromStr("0.59"),
-		sixtyPct,
-		sdkmath.LegacyMustNewDecFromStr("0.61"),
-		sdkmath.LegacyOneDec(),
-	}
-
-	// This maps the operator address to a description of that validator with respects to this test.
-	valDescs := make(map[string]string)
-	// Make note of all the existing validators.
-	iniVals, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
-	s.Require().NoError(err, "GetAllValidators at start")
-	for _, val := range iniVals {
-		valDescs[val.OperatorAddress] = "initial"
-	}
-	// Create a bunch more with various rates and max rates.
-	for i, rate := range amounts {
-		for j := i; j < len(amounts); j++ {
-			maxRate := amounts[j]
-			opAddr := s.CreateValidatorWithComission(rate, maxRate)
-			valDescs[opAddr] = fmt.Sprintf("rate = %s, max rate = %s", rate, maxRate)
-		}
-	}
-
-	testFunc := func() {
-		err = updateValidatorCommissions(s.ctx, s.app)
-	}
-	s.Require().NotPanics(testFunc, "updateValidatorCommissions")
-	s.Require().NoError(err, "updateValidatorCommissions")
-
-	actualVals, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
-	s.Require().NoError(err, "GetAllValidators after updateValidatorCommissions")
-	for _, val := range actualVals {
-		desc := valDescs[val.OperatorAddress]
-		s.Assert().NotEmpty(desc, "validator %q was not previously known", val.OperatorAddress)
-		s.Assert().Equal(sixtyPct, val.Commission.Rate, "Commission.Rate: %s", desc)
-		s.Assert().Equal(sixtyPct, val.Commission.MaxRate, "Commission.Rate: %s", desc)
-	}
-	s.Assert().Equal(len(valDescs), len(actualVals), "number of validators")
-}
-
-func (s *UpgradeTestSuite) TestIncreaseMinCommission() {
-	sixtyPct := sdkmath.LegacyMustNewDecFromStr("0.60")
-
-	var err error
-	testFunc := func() {
-		err = increaseMinCommission(s.ctx, s.app)
-	}
-	s.Require().NotPanics(testFunc, "increaseMinCommission")
-	s.Require().NoError(err, "increaseMinCommission error")
-
-	params, err := s.app.StakingKeeper.GetParams(s.ctx)
-	s.Require().NoError(err, "StakingKeeper.GetParams")
-	s.Assert().Equal(sixtyPct, params.MinCommissionRate, "MinCommissionRate")
+	s.AssertUpgradeHandlerLogs("xenon", expInLog, nil)
 }

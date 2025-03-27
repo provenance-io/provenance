@@ -135,7 +135,7 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/records/all";
   }
 
-  // Ownership returns the scope identifiers that list the given address as either a data or value owner.
+  // Ownership returns the scope identifiers that have the given address in the owners list.
   rpc Ownership(OwnershipRequest) returns (OwnershipResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/ownership/{address}";
   }
