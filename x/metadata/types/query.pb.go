@@ -3859,7 +3859,7 @@ type QueryClient interface {
 	Records(ctx context.Context, in *RecordsRequest, opts ...grpc.CallOption) (*RecordsResponse, error)
 	// RecordsAll retrieves all records.
 	RecordsAll(ctx context.Context, in *RecordsAllRequest, opts ...grpc.CallOption) (*RecordsAllResponse, error)
-	// Ownership returns the scope identifiers that list the given address as either a data or value owner.
+	// Ownership returns the scope identifiers that have the given address in the owners list.
 	Ownership(ctx context.Context, in *OwnershipRequest, opts ...grpc.CallOption) (*OwnershipResponse, error)
 	// ValueOwnership returns the scope identifiers that list the given address as the value owner.
 	ValueOwnership(ctx context.Context, in *ValueOwnershipRequest, opts ...grpc.CallOption) (*ValueOwnershipResponse, error)
@@ -4219,7 +4219,7 @@ type QueryServer interface {
 	Records(context.Context, *RecordsRequest) (*RecordsResponse, error)
 	// RecordsAll retrieves all records.
 	RecordsAll(context.Context, *RecordsAllRequest) (*RecordsAllResponse, error)
-	// Ownership returns the scope identifiers that list the given address as either a data or value owner.
+	// Ownership returns the scope identifiers that have the given address in the owners list.
 	Ownership(context.Context, *OwnershipRequest) (*OwnershipResponse, error)
 	// ValueOwnership returns the scope identifiers that list the given address as the value owner.
 	ValueOwnership(context.Context, *ValueOwnershipRequest) (*ValueOwnershipResponse, error)
