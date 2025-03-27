@@ -76,6 +76,32 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"xenon-rc1": { // Upgrade for v1.22.0-rc1.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			return vm, nil
+		},
+	},
+	"xenon": { // Upgrade for v1.22.0.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			return vm, nil
+		},
+	},
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.

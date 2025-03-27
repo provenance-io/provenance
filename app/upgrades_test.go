@@ -606,6 +606,24 @@ func (s *UpgradeTestSuite) TestWisteria() {
 	s.AssertUpgradeHandlerLogs("wisteria", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestXenonRC1() {
+	expInLog := []string{
+		"INF Pruning expired consensus states for IBC.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Removing inactive validator delegations.",
+	}
+	s.AssertUpgradeHandlerLogs("xenon-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestXenon() {
+	expInLog := []string{
+		"INF Pruning expired consensus states for IBC.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Removing inactive validator delegations.",
+	}
+	s.AssertUpgradeHandlerLogs("xenon", expInLog, nil)
+}
+
 // CreateValidator creates a new validator in the app.
 func (s *UpgradeTestSuite) CreateValidatorWithComission(rate, maxRate sdkmath.LegacyDec) string {
 	key := secp256k1.GenPrivKey()
