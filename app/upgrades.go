@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -38,44 +37,6 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"wisteria-rc1": { // Upgrade for v1.21.0-rc1.
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-			removeInactiveValidatorDelegations(ctx, app)
-			if err = updateValidatorCommissions(ctx, app); err != nil {
-				return nil, err
-			}
-			if err = increaseMinCommission(ctx, app); err != nil {
-				return nil, err
-			}
-			return vm, nil
-		},
-	},
-	"wisteria": { // Upgrade for v1.21.0.
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-			removeInactiveValidatorDelegations(ctx, app)
-			if err = updateValidatorCommissions(ctx, app); err != nil {
-				return nil, err
-			}
-			if err = increaseMinCommission(ctx, app); err != nil {
-				return nil, err
-			}
-			return vm, nil
-		},
-	},
 	"xenon-rc1": { // Upgrade for v1.22.0-rc1.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -262,46 +223,3 @@ var (
 	_ = removeInactiveValidatorDelegations
 	_ = pruneIBCExpiredConsensusStates
 )
-
-// updateValidatorCommissions updates all the validators to have 60% commission rate, with a max of 60% too.
-// Part of the wisteria upgrade.
-func updateValidatorCommissions(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Updating the commissions for all validators to 60% with 60% max.")
-	sixtyPct := sdkmath.LegacyMustNewDecFromStr("0.60")
-
-	validators, err := app.StakingKeeper.GetAllValidators(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get all validators: %w", err)
-	}
-
-	for _, validator := range validators {
-		validator.Commission.MaxRate = sixtyPct
-		validator.Commission.Rate = sixtyPct
-		err = app.StakingKeeper.SetValidator(ctx, validator)
-		if err != nil {
-			return fmt.Errorf("could not update validator %q: %w", validator.OperatorAddress, err)
-		}
-	}
-
-	ctx.Logger().Info("Done updating the commissions for all validators to 60% with 60% max.")
-	return nil
-}
-
-// increaseMinCommission increases the minimum commission (for any validator) to 60%.
-// Part of the wisteria upgrade.
-func increaseMinCommission(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting minimum commission to 60%.")
-	params, err := app.StakingKeeper.GetParams(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get staking module params: %w", err)
-	}
-
-	params.MinCommissionRate = sdkmath.LegacyMustNewDecFromStr("0.60")
-	err = app.StakingKeeper.SetParams(ctx, params)
-	if err != nil {
-		return fmt.Errorf("could not set staking module params: %w", err)
-	}
-
-	ctx.Logger().Info("Done setting minimum commission to 60%.")
-	return nil
-}
