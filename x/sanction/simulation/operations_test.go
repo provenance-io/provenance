@@ -142,7 +142,7 @@ func (s *SimTestSuite) requireResetParams() {
 	s.requireResetSanctionParams()
 }
 
-// requireResetParams resets the gov params to the standard used by most tests in here.
+// requireResetGovParams resets the gov params to the standard used by most tests in here.
 func (s *SimTestSuite) requireResetGovParams() {
 	params, err := s.app.GovKeeper.Params.Get(s.ctx)
 	s.Require().NoError(err, "s.app.GovKeeper.Params.Get(s.ctx)")
