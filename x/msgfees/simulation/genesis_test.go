@@ -43,7 +43,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.True(t, msgFeesGenesis.Params.FloorGasPrice.Amount.IsPositive())
 }
 
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
+// TestRandomizedGenState1 enState.
 func TestRandomizedGenState1(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
