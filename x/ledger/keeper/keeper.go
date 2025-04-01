@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,12 +10,16 @@ import (
 
 // Keeper defines the mymodule keeper.
 type Keeper struct {
+	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 }
 
 // NewKeeper returns a new mymodule Keeper.
-func NewKeeper(storeKey storetypes.StoreKey) Keeper {
-	return Keeper{storeKey: storeKey}
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey) Keeper {
+	return Keeper{
+		cdc:      cdc,
+		storeKey: storeKey,
+	}
 }
 
 // SetValue stores a value with a given key.

@@ -148,6 +148,9 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
+	"github.com/provenance-io/provenance/x/ledger"
+	ledgerkeeper "github.com/provenance-io/provenance/x/ledger/keeper"
+	ledgermodule "github.com/provenance-io/provenance/x/ledger/module"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -270,6 +273,7 @@ type App struct {
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
+	LedgerKeeper    ledgerkeeper.Keeper
 	ExchangeKeeper  exchangekeeper.Keeper
 	WasmKeeper      *wasmkeeper.Keeper
 	ContractKeeper  *wasmkeeper.PermissionedKeeper
@@ -578,6 +582,10 @@ func New(
 		appCodec, keys[hold.StoreKey], app.BankKeeper,
 	)
 
+	app.LedgerKeeper = ledgerkeeper.NewKeeper(
+		appCodec, keys[ledger.StoreKey],
+	)
+
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
 		app.AccountKeeper, app.AttributeKeeper, app.BankKeeper, app.HoldKeeper, app.MarkerKeeper,
@@ -750,6 +758,7 @@ func New(
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
+		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
