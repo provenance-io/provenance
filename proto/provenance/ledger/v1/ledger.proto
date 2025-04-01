@@ -1,0 +1,80 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+
+message Ledger { 
+  string nft_uuid = 1;
+  repeated LedgerEntry ledger = 2;
+}
+
+message LedgerEntry {
+  string uuid = 1;
+  string type = 2;
+  string denom = 3;
+  
+  google.protobuf.Timestamp posted_date = 4 [
+    (gogoproto.stdtime) = true, (gogoproto.nullable) = false
+  ];
+
+  google.protobuf.Timestamp effective_date = 5 [
+    (gogoproto.stdtime) = true, (gogoproto.nullable) = false
+  ];
+  
+  string amt = 6 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  string prin_applied_amt = 7 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  string prin_bal_amt = 8 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  
+  string int_applied_amt = 9 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  string int_bal_amt = 10 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  string other_applied_amt = 11 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  string other_bal_amt = 12 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}
