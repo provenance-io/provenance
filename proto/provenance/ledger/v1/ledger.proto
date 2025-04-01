@@ -13,64 +13,64 @@ import "gogoproto/gogo.proto";
 message Ledger { 
   string nft_uuid = 1;
   repeated LedgerEntry ledger = 2;
+  string denom = 3;
 }
 
 message LedgerEntry {
   string uuid = 1;
   string type = 2;
-  string denom = 3;
   
-  google.protobuf.Timestamp posted_date = 4 [
+  google.protobuf.Timestamp posted_date = 3 [
     (gogoproto.stdtime) = true, (gogoproto.nullable) = false
   ];
 
-  google.protobuf.Timestamp effective_date = 5 [
+  google.protobuf.Timestamp effective_date = 4 [
     (gogoproto.stdtime) = true, (gogoproto.nullable) = false
   ];
   
-  string amt = 6 [
+  string amt = 5 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
 
-  string prin_applied_amt = 7 [
+  string prin_applied_amt = 6 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
 
-  string prin_bal_amt = 8 [
+  string prin_bal_amt = 7 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
   
-  string int_applied_amt = 9 [
+  string int_applied_amt = 8 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
 
-  string int_bal_amt = 10 [
+  string int_bal_amt = 9 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
 
-  string other_applied_amt = 11 [
+  string other_applied_amt = 10 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
 
-  string other_bal_amt = 12 [
+  string other_bal_amt = 11 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
