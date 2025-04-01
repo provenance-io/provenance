@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	"cosmossdk.io/core/codec"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
 )
