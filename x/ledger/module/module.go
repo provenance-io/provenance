@@ -6,13 +6,16 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 )
 
-// AppModuleBasic defines the basic application module used by mymodule.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
 // Name returns the module name.
 func (AppModuleBasic) Name() string {
@@ -42,9 +45,10 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(k keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 	return AppModule{
-		keeper: k,
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         k,
 	}
 }
 
@@ -86,3 +90,10 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 // 	// Export current state as genesis state.
 // 	return cdc.MustMarshalJSON(struct{}{})
 // }
+
+// Satisfy the AppModule interface for now..
+func (AppModule) IsAppModule()                                                {}
+func (AppModule) IsOnePerModuleType()                                         {}
+func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino)                 {}
+func (AppModule) RegisterInterfaces(types.InterfaceRegistry)                  {}
+func (AppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
