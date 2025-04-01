@@ -866,6 +866,7 @@ func New(
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
 		hold.ModuleName,
+		ledger.ModuleName,
 		exchange.ModuleName, // must be after the hold module.
 
 		ibcexported.ModuleName,
@@ -903,6 +904,7 @@ func New(
 		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
+		ledger.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
