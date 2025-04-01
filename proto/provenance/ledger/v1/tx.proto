@@ -3,22 +3,24 @@ package provenance.ledger.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/ledger";
 
-option java_package = "io.provenance.ledger.v1";
+option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
 import "cosmos/msg/v1/msg.proto";
-import "cosmos_proto/cosmos.proto";
 import "provenance/ledger/v1/ledger.proto";
 
 // Msg defines the attribute module Msg service.
 service Msg {
-    option (cosmos.msg.v1.service) = true;
-  
-    rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
-}
-  
-message MsgAppendRequest {
-    LedgerEntry entry = 1;
+  option (cosmos.msg.v1.service) = true;
+
+  // Append a ledger entry
+  rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
 }
 
+// MsgAppendRequest
+message MsgAppendRequest {
+  LedgerEntry entry = 1;
+}
+
+// MsgAppendResponse
 message MsgAppendResponse {}

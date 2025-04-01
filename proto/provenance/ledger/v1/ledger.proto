@@ -1,7 +1,7 @@
 syntax = "proto3";
 package provenance.ledger.v1;
 
-option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option go_package          = "github.com/provenance-io/provenance/x/ledger";
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
@@ -10,24 +10,22 @@ import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 
-message Ledger { 
-  string nft_uuid = 1;
-  repeated LedgerEntry ledger = 2;
-  string denom = 3;
+// Ledger
+message Ledger {
+  string               nft_uuid = 1;
+  repeated LedgerEntry ledger   = 2;
+  string               denom    = 3;
 }
 
+// LedgerEntry
 message LedgerEntry {
   string uuid = 1;
   string type = 2;
-  
-  google.protobuf.Timestamp posted_date = 3 [
-    (gogoproto.stdtime) = true, (gogoproto.nullable) = false
-  ];
 
-  google.protobuf.Timestamp effective_date = 4 [
-    (gogoproto.stdtime) = true, (gogoproto.nullable) = false
-  ];
-  
+  google.protobuf.Timestamp posted_date = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+
+  google.protobuf.Timestamp effective_date = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+
   string amt = 5 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -48,7 +46,7 @@ message LedgerEntry {
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
-  
+
   string int_applied_amt = 8 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",

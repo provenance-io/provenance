@@ -259,6 +259,19 @@
     - [DenomSplit](#provenance-exchange-v1-DenomSplit)
     - [Params](#provenance-exchange-v1-Params)
   
+- [provenance/ledger/v1/tx.proto](#provenance_ledger_v1_tx-proto)
+    - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
+    - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
+  
+    - [Msg](#provenance-ledger-v1-Msg)
+  
+- [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
+    - [Ledger](#provenance-ledger-v1-Ledger)
+    - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
+  
+- [provenance/ledger/v1/genesis.proto](#provenance_ledger_v1_genesis-proto)
+    - [GenesisState](#provenance-ledger-v1-GenesisState)
+  
 - [provenance/trigger/v1/tx.proto](#provenance_trigger_v1_tx-proto)
     - [MsgCreateTriggerRequest](#provenance-trigger-v1-MsgCreateTriggerRequest)
     - [MsgCreateTriggerResponse](#provenance-trigger-v1-MsgCreateTriggerResponse)
@@ -4396,6 +4409,146 @@ Params is a representation of the exchange module parameters.
 | `denom_splits` | [DenomSplit](#provenance-exchange-v1-DenomSplit) | repeated | denom_splits are the denom-specific amounts the exchange receives. |
 | `fee_create_payment_flat` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | fee_create_payment_flat is the flat fee options for creating a payment. If the source amount is not zero then one of these fee entries is required to create the payment. This field is currently limited to zero or one entries. |
 | `fee_accept_payment_flat` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | fee_accept_payment_flat is the flat fee options for accepting a payment. If the target amount is not zero then one of these fee entries is required to accept the payment. This field is currently limited to zero or one entries. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/tx.proto
+
+
+
+<a name="provenance-ledger-v1-MsgAppendRequest"></a>
+
+### MsgAppendRequest
+MsgAppendRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAppendResponse"></a>
+
+### MsgAppendResponse
+MsgAppendResponse
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-ledger-v1-Msg"></a>
+
+### Msg
+Msg defines the attribute module Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_ledger-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/ledger.proto
+
+
+
+<a name="provenance-ledger-v1-Ledger"></a>
+
+### Ledger
+Ledger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_uuid` | [string](#string) |  |  |
+| `ledger` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
+| `denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerEntry"></a>
+
+### LedgerEntry
+LedgerEntry
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `uuid` | [string](#string) |  |  |
+| `type` | [string](#string) |  |  |
+| `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| `amt` | [string](#string) |  |  |
+| `prin_applied_amt` | [string](#string) |  |  |
+| `prin_bal_amt` | [string](#string) |  |  |
+| `int_applied_amt` | [string](#string) |  |  |
+| `int_bal_amt` | [string](#string) |  |  |
+| `other_applied_amt` | [string](#string) |  |  |
+| `other_bal_amt` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/genesis.proto
+
+
+
+<a name="provenance-ledger-v1-GenesisState"></a>
+
+### GenesisState
+Initial state of the ledger store.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledgers` | [Ledger](#provenance-ledger-v1-Ledger) | repeated |  |
 
 
 

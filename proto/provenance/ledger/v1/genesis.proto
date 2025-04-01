@@ -1,18 +1,17 @@
 syntax = "proto3";
 package provenance.ledger.v1;
 
-option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option go_package          = "github.com/provenance-io/provenance/x/ledger";
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
 import "provenance/ledger/v1/ledger.proto";
 
+// Initial state of the ledger store.
 message GenesisState {
-    option (gogoproto.equal)           = false;
-    option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
-    repeated Ledger ledgers = 1 [
-        (gogoproto.nullable) = false
-    ];
+  repeated Ledger ledgers = 1 [(gogoproto.nullable) = false];
 }
