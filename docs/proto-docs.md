@@ -386,6 +386,32 @@
     - [UpdateMsgFeeProposal](#provenance-msgfees-v1-UpdateMsgFeeProposal)
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
   
+- [provenance/flatfees/v1/tx.proto](#provenance_flatfees_v1_tx-proto)
+    - [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest)
+    - [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse)
+    - [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest)
+    - [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse)
+  
+    - [Msg](#provenance-flatfees-v1-Msg)
+  
+- [provenance/flatfees/v1/flatfees.proto](#provenance_flatfees_v1_flatfees-proto)
+    - [ConversionFactor](#provenance-flatfees-v1-ConversionFactor)
+    - [MsgFee](#provenance-flatfees-v1-MsgFee)
+    - [Params](#provenance-flatfees-v1-Params)
+  
+- [provenance/flatfees/v1/query.proto](#provenance_flatfees_v1_query-proto)
+    - [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest)
+    - [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse)
+    - [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest)
+    - [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse)
+    - [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest)
+    - [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse)
+  
+    - [Query](#provenance-flatfees-v1-Query)
+  
+- [provenance/flatfees/v1/genesis.proto](#provenance_flatfees_v1_genesis-proto)
+    - [GenesisState](#provenance-flatfees-v1-GenesisState)
+  
 - [provenance/oracle/v1/tx.proto](#provenance_oracle_v1_tx-proto)
     - [MsgSendQueryOracleRequest](#provenance-oracle-v1-MsgSendQueryOracleRequest)
     - [MsgSendQueryOracleResponse](#provenance-oracle-v1-MsgSendQueryOracleResponse)
@@ -6063,6 +6089,298 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 | `title` | [string](#string) |  | proposal title |
 | `description` | [string](#string) |  | proposal description |
 | `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/tx.proto
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesRequest"></a>
+
+### MsgUpdateMsgFeesRequest
+MsgUpdateMsgFeesRequest is the request for the UpdateMsgFees governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `to_set` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | to_set is the list of msg fees to create and/or update. |
+| `to_unset` | [string](#string) | repeated | to_unset is the list of msg-type-urls that should have their msg fee entries deleted (they'll go back to using the default cost). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesResponse"></a>
+
+### MsgUpdateMsgFeesResponse
+MsgUpdateMsgFeesResponse is the response for the UpdateMsgFees governance endpoint.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateParamsRequest"></a>
+
+### MsgUpdateParamsRequest
+MsgUpdateParamsRequest is the request for the UpdateParams governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params are the new param values to set. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateParamsResponse"></a>
+
+### MsgUpdateParamsResponse
+MsgUpdateParamsResponse is the response for the UpdateParams governance endpoint.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-flatfees-v1-Msg"></a>
+
+### Msg
+Msg defines the flatfees Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UpdateParams` | [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse) | UpdateParams is a governance endpoint for updating the x/flatfees params. |
+| `UpdateMsgFees` | [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest) | [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse) | UpdateMsgFees is a governance endpoint for updating fees for specific msgs. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_flatfees-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/flatfees.proto
+
+
+
+<a name="provenance-flatfees-v1-ConversionFactor"></a>
+
+### ConversionFactor
+ConversionFactor associates the values of two coins with different denoms.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | base_amount is an amount in the base denom that is equal to the converted_amount. |
+| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denom equal to the base_amount. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgFee"></a>
+
+### MsgFee
+MsgFee defines the cost to use a specific message type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-Params"></a>
+
+### Params
+Params defines the set of params for the flatfees module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denom. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/query.proto
+
+
+
+<a name="provenance-flatfees-v1-QueryAllMsgFeesRequest"></a>
+
+### QueryAllMsgFeesRequest
+QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert will return the fees as defined (instead of as converted). |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the request. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryAllMsgFeesResponse"></a>
+
+### QueryAllMsgFeesResponse
+QueryAllMsgFeesResponse is the response type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees contains the requested information. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination parameters of the response. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeRequest"></a>
+
+### QueryMsgFeeRequest
+QueryMsgFeeRequest is the request type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert will return the fees as defined (instead of as converted). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeResponse"></a>
+
+### QueryMsgFeeResponse
+QueryMsgFeeResponse is the response type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fee` | [MsgFee](#provenance-flatfees-v1-MsgFee) |  | msg_fee is the requested entry. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Params query.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Params query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-flatfees-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for marker module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `Params` | [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse) | Params queries the parameters for x/flatfees. |
+| `AllMsgFees` | [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse) | AllMsgFees returns info on all msg types that have a customized msg fee. |
+| `MsgFee` | [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest) | [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse) | MsgFee will return information about what it will cost to execute a given msg type. If the provided msg type does not have a specific fee defined, the default is returned. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/genesis.proto
+
+
+
+<a name="provenance-flatfees-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of the flat fees module, persisted from the store.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines all the parameters of the module. |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the additional fees on specific tx msgs |
 
 
 

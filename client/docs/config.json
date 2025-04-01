@@ -131,7 +131,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/msgfees/v1/query.swagger.json",
+      "url": "./tmp-swagger-gen/provenance/flatfees/v1/query.swagger.json",
       "tags": {
         "add": [
           "Fees"
@@ -139,12 +139,12 @@
       },
       "operationIds": {
         "rename": {
-          "Params": "MsgFeeParams"
+          "Params": "FlatFeeParams"
         }
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/msgfees/v1/tx.swagger.json",
+      "url": "./tmp-swagger-gen/provenance/flatfees/v1/tx.swagger.json",
       "tags": {
         "add": [
           "Fees"

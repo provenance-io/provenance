@@ -1,0 +1,54 @@
+syntax = "proto3";
+package provenance.flatfees.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "provenance/flatfees/v1/flatfees.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/flatfees/types";
+
+option java_package        = "io.provenance.flatfees.v1";
+option java_multiple_files = true;
+
+// Msg defines the flatfees Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // UpdateParams is a governance endpoint for updating the x/flatfees params.
+  rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
+
+  // UpdateMsgFees is a governance endpoint for updating fees for specific msgs.
+  rpc UpdateMsgFees(MsgUpdateMsgFeesRequest) returns (MsgUpdateMsgFeesResponse);
+}
+
+// MsgUpdateParamsRequest is the request for the UpdateParams governance endpoint.
+message MsgUpdateParamsRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params are the new param values to set.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse is the response for the UpdateParams governance endpoint.
+message MsgUpdateParamsResponse {}
+
+// MsgUpdateMsgFeesRequest is the request for the UpdateMsgFees governance endpoint.
+message MsgUpdateMsgFeesRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // to_set is the list of msg fees to create and/or update.
+  repeated MsgFee to_set = 2;
+  // to_unset is the list of msg-type-urls that should have their msg fee entries
+  // deleted (they'll go back to using the default cost).
+  repeated string to_unset = 3;
+}
+
+// MsgUpdateMsgFeesResponse is the response for the UpdateMsgFees governance endpoint.
+message MsgUpdateMsgFeesResponse {}

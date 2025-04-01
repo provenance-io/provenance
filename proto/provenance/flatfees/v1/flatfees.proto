@@ -1,0 +1,45 @@
+syntax = "proto3";
+package provenance.flatfees.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/flatfees/types";
+option java_package        = "io.provenance.flatfees.v1";
+option java_multiple_files = true;
+
+// Params defines the set of params for the flatfees module.
+message Params {
+  option (gogoproto.equal) = false;
+
+  // default_cost is the amount a msg costs when there is no specific msg-fee defined for it.
+  cosmos.base.v1beta1.Coin default_cost = 1 [(gogoproto.nullable) = false];
+  // conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denom.
+  ConversionFactor conversion_factor = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgFee defines the cost to use a specific message type.
+message MsgFee {
+  option (gogoproto.goproto_stringer) = false;
+
+  // msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend".
+  string msg_type_url = 1;
+  // cost is the Tx fee required for this msg_type_url.
+  repeated cosmos.base.v1beta1.Coin cost = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
+}
+
+// ConversionFactor associates the values of two coins with different denoms.
+message ConversionFactor {
+  option (gogoproto.goproto_stringer) = false;
+
+  // base_amount is an amount in the base denom that is equal to the converted_amount.
+  cosmos.base.v1beta1.Coin base_amount = 1 [(gogoproto.nullable) = false];
+  // converted_amount is an amount in the fee denom equal to the base_amount.
+  cosmos.base.v1beta1.Coin converted_amount = 2 [(gogoproto.nullable) = false];
+}
