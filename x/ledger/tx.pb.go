@@ -28,16 +28,116 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgCreateRequest
+type MsgCreateRequest struct {
+	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	Denom      string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	Owner      string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+}
+
+func (m *MsgCreateRequest) Reset()         { *m = MsgCreateRequest{} }
+func (m *MsgCreateRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateRequest) ProtoMessage()    {}
+func (*MsgCreateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{0}
+}
+func (m *MsgCreateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateRequest.Merge(m, src)
+}
+func (m *MsgCreateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateRequest proto.InternalMessageInfo
+
+func (m *MsgCreateRequest) GetNftAddress() string {
+	if m != nil {
+		return m.NftAddress
+	}
+	return ""
+}
+
+func (m *MsgCreateRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgCreateRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+// MsgCreateResponse
+type MsgCreateResponse struct {
+}
+
+func (m *MsgCreateResponse) Reset()         { *m = MsgCreateResponse{} }
+func (m *MsgCreateResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateResponse) ProtoMessage()    {}
+func (*MsgCreateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{1}
+}
+func (m *MsgCreateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateResponse.Merge(m, src)
+}
+func (m *MsgCreateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateResponse proto.InternalMessageInfo
+
 // MsgAppendRequest
 type MsgAppendRequest struct {
-	Entry *LedgerEntry `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry,omitempty"`
+	NftAddress string       `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	Entry      *LedgerEntry `protobuf:"bytes,2,opt,name=entry,proto3" json:"entry,omitempty"`
+	Owner      string       `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
 func (m *MsgAppendRequest) Reset()         { *m = MsgAppendRequest{} }
 func (m *MsgAppendRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAppendRequest) ProtoMessage()    {}
 func (*MsgAppendRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{0}
+	return fileDescriptor_3c124d2e9569f84d, []int{2}
 }
 func (m *MsgAppendRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -66,11 +166,25 @@ func (m *MsgAppendRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAppendRequest proto.InternalMessageInfo
 
+func (m *MsgAppendRequest) GetNftAddress() string {
+	if m != nil {
+		return m.NftAddress
+	}
+	return ""
+}
+
 func (m *MsgAppendRequest) GetEntry() *LedgerEntry {
 	if m != nil {
 		return m.Entry
 	}
 	return nil
+}
+
+func (m *MsgAppendRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
 }
 
 // MsgAppendResponse
@@ -81,7 +195,7 @@ func (m *MsgAppendResponse) Reset()         { *m = MsgAppendResponse{} }
 func (m *MsgAppendResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAppendResponse) ProtoMessage()    {}
 func (*MsgAppendResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{1}
+	return fileDescriptor_3c124d2e9569f84d, []int{3}
 }
 func (m *MsgAppendResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -111,6 +225,8 @@ func (m *MsgAppendResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAppendResponse proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*MsgCreateRequest)(nil), "provenance.ledger.v1.MsgCreateRequest")
+	proto.RegisterType((*MsgCreateResponse)(nil), "provenance.ledger.v1.MsgCreateResponse")
 	proto.RegisterType((*MsgAppendRequest)(nil), "provenance.ledger.v1.MsgAppendRequest")
 	proto.RegisterType((*MsgAppendResponse)(nil), "provenance.ledger.v1.MsgAppendResponse")
 }
@@ -118,24 +234,29 @@ func init() {
 func init() { proto.RegisterFile("provenance/ledger/v1/tx.proto", fileDescriptor_3c124d2e9569f84d) }
 
 var fileDescriptor_3c124d2e9569f84d = []byte{
-	// 266 bytes of a gzipped FileDescriptorProto
+	// 351 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x2d, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0xcf, 0x49, 0x4d, 0x49, 0x4f, 0x2d, 0xd2, 0x2f, 0x33,
 	0xd4, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x41, 0x48, 0xeb, 0x41, 0xa4,
 	0xf5, 0xca, 0x0c, 0xa5, 0xc4, 0x93, 0xf3, 0x8b, 0x73, 0xf3, 0x8b, 0xf5, 0x73, 0x8b, 0xd3, 0x41,
-	0xaa, 0x73, 0x8b, 0xd3, 0x21, 0xca, 0xa5, 0x14, 0xb1, 0x9a, 0x06, 0xd5, 0x08, 0x56, 0xa2, 0x14,
-	0xce, 0x25, 0xe0, 0x5b, 0x9c, 0xee, 0x58, 0x50, 0x90, 0x9a, 0x97, 0x12, 0x94, 0x5a, 0x58, 0x9a,
-	0x5a, 0x5c, 0x22, 0x64, 0xce, 0xc5, 0x9a, 0x9a, 0x57, 0x52, 0x54, 0x29, 0xc1, 0xa8, 0xc0, 0xa8,
-	0xc1, 0x6d, 0xa4, 0xa8, 0x87, 0xcd, 0x56, 0x3d, 0x1f, 0x30, 0xcb, 0x15, 0xa4, 0x30, 0x08, 0xa2,
-	0xde, 0x8a, 0xab, 0xe9, 0xf9, 0x06, 0x2d, 0xd6, 0xfc, 0xf2, 0xbc, 0xd4, 0x22, 0x25, 0x61, 0x2e,
-	0x41, 0x24, 0x83, 0x8b, 0x0b, 0xf2, 0xf3, 0x8a, 0x53, 0x8d, 0xd2, 0xb9, 0x98, 0x7d, 0x8b, 0xd3,
-	0x85, 0x22, 0xb9, 0xd8, 0x20, 0x12, 0x42, 0x6a, 0xd8, 0xcd, 0x46, 0x77, 0x92, 0x94, 0x3a, 0x41,
-	0x75, 0x10, 0x1b, 0xa4, 0x58, 0x1b, 0x9e, 0x6f, 0xd0, 0x62, 0x74, 0x4a, 0x3c, 0xf1, 0x48, 0x8e,
-	0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58,
-	0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x06, 0x2e, 0xf1, 0xcc, 0x7c, 0xac, 0x66, 0x05, 0x30, 0x46, 0xe9,
-	0xa4, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0x23, 0x94, 0xe8, 0x66, 0xe6,
-	0x23, 0xf1, 0xf4, 0x2b, 0xa0, 0xe1, 0x97, 0xc4, 0x06, 0x0e, 0x40, 0x63, 0x40, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x1e, 0xb3, 0x3b, 0x73, 0xb3, 0x01, 0x00, 0x00,
+	0xaa, 0x73, 0x8b, 0xd3, 0x21, 0xca, 0xa5, 0x14, 0xb1, 0x9a, 0x06, 0xd5, 0x08, 0x56, 0xa2, 0x94,
+	0xcd, 0x25, 0xe0, 0x5b, 0x9c, 0xee, 0x5c, 0x94, 0x9a, 0x58, 0x92, 0x1a, 0x94, 0x5a, 0x58, 0x9a,
+	0x5a, 0x5c, 0x22, 0x24, 0xcf, 0xc5, 0x9d, 0x97, 0x56, 0x12, 0x9f, 0x98, 0x92, 0x52, 0x94, 0x5a,
+	0x5c, 0x2c, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x19, 0xc4, 0x95, 0x97, 0x56, 0xe2, 0x08, 0x11, 0x11,
+	0x12, 0xe1, 0x62, 0x4d, 0x49, 0xcd, 0xcb, 0xcf, 0x95, 0x60, 0x02, 0x4b, 0x41, 0x38, 0x20, 0xd1,
+	0xfc, 0xf2, 0xbc, 0xd4, 0x22, 0x09, 0x66, 0x88, 0x28, 0x98, 0x63, 0xc5, 0xd5, 0xf4, 0x7c, 0x83,
+	0x16, 0x84, 0xad, 0x24, 0xcc, 0x25, 0x88, 0x64, 0x59, 0x71, 0x41, 0x7e, 0x5e, 0x71, 0xaa, 0x52,
+	0x1f, 0x23, 0xd8, 0x09, 0x8e, 0x05, 0x05, 0xa9, 0x79, 0x29, 0x44, 0x3b, 0xc1, 0x9c, 0x8b, 0x35,
+	0x35, 0xaf, 0xa4, 0xa8, 0x12, 0xec, 0x04, 0x6e, 0x23, 0x45, 0x3d, 0x6c, 0x21, 0xa3, 0xe7, 0x03,
+	0x66, 0xb9, 0x82, 0x14, 0x06, 0x41, 0xd4, 0x13, 0xed, 0x4a, 0x98, 0x7b, 0x20, 0xae, 0x34, 0x3a,
+	0xc4, 0xc8, 0xc5, 0xec, 0x5b, 0x9c, 0x2e, 0x14, 0xc9, 0xc5, 0x06, 0x71, 0xbf, 0x90, 0x1a, 0x76,
+	0x2b, 0xd1, 0x43, 0x53, 0x4a, 0x9d, 0xa0, 0x3a, 0x88, 0x15, 0x20, 0xa3, 0x21, 0x96, 0xe2, 0x31,
+	0x1a, 0x25, 0x94, 0xf0, 0x18, 0x8d, 0xea, 0x7a, 0x29, 0xd6, 0x86, 0xe7, 0x1b, 0xb4, 0x18, 0x9d,
+	0x12, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f,
+	0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x81, 0x4b, 0x3c, 0x33, 0x1f, 0xab,
+	0x59, 0x01, 0x8c, 0x51, 0x3a, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa,
+	0x08, 0x25, 0xba, 0x99, 0xf9, 0x48, 0x3c, 0xfd, 0x0a, 0x68, 0xaa, 0x4a, 0x62, 0x03, 0x27, 0x2b,
+	0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4e, 0x47, 0xd4, 0x22, 0xc9, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -150,6 +271,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
+	// Create a new NFT ledger
+	Create(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error)
 	// Append a ledger entry
 	Append(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error)
 }
@@ -160,6 +283,15 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
+}
+
+func (c *msgClient) Create(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error) {
+	out := new(MsgCreateResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *msgClient) Append(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error) {
@@ -173,6 +305,8 @@ func (c *msgClient) Append(ctx context.Context, in *MsgAppendRequest, opts ...gr
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
+	// Create a new NFT ledger
+	Create(context.Context, *MsgCreateRequest) (*MsgCreateResponse, error)
 	// Append a ledger entry
 	Append(context.Context, *MsgAppendRequest) (*MsgAppendResponse, error)
 }
@@ -181,12 +315,33 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) Create(ctx context.Context, req *MsgCreateRequest) (*MsgCreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
 func (*UnimplementedMsgServer) Append(ctx context.Context, req *MsgAppendRequest) (*MsgAppendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Append not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Msg/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Create(ctx, req.(*MsgCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_Append_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -213,12 +368,83 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Create",
+			Handler:    _Msg_Create_Handler,
+		},
+		{
 			MethodName: "Append",
 			Handler:    _Msg_Append_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provenance/ledger/v1/tx.proto",
+}
+
+func (m *MsgCreateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.NftAddress) > 0 {
+		i -= len(m.NftAddress)
+		copy(dAtA[i:], m.NftAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.NftAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgAppendRequest) Marshal() (dAtA []byte, err error) {
@@ -241,6 +467,13 @@ func (m *MsgAppendRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0x1a
+	}
 	if m.Entry != nil {
 		{
 			size, err := m.Entry.MarshalToSizedBuffer(dAtA[:i])
@@ -250,6 +483,13 @@ func (m *MsgAppendRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i -= size
 			i = encodeVarintTx(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.NftAddress) > 0 {
+		i -= len(m.NftAddress)
+		copy(dAtA[i:], m.NftAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.NftAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -290,14 +530,52 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgCreateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.NftAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgAppendRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
+	l = len(m.NftAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
 	if m.Entry != nil {
 		l = m.Entry.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Owner)
+	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
@@ -317,6 +595,202 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgCreateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NftAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgAppendRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -348,6 +822,38 @@ func (m *MsgAppendRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NftAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Entry", wireType)
 			}
@@ -382,6 +888,38 @@ func (m *MsgAppendRequest) Unmarshal(dAtA []byte) error {
 			if err := m.Entry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

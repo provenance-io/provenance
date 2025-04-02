@@ -267,6 +267,8 @@
 - [provenance/ledger/v1/tx.proto](#provenance_ledger_v1_tx-proto)
     - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
+    - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
+    - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
   
     - [Msg](#provenance-ledger-v1-Msg)
   
@@ -4535,7 +4537,9 @@ MsgAppendRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
 | `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+| `owner` | [string](#string) |  |  |
 
 
 
@@ -4546,6 +4550,33 @@ MsgAppendRequest
 
 ### MsgAppendResponse
 MsgAppendResponse
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateRequest"></a>
+
+### MsgCreateRequest
+MsgCreateRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateResponse"></a>
+
+### MsgCreateResponse
+MsgCreateResponse
 
 
 
@@ -4565,6 +4596,7 @@ Msg defines the attribute module Msg service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
+| `Create` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
 | `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
 
  <!-- end services -->

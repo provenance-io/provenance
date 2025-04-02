@@ -13,15 +13,32 @@ import "provenance/ledger/v1/ledger.proto";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
+  // Create a new NFT ledger
+  rpc Create(MsgCreateRequest) returns (MsgCreateResponse);
+
   // Append a ledger entry
   rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
 }
+
+// MsgCreateRequest
+message MsgCreateRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
+  string nft_address = 1;
+  string denom       = 2;
+  string owner       = 3;
+}
+
+// MsgCreateResponse
+message MsgCreateResponse {}
 
 // MsgAppendRequest
 message MsgAppendRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  LedgerEntry entry = 1;
+  string      nft_address = 1;
+  LedgerEntry entry       = 2;
+  string      owner       = 3;
 }
 
 // MsgAppendResponse
