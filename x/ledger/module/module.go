@@ -112,14 +112,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // Register the protobuf message types and services with the sdk.
 func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
-	msgTypes := []sdk.Msg{
-		&ledger.MsgAppendRequest{},
-		&ledger.MsgAppendResponse{},
-		&ledger.MsgCreateRequest{},
-		&ledger.MsgCreateResponse{},
-	}
-
-	registry.RegisterImplementations((*sdk.Msg)(nil), msgTypes...)
 	msgservice.RegisterMsgServiceDesc(registry, &ledger.Msg_serviceDesc)
 }
 
