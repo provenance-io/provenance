@@ -8,6 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/provenance-io/provenance/x/ledger/client/cli"
@@ -62,11 +64,6 @@ func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 // RegisterInvariants registers the invariants of the module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-// RegisterServices registers module services.
-// func (am AppModule) RegisterServices(cfg module.Configurator) {
-// 	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
-// }
-
 // Route returns the message routing key for the module.
 // func (am AppModule) Route() types.RouterKey {
 // 	return ledger.RouterKey
@@ -108,6 +105,12 @@ func (AppModule) IsAppModule()                                {}
 func (AppModule) IsOnePerModuleType()                         {}
 func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
+}
+
+// Register the protobuf message types and services with the sdk.
 func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
 	msgTypes := []sdk.Msg{
 		&ledger.MsgAppendRequest{},
@@ -117,7 +120,7 @@ func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
 	}
 
 	registry.RegisterImplementations((*sdk.Msg)(nil), msgTypes...)
-	// msgservice.RegisterMsgServiceDesc(registry, &ledger.Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &ledger.Msg_serviceDesc)
 }
 
 func (AppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
