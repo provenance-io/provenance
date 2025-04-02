@@ -1,18 +1,24 @@
 package antewrapper_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	sdksigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,14 +28,8 @@ import (
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
-
-// TestAccount represents an account used in the tests in x/auth/ante.
-type TestAccount struct {
-	acc  sdk.AccountI
-	priv cryptotypes.PrivKey
-}
 
 // AnteTestSuite is a test s to be used with ante handler tests.
 type AnteTestSuite struct {
@@ -42,6 +42,16 @@ type AnteTestSuite struct {
 	txBuilder   client.TxBuilder
 
 	encodingConfig simappparams.EncodingConfig
+}
+
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
+
+// TestAccount represents an account used in the tests in x/auth/ante.
+type TestAccount struct {
+	acc  sdk.AccountI
+	priv cryptotypes.PrivKey
 }
 
 // returns context and app with params set on account keeper
@@ -83,7 +93,7 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 			FeegrantKeeper:      s.app.FeeGrantKeeper,
 			TxSigningHandlerMap: s.encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
-			MsgFeesKeeper:       s.app.MsgFeesKeeper,
+			FlatFeesKeeper:      s.app.FlatFeesKeeper,
 			CircuitKeeper:       &s.app.CircuitKeeper,
 		},
 	)
@@ -122,12 +132,12 @@ func (s *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (authsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
-	var sigsV2 []signing.SignatureV2
+	var sigsV2 []sdksigning.SignatureV2
 	for i, priv := range privs {
-		sigV2 := signing.SignatureV2{
+		sigV2 := sdksigning.SignatureV2{
 			PubKey: priv.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+			Data: &sdksigning.SingleSignatureData{
+				SignMode:  sdksigning.SignMode_SIGN_MODE_DIRECT,
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -141,7 +151,7 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 	}
 
 	// Second round: all signer infos are set, so each signer can sign.
-	sigsV2 = []signing.SignatureV2{}
+	sigsV2 = []sdksigning.SignatureV2{}
 	for i, priv := range privs {
 		signerData := authsigning.SignerData{
 			ChainID:       chainID,
@@ -149,7 +159,7 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 			Sequence:      accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(s.ctx,
-			signing.SignMode_SIGN_MODE_DIRECT, signerData,
+			sdksigning.SignMode_SIGN_MODE_DIRECT, signerData,
 			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
@@ -212,10 +222,10 @@ func (s *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.Msg,
 
 func (s *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	for _, msg := range msgs {
-		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee, "", msgfeetype.DefaultMsgFeeBips)
-		err := s.app.MsgFeesKeeper.SetMsgFee(s.ctx, msgFeeToCreate)
+		msgFeeToCreate := flatfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), fee)
+		err := s.app.FlatFeesKeeper.SetMsgFee(s.ctx, *msgFeeToCreate)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not create msg fee %q for %q: %w", fee.String(), sdk.MsgTypeURL(msg), err)
 		}
 	}
 	return nil
@@ -227,6 +237,81 @@ func (s *AnteTestSuite) NewTestGasLimit() uint64 {
 	return 100000
 }
 
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
+// ctxWithFlatFeeGasMeter will return a ctx (based off s.ctx) with a FlatFeeGasMeter in it.
+func (s *AnteTestSuite) ctxWithFlatFeeGasMeter() sdk.Context {
+	if _, err := antewrapper.GetFlatFeeGasMeter(s.ctx); err == nil {
+		return s.ctx
+	}
+	return s.ctx.WithGasMeter(antewrapper.NewFlatFeeGasMeter(s.ctx.GasMeter(), s.ctx.Logger(), s.app.FlatFeesKeeper))
+}
+
+func genTxWithFeeGranter(ctx context.Context,
+	gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string,
+	accNums, accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey,
+) (sdk.Tx, error) {
+	sigs := make([]sdksigning.SignatureV2, len(priv))
+
+	// create a random length memo
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	memo := simtypes.RandStringOfLength(r, r.Intn(101))
+
+	signMode := gen.SignModeHandler().DefaultMode()
+
+	// 1st round: set SignatureV2 with empty signatures, to set correct
+	// signer infos.
+	for i, p := range priv {
+		sigs[i] = sdksigning.SignatureV2{
+			PubKey: p.PubKey(),
+			Data: &sdksigning.SingleSignatureData{
+				SignMode: sdksigning.SignMode(signMode),
+			},
+			Sequence: accSeqs[i],
+		}
+	}
+
+	txb := gen.NewTxBuilder()
+	err := txb.SetMsgs(msgs...)
+	if err != nil {
+		return nil, err
+	}
+	err = txb.SetSignatures(sigs...)
+	if err != nil {
+		return nil, err
+	}
+	txb.SetMemo(memo)
+	txb.SetFeeAmount(feeAmt)
+	txb.SetGasLimit(gas)
+	txb.SetFeeGranter(feeGranter)
+
+	// 2nd round: once all signer infos are set, every signer can sign.
+	for i, p := range priv {
+		signerData := signing.SignerData{
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
+		}
+
+		theTx := txb.GetTx()
+		adaptableTx, ok := theTx.(authsigning.V2AdaptableTx)
+		if !ok {
+			return nil, fmt.Errorf("%T does not implement the authsigning.V2AdaptableTx interface", theTx)
+		}
+		txData := adaptableTx.GetSigningTxData()
+		signBytes, err := gen.SignModeHandler().GetSignBytes(ctx, signMode, signerData, txData)
+		if err != nil {
+			return nil, err
+		}
+		sig, err := p.Sign(signBytes)
+		if err != nil {
+			return nil, err
+		}
+		sigs[i].Data.(*sdksigning.SingleSignatureData).Signature = sig
+		err = txb.SetSignatures(sigs...)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return txb.GetTx(), nil
 }

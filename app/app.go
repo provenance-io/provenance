@@ -64,7 +64,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -139,6 +138,9 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	exchangekeeper "github.com/provenance-io/provenance/x/exchange/keeper"
 	exchangemodule "github.com/provenance-io/provenance/x/exchange/module"
+	flatfeeskeeper "github.com/provenance-io/provenance/x/flatfees/keeper"
+	flatfeesmodule "github.com/provenance-io/provenance/x/flatfees/module"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	"github.com/provenance-io/provenance/x/hold"
 	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
 	holdmodule "github.com/provenance-io/provenance/x/hold/module"
@@ -252,6 +254,7 @@ type App struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	MsgFeesKeeper         msgfeeskeeper.Keeper
+	FlatFeesKeeper        flatfeeskeeper.Keeper
 	QuarantineKeeper      quarantinekeeper.Keeper
 	SanctionKeeper        sanctionkeeper.Keeper
 	TriggerKeeper         triggerkeeper.Keeper
@@ -345,7 +348,7 @@ func New(
 	std.RegisterInterfaces(interfaceRegistry)
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, txConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(txConfig.TxDecoder()))
+	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter())
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -370,6 +373,7 @@ func New(
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
 		msgfeestypes.StoreKey,
+		flatfeestypes.StoreKey,
 		wasmtypes.StoreKey,
 		quarantine.StoreKey,
 		sanction.StoreKey,
@@ -485,8 +489,9 @@ func New(
 		app.txConfig.TxDecoder(), interfaceRegistry,
 	)
 
-	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
-	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
+	app.FlatFeesKeeper = flatfeeskeeper.NewKeeper(
+		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName,
+	)
 
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	restrictHooks := piohandlers.NewStakingRestrictionHooks(app.StakingKeeper, *piohandlers.DefaultRestrictionOptions)
@@ -585,7 +590,7 @@ func New(
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
-		return pioMsgFeesRouter.Handler(msg)
+		return app.MsgServiceRouter().Handler(msg)
 	})
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
 	icaHostKeeper := icahostkeeper.NewKeeper(
@@ -746,6 +751,7 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
+		flatfeesmodule.NewAppModule(appCodec, app.FlatFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), nil),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
@@ -836,7 +842,8 @@ func New(
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
-		genutiltypes.ModuleName, // Must be after both staking and auth.
+		flatfeestypes.ModuleName, // Must be somewhere before genutiltypes.
+		genutiltypes.ModuleName,  // Must be after both staking and auth.
 		evidencetypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
@@ -903,6 +910,7 @@ func New(
 		attributetypes.ModuleName,
 		markertypes.ModuleName,
 		msgfeestypes.ModuleName,
+		flatfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
 		triggertypes.ModuleName,
@@ -947,7 +955,6 @@ func New(
 	app.SetEndBlocker(app.EndBlocker)
 	app.setAnteHandler()
 	app.setPostHandler()
-	app.setFeeHandler()
 	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
 
 	// Register upgrade handlers and set the store loader.
@@ -972,7 +979,7 @@ func (app *App) setAnteHandler() {
 			BankKeeper:          app.BankKeeper,
 			TxSigningHandlerMap: app.txConfig.SignModeHandler(),
 			FeegrantKeeper:      app.FeeGrantKeeper,
-			MsgFeesKeeper:       app.MsgFeesKeeper,
+			FlatFeesKeeper:      app.FlatFeesKeeper,
 			CircuitKeeper:       &app.CircuitKeeper,
 			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
 		})
@@ -985,29 +992,10 @@ func (app *App) setAnteHandler() {
 }
 
 func (app *App) setPostHandler() {
-	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{},
+	postHandler := sdk.ChainPostDecorators(
+		antewrapper.NewFlatFeePostHandler(app.BankKeeper, app.FeeGrantKeeper),
 	)
-	if err != nil {
-		panic(err)
-	}
-
 	app.SetPostHandler(postHandler)
-}
-
-func (app *App) setFeeHandler() {
-	msgFeeHandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  app.AccountKeeper,
-		BankKeeper:     app.BankKeeper,
-		FeegrantKeeper: app.FeeGrantKeeper,
-		MsgFeesKeeper:  app.MsgFeesKeeper,
-		Decoder:        app.txConfig.TxDecoder(),
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	app.SetFeeHandler(msgFeeHandler)
 }
 
 func (app *App) registerUpgradeHandlers() {
@@ -1238,7 +1226,32 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *App) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
+	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
+}
+
+// Simulate runs a tx to identify how much of a fee it will cost.
+func (app *App) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
+	gasInfo, res, ctx, err := app.BaseApp.SimulateProv(txBytes)
+	if err != nil {
+		return gasInfo, res, err
+	}
+
+	gasMeter, err := antewrapper.GetFlatFeeGasMeter(ctx)
+	if err != nil {
+		return gasInfo, res, err
+	}
+
+	// We report the GasUsed as the amount of the fee denom required.
+	// That way, we can tell people to use --gas-prices 1nhash
+	// and it will properly set the fee to the required amount (at least for most stuff).
+	reqFee := gasMeter.GetRequiredFee()
+	ok, feeCoin := reqFee.Find(pioconfig.GetProvenanceConfig().FeeDenom)
+	if ok && !feeCoin.IsNil() && feeCoin.IsPositive() {
+		gasInfo.GasUsed = feeCoin.Amount.Uint64()
+	} else {
+		gasInfo.GasUsed = 0
+	}
+	return gasInfo, res, err
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.

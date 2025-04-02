@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -16,9 +17,14 @@ type MockCodec struct {
 	codec.Codec
 	MarshalJSONErrs   []string
 	UnmarshalJSONErrs []string
+	UnpackAnyErrs     []string
 }
 
-var _ codec.Codec = (*MockCodec)(nil)
+var (
+	_ codec.Codec            = (*MockCodec)(nil)
+	_ codec.JSONCodec        = (*MockCodec)(nil)
+	_ codectypes.AnyUnpacker = (*MockCodec)(nil)
+)
 
 // NewMockCodec creates a new mock codec based on the standard test encoding config codec.
 func NewMockCodec(baseCdc codec.Codec) *MockCodec {
@@ -40,6 +46,15 @@ func (c *MockCodec) WithMarshalJSONErrs(errMsgs ...string) *MockCodec {
 // The receiver is both updated and returned.
 func (c *MockCodec) WithUnmarshalJSONErrs(errMsgs ...string) *MockCodec {
 	c.UnmarshalJSONErrs = append(c.UnmarshalJSONErrs, errMsgs...)
+	return c
+}
+
+// WithUnpackAnyErrs adds the given errors to be returned from UnpackAny.
+// Each entry is used once in the order they are provided.
+// An empty string indicates no error (do the normal thing).
+// The receiver is both updated and returned.
+func (c *MockCodec) WithUnpackAnyErrs(errMsgs ...string) *MockCodec {
+	c.UnpackAnyErrs = append(c.UnpackAnyErrs, errMsgs...)
 	return c
 }
 
@@ -85,4 +100,15 @@ func (c *MockCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 		}
 	}
 	c.Codec.MustUnmarshalJSON(bz, ptr)
+}
+
+func (c *MockCodec) UnpackAny(any *codectypes.Any, iface interface{}) error {
+	if len(c.UnpackAnyErrs) > 0 {
+		errMsg := c.UnpackAnyErrs[0]
+		c.UnpackAnyErrs = c.UnpackAnyErrs[1:]
+		if len(errMsg) > 0 {
+			return errors.New(errMsg)
+		}
+	}
+	return c.Codec.UnpackAny(any, iface)
 }

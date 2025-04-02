@@ -11,8 +11,6 @@ import (
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -20,8 +18,8 @@ type HandlerOptions struct {
 	AccountKeeper          cosmosante.AccountKeeper
 	BankKeeper             banktypes.Keeper
 	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
-	FeegrantKeeper         msgfeestypes.FeegrantKeeper
-	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
+	FeegrantKeeper         FeegrantKeeper
+	FlatFeesKeeper         FlatFeesKeeper
 	CircuitKeeper          circuitante.CircuitBreaker
 	TxSigningHandlerMap    *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
@@ -36,6 +34,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, sdkerrors.ErrLogic.Wrap("bank keeper is required for ante builder")
 	}
 
+	if options.FlatFeesKeeper == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("flatfees keeper is required for ante builder")
+	}
 	if options.TxSigningHandlerMap == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("tx signing handler map is required for ante builder")
 	}
@@ -46,18 +47,15 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	decorators := []sdk.AnteDecorator{
-		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		NewProvSetUpContextDecorator(options.FlatFeesKeeper), // outermost AnteDecorator. SetUpContext must be called first
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
-		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
-		NewTxGasLimitDecorator(),
-		NewMinGasPricesDecorator(),
-		NewMsgFeesDecorator(options.MsgFeesKeeper),
+		NewFlatFeeSetupDecorator(),
 		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		cosmosante.NewValidateBasicDecorator(),
 		cosmosante.NewTxTimeoutHeightDecorator(),
 		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),
 		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewProvenanceDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
+		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
@@ -67,3 +65,24 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	return sdk.ChainAnteDecorators(decorators...), nil
 }
+
+// GetFeeTx coverts the provided Tx to a FeeTx if possible.
+func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, sdkerrors.ErrTxDecode.Wrapf("Tx must be a FeeTx: %T", tx)
+	}
+	return feeTx, nil
+}
+
+// IsInitGenesis returns true if the context indicates we're in InitGenesis.
+func IsInitGenesis(ctx sdk.Context) bool {
+	// Note: This isn't fully accurate since you can initialize a chain at a height other than zero.
+	// But it should be good enough for our stuff. Ideally we'd want something specifically set in
+	// the context during InitGenesis to check, but that'd probably involve some SDK work.
+	return ctx.BlockHeight() <= 0
+}
+
+const (
+	SimAppChainID = "simapp-unit-testing"
+)

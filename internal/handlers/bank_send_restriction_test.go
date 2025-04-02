@@ -42,7 +42,7 @@ func TestBankSend(tt *testing.T) {
 		banktypes.Balance{Address: addr2.String(), Coins: acct2Balance},
 	)
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "bank-restriction-testing"})
-	app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams())
+	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "AccountKeeper.Params.Set(...)")
 
 	require.NoError(tt, app.NameKeeper.SetNameRecord(ctx, "some.kyc.provenance.io", addr1, false))
 	require.NoError(tt, app.AttributeKeeper.SetAttribute(ctx, attrtypes.NewAttribute("some.kyc.provenance.io", acct3.Address, attrtypes.AttributeType_Bytes, []byte{}, nil), addr1))
@@ -112,7 +112,7 @@ func TestBankSend(tt *testing.T) {
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	assert.Equal(tt, "1000nonrestrictedmarker,900restrictedmarker,1000restrictedmarkerattr,999400000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "100restrictedmarker,1000000000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "100restrictedmarker,1000000000stake", addr2afterBalance, "addr2afterBalance")
 
 	// send non restricted marker, expect success
 	sendRMarker = banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(nrMarkerDenom, 100)))
@@ -120,14 +120,14 @@ func TestBankSend(tt *testing.T) {
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	assert.Equal(tt, "900nonrestrictedmarker,900restrictedmarker,1000restrictedmarkerattr,999250000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "100nonrestrictedmarker,100restrictedmarker,1000000000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "100nonrestrictedmarker,100restrictedmarker,1000000000stake", addr2afterBalance, "addr2afterBalance")
 
 	sendNRMarker := banktypes.NewMsgSend(addr2, addr1, sdk.NewCoins(sdk.NewInt64Coin(nrMarkerDenom, 50)))
 	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, sendNRMarker, abci.CodeTypeOK, "")
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	assert.Equal(tt, "950nonrestrictedmarker,900restrictedmarker,1000restrictedmarkerattr,999250000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,999850000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,999850000stake", addr2afterBalance, "addr2afterBalance")
 
 	// On a restricted coin without required attributes where the sender doesn't have TRANSFER permission.
 	sendRMarker = banktypes.NewMsgSend(addr2, addr1, sdk.NewCoins(sdk.NewInt64Coin(restrictedMarkerDenom, 100)))
@@ -135,7 +135,7 @@ func TestBankSend(tt *testing.T) {
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	assert.Equal(tt, "950nonrestrictedmarker,900restrictedmarker,1000restrictedmarkerattr,999250000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,999700000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,999849999stake", addr2afterBalance, "addr2afterBalance")
 
 	// On a restricted coin with required attributes from a sender that has TRANSFER permission, but the receiver doesn't have the required attributes.
 	sendRMarker = banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(restrictedAttrMarkerDenom, 100)))
@@ -143,24 +143,24 @@ func TestBankSend(tt *testing.T) {
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	assert.Equal(tt, "950nonrestrictedmarker,900restrictedmarker,900restrictedmarkerattr,999100000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,100restrictedmarkerattr,999700000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,100restrictedmarkerattr,999849999stake", addr2afterBalance, "addr2afterBalance")
 
 	// On a restricted coin with required attributes from a sender that does not have TRANSFER permission, but the receiver DOES have the required attributes.
 	sendRMarker = banktypes.NewMsgSend(addr2, addr3, sdk.NewCoins(sdk.NewInt64Coin(restrictedAttrMarkerDenom, 25)))
 	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, sendRMarker, abci.CodeTypeOK, "")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,75restrictedmarkerattr,999550000stake", addr2afterBalance, "addr1afterBalance")
+	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,75restrictedmarkerattr,999699999stake", addr2afterBalance, "addr2afterBalance")
 	addr3afterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	assert.Equal(tt, "25restrictedmarkerattr", addr3afterBalance, "addr3beforeBalance")
+	assert.Equal(tt, "25restrictedmarkerattr", addr3afterBalance, "addr3afterBalance")
 
 	// MsgTransfer Tests
 	// On a restricted coin with required attributes using an admin that has TRANSFER permission, but the receiver doesn't have the required attributes.
 	tranferRMarker := markertypes.NewMsgTransferRequest(addr1, addr1, addr2, sdk.NewInt64Coin(restrictedMarkerDenom, 25))
 	ConstructAndSendTx(tt, *app, ctx, acct1, priv1, tranferRMarker, abci.CodeTypeOK, "")
-	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(tt, "950nonrestrictedmarker,875restrictedmarker,900restrictedmarkerattr,998950000stake", addr2afterBalance, "addr1afterBalance")
+	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	assert.Equal(tt, "950nonrestrictedmarker,875restrictedmarker,900restrictedmarkerattr,998950000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "50nonrestrictedmarker,125restrictedmarker,75restrictedmarkerattr,999550000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "50nonrestrictedmarker,125restrictedmarker,75restrictedmarkerattr,999699999stake", addr2afterBalance, "addr2afterBalance")
 
 	// On a restricted coin with required attributes using an admin that does not have TRANSFER permission, but the receiver DOES have the required attributes.
 	tranferRAMarker := markertypes.NewMsgTransferRequest(addr2, addr2, addr3, sdk.NewInt64Coin(restrictedAttrMarkerDenom, 25))
@@ -168,16 +168,16 @@ func TestBankSend(tt *testing.T) {
 		addr2.String(), raMarkerAcct.GetAddress().String())
 	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, tranferRAMarker, txFailureCode, expErr)
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "50nonrestrictedmarker,125restrictedmarker,75restrictedmarkerattr,999400000stake", addr2afterBalance, "addr1afterBalance")
-	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	assert.Equal(tt, "25restrictedmarkerattr", addr3afterBalance, "addr3beforeBalance")
+	assert.Equal(tt, "50nonrestrictedmarker,125restrictedmarker,75restrictedmarkerattr,999699998stake", addr2afterBalance, "addr2afterBalance")
+	addr3afterBalance = app.BankKeeper.GetAllBalances(ctx, addr3).String()
+	assert.Equal(tt, "25restrictedmarkerattr", addr3afterBalance, "addr3afterBalance")
 }
 
 func ConstructAndSendTx(tt *testing.T, app piosimapp.App, ctx sdk.Context, acct *authtypes.BaseAccount, priv cryptotypes.PrivKey, msg sdk.Msg, expectedCode uint32, expectedError string) {
 	encCfg := app.GetEncodingConfig()
-	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(TestGasLimit)))
 	acct = app.AccountKeeper.GetAccount(ctx, acct.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
+	txBytes, err := SignTxAndGetBytes(ctx, TestGasLimit, fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
 	require.NoError(tt, err, "SignTxAndGetBytes")
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: ctx.BlockHeight() + 1,

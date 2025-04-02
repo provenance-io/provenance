@@ -28,12 +28,12 @@ import (
 
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/provenance-io/provenance/x/quarantine"
@@ -282,10 +282,10 @@ func init() {
 	setWhitelistedQuery("/provenance.metadata.v1.Query/AccountData", &metadatatypes.AccountDataResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/ScopeNetAssetValues", &metadatatypes.QueryScopeNetAssetValuesResponse{})
 
-	// msg fee
-	setWhitelistedQuery("/provenance.msgfees.v1.Query/Params", &msgfeestypes.QueryParamsResponse{})
-	setWhitelistedQuery("/provenance.msgfees.v1.Query/QueryAllMsgFees", &msgfeestypes.QueryAllMsgFeesResponse{})
-	setWhitelistedQuery("/provenance.msgfees.v1.Query/CalculateTxFees", &msgfeestypes.CalculateTxFeesResponse{})
+	// flatfees
+	setWhitelistedQuery("/provenance.flatfees.v1.Query/Params", &flatfeestypes.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.flatfees.v1.Query/AllMsgFees", &flatfeestypes.QueryAllMsgFeesResponse{})
+	setWhitelistedQuery("/provenance.flatfees.v1.Query/MsgFee", &flatfeestypes.QueryMsgFeeResponse{})
 
 	// name
 	setWhitelistedQuery("/provenance.name.v1.Query/Params", &nametypes.QueryParamsResponse{})
