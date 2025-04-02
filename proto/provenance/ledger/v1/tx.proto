@@ -19,6 +19,8 @@ service Msg {
 
 // MsgAppendRequest
 message MsgAppendRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
   LedgerEntry entry = 1;
 }
 

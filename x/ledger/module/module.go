@@ -55,6 +55,11 @@ func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 // RegisterInvariants registers the invariants of the module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
+}
+
 // Route returns the message routing key for the module.
 // func (am AppModule) Route() types.RouterKey {
 // 	return ledger.RouterKey
