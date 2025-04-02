@@ -10,7 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/ledger"
+	"github.com/provenance-io/provenance/x/ledger/client/cli"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
+	"github.com/spf13/cobra"
 )
 
 type AppModuleBasic struct {
@@ -20,6 +22,11 @@ type AppModuleBasic struct {
 // Name returns the module name.
 func (AppModuleBasic) Name() string {
 	return ledger.ModuleName
+}
+
+// GetTxCmd returns the root tx command for the attribute module.
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.CmdTx()
 }
 
 // RegisterCodec registers the module's types. (In newer SDK versions, use RegisterLegacyAminoCodec.)
@@ -56,9 +63,9 @@ func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
-}
+// func (am AppModule) RegisterServices(cfg module.Configurator) {
+// 	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
+// }
 
 // Route returns the message routing key for the module.
 // func (am AppModule) Route() types.RouterKey {
