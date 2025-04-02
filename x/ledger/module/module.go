@@ -104,8 +104,20 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 // }
 
 // Satisfy the AppModule interface for now..
-func (AppModule) IsAppModule()                                                {}
-func (AppModule) IsOnePerModuleType()                                         {}
-func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino)                 {}
-func (AppModule) RegisterInterfaces(types.InterfaceRegistry)                  {}
+func (AppModule) IsAppModule()                                {}
+func (AppModule) IsOnePerModuleType()                         {}
+func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
+
+func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
+	msgTypes := []sdk.Msg{
+		&ledger.MsgAppendRequest{},
+		&ledger.MsgAppendResponse{},
+		&ledger.MsgCreateRequest{},
+		&ledger.MsgCreateResponse{},
+	}
+
+	registry.RegisterImplementations((*sdk.Msg)(nil), msgTypes...)
+	// msgservice.RegisterMsgServiceDesc(registry, &ledger.Msg_serviceDesc)
+}
+
 func (AppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
