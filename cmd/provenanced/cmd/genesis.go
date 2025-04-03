@@ -25,6 +25,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/exchange"
 	exchangecli "github.com/provenance-io/provenance/x/exchange/client/cli"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -67,8 +68,7 @@ func GenesisCmd(txConfig client.TxConfig, moduleBasics module.BasicManager, defa
 		AddGenesisAccountCmd(txConfig, defaultNodeHome),
 		AddRootDomainAccountCmd(defaultNodeHome),
 		AddGenesisMarkerCmd(defaultNodeHome),
-		AddGenesisMsgFeeCmd(defaultNodeHome),
-		AddGenesisCustomFloorPriceDenomCmd(defaultNodeHome),
+		AddGenesisFlatFeeCmd(defaultNodeHome),
 		AddGenesisDefaultMarketCmd(defaultNodeHome),
 		AddGenesisCustomMarketCmd(defaultNodeHome),
 	)
@@ -475,67 +475,14 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	return cmd
 }
 
-// AddGenesisCustomFloorPriceDenomCmd returns add-msg-fee cobra command.
-func AddGenesisCustomFloorPriceDenomCmd(defaultNodeHome string) *cobra.Command {
+// AddGenesisFlatFeeCmd returns add-msg-fee cobra command.
+func AddGenesisFlatFeeCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add-custom-floor [coin]",
-		Aliases: []string{"add-genesis-custom-floor"},
-		Short:   "Add a floor price denom and amount to genesis.json",
-		Long: `Add a floor price denom and amount to genesis.json. This will create a custom floor price denom and amount for calculating additional message costs.
-Currently, the denom and price defaults to 1905nhash
-		`,
-		Example: fmt.Sprintf(`$ %[1]s add-custom-floor 0vspn`, genCmdStart),
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			cdc := clientCtx.Codec
-			config := serverCtx.Config
-			config.SetRoot(clientCtx.HomeDir)
-			coin, err := sdk.ParseCoinNormalized(args[0])
-			if err != nil {
-				return fmt.Errorf("failed to parse coin: %w", err)
-			}
-			genFile := config.GenesisFile()
-			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
-			}
-			msgFeesGenState := msgfeetypes.GetGenesisStateFromAppState(cdc, appState)
-
-			msgFeesGenState.Params.FloorGasPrice = coin
-
-			msgFeesGenStateBz, err := cdc.MarshalJSON(&msgFeesGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal msgfees genesis state: %w", err)
-			}
-
-			appState[msgfeetypes.ModuleName] = msgFeesGenStateBz
-
-			appStateJSON, err := json.Marshal(appState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal application genesis state: %w", err)
-			}
-
-			genDoc.AppState = appStateJSON
-			return genutil.ExportGenesisFile(genDoc, genFile)
-		},
-	}
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// AddGenesisMsgFeeCmd returns add-msg-fee cobra command.
-func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "add-msg-fee [msg-url] [additional-fee]",
+		Use:     "add-msg-fee <msg-url> <cost>",
 		Aliases: []string{"add-genesis-msg-fee"},
-		Short:   "Add a msg fee to genesis.json",
-		Long: `Add a msg fee to to genesis.json. This will create a msg based fee for an sdk msg type.  The command will validate
-		that the msg-url is a valid sdk.msg and that the fee is a valid amount and coin.
-	`,
+		Short:   "Add a flat msg fee to genesis.json",
+		Long: `Add a flat msg fee to genesis.json. This will create a msg based fee for an sdk msg type.
+The command will validate that the msg-url is a valid sdk.msg and that the fee is a valid amount.`,
 		Example: fmt.Sprintf(`$ %[1]s add-msg-fee /cosmos.bank.v1beta1.MsgSend 10000000000nhash`, genCmdStart),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -544,7 +491,6 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
 			config.SetRoot(clientCtx.HomeDir)
 
 			msgType := args[0]
@@ -554,40 +500,45 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 
 			_, err := cdc.InterfaceRegistry().Resolve(msgType)
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid msg type %q: %w", msgType, err)
 			}
 
-			additionalFee, err := sdk.ParseCoinNormalized(args[1])
+			// TODO[fees]: Make sure ParseCoinsNormalized works with an empty string.
+			cost, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("failed to parse coin: %w", err)
+				return fmt.Errorf("invalid cost %q: %w", args[1], err)
 			}
 
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
-				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+				return fmt.Errorf("could not read genesis state: %w", err)
 			}
 
-			msgFeesGenState := msgfeetypes.GetGenesisStateFromAppState(cdc, appState)
+			flatFeesGenState, err := flatfeestypes.GetGenesisStateFromAppState(cdc, appState)
+			if err != nil {
+				return fmt.Errorf("could not get x/flatfees genesis state: %w", err)
+			}
 
 			found := false
-			for _, mf := range msgFeesGenState.MsgFees {
-				if strings.EqualFold(mf.MsgTypeUrl, msgType) {
+			for _, msgFee := range flatFeesGenState.MsgFees {
+				if strings.EqualFold(msgFee.MsgTypeUrl, msgType) {
 					found = true
-					mf.AdditionalFee = additionalFee
+					msgFee.Cost = cost
+					break
 				}
 			}
 
 			if !found {
-				msgFeesGenState.MsgFees = append(msgFeesGenState.MsgFees, msgfeetypes.NewMsgFee(msgType, additionalFee, "", msgfeetypes.DefaultMsgFeeBips))
+				flatFeesGenState.MsgFees = append(flatFeesGenState.MsgFees, flatfeestypes.NewMsgFee(msgType, cost...))
 			}
 
-			msgFeesGenStateBz, err := cdc.MarshalJSON(&msgFeesGenState)
+			flatFeesGenStateBz, err := cdc.MarshalJSON(flatFeesGenState)
 			if err != nil {
-				return fmt.Errorf("failed to marshal msgfees genesis state: %w", err)
+				return fmt.Errorf("failed to marshal x/flatfees genesis state: %w", err)
 			}
 
-			appState[msgfeetypes.ModuleName] = msgFeesGenStateBz
+			appState[msgfeetypes.ModuleName] = flatFeesGenStateBz
 
 			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
@@ -598,9 +549,9 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 			return genutil.ExportGenesisFile(genDoc, genFile)
 		},
 	}
+
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	flags.AddQueryFlagsToCmd(cmd)
-
 	return cmd
 }
 
