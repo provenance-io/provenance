@@ -6,8 +6,6 @@ option go_package = "github.com/provenance-io/provenance/x/ledger";
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
-import "cosmos/base/query/v1beta1/pagination.proto";
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/ledger/v1/ledger.proto";
 
@@ -23,10 +21,16 @@ service Query {
   }
 }
 
-message QueryLedgerConfigRequest {}
+message QueryLedgerConfigRequest {
+  string nft_address = 1;
+}
 
-message QueryLedgerConfigResponse {}
+message QueryLedgerConfigResponse {
+  Ledger ledger = 1;
+}
 
-message QueryLedgerRequest {}
+message QueryLedgerRequest {
+  string nft_address = 1;
+}
 
 message QueryLedgerResponse {}

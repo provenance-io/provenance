@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -51,6 +53,23 @@ func (k Keeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) e
 	store := k.ledgerStore(ctx)
 	store.Set([]byte(nftAddress), []byte(v))
 	return nil
+}
+
+func (k Keeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error) {
+	store := k.ledgerStore(ctx)
+
+	bz := store.Get([]byte(nftAddress))
+	if bz == nil {
+		return nil, fmt.Errorf("ledger not found for nft %s", nftAddress)
+	}
+
+	var l ledger.Ledger
+	err := k.cdc.Unmarshal(bz, &l)
+	if err != nil {
+		return nil, err
+	}
+
+	return &l, nil
 }
 
 // GetValue retrieves a value by key.

@@ -4586,6 +4586,11 @@ LedgerEntry
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+
+
 
 
 
@@ -4596,6 +4601,11 @@ LedgerEntry
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
+
+
 
 
 
@@ -4604,6 +4614,11 @@ LedgerEntry
 
 ### QueryLedgerRequest
 
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
 
 
 
