@@ -48,7 +48,6 @@ type IntegrationTestSuite struct {
 	startingTriggerID  triggertypes.TriggerID
 	startingQueueIndex uint64
 	triggers           []triggertypes.Trigger
-	gasLimits          []triggertypes.GasLimit
 	queuedTriggers     []triggertypes.QueuedTrigger
 }
 
@@ -107,36 +106,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.CreateTrigger(4, s.accountAddresses[1].String(), &triggertypes.BlockHeightEvent{BlockHeight: 1000}, &triggertypes.MsgDestroyTriggerRequest{Id: 2, Authority: s.accountAddresses[1].String()}),
 		s.CreateTrigger(7, s.accountAddresses[0].String(), &triggertypes.BlockHeightEvent{BlockHeight: 1000}, &triggertypes.MsgDestroyTriggerRequest{Id: 2, Authority: s.accountAddresses[1].String()}),
 	}
-	s.gasLimits = []triggertypes.GasLimit{
-		{
-			TriggerId: 1,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 2,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 3,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 4,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 5,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 6,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 7,
-			Amount:    20000,
-		},
-	}
 	s.queuedTriggers = []triggertypes.QueuedTrigger{
 		{
 			BlockHeight: 5,
@@ -154,7 +123,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.startingTriggerID,
 		s.startingQueueIndex,
 		s.triggers,
-		s.gasLimits,
 		s.queuedTriggers,
 	)
 

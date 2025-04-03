@@ -9,6 +9,6 @@ In this section we describe the processing of the trigger messages and the corre
 
 ## GenesisState
 
-GenesisState contains a list of triggers, queued triggers, and gas limits. It also tracks the triggerID and the queue start. These are exported and later imported from/to the store.
+GenesisState contains a list of triggers, and queued triggers. It also tracks the triggerID and the queue start. The `gas_limits` field has been deprecated and is no longer used; as such, it must always be empty.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/trigger/v1/genesis.proto#L11-L30

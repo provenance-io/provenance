@@ -26,7 +26,6 @@ const (
 	NumIniTrigQueued = "num_ini_trig_queued"
 	Triggers         = "triggers"
 	QueuedTriggers   = "queued_triggers"
-	GasLimits        = "trigger_gas_limits"
 )
 
 // TriggerIDStartFn randomized starting trigger id
@@ -107,32 +106,6 @@ func RandomNewQueuedTriggers(r *rand.Rand, simState *module.SimulationState, acc
 	for i, id := range queuedTriggerIDs {
 		rv[i] = NewRandomQueuedTrigger(r, simState, accs, id)
 	}
-	return rv
-}
-
-// NewRandomGasLimit randomized Gas Limit
-func NewRandomGasLimit(r *rand.Rand) uint64 {
-	return uint64(r.Intn(1000000))
-}
-
-// RandomGasLimits generates random gas limits for all the provided triggers and queued triggers.
-func RandomGasLimits(r *rand.Rand, triggers []types.Trigger, queuedTriggers []types.QueuedTrigger) []types.GasLimit {
-	rv := make([]types.GasLimit, 0, len(triggers)+len(queuedTriggers))
-	for _, trigger := range triggers {
-		rv = append(rv, types.GasLimit{
-			TriggerId: trigger.GetId(),
-			Amount:    NewRandomGasLimit(r),
-		})
-	}
-	for _, item := range queuedTriggers {
-		rv = append(rv, types.GasLimit{
-			TriggerId: item.Trigger.Id,
-			Amount:    NewRandomGasLimit(r),
-		})
-	}
-	r.Shuffle(len(rv), func(i, j int) {
-		rv[i], rv[j] = rv[j], rv[i]
-	})
 	return rv
 }
 
@@ -223,13 +196,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		},
 	)
 
-	var gasLimits []types.GasLimit
-	simState.AppParams.GetOrGenerate(
-		GasLimits, &gasLimits, simState.Rand,
-		func(r *rand.Rand) { gasLimits = RandomGasLimits(r, triggers, queuedTriggers) },
-	)
-
-	genesis := types.NewGenesisState(triggerID, queueStart, triggers, gasLimits, queuedTriggers)
+	genesis := types.NewGenesisState(triggerID, queueStart, triggers, queuedTriggers)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 
 	bz, err := json.MarshalIndent(simState.GenState[types.ModuleName], "", " ")

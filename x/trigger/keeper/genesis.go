@@ -21,12 +21,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	gasLimits, err := k.GetAllGasLimits(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	return types.NewGenesisState(triggerID, queueStartIndex, triggers, gasLimits, queue)
+	return types.NewGenesisState(triggerID, queueStartIndex, triggers, queue)
 }
 
 // InitGenesis new trigger genesis
@@ -39,10 +34,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.setQueueStartIndex(ctx, data.QueueStart)
 	if len(data.QueuedTriggers) == 0 {
 		k.setQueueLength(ctx, 0)
-	}
-
-	for _, gasLimit := range data.GasLimits {
-		k.SetGasLimit(ctx, gasLimit.TriggerId, gasLimit.Amount)
 	}
 
 	for _, queuedTrigger := range data.QueuedTriggers {

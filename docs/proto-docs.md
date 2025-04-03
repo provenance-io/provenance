@@ -4699,12 +4699,13 @@ EventTriggerExecuted is an event for when a trigger is executed.
 
 ### GasLimit
 GasLimit defines the trigger module's grouping of a trigger and a gas limit
+Deprecated: The GasLimit type is no longer used since we use flat fees.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. |
-| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
+| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. Deprecated: The GasLimit type is no longer used since we use flat fees. |
+| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. Deprecated: The GasLimit type is no longer used since we use flat fees. |
 
 
 
@@ -4722,7 +4723,7 @@ GenesisState defines the trigger module's genesis state.
 | `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
 | `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
 | `triggers` | [Trigger](#provenance-trigger-v1-Trigger) | repeated | Triggers to initially start with. |
-| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. |
+| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. Deprecated: We no longer need to keep track of gas limits since we use flat fees. |
 | `queued_triggers` | [QueuedTrigger](#provenance-trigger-v1-QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
 
 

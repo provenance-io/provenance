@@ -71,18 +71,6 @@ func TestGetTriggerIDToAndFromBytes(t *testing.T) {
 	assert.EqualValues(t, int(1), int(index), "should correctly get trigger id from key bytes")
 }
 
-func TestGetGasLimitKey(t *testing.T) {
-	key := GetGasLimitKey(1)
-	assert.EqualValues(t, GasLimitKeyPrefix, key[0:1], "should get prefix for GetGasLimitKey")
-	assert.EqualValues(t, int(1), int(binary.BigEndian.Uint64(key[1:9])), "should get value for GetGasLimitKey")
-}
-
-func TestGetGasLimitToAndFromBytes(t *testing.T) {
-	bytes := GetGasLimitBytes(1)
-	index := GetGasLimitFromBytes(bytes)
-	assert.EqualValues(t, int(1), int(index), "should get correct value from GasLimitBytes")
-}
-
 func TestGetEventNameBytes(t *testing.T) {
 	bytes := GetEventNameBytes("event")
 	bytes2 := GetEventNameBytes("Event")

@@ -12,12 +12,12 @@ import (
 func TestNewGenesisState(t *testing.T) {
 	request := MustNewCreateTriggerRequest([]string{"addr"}, &BlockHeightEvent{}, []types.Msg{&MsgDestroyTriggerRequest{}})
 	trigger := NewTrigger(1, "owner", request.Event, request.Actions)
-	state := NewGenesisState(1, 2, []Trigger{trigger}, []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 2}}, []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}})
+	state := NewGenesisState(1, 2, []Trigger{trigger}, []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}})
 
 	assert.Equal(t, uint64(1), state.TriggerId, "trigger ids should match in NewGenesisState")
 	assert.Equal(t, uint64(2), state.QueueStart, "queue start should match in NewGenesisState")
 	assert.Equal(t, []Trigger{trigger}, state.Triggers, "triggers should match in NewGenesisState")
-	assert.Equal(t, []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 2}}, state.GasLimits, "gas limits should match in NewGenesisState")
+	assert.Nil(t, state.GasLimits, "gas limits should always be nil now")
 	assert.Equal(t, []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}}, state.QueuedTriggers, "queud triggers should match in NewGenesisState")
 }
 
@@ -27,7 +27,7 @@ func TestDefaultGenesis(t *testing.T) {
 	assert.Equal(t, uint64(1), state.TriggerId, "trigger ids should match in DefaultGenesis")
 	assert.Equal(t, uint64(1), state.QueueStart, "queue start should match in DefaultGenesis")
 	assert.Equal(t, []Trigger{}, state.Triggers, "triggers should be empty in DefaultGenesis")
-	assert.Equal(t, []GasLimit{}, state.GasLimits, "gas limits should be empty in default DefaultGenesis")
+	assert.Nil(t, state.GasLimits, "gas limits should always be nil now")
 	assert.Equal(t, []QueuedTrigger{}, state.QueuedTriggers, "queued triggers should be empty in default DefaultGenesis")
 
 	err := state.Validate()
@@ -57,7 +57,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      1,
 				QueueStart:     1,
-				GasLimits:      nil,
 				Triggers:       nil,
 				QueuedTriggers: nil,
 			},
@@ -69,7 +68,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      0,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{},
 				Triggers:       []Trigger{},
 				QueuedTriggers: []QueuedTrigger{},
 			},
@@ -81,7 +79,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      1,
 				QueueStart:     0,
-				GasLimits:      []GasLimit{},
 				Triggers:       []Trigger{},
 				QueuedTriggers: []QueuedTrigger{},
 			},
@@ -89,47 +86,10 @@ func TestGenesisStateValidate(t *testing.T) {
 			err:    "invalid queue start",
 		},
 		{
-			name: "invalid - gas and trigger length mismatch",
-			state: &GenesisState{
-				TriggerId:      1,
-				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}},
-				Triggers:       []Trigger{},
-				QueuedTriggers: []QueuedTrigger{},
-			},
-			modify: nil,
-			err:    "gas limit list length must match sum of triggers and queued triggers length",
-		},
-		{
-			name: "invalid - gas and queue length mismatch",
-			state: &GenesisState{
-				TriggerId:      1,
-				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}},
-				Triggers:       []Trigger{},
-				QueuedTriggers: []QueuedTrigger{},
-			},
-			modify: nil,
-			err:    "gas limit list length must match sum of triggers and queued triggers length",
-		},
-		{
-			name: "invalid - gas and trigger + queue length mismatch",
-			state: &GenesisState{
-				TriggerId:      2,
-				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}},
-				Triggers:       []Trigger{trigger},
-				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
-			},
-			modify: nil,
-			err:    "gas limit list length must match sum of triggers and queued triggers length",
-		},
-		{
 			name: "invalid - action must pass internal validate basic",
 			state: &GenesisState{
 				TriggerId:      2,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -143,7 +103,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      2,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 3, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -159,7 +118,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      2,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -173,7 +131,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      2,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -189,7 +146,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      1,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -204,7 +160,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      2,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -215,35 +170,10 @@ func TestGenesisStateValidate(t *testing.T) {
 			err: "could not validate event for trigger with id 2: empty event name",
 		},
 		{
-			name: "invalid - Gas limits must match either a trigger or queued trigger",
-			state: &GenesisState{
-				TriggerId:      3,
-				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 3, Amount: 1}, {TriggerId: 2, Amount: 1}},
-				Triggers:       []Trigger{trigger},
-				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
-			},
-			modify: nil,
-			err:    "trigger or queued trigger does not have a gas limit that matches it with id 1",
-		},
-		{
-			name: "invalid - Gas limits ids must be unique",
-			state: &GenesisState{
-				TriggerId:      1,
-				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 1, Amount: 1}},
-				Triggers:       []Trigger{trigger},
-				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}},
-			},
-			modify: nil,
-			err:    "cannot have duplicate trigger id (1) in gas limits",
-		},
-		{
 			name: "invalid - triggers cannot have duplicate id",
 			state: &GenesisState{
 				TriggerId:      1,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}, {TriggerId: 3, Amount: 1}},
 				Triggers:       []Trigger{trigger, trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -255,7 +185,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      2,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}, {TriggerId: 3, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}, {BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
@@ -273,6 +202,18 @@ func TestGenesisStateValidate(t *testing.T) {
 			},
 			modify: nil,
 			err:    "trigger id 1 is not unique within the set all triggers and queued triggers",
+		},
+		{
+			name: "invalid - non-empty gas limits",
+			state: &GenesisState{
+				TriggerId:      1,
+				QueueStart:     1,
+				GasLimits:      []GasLimit{{TriggerId: 5, Amount: 12}},
+				Triggers:       []Trigger{trigger},
+				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}},
+			},
+			modify: nil,
+			err:    "gas limits are deprecated and must be empty",
 		},
 	}
 

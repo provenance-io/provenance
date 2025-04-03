@@ -52,8 +52,6 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 				s.NoError(err, "should have event listener for successful CreateTrigger")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.expectedId)
 				s.NoError(err, "should have trigger for successful CreateTrigger")
-				gasLimit := s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.expectedId)
-				s.Equal(uint64(2000000), gasLimit, "should have correct gas limit for successful CreateTrigger")
 			} else {
 				s.EqualError(err, tc.err, "should throw an error on invalid handler")
 			}
@@ -123,9 +121,6 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 				s.Error(err, "should not have an event listener after handling TriggerDestroyRequest")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.request.GetId())
 				s.Error(err, "should not have a trigger after handling TriggerDestroyRequest")
-				s.PanicsWithValue("gas limit not found for trigger", func() {
-					s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.request.GetId())
-				})
 			} else {
 				s.EqualError(err, tc.err, "handler should throw error and match")
 			}
