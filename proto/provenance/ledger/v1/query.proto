@@ -1,0 +1,32 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/ledger";
+
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/ledger/v1/ledger.proto";
+
+// Query defines the gRPC querier service for ledger module.
+service Query {
+  // Params queries params of the ledger module.
+  rpc Config(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/config";
+  }
+
+  rpc Entries(QueryLedgerRequest) returns (QueryLedgerResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/entries";
+  }
+}
+
+message QueryLedgerConfigRequest {}
+
+message QueryLedgerConfigResponse {}
+
+message QueryLedgerRequest {}
+
+message QueryLedgerResponse {}
