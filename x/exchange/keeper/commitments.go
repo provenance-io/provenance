@@ -419,10 +419,10 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 
 // consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.
 func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
-	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)
+	calcResp, err := k.CalculateCommitmentSettlementFee(ctx, req)
 	if err != nil {
 		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
 	}
-	antewrapper.ConsumeMsgFee(ctx, exchangeFees.ExchangeFees, req, "")
+	antewrapper.ConsumeAdditionalFee(ctx, calcResp.ExchangeFees)
 	return nil
 }

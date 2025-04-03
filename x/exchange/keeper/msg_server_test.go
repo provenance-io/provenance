@@ -88,7 +88,7 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 		tc.setup()
 	}
 
-	gm := antewrapper.NewFeeGasMeterWrapper(log.NewNopLogger(), storetypes.NewInfiniteGasMeter(), false).(*antewrapper.FeeGasMeter)
+	gm := antewrapper.NewFlatFeeGasMeter(storetypes.NewInfiniteGasMeter(), log.NewNopLogger(), s.app.FlatFeesKeeper)
 	em := sdk.NewEventManager()
 	s.ctx = s.ctx.WithEventManager(em).WithGasMeter(gm)
 	s.logBuffer.Reset()
@@ -382,25 +382,14 @@ func (s *TestSuite) zeroCoins(denoms ...string) []sdk.Coin {
 }
 
 // assertNonZeroMsgFeeConsumed checks that a msg fee was consumed for the given msg type.
-func (s *TestSuite) assertNonZeroMsgFeeConsumed(msg sdk.Msg) bool {
-	feeGm, err := antewrapper.GetFeeGasMeter(s.ctx)
-	if !s.Assert().NoError(err, "GetFeeGasMeter") {
+func (s *TestSuite) assertNonZeroMsgFeeConsumed() bool {
+	gasMeter, err := antewrapper.GetFlatFeeGasMeter(s.ctx)
+	if !s.Assert().NoError(err, "GetFlatFeeGasMeter") {
 		return false
 	}
 
-	msgFeesConsumed := feeGm.FeeConsumedByMsg()
-	if !s.Assert().NotEmpty(msgFeesConsumed, "FeeConsumedByMsg()") {
-		return false
-	}
-
-	msgType := sdk.MsgTypeURL(msg)
-	feeForMsg := msgFeesConsumed[msgType]
-	if !s.Assert().False(feeForMsg.IsZero(), "FeeConsumedByMsg()[%q].IsZero()", msgType) {
-		s.T().Logf("FeeConsumedByMsg() = %#v", msgFeesConsumed)
-		return false
-	}
-
-	return true
+	addedFees := gasMeter.GetAddedFees()
+	return s.Assert().NotEmpty(addedFees.String(), "gasMeter.GetAddedFees()")
 }
 
 func (s *TestSuite) TestMsgServer_CreateAsk() {
@@ -4588,7 +4577,7 @@ func (s *TestSuite) TestMsgServer_CreatePayment() {
 				s.checkBalances(eb)
 			}
 
-			s.assertNonZeroMsgFeeConsumed(msg)
+			s.assertNonZeroMsgFeeConsumed()
 		},
 	}
 
@@ -4651,7 +4640,7 @@ func (s *TestSuite) TestMsgServer_AcceptPayment() {
 				s.checkBalances(eb)
 			}
 
-			s.assertNonZeroMsgFeeConsumed(msg)
+			s.assertNonZeroMsgFeeConsumed()
 		},
 	}
 

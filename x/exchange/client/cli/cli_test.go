@@ -111,8 +111,9 @@ func (s *CmdTestSuite) SetupSuite() {
 		cli.AuthorityAddr.String(): "authorityAddr",
 	}
 
+	var allMarkers []*markertypes.MarkerAccount
 	newMarker := func(denom string) *markertypes.MarkerAccount {
-		return &markertypes.MarkerAccount{
+		rv := &markertypes.MarkerAccount{
 			BaseAccount: &authtypes.BaseAccount{
 				Address: markertypes.MustGetMarkerAddress(denom).String(),
 			},
@@ -123,242 +124,233 @@ func (s *CmdTestSuite) SetupSuite() {
 			SupplyFixed:            false,
 			AllowGovernanceControl: true,
 		}
+		allMarkers = append(allMarkers, rv)
+		return rv
 	}
 	appleMarker := newMarker("apple")
 	acornMarker := newMarker("acorn")
 	peachMarker := newMarker("peach")
 	cherryMarker := newMarker("cherry")
-	strawberryMarker := newMarker("strawberry")
-	tangerineMarker := newMarker("tangerine")
-
-	allMarkers := []*markertypes.MarkerAccount{
-		appleMarker, acornMarker, peachMarker,
-		cherryMarker, strawberryMarker, tangerineMarker,
-	}
+	newMarker("strawberry")
+	newMarker("tangerine")
 
 	// Add accounts to auth gen state.
-	var authGen authtypes.GenesisState
-	err := s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[authtypes.ModuleName], &authGen)
-	s.Require().NoError(err, "UnmarshalJSON auth gen state")
-	genAccs := make(authtypes.GenesisAccounts, 0, len(s.accountAddrs)+len(allMarkers))
-	for _, addr := range s.accountAddrs {
-		genAccs = append(genAccs, authtypes.NewBaseAccount(addr, nil, 0, 1))
-	}
-	for _, marker := range allMarkers {
-		genAccs = append(genAccs, marker)
-	}
-
-	newAccounts, err := authtypes.PackAccounts(genAccs)
-	s.Require().NoError(err, "PackAccounts")
-	authGen.Accounts = append(authGen.Accounts, newAccounts...)
-	s.cfg.GenesisState[authtypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&authGen)
-	s.Require().NoError(err, "MarshalJSON auth gen state")
-
-	// Add some markets to the exchange gen state.
-	var exchangeGen exchange.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[exchange.ModuleName], &exchangeGen)
-	s.Require().NoError(err, "UnmarshalJSON exchange gen state")
-	exchangeGen.Params = exchange.DefaultParams()
-	exchangeGen.Markets = append(exchangeGen.Markets,
-		exchange.Market{
-			MarketId: 3,
-			MarketDetails: exchange.MarketDetails{
-				Name:        "Market Three",
-				Description: "The third market (or is it?). It only has ask/seller fees.",
-			},
-			FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("peach", 10)},
-			FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 50)},
-			FeeSellerSettlementRatios: []exchange.FeeRatio{
-				{Price: sdk.NewInt64Coin("peach", 100), Fee: sdk.NewInt64Coin("peach", 1)},
-			},
-			AcceptingOrders:     true,
-			AllowUserSettlement: true,
-			AccessGrants: []exchange.AccessGrant{
-				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
-				{Address: s.addr2.String(), Permissions: exchange.AllPermissions()},
-				{Address: s.addr3.String(), Permissions: []exchange.Permission{exchange.Permission_cancel, exchange.Permission_attributes}},
-			},
-			AcceptingCommitments:     true,
-			CommitmentSettlementBips: 50,
-			IntermediaryDenom:        "cherry",
-		},
-		exchange.Market{
-			MarketId: 5,
-			MarketDetails: exchange.MarketDetails{
-				Name:        "Market Five",
-				Description: "Market the Fifth. It only has bid/buyer fees.",
-			},
-			FeeCreateBidFlat:       []sdk.Coin{sdk.NewInt64Coin("peach", 10)},
-			FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 50)},
-			FeeBuyerSettlementRatios: []exchange.FeeRatio{
-				{Price: sdk.NewInt64Coin("peach", 100), Fee: sdk.NewInt64Coin("peach", 1)},
-				{Price: sdk.NewInt64Coin("peach", 100), Fee: sdk.NewInt64Coin(s.cfg.BondDenom, 3)},
-			},
-			AcceptingOrders:     true,
-			AllowUserSettlement: true,
-			AccessGrants: []exchange.AccessGrant{
-				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
-			},
-			AcceptingCommitments:     true,
-			CommitmentSettlementBips: 50,
-			IntermediaryDenom:        "cherry",
-			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 15)},
-		},
-		// Do not make a market 419, lots of tests expect it to not exist.
-		exchange.Market{
-			// The stuff in this market is for the query tests.
-			// Don't use it in other unit tests (e.g. order creation or settlement).
-			MarketId: 420,
-			MarketDetails: exchange.MarketDetails{
-				Name:        "THE Market",
-				Description: "It's coming; you know it. It has all the fees.",
-			},
-			FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("peach", 20)},
-			FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("peach", 25)},
-			FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 100)},
-			FeeSellerSettlementRatios: []exchange.FeeRatio{
-				{Price: sdk.NewInt64Coin("peach", 75), Fee: sdk.NewInt64Coin("peach", 1)},
-			},
-			FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 105)},
-			FeeBuyerSettlementRatios: []exchange.FeeRatio{
-				{Price: sdk.NewInt64Coin("peach", 50), Fee: sdk.NewInt64Coin("peach", 1)},
-				{Price: sdk.NewInt64Coin("peach", 50), Fee: sdk.NewInt64Coin(s.cfg.BondDenom, 3)},
-			},
-			AcceptingOrders:     true,
-			AllowUserSettlement: true,
-			AccessGrants: []exchange.AccessGrant{
-				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
-			},
-			ReqAttrCreateAsk: []string{"seller.kyc"},
-			ReqAttrCreateBid: []string{"buyer.kyc"},
-
-			AcceptingCommitments:     true,
-			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 5)},
-			CommitmentSettlementBips: 50,
-			IntermediaryDenom:        "cherry",
-			ReqAttrCreateCommitment:  []string{"committer.kyc"},
-		},
-		exchange.Market{
-			// This market has an invalid setup. Don't use it for anything else.
-			MarketId:      421,
-			MarketDetails: exchange.MarketDetails{Name: "Broken"},
-			FeeSellerSettlementRatios: []exchange.FeeRatio{
-				{Price: sdk.NewInt64Coin("peach", 55), Fee: sdk.NewInt64Coin("peach", 1)},
-			},
-			FeeBuyerSettlementRatios: []exchange.FeeRatio{
-				{Price: sdk.NewInt64Coin("peach", 56), Fee: sdk.NewInt64Coin("peach", 1)},
-				{Price: sdk.NewInt64Coin("plum", 57), Fee: sdk.NewInt64Coin("plum", 1)},
-			},
-			AccessGrants: []exchange.AccessGrant{
-				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
-			},
-		},
-	)
-
-	exchangeGen.Orders = make([]exchange.Order, 60)
-	for i := range exchangeGen.Orders {
-		order := s.makeInitialOrder(uint64(i + 1))
-		exchangeGen.Orders[i] = *order
-	}
-	exchangeGen.LastOrderId = uint64(100)
-
-	for i := range s.accountAddrs {
-		com := s.makeInitialCommitment(i)
-		if !com.Amount.IsZero() {
-			exchangeGen.Commitments = append(exchangeGen.Commitments, *com)
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authGen *authtypes.GenesisState) *authtypes.GenesisState {
+		genAccs := make(authtypes.GenesisAccounts, 0, len(s.accountAddrs)+len(allMarkers))
+		for _, addr := range s.accountAddrs {
+			genAccs = append(genAccs, authtypes.NewBaseAccount(addr, nil, 0, 1))
 		}
-	}
-	exchangeGen.Commitments = append(exchangeGen.Commitments, exchange.Commitment{
-		Account:  s.addr1.String(),
-		MarketId: 421,
-		Amount:   sdk.NewCoins(sdk.NewInt64Coin("apple", 4210), sdk.NewInt64Coin("peach", 421)),
+		for _, marker := range allMarkers {
+			genAccs = append(genAccs, marker)
+		}
+		newAccounts, err := authtypes.PackAccounts(genAccs)
+		s.Require().NoError(err, "PackAccounts")
+		authGen.Accounts = append(authGen.Accounts, newAccounts...)
+		return authGen
 	})
 
-	for sourceI := range s.accountAddrs {
-		for targetI := range s.accountAddrs {
-			payment := s.makeInitialPayment(sourceI, targetI)
+	// Add some markets to the exchange gen state.
+	toHold := make(map[string]sdk.Coins)
+	testutil.MutateGenesisState(s.T(), &s.cfg, exchange.ModuleName, &exchange.GenesisState{}, func(exchangeGen *exchange.GenesisState) *exchange.GenesisState {
+		exchangeGen.Params = exchange.DefaultParams()
+		exchangeGen.Markets = append(exchangeGen.Markets,
+			exchange.Market{
+				MarketId: 3,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Market Three",
+					Description: "The third market (or is it?). It only has ask/seller fees.",
+				},
+				FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("peach", 10)},
+				FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 50)},
+				FeeSellerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("peach", 100), Fee: sdk.NewInt64Coin("peach", 1)},
+				},
+				AcceptingOrders:     true,
+				AllowUserSettlement: true,
+				AccessGrants: []exchange.AccessGrant{
+					{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+					{Address: s.addr2.String(), Permissions: exchange.AllPermissions()},
+					{Address: s.addr3.String(), Permissions: []exchange.Permission{exchange.Permission_cancel, exchange.Permission_attributes}},
+				},
+				AcceptingCommitments:     true,
+				CommitmentSettlementBips: 50,
+				IntermediaryDenom:        "cherry",
+			},
+			exchange.Market{
+				MarketId: 5,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Market Five",
+					Description: "Market the Fifth. It only has bid/buyer fees.",
+				},
+				FeeCreateBidFlat:       []sdk.Coin{sdk.NewInt64Coin("peach", 10)},
+				FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 50)},
+				FeeBuyerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("peach", 100), Fee: sdk.NewInt64Coin("peach", 1)},
+					{Price: sdk.NewInt64Coin("peach", 100), Fee: sdk.NewInt64Coin(s.cfg.BondDenom, 3)},
+				},
+				AcceptingOrders:     true,
+				AllowUserSettlement: true,
+				AccessGrants: []exchange.AccessGrant{
+					{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+				},
+				AcceptingCommitments:     true,
+				CommitmentSettlementBips: 50,
+				IntermediaryDenom:        "cherry",
+				FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 15)},
+			},
+			// Do not make a market 419, lots of tests expect it to not exist.
+			exchange.Market{
+				// The stuff in this market is for the query tests.
+				// Don't use it in other unit tests (e.g. order creation or settlement).
+				MarketId: 420,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "THE Market",
+					Description: "It's coming; you know it. It has all the fees.",
+				},
+				FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("peach", 20)},
+				FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("peach", 25)},
+				FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 100)},
+				FeeSellerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("peach", 75), Fee: sdk.NewInt64Coin("peach", 1)},
+				},
+				FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("peach", 105)},
+				FeeBuyerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("peach", 50), Fee: sdk.NewInt64Coin("peach", 1)},
+					{Price: sdk.NewInt64Coin("peach", 50), Fee: sdk.NewInt64Coin(s.cfg.BondDenom, 3)},
+				},
+				AcceptingOrders:     true,
+				AllowUserSettlement: true,
+				AccessGrants: []exchange.AccessGrant{
+					{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+				},
+				ReqAttrCreateAsk: []string{"seller.kyc"},
+				ReqAttrCreateBid: []string{"buyer.kyc"},
+
+				AcceptingCommitments:     true,
+				FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 5)},
+				CommitmentSettlementBips: 50,
+				IntermediaryDenom:        "cherry",
+				ReqAttrCreateCommitment:  []string{"committer.kyc"},
+			},
+			exchange.Market{
+				// This market has an invalid setup. Don't use it for anything else.
+				MarketId:      421,
+				MarketDetails: exchange.MarketDetails{Name: "Broken"},
+				FeeSellerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("peach", 55), Fee: sdk.NewInt64Coin("peach", 1)},
+				},
+				FeeBuyerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("peach", 56), Fee: sdk.NewInt64Coin("peach", 1)},
+					{Price: sdk.NewInt64Coin("plum", 57), Fee: sdk.NewInt64Coin("plum", 1)},
+				},
+				AccessGrants: []exchange.AccessGrant{
+					{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+				},
+			},
+		)
+
+		exchangeGen.Orders = make([]exchange.Order, 60)
+		for i := range exchangeGen.Orders {
+			order := s.makeInitialOrder(uint64(i + 1))
+			exchangeGen.Orders[i] = *order
+		}
+		exchangeGen.LastOrderId = uint64(100)
+
+		for i := range s.accountAddrs {
+			com := s.makeInitialCommitment(i)
+			if !com.Amount.IsZero() {
+				exchangeGen.Commitments = append(exchangeGen.Commitments, *com)
+			}
+		}
+
+		exchangeGen.Commitments = append(exchangeGen.Commitments, exchange.Commitment{
+			Account:  s.addr1.String(),
+			MarketId: 421,
+			Amount:   sdk.NewCoins(sdk.NewInt64Coin("apple", 4210), sdk.NewInt64Coin("peach", 421)),
+		})
+
+		for sourceI := range s.accountAddrs {
+			for targetI := range s.accountAddrs {
+				payment := s.makeInitialPayment(sourceI, targetI)
+				exchangeGen.Payments = append(exchangeGen.Payments, *payment)
+			}
+			payment := s.makeInitialPayment(sourceI, len(s.accountAddrs))
 			exchangeGen.Payments = append(exchangeGen.Payments, *payment)
 		}
-		payment := s.makeInitialPayment(sourceI, len(s.accountAddrs))
-		exchangeGen.Payments = append(exchangeGen.Payments, *payment)
-	}
 
-	toHold := make(map[string]sdk.Coins)
-	for _, order := range exchangeGen.Orders {
-		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
-	}
-	for _, com := range exchangeGen.Commitments {
-		toHold[com.Account] = toHold[com.Account].Add(com.Amount...)
-	}
-	for _, payment := range exchangeGen.Payments {
-		if !payment.SourceAmount.IsZero() {
-			toHold[payment.Source] = toHold[payment.Source].Add(payment.SourceAmount...)
+		for _, order := range exchangeGen.Orders {
+			toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
 		}
-	}
 
-	s.cfg.GenesisState[exchange.ModuleName], err = s.cfg.Codec.MarshalJSON(&exchangeGen)
-	s.Require().NoError(err, "MarshalJSON exchange gen state")
+		for _, com := range exchangeGen.Commitments {
+			toHold[com.Account] = toHold[com.Account].Add(com.Amount...)
+		}
+
+		for _, payment := range exchangeGen.Payments {
+			if !payment.SourceAmount.IsZero() {
+				toHold[payment.Source] = toHold[payment.Source].Add(payment.SourceAmount...)
+			}
+		}
+
+		return exchangeGen
+	})
 
 	// Create all the needed holds.
-	var holdGen hold.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[hold.ModuleName], &holdGen)
-	s.Require().NoError(err, "UnmarshalJSON hold gen state")
-	for _, addr := range s.accountAddrs {
-		holdGen.Holds = append(holdGen.Holds, &hold.AccountHold{
-			Address: addr.String(),
-			Amount:  toHold[addr.String()],
-		})
-	}
-	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&holdGen)
-	s.Require().NoError(err, "MarshalJSON hold gen state")
+	testutil.MutateGenesisState(s.T(), &s.cfg, hold.ModuleName, &hold.GenesisState{}, func(holdGen *hold.GenesisState) *hold.GenesisState {
+		for _, addr := range s.accountAddrs {
+			holdGen.Holds = append(holdGen.Holds, &hold.AccountHold{
+				Address: addr.String(),
+				Amount:  toHold[addr.String()],
+			})
+		}
+		return holdGen
+	})
 
-	var markerGen markertypes.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[markertypes.ModuleName], &markerGen)
-	s.Require().NoError(err, "UnmarshalJSON marker gen state")
-	markerGen.NetAssetValues = append(markerGen.NetAssetValues, []markertypes.MarkerNetAssetValues{
-		{
-			Address:        cherryMarker.Address,
-			NetAssetValues: []markertypes.NetAssetValue{{Price: s.feeCoin(100), Volume: 1}},
-		},
-		{
-			Address:        appleMarker.Address,
-			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 8), Volume: 1}},
-		},
-		{
-			Address:        acornMarker.Address,
-			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 3), Volume: 17}},
-		},
-		{
-			Address:        peachMarker.Address,
-			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 778), Volume: 3}},
-		},
-	}...)
-	s.cfg.GenesisState[markertypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&markerGen)
-	s.Require().NoError(err, "MarshalJSON marker gen state")
+	// Add the markers.
+	testutil.MutateGenesisState(s.T(), &s.cfg, markertypes.ModuleName, &markertypes.GenesisState{}, func(markerGen *markertypes.GenesisState) *markertypes.GenesisState {
+		markerGen.NetAssetValues = append(markerGen.NetAssetValues, []markertypes.MarkerNetAssetValues{
+			{
+				Address:        cherryMarker.Address,
+				NetAssetValues: []markertypes.NetAssetValue{{Price: s.feeCoin(100), Volume: 1}},
+			},
+			{
+				Address:        appleMarker.Address,
+				NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 8), Volume: 1}},
+			},
+			{
+				Address:        acornMarker.Address,
+				NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 3), Volume: 17}},
+			},
+			{
+				Address:        peachMarker.Address,
+				NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 778), Volume: 3}},
+			},
+		}...)
+		return markerGen
+	})
 
 	// Add balances to bank gen state.
-	// Any initial holds for an account are added to this so that
-	// this is what's spendable to each at the start of the unit tests.
-	balance := sdk.NewCoins(
-		s.bondCoin(1_000_000_000),
-		s.feeCoin(1_000_000_000_000),
-		sdk.NewInt64Coin("acorn", 1_000_000_000),
-		sdk.NewInt64Coin("apple", 1_000_000_000),
-		sdk.NewInt64Coin("peach", 1_000_000_000),
-		sdk.NewInt64Coin("strawberry", 1_000_000_000),
-		sdk.NewInt64Coin("tangerine", 1_000_000_000),
-	)
-	var bankGen banktypes.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[banktypes.ModuleName], &bankGen)
-	s.Require().NoError(err, "UnmarshalJSON bank gen state")
-	for _, addr := range s.accountAddrs {
-		bal := balance.Add(toHold[addr.String()]...)
-		bankGen.Balances = append(bankGen.Balances, banktypes.Balance{Address: addr.String(), Coins: bal})
-	}
-	s.cfg.GenesisState[banktypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&bankGen)
-	s.Require().NoError(err, "MarshalJSON bank gen state")
+	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankGen *banktypes.GenesisState) *banktypes.GenesisState {
+		// Any initial holds for an account are added to this so that
+		// this is what's spendable to each at the start of the unit tests.
+		balance := sdk.NewCoins(
+			s.bondCoin(1_000_000_000),
+			s.feeCoin(1_000_000_000_000),
+			sdk.NewInt64Coin("acorn", 1_000_000_000),
+			sdk.NewInt64Coin("apple", 1_000_000_000),
+			sdk.NewInt64Coin("peach", 1_000_000_000),
+			sdk.NewInt64Coin("strawberry", 1_000_000_000),
+			sdk.NewInt64Coin("tangerine", 1_000_000_000),
+		)
+		for _, addr := range s.accountAddrs {
+			bal := balance.Add(toHold[addr.String()]...)
+			bankGen.Balances = append(bankGen.Balances, banktypes.Balance{Address: addr.String(), Coins: bal})
+		}
+		return bankGen
+	})
 
 	// And fire it all up!!
+	var err error
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "testnet.New(...)")
 
@@ -556,7 +548,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 		fees = fees.Add(tc.addedFees...)
 	}
 
-	gas := "250000"
+	gas := "300000"
 	if tc.gas > 0 {
 		gas = fmt.Sprintf("%d", tc.gas)
 	}
