@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
@@ -16,8 +18,8 @@ type Keeper struct {
 	storeKey storetypes.StoreKey
 	schema   collections.Schema
 
-	Ledgers collections.Map[string, ledger.Ledger]
-	// LedgerEntries collections.Map[sdkcollections.Pair[string, string], ledger.LedgerEntry]
+	Ledgers       collections.Map[string, ledger.Ledger]
+	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
 }
 
 // NewKeeper returns a new mymodule Keeper.
@@ -30,10 +32,17 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 
 		Ledgers: collections.NewMap(
 			sb,
-			collections.NewPrefix(ledger.LedgerKeyPrefix),
+			collections.NewPrefix("ledgers"),
 			"ledgers",
 			collections.StringKey,
 			codec.CollValue[ledger.Ledger](cdc),
+		),
+		LedgerEntries: collections.NewMap(
+			sb,
+			collections.NewPrefix("ledger_entries"),
+			"ledger_entries",
+			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
+			codec.CollValue[ledger.LedgerEntry](cdc),
 		),
 	}
 
@@ -76,22 +85,33 @@ func (k Keeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) e
 }
 
 // SetValue stores a value with a given key.
-func (k Keeper) AppendEntry(ctx sdk.Context, nftAddress string, denom string) error {
-	// l, err := k.GetLedger(ctx, nftAddress)
-	// if err != nil {
-	// 	return err
-	// }
+func (k Keeper) AppendEntry(ctx sdk.Context, nftAddress string, entryUuid string) error {
+	le := ledger.LedgerEntry{
+		Uuid: entryUuid,
+	}
 
-	// l.Ledger
+	key := collections.Join(nftAddress, entryUuid)
+	return k.LedgerEntries.Set(ctx, key, le)
+}
 
-	// v, err := k.cdc.Marshal(&l)
-	// if err != nil {
-	// 	return err
-	// }
+func (k Keeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error) {
+	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
 
-	// store := k.ledgerStore(ctx)
-	// store.Set([]byte(nftAddress), []byte(v))
-	return nil
+	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+
+	var entries []ledger.LedgerEntry
+	for ; iter.Valid(); iter.Next() {
+		le, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, le)
+	}
+	return entries, nil
 }
 
 func (k Keeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error) {

@@ -4727,6 +4727,11 @@ LedgerEntry
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
+
+
 
 
 

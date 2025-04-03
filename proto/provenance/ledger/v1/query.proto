@@ -33,4 +33,6 @@ message QueryLedgerRequest {
   string nft_address = 1;
 }
 
-message QueryLedgerResponse {}
+message QueryLedgerResponse {
+  repeated LedgerEntry entries = 1;
+}
