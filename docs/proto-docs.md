@@ -271,6 +271,14 @@
     - [Ledger](#provenance-ledger-v1-Ledger)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
   
+- [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
+    - [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest)
+    - [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse)
+    - [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest)
+    - [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse)
+  
+    - [Query](#provenance-ledger-v1-Query)
+  
 - [provenance/ledger/v1/genesis.proto](#provenance_ledger_v1_genesis-proto)
     - [GenesisState](#provenance-ledger-v1-GenesisState)
   
@@ -4560,6 +4568,73 @@ LedgerEntry
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/query.proto
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerConfigRequest"></a>
+
+### QueryLedgerConfigRequest
+
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerConfigResponse"></a>
+
+### QueryLedgerConfigResponse
+
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerRequest"></a>
+
+### QueryLedgerRequest
+
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerResponse"></a>
+
+### QueryLedgerResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-ledger-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for ledger module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `Config` | [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest) | [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse) | Params queries params of the ledger module. |
+| `Entries` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) |  |
 
  <!-- end services -->
 
