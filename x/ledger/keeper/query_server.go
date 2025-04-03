@@ -24,6 +24,19 @@ func (k Keeper) Config(goCtx context.Context, req *ledger.QueryLedgerConfigReque
 	return &resp, nil
 }
 
-func (k Keeper) Entries(context.Context, *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
-	return nil, nil
+func (k Keeper) Entries(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	entries, err := k.ListLedgerEntries(ctx, req.NftAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.QueryLedgerResponse{}
+
+	for _, entry := range entries {
+		resp.Entries = append(resp.Entries, &entry)
+	}
+
+	return &resp, nil
 }

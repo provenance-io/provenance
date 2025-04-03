@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -42,7 +40,7 @@ func CmdCreate() *cobra.Command {
 
 			nftAddress := args[0]
 			denom := args[1]
-			owner := "tp187kt2cd9akuzdcv44f390tvsadpxs2jgwn2ek3"
+			owner := "tp1xgvztaaprw6k335t0mcy23m4r3n0yw8c36x723"
 			m := ledger.MsgCreateRequest{
 				NftAddress: nftAddress,
 				Denom:      denom,
@@ -60,19 +58,32 @@ func CmdCreate() *cobra.Command {
 // CmdAppend creates a new ledger entry for a given nft
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append <entry>",
+		Use:     "append <nft_address> <entry_uuid>",
 		Aliases: []string{},
 		Short:   "Append an entry to an existing ledger",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("TODO")
+			nftAddress := args[0]
+			entryUuid := args[1]
+			owner := "tp1xgvztaaprw6k335t0mcy23m4r3n0yw8c36x723"
+
+			m := ledger.MsgAppendRequest{
+				NftAddress: nftAddress,
+				Entry: &ledger.LedgerEntry{
+					Uuid: entryUuid,
+				},
+				Owner: owner,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

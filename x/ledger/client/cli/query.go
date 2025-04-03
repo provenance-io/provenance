@@ -25,6 +25,7 @@ func CmdQuery() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		GetConfigCmd(),
+		GetLedgerEntriesCmd(),
 	)
 
 	return queryCmd
@@ -58,6 +59,38 @@ func GetConfigCmd() *cobra.Command {
 			}
 
 			return clientCtx.PrintProto(&resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetAttributeParamsCmd returns the command handler for name parameter querying.
+func GetLedgerEntriesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "entries <nft_address>",
+		Short:   "Query the ledger for the specified nft address",
+		Example: fmt.Sprintf(`$ %s query attribute params`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			nftAddress := args[0]
+			req := ledger.QueryLedgerRequest{
+				NftAddress: nftAddress,
+			}
+
+			queryClient := ledger.NewQueryClient(clientCtx)
+			l, err := queryClient.Entries(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(l)
 		},
 	}
 

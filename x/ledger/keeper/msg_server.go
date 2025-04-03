@@ -19,6 +19,13 @@ func NewMsgServer(k Keeper) ledger.MsgServer {
 }
 
 func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := k.AppendEntry(ctx, req.NftAddress, req.Entry.Uuid)
+	if err != nil {
+		return nil, err
+	}
+
 	resp := ledger.MsgAppendResponse{}
 	return &resp, nil
 }
