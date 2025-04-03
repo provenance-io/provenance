@@ -36,17 +36,6 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	// Register any concrete types if needed.
 }
 
-// DefaultGenesis returns default genesis state as raw bytes.
-// func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-// 	// Return a default (empty) genesis state.
-// 	return cdc.MustMarshalJSON()
-// }
-
-// ValidateGenesis validates the genesis state.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
-}
-
 // AppModule implements an application module for mymodule.
 type AppModule struct {
 	AppModuleBasic
@@ -90,8 +79,21 @@ func (am AppModule) QuerierRoute() string {
 
 // InitGenesis initializes the genesis state.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
-	// Initialize genesis state if needed.
-	return []abci.ValidatorUpdate{}
+	ctx.Logger().Info("Genesising Ledger Module")
+	var state ledger.GenesisState
+	cdc.MustUnmarshalJSON(gs, &state)
+	am.keeper.InitGenesis(ctx, &state)
+	return nil
+}
+
+// DefaultGenesis returns default genesis state as raw bytes.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(&ledger.GenesisState{})
+}
+
+// ValidateGenesis validates the genesis state.
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	return nil
 }
 
 // ExportGenesis exports the module's genesis state.

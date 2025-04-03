@@ -22,6 +22,20 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey) Keeper {
 	}
 }
 
+func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
+	store := k.ledgerStore(ctx)
+
+	for _, l := range state.Ledgers {
+		key := []byte(l.NftUuid)
+		bz := k.cdc.MustMarshal(&l)
+		store.Set(key, bz)
+	}
+}
+
+func (k Keeper) ExportGenesis(ctx sdk.Context) {
+	// TODO
+}
+
 // SetValue stores a value with a given key.
 func (k Keeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) error {
 	l := ledger.Ledger{
@@ -34,7 +48,7 @@ func (k Keeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) e
 		return err
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("ledger:"))
+	store := k.ledgerStore(ctx)
 	store.Set([]byte(nftAddress), []byte(v))
 	return nil
 }
@@ -44,4 +58,10 @@ func (k Keeper) GetValue(ctx sdk.Context, key string) string {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(ledger.ModuleName+":"))
 	bz := store.Get([]byte(key))
 	return string(bz)
+}
+
+func (k Keeper) ledgerStore(ctx sdk.Context) *prefix.Store {
+	baseStore := ctx.KVStore(k.storeKey)
+	store := prefix.NewStore(baseStore, []byte(ledger.LedgerKeyPrefix))
+	return &store
 }

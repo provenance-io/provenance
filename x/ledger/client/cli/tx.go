@@ -42,14 +42,13 @@ func CmdCreate() *cobra.Command {
 
 			nftAddress := args[0]
 			denom := args[1]
-			owner := "tp1c2hkxhv3e56hj5gku6nlyk86r5aty78wd9q47v"
+			owner := "tp1azh0p8l432pr9keg9sls4zc9en2f5780az8w5p"
 			m := ledger.MsgCreateRequest{
 				NftAddress: nftAddress,
 				Denom:      denom,
 				Owner:      owner,
 			}
 
-			fmt.Println(m)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
 		},
 	}
