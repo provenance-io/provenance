@@ -72,15 +72,7 @@ func (k Keeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, e
 	return &l, nil
 }
 
-// GetValue retrieves a value by key.
-func (k Keeper) GetValue(ctx sdk.Context, key string) string {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(ledger.ModuleName+":"))
-	bz := store.Get([]byte(key))
-	return string(bz)
-}
-
 func (k Keeper) ledgerStore(ctx sdk.Context) *prefix.Store {
-	baseStore := ctx.KVStore(k.storeKey)
-	store := prefix.NewStore(baseStore, []byte(ledger.LedgerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(ledger.LedgerKeyPrefix))
 	return &store
 }
