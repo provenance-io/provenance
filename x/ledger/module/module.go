@@ -32,6 +32,10 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.CmdTx()
 }
 
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.CmdQuery()
+}
+
 // RegisterCodec registers the module's types. (In newer SDK versions, use RegisterLegacyAminoCodec.)
 func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	// Register any concrete types if needed.
