@@ -1,6 +1,7 @@
-package mymodule
+package module
 
 import (
+	"context"
 	"encoding/json"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -110,6 +111,7 @@ func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
+	ledger.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // Register the protobuf message types and services with the sdk.
@@ -117,4 +119,9 @@ func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &ledger.Msg_serviceDesc)
 }
 
-func (AppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
+func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
+	err := ledger.RegisterQueryHandlerClient(context.Background(), mux, ledger.NewQueryClient(ctx))
+	if err != nil {
+		panic(err)
+	}
+}
