@@ -18,14 +18,20 @@ func NewMsgServer(k Keeper) ledger.MsgServer {
 	return &ms
 }
 
-func (k *MsgServer) Append(ctx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
+func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
 	resp := ledger.MsgAppendResponse{}
 	return &resp, nil
 }
 
 func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ctx.Logger().Info("Doing some cool shit here...")
+
+	// TODO VALIDATE
+
+	err := k.CreateLedger(ctx, req.NftAddress, req.Denom)
+	if err != nil {
+		return nil, err
+	}
 
 	resp := ledger.MsgCreateResponse{}
 	return &resp, nil
