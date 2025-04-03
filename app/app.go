@@ -388,6 +388,7 @@ func New(
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
+		ledger.StoreKey,
 		exchange.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys()
