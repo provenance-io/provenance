@@ -583,9 +583,7 @@ func New(
 		appCodec, keys[hold.StoreKey], app.BankKeeper,
 	)
 
-	app.LedgerKeeper = ledgerkeeper.NewKeeper(
-		appCodec, keys[ledger.StoreKey],
-	)
+	app.LedgerKeeper = ledgerkeeper.NewKeeper(appCodec, keys[ledger.StoreKey], runtime.NewKVStoreService(keys[ledger.StoreKey]))
 
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
