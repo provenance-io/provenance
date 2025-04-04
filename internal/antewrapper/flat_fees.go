@@ -14,6 +14,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 
+	cflags "github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -45,7 +46,7 @@ const (
 )
 
 func init() {
-	// cflags.DefaultGasLimit = DefaultGasLimit // TODO[fees]: Put this back once I've updated the SDK to make this settable.
+	cflags.DefaultGasLimit = DefaultGasLimit
 }
 
 // FlatFeesKeeper has the methods needed from a x/flatfees keeper that are needed for fee checking and collection.
