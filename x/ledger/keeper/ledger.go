@@ -39,10 +39,6 @@ func (k LedgerKeeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Led
 }
 
 func (k LedgerKeeper) HasLedger(ctx sdk.Context, nftAddress string) bool {
-	l, err := k.GetLedger(ctx, nftAddress)
-	if err != nil {
-		panic(err)
-	}
-
-	return l != nil
+	has, _ := k.Ledgers.Has(ctx, nftAddress)
+	return has
 }
