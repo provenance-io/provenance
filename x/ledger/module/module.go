@@ -44,11 +44,11 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 // AppModule implements an application module for mymodule.
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper keeper.LedgerKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, k keeper.LedgerKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         k,

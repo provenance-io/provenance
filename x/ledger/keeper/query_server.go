@@ -7,9 +7,9 @@ import (
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
-var _ ledger.QueryServer = Keeper{}
+var _ ledger.QueryServer = LedgerKeeper{}
 
-func (k Keeper) Config(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
+func (k LedgerKeeper) Config(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	l, err := k.GetLedger(ctx, req.NftAddress)
@@ -24,7 +24,7 @@ func (k Keeper) Config(goCtx context.Context, req *ledger.QueryLedgerConfigReque
 	return &resp, nil
 }
 
-func (k Keeper) Entries(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
+func (k LedgerKeeper) Entries(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	entries, err := k.ListLedgerEntries(ctx, req.NftAddress)
