@@ -12,7 +12,7 @@ import (
 )
 
 // Keeper defines the mymodule keeper.
-type Keeper struct {
+type LedgerKeeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	schema   collections.Schema
@@ -22,10 +22,10 @@ type Keeper struct {
 }
 
 // NewKeeper returns a new mymodule Keeper.
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) LedgerKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
-	lk := Keeper{
+	lk := LedgerKeeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 
@@ -55,18 +55,18 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 	return lk
 }
 
-func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
+func (k LedgerKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 	for _, l := range state.Ledgers {
 		k.CreateLedger(ctx, l.NftAddress, l.Denom)
 	}
 }
 
-func (k Keeper) ExportGenesis(ctx sdk.Context) {
+func (k LedgerKeeper) ExportGenesis(ctx sdk.Context) {
 	// TODO
 }
 
 // SetValue stores a value with a given key.
-func (k Keeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) error {
+func (k LedgerKeeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) error {
 	l := ledger.Ledger{
 		Denom: denom,
 	}
@@ -80,7 +80,7 @@ func (k Keeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) e
 }
 
 // SetValue stores a value with a given key.
-func (k Keeper) AppendEntry(ctx sdk.Context, nftAddress string, entryUuid string) error {
+func (k LedgerKeeper) AppendEntry(ctx sdk.Context, nftAddress string, entryUuid string) error {
 	le := ledger.LedgerEntry{
 		Uuid: entryUuid,
 	}
@@ -89,7 +89,7 @@ func (k Keeper) AppendEntry(ctx sdk.Context, nftAddress string, entryUuid string
 	return k.LedgerEntries.Set(ctx, key, le)
 }
 
-func (k Keeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error) {
+func (k LedgerKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error) {
 	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
 
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
@@ -109,7 +109,7 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]led
 	return entries, nil
 }
 
-func (k Keeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error) {
+func (k LedgerKeeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error) {
 	l, err := k.Ledgers.Get(ctx, nftAddress)
 
 	if err != nil {
