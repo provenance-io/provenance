@@ -6,6 +6,4 @@ const (
 	StoreKey = ModuleName
 
 	RouterKey = ModuleName
-
-	LedgerKeyPrefix = "ledger:"
 )

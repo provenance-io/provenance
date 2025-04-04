@@ -21,6 +21,11 @@ type LedgerKeeper struct {
 	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
 }
 
+const (
+	ledgerPrefix  = "ledgers"
+	entriesPrefix = "ledger_entries"
+)
+
 // NewKeeper returns a new mymodule Keeper.
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) LedgerKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
@@ -31,15 +36,15 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 
 		Ledgers: collections.NewMap(
 			sb,
-			collections.NewPrefix("ledgers"),
-			"ledgers",
+			collections.NewPrefix(ledgerPrefix),
+			ledgerPrefix,
 			collections.StringKey,
 			codec.CollValue[ledger.Ledger](cdc),
 		),
 		LedgerEntries: collections.NewMap(
 			sb,
-			collections.NewPrefix("ledger_entries"),
-			"ledger_entries",
+			collections.NewPrefix(entriesPrefix),
+			entriesPrefix,
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[ledger.LedgerEntry](cdc),
 		),
