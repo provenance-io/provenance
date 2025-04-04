@@ -9,7 +9,7 @@ import (
 // Returns an error if the Ledger exists
 func (k LedgerKeeper) validateLedgerNotExists(ctx sdk.Context, l *ledger.Ledger) error {
 	if k.HasLedger(ctx, l.NftAddress) {
-		return NewLedgerCodedError(ErrCodeAlreadyExists, "object[ledger]")
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger")
 	}
 
 	return nil
