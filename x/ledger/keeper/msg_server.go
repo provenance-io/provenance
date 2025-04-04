@@ -34,9 +34,6 @@ func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	l := ledger.Ledger{
-		// We omit the nftAddress intentionally as a minor optimization since it is also our data key.
-		// NftAddress: nftAddress,
-
 		NftAddress: req.NftAddress,
 		Denom:      req.Denom,
 	}
