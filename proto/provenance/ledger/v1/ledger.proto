@@ -12,14 +12,18 @@ import "gogoproto/gogo.proto";
 
 // Ledger
 message Ledger {
-  string               nft_uuid = 1;
-  repeated LedgerEntry ledger   = 2;
-  string               denom    = 3;
+  // Address of the NFT to which this ledger is linked.
+  string nft_address = 1;
+
+  // This denom will represent the entry values within the ledger.
+  string denom = 3;
 }
 
 // LedgerEntry
 message LedgerEntry {
+  // Unique uuid for a ledger entry.
   string uuid = 1;
+
   string type = 2;
 
   google.protobuf.Timestamp posted_date = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
