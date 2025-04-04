@@ -21,7 +21,7 @@ func NewMsgServer(k LedgerKeeper) ledger.MsgServer {
 func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.AppendEntry(ctx, req.NftAddress, req.Entry.Uuid)
+	err := k.AppendEntry(ctx, req.NftAddress, *req.Entry)
 	if err != nil {
 		return nil, err
 	}
@@ -33,9 +33,15 @@ func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) 
 func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO VALIDATE
+	l := ledger.Ledger{
+		// We omit the nftAddress intentionally as a minor optimization since it is also our data key.
+		// NftAddress: nftAddress,
 
-	err := k.CreateLedger(ctx, req.NftAddress, req.Denom)
+		NftAddress: req.NftAddress,
+		Denom:      req.Denom,
+	}
+
+	err := k.CreateLedger(ctx, l)
 	if err != nil {
 		return nil, err
 	}
