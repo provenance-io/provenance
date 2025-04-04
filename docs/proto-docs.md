@@ -4530,9 +4530,8 @@ Ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_uuid` | [string](#string) |  |  |
-| `ledger` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
-| `denom` | [string](#string) |  |  |
+| `nft_address` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
+| `denom` | [string](#string) |  | This denom will represent the entry values within the ledger. |
 
 
 
@@ -4547,7 +4546,7 @@ LedgerEntry
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `uuid` | [string](#string) |  |  |
+| `uuid` | [string](#string) |  | Unique uuid for a ledger entry. |
 | `type` | [string](#string) |  |  |
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |

@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,12 +56,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 }
 
 func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
-	store := k.ledgerStore(ctx)
-
 	for _, l := range state.Ledgers {
-		key := []byte(l.NftUuid)
-		bz := k.cdc.MustMarshal(&l)
-		store.Set(key, bz)
+		k.CreateLedger(ctx, l.NftAddress, l.Denom)
 	}
 }
 
@@ -122,14 +117,4 @@ func (k Keeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, e
 	}
 
 	return &l, nil
-}
-
-func (k Keeper) ledgerStore(ctx sdk.Context) *prefix.Store {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(ledger.LedgerKeyPrefix))
-	return &store
-}
-
-func (k Keeper) entryStore(ctx sdk.Context, nftAddress string) *prefix.Store {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(ledger.LedgerKeyPrefix+":entries"+nftAddress))
-	return &store
 }
