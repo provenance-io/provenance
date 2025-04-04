@@ -3,82 +3,20 @@ package keeper
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	"cosmossdk.io/store/prefix"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 var _ types.QueryServer = Keeper{}
 
-func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	c := sdk.UnwrapSDKContext(ctx)
-	return &types.QueryParamsResponse{Params: k.GetParams(c)}, nil
+func (k Keeper) Params(_ context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	return nil, sdkerrors.ErrInvalidRequest.Wrap("query no longer available")
 }
 
-func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryAllMsgFeesRequest) (*types.QueryAllMsgFeesResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-
-	var msgFees []*types.MsgFee
-	store := ctx.KVStore(k.storeKey)
-	msgFeeStore := prefix.NewStore(store, types.MsgFeeKeyPrefix)
-	pageRes, err := query.Paginate(msgFeeStore, req.Pagination, func(_ []byte, value []byte) error {
-		var msgFee types.MsgFee
-
-		if err := k.cdc.Unmarshal(value, &msgFee); err != nil {
-			return err
-		}
-
-		msgFees = append(msgFees, &msgFee)
-		return nil
-	})
-
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryAllMsgFeesResponse{MsgFees: msgFees, Pagination: pageRes}, nil
+func (k Keeper) QueryAllMsgFees(_ context.Context, _ *types.QueryAllMsgFeesRequest) (*types.QueryAllMsgFeesResponse, error) {
+	return nil, sdkerrors.ErrInvalidRequest.Wrap("query no longer available")
 }
 
-func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateTxFeesRequest) (*types.CalculateTxFeesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	gasInfo, _, txCtx, err := k.simulateFunc(request.TxBytes)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-
-	gasMeter, err := antewrapper.GetFeeGasMeter(txCtx)
-	if err != nil {
-		return nil, err
-	}
-	// based on Carlton H's comment this is only for testing, has no real value in practical usage.
-	baseDenom := k.defaultFeeDenom
-	if request.DefaultBaseDenom != "" {
-		baseDenom = request.DefaultBaseDenom
-	}
-
-	minGasPrice := k.GetFloorGasPrice(ctx)
-	gasAdjustment := request.GasAdjustment
-	if gasAdjustment <= 0 {
-		gasAdjustment = 1.0
-	}
-	gasUsed := int64(float64(gasInfo.GasUsed) * float64(gasAdjustment))
-	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, minGasPrice.Amount.MulRaw(gasUsed)))
-
-	return &types.CalculateTxFeesResponse{
-		AdditionalFees: gasMeter.FeeConsumed(),
-		TotalFees:      totalFees,
-		EstimatedGas:   uint64(gasUsed),
-	}, nil
+func (k Keeper) CalculateTxFees(_ context.Context, _ *types.CalculateTxFeesRequest) (*types.CalculateTxFeesResponse, error) {
+	return nil, sdkerrors.ErrInvalidRequest.Wrap("query no longer available")
 }

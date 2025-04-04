@@ -46,6 +46,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, s.bondCoins(10).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 	}
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)

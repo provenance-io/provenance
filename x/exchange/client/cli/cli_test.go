@@ -516,7 +516,7 @@ type txCmdTestCase struct {
 	args []string
 	// addedFees is any fees to add to the default 10<bond> amount.
 	addedFees sdk.Coins
-	// gas is the amount of gas to include. Default is 250,000.
+	// gas is the amount of gas to include. Default is 300,000.
 	gas int
 	// expInErr are strings to expect in an error from the cmd.
 	// Errors that come from the endpoint will not be here; use expInRawLog for those.

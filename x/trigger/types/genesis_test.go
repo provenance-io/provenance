@@ -196,7 +196,6 @@ func TestGenesisStateValidate(t *testing.T) {
 			state: &GenesisState{
 				TriggerId:      1,
 				QueueStart:     1,
-				GasLimits:      []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 1}},
 				Triggers:       []Trigger{trigger},
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}},
 			},
