@@ -18,6 +18,13 @@ func (k LedgerKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le ledger.
 		return err
 	}
 
+	_, err := k.getAddress(&nftAddress)
+	if err != nil {
+		return err
+	}
+
+	// TODO validate that the {addr} can be modified by the signer...
+
 	key := collections.Join(nftAddress, le.Uuid)
 	return k.LedgerEntries.Set(ctx, key, le)
 }

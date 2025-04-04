@@ -15,12 +15,19 @@ func (k LedgerKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 		return err
 	}
 
+	_, err := k.getAddress(&l.NftAddress)
+	if err != nil {
+		return err
+	}
+
+	// TODO validate that the {addr} can be modified by the signer...
+
 	// We omit the nftAddress out of the data we store intentionally as
 	// a minor optimization since it is also our data key.
 	nftAddress := l.NftAddress
 	l.NftAddress = ""
 
-	err := k.Ledgers.Set(ctx, nftAddress, l)
+	err = k.Ledgers.Set(ctx, nftAddress, l)
 	if err != nil {
 		return err
 	}
@@ -41,4 +48,13 @@ func (k LedgerKeeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Led
 func (k LedgerKeeper) HasLedger(ctx sdk.Context, nftAddress string) bool {
 	has, _ := k.Ledgers.Has(ctx, nftAddress)
 	return has
+}
+
+func (k LedgerKeeper) getAddress(s *string) (sdk.AccAddress, error) {
+	addr, err := sdk.AccAddressFromBech32(*s)
+	if err != nil || addr == nil {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "field[nft_address]")
+	}
+
+	return addr, nil
 }
