@@ -40,11 +40,11 @@ func CmdCreate() *cobra.Command {
 
 			nftAddress := args[0]
 			denom := args[1]
-			owner := "tp1xgvztaaprw6k335t0mcy23m4r3n0yw8c36x723"
+
 			m := ledger.MsgCreateRequest{
 				NftAddress: nftAddress,
 				Denom:      denom,
-				Owner:      owner,
+				Owner:      clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
@@ -69,14 +69,13 @@ func CmdAppend() *cobra.Command {
 
 			nftAddress := args[0]
 			entryUuid := args[1]
-			owner := "tp1xgvztaaprw6k335t0mcy23m4r3n0yw8c36x723"
 
 			m := ledger.MsgAppendRequest{
 				NftAddress: nftAddress,
 				Entry: &ledger.LedgerEntry{
 					Uuid: entryUuid,
 				},
-				Owner: owner,
+				Owner: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
