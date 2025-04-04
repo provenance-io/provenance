@@ -62,7 +62,10 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 
 func (k LedgerKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 	for _, l := range state.Ledgers {
-		k.CreateLedger(ctx, l.NftAddress, l.Denom)
+		if err := k.CreateLedger(ctx, l); err != nil {
+			// May as well panic here as there is no way we should genesis with bad data.
+			panic(err)
+		}
 	}
 }
 
@@ -71,10 +74,15 @@ func (k LedgerKeeper) ExportGenesis(ctx sdk.Context) {
 }
 
 // SetValue stores a value with a given key.
-func (k LedgerKeeper) CreateLedger(ctx sdk.Context, nftAddress string, denom string) error {
-	l := ledger.Ledger{
-		Denom: denom,
+func (k LedgerKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
+	if err := validateLedgerBasic(&l); err != nil {
+		return err
 	}
+
+	// We omit the nftAddress out of the data we store intentionally as
+	// a minor optimization since it is also our data key.
+	nftAddress := l.NftAddress
+	l.NftAddress = ""
 
 	err := k.Ledgers.Set(ctx, nftAddress, l)
 	if err != nil {
@@ -85,12 +93,16 @@ func (k LedgerKeeper) CreateLedger(ctx sdk.Context, nftAddress string, denom str
 }
 
 // SetValue stores a value with a given key.
-func (k LedgerKeeper) AppendEntry(ctx sdk.Context, nftAddress string, entryUuid string) error {
-	le := ledger.LedgerEntry{
-		Uuid: entryUuid,
+func (k LedgerKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le ledger.LedgerEntry) error {
+	if emptyString(&nftAddress) {
+		return NewLedgerCodedError(ErrCodeMissingField, "field[nft_address]")
 	}
 
-	key := collections.Join(nftAddress, entryUuid)
+	if err := validateLedgerEntryBasic(&le); err != nil {
+		return err
+	}
+
+	key := collections.Join(nftAddress, le.Uuid)
 	return k.LedgerEntries.Set(ctx, key, le)
 }
 
