@@ -11,9 +11,9 @@ const (
 )
 
 var ValidationMessages = map[string]string{
-	ErrCodeInvalidField:  "provided field value is invalid",
-	ErrCodeMissingField:  "required field is missing or empty",
-	ErrCodeAlreadyExists: "object already exists",
+	ErrCodeInvalidField:  "provided [field] value is invalid",
+	ErrCodeMissingField:  "required [field] is missing or empty",
+	ErrCodeAlreadyExists: "[object] already exists",
 	ErrCodeUnauthorized:  "unauthorized access",
 }
 
@@ -35,8 +35,8 @@ func NewLedgerCodedError(code string, msgs ...string) *LedgerCodedError {
 		errMsg = "unknown error"
 	}
 
-	// Build the full error msg
-	errMsgs := make([]string, len(msgs)+1)
+	// slice to store the list of err msgs.
+	errMsgs := make([]string, 0)
 	errMsgs = append(errMsgs, errMsg)
 	errMsgs = append(errMsgs, msgs...)
 

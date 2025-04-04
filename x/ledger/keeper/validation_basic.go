@@ -10,10 +10,10 @@ import (
 
 func validateLedgerBasic(l *ledger.Ledger) error {
 	if emptyString(&l.Denom) {
-		return NewLedgerCodedError(ErrCodeMissingField, "field[denom]")
+		return NewLedgerCodedError(ErrCodeMissingField, "denom")
 	}
 	if emptyString(&l.NftAddress) {
-		return NewLedgerCodedError(ErrCodeMissingField, "field[nft_address]")
+		return NewLedgerCodedError(ErrCodeMissingField, "nft_address")
 	}
 
 	return nil
@@ -21,7 +21,7 @@ func validateLedgerBasic(l *ledger.Ledger) error {
 
 func validateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 	if emptyString(&e.Uuid) {
-		return NewLedgerCodedError(ErrCodeMissingField, "field[uuid]")
+		return NewLedgerCodedError(ErrCodeMissingField, "uuid")
 	}
 
 	return nil

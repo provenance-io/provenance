@@ -53,7 +53,7 @@ func (k LedgerKeeper) HasLedger(ctx sdk.Context, nftAddress string) bool {
 func (k LedgerKeeper) getAddress(s *string) (sdk.AccAddress, error) {
 	addr, err := sdk.AccAddressFromBech32(*s)
 	if err != nil || addr == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "field[nft_address]")
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "nft_address")
 	}
 
 	return addr, nil
