@@ -271,6 +271,8 @@
     - [Ledger](#provenance-ledger-v1-Ledger)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
   
+    - [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType)
+  
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
     - [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest)
     - [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse)
@@ -4547,7 +4549,7 @@ LedgerEntry
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `uuid` | [string](#string) |  | Unique uuid for a ledger entry. |
-| `type` | [string](#string) |  |  |
+| `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | `amt` | [string](#string) |  |  |
@@ -4563,6 +4565,21 @@ LedgerEntry
 
 
  <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-LedgerEntryType"></a>
+
+### LedgerEntryType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `LEDGER_ENTRY_TYPE_UNSPECIFIED` | `0` |  |
+| `LEDGER_ENTRY_TYPE_DISBURSEMENT` | `1` |  |
+| `LEDGER_ENTRY_TYPE_PAYMENT` | `2` |  |
+| `LEDGER_ENTRY_TYPE_FEE` | `3` |  |
+| `LEDGER_ENTRY_TYPE_OTHER` | `4` |  |
+
 
  <!-- end enums -->
 

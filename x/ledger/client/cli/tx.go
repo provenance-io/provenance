@@ -58,7 +58,7 @@ func CmdCreate() *cobra.Command {
 // CmdAppend creates a new ledger entry for a given nft
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append <nft_address> <entry_uuid>",
+		Use:     "append <nft_address> <uuid> <type> <posted_date> <effective_date> <amt> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
 		Aliases: []string{},
 		Short:   "Append an entry to an existing ledger",
 		RunE: func(cmd *cobra.Command, args []string) error {

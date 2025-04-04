@@ -19,12 +19,20 @@ message Ledger {
   string denom = 3;
 }
 
+enum LedgerEntryType {
+  LEDGER_ENTRY_TYPE_UNSPECIFIED  = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  LEDGER_ENTRY_TYPE_DISBURSEMENT = 1 [(gogoproto.enumvalue_customname) = "Disbursement"];
+  LEDGER_ENTRY_TYPE_PAYMENT      = 2 [(gogoproto.enumvalue_customname) = "Payment"];
+  LEDGER_ENTRY_TYPE_FEE          = 3 [(gogoproto.enumvalue_customname) = "Fee"];
+  LEDGER_ENTRY_TYPE_OTHER        = 4 [(gogoproto.enumvalue_customname) = "Other"];
+}
+
 // LedgerEntry
 message LedgerEntry {
   // Unique uuid for a ledger entry.
   string uuid = 1;
 
-  string type = 2;
+  LedgerEntryType type = 2;
 
   google.protobuf.Timestamp posted_date = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
