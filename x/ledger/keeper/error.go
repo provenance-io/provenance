@@ -42,7 +42,7 @@ func NewLedgerCodedError(code string, msgs ...string) *LedgerCodedError {
 
 	return &LedgerCodedError{
 		Code:    code,
-		Message: strings.Join(errMsgs, "\n"),
+		Message: strings.Join(errMsgs, "; "),
 	}
 }
 
