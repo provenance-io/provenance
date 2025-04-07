@@ -26,7 +26,30 @@ func (k LedgerKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le ledger.
 	// TODO validate that the {addr} can be modified by the signer...
 
 	key := collections.Join(nftAddress, le.Uuid)
-	return k.LedgerEntries.Set(ctx, key, le)
+	err = k.LedgerEntries.Set(ctx, key, le)
+	if err != nil {
+		return err
+	}
+
+	// Emit the ledger entry added event
+	ctx.EventManager().EmitEvent(ledger.NewEventLedgerEntryAdded(
+		nftAddress,
+		le.Uuid,
+		int32(le.Type),
+		le.PostedDate,
+		le.EffectiveDate,
+		le.Amt.String(),
+	))
+
+	// Emit the balance updated event
+	ctx.EventManager().EmitEvent(ledger.NewEventBalanceUpdated(
+		nftAddress,
+		le.PrinBalAmt.String(),
+		le.IntBalAmt.String(),
+		le.OtherBalAmt.String(),
+	))
+
+	return nil
 }
 
 func (k LedgerKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error) {
