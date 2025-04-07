@@ -281,6 +281,13 @@
   
     - [Query](#provenance-ledger-v1-Query)
   
+- [provenance/ledger/v1/event.proto](#provenance_ledger_v1_event-proto)
+    - [LedgerCreatedEvent](#provenance-ledger-v1-LedgerCreatedEvent)
+    - [LedgerDisbursementEvent](#provenance-ledger-v1-LedgerDisbursementEvent)
+    - [LedgerEntryAddedEvent](#provenance-ledger-v1-LedgerEntryAddedEvent)
+    - [LedgerNavUpdatedEvent](#provenance-ledger-v1-LedgerNavUpdatedEvent)
+    - [LedgerPaymentEvent](#provenance-ledger-v1-LedgerPaymentEvent)
+  
 - [provenance/ledger/v1/genesis.proto](#provenance_ledger_v1_genesis-proto)
     - [GenesisState](#provenance-ledger-v1-GenesisState)
   
@@ -4570,7 +4577,7 @@ LedgerEntry
 <a name="provenance-ledger-v1-LedgerEntryType"></a>
 
 ### LedgerEntryType
-
+LedgerEntryType
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -4671,6 +4678,102 @@ Query defines the gRPC querier service for ledger module.
 | ----------- | ------------ | ------------- | ------------|
 | `Config` | [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest) | [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse) | Params queries params of the ledger module. |
 | `Entries` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) |  |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_event-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/event.proto
+
+
+
+<a name="provenance-ledger-v1-LedgerCreatedEvent"></a>
+
+### LedgerCreatedEvent
+LedgerCreatedEvent represents an event emitted when a new ledger is created
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerDisbursementEvent"></a>
+
+### LedgerDisbursementEvent
+LedgerDisbursementEvent represents an event emitted when a disbursement is made from a ledger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `disbursement` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerEntryAddedEvent"></a>
+
+### LedgerEntryAddedEvent
+LedgerEntryAddedEvent represents an event emitted when a new entry is added to a ledger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerNavUpdatedEvent"></a>
+
+### LedgerNavUpdatedEvent
+LedgerNavUpdatedEvent represents an event emitted when the NAV (Net Asset Value) of a ledger is updated
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `nav_amount` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerPaymentEvent"></a>
+
+### LedgerPaymentEvent
+LedgerPaymentEvent represents an event emitted when a payment is made on a ledger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `payment` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

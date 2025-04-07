@@ -30,6 +30,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// LedgerEntryType
 type LedgerEntryType int32
 
 const (

@@ -42,6 +42,7 @@ func (k LedgerKeeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Led
 		return nil, err
 	}
 
+	l.NftAddress = nftAddress
 	return &l, nil
 }
 

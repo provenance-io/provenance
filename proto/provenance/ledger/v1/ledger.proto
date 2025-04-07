@@ -19,6 +19,7 @@ message Ledger {
   string denom = 3;
 }
 
+// LedgerEntryType
 enum LedgerEntryType {
   LEDGER_ENTRY_TYPE_UNSPECIFIED  = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
   LEDGER_ENTRY_TYPE_DISBURSEMENT = 1 [(gogoproto.enumvalue_customname) = "Disbursement"];

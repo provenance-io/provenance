@@ -1,0 +1,46 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "provenance/ledger/v1/ledger.proto";
+
+// LedgerCreatedEvent represents an event emitted when a new ledger is created
+message LedgerCreatedEvent {
+  string nft_address = 1;
+  string denom       = 2;
+}
+
+// LedgerEntryAddedEvent represents an event emitted when a new entry is added to a ledger
+message LedgerEntryAddedEvent {
+  string      nft_address = 1;
+  LedgerEntry entry       = 2;
+}
+
+// LedgerPaymentEvent represents an event emitted when a payment is made on a ledger
+message LedgerPaymentEvent {
+  string      nft_address = 1;
+  LedgerEntry payment     = 2;
+}
+
+// LedgerDisbursementEvent represents an event emitted when a disbursement is made from a ledger
+message LedgerDisbursementEvent {
+  string      nft_address  = 1;
+  LedgerEntry disbursement = 2;
+}
+
+// LedgerNavUpdatedEvent represents an event emitted when the NAV (Net Asset Value) of a ledger is updated
+message LedgerNavUpdatedEvent {
+  string nft_address = 1;
+  string nav_amount  = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}
