@@ -2,11 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/spf13/cobra"
 )
@@ -78,48 +80,73 @@ func CmdAppend() *cobra.Command {
 				return err
 			}
 
+			nftAddress := args[0]
+			if nftAddress == "" {
+				return fmt.Errorf("invalid <nft_address>: %s", err.Error())
+			}
+
+			entryUuid, err := uuid.Parse(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid <uuid>: %s", err.Error())
+			}
+
 			amt, ok := sdkmath.NewIntFromString(args[5])
 			if !ok {
-				return fmt.Errorf("Invalid <amount>: %s", err.Error())
+				return fmt.Errorf("invalid <amount>: %s", err.Error())
 			}
 
 			prinAppliedAmt, ok := sdkmath.NewIntFromString(args[6])
 			if !ok {
-				return fmt.Errorf("Invalid <prin_applied_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <prin_applied_amt>: %s", err.Error())
 			}
 
 			prinBalAmt, ok := sdkmath.NewIntFromString(args[7])
 			if !ok {
-				return fmt.Errorf("Invalid <prin_bal_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <prin_bal_amt>: %s", err.Error())
 			}
 
 			intAppliedAmt, ok := sdkmath.NewIntFromString(args[8])
 			if !ok {
-				return fmt.Errorf("Invalid <int_applied_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <int_applied_amt>: %s", err.Error())
 			}
 
 			intBalAmt, ok := sdkmath.NewIntFromString(args[9])
 			if !ok {
-				return fmt.Errorf("Invalid <int_bal_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <int_bal_amt>: %s", err.Error())
 			}
 
 			otherAppliedAmt, ok := sdkmath.NewIntFromString(args[10])
 			if !ok {
-				return fmt.Errorf("Invalid <other_applied_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <other_applied_amt>: %s", err.Error())
 			}
 
 			otherBalAmt, ok := sdkmath.NewIntFromString(args[11])
 			if !ok {
-				return fmt.Errorf("Invalid <other_bal_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <other_bal_amt>: %s", err.Error())
+			}
+
+			postedDate, err := time.Parse(time.RFC3339, args[3])
+			if err != nil {
+				return fmt.Errorf("invalid <posted_date>: %s", err.Error())
+			}
+
+			effectiveDate, err := time.Parse(time.RFC3339, args[4])
+			if err != nil {
+				return fmt.Errorf("invalid <effective_date>: %s", err.Error())
+			}
+
+			entryType, ok := ledger.LedgerEntryType_value[args[2]]
+			if !ok {
+				return fmt.Errorf("invalid <type>")
 			}
 
 			m := ledger.MsgAppendRequest{
-				NftAddress: args[0],
+				NftAddress: nftAddress,
 				Entry: &ledger.LedgerEntry{
-					Uuid: args[1],
-					// Type:            args[2],
-					// PostedDate:      args[3],
-					// EffectiveDate:   args[4],
+					Uuid:            entryUuid.String(),
+					Type:            ledger.LedgerEntryType(entryType),
+					PostedDate:      postedDate,
+					EffectiveDate:   effectiveDate,
 					Amt:             amt,
 					PrinAppliedAmt:  prinAppliedAmt,
 					PrinBalAmt:      prinBalAmt,
