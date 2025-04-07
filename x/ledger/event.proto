@@ -51,4 +51,4 @@ message EventLedgerConfigUpdated {
   string denom = 2;
   // The previous denomination (if changed)
   string previous_denom = 3;
-}
+} 
