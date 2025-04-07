@@ -32,6 +32,9 @@ func (k LedgerKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 		return err
 	}
 
+	// Emit the ledger created event
+	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(nftAddress, l.Denom))
+
 	return nil
 }
 
