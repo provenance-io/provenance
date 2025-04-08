@@ -107,7 +107,7 @@ message FundTransfer {
   string                memo              = 5;
 
   // The minimum block height or timestamp for settlement
-  int64 settlement_block = 5;
+  int64 settlement_block = 6;
 }
 
 // SettlementInstruction represents blockchain-specific settlement instructions

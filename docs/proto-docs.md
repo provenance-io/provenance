@@ -4686,6 +4686,7 @@ FundTransferEntry represents a single fund transfer to process
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
 | `ledger_entry_uuid` | [string](#string) |  |  |
 | `amount` | [string](#string) |  |  |
 | `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
@@ -4705,6 +4706,7 @@ FundTransferEntryWithSettlement represents a fund transfer with settlement instr
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
 | `ledger_entry_uuid` | [string](#string) |  |  |
 | `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
