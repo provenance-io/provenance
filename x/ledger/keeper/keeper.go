@@ -17,13 +17,13 @@ type LedgerKeeper struct {
 
 	Ledgers       collections.Map[string, ledger.Ledger]
 	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
-	Flows         collections.Map[string, ledger.Flow]
+	FundTransfers collections.Map[string, ledger.FundTransfer]
 }
 
 const (
-	ledgerPrefix  = "ledgers"
-	entriesPrefix = "ledger_entries"
-	flowsPrefix   = "flows"
+	ledgerPrefix        = "ledgers"
+	entriesPrefix       = "ledger_entries"
+	fundTransfersPrefix = "ledger_fund_transfers"
 )
 
 // NewKeeper returns a new mymodule Keeper.
@@ -48,12 +48,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[ledger.LedgerEntry](cdc),
 		),
-		Flows: collections.NewMap(
+		FundTransfers: collections.NewMap(
 			sb,
-			collections.NewPrefix(flowsPrefix),
-			flowsPrefix,
+			collections.NewPrefix(fundTransfersPrefix),
+			fundTransfersPrefix,
 			collections.StringKey,
-			codec.CollValue[ledger.Flow](cdc),
+			codec.CollValue[ledger.FundTransfer](cdc),
 		),
 	}
 

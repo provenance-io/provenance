@@ -89,30 +89,42 @@ message LedgerEntry {
   ];
 }
 
-// FlowType represents the type of flow being tracked
-enum FlowType {
-  FLOW_TYPE_UNSPECIFIED  = 0;
-  FLOW_TYPE_PAYMENT      = 1;
-  FLOW_TYPE_DISBURSEMENT = 2;
-}
-
 // FlowStatus represents the current status of a flow
-enum FlowStatus {
-  FLOW_STATUS_UNSPECIFIED = 0;
-  FLOW_STATUS_PENDING     = 1;
-  FLOW_STATUS_PROCESSING  = 2;
-  FLOW_STATUS_COMPLETED   = 3;
-  FLOW_STATUS_FAILED      = 4;
+enum FundingTransferStatus {
+  FUNDING_TRANSFER_STATUS_UNSPECIFIED = 0;
+  FUNDING_TRANSFER_STATUS_PENDING     = 1;
+  FUNDING_TRANSFER_STATUS_PROCESSING  = 2;
+  FUNDING_TRANSFER_STATUS_COMPLETED   = 3;
+  FUNDING_TRANSFER_STATUS_FAILED      = 4;
 }
 
-// Flow represents a payment or disbursement flow associated with a ledger entry
-message Flow {
-  string     flow_id           = 1;
-  string     ledger_entry_uuid = 2;
-  FlowType   flow_type         = 3;
-  FlowStatus status            = 4;
-  string     amount            = 5;
-  string     memo              = 6;
-  int64      created_at        = 7;
-  int64      updated_at        = 8;
+// FundTransferEntry represents a single fund transfer to process
+message FundTransfer {
+  string                ledger_entry_uuid = 1;
+  string                amount            = 2;
+  FundingTransferStatus status            = 3;
+  string                memo              = 4;
+
+  // The minimum block height or timestamp for settlement
+  int64 settlement_block = 5;
+}
+
+// SettlementInstruction represents blockchain-specific settlement instructions
+message SettlementInstruction {
+  string amount = 1;
+
+  // The recipient's blockchain address
+  string recipient_address = 2;
+
+  // The minimum block height or timestamp for settlement
+  int64 settlement_block = 3;
+
+  // Optional memo or note for the transaction
+  string memo = 4;
+}
+
+// FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
+message FundTransferWithSettlement {
+  string                         ledger_entry_uuid      = 1;
+  repeated SettlementInstruction settlementInstructions = 4;
 }

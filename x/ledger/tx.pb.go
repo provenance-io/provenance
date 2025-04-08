@@ -224,25 +224,24 @@ func (m *MsgAppendResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAppendResponse proto.InternalMessageInfo
 
-// PaymentEntry represents a single payment to process
-type PaymentEntry struct {
-	LedgerEntryUuid string `protobuf:"bytes,1,opt,name=ledger_entry_uuid,json=ledgerEntryUuid,proto3" json:"ledger_entry_uuid,omitempty"`
-	Amount          string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	Memo            string `protobuf:"bytes,3,opt,name=memo,proto3" json:"memo,omitempty"`
+// MsgProcessFundTransfersRequest represents a request to process multiple fund transfers
+type MsgProcessFundTransfersRequest struct {
+	Owner     string          `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	Transfers []*FundTransfer `protobuf:"bytes,2,rep,name=transfers,proto3" json:"transfers,omitempty"`
 }
 
-func (m *PaymentEntry) Reset()         { *m = PaymentEntry{} }
-func (m *PaymentEntry) String() string { return proto.CompactTextString(m) }
-func (*PaymentEntry) ProtoMessage()    {}
-func (*PaymentEntry) Descriptor() ([]byte, []int) {
+func (m *MsgProcessFundTransfersRequest) Reset()         { *m = MsgProcessFundTransfersRequest{} }
+func (m *MsgProcessFundTransfersRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgProcessFundTransfersRequest) ProtoMessage()    {}
+func (*MsgProcessFundTransfersRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{4}
 }
-func (m *PaymentEntry) XXX_Unmarshal(b []byte) error {
+func (m *MsgProcessFundTransfersRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PaymentEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgProcessFundTransfersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PaymentEntry.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgProcessFundTransfersRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -252,57 +251,48 @@ func (m *PaymentEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *PaymentEntry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PaymentEntry.Merge(m, src)
+func (m *MsgProcessFundTransfersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgProcessFundTransfersRequest.Merge(m, src)
 }
-func (m *PaymentEntry) XXX_Size() int {
+func (m *MsgProcessFundTransfersRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *PaymentEntry) XXX_DiscardUnknown() {
-	xxx_messageInfo_PaymentEntry.DiscardUnknown(m)
+func (m *MsgProcessFundTransfersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgProcessFundTransfersRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PaymentEntry proto.InternalMessageInfo
+var xxx_messageInfo_MsgProcessFundTransfersRequest proto.InternalMessageInfo
 
-func (m *PaymentEntry) GetLedgerEntryUuid() string {
+func (m *MsgProcessFundTransfersRequest) GetOwner() string {
 	if m != nil {
-		return m.LedgerEntryUuid
+		return m.Owner
 	}
 	return ""
 }
 
-func (m *PaymentEntry) GetAmount() string {
+func (m *MsgProcessFundTransfersRequest) GetTransfers() []*FundTransfer {
 	if m != nil {
-		return m.Amount
+		return m.Transfers
 	}
-	return ""
+	return nil
 }
 
-func (m *PaymentEntry) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
+// MsgProcessFundTransfersResponse represents the response from processing fund transfers
+type MsgProcessFundTransfersResponse struct {
 }
 
-// MsgProcessPaymentsRequest represents a request to process multiple payments
-type MsgProcessPaymentsRequest struct {
-	Owner    string          `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	Payments []*PaymentEntry `protobuf:"bytes,2,rep,name=payments,proto3" json:"payments,omitempty"`
-}
-
-func (m *MsgProcessPaymentsRequest) Reset()         { *m = MsgProcessPaymentsRequest{} }
-func (m *MsgProcessPaymentsRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgProcessPaymentsRequest) ProtoMessage()    {}
-func (*MsgProcessPaymentsRequest) Descriptor() ([]byte, []int) {
+func (m *MsgProcessFundTransfersResponse) Reset()         { *m = MsgProcessFundTransfersResponse{} }
+func (m *MsgProcessFundTransfersResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgProcessFundTransfersResponse) ProtoMessage()    {}
+func (*MsgProcessFundTransfersResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{5}
 }
-func (m *MsgProcessPaymentsRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgProcessFundTransfersResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgProcessPaymentsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgProcessFundTransfersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgProcessPaymentsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgProcessFundTransfersResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -312,50 +302,41 @@ func (m *MsgProcessPaymentsRequest) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgProcessPaymentsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgProcessPaymentsRequest.Merge(m, src)
+func (m *MsgProcessFundTransfersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgProcessFundTransfersResponse.Merge(m, src)
 }
-func (m *MsgProcessPaymentsRequest) XXX_Size() int {
+func (m *MsgProcessFundTransfersResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgProcessPaymentsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgProcessPaymentsRequest.DiscardUnknown(m)
+func (m *MsgProcessFundTransfersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgProcessFundTransfersResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgProcessPaymentsRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgProcessFundTransfersResponse proto.InternalMessageInfo
 
-func (m *MsgProcessPaymentsRequest) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
+// MsgProcessFundTransfersWithSettlementRequest represents a request to process fund transfers with settlement
+// instructions
+type MsgProcessFundTransfersWithSettlementRequest struct {
+	Owner     string                        `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	Transfers []*FundTransferWithSettlement `protobuf:"bytes,2,rep,name=transfers,proto3" json:"transfers,omitempty"`
 }
 
-func (m *MsgProcessPaymentsRequest) GetPayments() []*PaymentEntry {
-	if m != nil {
-		return m.Payments
-	}
-	return nil
+func (m *MsgProcessFundTransfersWithSettlementRequest) Reset() {
+	*m = MsgProcessFundTransfersWithSettlementRequest{}
 }
-
-// MsgProcessPaymentsResponse represents the response from processing payments
-type MsgProcessPaymentsResponse struct {
-	ProcessedEntryUuids []string `protobuf:"bytes,1,rep,name=processed_entry_uuids,json=processedEntryUuids,proto3" json:"processed_entry_uuids,omitempty"`
-	FlowIds             []string `protobuf:"bytes,2,rep,name=flow_ids,json=flowIds,proto3" json:"flow_ids,omitempty"`
+func (m *MsgProcessFundTransfersWithSettlementRequest) String() string {
+	return proto.CompactTextString(m)
 }
-
-func (m *MsgProcessPaymentsResponse) Reset()         { *m = MsgProcessPaymentsResponse{} }
-func (m *MsgProcessPaymentsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgProcessPaymentsResponse) ProtoMessage()    {}
-func (*MsgProcessPaymentsResponse) Descriptor() ([]byte, []int) {
+func (*MsgProcessFundTransfersWithSettlementRequest) ProtoMessage() {}
+func (*MsgProcessFundTransfersWithSettlementRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{6}
 }
-func (m *MsgProcessPaymentsResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgProcessFundTransfersWithSettlementRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgProcessPaymentsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgProcessFundTransfersWithSettlementRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgProcessPaymentsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgProcessFundTransfersWithSettlementRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -365,195 +346,28 @@ func (m *MsgProcessPaymentsResponse) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *MsgProcessPaymentsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgProcessPaymentsResponse.Merge(m, src)
+func (m *MsgProcessFundTransfersWithSettlementRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgProcessFundTransfersWithSettlementRequest.Merge(m, src)
 }
-func (m *MsgProcessPaymentsResponse) XXX_Size() int {
+func (m *MsgProcessFundTransfersWithSettlementRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgProcessPaymentsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgProcessPaymentsResponse.DiscardUnknown(m)
+func (m *MsgProcessFundTransfersWithSettlementRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgProcessFundTransfersWithSettlementRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgProcessPaymentsResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgProcessFundTransfersWithSettlementRequest proto.InternalMessageInfo
 
-func (m *MsgProcessPaymentsResponse) GetProcessedEntryUuids() []string {
-	if m != nil {
-		return m.ProcessedEntryUuids
-	}
-	return nil
-}
-
-func (m *MsgProcessPaymentsResponse) GetFlowIds() []string {
-	if m != nil {
-		return m.FlowIds
-	}
-	return nil
-}
-
-// DisbursementEntry represents a single disbursement to process
-type DisbursementEntry struct {
-	LedgerEntryUuid string `protobuf:"bytes,1,opt,name=ledger_entry_uuid,json=ledgerEntryUuid,proto3" json:"ledger_entry_uuid,omitempty"`
-	Amount          string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	Memo            string `protobuf:"bytes,3,opt,name=memo,proto3" json:"memo,omitempty"`
-}
-
-func (m *DisbursementEntry) Reset()         { *m = DisbursementEntry{} }
-func (m *DisbursementEntry) String() string { return proto.CompactTextString(m) }
-func (*DisbursementEntry) ProtoMessage()    {}
-func (*DisbursementEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{7}
-}
-func (m *DisbursementEntry) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *DisbursementEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_DisbursementEntry.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *DisbursementEntry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DisbursementEntry.Merge(m, src)
-}
-func (m *DisbursementEntry) XXX_Size() int {
-	return m.Size()
-}
-func (m *DisbursementEntry) XXX_DiscardUnknown() {
-	xxx_messageInfo_DisbursementEntry.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DisbursementEntry proto.InternalMessageInfo
-
-func (m *DisbursementEntry) GetLedgerEntryUuid() string {
-	if m != nil {
-		return m.LedgerEntryUuid
-	}
-	return ""
-}
-
-func (m *DisbursementEntry) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
-func (m *DisbursementEntry) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-// MsgProcessDisbursementsRequest represents a request to process multiple disbursements
-type MsgProcessDisbursementsRequest struct {
-	Owner         string               `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	Disbursements []*DisbursementEntry `protobuf:"bytes,2,rep,name=disbursements,proto3" json:"disbursements,omitempty"`
-}
-
-func (m *MsgProcessDisbursementsRequest) Reset()         { *m = MsgProcessDisbursementsRequest{} }
-func (m *MsgProcessDisbursementsRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgProcessDisbursementsRequest) ProtoMessage()    {}
-func (*MsgProcessDisbursementsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{8}
-}
-func (m *MsgProcessDisbursementsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgProcessDisbursementsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgProcessDisbursementsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgProcessDisbursementsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgProcessDisbursementsRequest.Merge(m, src)
-}
-func (m *MsgProcessDisbursementsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgProcessDisbursementsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgProcessDisbursementsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgProcessDisbursementsRequest proto.InternalMessageInfo
-
-func (m *MsgProcessDisbursementsRequest) GetOwner() string {
+func (m *MsgProcessFundTransfersWithSettlementRequest) GetOwner() string {
 	if m != nil {
 		return m.Owner
 	}
 	return ""
 }
 
-func (m *MsgProcessDisbursementsRequest) GetDisbursements() []*DisbursementEntry {
+func (m *MsgProcessFundTransfersWithSettlementRequest) GetTransfers() []*FundTransferWithSettlement {
 	if m != nil {
-		return m.Disbursements
-	}
-	return nil
-}
-
-// MsgProcessDisbursementsResponse represents the response from processing disbursements
-type MsgProcessDisbursementsResponse struct {
-	ProcessedEntryUuids []string `protobuf:"bytes,1,rep,name=processed_entry_uuids,json=processedEntryUuids,proto3" json:"processed_entry_uuids,omitempty"`
-	FlowIds             []string `protobuf:"bytes,2,rep,name=flow_ids,json=flowIds,proto3" json:"flow_ids,omitempty"`
-}
-
-func (m *MsgProcessDisbursementsResponse) Reset()         { *m = MsgProcessDisbursementsResponse{} }
-func (m *MsgProcessDisbursementsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgProcessDisbursementsResponse) ProtoMessage()    {}
-func (*MsgProcessDisbursementsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{9}
-}
-func (m *MsgProcessDisbursementsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgProcessDisbursementsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgProcessDisbursementsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgProcessDisbursementsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgProcessDisbursementsResponse.Merge(m, src)
-}
-func (m *MsgProcessDisbursementsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgProcessDisbursementsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgProcessDisbursementsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgProcessDisbursementsResponse proto.InternalMessageInfo
-
-func (m *MsgProcessDisbursementsResponse) GetProcessedEntryUuids() []string {
-	if m != nil {
-		return m.ProcessedEntryUuids
-	}
-	return nil
-}
-
-func (m *MsgProcessDisbursementsResponse) GetFlowIds() []string {
-	if m != nil {
-		return m.FlowIds
+		return m.Transfers
 	}
 	return nil
 }
@@ -563,55 +377,46 @@ func init() {
 	proto.RegisterType((*MsgCreateResponse)(nil), "provenance.ledger.v1.MsgCreateResponse")
 	proto.RegisterType((*MsgAppendRequest)(nil), "provenance.ledger.v1.MsgAppendRequest")
 	proto.RegisterType((*MsgAppendResponse)(nil), "provenance.ledger.v1.MsgAppendResponse")
-	proto.RegisterType((*PaymentEntry)(nil), "provenance.ledger.v1.PaymentEntry")
-	proto.RegisterType((*MsgProcessPaymentsRequest)(nil), "provenance.ledger.v1.MsgProcessPaymentsRequest")
-	proto.RegisterType((*MsgProcessPaymentsResponse)(nil), "provenance.ledger.v1.MsgProcessPaymentsResponse")
-	proto.RegisterType((*DisbursementEntry)(nil), "provenance.ledger.v1.DisbursementEntry")
-	proto.RegisterType((*MsgProcessDisbursementsRequest)(nil), "provenance.ledger.v1.MsgProcessDisbursementsRequest")
-	proto.RegisterType((*MsgProcessDisbursementsResponse)(nil), "provenance.ledger.v1.MsgProcessDisbursementsResponse")
+	proto.RegisterType((*MsgProcessFundTransfersRequest)(nil), "provenance.ledger.v1.MsgProcessFundTransfersRequest")
+	proto.RegisterType((*MsgProcessFundTransfersResponse)(nil), "provenance.ledger.v1.MsgProcessFundTransfersResponse")
+	proto.RegisterType((*MsgProcessFundTransfersWithSettlementRequest)(nil), "provenance.ledger.v1.MsgProcessFundTransfersWithSettlementRequest")
 }
 
 func init() { proto.RegisterFile("provenance/ledger/v1/tx.proto", fileDescriptor_3c124d2e9569f84d) }
 
 var fileDescriptor_3c124d2e9569f84d = []byte{
-	// 592 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0xad, 0x13, 0x12, 0xda, 0x09, 0xa8, 0x64, 0x1b, 0x68, 0x6a, 0x09, 0xb7, 0xf5, 0x81, 0x46,
-	0x11, 0xd8, 0x34, 0x80, 0x90, 0x38, 0x20, 0x95, 0x8f, 0x03, 0x12, 0x91, 0x22, 0x4b, 0x1c, 0xca,
-	0x25, 0x72, 0xe2, 0x8d, 0xb1, 0x12, 0x7b, 0x8d, 0x77, 0x9d, 0xb6, 0x07, 0x24, 0x04, 0x77, 0x04,
-	0xff, 0xa4, 0xbf, 0x80, 0x33, 0xc7, 0x1e, 0x39, 0xa2, 0xe4, 0xd0, 0xbf, 0x81, 0xbc, 0xbb, 0x4d,
-	0x9c, 0xe2, 0x36, 0xe1, 0xd0, 0xdb, 0xce, 0xce, 0x9b, 0x99, 0xf7, 0x9e, 0x3d, 0x36, 0xdc, 0x0d,
-	0x23, 0x32, 0xc4, 0x81, 0x1d, 0x74, 0xb1, 0x39, 0xc0, 0x8e, 0x8b, 0x23, 0x73, 0xb8, 0x6b, 0xb2,
-	0x43, 0x23, 0x8c, 0x08, 0x23, 0xa8, 0x32, 0x4d, 0x1b, 0x22, 0x6d, 0x0c, 0x77, 0xd5, 0xf5, 0x2e,
-	0xa1, 0x3e, 0xa1, 0xa6, 0x4f, 0xdd, 0x04, 0xed, 0x53, 0x57, 0xc0, 0xd5, 0xed, 0xcc, 0x6e, 0xb2,
-	0x90, 0x43, 0xf4, 0x3e, 0xdc, 0x6a, 0x52, 0xf7, 0x65, 0x84, 0x6d, 0x86, 0x2d, 0xfc, 0x31, 0xc6,
-	0x94, 0xa1, 0x4d, 0x28, 0x05, 0x3d, 0xd6, 0xb6, 0x1d, 0x27, 0xc2, 0x94, 0x56, 0x95, 0x2d, 0xa5,
-	0xb6, 0x62, 0x41, 0xd0, 0x63, 0x7b, 0xe2, 0x06, 0x55, 0xa0, 0xe0, 0xe0, 0x80, 0xf8, 0xd5, 0x1c,
-	0x4f, 0x89, 0x20, 0xb9, 0x25, 0x07, 0x01, 0x8e, 0xaa, 0x79, 0x71, 0xcb, 0x83, 0x67, 0xf0, 0xe5,
-	0xf4, 0xb8, 0x2e, 0xce, 0xfa, 0x1a, 0x94, 0x53, 0xc3, 0x68, 0x48, 0x02, 0x8a, 0xf5, 0x6f, 0x0a,
-	0xa7, 0xb0, 0x17, 0x86, 0x38, 0x70, 0x16, 0xa6, 0xf0, 0x14, 0x0a, 0x38, 0x60, 0xd1, 0x11, 0xa7,
-	0x50, 0x6a, 0x6c, 0x1b, 0x59, 0xce, 0x18, 0x6f, 0xf9, 0xe9, 0x75, 0x02, 0xb4, 0x04, 0x7e, 0x61,
-	0x96, 0x67, 0x7c, 0x24, 0xcb, 0x1e, 0xdc, 0x68, 0xd9, 0x47, 0x3e, 0x0e, 0x18, 0xef, 0x86, 0xea,
-	0x50, 0x16, 0x63, 0xda, 0xbc, 0x6d, 0x3b, 0x8e, 0x3d, 0x47, 0xd2, 0x5c, 0x1d, 0x4c, 0xa7, 0xbe,
-	0x8b, 0x3d, 0x07, 0xdd, 0x81, 0xa2, 0xed, 0x93, 0x38, 0x60, 0xd2, 0x2f, 0x19, 0x21, 0x04, 0xd7,
-	0x7c, 0xec, 0x13, 0xc9, 0x84, 0x9f, 0xf5, 0x4f, 0xb0, 0xd1, 0xa4, 0x6e, 0x2b, 0x22, 0x5d, 0x4c,
-	0xa9, 0x9c, 0x48, 0xcf, 0x5c, 0x99, 0x70, 0x57, 0x52, 0xdc, 0xd1, 0x73, 0x58, 0x0e, 0x25, 0xb0,
-	0x9a, 0xdb, 0xca, 0xd7, 0x4a, 0x0d, 0x3d, 0xdb, 0x8d, 0xb4, 0x00, 0x6b, 0x52, 0x33, 0xa3, 0xbd,
-	0x0f, 0x6a, 0xd6, 0x78, 0x61, 0x02, 0x6a, 0xc0, 0xed, 0x50, 0xa4, 0xb0, 0x93, 0xd2, 0x9d, 0x3c,
-	0x9f, 0x7c, 0x6d, 0xc5, 0x5a, 0x9b, 0x24, 0x27, 0xda, 0x29, 0xda, 0x80, 0xe5, 0xde, 0x80, 0x1c,
-	0xb4, 0x13, 0x58, 0x8e, 0xc3, 0xae, 0x27, 0xf1, 0x1b, 0x87, 0xea, 0x7d, 0x28, 0xbf, 0xf2, 0x68,
-	0x27, 0x8e, 0x28, 0xbe, 0x7a, 0x63, 0x7f, 0x28, 0xa0, 0x4d, 0xa5, 0xa5, 0xe7, 0xce, 0xb1, 0xb7,
-	0x09, 0x37, 0x9d, 0x34, 0x5a, 0x7a, 0xbc, 0x93, 0xed, 0xf1, 0x3f, 0x82, 0xac, 0xd9, 0xea, 0x19,
-	0xb7, 0x43, 0xd8, 0xbc, 0x90, 0xd2, 0x95, 0x58, 0xde, 0xf8, 0x99, 0x87, 0x7c, 0x93, 0xba, 0x68,
-	0x1f, 0x8a, 0x62, 0x0d, 0xd1, 0xbd, 0x6c, 0x1d, 0xe7, 0x3f, 0x0a, 0xea, 0xce, 0x5c, 0x9c, 0x64,
-	0xbc, 0x0f, 0x45, 0xb1, 0x3b, 0x97, 0xb4, 0x9e, 0x59, 0xf6, 0x4b, 0x5a, 0xcf, 0x2e, 0x21, 0x62,
-	0xb0, 0x7a, 0xee, 0xd5, 0x44, 0xe6, 0x85, 0xb5, 0xd9, 0x3b, 0xa4, 0x3e, 0x5c, 0xbc, 0x40, 0x4e,
-	0xfd, 0xaa, 0x40, 0x25, 0xeb, 0x19, 0xa1, 0xc7, 0xf3, 0x5a, 0x65, 0xbd, 0x65, 0xea, 0x93, 0xff,
-	0xac, 0x12, 0x2c, 0xd4, 0xc2, 0xe7, 0xd3, 0xe3, 0xba, 0xf2, 0xc2, 0xfe, 0x35, 0xd2, 0x94, 0x93,
-	0x91, 0xa6, 0xfc, 0x19, 0x69, 0xca, 0xf7, 0xb1, 0xb6, 0x74, 0x32, 0xd6, 0x96, 0x7e, 0x8f, 0xb5,
-	0x25, 0x58, 0xf7, 0x48, 0x66, 0xe7, 0x96, 0xf2, 0xfe, 0xbe, 0xeb, 0xb1, 0x0f, 0x71, 0xc7, 0xe8,
-	0x12, 0xdf, 0x9c, 0x42, 0x1e, 0x78, 0x24, 0x15, 0x99, 0x87, 0xf2, 0xc7, 0xd0, 0x29, 0xf2, 0x3f,
-	0xc3, 0xa3, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x7c, 0x7e, 0xc7, 0x91, 0x8c, 0x06, 0x00, 0x00,
+	// 486 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x41, 0x6b, 0x13, 0x41,
+	0x14, 0xc7, 0x33, 0x0d, 0x29, 0xf4, 0xe5, 0xa2, 0x63, 0xa0, 0x61, 0xc1, 0x6d, 0xb3, 0x07, 0x2d,
+	0xa5, 0xee, 0xda, 0xa8, 0x08, 0x9e, 0x6c, 0x45, 0x4f, 0x46, 0x4a, 0x14, 0x44, 0x2f, 0xb2, 0xcd,
+	0xbe, 0x6c, 0x83, 0xdd, 0x99, 0x75, 0xde, 0x24, 0xd6, 0x9b, 0xa8, 0x67, 0xf1, 0x1b, 0xe8, 0x47,
+	0xe8, 0xc7, 0xf0, 0xd8, 0xa3, 0x47, 0x49, 0x0e, 0x05, 0x3f, 0x85, 0x64, 0x67, 0x63, 0x92, 0x3a,
+	0x49, 0xda, 0xde, 0x76, 0xe6, 0xfd, 0xdf, 0x7f, 0x7e, 0xfb, 0xe6, 0xcf, 0xc0, 0xf5, 0x54, 0xc9,
+	0x1e, 0x8a, 0x50, 0xb4, 0x30, 0x38, 0xc4, 0x28, 0x46, 0x15, 0xf4, 0xb6, 0x03, 0x7d, 0xe4, 0xa7,
+	0x4a, 0x6a, 0xc9, 0x2b, 0xe3, 0xb2, 0x6f, 0xca, 0x7e, 0x6f, 0xdb, 0x59, 0x6d, 0x49, 0x4a, 0x24,
+	0x05, 0x09, 0xc5, 0x43, 0x75, 0x42, 0xb1, 0x91, 0x3b, 0x35, 0xab, 0x5b, 0xde, 0x98, 0x49, 0xbc,
+	0xb7, 0x70, 0xa5, 0x41, 0xf1, 0x23, 0x85, 0xa1, 0xc6, 0x26, 0xbe, 0xeb, 0x22, 0x69, 0xbe, 0x06,
+	0x65, 0xd1, 0xd6, 0x6f, 0xc2, 0x28, 0x52, 0x48, 0x54, 0x65, 0xeb, 0x6c, 0x63, 0xa5, 0x09, 0xa2,
+	0xad, 0x77, 0xcc, 0x0e, 0xaf, 0x40, 0x29, 0x42, 0x21, 0x93, 0xea, 0x52, 0x56, 0x32, 0x8b, 0xe1,
+	0xae, 0x7c, 0x2f, 0x50, 0x55, 0x8b, 0x66, 0x37, 0x5b, 0x3c, 0x80, 0x4f, 0xa7, 0xc7, 0x9b, 0xe6,
+	0xdb, 0xbb, 0x06, 0x57, 0x27, 0x0e, 0xa3, 0x54, 0x0a, 0x42, 0xef, 0x2b, 0xcb, 0x10, 0x76, 0xd2,
+	0x14, 0x45, 0x74, 0x6e, 0x84, 0xfb, 0x50, 0x42, 0xa1, 0xd5, 0x87, 0x0c, 0xa1, 0x5c, 0xaf, 0xf9,
+	0xb6, 0xc9, 0xf8, 0x4f, 0xb3, 0xaf, 0xc7, 0x43, 0x61, 0xd3, 0xe8, 0xcf, 0x4d, 0x39, 0xe2, 0xc9,
+	0x29, 0xbf, 0x30, 0x70, 0x1b, 0x14, 0xef, 0x29, 0xd9, 0x42, 0xa2, 0x27, 0x5d, 0x11, 0xbd, 0x50,
+	0xa1, 0xa0, 0x36, 0x2a, 0x1a, 0x31, 0xff, 0x73, 0x66, 0x13, 0xce, 0xfc, 0x21, 0xac, 0xe8, 0x91,
+	0xb2, 0xba, 0xb4, 0x5e, 0xdc, 0x28, 0xd7, 0x3d, 0x3b, 0xec, 0xa4, 0x69, 0x73, 0xdc, 0x34, 0xc5,
+	0x56, 0x83, 0xb5, 0x99, 0x14, 0x39, 0xe9, 0x0f, 0x06, 0x5b, 0x33, 0x34, 0x2f, 0x3b, 0xfa, 0xe0,
+	0x39, 0x6a, 0x7d, 0x88, 0x09, 0x0a, 0x3d, 0x9f, 0xfb, 0xd9, 0xff, 0xdc, 0xb7, 0x17, 0x73, 0x9f,
+	0x39, 0xc1, 0xfe, 0x17, 0xf5, 0x3f, 0x45, 0x28, 0x36, 0x28, 0xe6, 0xaf, 0x60, 0xd9, 0x84, 0x81,
+	0xdf, 0xb0, 0x5b, 0x9f, 0x8d, 0xa6, 0x73, 0x73, 0xa1, 0xce, 0x4c, 0x61, 0x68, 0x6d, 0x6e, 0x70,
+	0x8e, 0xf5, 0x54, 0xe4, 0xe6, 0x58, 0x4f, 0x47, 0x81, 0x7f, 0x66, 0x50, 0xb1, 0x4d, 0x97, 0xdf,
+	0x9d, 0xe9, 0x30, 0x27, 0x36, 0xce, 0xbd, 0x0b, 0x76, 0xe5, 0x14, 0xdf, 0x19, 0x78, 0x8b, 0xef,
+	0x98, 0xef, 0x5e, 0xc8, 0xdd, 0x1a, 0x90, 0x4b, 0x12, 0x3a, 0xa5, 0x8f, 0xa7, 0xc7, 0x9b, 0x6c,
+	0x37, 0xfc, 0xd9, 0x77, 0xd9, 0x49, 0xdf, 0x65, 0xbf, 0xfb, 0x2e, 0xfb, 0x36, 0x70, 0x0b, 0x27,
+	0x03, 0xb7, 0xf0, 0x6b, 0xe0, 0x16, 0x60, 0xb5, 0x23, 0xad, 0xce, 0x7b, 0xec, 0xf5, 0x56, 0xdc,
+	0xd1, 0x07, 0xdd, 0x7d, 0xbf, 0x25, 0x93, 0x60, 0x2c, 0xb9, 0xd5, 0x91, 0x13, 0xab, 0xe0, 0x28,
+	0x7f, 0xca, 0xf6, 0x97, 0xb3, 0xb7, 0xec, 0xce, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf5, 0xba,
+	0xd9, 0x11, 0x3e, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -630,10 +435,10 @@ type MsgClient interface {
 	Create(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error)
 	// Append a ledger entry
 	Append(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error)
-	// Process multiple payments
-	ProcessPayments(ctx context.Context, in *MsgProcessPaymentsRequest, opts ...grpc.CallOption) (*MsgProcessPaymentsResponse, error)
-	// Process multiple disbursements
-	ProcessDisbursements(ctx context.Context, in *MsgProcessDisbursementsRequest, opts ...grpc.CallOption) (*MsgProcessDisbursementsResponse, error)
+	// Process multiple fund transfers (payments and disbursements)
+	ProcessFundTransfers(ctx context.Context, in *MsgProcessFundTransfersRequest, opts ...grpc.CallOption) (*MsgProcessFundTransfersResponse, error)
+	// Process multiple fund transfers with manual settlement instructions
+	ProcessFundTransfersWithSettlement(ctx context.Context, in *MsgProcessFundTransfersWithSettlementRequest, opts ...grpc.CallOption) (*MsgProcessFundTransfersResponse, error)
 }
 
 type msgClient struct {
@@ -662,18 +467,18 @@ func (c *msgClient) Append(ctx context.Context, in *MsgAppendRequest, opts ...gr
 	return out, nil
 }
 
-func (c *msgClient) ProcessPayments(ctx context.Context, in *MsgProcessPaymentsRequest, opts ...grpc.CallOption) (*MsgProcessPaymentsResponse, error) {
-	out := new(MsgProcessPaymentsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/ProcessPayments", in, out, opts...)
+func (c *msgClient) ProcessFundTransfers(ctx context.Context, in *MsgProcessFundTransfersRequest, opts ...grpc.CallOption) (*MsgProcessFundTransfersResponse, error) {
+	out := new(MsgProcessFundTransfersResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/ProcessFundTransfers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) ProcessDisbursements(ctx context.Context, in *MsgProcessDisbursementsRequest, opts ...grpc.CallOption) (*MsgProcessDisbursementsResponse, error) {
-	out := new(MsgProcessDisbursementsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/ProcessDisbursements", in, out, opts...)
+func (c *msgClient) ProcessFundTransfersWithSettlement(ctx context.Context, in *MsgProcessFundTransfersWithSettlementRequest, opts ...grpc.CallOption) (*MsgProcessFundTransfersResponse, error) {
+	out := new(MsgProcessFundTransfersResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/ProcessFundTransfersWithSettlement", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -686,10 +491,10 @@ type MsgServer interface {
 	Create(context.Context, *MsgCreateRequest) (*MsgCreateResponse, error)
 	// Append a ledger entry
 	Append(context.Context, *MsgAppendRequest) (*MsgAppendResponse, error)
-	// Process multiple payments
-	ProcessPayments(context.Context, *MsgProcessPaymentsRequest) (*MsgProcessPaymentsResponse, error)
-	// Process multiple disbursements
-	ProcessDisbursements(context.Context, *MsgProcessDisbursementsRequest) (*MsgProcessDisbursementsResponse, error)
+	// Process multiple fund transfers (payments and disbursements)
+	ProcessFundTransfers(context.Context, *MsgProcessFundTransfersRequest) (*MsgProcessFundTransfersResponse, error)
+	// Process multiple fund transfers with manual settlement instructions
+	ProcessFundTransfersWithSettlement(context.Context, *MsgProcessFundTransfersWithSettlementRequest) (*MsgProcessFundTransfersResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -702,11 +507,11 @@ func (*UnimplementedMsgServer) Create(ctx context.Context, req *MsgCreateRequest
 func (*UnimplementedMsgServer) Append(ctx context.Context, req *MsgAppendRequest) (*MsgAppendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Append not implemented")
 }
-func (*UnimplementedMsgServer) ProcessPayments(ctx context.Context, req *MsgProcessPaymentsRequest) (*MsgProcessPaymentsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProcessPayments not implemented")
+func (*UnimplementedMsgServer) ProcessFundTransfers(ctx context.Context, req *MsgProcessFundTransfersRequest) (*MsgProcessFundTransfersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessFundTransfers not implemented")
 }
-func (*UnimplementedMsgServer) ProcessDisbursements(ctx context.Context, req *MsgProcessDisbursementsRequest) (*MsgProcessDisbursementsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProcessDisbursements not implemented")
+func (*UnimplementedMsgServer) ProcessFundTransfersWithSettlement(ctx context.Context, req *MsgProcessFundTransfersWithSettlementRequest) (*MsgProcessFundTransfersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessFundTransfersWithSettlement not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -749,38 +554,38 @@ func _Msg_Append_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ProcessPayments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgProcessPaymentsRequest)
+func _Msg_ProcessFundTransfers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgProcessFundTransfersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ProcessPayments(ctx, in)
+		return srv.(MsgServer).ProcessFundTransfers(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/ProcessPayments",
+		FullMethod: "/provenance.ledger.v1.Msg/ProcessFundTransfers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ProcessPayments(ctx, req.(*MsgProcessPaymentsRequest))
+		return srv.(MsgServer).ProcessFundTransfers(ctx, req.(*MsgProcessFundTransfersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ProcessDisbursements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgProcessDisbursementsRequest)
+func _Msg_ProcessFundTransfersWithSettlement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgProcessFundTransfersWithSettlementRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ProcessDisbursements(ctx, in)
+		return srv.(MsgServer).ProcessFundTransfersWithSettlement(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/ProcessDisbursements",
+		FullMethod: "/provenance.ledger.v1.Msg/ProcessFundTransfersWithSettlement",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ProcessDisbursements(ctx, req.(*MsgProcessDisbursementsRequest))
+		return srv.(MsgServer).ProcessFundTransfersWithSettlement(ctx, req.(*MsgProcessFundTransfersWithSettlementRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -799,12 +604,12 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_Append_Handler,
 		},
 		{
-			MethodName: "ProcessPayments",
-			Handler:    _Msg_ProcessPayments_Handler,
+			MethodName: "ProcessFundTransfers",
+			Handler:    _Msg_ProcessFundTransfers_Handler,
 		},
 		{
-			MethodName: "ProcessDisbursements",
-			Handler:    _Msg_ProcessDisbursements_Handler,
+			MethodName: "ProcessFundTransfersWithSettlement",
+			Handler:    _Msg_ProcessFundTransfersWithSettlement_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -950,7 +755,7 @@ func (m *MsgAppendResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PaymentEntry) Marshal() (dAtA []byte, err error) {
+func (m *MsgProcessFundTransfersRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -960,64 +765,20 @@ func (m *PaymentEntry) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PaymentEntry) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgProcessFundTransfersRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PaymentEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgProcessFundTransfersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Memo) > 0 {
-		i -= len(m.Memo)
-		copy(dAtA[i:], m.Memo)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Memo)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Amount) > 0 {
-		i -= len(m.Amount)
-		copy(dAtA[i:], m.Amount)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Amount)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.LedgerEntryUuid) > 0 {
-		i -= len(m.LedgerEntryUuid)
-		copy(dAtA[i:], m.LedgerEntryUuid)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.LedgerEntryUuid)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgProcessPaymentsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgProcessPaymentsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgProcessPaymentsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Payments) > 0 {
-		for iNdEx := len(m.Payments) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Transfers) > 0 {
+		for iNdEx := len(m.Transfers) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Payments[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Transfers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1038,7 +799,7 @@ func (m *MsgProcessPaymentsRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgProcessPaymentsResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgProcessFundTransfersResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1048,38 +809,20 @@ func (m *MsgProcessPaymentsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgProcessPaymentsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgProcessFundTransfersResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgProcessPaymentsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgProcessFundTransfersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.FlowIds) > 0 {
-		for iNdEx := len(m.FlowIds) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.FlowIds[iNdEx])
-			copy(dAtA[i:], m.FlowIds[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.FlowIds[iNdEx])))
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.ProcessedEntryUuids) > 0 {
-		for iNdEx := len(m.ProcessedEntryUuids) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ProcessedEntryUuids[iNdEx])
-			copy(dAtA[i:], m.ProcessedEntryUuids[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.ProcessedEntryUuids[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-		}
-	}
 	return len(dAtA) - i, nil
 }
 
-func (m *DisbursementEntry) Marshal() (dAtA []byte, err error) {
+func (m *MsgProcessFundTransfersWithSettlementRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1089,64 +832,20 @@ func (m *DisbursementEntry) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DisbursementEntry) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgProcessFundTransfersWithSettlementRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *DisbursementEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgProcessFundTransfersWithSettlementRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Memo) > 0 {
-		i -= len(m.Memo)
-		copy(dAtA[i:], m.Memo)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Memo)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Amount) > 0 {
-		i -= len(m.Amount)
-		copy(dAtA[i:], m.Amount)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Amount)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.LedgerEntryUuid) > 0 {
-		i -= len(m.LedgerEntryUuid)
-		copy(dAtA[i:], m.LedgerEntryUuid)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.LedgerEntryUuid)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgProcessDisbursementsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgProcessDisbursementsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgProcessDisbursementsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Disbursements) > 0 {
-		for iNdEx := len(m.Disbursements) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Transfers) > 0 {
+		for iNdEx := len(m.Transfers) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Disbursements[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Transfers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1163,47 +862,6 @@ func (m *MsgProcessDisbursementsRequest) MarshalToSizedBuffer(dAtA []byte) (int,
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
 		i--
 		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgProcessDisbursementsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgProcessDisbursementsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgProcessDisbursementsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.FlowIds) > 0 {
-		for iNdEx := len(m.FlowIds) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.FlowIds[iNdEx])
-			copy(dAtA[i:], m.FlowIds[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.FlowIds[iNdEx])))
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.ProcessedEntryUuids) > 0 {
-		for iNdEx := len(m.ProcessedEntryUuids) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ProcessedEntryUuids[iNdEx])
-			copy(dAtA[i:], m.ProcessedEntryUuids[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.ProcessedEntryUuids[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -1279,28 +937,7 @@ func (m *MsgAppendResponse) Size() (n int) {
 	return n
 }
 
-func (m *PaymentEntry) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.LedgerEntryUuid)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Amount)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Memo)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgProcessPaymentsRequest) Size() (n int) {
+func (m *MsgProcessFundTransfersRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1310,8 +947,8 @@ func (m *MsgProcessPaymentsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if len(m.Payments) > 0 {
-		for _, e := range m.Payments {
+	if len(m.Transfers) > 0 {
+		for _, e := range m.Transfers {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -1319,49 +956,16 @@ func (m *MsgProcessPaymentsRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgProcessPaymentsResponse) Size() (n int) {
+func (m *MsgProcessFundTransfersResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.ProcessedEntryUuids) > 0 {
-		for _, s := range m.ProcessedEntryUuids {
-			l = len(s)
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	if len(m.FlowIds) > 0 {
-		for _, s := range m.FlowIds {
-			l = len(s)
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
 	return n
 }
 
-func (m *DisbursementEntry) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.LedgerEntryUuid)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Amount)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Memo)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgProcessDisbursementsRequest) Size() (n int) {
+func (m *MsgProcessFundTransfersWithSettlementRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1371,30 +975,9 @@ func (m *MsgProcessDisbursementsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if len(m.Disbursements) > 0 {
-		for _, e := range m.Disbursements {
+	if len(m.Transfers) > 0 {
+		for _, e := range m.Transfers {
 			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgProcessDisbursementsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.ProcessedEntryUuids) > 0 {
-		for _, s := range m.ProcessedEntryUuids {
-			l = len(s)
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	if len(m.FlowIds) > 0 {
-		for _, s := range m.FlowIds {
-			l = len(s)
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
@@ -1803,7 +1386,7 @@ func (m *MsgAppendResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PaymentEntry) Unmarshal(dAtA []byte) error {
+func (m *MsgProcessFundTransfersRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1826,156 +1409,10 @@ func (m *PaymentEntry) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PaymentEntry: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgProcessFundTransfersRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PaymentEntry: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LedgerEntryUuid", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LedgerEntryUuid = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Memo", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Memo = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgProcessPaymentsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgProcessPaymentsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgProcessPaymentsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgProcessFundTransfersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2012,7 +1449,7 @@ func (m *MsgProcessPaymentsRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Payments", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Transfers", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2039,8 +1476,8 @@ func (m *MsgProcessPaymentsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Payments = append(m.Payments, &PaymentEntry{})
-			if err := m.Payments[len(m.Payments)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Transfers = append(m.Transfers, &FundTransfer{})
+			if err := m.Transfers[len(m.Transfers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2065,7 +1502,7 @@ func (m *MsgProcessPaymentsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgProcessPaymentsResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgProcessFundTransfersResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2088,76 +1525,12 @@ func (m *MsgProcessPaymentsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgProcessPaymentsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgProcessFundTransfersResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgProcessPaymentsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgProcessFundTransfersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProcessedEntryUuids", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ProcessedEntryUuids = append(m.ProcessedEntryUuids, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FlowIds", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.FlowIds = append(m.FlowIds, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -2179,7 +1552,7 @@ func (m *MsgProcessPaymentsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DisbursementEntry) Unmarshal(dAtA []byte) error {
+func (m *MsgProcessFundTransfersWithSettlementRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2202,156 +1575,10 @@ func (m *DisbursementEntry) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DisbursementEntry: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgProcessFundTransfersWithSettlementRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DisbursementEntry: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LedgerEntryUuid", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LedgerEntryUuid = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Memo", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Memo = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgProcessDisbursementsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgProcessDisbursementsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgProcessDisbursementsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgProcessFundTransfersWithSettlementRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2388,7 +1615,7 @@ func (m *MsgProcessDisbursementsRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Disbursements", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Transfers", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2415,124 +1642,10 @@ func (m *MsgProcessDisbursementsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Disbursements = append(m.Disbursements, &DisbursementEntry{})
-			if err := m.Disbursements[len(m.Disbursements)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Transfers = append(m.Transfers, &FundTransferWithSettlement{})
+			if err := m.Transfers[len(m.Transfers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgProcessDisbursementsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgProcessDisbursementsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgProcessDisbursementsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProcessedEntryUuids", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ProcessedEntryUuids = append(m.ProcessedEntryUuids, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FlowIds", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.FlowIds = append(m.FlowIds, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
