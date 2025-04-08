@@ -6,14 +6,16 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
 // Keeper defines the mymodule keeper.
 type LedgerKeeper struct {
-	cdc      codec.BinaryCodec
-	storeKey storetypes.StoreKey
-	schema   collections.Schema
+	cdc        codec.BinaryCodec
+	storeKey   storetypes.StoreKey
+	schema     collections.Schema
+	bankKeeper bankkeeper.BaseKeeper
 
 	Ledgers       collections.Map[string, ledger.Ledger]
 	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
@@ -27,12 +29,13 @@ const (
 )
 
 // NewKeeper returns a new mymodule Keeper.
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) LedgerKeeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper bankkeeper.BaseKeeper) LedgerKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
 	lk := LedgerKeeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+		cdc:        cdc,
+		storeKey:   storeKey,
+		bankKeeper: bankKeeper,
 
 		Ledgers: collections.NewMap(
 			sb,
