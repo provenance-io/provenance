@@ -74,7 +74,7 @@ func (k LedgerKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) 
 }
 
 // GetLedgerEntry retrieves a ledger entry by its UUID
-func (k LedgerKeeper) GetLedgerEntry(ctx context.Context, uuid string) (*ledger.LedgerEntry, error) {
+func (k LedgerKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, uuid string) (*ledger.LedgerEntry, error) {
 	// Find the ledger entry by walking through all entries
 	var foundEntry *ledger.LedgerEntry
 	err := k.LedgerEntries.Walk(ctx, nil, func(key collections.Pair[string, string], value ledger.LedgerEntry) (stop bool, err error) {
