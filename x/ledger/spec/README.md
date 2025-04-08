@@ -12,6 +12,7 @@ The Ledger module provides a comprehensive financial tracking system for NFTs, a
 - Historical transaction records
 - Real-time event emission
 - Comprehensive query system
+- Fund transfer processing with settlement instructions
 
 ## Contents
 
@@ -19,6 +20,7 @@ The Ledger module provides a comprehensive financial tracking system for NFTs, a
 2. **[State](02_state.md)** - State management and storage
 3. **[Events](03_events.md)** - Event types and usage
 4. **[Queries](04_queries.md)** - Query endpoints and usage
+5. **[Messages](05_messages.md)** - Transaction messages and CLI commands
 
 ## Integration
 
@@ -27,4 +29,5 @@ The Ledger module can be integrated with:
 - Financial tracking systems
 - Accounting software
 - Audit systems
-- External monitoring tools 
+- External monitoring tools
+- Payment processing systems 
