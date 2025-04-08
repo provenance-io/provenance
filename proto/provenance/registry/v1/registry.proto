@@ -1,0 +1,46 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/registry";
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+// Role defines the different types of roles that can be assigned to addresses
+enum RegistryRole {
+  // REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned
+  REGISTRY_ROLE_UNSPECIFIED = 0;
+  // REGISTRY_ROLE_SERVICER indicates the address has servicer privileges
+  REGISTRY_ROLE_SERVICER = 1;
+  // REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges
+  REGISTRY_ROLE_SUBSERVICER = 2;
+  // REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges
+  REGISTRY_ROLE_CONTROLLER = 3;
+  // REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges
+  REGISTRY_ROLE_CUSTODIAN = 4;
+  // REGISTRY_ROLE_SECURED_PARTY indicates the address has secured party privileges
+  REGISTRY_ROLE_SECURED_PARTY = 5;
+  // ROLE_BORROWER indicates the address has borrower privileges
+  REGISTRY_ROLE_BORROWER = 6;
+}
+
+// RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
+message RegistryEntry {
+  // address is the blockchain address that owns this registry entry
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // roles is a map of role names to lists of addresses that can perform that role
+  map<string, RoleAddresses> roles = 2 [(gogoproto.nullable) = false];
+}
+
+// RoleAddresses contains a list of addresses that can perform a specific role
+message RoleAddresses {
+  // addresses is the list of blockchain addresses that can perform this role
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// GenesisState defines the registry module's genesis state
+message GenesisState {
+  // entries is the list of registry entries
+  repeated RegistryEntry entries = 1 [(gogoproto.nullable) = false];
+}

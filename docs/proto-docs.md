@@ -448,6 +448,34 @@
 - [provenance/oracle/v1/genesis.proto](#provenance_oracle_v1_genesis-proto)
     - [GenesisState](#provenance-oracle-v1-GenesisState)
   
+- [provenance/registry/v1/tx.proto](#provenance_registry_v1_tx-proto)
+    - [MsgRegisterAddress](#provenance-registry-v1-MsgRegisterAddress)
+    - [MsgRegisterAddress.RolesEntry](#provenance-registry-v1-MsgRegisterAddress-RolesEntry)
+    - [MsgRegisterAddressResponse](#provenance-registry-v1-MsgRegisterAddressResponse)
+    - [MsgRemoveAddress](#provenance-registry-v1-MsgRemoveAddress)
+    - [MsgRemoveAddressResponse](#provenance-registry-v1-MsgRemoveAddressResponse)
+    - [MsgUpdateRoles](#provenance-registry-v1-MsgUpdateRoles)
+    - [MsgUpdateRoles.RolesEntry](#provenance-registry-v1-MsgUpdateRoles-RolesEntry)
+    - [MsgUpdateRolesResponse](#provenance-registry-v1-MsgUpdateRolesResponse)
+  
+    - [Msg](#provenance-registry-v1-Msg)
+  
+- [provenance/registry/v1/query.proto](#provenance_registry_v1_query-proto)
+    - [QueryGetRegistryEntryRequest](#provenance-registry-v1-QueryGetRegistryEntryRequest)
+    - [QueryGetRegistryEntryResponse](#provenance-registry-v1-QueryGetRegistryEntryResponse)
+    - [QueryListRegistryEntriesRequest](#provenance-registry-v1-QueryListRegistryEntriesRequest)
+    - [QueryListRegistryEntriesResponse](#provenance-registry-v1-QueryListRegistryEntriesResponse)
+  
+    - [Query](#provenance-registry-v1-Query)
+  
+- [provenance/registry/v1/registry.proto](#provenance_registry_v1_registry-proto)
+    - [GenesisState](#provenance-registry-v1-GenesisState)
+    - [RegistryEntry](#provenance-registry-v1-RegistryEntry)
+    - [RegistryEntry.RolesEntry](#provenance-registry-v1-RegistryEntry-RolesEntry)
+    - [RoleAddresses](#provenance-registry-v1-RoleAddresses)
+  
+    - [RegistryRole](#provenance-registry-v1-RegistryRole)
+  
 - [provenance/ibchooks/v1/tx.proto](#provenance_ibchooks_v1_tx-proto)
     - [MsgEmitIBCAck](#provenance-ibchooks-v1-MsgEmitIBCAck)
     - [MsgEmitIBCAckResponse](#provenance-ibchooks-v1-MsgEmitIBCAckResponse)
@@ -6845,6 +6873,329 @@ GenesisState defines the oracle module's genesis state.
 
 
  <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/tx.proto
+
+
+
+<a name="provenance-registry-v1-MsgRegisterAddress"></a>
+
+### MsgRegisterAddress
+MsgRegisterAddress represents a message to register a new address with roles
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that is authorized to register addresses |
+| `address` | [string](#string) |  | address is the blockchain address to register |
+| `roles` | [MsgRegisterAddress.RolesEntry](#provenance-registry-v1-MsgRegisterAddress-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRegisterAddress-RolesEntry"></a>
+
+### MsgRegisterAddress.RolesEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [RoleAddresses](#provenance-registry-v1-RoleAddresses) |  |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRegisterAddressResponse"></a>
+
+### MsgRegisterAddressResponse
+MsgRegisterAddressResponse defines the response for RegisterAddress
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRemoveAddress"></a>
+
+### MsgRemoveAddress
+MsgRemoveAddress represents a message to remove an address from the registry
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that is authorized to remove addresses |
+| `address` | [string](#string) |  | address is the blockchain address to remove |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRemoveAddressResponse"></a>
+
+### MsgRemoveAddressResponse
+MsgRemoveAddressResponse defines the response for RemoveAddress
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgUpdateRoles"></a>
+
+### MsgUpdateRoles
+MsgUpdateRoles represents a message to update roles for an existing address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that is authorized to update roles |
+| `address` | [string](#string) |  | address is the blockchain address to update |
+| `roles` | [MsgUpdateRoles.RolesEntry](#provenance-registry-v1-MsgUpdateRoles-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgUpdateRoles-RolesEntry"></a>
+
+### MsgUpdateRoles.RolesEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [RoleAddresses](#provenance-registry-v1-RoleAddresses) |  |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgUpdateRolesResponse"></a>
+
+### MsgUpdateRolesResponse
+MsgUpdateRolesResponse defines the response for UpdateRoles
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-registry-v1-Msg"></a>
+
+### Msg
+Msg defines the registry Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `RegisterAddress` | [MsgRegisterAddress](#provenance-registry-v1-MsgRegisterAddress) | [MsgRegisterAddressResponse](#provenance-registry-v1-MsgRegisterAddressResponse) | RegisterAddress registers a new address with roles |
+| `UpdateRoles` | [MsgUpdateRoles](#provenance-registry-v1-MsgUpdateRoles) | [MsgUpdateRolesResponse](#provenance-registry-v1-MsgUpdateRolesResponse) | UpdateRoles updates the roles for an existing address |
+| `RemoveAddress` | [MsgRemoveAddress](#provenance-registry-v1-MsgRemoveAddress) | [MsgRemoveAddressResponse](#provenance-registry-v1-MsgRemoveAddressResponse) | RemoveAddress removes an address from the registry |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/query.proto
+
+
+
+<a name="provenance-registry-v1-QueryGetRegistryEntryRequest"></a>
+
+### QueryGetRegistryEntryRequest
+QueryGetRegistryEntryRequest is the request type for the Query/GetRegistryEntry RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the blockchain address to query |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryGetRegistryEntryResponse"></a>
+
+### QueryGetRegistryEntryResponse
+QueryGetRegistryEntryResponse is the response type for the Query/GetRegistryEntry RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entry` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) |  | entry is the registry entry for the requested address |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryListRegistryEntriesRequest"></a>
+
+### QueryListRegistryEntriesRequest
+QueryListRegistryEntriesRequest is the request type for the Query/ListRegistryEntries RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryListRegistryEntriesResponse"></a>
+
+### QueryListRegistryEntriesResponse
+QueryListRegistryEntriesResponse is the response type for the Query/ListRegistryEntries RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-registry-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `GetRegistryEntry` | [QueryGetRegistryEntryRequest](#provenance-registry-v1-QueryGetRegistryEntryRequest) | [QueryGetRegistryEntryResponse](#provenance-registry-v1-QueryGetRegistryEntryResponse) | GetRegistryEntry returns the registry entry for a given address |
+| `ListRegistryEntries` | [QueryListRegistryEntriesRequest](#provenance-registry-v1-QueryListRegistryEntriesRequest) | [QueryListRegistryEntriesResponse](#provenance-registry-v1-QueryListRegistryEntriesResponse) | ListRegistryEntries returns all registry entries |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_registry-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/registry.proto
+
+
+
+<a name="provenance-registry-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState defines the registry module's genesis state
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RegistryEntry"></a>
+
+### RegistryEntry
+RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the blockchain address that owns this registry entry |
+| `roles` | [RegistryEntry.RolesEntry](#provenance-registry-v1-RegistryEntry-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RegistryEntry-RolesEntry"></a>
+
+### RegistryEntry.RolesEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [RoleAddresses](#provenance-registry-v1-RoleAddresses) |  |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RoleAddresses"></a>
+
+### RoleAddresses
+RoleAddresses contains a list of addresses that can perform a specific role
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addresses` | [string](#string) | repeated | addresses is the list of blockchain addresses that can perform this role |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance-registry-v1-RegistryRole"></a>
+
+### RegistryRole
+Role defines the different types of roles that can be assigned to addresses
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `REGISTRY_ROLE_UNSPECIFIED` | `0` | REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned |
+| `REGISTRY_ROLE_SERVICER` | `1` | REGISTRY_ROLE_SERVICER indicates the address has servicer privileges |
+| `REGISTRY_ROLE_SUBSERVICER` | `2` | REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges |
+| `REGISTRY_ROLE_CONTROLLER` | `3` | REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges |
+| `REGISTRY_ROLE_CUSTODIAN` | `4` | REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges |
+| `REGISTRY_ROLE_SECURED_PARTY` | `5` | REGISTRY_ROLE_SECURED_PARTY indicates the address has secured party privileges |
+| `REGISTRY_ROLE_BORROWER` | `6` | ROLE_BORROWER indicates the address has borrower privileges |
+
 
  <!-- end enums -->
 
