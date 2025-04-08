@@ -10,6 +10,8 @@ import "provenance/registry/v1/registry.proto";
 
 // Msg defines the registry Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // RegisterAddress registers a new address with roles
   rpc RegisterAddress(MsgRegisterAddress) returns (MsgRegisterAddressResponse);
 

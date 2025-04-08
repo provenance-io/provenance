@@ -1,80 +1,67 @@
 package keeper
 
 import (
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/registry"
 )
 
-const RegistryEntryPrefix = "registry_entry"
-
+// RegistryKeeper defines the registry keeper
 type RegistryKeeper struct {
-	cdc      codec.Codec
+	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
-	memKey   storetypes.StoreKey
+	schema   collections.Schema
+
+	RegistryEntries collections.Map[string, registry.RegistryEntry]
+	Roles           collections.Map[collections.Pair[string, string], registry.RoleAddresses]
 }
 
-func NewKeeper(
-	cdc codec.Codec,
-	storeKey,
-	memKey storetypes.StoreKey,
-) RegistryKeeper {
-	return RegistryKeeper{
+const (
+	registryPrefix = "registry_entries"
+	rolesPrefix    = "roles"
+)
+
+// NewKeeper returns a new registry Keeper
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) RegistryKeeper {
+	sb := collections.NewSchemaBuilder(storeService)
+
+	rk := RegistryKeeper{
 		cdc:      cdc,
 		storeKey: storeKey,
-		memKey:   memKey,
+
+		RegistryEntries: collections.NewMap(
+			sb,
+			collections.NewPrefix(registryPrefix),
+			registryPrefix,
+			collections.StringKey,
+			codec.CollValue[registry.RegistryEntry](cdc),
+		),
+		Roles: collections.NewMap(
+			sb,
+			collections.NewPrefix(rolesPrefix),
+			rolesPrefix,
+			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
+			codec.CollValue[registry.RoleAddresses](cdc),
+		),
 	}
-}
 
-func (k RegistryKeeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+registry.ModuleName)
-}
-
-// SetRegistryEntry sets a registry entry
-func (k RegistryKeeper) SetRegistryEntry(ctx sdk.Context, entry registry.RegistryEntry) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&entry)
-	store.Set(registry.GetRegistryEntryKey(entry.Address), bz)
-}
-
-// GetRegistryEntry returns a registry entry
-func (k RegistryKeeper) GetRegistryEntry(ctx sdk.Context, address string) (registry.RegistryEntry, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetRegistryEntryKey(address))
-	if bz == nil {
-		return registry.RegistryEntry{}, false
+	// Build and set the schema
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
 	}
-	var entry types.RegistryEntry
-	k.cdc.MustUnmarshal(bz, &entry)
-	return entry, true
+	rk.schema = schema
+
+	return rk
 }
 
-// GetAllRegistryEntries returns all registry entries
-func (k RegistryKeeper) GetAllRegistryEntries(ctx sdk.Context) []registry.RegistryEntry {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(RegistryEntryPrefix))
-	iterator := prefixStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	var entries []RegistryEntry
-	for ; iterator.Valid(); iterator.Next() {
-		var entry registry.RegistryEntry
-		k.cdc.MustUnmarshal(iterator.Value(), &entry)
-		entries = append(entries, entry)
-	}
-	return entries
-}
-
-// InitGenesis initializes the genesis state
-func (k RegistryKeeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
+func (k RegistryKeeper) InitGenesis(ctx sdk.Context, state *registry.GenesisState) {
 	// Initialize genesis state
 }
 
-// ExportGenesis exports the genesis state
-func (k RegistryKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	return &types.GenesisState{}
+func (k RegistryKeeper) ExportGenesis(ctx sdk.Context) *registry.GenesisState {
+	return &registry.GenesisState{}
 }

@@ -169,6 +169,9 @@ import (
 	"github.com/provenance-io/provenance/x/quarantine"
 	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
 	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
+	"github.com/provenance-io/provenance/x/registry"
+	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
+	registrymodule "github.com/provenance-io/provenance/x/registry/module"
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
@@ -274,6 +277,7 @@ type App struct {
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
 	LedgerKeeper    ledgerkeeper.LedgerKeeper
+	RegistryKeeper  registrykeeper.RegistryKeeper
 	ExchangeKeeper  exchangekeeper.Keeper
 	WasmKeeper      *wasmkeeper.Keeper
 	ContractKeeper  *wasmkeeper.PermissionedKeeper
@@ -382,6 +386,7 @@ func New(
 		hold.StoreKey,
 		ledger.StoreKey,
 		exchange.StoreKey,
+		registry.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys()
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -585,6 +590,8 @@ func New(
 
 	app.LedgerKeeper = ledgerkeeper.NewKeeper(appCodec, keys[ledger.StoreKey], runtime.NewKVStoreService(keys[ledger.StoreKey]), app.BankKeeper)
 
+	app.RegistryKeeper = registrykeeper.NewKeeper(appCodec, keys[registry.StoreKey], runtime.NewKVStoreService(keys[registry.StoreKey]))
+
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
 		app.AccountKeeper, app.AttributeKeeper, app.BankKeeper, app.HoldKeeper, app.MarkerKeeper,
@@ -758,6 +765,7 @@ func New(
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
+		registrymodule.NewAppModule(appCodec, app.RegistryKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
