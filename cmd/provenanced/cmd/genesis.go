@@ -503,7 +503,6 @@ The command will validate that the msg-url is a valid sdk.msg and that the fee i
 				return fmt.Errorf("invalid msg type %q: %w", msgType, err)
 			}
 
-			// TODO[fees]: Make sure ParseCoinsNormalized works with an empty string.
 			cost, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
 				return fmt.Errorf("invalid cost %q: %w", args[1], err)

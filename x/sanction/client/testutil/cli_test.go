@@ -24,6 +24,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/sanction"
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
+	"github.com/provenance-io/provenance/x/sanction/errors"
 )
 
 const blocksPerVotingPeriod = 8
@@ -33,7 +34,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
-	s.T().Skip("Skipping this one until it can be fixed.") // TODO[fees]: Fix TestSanctionValidatorImmediateUsingGovCmds.
 	// Wait 2 blocks to start this. That way, hopefully the query tests are done.
 	// In between the two, create all the stuff to send.
 	s.waitForNextBlock("wait for next block 1")
@@ -154,7 +154,6 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		s.Require().NoError(err, "[%d]: ExecTestCLICmd tx gov vote", i)
 		voteOutBzs[i] = voteOutBW.Bytes()
 		s.T().Logf("[%d]: tx gov vote output:\n%s", i, voteOutBzs[i])
-		// TODO[fees]: For the sanctioned validator, verify that the tx failed right here. Also, fix the codespace and code.
 	}
 	s.logHeight()
 	// And now, we check that the votes happened as expected.
@@ -163,9 +162,9 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		if i != sanctionValI {
 			s.Assert().Equal(0, int(txResp.Code), "vote[%d] response code", i)
 		} else {
-			s.Assert().Equal(5, int(txResp.Code), "vote[%d] response code", i)
+			s.Assert().Equal(int(errors.ErrSanctionedAccount.ABCICode()), int(txResp.Code), "vote[%d] response code", i)
 			s.Assert().Contains(txResp.RawLog, "cannot send from "+s.network.Validators[i].Address.String(), "vote[%d] Raw Log")
-			s.Assert().Contains(txResp.RawLog, "account is sanctioned", "vote[%d] Raw Log")
+			s.Assert().Contains(txResp.RawLog, errors.ErrSanctionedAccount.Error(), "vote[%d] Raw Log")
 			s.Assert().Contains(txResp.RawLog, "insufficient funds", "vote[%d] Raw Log")
 		}
 	}

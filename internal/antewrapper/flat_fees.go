@@ -612,7 +612,7 @@ func (d DeductFeeDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx sdk.Tx, s
 			ctx2 = internalsdk.WithFeeGrantInUse(ctx)
 		}
 		if err = PayFee(ctx2, d.bk, deductFeesFrom, upFrontCost); err != nil {
-			return fmt.Errorf("could not collect up-front fee %q: %w", upFrontCost.String(), err)
+			return cerrs.Wrapf(err, "could not collect up-front fee of %q", upFrontCost.String())
 		}
 	}
 
@@ -780,7 +780,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 			ctx2 = internalsdk.WithFeeGrantInUse(ctx)
 		}
 		if err = PayFee(ctx2, h.bk, deductFeesFrom, uncharged); err != nil {
-			return ctx, fmt.Errorf("could not collect fee remainder %q upon success: %w", uncharged.String(), err)
+			return ctx, cerrs.Wrapf(err, "could not collect fee remainder %q upon success", uncharged.String())
 		}
 	}
 
