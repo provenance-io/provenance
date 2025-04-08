@@ -31,9 +31,32 @@ The module supports several types of ledger entries:
 
 1. `LEDGER_ENTRY_TYPE_UNSPECIFIED`: Default type, not used in normal operations
 2. `LEDGER_ENTRY_TYPE_DISBURSEMENT`: Represents funds being disbursed
+   - Example: Initial loan amount disbursed to borrower
 3. `LEDGER_ENTRY_TYPE_PAYMENT`: Represents a payment made
+   - Example: Monthly payment from borrower
 4. `LEDGER_ENTRY_TYPE_FEE`: Represents a fee charged
+   - Example: Origination fee, late payment fee
 5. `LEDGER_ENTRY_TYPE_OTHER`: Represents other types of financial activities
+   - Example: Adjustments, corrections, or special transactions
+
+## Balance Tracking
+
+The module maintains several types of balances:
+
+1. **Principal Balance**
+   - Original amount disbursed
+   - Reduced by principal payments
+   - Increased by disbursements
+
+2. **Interest Balance**
+   - Accrued interest
+   - Reduced by interest payments
+   - Updated based on interest calculations
+
+3. **Other Balance**
+   - Fees and charges
+   - Special adjustments
+   - Miscellaneous amounts
 
 ## State Management
 
@@ -47,4 +70,6 @@ The module maintains the following state:
 The module provides query endpoints to:
 - Retrieve ledger configuration for a specific NFT
 - Access historical ledger entries for a specific NFT
-- View current balances and financial status 
+- View current balances and financial status
+- Filter and search ledger entries
+- Get aggregated financial information 
