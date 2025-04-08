@@ -19,11 +19,12 @@ service Msg {
   // Append a ledger entry
   rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
 
-  // Process multiple payments
-  rpc ProcessPayments(MsgProcessPaymentsRequest) returns (MsgProcessPaymentsResponse);
+  // Process multiple fund transfers (payments and disbursements)
+  rpc ProcessFundTransfers(MsgProcessFundTransfersRequest) returns (MsgProcessFundTransfersResponse);
 
-  // Process multiple disbursements
-  rpc ProcessDisbursements(MsgProcessDisbursementsRequest) returns (MsgProcessDisbursementsResponse);
+  // Process multiple fund transfers with manual settlement instructions
+  rpc ProcessFundTransfersWithSettlement(MsgProcessFundTransfersWithSettlementRequest)
+      returns (MsgProcessFundTransfersResponse);
 }
 
 // MsgCreateRequest
@@ -50,44 +51,22 @@ message MsgAppendRequest {
 // MsgAppendResponse
 message MsgAppendResponse {}
 
-// PaymentEntry represents a single payment to process
-message PaymentEntry {
-  string ledger_entry_uuid = 1;
-  string amount            = 2;
-  string memo              = 3;
-}
-
-// MsgProcessPaymentsRequest represents a request to process multiple payments
-message MsgProcessPaymentsRequest {
+// MsgProcessFundTransfersRequest represents a request to process multiple fund transfers
+message MsgProcessFundTransfersRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  string                owner    = 1;
-  repeated PaymentEntry payments = 2;
+  string                owner     = 1;
+  repeated FundTransfer transfers = 2;
 }
 
-// MsgProcessPaymentsResponse represents the response from processing payments
-message MsgProcessPaymentsResponse {
-  repeated string processed_entry_uuids = 1;
-  repeated string flow_ids              = 2;
-}
+// MsgProcessFundTransfersResponse represents the response from processing fund transfers
+message MsgProcessFundTransfersResponse {}
 
-// DisbursementEntry represents a single disbursement to process
-message DisbursementEntry {
-  string ledger_entry_uuid = 1;
-  string amount            = 2;
-  string memo              = 3;
-}
-
-// MsgProcessDisbursementsRequest represents a request to process multiple disbursements
-message MsgProcessDisbursementsRequest {
+// MsgProcessFundTransfersWithSettlementRequest represents a request to process fund transfers with settlement
+// instructions
+message MsgProcessFundTransfersWithSettlementRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  string                     owner         = 1;
-  repeated DisbursementEntry disbursements = 2;
-}
-
-// MsgProcessDisbursementsResponse represents the response from processing disbursements
-message MsgProcessDisbursementsResponse {
-  repeated string processed_entry_uuids = 1;
-  repeated string flow_ids              = 2;
+  string                              owner     = 1;
+  repeated FundTransferWithSettlement transfers = 2;
 }

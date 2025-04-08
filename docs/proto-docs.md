@@ -260,26 +260,24 @@
     - [Params](#provenance-exchange-v1-Params)
   
 - [provenance/ledger/v1/tx.proto](#provenance_ledger_v1_tx-proto)
-    - [DisbursementEntry](#provenance-ledger-v1-DisbursementEntry)
     - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
     - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
     - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
-    - [MsgProcessDisbursementsRequest](#provenance-ledger-v1-MsgProcessDisbursementsRequest)
-    - [MsgProcessDisbursementsResponse](#provenance-ledger-v1-MsgProcessDisbursementsResponse)
-    - [MsgProcessPaymentsRequest](#provenance-ledger-v1-MsgProcessPaymentsRequest)
-    - [MsgProcessPaymentsResponse](#provenance-ledger-v1-MsgProcessPaymentsResponse)
-    - [PaymentEntry](#provenance-ledger-v1-PaymentEntry)
+    - [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest)
+    - [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse)
+    - [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest)
   
     - [Msg](#provenance-ledger-v1-Msg)
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
-    - [Flow](#provenance-ledger-v1-Flow)
+    - [FundTransfer](#provenance-ledger-v1-FundTransfer)
+    - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
     - [Ledger](#provenance-ledger-v1-Ledger)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
+    - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
   
-    - [FlowStatus](#provenance-ledger-v1-FlowStatus)
-    - [FlowType](#provenance-ledger-v1-FlowType)
+    - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
     - [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
@@ -4458,23 +4456,6 @@ Params is a representation of the exchange module parameters.
 
 
 
-<a name="provenance-ledger-v1-DisbursementEntry"></a>
-
-### DisbursementEntry
-DisbursementEntry represents a single disbursement to process
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `ledger_entry_uuid` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-| `memo` | [string](#string) |  |  |
-
-
-
-
-
-
 <a name="provenance-ledger-v1-MsgAppendRequest"></a>
 
 ### MsgAppendRequest
@@ -4529,81 +4510,43 @@ MsgCreateResponse
 
 
 
-<a name="provenance-ledger-v1-MsgProcessDisbursementsRequest"></a>
+<a name="provenance-ledger-v1-MsgProcessFundTransfersRequest"></a>
 
-### MsgProcessDisbursementsRequest
-MsgProcessDisbursementsRequest represents a request to process multiple disbursements
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `owner` | [string](#string) |  |  |
-| `disbursements` | [DisbursementEntry](#provenance-ledger-v1-DisbursementEntry) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-MsgProcessDisbursementsResponse"></a>
-
-### MsgProcessDisbursementsResponse
-MsgProcessDisbursementsResponse represents the response from processing disbursements
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `processed_entry_uuids` | [string](#string) | repeated |  |
-| `flow_ids` | [string](#string) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-MsgProcessPaymentsRequest"></a>
-
-### MsgProcessPaymentsRequest
-MsgProcessPaymentsRequest represents a request to process multiple payments
+### MsgProcessFundTransfersRequest
+MsgProcessFundTransfersRequest represents a request to process multiple fund transfers
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
-| `payments` | [PaymentEntry](#provenance-ledger-v1-PaymentEntry) | repeated |  |
+| `transfers` | [FundTransfer](#provenance-ledger-v1-FundTransfer) | repeated |  |
 
 
 
 
 
 
-<a name="provenance-ledger-v1-MsgProcessPaymentsResponse"></a>
+<a name="provenance-ledger-v1-MsgProcessFundTransfersResponse"></a>
 
-### MsgProcessPaymentsResponse
-MsgProcessPaymentsResponse represents the response from processing payments
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `processed_entry_uuids` | [string](#string) | repeated |  |
-| `flow_ids` | [string](#string) | repeated |  |
+### MsgProcessFundTransfersResponse
+MsgProcessFundTransfersResponse represents the response from processing fund transfers
 
 
 
 
 
 
-<a name="provenance-ledger-v1-PaymentEntry"></a>
+<a name="provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest"></a>
 
-### PaymentEntry
-PaymentEntry represents a single payment to process
+### MsgProcessFundTransfersWithSettlementRequest
+MsgProcessFundTransfersWithSettlementRequest represents a request to process fund transfers with settlement
+instructions
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_entry_uuid` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-| `memo` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated |  |
 
 
 
@@ -4625,8 +4568,8 @@ Msg defines the attribute module Msg service.
 | ----------- | ------------ | ------------- | ------------|
 | `Create` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
 | `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
-| `ProcessPayments` | [MsgProcessPaymentsRequest](#provenance-ledger-v1-MsgProcessPaymentsRequest) | [MsgProcessPaymentsResponse](#provenance-ledger-v1-MsgProcessPaymentsResponse) | Process multiple payments |
-| `ProcessDisbursements` | [MsgProcessDisbursementsRequest](#provenance-ledger-v1-MsgProcessDisbursementsRequest) | [MsgProcessDisbursementsResponse](#provenance-ledger-v1-MsgProcessDisbursementsResponse) | Process multiple disbursements |
+| `ProcessFundTransfers` | [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers (payments and disbursements) |
+| `ProcessFundTransfersWithSettlement` | [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers with manual settlement instructions |
 
  <!-- end services -->
 
@@ -4639,22 +4582,35 @@ Msg defines the attribute module Msg service.
 
 
 
-<a name="provenance-ledger-v1-Flow"></a>
+<a name="provenance-ledger-v1-FundTransfer"></a>
 
-### Flow
-Flow represents a payment or disbursement flow associated with a ledger entry
+### FundTransfer
+FundTransferEntry represents a single fund transfer to process
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `flow_id` | [string](#string) |  |  |
 | `ledger_entry_uuid` | [string](#string) |  |  |
-| `flow_type` | [FlowType](#provenance-ledger-v1-FlowType) |  |  |
-| `status` | [FlowStatus](#provenance-ledger-v1-FlowStatus) |  |  |
 | `amount` | [string](#string) |  |  |
+| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
 | `memo` | [string](#string) |  |  |
-| `created_at` | [int64](#int64) |  |  |
-| `updated_at` | [int64](#int64) |  |  |
+| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
+
+### FundTransferWithSettlement
+FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_entry_uuid` | [string](#string) |  |  |
+| `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
 
 
@@ -4701,34 +4657,39 @@ LedgerEntry
 
 
 
+
+<a name="provenance-ledger-v1-SettlementInstruction"></a>
+
+### SettlementInstruction
+SettlementInstruction represents blockchain-specific settlement instructions
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [string](#string) |  |  |
+| `recipient_address` | [string](#string) |  | The recipient's blockchain address |
+| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
+| `memo` | [string](#string) |  | Optional memo or note for the transaction |
+
+
+
+
+
  <!-- end messages -->
 
 
-<a name="provenance-ledger-v1-FlowStatus"></a>
+<a name="provenance-ledger-v1-FundingTransferStatus"></a>
 
-### FlowStatus
+### FundingTransferStatus
 FlowStatus represents the current status of a flow
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `FLOW_STATUS_UNSPECIFIED` | `0` |  |
-| `FLOW_STATUS_PENDING` | `1` |  |
-| `FLOW_STATUS_PROCESSING` | `2` |  |
-| `FLOW_STATUS_COMPLETED` | `3` |  |
-| `FLOW_STATUS_FAILED` | `4` |  |
-
-
-
-<a name="provenance-ledger-v1-FlowType"></a>
-
-### FlowType
-FlowType represents the type of flow being tracked
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| `FLOW_TYPE_UNSPECIFIED` | `0` |  |
-| `FLOW_TYPE_PAYMENT` | `1` |  |
-| `FLOW_TYPE_DISBURSEMENT` | `2` |  |
+| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` |  |
+| `FUNDING_TRANSFER_STATUS_PENDING` | `1` |  |
+| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` |  |
+| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` |  |
+| `FUNDING_TRANSFER_STATUS_FAILED` | `4` |  |
 
 
 
