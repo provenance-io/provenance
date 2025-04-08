@@ -260,17 +260,26 @@
     - [Params](#provenance-exchange-v1-Params)
   
 - [provenance/ledger/v1/tx.proto](#provenance_ledger_v1_tx-proto)
+    - [DisbursementEntry](#provenance-ledger-v1-DisbursementEntry)
     - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
     - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
     - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
+    - [MsgProcessDisbursementsRequest](#provenance-ledger-v1-MsgProcessDisbursementsRequest)
+    - [MsgProcessDisbursementsResponse](#provenance-ledger-v1-MsgProcessDisbursementsResponse)
+    - [MsgProcessPaymentsRequest](#provenance-ledger-v1-MsgProcessPaymentsRequest)
+    - [MsgProcessPaymentsResponse](#provenance-ledger-v1-MsgProcessPaymentsResponse)
+    - [PaymentEntry](#provenance-ledger-v1-PaymentEntry)
   
     - [Msg](#provenance-ledger-v1-Msg)
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
+    - [Flow](#provenance-ledger-v1-Flow)
     - [Ledger](#provenance-ledger-v1-Ledger)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
   
+    - [FlowStatus](#provenance-ledger-v1-FlowStatus)
+    - [FlowType](#provenance-ledger-v1-FlowType)
     - [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
@@ -282,11 +291,10 @@
     - [Query](#provenance-ledger-v1-Query)
   
 - [provenance/ledger/v1/event.proto](#provenance_ledger_v1_event-proto)
-    - [LedgerCreatedEvent](#provenance-ledger-v1-LedgerCreatedEvent)
-    - [LedgerDisbursementEvent](#provenance-ledger-v1-LedgerDisbursementEvent)
-    - [LedgerEntryAddedEvent](#provenance-ledger-v1-LedgerEntryAddedEvent)
-    - [LedgerNavUpdatedEvent](#provenance-ledger-v1-LedgerNavUpdatedEvent)
-    - [LedgerPaymentEvent](#provenance-ledger-v1-LedgerPaymentEvent)
+    - [EventBalanceUpdated](#provenance-ledger-v1-EventBalanceUpdated)
+    - [EventLedgerConfigUpdated](#provenance-ledger-v1-EventLedgerConfigUpdated)
+    - [EventLedgerCreated](#provenance-ledger-v1-EventLedgerCreated)
+    - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
   
 - [provenance/ledger/v1/genesis.proto](#provenance_ledger_v1_genesis-proto)
     - [GenesisState](#provenance-ledger-v1-GenesisState)
@@ -4450,6 +4458,23 @@ Params is a representation of the exchange module parameters.
 
 
 
+<a name="provenance-ledger-v1-DisbursementEntry"></a>
+
+### DisbursementEntry
+DisbursementEntry represents a single disbursement to process
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_entry_uuid` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+| `memo` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-MsgAppendRequest"></a>
 
 ### MsgAppendRequest
@@ -4503,6 +4528,87 @@ MsgCreateResponse
 
 
 
+
+<a name="provenance-ledger-v1-MsgProcessDisbursementsRequest"></a>
+
+### MsgProcessDisbursementsRequest
+MsgProcessDisbursementsRequest represents a request to process multiple disbursements
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `disbursements` | [DisbursementEntry](#provenance-ledger-v1-DisbursementEntry) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgProcessDisbursementsResponse"></a>
+
+### MsgProcessDisbursementsResponse
+MsgProcessDisbursementsResponse represents the response from processing disbursements
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `processed_entry_uuids` | [string](#string) | repeated |  |
+| `flow_ids` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgProcessPaymentsRequest"></a>
+
+### MsgProcessPaymentsRequest
+MsgProcessPaymentsRequest represents a request to process multiple payments
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `payments` | [PaymentEntry](#provenance-ledger-v1-PaymentEntry) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgProcessPaymentsResponse"></a>
+
+### MsgProcessPaymentsResponse
+MsgProcessPaymentsResponse represents the response from processing payments
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `processed_entry_uuids` | [string](#string) | repeated |  |
+| `flow_ids` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-PaymentEntry"></a>
+
+### PaymentEntry
+PaymentEntry represents a single payment to process
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_entry_uuid` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+| `memo` | [string](#string) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4519,6 +4625,8 @@ Msg defines the attribute module Msg service.
 | ----------- | ------------ | ------------- | ------------|
 | `Create` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
 | `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
+| `ProcessPayments` | [MsgProcessPaymentsRequest](#provenance-ledger-v1-MsgProcessPaymentsRequest) | [MsgProcessPaymentsResponse](#provenance-ledger-v1-MsgProcessPaymentsResponse) | Process multiple payments |
+| `ProcessDisbursements` | [MsgProcessDisbursementsRequest](#provenance-ledger-v1-MsgProcessDisbursementsRequest) | [MsgProcessDisbursementsResponse](#provenance-ledger-v1-MsgProcessDisbursementsResponse) | Process multiple disbursements |
 
  <!-- end services -->
 
@@ -4528,6 +4636,28 @@ Msg defines the attribute module Msg service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/ledger/v1/ledger.proto
+
+
+
+<a name="provenance-ledger-v1-Flow"></a>
+
+### Flow
+Flow represents a payment or disbursement flow associated with a ledger entry
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `flow_id` | [string](#string) |  |  |
+| `ledger_entry_uuid` | [string](#string) |  |  |
+| `flow_type` | [FlowType](#provenance-ledger-v1-FlowType) |  |  |
+| `status` | [FlowStatus](#provenance-ledger-v1-FlowStatus) |  |  |
+| `amount` | [string](#string) |  |  |
+| `memo` | [string](#string) |  |  |
+| `created_at` | [int64](#int64) |  |  |
+| `updated_at` | [int64](#int64) |  |  |
+
+
+
 
 
 
@@ -4572,6 +4702,34 @@ LedgerEntry
 
 
  <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-FlowStatus"></a>
+
+### FlowStatus
+FlowStatus represents the current status of a flow
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `FLOW_STATUS_UNSPECIFIED` | `0` |  |
+| `FLOW_STATUS_PENDING` | `1` |  |
+| `FLOW_STATUS_PROCESSING` | `2` |  |
+| `FLOW_STATUS_COMPLETED` | `3` |  |
+| `FLOW_STATUS_FAILED` | `4` |  |
+
+
+
+<a name="provenance-ledger-v1-FlowType"></a>
+
+### FlowType
+FlowType represents the type of flow being tracked
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `FLOW_TYPE_UNSPECIFIED` | `0` |  |
+| `FLOW_TYPE_PAYMENT` | `1` |  |
+| `FLOW_TYPE_DISBURSEMENT` | `2` |  |
+
 
 
 <a name="provenance-ledger-v1-LedgerEntryType"></a>
@@ -4690,80 +4848,71 @@ Query defines the gRPC querier service for ledger module.
 
 
 
-<a name="provenance-ledger-v1-LedgerCreatedEvent"></a>
+<a name="provenance-ledger-v1-EventBalanceUpdated"></a>
 
-### LedgerCreatedEvent
-LedgerCreatedEvent represents an event emitted when a new ledger is created
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `denom` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-LedgerDisbursementEvent"></a>
-
-### LedgerDisbursementEvent
-LedgerDisbursementEvent represents an event emitted when a disbursement is made from a ledger
+### EventBalanceUpdated
+EventBalanceUpdated is emitted when balances are updated due to a ledger entry.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `disbursement` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+| `nft_address` | [string](#string) |  | The address of the NFT |
+| `principal_balance` | [string](#string) |  | The new principal balance |
+| `interest_balance` | [string](#string) |  | The new interest balance |
+| `other_balance` | [string](#string) |  | The new other balance |
 
 
 
 
 
 
-<a name="provenance-ledger-v1-LedgerEntryAddedEvent"></a>
+<a name="provenance-ledger-v1-EventLedgerConfigUpdated"></a>
 
-### LedgerEntryAddedEvent
-LedgerEntryAddedEvent represents an event emitted when a new entry is added to a ledger
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-LedgerNavUpdatedEvent"></a>
-
-### LedgerNavUpdatedEvent
-LedgerNavUpdatedEvent represents an event emitted when the NAV (Net Asset Value) of a ledger is updated
+### EventLedgerConfigUpdated
+EventLedgerConfigUpdated is emitted when ledger configuration is modified.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `nav_amount` | [string](#string) |  |  |
+| `nft_address` | [string](#string) |  | The address of the NFT |
+| `denom` | [string](#string) |  | The new denomination |
+| `previous_denom` | [string](#string) |  | The previous denomination (if changed) |
 
 
 
 
 
 
-<a name="provenance-ledger-v1-LedgerPaymentEvent"></a>
+<a name="provenance-ledger-v1-EventLedgerCreated"></a>
 
-### LedgerPaymentEvent
-LedgerPaymentEvent represents an event emitted when a payment is made on a ledger
+### EventLedgerCreated
+EventLedgerCreated is emitted when a new ledger is created for an NFT.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `payment` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+| `nft_address` | [string](#string) |  | The address of the NFT |
+| `denom` | [string](#string) |  | The denomination used for the ledger |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerEntryAdded"></a>
+
+### EventLedgerEntryAdded
+EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  | The address of the NFT |
+| `entry_uuid` | [string](#string) |  | The unique identifier of the entry |
+| `entry_type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  | The type of the entry |
+| `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry was posted |
+| `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry takes effect |
+| `amount` | [string](#string) |  | The total amount of the entry |
 
 
 
