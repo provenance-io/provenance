@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
@@ -29,13 +28,4 @@ func (k LedgerKeeper) ValidateTransfer(ctx context.Context, transfer *ledger.Fun
 func (k LedgerKeeper) GetTransferHistory(ctx context.Context, nftAddress string) ([]*ledger.FundTransfer, error) {
 	// TODO: Implement transfer history retrieval
 	return nil, nil
-}
-
-// TransferRecord represents a single fund transfer record
-type TransferRecord struct {
-	FromAddress sdk.AccAddress
-	ToAddress   sdk.AccAddress
-	Amount      sdk.Coins
-	Timestamp   int64
-	Status      string
 }
