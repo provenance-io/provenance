@@ -51,7 +51,21 @@ func (k *MsgServer) ProcessFundTransfers(goCtx context.Context, req *ledger.MsgP
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	for _, ft := range req.Transfers {
-		err := k.ProcessFundTransfer(ctx, ft)
+		err := k.TransferFunds(ctx, ft)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	resp := ledger.MsgProcessFundTransfersResponse{}
+	return &resp, nil
+}
+
+func (k *MsgServer) ProcessFundTransfersWithSettlement(goCtx context.Context, req *ledger.MsgProcessFundTransfersWithSettlementRequest) (*ledger.MsgProcessFundTransfersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	for _, ft := range req.Transfers {
+		err := k.TransferFundsWithSettlement(ctx, ft)
 		if err != nil {
 			return nil, err
 		}

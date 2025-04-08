@@ -4670,8 +4670,8 @@ SettlementInstruction represents blockchain-specific settlement instructions
 | ----- | ---- | ----- | ----------- |
 | `amount` | [string](#string) |  |  |
 | `recipient_address` | [string](#string) |  | The recipient's blockchain address |
-| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
 | `memo` | [string](#string) |  | Optional memo or note for the transaction |
+| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
 
 
 
