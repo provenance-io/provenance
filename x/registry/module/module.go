@@ -94,8 +94,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // Register the protobuf message types and services with the sdk.
-func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
-	msgservice.RegisterMsgServiceDesc(registry, &registry.Msg_serviceDesc)
+func (AppModule) RegisterInterfaces(r types.InterfaceRegistry) {
+	msgservice.RegisterMsgServiceDesc(r, &registry.Msg_serviceDesc)
 }
 
 func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {

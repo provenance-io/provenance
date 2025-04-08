@@ -40,13 +40,13 @@ func CmdRegisterAddress() *cobra.Command {
 				return err
 			}
 
-			msg := registry.NewMsgRegisterAddress(
-				clientCtx.GetFromAddress().String(),
-				args[0],
-				args[1],
-			)
+			msg := registry.MsgRegisterAddress{
+				Authority: clientCtx.GetFromAddress().String(),
+				Address:   args[0],
+				Roles:     map[string]registry.RoleAddresses{},
+			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 
@@ -66,13 +66,13 @@ func CmdUpdateRoles() *cobra.Command {
 				return err
 			}
 
-			msg := registry.NewMsgUpdateRoles(
-				clientCtx.GetFromAddress().String(),
-				args[0],
-				args[1],
-			)
+			msg := registry.MsgUpdateRoles{
+				Authority: clientCtx.GetFromAddress().String(),
+				Address:   args[0],
+				Roles:     map[string]registry.RoleAddresses{},
+			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 
@@ -92,12 +92,12 @@ func CmdRemoveAddress() *cobra.Command {
 				return err
 			}
 
-			msg := registry.NewMsgRemoveAddress(
-				clientCtx.GetFromAddress().String(),
-				args[0],
-			)
+			msg := registry.MsgRemoveAddress{
+				Authority: clientCtx.GetFromAddress().String(),
+				Address:   args[0],
+			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 
