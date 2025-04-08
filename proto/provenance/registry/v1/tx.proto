@@ -1,0 +1,69 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/registry";
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "provenance/registry/v1/registry.proto";
+
+// Msg defines the registry Msg service.
+service Msg {
+  // RegisterAddress registers a new address with roles
+  rpc RegisterAddress(MsgRegisterAddress) returns (MsgRegisterAddressResponse);
+
+  // UpdateRoles updates the roles for an existing address
+  rpc UpdateRoles(MsgUpdateRoles) returns (MsgUpdateRolesResponse);
+
+  // RemoveAddress removes an address from the registry
+  rpc RemoveAddress(MsgRemoveAddress) returns (MsgRemoveAddressResponse);
+}
+
+// MsgRegisterAddress represents a message to register a new address with roles
+message MsgRegisterAddress {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that is authorized to register addresses
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // address is the blockchain address to register
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // roles is a map of role names to lists of addresses that can perform that role
+  map<string, RoleAddresses> roles = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgRegisterAddressResponse defines the response for RegisterAddress
+message MsgRegisterAddressResponse {}
+
+// MsgUpdateRoles represents a message to update roles for an existing address
+message MsgUpdateRoles {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that is authorized to update roles
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // address is the blockchain address to update
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // roles is a map of role names to lists of addresses that can perform that role
+  map<string, RoleAddresses> roles = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateRolesResponse defines the response for UpdateRoles
+message MsgUpdateRolesResponse {}
+
+// MsgRemoveAddress represents a message to remove an address from the registry
+message MsgRemoveAddress {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that is authorized to remove addresses
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // address is the blockchain address to remove
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRemoveAddressResponse defines the response for RemoveAddress
+message MsgRemoveAddressResponse {}

@@ -1,0 +1,49 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/registry";
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "provenance/registry/v1/registry.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+// Query defines the gRPC querier service.
+service Query {
+  // GetRegistryEntry returns the registry entry for a given address
+  rpc GetRegistryEntry(QueryGetRegistryEntryRequest) returns (QueryGetRegistryEntryResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/entry/{address}";
+  }
+
+  // ListRegistryEntries returns all registry entries
+  rpc ListRegistryEntries(QueryListRegistryEntriesRequest) returns (QueryListRegistryEntriesResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/entries";
+  }
+}
+
+// QueryGetRegistryEntryRequest is the request type for the Query/GetRegistryEntry RPC method
+message QueryGetRegistryEntryRequest {
+  // address is the blockchain address to query
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryGetRegistryEntryResponse is the response type for the Query/GetRegistryEntry RPC method
+message QueryGetRegistryEntryResponse {
+  // entry is the registry entry for the requested address
+  RegistryEntry entry = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryListRegistryEntriesRequest is the request type for the Query/ListRegistryEntries RPC method
+message QueryListRegistryEntriesRequest {
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryListRegistryEntriesResponse is the response type for the Query/ListRegistryEntries RPC method
+message QueryListRegistryEntriesResponse {
+  // entries is the list of registry entries
+  repeated RegistryEntry entries = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
