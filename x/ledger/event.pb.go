@@ -4,21 +4,22 @@
 package ledger
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-proto"
-	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -26,24 +27,26 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// LedgerCreatedEvent represents an event emitted when a new ledger is created
-type LedgerCreatedEvent struct {
+// EventLedgerCreated is emitted when a new ledger is created for an NFT.
+type EventLedgerCreated struct {
+	// The address of the NFT
 	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	Denom      string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	// The denomination used for the ledger
+	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 }
 
-func (m *LedgerCreatedEvent) Reset()         { *m = LedgerCreatedEvent{} }
-func (m *LedgerCreatedEvent) String() string { return proto.CompactTextString(m) }
-func (*LedgerCreatedEvent) ProtoMessage()    {}
-func (*LedgerCreatedEvent) Descriptor() ([]byte, []int) {
+func (m *EventLedgerCreated) Reset()         { *m = EventLedgerCreated{} }
+func (m *EventLedgerCreated) String() string { return proto.CompactTextString(m) }
+func (*EventLedgerCreated) ProtoMessage()    {}
+func (*EventLedgerCreated) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a60494a0b0d3ba7b, []int{0}
 }
-func (m *LedgerCreatedEvent) XXX_Unmarshal(b []byte) error {
+func (m *EventLedgerCreated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *LedgerCreatedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventLedgerCreated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_LedgerCreatedEvent.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventLedgerCreated.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -53,50 +56,60 @@ func (m *LedgerCreatedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *LedgerCreatedEvent) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LedgerCreatedEvent.Merge(m, src)
+func (m *EventLedgerCreated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLedgerCreated.Merge(m, src)
 }
-func (m *LedgerCreatedEvent) XXX_Size() int {
+func (m *EventLedgerCreated) XXX_Size() int {
 	return m.Size()
 }
-func (m *LedgerCreatedEvent) XXX_DiscardUnknown() {
-	xxx_messageInfo_LedgerCreatedEvent.DiscardUnknown(m)
+func (m *EventLedgerCreated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLedgerCreated.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LedgerCreatedEvent proto.InternalMessageInfo
+var xxx_messageInfo_EventLedgerCreated proto.InternalMessageInfo
 
-func (m *LedgerCreatedEvent) GetNftAddress() string {
+func (m *EventLedgerCreated) GetNftAddress() string {
 	if m != nil {
 		return m.NftAddress
 	}
 	return ""
 }
 
-func (m *LedgerCreatedEvent) GetDenom() string {
+func (m *EventLedgerCreated) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-// LedgerEntryAddedEvent represents an event emitted when a new entry is added to a ledger
-type LedgerEntryAddedEvent struct {
-	NftAddress string       `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	Entry      *LedgerEntry `protobuf:"bytes,2,opt,name=entry,proto3" json:"entry,omitempty"`
+// EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
+type EventLedgerEntryAdded struct {
+	// The address of the NFT
+	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	// The unique identifier of the entry
+	EntryUuid string `protobuf:"bytes,2,opt,name=entry_uuid,json=entryUuid,proto3" json:"entry_uuid,omitempty"`
+	// The type of the entry
+	EntryType LedgerEntryType `protobuf:"varint,3,opt,name=entry_type,json=entryType,proto3,enum=provenance.ledger.v1.LedgerEntryType" json:"entry_type,omitempty"`
+	// The date the entry was posted
+	PostedDate *time.Time `protobuf:"bytes,4,opt,name=posted_date,json=postedDate,proto3,stdtime" json:"posted_date,omitempty"`
+	// The date the entry takes effect
+	EffectiveDate *time.Time `protobuf:"bytes,5,opt,name=effective_date,json=effectiveDate,proto3,stdtime" json:"effective_date,omitempty"`
+	// The total amount of the entry
+	Amount string `protobuf:"bytes,6,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
-func (m *LedgerEntryAddedEvent) Reset()         { *m = LedgerEntryAddedEvent{} }
-func (m *LedgerEntryAddedEvent) String() string { return proto.CompactTextString(m) }
-func (*LedgerEntryAddedEvent) ProtoMessage()    {}
-func (*LedgerEntryAddedEvent) Descriptor() ([]byte, []int) {
+func (m *EventLedgerEntryAdded) Reset()         { *m = EventLedgerEntryAdded{} }
+func (m *EventLedgerEntryAdded) String() string { return proto.CompactTextString(m) }
+func (*EventLedgerEntryAdded) ProtoMessage()    {}
+func (*EventLedgerEntryAdded) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a60494a0b0d3ba7b, []int{1}
 }
-func (m *LedgerEntryAddedEvent) XXX_Unmarshal(b []byte) error {
+func (m *EventLedgerEntryAdded) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *LedgerEntryAddedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventLedgerEntryAdded) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_LedgerEntryAddedEvent.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventLedgerEntryAdded.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -106,50 +119,84 @@ func (m *LedgerEntryAddedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *LedgerEntryAddedEvent) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LedgerEntryAddedEvent.Merge(m, src)
+func (m *EventLedgerEntryAdded) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLedgerEntryAdded.Merge(m, src)
 }
-func (m *LedgerEntryAddedEvent) XXX_Size() int {
+func (m *EventLedgerEntryAdded) XXX_Size() int {
 	return m.Size()
 }
-func (m *LedgerEntryAddedEvent) XXX_DiscardUnknown() {
-	xxx_messageInfo_LedgerEntryAddedEvent.DiscardUnknown(m)
+func (m *EventLedgerEntryAdded) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLedgerEntryAdded.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LedgerEntryAddedEvent proto.InternalMessageInfo
+var xxx_messageInfo_EventLedgerEntryAdded proto.InternalMessageInfo
 
-func (m *LedgerEntryAddedEvent) GetNftAddress() string {
+func (m *EventLedgerEntryAdded) GetNftAddress() string {
 	if m != nil {
 		return m.NftAddress
 	}
 	return ""
 }
 
-func (m *LedgerEntryAddedEvent) GetEntry() *LedgerEntry {
+func (m *EventLedgerEntryAdded) GetEntryUuid() string {
 	if m != nil {
-		return m.Entry
+		return m.EntryUuid
+	}
+	return ""
+}
+
+func (m *EventLedgerEntryAdded) GetEntryType() LedgerEntryType {
+	if m != nil {
+		return m.EntryType
+	}
+	return LedgerEntryType_Unspecified
+}
+
+func (m *EventLedgerEntryAdded) GetPostedDate() *time.Time {
+	if m != nil {
+		return m.PostedDate
 	}
 	return nil
 }
 
-// LedgerPaymentEvent represents an event emitted when a payment is made on a ledger
-type LedgerPaymentEvent struct {
-	NftAddress string       `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	Payment    *LedgerEntry `protobuf:"bytes,2,opt,name=payment,proto3" json:"payment,omitempty"`
+func (m *EventLedgerEntryAdded) GetEffectiveDate() *time.Time {
+	if m != nil {
+		return m.EffectiveDate
+	}
+	return nil
 }
 
-func (m *LedgerPaymentEvent) Reset()         { *m = LedgerPaymentEvent{} }
-func (m *LedgerPaymentEvent) String() string { return proto.CompactTextString(m) }
-func (*LedgerPaymentEvent) ProtoMessage()    {}
-func (*LedgerPaymentEvent) Descriptor() ([]byte, []int) {
+func (m *EventLedgerEntryAdded) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+// EventBalanceUpdated is emitted when balances are updated due to a ledger entry.
+type EventBalanceUpdated struct {
+	// The address of the NFT
+	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	// The new principal balance
+	PrincipalBalance string `protobuf:"bytes,2,opt,name=principal_balance,json=principalBalance,proto3" json:"principal_balance,omitempty"`
+	// The new interest balance
+	InterestBalance string `protobuf:"bytes,3,opt,name=interest_balance,json=interestBalance,proto3" json:"interest_balance,omitempty"`
+	// The new other balance
+	OtherBalance string `protobuf:"bytes,4,opt,name=other_balance,json=otherBalance,proto3" json:"other_balance,omitempty"`
+}
+
+func (m *EventBalanceUpdated) Reset()         { *m = EventBalanceUpdated{} }
+func (m *EventBalanceUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventBalanceUpdated) ProtoMessage()    {}
+func (*EventBalanceUpdated) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a60494a0b0d3ba7b, []int{2}
 }
-func (m *LedgerPaymentEvent) XXX_Unmarshal(b []byte) error {
+func (m *EventBalanceUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *LedgerPaymentEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventBalanceUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_LedgerPaymentEvent.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventBalanceUpdated.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -159,50 +206,68 @@ func (m *LedgerPaymentEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *LedgerPaymentEvent) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LedgerPaymentEvent.Merge(m, src)
+func (m *EventBalanceUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventBalanceUpdated.Merge(m, src)
 }
-func (m *LedgerPaymentEvent) XXX_Size() int {
+func (m *EventBalanceUpdated) XXX_Size() int {
 	return m.Size()
 }
-func (m *LedgerPaymentEvent) XXX_DiscardUnknown() {
-	xxx_messageInfo_LedgerPaymentEvent.DiscardUnknown(m)
+func (m *EventBalanceUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventBalanceUpdated.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LedgerPaymentEvent proto.InternalMessageInfo
+var xxx_messageInfo_EventBalanceUpdated proto.InternalMessageInfo
 
-func (m *LedgerPaymentEvent) GetNftAddress() string {
+func (m *EventBalanceUpdated) GetNftAddress() string {
 	if m != nil {
 		return m.NftAddress
 	}
 	return ""
 }
 
-func (m *LedgerPaymentEvent) GetPayment() *LedgerEntry {
+func (m *EventBalanceUpdated) GetPrincipalBalance() string {
 	if m != nil {
-		return m.Payment
+		return m.PrincipalBalance
 	}
-	return nil
+	return ""
 }
 
-// LedgerDisbursementEvent represents an event emitted when a disbursement is made from a ledger
-type LedgerDisbursementEvent struct {
-	NftAddress   string       `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	Disbursement *LedgerEntry `protobuf:"bytes,2,opt,name=disbursement,proto3" json:"disbursement,omitempty"`
+func (m *EventBalanceUpdated) GetInterestBalance() string {
+	if m != nil {
+		return m.InterestBalance
+	}
+	return ""
 }
 
-func (m *LedgerDisbursementEvent) Reset()         { *m = LedgerDisbursementEvent{} }
-func (m *LedgerDisbursementEvent) String() string { return proto.CompactTextString(m) }
-func (*LedgerDisbursementEvent) ProtoMessage()    {}
-func (*LedgerDisbursementEvent) Descriptor() ([]byte, []int) {
+func (m *EventBalanceUpdated) GetOtherBalance() string {
+	if m != nil {
+		return m.OtherBalance
+	}
+	return ""
+}
+
+// EventLedgerConfigUpdated is emitted when ledger configuration is modified.
+type EventLedgerConfigUpdated struct {
+	// The address of the NFT
+	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	// The new denomination
+	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	// The previous denomination (if changed)
+	PreviousDenom string `protobuf:"bytes,3,opt,name=previous_denom,json=previousDenom,proto3" json:"previous_denom,omitempty"`
+}
+
+func (m *EventLedgerConfigUpdated) Reset()         { *m = EventLedgerConfigUpdated{} }
+func (m *EventLedgerConfigUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventLedgerConfigUpdated) ProtoMessage()    {}
+func (*EventLedgerConfigUpdated) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a60494a0b0d3ba7b, []int{3}
 }
-func (m *LedgerDisbursementEvent) XXX_Unmarshal(b []byte) error {
+func (m *EventLedgerConfigUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *LedgerDisbursementEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventLedgerConfigUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_LedgerDisbursementEvent.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventLedgerConfigUpdated.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -212,119 +277,83 @@ func (m *LedgerDisbursementEvent) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *LedgerDisbursementEvent) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LedgerDisbursementEvent.Merge(m, src)
+func (m *EventLedgerConfigUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLedgerConfigUpdated.Merge(m, src)
 }
-func (m *LedgerDisbursementEvent) XXX_Size() int {
+func (m *EventLedgerConfigUpdated) XXX_Size() int {
 	return m.Size()
 }
-func (m *LedgerDisbursementEvent) XXX_DiscardUnknown() {
-	xxx_messageInfo_LedgerDisbursementEvent.DiscardUnknown(m)
+func (m *EventLedgerConfigUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLedgerConfigUpdated.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LedgerDisbursementEvent proto.InternalMessageInfo
+var xxx_messageInfo_EventLedgerConfigUpdated proto.InternalMessageInfo
 
-func (m *LedgerDisbursementEvent) GetNftAddress() string {
+func (m *EventLedgerConfigUpdated) GetNftAddress() string {
 	if m != nil {
 		return m.NftAddress
 	}
 	return ""
 }
 
-func (m *LedgerDisbursementEvent) GetDisbursement() *LedgerEntry {
+func (m *EventLedgerConfigUpdated) GetDenom() string {
 	if m != nil {
-		return m.Disbursement
+		return m.Denom
 	}
-	return nil
+	return ""
 }
 
-// LedgerNavUpdatedEvent represents an event emitted when the NAV (Net Asset Value) of a ledger is updated
-type LedgerNavUpdatedEvent struct {
-	NftAddress string                `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	NavAmount  cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=nav_amount,json=navAmount,proto3,customtype=cosmossdk.io/math.Int" json:"nav_amount"`
-}
-
-func (m *LedgerNavUpdatedEvent) Reset()         { *m = LedgerNavUpdatedEvent{} }
-func (m *LedgerNavUpdatedEvent) String() string { return proto.CompactTextString(m) }
-func (*LedgerNavUpdatedEvent) ProtoMessage()    {}
-func (*LedgerNavUpdatedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a60494a0b0d3ba7b, []int{4}
-}
-func (m *LedgerNavUpdatedEvent) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *LedgerNavUpdatedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LedgerNavUpdatedEvent.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *LedgerNavUpdatedEvent) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LedgerNavUpdatedEvent.Merge(m, src)
-}
-func (m *LedgerNavUpdatedEvent) XXX_Size() int {
-	return m.Size()
-}
-func (m *LedgerNavUpdatedEvent) XXX_DiscardUnknown() {
-	xxx_messageInfo_LedgerNavUpdatedEvent.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LedgerNavUpdatedEvent proto.InternalMessageInfo
-
-func (m *LedgerNavUpdatedEvent) GetNftAddress() string {
+func (m *EventLedgerConfigUpdated) GetPreviousDenom() string {
 	if m != nil {
-		return m.NftAddress
+		return m.PreviousDenom
 	}
 	return ""
 }
 
 func init() {
-	proto.RegisterType((*LedgerCreatedEvent)(nil), "provenance.ledger.v1.LedgerCreatedEvent")
-	proto.RegisterType((*LedgerEntryAddedEvent)(nil), "provenance.ledger.v1.LedgerEntryAddedEvent")
-	proto.RegisterType((*LedgerPaymentEvent)(nil), "provenance.ledger.v1.LedgerPaymentEvent")
-	proto.RegisterType((*LedgerDisbursementEvent)(nil), "provenance.ledger.v1.LedgerDisbursementEvent")
-	proto.RegisterType((*LedgerNavUpdatedEvent)(nil), "provenance.ledger.v1.LedgerNavUpdatedEvent")
+	proto.RegisterType((*EventLedgerCreated)(nil), "provenance.ledger.v1.EventLedgerCreated")
+	proto.RegisterType((*EventLedgerEntryAdded)(nil), "provenance.ledger.v1.EventLedgerEntryAdded")
+	proto.RegisterType((*EventBalanceUpdated)(nil), "provenance.ledger.v1.EventBalanceUpdated")
+	proto.RegisterType((*EventLedgerConfigUpdated)(nil), "provenance.ledger.v1.EventLedgerConfigUpdated")
 }
 
 func init() { proto.RegisterFile("provenance/ledger/v1/event.proto", fileDescriptor_a60494a0b0d3ba7b) }
 
 var fileDescriptor_a60494a0b0d3ba7b = []byte{
-	// 405 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0xbf, 0x6e, 0xda, 0x40,
-	0x1c, 0xf6, 0x55, 0xa2, 0x15, 0x47, 0x97, 0x5a, 0x20, 0x28, 0x83, 0x01, 0x4f, 0x55, 0x55, 0xee,
-	0x4a, 0x3b, 0x74, 0xe8, 0x04, 0x2d, 0x03, 0x6a, 0x95, 0x20, 0xa4, 0x2c, 0x59, 0xd0, 0xc1, 0x1d,
-	0xc6, 0x4a, 0x7c, 0xe7, 0x9c, 0x0f, 0x2b, 0x8c, 0x19, 0xb3, 0xe5, 0x31, 0x32, 0x66, 0xc8, 0x43,
-	0x30, 0xa2, 0x4c, 0x51, 0x06, 0x14, 0xc1, 0x90, 0xd7, 0x88, 0xb8, 0x33, 0x82, 0x48, 0x0c, 0x66,
-	0xb1, 0xfc, 0xfd, 0xee, 0xfb, 0x73, 0xfe, 0xf9, 0x83, 0xd5, 0x50, 0x8a, 0x98, 0x71, 0xc2, 0x87,
-	0x0c, 0x9f, 0x33, 0xea, 0x31, 0x89, 0xe3, 0x06, 0x66, 0x31, 0xe3, 0x0a, 0x85, 0x52, 0x28, 0x61,
-	0xe7, 0xb7, 0x0c, 0x64, 0x18, 0x28, 0x6e, 0x94, 0x3f, 0x0f, 0x45, 0x14, 0x88, 0xa8, 0xaf, 0x39,
-	0xd8, 0x00, 0x23, 0x28, 0x7f, 0x22, 0x81, 0xcf, 0x05, 0xd6, 0xcf, 0x64, 0x94, 0xf7, 0x84, 0x27,
-	0x0c, 0x75, 0xfd, 0x96, 0x4c, 0x6b, 0x7b, 0xb3, 0x93, 0x0c, 0x4d, 0x71, 0xff, 0x41, 0xfb, 0xbf,
-	0xc6, 0x7f, 0x24, 0x23, 0x8a, 0xd1, 0xf6, 0xfa, 0x62, 0x76, 0x05, 0xe6, 0xf8, 0x48, 0xf5, 0x09,
-	0xa5, 0x92, 0x45, 0x51, 0x09, 0x54, 0xc1, 0x97, 0x6c, 0x0f, 0xf2, 0x91, 0x6a, 0x9a, 0x89, 0x9d,
-	0x87, 0x19, 0xca, 0xb8, 0x08, 0x4a, 0xef, 0xf4, 0x91, 0x01, 0xee, 0x05, 0x2c, 0x18, 0xb3, 0x36,
-	0x57, 0x72, 0xda, 0xa4, 0x34, 0xb5, 0xdf, 0x2f, 0x98, 0x61, 0x6b, 0x8d, 0xf6, 0xcb, 0xfd, 0xa8,
-	0xa1, 0x7d, 0x3b, 0x41, 0x3b, 0xe6, 0x3d, 0xc3, 0x77, 0xe5, 0xe6, 0xfe, 0x5d, 0x32, 0x0d, 0x18,
-	0x57, 0x29, 0xf3, 0x7e, 0xc3, 0x0f, 0xa1, 0x11, 0xa4, 0x4f, 0xdc, 0x28, 0xdc, 0x2b, 0x00, 0x8b,
-	0xe6, 0xe0, 0xaf, 0x1f, 0x0d, 0x26, 0x32, 0x62, 0x07, 0x24, 0xb7, 0xe1, 0x47, 0xba, 0xa3, 0x4a,
-	0x1f, 0xff, 0x46, 0xe6, 0x5e, 0x83, 0xcd, 0xae, 0x8f, 0x48, 0x7c, 0x12, 0xd2, 0x03, 0xfe, 0xdd,
-	0x31, 0x84, 0x9c, 0xc4, 0x7d, 0x12, 0x88, 0x49, 0x92, 0x9f, 0x6d, 0x7d, 0x9f, 0x2d, 0x2a, 0xd6,
-	0xd3, 0xa2, 0x52, 0x30, 0x45, 0x8b, 0xe8, 0x19, 0xf2, 0x05, 0x0e, 0x88, 0x1a, 0xa3, 0x0e, 0x57,
-	0x0f, 0xf7, 0x75, 0x98, 0x34, 0xb0, 0xc3, 0xd5, 0xed, 0xcb, 0xdd, 0x57, 0xd0, 0xcb, 0x72, 0x12,
-	0x37, 0xb5, 0x45, 0x8b, 0xcc, 0x96, 0x0e, 0x98, 0x2f, 0x1d, 0xf0, 0xbc, 0x74, 0xc0, 0xcd, 0xca,
-	0xb1, 0xe6, 0x2b, 0xc7, 0x7a, 0x5c, 0x39, 0x16, 0x2c, 0xfa, 0x62, 0xef, 0x87, 0x75, 0xc1, 0xe9,
-	0x37, 0xcf, 0x57, 0xe3, 0xc9, 0x00, 0x0d, 0x45, 0x80, 0xb7, 0x94, 0xba, 0x2f, 0x76, 0x10, 0xbe,
-	0x4c, 0xca, 0x3a, 0x78, 0xaf, 0xdb, 0xfa, 0xf3, 0x35, 0x00, 0x00, 0xff, 0xff, 0x5a, 0x97, 0xc0,
-	0xcc, 0x4e, 0x03, 0x00, 0x00,
+	// 479 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xb1, 0x6e, 0xdb, 0x3c,
+	0x14, 0x85, 0xad, 0xc4, 0x31, 0x10, 0xfa, 0xb7, 0xff, 0x54, 0x75, 0x0b, 0xc1, 0x40, 0x65, 0xd7,
+	0x45, 0x00, 0x17, 0x6d, 0x25, 0x24, 0x7d, 0x02, 0xbb, 0x4e, 0x3b, 0xb4, 0x53, 0x90, 0x2c, 0x5d,
+	0x04, 0xd9, 0xbc, 0x52, 0x08, 0x58, 0x24, 0x41, 0x5d, 0x09, 0xf1, 0x5b, 0xe4, 0x5d, 0xfa, 0x04,
+	0xdd, 0x3a, 0x66, 0xec, 0xd6, 0xc2, 0x7e, 0x91, 0x42, 0x24, 0xe5, 0x78, 0xf0, 0xe0, 0x4d, 0xf7,
+	0xdc, 0x8f, 0x87, 0xe4, 0xe1, 0x15, 0x19, 0x4a, 0x25, 0x4a, 0xe0, 0x31, 0x5f, 0x40, 0xb8, 0x04,
+	0x9a, 0x82, 0x0a, 0xcb, 0x8b, 0x10, 0x4a, 0xe0, 0x18, 0x48, 0x25, 0x50, 0xb8, 0xbd, 0x27, 0x22,
+	0x30, 0x44, 0x50, 0x5e, 0xf4, 0x7b, 0xa9, 0x48, 0x85, 0x06, 0xc2, 0xea, 0xcb, 0xb0, 0xfd, 0x41,
+	0x2a, 0x44, 0xba, 0x84, 0x50, 0x57, 0xf3, 0x22, 0x09, 0x91, 0x65, 0x90, 0x63, 0x9c, 0x49, 0x0b,
+	0xbc, 0xde, 0xbb, 0x9d, 0xb5, 0xd5, 0xc8, 0xe8, 0x2b, 0x71, 0xaf, 0xaa, 0xed, 0xbf, 0x69, 0xf1,
+	0x93, 0x82, 0x18, 0x81, 0xba, 0x03, 0xd2, 0xe6, 0x09, 0x46, 0x31, 0xa5, 0x0a, 0xf2, 0xdc, 0x73,
+	0x86, 0xce, 0xf8, 0xf4, 0x9a, 0xf0, 0x04, 0x27, 0x46, 0x71, 0x7b, 0xe4, 0x84, 0x02, 0x17, 0x99,
+	0x77, 0xa4, 0x5b, 0xa6, 0x18, 0xfd, 0x3c, 0x22, 0x2f, 0x76, 0xdc, 0xae, 0x38, 0xaa, 0xd5, 0x84,
+	0xd2, 0x43, 0x0c, 0x5f, 0x11, 0x02, 0x15, 0x1e, 0x15, 0x05, 0xa3, 0xd6, 0xf5, 0x54, 0x2b, 0xb7,
+	0x05, 0xa3, 0xee, 0xac, 0x6e, 0xe3, 0x4a, 0x82, 0x77, 0x3c, 0x74, 0xc6, 0xdd, 0xcb, 0xf3, 0x60,
+	0x5f, 0x56, 0xc1, 0xce, 0xde, 0x37, 0x2b, 0x09, 0xd6, 0xa5, 0xfa, 0x74, 0x27, 0xa4, 0x2d, 0x45,
+	0x8e, 0x40, 0x23, 0x1a, 0x23, 0x78, 0xcd, 0xa1, 0x33, 0x6e, 0x5f, 0xf6, 0x03, 0x13, 0x63, 0x50,
+	0xc7, 0x18, 0xdc, 0xd4, 0x31, 0x4e, 0x9b, 0x0f, 0x7f, 0x06, 0xce, 0x35, 0x31, 0x8b, 0x66, 0x31,
+	0x82, 0xfb, 0x85, 0x74, 0x21, 0x49, 0x60, 0x81, 0xac, 0x04, 0xe3, 0x72, 0x72, 0xa0, 0x4b, 0x67,
+	0xbb, 0x4e, 0x1b, 0xbd, 0x24, 0xad, 0x38, 0x13, 0x05, 0x47, 0xaf, 0xa5, 0x2f, 0x6b, 0xab, 0xd1,
+	0x0f, 0x87, 0x3c, 0xd7, 0x19, 0x4e, 0xe3, 0x65, 0x75, 0xb3, 0x5b, 0x49, 0x0f, 0x7b, 0x92, 0x77,
+	0xe4, 0x99, 0x54, 0x8c, 0x2f, 0x98, 0x8c, 0x97, 0xd1, 0xdc, 0x2c, 0xb6, 0x41, 0x9e, 0x6d, 0x1b,
+	0xd6, 0xd4, 0x7d, 0x4b, 0xce, 0x18, 0x47, 0x50, 0x90, 0xe3, 0x96, 0x3d, 0xd6, 0xec, 0xff, 0xb5,
+	0x5e, 0xa3, 0x6f, 0x48, 0x47, 0xe0, 0x1d, 0xa8, 0x2d, 0xd7, 0xd4, 0xdc, 0x7f, 0x5a, 0xb4, 0xd0,
+	0xe8, 0x9e, 0x78, 0xbb, 0x63, 0x24, 0x78, 0xc2, 0xd2, 0x83, 0x4f, 0xbe, 0x77, 0x98, 0xdc, 0x73,
+	0xd2, 0x95, 0x0a, 0x4a, 0x26, 0x8a, 0x3c, 0x32, 0x6d, 0x73, 0xc0, 0x4e, 0xad, 0xce, 0x2a, 0x71,
+	0xfa, 0xf9, 0xd7, 0xda, 0x77, 0x1e, 0xd7, 0xbe, 0xf3, 0x77, 0xed, 0x3b, 0x0f, 0x1b, 0xbf, 0xf1,
+	0xb8, 0xf1, 0x1b, 0xbf, 0x37, 0x7e, 0xe3, 0xfb, 0xfb, 0x94, 0xe1, 0x5d, 0x31, 0x0f, 0x16, 0x22,
+	0x0b, 0x9f, 0x26, 0xe5, 0x03, 0x13, 0x3b, 0x55, 0x78, 0x6f, 0x7f, 0x87, 0x79, 0x4b, 0x3f, 0xdc,
+	0xc7, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x2e, 0x34, 0x07, 0x35, 0xa3, 0x03, 0x00, 0x00,
 }
 
-func (m *LedgerCreatedEvent) Marshal() (dAtA []byte, err error) {
+func (m *EventLedgerCreated) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -334,12 +363,12 @@ func (m *LedgerCreatedEvent) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *LedgerCreatedEvent) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventLedgerCreated) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *LedgerCreatedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventLedgerCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -361,7 +390,7 @@ func (m *LedgerCreatedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *LedgerEntryAddedEvent) Marshal() (dAtA []byte, err error) {
+func (m *EventLedgerEntryAdded) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -371,25 +400,52 @@ func (m *LedgerEntryAddedEvent) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *LedgerEntryAddedEvent) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventLedgerEntryAdded) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *LedgerEntryAddedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventLedgerEntryAdded) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Entry != nil {
-		{
-			size, err := m.Entry.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if m.EffectiveDate != nil {
+		n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.EffectiveDate, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.EffectiveDate):])
+		if err1 != nil {
+			return 0, err1
 		}
+		i -= n1
+		i = encodeVarintEvent(dAtA, i, uint64(n1))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.PostedDate != nil {
+		n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.PostedDate, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.PostedDate):])
+		if err2 != nil {
+			return 0, err2
+		}
+		i -= n2
+		i = encodeVarintEvent(dAtA, i, uint64(n2))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.EntryType != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.EntryType))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.EntryUuid) > 0 {
+		i -= len(m.EntryUuid)
+		copy(dAtA[i:], m.EntryUuid)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.EntryUuid)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -403,7 +459,7 @@ func (m *LedgerEntryAddedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *LedgerPaymentEvent) Marshal() (dAtA []byte, err error) {
+func (m *EventBalanceUpdated) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -413,25 +469,34 @@ func (m *LedgerPaymentEvent) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *LedgerPaymentEvent) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventBalanceUpdated) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *LedgerPaymentEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventBalanceUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Payment != nil {
-		{
-			size, err := m.Payment.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
-		}
+	if len(m.OtherBalance) > 0 {
+		i -= len(m.OtherBalance)
+		copy(dAtA[i:], m.OtherBalance)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.OtherBalance)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.InterestBalance) > 0 {
+		i -= len(m.InterestBalance)
+		copy(dAtA[i:], m.InterestBalance)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.InterestBalance)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.PrincipalBalance) > 0 {
+		i -= len(m.PrincipalBalance)
+		copy(dAtA[i:], m.PrincipalBalance)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.PrincipalBalance)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -445,7 +510,7 @@ func (m *LedgerPaymentEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *LedgerDisbursementEvent) Marshal() (dAtA []byte, err error) {
+func (m *EventLedgerConfigUpdated) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -455,68 +520,30 @@ func (m *LedgerDisbursementEvent) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *LedgerDisbursementEvent) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventLedgerConfigUpdated) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *LedgerDisbursementEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventLedgerConfigUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Disbursement != nil {
-		{
-			size, err := m.Disbursement.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
-		}
+	if len(m.PreviousDenom) > 0 {
+		i -= len(m.PreviousDenom)
+		copy(dAtA[i:], m.PreviousDenom)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.PreviousDenom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Denom)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.NftAddress) > 0 {
-		i -= len(m.NftAddress)
-		copy(dAtA[i:], m.NftAddress)
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.NftAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *LedgerNavUpdatedEvent) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *LedgerNavUpdatedEvent) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LedgerNavUpdatedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size := m.NavAmount.Size()
-		i -= size
-		if _, err := m.NavAmount.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintEvent(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
 	if len(m.NftAddress) > 0 {
 		i -= len(m.NftAddress)
 		copy(dAtA[i:], m.NftAddress)
@@ -538,7 +565,7 @@ func encodeVarintEvent(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *LedgerCreatedEvent) Size() (n int) {
+func (m *EventLedgerCreated) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -555,7 +582,7 @@ func (m *LedgerCreatedEvent) Size() (n int) {
 	return n
 }
 
-func (m *LedgerEntryAddedEvent) Size() (n int) {
+func (m *EventLedgerEntryAdded) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -565,14 +592,29 @@ func (m *LedgerEntryAddedEvent) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.Entry != nil {
-		l = m.Entry.Size()
+	l = len(m.EntryUuid)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if m.EntryType != 0 {
+		n += 1 + sovEvent(uint64(m.EntryType))
+	}
+	if m.PostedDate != nil {
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.PostedDate)
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if m.EffectiveDate != nil {
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.EffectiveDate)
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
 	return n
 }
 
-func (m *LedgerPaymentEvent) Size() (n int) {
+func (m *EventBalanceUpdated) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -582,14 +624,22 @@ func (m *LedgerPaymentEvent) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.Payment != nil {
-		l = m.Payment.Size()
+	l = len(m.PrincipalBalance)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.InterestBalance)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.OtherBalance)
+	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
 	return n
 }
 
-func (m *LedgerDisbursementEvent) Size() (n int) {
+func (m *EventLedgerConfigUpdated) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -599,25 +649,14 @@ func (m *LedgerDisbursementEvent) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.Disbursement != nil {
-		l = m.Disbursement.Size()
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	return n
-}
-
-func (m *LedgerNavUpdatedEvent) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.NftAddress)
+	l = len(m.Denom)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	l = m.NavAmount.Size()
-	n += 1 + l + sovEvent(uint64(l))
+	l = len(m.PreviousDenom)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
 	return n
 }
 
@@ -627,7 +666,7 @@ func sovEvent(x uint64) (n int) {
 func sozEvent(x uint64) (n int) {
 	return sovEvent(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *LedgerCreatedEvent) Unmarshal(dAtA []byte) error {
+func (m *EventLedgerCreated) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -650,10 +689,10 @@ func (m *LedgerCreatedEvent) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: LedgerCreatedEvent: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventLedgerCreated: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LedgerCreatedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventLedgerCreated: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -741,7 +780,7 @@ func (m *LedgerCreatedEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *LedgerEntryAddedEvent) Unmarshal(dAtA []byte) error {
+func (m *EventLedgerEntryAdded) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -764,10 +803,10 @@ func (m *LedgerEntryAddedEvent) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: LedgerEntryAddedEvent: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventLedgerEntryAdded: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LedgerEntryAddedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventLedgerEntryAdded: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -804,7 +843,58 @@ func (m *LedgerEntryAddedEvent) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Entry", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EntryUuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EntryUuid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EntryType", wireType)
+			}
+			m.EntryType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EntryType |= LedgerEntryType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PostedDate", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -831,98 +921,16 @@ func (m *LedgerEntryAddedEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Entry == nil {
-				m.Entry = &LedgerEntry{}
+			if m.PostedDate == nil {
+				m.PostedDate = new(time.Time)
 			}
-			if err := m.Entry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.PostedDate, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipEvent(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthEvent
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *LedgerPaymentEvent) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowEvent
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: LedgerPaymentEvent: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LedgerPaymentEvent: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
+		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvent
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.NftAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Payment", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EffectiveDate", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -949,12 +957,44 @@ func (m *LedgerPaymentEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Payment == nil {
-				m.Payment = &LedgerEntry{}
+			if m.EffectiveDate == nil {
+				m.EffectiveDate = new(time.Time)
 			}
-			if err := m.Payment.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.EffectiveDate, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -977,7 +1017,7 @@ func (m *LedgerPaymentEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *LedgerDisbursementEvent) Unmarshal(dAtA []byte) error {
+func (m *EventBalanceUpdated) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1000,10 +1040,10 @@ func (m *LedgerDisbursementEvent) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: LedgerDisbursementEvent: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventBalanceUpdated: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LedgerDisbursementEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventBalanceUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1040,9 +1080,9 @@ func (m *LedgerDisbursementEvent) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Disbursement", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PrincipalBalance", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvent
@@ -1052,27 +1092,87 @@ func (m *LedgerDisbursementEvent) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvent
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvent
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Disbursement == nil {
-				m.Disbursement = &LedgerEntry{}
+			m.PrincipalBalance = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterestBalance", wireType)
 			}
-			if err := m.Disbursement.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InterestBalance = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OtherBalance", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OtherBalance = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1095,7 +1195,7 @@ func (m *LedgerDisbursementEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *LedgerNavUpdatedEvent) Unmarshal(dAtA []byte) error {
+func (m *EventLedgerConfigUpdated) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1118,10 +1218,10 @@ func (m *LedgerNavUpdatedEvent) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: LedgerNavUpdatedEvent: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventLedgerConfigUpdated: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LedgerNavUpdatedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventLedgerConfigUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1158,7 +1258,7 @@ func (m *LedgerNavUpdatedEvent) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NavAmount", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1186,9 +1286,39 @@ func (m *LedgerNavUpdatedEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.NavAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PreviousDenom", wireType)
 			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PreviousDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

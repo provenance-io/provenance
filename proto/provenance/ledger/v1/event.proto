@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "provenance/ledger/v1/ledger.proto";
 
-option go_package = "github.com/provenance-io/provenance/x/ledger/types";
+option go_package = "github.com/provenance-io/provenance/x/ledger";
 
 // EventLedgerCreated is emitted when a new ledger is created for an NFT.
 message EventLedgerCreated {

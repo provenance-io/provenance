@@ -88,3 +88,31 @@ message LedgerEntry {
     (amino.dont_omitempty) = true
   ];
 }
+
+// FlowType represents the type of flow being tracked
+enum FlowType {
+  FLOW_TYPE_UNSPECIFIED  = 0;
+  FLOW_TYPE_PAYMENT      = 1;
+  FLOW_TYPE_DISBURSEMENT = 2;
+}
+
+// FlowStatus represents the current status of a flow
+enum FlowStatus {
+  FLOW_STATUS_UNSPECIFIED = 0;
+  FLOW_STATUS_PENDING     = 1;
+  FLOW_STATUS_PROCESSING  = 2;
+  FLOW_STATUS_COMPLETED   = 3;
+  FLOW_STATUS_FAILED      = 4;
+}
+
+// Flow represents a payment or disbursement flow associated with a ledger entry
+message Flow {
+  string     flow_id           = 1;
+  string     ledger_entry_uuid = 2;
+  FlowType   flow_type         = 3;
+  FlowStatus status            = 4;
+  string     amount            = 5;
+  string     memo              = 6;
+  int64      created_at        = 7;
+  int64      updated_at        = 8;
+}
