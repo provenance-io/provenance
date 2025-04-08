@@ -117,11 +117,11 @@ message SettlementInstruction {
   // The recipient's blockchain address
   string recipient_address = 2;
 
-  // The minimum block height or timestamp for settlement
-  int64 settlement_block = 3;
-
   // Optional memo or note for the transaction
-  string memo = 4;
+  string memo = 3;
+
+  // The minimum block height or timestamp for settlement
+  int64 settlement_block = 4;
 }
 
 // FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
