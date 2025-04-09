@@ -226,7 +226,61 @@ func (s *TestSuite) TestCreateLedger() {
 
 // TestGetLedger tests the GetLedger function
 func (s *TestSuite) TestGetLedger() {
-	// TODO: Implement test cases for GetLedger
+	// Create a valid NFT address for testing
+	nftAddr := s.addr1.String()
+	denom := "testdenom"
+
+	// Create a valid ledger first that we can try to get
+	validLedger := ledger.Ledger{
+		NftAddress: nftAddr,
+		Denom:      denom,
+	}
+	err := s.keeper.CreateLedger(s.ctx, validLedger)
+	s.Require().NoError(err, "CreateLedger error")
+
+	tests := []struct {
+		name      string
+		nftAddr   string
+		expErr    []string
+		expLedger *ledger.Ledger
+	}{
+		{
+			name:      "valid ledger retrieval",
+			nftAddr:   nftAddr,
+			expLedger: &validLedger,
+		},
+		{
+			name:    "empty nft address",
+			nftAddr: "",
+			expErr:  []string{"nft_address"},
+		},
+		{
+			name:    "non-existent ledger",
+			nftAddr: s.addr2.String(),
+			expErr:  []string{"not found"},
+		},
+		{
+			name:    "invalid nft address",
+			nftAddr: "invalid",
+			expErr:  []string{"nft_address"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ledger, err := s.keeper.GetLedger(s.ctx, tc.nftAddr)
+
+			if len(tc.expErr) > 0 {
+				s.assertErrorContents(err, tc.expErr, "GetLedger error")
+				s.Require().Nil(ledger, "GetLedger result should be nil on error")
+			} else {
+				s.Require().NoError(err, "GetLedger error")
+				s.Require().NotNil(ledger, "GetLedger result")
+				s.Require().Equal(tc.expLedger.NftAddress, ledger.NftAddress, "ledger nft address")
+				s.Require().Equal(tc.expLedger.Denom, ledger.Denom, "ledger denom")
+			}
+		})
+	}
 }
 
 // TestCreateLedgerEntry tests the CreateLedgerEntry function
