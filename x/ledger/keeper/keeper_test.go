@@ -202,26 +202,22 @@ func (s *TestSuite) TestCreateLedger() {
 
 				// Verify event emission
 				if tc.expEvent {
-					var event *sdk.Event
-
-					events := s.ctx.EventManager().Events()
-					for _, e := range events {
-						s.ctx.Logger().Info("event", "type", e.Type, "attributes", e.Attributes)
+					// Find the expected event
+					var foundEvent *sdk.Event
+					for _, e := range s.ctx.EventManager().Events() {
 						if e.Type == ledger.EventTypeLedgerCreated {
-							event = &e
-							s.Require().NotNil(event)
-							s.Require().Equal(ledger.EventTypeLedgerCreated, event.Type, "event type")
+							foundEvent = &e
 							break
 						}
 					}
 
-					s.Require().NotNil(event)
-					s.Require().Equal(ledger.EventTypeLedgerCreated, event.Type, "event type")
-					s.Require().Len(event.Attributes, 2, "event attributes length")
-					s.Require().Equal("nft_address", event.Attributes[0].Key, "event nft address key")
-					s.Require().Equal(tc.ledger.NftAddress, event.Attributes[0].Value, "event nft address value")
-					s.Require().Equal("denom", event.Attributes[1].Key, "event denom key")
-					s.Require().Equal(tc.ledger.Denom, event.Attributes[1].Value, "event denom value")
+					s.Require().NotNil(foundEvent)
+					s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvent.Type, "event type")
+					s.Require().Len(foundEvent.Attributes, 2, "event attributes length")
+					s.Require().Equal("nft_address", foundEvent.Attributes[0].Key, "event nft address key")
+					s.Require().Equal(tc.ledger.NftAddress, foundEvent.Attributes[0].Value, "event nft address value")
+					s.Require().Equal("denom", foundEvent.Attributes[1].Key, "event denom key")
+					s.Require().Equal(tc.ledger.Denom, foundEvent.Attributes[1].Value, "event denom value")
 				}
 			}
 		})
