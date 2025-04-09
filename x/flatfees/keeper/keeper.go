@@ -30,6 +30,7 @@ type Keeper struct {
 
 	authority string
 
+	Schema  collections.Schema
 	params  collections.Item[types.Params]
 	msgFees collections.Map[string, types.MsgFee]
 }
@@ -40,7 +41,7 @@ func NewKeeper(
 	feeCollectorName string,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
-	return Keeper{
+	rv := Keeper{
 		storeService:     storeService,
 		cdc:              cdc,
 		feeCollectorName: feeCollectorName,
@@ -49,6 +50,13 @@ func NewKeeper(
 		msgFees:   collections.NewMap(sb, types.MsgFeeKeyPrefix, "msg_fees", collections.StringKey, codec.CollValue[types.MsgFee](cdc)),
 		params:    collections.NewItem(sb, types.ParamsKeyPrefix, "params", codec.CollValue[types.Params](cdc)),
 	}
+
+	var err error
+	rv.Schema, err = sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	return rv
 }
 
 // GetAuthority is signer of the proposal

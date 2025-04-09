@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/core/appmodule"
 	cerrs "cosmossdk.io/errors"
@@ -147,13 +146,13 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RandomizedParams creates randomized x/flatfees param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
-	return simulation.ParamChanges(r)
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for x/flatfees module's types.
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
