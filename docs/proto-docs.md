@@ -7193,7 +7193,6 @@ Role defines the different types of roles that can be assigned to addresses
 | `REGISTRY_ROLE_SUBSERVICER` | `2` | REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges |
 | `REGISTRY_ROLE_CONTROLLER` | `3` | REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges |
 | `REGISTRY_ROLE_CUSTODIAN` | `4` | REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges |
-| `REGISTRY_ROLE_SECURED_PARTY` | `5` | REGISTRY_ROLE_SECURED_PARTY indicates the address has secured party privileges |
 
 
  <!-- end enums -->
