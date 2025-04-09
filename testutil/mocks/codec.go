@@ -102,7 +102,7 @@ func (c *MockCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	c.Codec.MustUnmarshalJSON(bz, ptr)
 }
 
-func (c *MockCodec) UnpackAny(any *codectypes.Any, iface interface{}) error {
+func (c *MockCodec) UnpackAny(toUnpack *codectypes.Any, iface interface{}) error {
 	if len(c.UnpackAnyErrs) > 0 {
 		errMsg := c.UnpackAnyErrs[0]
 		c.UnpackAnyErrs = c.UnpackAnyErrs[1:]
@@ -110,5 +110,5 @@ func (c *MockCodec) UnpackAny(any *codectypes.Any, iface interface{}) error {
 			return errors.New(errMsg)
 		}
 	}
-	return c.Codec.UnpackAny(any, iface)
+	return c.Codec.UnpackAny(toUnpack, iface)
 }

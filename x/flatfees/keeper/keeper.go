@@ -19,14 +19,11 @@ import (
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
-const StoreKey = types.ModuleName
-
 // Keeper of the x/flatfees store
 type Keeper struct {
 	cdc              codec.Codec
 	storeService     storetypes.KVStoreService
 	feeCollectorName string // name of the FeeCollector ModuleAccount
-	defaultFeeDenom  string
 
 	authority string
 
