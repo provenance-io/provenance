@@ -18,8 +18,6 @@ enum RegistryRole {
   REGISTRY_ROLE_CONTROLLER = 3;
   // REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges
   REGISTRY_ROLE_CUSTODIAN = 4;
-  // REGISTRY_ROLE_SECURED_PARTY indicates the address has secured party privileges
-  REGISTRY_ROLE_SECURED_PARTY = 5;
 }
 
 // RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
