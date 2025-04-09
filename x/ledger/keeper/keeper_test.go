@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -285,7 +287,180 @@ func (s *TestSuite) TestGetLedger() {
 
 // TestCreateLedgerEntry tests the CreateLedgerEntry function
 func (s *TestSuite) TestCreateLedgerEntry() {
-	// TODO: Implement test cases for CreateLedgerEntry
+	// Create a valid NFT address and ledger first
+	nftAddr := s.addr1.String()
+	denom := "testdenom"
+	validLedger := ledger.Ledger{
+		NftAddress: nftAddr,
+		Denom:      denom,
+	}
+	err := s.keeper.CreateLedger(s.ctx, validLedger)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Create test entry data
+	entryUUID := "b64596bd-76d5-4a04-86db-7568bd295b33"
+	entryType := ledger.LedgerEntryType_Disbursement
+	postedDate := time.Now()
+	effectiveDate := postedDate.Add(24 * time.Hour)
+	amount := s.int(1000)
+
+	tests := []struct {
+		name     string
+		nftAddr  string
+		entry    ledger.LedgerEntry
+		expErr   []string
+		expEvent bool
+	}{
+		{
+			name:    "valid ledger entry",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expEvent: true,
+		},
+		{
+			name:    "empty nft address",
+			nftAddr: "",
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"nft_address"},
+		},
+		{
+			name:    "empty entry uuid",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            "",
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"uuid"},
+		},
+		{
+			name:    "invalid entry uuid format",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            "invalid-uuid",
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"uuid"},
+		},
+		{
+			name:    "non-existent ledger",
+			nftAddr: s.addr2.String(),
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"not found"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Clear events before each test
+			s.ctx.EventManager().Events()
+
+			err := s.keeper.AppendEntry(s.ctx, tc.nftAddr, tc.entry)
+
+			if len(tc.expErr) > 0 {
+				s.assertErrorContents(err, tc.expErr, "AppendEntry error")
+			} else {
+				s.Require().NoError(err, "AppendEntry error")
+
+				// Verify the entry was created
+				entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftAddr, tc.entry.Uuid)
+				s.Require().NoError(err, "GetLedgerEntry error")
+				s.Require().NotNil(entry, "GetLedgerEntry result")
+				s.Require().Equal(tc.entry.Uuid, entry.Uuid, "entry uuid")
+				s.Require().Equal(tc.entry.Type, entry.Type, "entry type")
+				s.Require().Equal(tc.entry.PostedDate, entry.PostedDate, "entry posted date")
+				s.Require().Equal(tc.entry.EffectiveDate, entry.EffectiveDate, "entry effective date")
+				s.Require().Equal(tc.entry.Amt, entry.Amt, "entry amount")
+				s.Require().Equal(tc.entry.PrinAppliedAmt, entry.PrinAppliedAmt, "entry principal applied amount")
+				s.Require().Equal(tc.entry.PrinBalAmt, entry.PrinBalAmt, "entry principal balance amount")
+				s.Require().Equal(tc.entry.IntAppliedAmt, entry.IntAppliedAmt, "entry interest applied amount")
+				s.Require().Equal(tc.entry.IntBalAmt, entry.IntBalAmt, "entry interest balance amount")
+				s.Require().Equal(tc.entry.OtherAppliedAmt, entry.OtherAppliedAmt, "entry other applied amount")
+				s.Require().Equal(tc.entry.OtherBalAmt, entry.OtherBalAmt, "entry other balance amount")
+
+				// Verify event emission
+				if tc.expEvent {
+					// Find the expected event
+					var foundEvent *sdk.Event
+					for _, e := range s.ctx.EventManager().Events() {
+						if e.Type == ledger.EventTypeLedgerEntryAdded {
+							foundEvent = &e
+							break
+						}
+					}
+
+					s.Require().NotNil(foundEvent)
+					s.Require().Equal(ledger.EventTypeLedgerEntryAdded, foundEvent.Type, "event type")
+					s.Require().Len(foundEvent.Attributes, 6, "event attributes length")
+					s.Require().Equal("nft_address", foundEvent.Attributes[0].Key, "event nft address key")
+					s.Require().Equal(tc.nftAddr, foundEvent.Attributes[0].Value, "event nft address value")
+					s.Require().Equal("entry_uuid", foundEvent.Attributes[1].Key, "event entry uuid key")
+					s.Require().Equal(tc.entry.Uuid, foundEvent.Attributes[1].Value, "event entry uuid value")
+					s.Require().Equal("entry_type", foundEvent.Attributes[2].Key, "event entry type key")
+					s.Require().Equal(strconv.FormatInt(int64(tc.entry.Type), 10), foundEvent.Attributes[2].Value, "event entry type value")
+					s.Require().Equal("posted_date", foundEvent.Attributes[3].Key, "event posted date key")
+					s.Require().Equal(tc.entry.PostedDate.Format(time.RFC3339), foundEvent.Attributes[3].Value, "event posted date value")
+					s.Require().Equal("effective_date", foundEvent.Attributes[4].Key, "event effective date key")
+					s.Require().Equal(tc.entry.EffectiveDate.Format(time.RFC3339), foundEvent.Attributes[4].Value, "event effective date value")
+					s.Require().Equal("amount", foundEvent.Attributes[5].Key, "event amount key")
+					s.Require().Equal(tc.entry.Amt.String(), foundEvent.Attributes[5].Value, "event amount value")
+				}
+			}
+		})
+	}
 }
 
 // TestGetLedgerEntry tests the GetLedgerEntry function
