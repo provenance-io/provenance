@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
@@ -10,12 +12,20 @@ import (
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
+// BankKeeper is an interface that allows the ledger keeper to send coins.
+type BankKeeper interface {
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	HasBalance(ctx context.Context, addr sdk.AccAddress, amt sdk.Coin) bool
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+}
+
 // Keeper defines the mymodule keeper.
 type LedgerKeeper struct {
 	cdc        codec.BinaryCodec
 	storeKey   storetypes.StoreKey
 	schema     collections.Schema
-	bankKeeper bankkeeper.BaseKeeper
+	bankKeeper BankKeeper
 
 	Ledgers       collections.Map[string, ledger.Ledger]
 	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
