@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	EventTypeLedgerCreated       = "ledger_created"
-	EventTypeLedgerEntryAdded    = "ledger_entry_added"
-	EventTypeBalanceUpdated      = "ledgerbalance_updated"
-	EventTypeLedgerConfigUpdated = "ledger_config_updated"
+	EventTypeLedgerCreated        = "ledger_created"
+	EventTypeLedgerEntryAdded     = "ledger_entry_added"
+	EventTypeBalanceUpdated       = "ledgerbalance_updated"
+	EventTypeLedgerConfigUpdated  = "ledger_config_updated"
+	EventTypeLedgerEntryRetrieved = "ledger_entry_retrieved"
 )
 
 // NewEventLedgerCreated creates a new EventLedgerCreated event
@@ -53,5 +54,14 @@ func NewEventLedgerConfigUpdated(nftAddress, denom, previousDenom string) sdk.Ev
 		sdk.NewAttribute("nft_address", nftAddress),
 		sdk.NewAttribute("denom", denom),
 		sdk.NewAttribute("previous_denom", previousDenom),
+	)
+}
+
+// NewEventLedgerEntryRetrieved creates a new EventLedgerEntryRetrieved event
+func NewEventLedgerEntryRetrieved(nftAddress, entryUUID string) sdk.Event {
+	return sdk.NewEvent(
+		EventTypeLedgerEntryRetrieved,
+		sdk.NewAttribute("nft_address", nftAddress),
+		sdk.NewAttribute("entry_uuid", entryUUID),
 	)
 }
