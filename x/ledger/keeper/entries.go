@@ -24,7 +24,7 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		return err
 	}
 
-	if err := validateLedgerEntryBasic(&le); err != nil {
+	if err := ValidateLedgerEntryBasic(&le); err != nil {
 		return err
 	}
 

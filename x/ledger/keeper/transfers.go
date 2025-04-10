@@ -6,6 +6,8 @@ import (
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
+var _ FundTransferKeeper = (*BaseFundTransferKeeper)(nil)
+
 type FundTransferKeeper interface {
 	TransferFunds(ctx context.Context, transfer *ledger.FundTransfer) error
 	TransferFundsWithSettlement(ctx context.Context, transfer *ledger.FundTransferWithSettlement) error
@@ -14,6 +16,7 @@ type FundTransferKeeper interface {
 }
 
 type BaseFundTransferKeeper struct {
+	BankKeeper
 }
 
 // TransferFunds processes a fund transfer request

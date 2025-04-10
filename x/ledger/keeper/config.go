@@ -17,7 +17,7 @@ type BaseConfigKeeper struct {
 
 // SetValue stores a value with a given key.
 func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
-	if err := validateLedgerBasic(&l); err != nil {
+	if err := ValidateLedgerBasic(&l); err != nil {
 		return err
 	}
 
