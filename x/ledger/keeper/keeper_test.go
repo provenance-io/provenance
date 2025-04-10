@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"sort"
-	"strconv"
 	"testing"
 	"time"
 
@@ -239,6 +238,23 @@ func (s *TestSuite) TestCreateLedgerEntry() {
 	effectiveDate := postedDate.Add(24 * time.Hour)
 	amount := s.int(1000)
 
+	// Create a valid ledger entry first
+	validEntry := ledger.LedgerEntry{
+		Uuid:            entryUUID,
+		Type:            entryType,
+		PostedDate:      postedDate,
+		EffectiveDate:   effectiveDate,
+		Amt:             amount,
+		PrinAppliedAmt:  amount,
+		PrinBalAmt:      amount,
+		IntAppliedAmt:   s.int(0),
+		IntBalAmt:       s.int(0),
+		OtherAppliedAmt: s.int(0),
+		OtherBalAmt:     s.int(0),
+	}
+	err = s.keeper.AppendEntry(s.ctx, nftAddr, validEntry)
+	s.Require().NoError(err, "AppendEntry error")
+
 	tests := []struct {
 		name     string
 		nftAddr  string
@@ -446,8 +462,8 @@ func (s *TestSuite) TestCreateLedgerEntry() {
 				s.Require().NotNil(entry, "GetLedgerEntry result")
 				s.Require().Equal(tc.entry.Uuid, entry.Uuid, "entry uuid")
 				s.Require().Equal(tc.entry.Type, entry.Type, "entry type")
-				s.Require().Equal(tc.entry.PostedDate, entry.PostedDate, "entry posted date")
-				s.Require().Equal(tc.entry.EffectiveDate, entry.EffectiveDate, "entry effective date")
+				s.Require().True(tc.entry.PostedDate.Equal(entry.PostedDate), "entry posted date")
+				s.Require().True(tc.entry.EffectiveDate.Equal(entry.EffectiveDate), "entry effective date")
 				s.Require().Equal(tc.entry.Amt, entry.Amt, "entry amount")
 				s.Require().Equal(tc.entry.PrinAppliedAmt, entry.PrinAppliedAmt, "entry principal applied amount")
 				s.Require().Equal(tc.entry.PrinBalAmt, entry.PrinBalAmt, "entry principal balance amount")
@@ -470,18 +486,18 @@ func (s *TestSuite) TestCreateLedgerEntry() {
 					s.Require().NotNil(foundEvent)
 					s.Require().Equal(ledger.EventTypeLedgerEntryAdded, foundEvent.Type, "event type")
 					s.Require().Len(foundEvent.Attributes, 6, "event attributes length")
-					s.Require().Equal("nft_address", foundEvent.Attributes[0].Key, "event nft address key")
-					s.Require().Equal(tc.nftAddr, foundEvent.Attributes[0].Value, "event nft address value")
-					s.Require().Equal("entry_uuid", foundEvent.Attributes[1].Key, "event entry uuid key")
-					s.Require().Equal(tc.entry.Uuid, foundEvent.Attributes[1].Value, "event entry uuid value")
-					s.Require().Equal("entry_type", foundEvent.Attributes[2].Key, "event entry type key")
-					s.Require().Equal(strconv.FormatInt(int64(tc.entry.Type), 10), foundEvent.Attributes[2].Value, "event entry type value")
-					s.Require().Equal("posted_date", foundEvent.Attributes[3].Key, "event posted date key")
-					s.Require().Equal(tc.entry.PostedDate.Format(time.RFC3339), foundEvent.Attributes[3].Value, "event posted date value")
-					s.Require().Equal("effective_date", foundEvent.Attributes[4].Key, "event effective date key")
-					s.Require().Equal(tc.entry.EffectiveDate.Format(time.RFC3339), foundEvent.Attributes[4].Value, "event effective date value")
-					s.Require().Equal("amount", foundEvent.Attributes[5].Key, "event amount key")
-					s.Require().Equal(tc.entry.Amt.String(), foundEvent.Attributes[5].Value, "event amount value")
+					s.Require().Equal("nft_address", string(foundEvent.Attributes[0].Key), "event nft address key")
+					s.Require().Equal(tc.nftAddr, string(foundEvent.Attributes[0].Value), "event nft address value")
+					s.Require().Equal("entry_uuid", string(foundEvent.Attributes[1].Key), "event entry uuid key")
+					s.Require().Equal(tc.entry.Uuid, string(foundEvent.Attributes[1].Value), "event entry uuid value")
+					s.Require().Equal("entry_type", string(foundEvent.Attributes[2].Key), "event entry type key")
+					s.Require().Equal(tc.entry.Type.String(), string(foundEvent.Attributes[2].Value), "event entry type value")
+					s.Require().Equal("posted_date", string(foundEvent.Attributes[3].Key), "event posted date key")
+					s.Require().Equal(tc.entry.PostedDate.Format(time.RFC3339), string(foundEvent.Attributes[3].Value), "event posted date value")
+					s.Require().Equal("effective_date", string(foundEvent.Attributes[4].Key), "event effective date key")
+					s.Require().Equal(tc.entry.EffectiveDate.Format(time.RFC3339), string(foundEvent.Attributes[4].Value), "event effective date value")
+					s.Require().Equal("amount", string(foundEvent.Attributes[5].Key), "event amount key")
+					s.Require().Equal(tc.entry.Amt.String(), string(foundEvent.Attributes[5].Value), "event amount value")
 				}
 			}
 		})
@@ -587,8 +603,8 @@ func (s *TestSuite) TestGetLedgerEntry() {
 					s.Require().NotNil(entry, "GetLedgerEntry result")
 					s.Require().Equal(tc.expEntry.Uuid, entry.Uuid, "entry uuid")
 					s.Require().Equal(tc.expEntry.Type, entry.Type, "entry type")
-					s.Require().Equal(tc.expEntry.PostedDate, entry.PostedDate, "entry posted date")
-					s.Require().Equal(tc.expEntry.EffectiveDate, entry.EffectiveDate, "entry effective date")
+					s.Require().True(tc.expEntry.PostedDate.Equal(entry.PostedDate), "entry posted date")
+					s.Require().True(tc.expEntry.EffectiveDate.Equal(entry.EffectiveDate), "entry effective date")
 					s.Require().Equal(tc.expEntry.Amt, entry.Amt, "entry amount")
 					s.Require().Equal(tc.expEntry.PrinAppliedAmt, entry.PrinAppliedAmt, "entry principal applied amount")
 					s.Require().Equal(tc.expEntry.PrinBalAmt, entry.PrinBalAmt, "entry principal balance amount")

@@ -7,12 +7,22 @@ import (
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
-var _ ledger.QueryServer = LedgerKeeper{}
+var _ ledger.QueryServer = LedgerQueryServer{}
 
-func (k LedgerKeeper) Config(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
+type LedgerQueryServer struct {
+	k ViewKeeper
+}
+
+func NewLedgerQueryServer(k ViewKeeper) LedgerQueryServer {
+	return LedgerQueryServer{
+		k: k,
+	}
+}
+
+func (qs LedgerQueryServer) Config(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	l, err := k.GetLedger(ctx, req.NftAddress)
+	l, err := qs.k.GetLedger(ctx, req.NftAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -24,10 +34,10 @@ func (k LedgerKeeper) Config(goCtx context.Context, req *ledger.QueryLedgerConfi
 	return &resp, nil
 }
 
-func (k LedgerKeeper) Entries(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
+func (qs LedgerQueryServer) Entries(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	entries, err := k.ListLedgerEntries(ctx, req.NftAddress)
+	entries, err := qs.k.ListLedgerEntries(ctx, req.NftAddress)
 	if err != nil {
 		return nil, err
 	}
