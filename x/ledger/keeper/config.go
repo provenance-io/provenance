@@ -13,6 +13,7 @@ type ConfigKeeper interface {
 
 type BaseConfigKeeper struct {
 	BaseViewKeeper
+	BankKeeper
 }
 
 // SetValue stores a value with a given key.
@@ -28,6 +29,11 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 	_, err := getAddress(&l.NftAddress)
 	if err != nil {
 		return err
+	}
+
+	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
+	if !k.HasSupply(ctx, l.Denom) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
 	}
 
 	// TODO validate that the {addr} can be modified by the signer...

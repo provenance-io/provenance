@@ -33,6 +33,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 		BaseViewKeeper: viewKeeper,
 		BaseConfigKeeper: BaseConfigKeeper{
 			BaseViewKeeper: viewKeeper,
+			BankKeeper:     bankKeeper,
 		},
 		BaseEntriesKeeper: BaseEntriesKeeper{
 			BaseViewKeeper: viewKeeper,
