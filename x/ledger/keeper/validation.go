@@ -14,3 +14,12 @@ func (k LedgerKeeper) validateLedgerNotExists(ctx sdk.Context, l *ledger.Ledger)
 
 	return nil
 }
+
+func (k LedgerKeeper) getAddress(s *string) (sdk.AccAddress, error) {
+	addr, err := sdk.AccAddressFromBech32(*s)
+	if err != nil || addr == nil {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "nft_address")
+	}
+
+	return addr, nil
+}
