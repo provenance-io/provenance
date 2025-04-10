@@ -59,76 +59,6 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-// coins creates an sdk.Coins from a string, requiring it to work.
-func (s *TestSuite) coins(coins string) sdk.Coins {
-	s.T().Helper()
-	rv, err := sdk.ParseCoinsNormalized(coins)
-	s.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
-	return rv
-}
-
-// coin creates a new coin without doing any validation on it.
-func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
-	return sdk.Coin{
-		Amount: s.int(amount),
-		Denom:  denom,
-	}
-}
-
-// int is a shorter way to call sdkmath.NewInt.
-func (s *TestSuite) int(amount int64) sdkmath.Int {
-	return sdkmath.NewInt(amount)
-}
-
-// intStr creates an sdkmath.Int from a string, requiring it to work.
-func (s *TestSuite) intStr(amount string) sdkmath.Int {
-	s.T().Helper()
-	rv, ok := sdkmath.NewIntFromString(amount)
-	s.Require().True(ok, "NewIntFromString(%q) ok bool", amount)
-	return rv
-}
-
-// assertErrorContents asserts that the provided error is as expected.
-func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
-}
-
-// assertErrorValue asserts that the provided error equals the expected.
-func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
-	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)
-}
-
-// requirePanicContents asserts that, if contains is empty, the provided func does not panic
-func (s *TestSuite) requirePanicContents(f assertions.PanicTestFunc, contains []string, msgAndArgs ...interface{}) {
-	assertions.RequirePanicContents(s.T(), f, contains, msgAndArgs...)
-}
-
-// getAddrName returns the name of the variable in this TestSuite holding the provided address.
-func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
-	switch string(addr) {
-	case string(s.addr1):
-		return "addr1"
-	case string(s.addr2):
-		return "addr2"
-	case string(s.addr3):
-		return "addr3"
-	default:
-		return addr.String()
-	}
-}
-
-// requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
-func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
-	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
-	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
-}
-
-// assertEqualEvents asserts that the expected events equal the actual events.
-func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
-	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
-}
-
 // TestCreateLedger tests the CreateLedger function
 func (s *TestSuite) TestCreateLedger() {
 	// Create a valid NFT address for testing
@@ -257,9 +187,9 @@ func (s *TestSuite) TestGetLedger() {
 			expErr:  []string{"nft_address"},
 		},
 		{
-			name:    "non-existent ledger",
-			nftAddr: s.addr2.String(),
-			expErr:  []string{"not found"},
+			name:      "non-existent ledger",
+			nftAddr:   s.addr2.String(),
+			expLedger: nil,
 		},
 		{
 			name:    "invalid nft address",
@@ -277,9 +207,13 @@ func (s *TestSuite) TestGetLedger() {
 				s.Require().Nil(ledger, "GetLedger result should be nil on error")
 			} else {
 				s.Require().NoError(err, "GetLedger error")
-				s.Require().NotNil(ledger, "GetLedger result")
-				s.Require().Equal(tc.expLedger.NftAddress, ledger.NftAddress, "ledger nft address")
-				s.Require().Equal(tc.expLedger.Denom, ledger.Denom, "ledger denom")
+				if tc.expLedger == nil {
+					s.Require().Nil(ledger, "GetLedger result should be nil for non-existent ledger")
+				} else {
+					s.Require().NotNil(ledger, "GetLedger result")
+					s.Require().Equal(tc.expLedger.NftAddress, ledger.NftAddress, "ledger nft address")
+					s.Require().Equal(tc.expLedger.Denom, ledger.Denom, "ledger denom")
+				}
 			}
 		})
 	}
@@ -287,7 +221,7 @@ func (s *TestSuite) TestGetLedger() {
 
 // TestCreateLedgerEntry tests the CreateLedgerEntry function
 func (s *TestSuite) TestCreateLedgerEntry() {
-	// Create a valid NFT address and ledger first
+	// Create a valid NFT address and ledger for testing
 	nftAddr := s.addr1.String()
 	denom := "testdenom"
 	validLedger := ledger.Ledger{
@@ -382,6 +316,96 @@ func (s *TestSuite) TestCreateLedgerEntry() {
 				OtherBalAmt:     s.int(0),
 			},
 			expErr: []string{"uuid"},
+		},
+		{
+			name:    "unspecified entry type",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            ledger.LedgerEntryType_Unspecified,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"type"},
+		},
+		{
+			name:    "zero posted date",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            entryType,
+				PostedDate:      time.Time{},
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"posted_date"},
+		},
+		{
+			name:    "zero effective date",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   time.Time{},
+				Amt:             amount,
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"effective_date"},
+		},
+		{
+			name:    "negative amount",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             s.int(-1000),
+				PrinAppliedAmt:  amount,
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"amount"},
+		},
+		{
+			name:    "negative principal applied amount",
+			nftAddr: nftAddr,
+			entry: ledger.LedgerEntry{
+				Uuid:            entryUUID,
+				Type:            entryType,
+				PostedDate:      postedDate,
+				EffectiveDate:   effectiveDate,
+				Amt:             amount,
+				PrinAppliedAmt:  s.int(-1000),
+				PrinBalAmt:      amount,
+				IntAppliedAmt:   s.int(0),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(0),
+				OtherBalAmt:     s.int(0),
+			},
+			expErr: []string{"principal_applied_amount"},
 		},
 		{
 			name:    "non-existent ledger",
@@ -481,4 +505,74 @@ func (s *TestSuite) TestInitGenesis() {
 // TestExportGenesis tests the ExportGenesis function
 func (s *TestSuite) TestExportGenesis() {
 	// TODO: Implement test cases for ExportGenesis
+}
+
+// coins creates an sdk.Coins from a string, requiring it to work.
+func (s *TestSuite) coins(coins string) sdk.Coins {
+	s.T().Helper()
+	rv, err := sdk.ParseCoinsNormalized(coins)
+	s.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
+	return rv
+}
+
+// coin creates a new coin without doing any validation on it.
+func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
+	return sdk.Coin{
+		Amount: s.int(amount),
+		Denom:  denom,
+	}
+}
+
+// int is a shorter way to call sdkmath.NewInt.
+func (s *TestSuite) int(amount int64) sdkmath.Int {
+	return sdkmath.NewInt(amount)
+}
+
+// intStr creates an sdkmath.Int from a string, requiring it to work.
+func (s *TestSuite) intStr(amount string) sdkmath.Int {
+	s.T().Helper()
+	rv, ok := sdkmath.NewIntFromString(amount)
+	s.Require().True(ok, "NewIntFromString(%q) ok bool", amount)
+	return rv
+}
+
+// assertErrorContents asserts that the provided error is as expected.
+func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+}
+
+// assertErrorValue asserts that the provided error equals the expected.
+func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
+	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)
+}
+
+// requirePanicContents asserts that, if contains is empty, the provided func does not panic
+func (s *TestSuite) requirePanicContents(f assertions.PanicTestFunc, contains []string, msgAndArgs ...interface{}) {
+	assertions.RequirePanicContents(s.T(), f, contains, msgAndArgs...)
+}
+
+// getAddrName returns the name of the variable in this TestSuite holding the provided address.
+func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
+	switch string(addr) {
+	case string(s.addr1):
+		return "addr1"
+	case string(s.addr2):
+		return "addr2"
+	case string(s.addr3):
+		return "addr3"
+	default:
+		return addr.String()
+	}
+}
+
+// requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
+	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
+}
+
+// assertEqualEvents asserts that the expected events equal the actual events.
+func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
+	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
 }

@@ -11,15 +11,18 @@ import (
 
 // SetValue stores a value with a given key.
 func (k LedgerKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le ledger.LedgerEntry) error {
-	if emptyString(&nftAddress) {
-		return NewLedgerCodedError(ErrCodeMissingField, "field[nft_address]")
+	// Validate the NFT address
+	_, err := k.getAddress(&nftAddress)
+	if err != nil {
+		return err
 	}
 
 	if err := validateLedgerEntryBasic(&le); err != nil {
 		return err
 	}
 
-	_, err := k.getAddress(&nftAddress)
+	// Validate that the ledger exists
+	_, err = k.Ledgers.Get(ctx, nftAddress)
 	if err != nil {
 		return err
 	}
