@@ -24,12 +24,12 @@ func NewEventLedgerCreated(nftAddress, denom string) sdk.Event {
 }
 
 // NewEventLedgerEntryAdded creates a new EventLedgerEntryAdded event
-func NewEventLedgerEntryAdded(nftAddress, entryUUID string, entryType int32, postedDate, effectiveDate time.Time, amount string) sdk.Event {
+func NewEventLedgerEntryAdded(nftAddress, entryUUID string, entryType string, postedDate, effectiveDate time.Time, amount string) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeLedgerEntryAdded,
 		sdk.NewAttribute("nft_address", nftAddress),
 		sdk.NewAttribute("entry_uuid", entryUUID),
-		sdk.NewAttribute("entry_type", string(entryType)),
+		sdk.NewAttribute("entry_type", entryType),
 		sdk.NewAttribute("posted_date", postedDate.Format(time.RFC3339)),
 		sdk.NewAttribute("effective_date", effectiveDate.Format(time.RFC3339)),
 		sdk.NewAttribute("amount", amount),

@@ -44,11 +44,11 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 // AppModule implements an application module for mymodule.
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.LedgerKeeper
+	keeper keeper.BaseKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(cdc codec.Codec, k keeper.LedgerKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, k keeper.BaseKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         k,
@@ -115,7 +115,8 @@ func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
-	ledger.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	ledger.RegisterQueryServer(cfg.QueryServer(), keeper.NewLedgerQueryServer(am.keeper))
 }
 
 // Register the protobuf message types and services with the sdk.
