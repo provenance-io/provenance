@@ -489,7 +489,113 @@ func (s *TestSuite) TestCreateLedgerEntry() {
 
 // TestGetLedgerEntry tests the GetLedgerEntry function
 func (s *TestSuite) TestGetLedgerEntry() {
-	// TODO: Implement test cases for GetLedgerEntry
+	// Create a valid NFT address and ledger for testing
+	nftAddr := s.addr1.String()
+	denom := "testdenom"
+	validLedger := ledger.Ledger{
+		NftAddress: nftAddr,
+		Denom:      denom,
+	}
+	err := s.keeper.CreateLedger(s.ctx, validLedger)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Create test entry data
+	entryUUID := "b64596bd-76d5-4a04-86db-7568bd295b33"
+	entryType := ledger.LedgerEntryType_Disbursement
+	postedDate := time.Now()
+	effectiveDate := postedDate.Add(24 * time.Hour)
+	amount := s.int(1000)
+
+	// Create a valid ledger entry first
+	validEntry := ledger.LedgerEntry{
+		Uuid:            entryUUID,
+		Type:            entryType,
+		PostedDate:      postedDate,
+		EffectiveDate:   effectiveDate,
+		Amt:             amount,
+		PrinAppliedAmt:  amount,
+		PrinBalAmt:      amount,
+		IntAppliedAmt:   s.int(0),
+		IntBalAmt:       s.int(0),
+		OtherAppliedAmt: s.int(0),
+		OtherBalAmt:     s.int(0),
+	}
+	err = s.keeper.AppendEntry(s.ctx, nftAddr, validEntry)
+	s.Require().NoError(err, "AppendEntry error")
+
+	tests := []struct {
+		name     string
+		nftAddr  string
+		uuid     string
+		expErr   []string
+		expEntry *ledger.LedgerEntry
+	}{
+		{
+			name:     "valid ledger entry retrieval",
+			nftAddr:  nftAddr,
+			uuid:     entryUUID,
+			expEntry: &validEntry,
+		},
+		{
+			name:    "empty nft address",
+			nftAddr: "",
+			uuid:    entryUUID,
+			expErr:  []string{"nft_address"},
+		},
+		{
+			name:    "empty uuid",
+			nftAddr: nftAddr,
+			uuid:    "",
+			expErr:  []string{"uuid"},
+		},
+		{
+			name:     "non-existent ledger",
+			nftAddr:  s.addr2.String(),
+			uuid:     entryUUID,
+			expEntry: nil,
+		},
+		{
+			name:     "non-existent entry",
+			nftAddr:  nftAddr,
+			uuid:     "b64596bd-76d5-4a04-86db-7568bd295b31",
+			expEntry: nil,
+		},
+		{
+			name:    "invalid nft address",
+			nftAddr: "invalid",
+			uuid:    entryUUID,
+			expErr:  []string{"nft_address"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftAddr, tc.uuid)
+
+			if len(tc.expErr) > 0 {
+				s.assertErrorContents(err, tc.expErr, "GetLedgerEntry error")
+				s.Require().Nil(entry, "GetLedgerEntry result should be nil on error")
+			} else {
+				s.Require().NoError(err, "GetLedgerEntry error")
+				if tc.expEntry == nil {
+					s.Require().Nil(entry, "GetLedgerEntry result should be nil for non-existent entry")
+				} else {
+					s.Require().NotNil(entry, "GetLedgerEntry result")
+					s.Require().Equal(tc.expEntry.Uuid, entry.Uuid, "entry uuid")
+					s.Require().Equal(tc.expEntry.Type, entry.Type, "entry type")
+					s.Require().Equal(tc.expEntry.PostedDate, entry.PostedDate, "entry posted date")
+					s.Require().Equal(tc.expEntry.EffectiveDate, entry.EffectiveDate, "entry effective date")
+					s.Require().Equal(tc.expEntry.Amt, entry.Amt, "entry amount")
+					s.Require().Equal(tc.expEntry.PrinAppliedAmt, entry.PrinAppliedAmt, "entry principal applied amount")
+					s.Require().Equal(tc.expEntry.PrinBalAmt, entry.PrinBalAmt, "entry principal balance amount")
+					s.Require().Equal(tc.expEntry.IntAppliedAmt, entry.IntAppliedAmt, "entry interest applied amount")
+					s.Require().Equal(tc.expEntry.IntBalAmt, entry.IntBalAmt, "entry interest balance amount")
+					s.Require().Equal(tc.expEntry.OtherAppliedAmt, entry.OtherAppliedAmt, "entry other applied amount")
+					s.Require().Equal(tc.expEntry.OtherBalAmt, entry.OtherBalAmt, "entry other balance amount")
+				}
+			}
+		})
+	}
 }
 
 // TestProcessFundTransfer tests the ProcessFundTransfer function

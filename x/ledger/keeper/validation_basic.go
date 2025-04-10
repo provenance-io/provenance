@@ -24,7 +24,7 @@ func validateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 	if emptyString(&e.Uuid) {
 		return NewLedgerCodedError(ErrCodeMissingField, "uuid")
 	} else {
-		if _, err := uuid.Parse(e.Uuid); err != nil {
+		if !isUUIDValid(e.Uuid) {
 			return NewLedgerCodedError(ErrCodeInvalidField, "uuid")
 		}
 	}
@@ -74,4 +74,13 @@ func emptyString(s *string) bool {
 		return true
 	}
 	return false
+}
+
+// validateUUID validates that the provided string is a valid UUID.
+// Returns true if the string is a valid UUID, false otherwise.
+func isUUIDValid(uuidStr string) bool {
+	if _, err := uuid.Parse(uuidStr); err != nil {
+		return false
+	}
+	return true
 }

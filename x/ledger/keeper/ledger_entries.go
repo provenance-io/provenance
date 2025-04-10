@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,6 +77,16 @@ func (k LedgerKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) 
 
 // GetLedgerEntry retrieves a ledger entry by its UUID for a specific NFT address
 func (k LedgerKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, uuid string) (*ledger.LedgerEntry, error) {
+	// Validate the NFT address
+	_, err := k.getAddress(&nftAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isUUIDValid(uuid) {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "uuid")
+	}
+
 	entries, err := k.ListLedgerEntries(ctx, nftAddress)
 	if err != nil {
 		return nil, err
@@ -89,5 +98,6 @@ func (k LedgerKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, uui
 		}
 	}
 
-	return nil, fmt.Errorf("ledger entry not found for NFT address %s with UUID %s", nftAddress, uuid)
+	// If we get here, the entry was not found
+	return nil, nil
 }
