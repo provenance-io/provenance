@@ -62,7 +62,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *TestSuite) TestCreateLedger() {
 	// Create a valid NFT address for testing
 	nftAddr := s.addr1.String()
-	denom := "testdenom"
+	denom := s.bondDenom
 
 	tests := []struct {
 		name     string
@@ -159,7 +159,7 @@ func (s *TestSuite) TestCreateLedger() {
 func (s *TestSuite) TestGetLedger() {
 	// Create a valid NFT address for testing
 	nftAddr := s.addr1.String()
-	denom := "testdenom"
+	denom := s.bondDenom
 
 	// Create a valid ledger first that we can try to get
 	validLedger := ledger.Ledger{
@@ -222,7 +222,7 @@ func (s *TestSuite) TestGetLedger() {
 func (s *TestSuite) TestCreateLedgerEntry() {
 	// Create a valid NFT address and ledger for testing
 	nftAddr := s.addr1.String()
-	denom := "testdenom"
+	denom := s.bondDenom
 	validLedger := ledger.Ledger{
 		NftAddress: nftAddr,
 		Denom:      denom,
@@ -507,7 +507,7 @@ func (s *TestSuite) TestCreateLedgerEntry() {
 func (s *TestSuite) TestGetLedgerEntry() {
 	// Create a valid NFT address and ledger for testing
 	nftAddr := s.addr1.String()
-	denom := "testdenom"
+	denom := s.bondDenom
 	validLedger := ledger.Ledger{
 		NftAddress: nftAddr,
 		Denom:      denom,
@@ -627,11 +627,11 @@ func (s *TestSuite) TestInitGenesis() {
 	// Create test ledgers
 	ledger1 := ledger.Ledger{
 		NftAddress: s.addr1.String(),
-		Denom:      "testdenom1",
+		Denom:      s.bondDenom,
 	}
 	ledger2 := ledger.Ledger{
 		NftAddress: s.addr2.String(),
-		Denom:      "testdenom2",
+		Denom:      s.bondDenom,
 	}
 
 	tests := []struct {
@@ -658,7 +658,7 @@ func (s *TestSuite) TestInitGenesis() {
 				Ledgers: []ledger.Ledger{
 					{
 						NftAddress: "invalid",
-						Denom:      "testdenom",
+						Denom:      "testinvaliddenom",
 					},
 				},
 			},
@@ -725,11 +725,11 @@ func (s *TestSuite) TestExportGenesis() {
 	// Create test ledgers
 	ledger1 := ledger.Ledger{
 		NftAddress: s.addr1.String(),
-		Denom:      "testdenom1",
+		Denom:      s.bondDenom,
 	}
 	ledger2 := ledger.Ledger{
 		NftAddress: s.addr2.String(),
-		Denom:      "testdenom2",
+		Denom:      s.bondDenom,
 	}
 
 	// Create ledgers first
