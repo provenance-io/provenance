@@ -384,9 +384,9 @@ func New(
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
+		registry.StoreKey,
 		ledger.StoreKey,
 		exchange.StoreKey,
-		registry.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys()
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -764,8 +764,8 @@ func New(
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
-		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
 		registrymodule.NewAppModule(appCodec, app.RegistryKeeper),
+		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
@@ -869,8 +869,8 @@ func New(
 		metadatatypes.ModuleName,
 		msgfeestypes.ModuleName,
 		hold.ModuleName,
-		ledger.ModuleName,
 		registry.ModuleName,
+		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
 
 		ibcexported.ModuleName,
@@ -908,8 +908,8 @@ func New(
 		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
-		ledger.ModuleName,
 		registry.ModuleName,
+		ledger.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
