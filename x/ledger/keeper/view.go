@@ -22,23 +22,21 @@ type ViewKeeper interface {
 }
 
 type BaseViewKeeper struct {
-	cdc        codec.BinaryCodec
-	storeKey   storetypes.StoreKey
-	schema     collections.Schema
-	bankKeeper BankKeeper
+	cdc      codec.BinaryCodec
+	storeKey storetypes.StoreKey
+	schema   collections.Schema
 
 	Ledgers       collections.Map[string, ledger.Ledger]
 	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
 	FundTransfers collections.Map[collections.Pair[string, string], ledger.FundTransfer]
 }
 
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper BankKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
 	lk := BaseViewKeeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		bankKeeper: bankKeeper,
+		cdc:      cdc,
+		storeKey: storeKey,
 
 		Ledgers: collections.NewMap(
 			sb,

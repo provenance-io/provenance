@@ -3,13 +3,10 @@
 package keeper
 
 import (
-	"strings"
-
-	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
-func validateLedgerBasic(l *ledger.Ledger) error {
+func ValidateLedgerBasic(l *ledger.Ledger) error {
 	if emptyString(&l.Denom) {
 		return NewLedgerCodedError(ErrCodeMissingField, "denom")
 	}
@@ -20,7 +17,7 @@ func validateLedgerBasic(l *ledger.Ledger) error {
 	return nil
 }
 
-func validateLedgerEntryBasic(e *ledger.LedgerEntry) error {
+func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 	if emptyString(&e.Uuid) {
 		return NewLedgerCodedError(ErrCodeMissingField, "uuid")
 	} else {
@@ -66,21 +63,4 @@ func validateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 	}
 
 	return nil
-}
-
-// Returns true if the string is nil or empty(TrimSpace(*s))
-func emptyString(s *string) bool {
-	if s == nil || strings.TrimSpace(*s) == "" {
-		return true
-	}
-	return false
-}
-
-// validateUUID validates that the provided string is a valid UUID.
-// Returns true if the string is a valid UUID, false otherwise.
-func isUUIDValid(uuidStr string) bool {
-	if _, err := uuid.Parse(uuidStr); err != nil {
-		return false
-	}
-	return true
 }
