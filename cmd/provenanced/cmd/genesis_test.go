@@ -92,7 +92,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmdFee := provenancecmd.AddGenesisFlatFeeCmd(home)
+			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home)
 			cmdFee.SetArgs([]string{
 				tc.msgType,
 				tc.fee,

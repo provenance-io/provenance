@@ -81,6 +81,24 @@ func ParseConversionFactor(arg string) (types.ConversionFactor, error) {
 	return rv, nil
 }
 
+// ParseParamsArgs parses the first arg as the default cost, and second as the conversion factor.
+// Contract: args must have length 2.
+func ParseParamsArgs(args []string) (types.Params, error) {
+	rv := types.Params{}
+	var err error
+	rv.DefaultCost, err = ParseDefaultCost(args[0])
+	if err != nil {
+		return rv, err
+	}
+
+	rv.ConversionFactor, err = ParseConversionFactor(args[1])
+	if err != nil {
+		return rv, err
+	}
+
+	return rv, nil
+}
+
 // ReadFlagSet reads the --set flag values from the provided flagSet.
 func ReadFlagSet(flagSet *pflag.FlagSet) ([]*types.MsgFee, error) {
 	args, err := flagSet.GetStringArray(FlagSet)
@@ -120,10 +138,10 @@ func NewCmdUpdateParams() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a governance proposal to update the x/flatfees module params.
 
 The <default cost> is a standard Coin string.
-The <base>=<converted> arg is the conversion factor, and each should be standard coin strings.
+The <base>=<converted> arg is the conversion factor, and each should be a standard coin string.
 The denominations in the <default cost> and <base> should be the same.
 `),
-		Example: fmt.Sprintf("$ %[1]s params 100%[2]s 5%[2]s=7nhash'", cmdStart, types.DefaultFeeDefinitionDenom),
+		Example: fmt.Sprintf("$ %[1]s params 100%[2]s 5%[2]s=7nhash", cmdStart, types.DefaultFeeDefinitionDenom),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -136,12 +154,7 @@ The denominations in the <default cost> and <base> should be the same.
 				Authority: provcli.GetAuthority(flagSet),
 			}
 
-			msg.Params.DefaultCost, err = ParseDefaultCost(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg.Params.ConversionFactor, err = ParseConversionFactor(args[1])
+			msg.Params, err = ParseParamsArgs(args)
 			if err != nil {
 				return err
 			}

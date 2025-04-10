@@ -25,10 +25,10 @@ import (
 
 	"github.com/provenance-io/provenance/x/exchange"
 	exchangecli "github.com/provenance-io/provenance/x/exchange/client/cli"
+	flatfeescli "github.com/provenance-io/provenance/x/flatfees/client/cli"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -68,7 +68,8 @@ func GenesisCmd(txConfig client.TxConfig, moduleBasics module.BasicManager, defa
 		AddGenesisAccountCmd(txConfig, defaultNodeHome),
 		AddRootDomainAccountCmd(defaultNodeHome),
 		AddGenesisMarkerCmd(defaultNodeHome),
-		AddGenesisFlatFeeCmd(defaultNodeHome),
+		AddGenesisMsgFeeCmd(defaultNodeHome),
+		SetGenesisParamsFlatFeeCmd(defaultNodeHome),
 		AddGenesisDefaultMarketCmd(defaultNodeHome),
 		AddGenesisCustomMarketCmd(defaultNodeHome),
 	)
@@ -475,8 +476,8 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	return cmd
 }
 
-// AddGenesisFlatFeeCmd returns add-msg-fee cobra command.
-func AddGenesisFlatFeeCmd(defaultNodeHome string) *cobra.Command {
+// AddGenesisMsgFeeCmd returns add-msg-fee cobra command.
+func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "add-msg-fee <msg-url> <cost>",
 		Aliases: []string{"add-genesis-msg-fee"},
@@ -485,20 +486,13 @@ func AddGenesisFlatFeeCmd(defaultNodeHome string) *cobra.Command {
 The command will validate that the msg-url is a valid sdk.msg and that the fee is a valid amount.`,
 		Example: fmt.Sprintf(`$ %[1]s add-msg-fee /cosmos.bank.v1beta1.MsgSend 10000000000nhash`, genCmdStart),
 		Args:    cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.Codec
-
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
-			config.SetRoot(clientCtx.HomeDir)
-
+		RunE: updateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error {
 			msgType := args[0]
 			if msgType[0] != '/' {
 				msgType = "/" + msgType
 			}
 
-			_, err := cdc.InterfaceRegistry().Resolve(msgType)
+			_, err := clientCtx.Codec.InterfaceRegistry().Resolve(msgType)
 			if err != nil {
 				return fmt.Errorf("invalid msg type %q: %w", msgType, err)
 			}
@@ -508,13 +502,10 @@ The command will validate that the msg-url is a valid sdk.msg and that the fee i
 				return fmt.Errorf("invalid cost %q: %w", args[1], err)
 			}
 
-			genFile := config.GenesisFile()
-			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
-			if err != nil {
-				return fmt.Errorf("could not read genesis state: %w", err)
-			}
+			// Usage won't help anymore.
+			cmd.SilenceUsage = true
 
-			flatFeesGenState, err := flatfeestypes.GetGenesisStateFromAppState(cdc, appState)
+			flatFeesGenState, err := flatfeestypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 			if err != nil {
 				return fmt.Errorf("could not get x/flatfees genesis state: %w", err)
 			}
@@ -532,21 +523,55 @@ The command will validate that the msg-url is a valid sdk.msg and that the fee i
 				flatFeesGenState.MsgFees = append(flatFeesGenState.MsgFees, flatfeestypes.NewMsgFee(msgType, cost...))
 			}
 
-			flatFeesGenStateBz, err := cdc.MarshalJSON(flatFeesGenState)
+			appState[flatfeestypes.ModuleName], err = clientCtx.Codec.MarshalJSON(flatFeesGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal x/flatfees genesis state: %w", err)
 			}
 
-			appState[msgfeetypes.ModuleName] = flatFeesGenStateBz
+			return nil
+		}),
+	}
 
-			appStateJSON, err := json.Marshal(appState)
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// SetGenesisParamsFlatFeeCmd returns the set-params-flatfees cobra command.
+func SetGenesisParamsFlatFeeCmd(defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-params-flatfees <default cost> <base>=<converted>",
+		Short: "Set the params of the flatfees module",
+		Long: strings.TrimSpace(`Set the params of the flatfees module.
+
+The <default cost> is a standard Coin string.
+The <base>=<converted> arg is the conversion factor, and each should be a standard coin string.
+The denominations in the <default cost> and <base> should be the same.
+`),
+		Example: fmt.Sprintf("$ %[1]s set-params-flatfees 100%[2]s 5%[2]s=7nhash", cmdStart, flatfeestypes.DefaultFeeDefinitionDenom),
+		Args:    cobra.ExactArgs(2),
+		RunE: updateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error {
+			params, err := flatfeescli.ParseParamsArgs(args)
 			if err != nil {
-				return fmt.Errorf("failed to marshal application genesis state: %w", err)
+				return err
 			}
 
-			genDoc.AppState = appStateJSON
-			return genutil.ExportGenesisFile(genDoc, genFile)
-		},
+			// No need to show usage on any of the rest of these errors.
+			cmd.SilenceUsage = true
+
+			flatFeesGenState, err := flatfeestypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+			if err != nil {
+				return fmt.Errorf("could not get x/flatfees genesis state: %w", err)
+			}
+			flatFeesGenState.Params = params
+
+			appState[flatfeestypes.ModuleName], err = clientCtx.Codec.MarshalJSON(flatFeesGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal x/flatfees genesis state: %w", err)
+			}
+
+			return nil
+		}),
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
