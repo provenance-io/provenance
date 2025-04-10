@@ -89,6 +89,29 @@ func (k LedgerKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 	}
 }
 
-func (k LedgerKeeper) ExportGenesis(ctx sdk.Context) {
-	// TODO
+func (k LedgerKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
+	state := &ledger.GenesisState{}
+
+	// Iterate through all ledgers
+	iter, err := k.Ledgers.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			panic(err)
+		}
+		value, err := iter.Value()
+		if err != nil {
+			panic(err)
+		}
+		// Set the NftAddress back since it's not stored in the value
+		value.NftAddress = key
+		state.Ledgers = append(state.Ledgers, value)
+	}
+
+	return state
 }
