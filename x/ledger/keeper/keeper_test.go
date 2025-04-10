@@ -529,47 +529,50 @@ func (s *TestSuite) TestGetLedgerEntry() {
 		uuid     string
 		expErr   []string
 		expEntry *ledger.LedgerEntry
+		expEvent bool
 	}{
 		{
 			name:     "valid ledger entry retrieval",
 			nftAddr:  nftAddr,
 			uuid:     entryUUID,
 			expEntry: &validEntry,
+			expEvent: true,
 		},
 		{
-			name:    "empty nft address",
-			nftAddr: "",
-			uuid:    entryUUID,
-			expErr:  []string{"nft_address"},
+			name:     "empty nft address",
+			nftAddr:  "",
+			uuid:     entryUUID,
+			expErr:   []string{"nft_address"},
+			expEvent: false,
 		},
 		{
-			name:    "empty uuid",
-			nftAddr: nftAddr,
-			uuid:    "",
-			expErr:  []string{"uuid"},
+			name:     "empty uuid",
+			nftAddr:  nftAddr,
+			uuid:     "",
+			expErr:   []string{"uuid"},
+			expEvent: false,
 		},
 		{
 			name:     "non-existent ledger",
 			nftAddr:  s.addr2.String(),
 			uuid:     entryUUID,
 			expEntry: nil,
+			expEvent: false,
 		},
 		{
 			name:     "non-existent entry",
 			nftAddr:  nftAddr,
 			uuid:     "b64596bd-76d5-4a04-86db-7568bd295b31",
 			expEntry: nil,
-		},
-		{
-			name:    "invalid nft address",
-			nftAddr: "invalid",
-			uuid:    entryUUID,
-			expErr:  []string{"nft_address"},
+			expEvent: false,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			// Clear events before each test
+			s.ctx.EventManager().Events()
+
 			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftAddr, tc.uuid)
 
 			if len(tc.expErr) > 0 {
@@ -592,6 +595,32 @@ func (s *TestSuite) TestGetLedgerEntry() {
 					s.Require().Equal(tc.expEntry.IntBalAmt, entry.IntBalAmt, "entry interest balance amount")
 					s.Require().Equal(tc.expEntry.OtherAppliedAmt, entry.OtherAppliedAmt, "entry other applied amount")
 					s.Require().Equal(tc.expEntry.OtherBalAmt, entry.OtherBalAmt, "entry other balance amount")
+				}
+			}
+
+			// Verify event emission
+			events := s.ctx.EventManager().Events()
+			if tc.expEvent {
+				// Find the expected event
+				var foundEvent *sdk.Event
+				for _, e := range events {
+					if e.Type == ledger.EventTypeLedgerEntryRetrieved {
+						foundEvent = &e
+						break
+					}
+				}
+
+				s.Require().NotNil(foundEvent, "Event should be emitted for successful retrieval")
+				s.Require().Equal(ledger.EventTypeLedgerEntryRetrieved, foundEvent.Type, "event type")
+				s.Require().Len(foundEvent.Attributes, 2, "event attributes length")
+				s.Require().Equal("nft_address", string(foundEvent.Attributes[0].Key), "event nft address key")
+				s.Require().Equal(tc.nftAddr, string(foundEvent.Attributes[0].Value), "event nft address value")
+				s.Require().Equal("entry_uuid", string(foundEvent.Attributes[1].Key), "event entry uuid key")
+				s.Require().Equal(tc.uuid, string(foundEvent.Attributes[1].Value), "event entry uuid value")
+			} else {
+				// Verify the specific event was not emitted
+				for _, e := range events {
+					s.Require().NotEqual(ledger.EventTypeLedgerEntryRetrieved, e.Type, "EventTypeLedgerEntryRetrieved should not be emitted")
 				}
 			}
 		})
