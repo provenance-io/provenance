@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -634,12 +635,175 @@ func (s *TestSuite) TestProcessFundTransfer() {
 
 // TestInitGenesis tests the InitGenesis function
 func (s *TestSuite) TestInitGenesis() {
-	// TODO: Implement test cases for InitGenesis
+	// Create test ledgers
+	ledger1 := ledger.Ledger{
+		NftAddress: s.addr1.String(),
+		Denom:      "testdenom1",
+	}
+	ledger2 := ledger.Ledger{
+		NftAddress: s.addr2.String(),
+		Denom:      "testdenom2",
+	}
+
+	tests := []struct {
+		name      string
+		genState  *ledger.GenesisState
+		expPanic  bool
+		expLedger *ledger.Ledger
+	}{
+		{
+			name: "valid genesis state",
+			genState: &ledger.GenesisState{
+				Ledgers: []ledger.Ledger{ledger1, ledger2},
+			},
+		},
+		{
+			name: "empty genesis state",
+			genState: &ledger.GenesisState{
+				Ledgers: []ledger.Ledger{},
+			},
+		},
+		{
+			name: "invalid ledger in genesis state",
+			genState: &ledger.GenesisState{
+				Ledgers: []ledger.Ledger{
+					{
+						NftAddress: "invalid",
+						Denom:      "testdenom",
+					},
+				},
+			},
+			expPanic: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Clear events before each test
+			s.ctx.EventManager().Events()
+
+			if tc.expPanic {
+				s.Require().Panics(func() {
+					s.keeper.InitGenesis(s.ctx, tc.genState)
+				}, "InitGenesis should panic with invalid ledger")
+				return
+			}
+
+			// Initialize genesis state
+			s.keeper.InitGenesis(s.ctx, tc.genState)
+
+			// Verify ledgers were created
+			for _, l := range tc.genState.Ledgers {
+				// Get the ledger and verify it exists
+				foundLedger, err := s.keeper.GetLedger(s.ctx, l.NftAddress)
+				s.Require().NoError(err, "GetLedger error")
+				s.Require().NotNil(foundLedger, "GetLedger result")
+				s.Require().Equal(l.NftAddress, foundLedger.NftAddress, "ledger nft address")
+				s.Require().Equal(l.Denom, foundLedger.Denom, "ledger denom")
+
+				// Verify event emission
+				events := s.ctx.EventManager().Events()
+				var foundEvents []*sdk.Event
+				for _, e := range events {
+					if e.Type == ledger.EventTypeLedgerCreated {
+						foundEvents = append(foundEvents, &e)
+					}
+				}
+
+				// Find the event for this specific ledger
+				var foundEvent *sdk.Event
+				for _, e := range foundEvents {
+					if string(e.Attributes[0].Value) == l.NftAddress {
+						foundEvent = e
+						break
+					}
+				}
+
+				s.Require().NotNil(foundEvent, "Event should be emitted for ledger creation")
+				s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvent.Type, "event type")
+				s.Require().Len(foundEvent.Attributes, 2, "event attributes length")
+				s.Require().Equal("nft_address", string(foundEvent.Attributes[0].Key), "event nft address key")
+				s.Require().Equal(l.NftAddress, string(foundEvent.Attributes[0].Value), "event nft address value")
+				s.Require().Equal("denom", string(foundEvent.Attributes[1].Key), "event denom key")
+				s.Require().Equal(l.Denom, string(foundEvent.Attributes[1].Value), "event denom value")
+			}
+		})
+	}
 }
 
 // TestExportGenesis tests the ExportGenesis function
 func (s *TestSuite) TestExportGenesis() {
-	// TODO: Implement test cases for ExportGenesis
+	// Create test ledgers
+	ledger1 := ledger.Ledger{
+		NftAddress: s.addr1.String(),
+		Denom:      "testdenom1",
+	}
+	ledger2 := ledger.Ledger{
+		NftAddress: s.addr2.String(),
+		Denom:      "testdenom2",
+	}
+
+	// Create ledgers first
+	err := s.keeper.CreateLedger(s.ctx, ledger1)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Verify first ledger creation event
+	events := s.ctx.EventManager().Events()
+	var foundEvents []*sdk.Event
+	for _, e := range events {
+		if e.Type == ledger.EventTypeLedgerCreated {
+			foundEvents = append(foundEvents, &e)
+		}
+	}
+	s.Require().Len(foundEvents, 1, "number of events after first ledger creation")
+	s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvents[0].Type, "event type")
+	s.Require().Len(foundEvents[0].Attributes, 2, "event attributes length")
+	s.Require().Equal("nft_address", string(foundEvents[0].Attributes[0].Key), "event nft address key")
+	s.Require().Equal(ledger1.NftAddress, string(foundEvents[0].Attributes[0].Value), "event nft address value")
+	s.Require().Equal("denom", string(foundEvents[0].Attributes[1].Key), "event denom key")
+	s.Require().Equal(ledger1.Denom, string(foundEvents[0].Attributes[1].Value), "event denom value")
+
+	// Clear events before second ledger creation
+	s.ctx.EventManager().Events()
+
+	err = s.keeper.CreateLedger(s.ctx, ledger2)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Verify second ledger creation event
+	events = s.ctx.EventManager().Events()
+	foundEvents = foundEvents[:0] // Clear the slice
+	for _, e := range events {
+		if e.Type == ledger.EventTypeLedgerCreated {
+			foundEvents = append(foundEvents, &e)
+		}
+	}
+	s.Require().Len(foundEvents, 1, "number of events after second ledger creation")
+	s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvents[0].Type, "event type")
+	s.Require().Len(foundEvents[0].Attributes, 2, "event attributes length")
+	s.Require().Equal("nft_address", string(foundEvents[0].Attributes[0].Key), "event nft address key")
+	s.Require().Equal(ledger2.NftAddress, string(foundEvents[0].Attributes[0].Value), "event nft address value")
+	s.Require().Equal("denom", string(foundEvents[0].Attributes[1].Key), "event denom key")
+	s.Require().Equal(ledger2.Denom, string(foundEvents[0].Attributes[1].Value), "event denom value")
+
+	// Export genesis state
+	genState := s.keeper.ExportGenesis(s.ctx)
+
+	// Verify exported state
+	s.Require().Len(genState.Ledgers, 2, "number of ledgers in exported state")
+
+	// Sort ledgers for consistent comparison
+	ledgers := genState.Ledgers
+	sort.Slice(ledgers, func(i, j int) bool {
+		return ledgers[i].NftAddress < ledgers[j].NftAddress
+	})
+
+	// Verify first ledger
+	s.Require().Equal(ledger1.NftAddress, ledgers[0].NftAddress, "first ledger nft address")
+	s.Require().Equal(ledger1.Denom, ledgers[0].Denom, "first ledger denom")
+
+	// Verify second ledger
+	s.Require().Equal(ledger2.NftAddress, ledgers[1].NftAddress, "second ledger nft address")
+	s.Require().Equal(ledger2.Denom, ledgers[1].Denom, "second ledger denom")
 }
 
 // coins creates an sdk.Coins from a string, requiring it to work.
