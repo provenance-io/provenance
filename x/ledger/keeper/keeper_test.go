@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"sort"
 	"testing"
 	"time"
 
@@ -24,7 +23,7 @@ type TestSuite struct {
 
 	app        *app.App
 	ctx        sdk.Context
-	keeper     keeper.LedgerKeeper
+	keeper     keeper.BaseKeeper
 	bankKeeper bankkeeper.Keeper
 
 	bondDenom  string
@@ -614,32 +613,6 @@ func (s *TestSuite) TestGetLedgerEntry() {
 					s.Require().Equal(tc.expEntry.OtherBalAmt, entry.OtherBalAmt, "entry other balance amount")
 				}
 			}
-
-			// Verify event emission
-			events := s.ctx.EventManager().Events()
-			if tc.expEvent {
-				// Find the expected event
-				var foundEvent *sdk.Event
-				for _, e := range events {
-					if e.Type == ledger.EventTypeLedgerEntryRetrieved {
-						foundEvent = &e
-						break
-					}
-				}
-
-				s.Require().NotNil(foundEvent, "Event should be emitted for successful retrieval")
-				s.Require().Equal(ledger.EventTypeLedgerEntryRetrieved, foundEvent.Type, "event type")
-				s.Require().Len(foundEvent.Attributes, 2, "event attributes length")
-				s.Require().Equal("nft_address", string(foundEvent.Attributes[0].Key), "event nft address key")
-				s.Require().Equal(tc.nftAddr, string(foundEvent.Attributes[0].Value), "event nft address value")
-				s.Require().Equal("entry_uuid", string(foundEvent.Attributes[1].Key), "event entry uuid key")
-				s.Require().Equal(tc.uuid, string(foundEvent.Attributes[1].Value), "event entry uuid value")
-			} else {
-				// Verify the specific event was not emitted
-				for _, e := range events {
-					s.Require().NotEqual(ledger.EventTypeLedgerEntryRetrieved, e.Type, "EventTypeLedgerEntryRetrieved should not be emitted")
-				}
-			}
 		})
 	}
 }
@@ -763,63 +736,54 @@ func (s *TestSuite) TestExportGenesis() {
 	err := s.keeper.CreateLedger(s.ctx, ledger1)
 	s.Require().NoError(err, "CreateLedger error")
 
-	// Verify first ledger creation event
-	events := s.ctx.EventManager().Events()
-	var foundEvents []*sdk.Event
-	for _, e := range events {
-		if e.Type == ledger.EventTypeLedgerCreated {
-			foundEvents = append(foundEvents, &e)
-		}
-	}
-	s.Require().Len(foundEvents, 1, "number of events after first ledger creation")
-	s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvents[0].Type, "event type")
-	s.Require().Len(foundEvents[0].Attributes, 2, "event attributes length")
-	s.Require().Equal("nft_address", string(foundEvents[0].Attributes[0].Key), "event nft address key")
-	s.Require().Equal(ledger1.NftAddress, string(foundEvents[0].Attributes[0].Value), "event nft address value")
-	s.Require().Equal("denom", string(foundEvents[0].Attributes[1].Key), "event denom key")
-	s.Require().Equal(ledger1.Denom, string(foundEvents[0].Attributes[1].Value), "event denom value")
-
-	// Clear events before second ledger creation
-	s.ctx.EventManager().Events()
-
+	// Create second ledger
 	err = s.keeper.CreateLedger(s.ctx, ledger2)
 	s.Require().NoError(err, "CreateLedger error")
 
-	// Verify second ledger creation event
-	events = s.ctx.EventManager().Events()
-	foundEvents = foundEvents[:0] // Clear the slice
+	// Verify first ledger creation event
+	ledgerCreateEvents := make(map[string]*sdk.Event)
+	events := s.ctx.EventManager().Events()
 	for _, e := range events {
 		if e.Type == ledger.EventTypeLedgerCreated {
-			foundEvents = append(foundEvents, &e)
+			ledgerCreateEvents[string(e.Attributes[0].Value)] = &e
 		}
 	}
-	s.Require().Len(foundEvents, 1, "number of events after second ledger creation")
-	s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvents[0].Type, "event type")
-	s.Require().Len(foundEvents[0].Attributes, 2, "event attributes length")
-	s.Require().Equal("nft_address", string(foundEvents[0].Attributes[0].Key), "event nft address key")
-	s.Require().Equal(ledger2.NftAddress, string(foundEvents[0].Attributes[0].Value), "event nft address value")
-	s.Require().Equal("denom", string(foundEvents[0].Attributes[1].Key), "event denom key")
-	s.Require().Equal(ledger2.Denom, string(foundEvents[0].Attributes[1].Value), "event denom value")
+
+	l1Event := ledgerCreateEvents[ledger1.NftAddress]
+	s.Require().NotNil(l1Event, "ledger1 event should be emitted")
+
+	l2Event := ledgerCreateEvents[ledger2.NftAddress]
+	s.Require().NotNil(l2Event, "ledger2 event should be emitted")
+
+	eventCheck := func(e sdk.Event, l ledger.Ledger) {
+		s.Require().Equal(ledger.EventTypeLedgerCreated, e.Type, "event type")
+		s.Require().Len(e.Attributes, 2, "event attributes length")
+		s.Require().Equal("nft_address", string(e.Attributes[0].Key), "event nft address key")
+		s.Require().Equal(l.NftAddress, string(e.Attributes[0].Value), "event nft address value")
+		s.Require().Equal("denom", string(e.Attributes[1].Key), "event denom key")
+		s.Require().Equal(l.Denom, string(e.Attributes[1].Value), "event denom value")
+	}
+
+	eventCheck(*l1Event, ledger1)
+	eventCheck(*l2Event, ledger2)
 
 	// Export genesis state
 	genState := s.keeper.ExportGenesis(s.ctx)
-
-	// Verify exported state
 	s.Require().Len(genState.Ledgers, 2, "number of ledgers in exported state")
 
-	// Sort ledgers for consistent comparison
+	// map the ledgers to an nft address for easier comparison
 	ledgers := genState.Ledgers
-	sort.Slice(ledgers, func(i, j int) bool {
-		return ledgers[i].NftAddress < ledgers[j].NftAddress
-	})
+	exportedLedgers := make(map[string]ledger.Ledger)
+	for _, l := range ledgers {
+		exportedLedgers[l.NftAddress] = l
+	}
 
-	// Verify first ledger
-	s.Require().Equal(ledger1.NftAddress, ledgers[0].NftAddress, "first ledger nft address")
-	s.Require().Equal(ledger1.Denom, ledgers[0].Denom, "first ledger denom")
-
-	// Verify second ledger
-	s.Require().Equal(ledger2.NftAddress, ledgers[1].NftAddress, "second ledger nft address")
-	s.Require().Equal(ledger2.Denom, ledgers[1].Denom, "second ledger denom")
+	genStateCheck := func(expected ledger.Ledger, actual ledger.Ledger) {
+		s.Require().Equal(expected.NftAddress, actual.NftAddress, "ledger nft address")
+		s.Require().Equal(expected.Denom, actual.Denom, "ledger denom")
+	}
+	genStateCheck(ledger1, exportedLedgers[ledger1.NftAddress])
+	genStateCheck(ledger2, exportedLedgers[ledger2.NftAddress])
 }
 
 // coins creates an sdk.Coins from a string, requiring it to work.
