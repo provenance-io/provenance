@@ -4907,6 +4907,7 @@ Initial state of the ledger store.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledgers` | [Ledger](#provenance-ledger-v1-Ledger) | repeated |  |
+| `ledger_entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 
 
 
