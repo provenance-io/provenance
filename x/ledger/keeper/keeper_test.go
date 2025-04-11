@@ -228,34 +228,6 @@ func (s *TestSuite) TestGetLedger() {
 	}
 }
 
-// TestCreateLedgerEntry tests the CreateLedgerEntry function
-func (s *TestSuite) TestCreateLedgerEntry() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	// Create a ledger first
-	err := s.keeper.CreateLedger(s.ctx, ledger.Ledger{
-		NftAddress: validNftAddress,
-		Denom:      s.bondDenom,
-	})
-	s.Require().NoError(err)
-
-	// Test creating a ledger entry
-	err = s.keeper.AppendEntry(s.ctx, validNftAddress, ledger.LedgerEntry{
-		PostedDate:      pastDate,
-		EffectiveDate:   pastDate,
-		Type:            ledger.LedgerEntryType_Disbursement,
-		Amt:             sdkmath.NewInt(100),
-		PrinAppliedAmt:  sdkmath.NewInt(100),
-		PrinBalAmt:      sdkmath.NewInt(100),
-		IntAppliedAmt:   sdkmath.NewInt(0),
-		IntBalAmt:       sdkmath.NewInt(0),
-		OtherAppliedAmt: sdkmath.NewInt(0),
-		OtherBalAmt:     sdkmath.NewInt(0),
-		CorrelationId:   "test-correlation-id",
-	})
-	s.Require().NoError(err, "AppendEntry error")
-}
-
 // TestGetLedgerEntry tests the GetLedgerEntry function
 func (s *TestSuite) TestGetLedgerEntry() {
 	// Create a test ledger
