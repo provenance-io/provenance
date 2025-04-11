@@ -7276,6 +7276,7 @@ Role defines the different types of roles that can be assigned to addresses
 | `REGISTRY_ROLE_CONTROLLER` | `3` | REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges |
 | `REGISTRY_ROLE_CUSTODIAN` | `4` | REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges |
 | `REGISTRY_ROLE_BORROWER` | `5` | REGISTRY_ROLE_BORROWER indicates the address has borrower privileges |
+| `REGISTRY_ROLE_ORIGINATOR` | `6` | REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges |
 
 
  <!-- end enums -->

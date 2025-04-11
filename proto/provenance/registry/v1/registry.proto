@@ -20,6 +20,8 @@ enum RegistryRole {
   REGISTRY_ROLE_CUSTODIAN = 4;
   // REGISTRY_ROLE_BORROWER indicates the address has borrower privileges
   REGISTRY_ROLE_BORROWER = 5;
+  // REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges
+  REGISTRY_ROLE_ORIGINATOR = 6;
 }
 
 // RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
