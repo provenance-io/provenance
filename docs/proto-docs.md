@@ -271,6 +271,7 @@
     - [Msg](#provenance-ledger-v1-Msg)
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
+    - [Balances](#provenance-ledger-v1-Balances)
     - [FundTransfer](#provenance-ledger-v1-FundTransfer)
     - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
     - [Ledger](#provenance-ledger-v1-Ledger)
@@ -281,8 +282,12 @@
     - [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
+    - [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest)
+    - [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse)
     - [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest)
     - [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse)
+    - [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest)
+    - [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse)
     - [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest)
     - [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse)
   
@@ -4610,16 +4615,33 @@ Msg defines the attribute module Msg service.
 
 
 
+<a name="provenance-ledger-v1-Balances"></a>
+
+### Balances
+Balances represents the current balances for principal, interest, and other amounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `principal` | [string](#string) |  |  |
+| `interest` | [string](#string) |  |  |
+| `other` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-FundTransfer"></a>
 
 ### FundTransfer
-FundTransferEntry represents a single fund transfer to process
+FundTransfer represents a single fund transfer to process
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `ledger_entry_uuid` | [string](#string) |  |  |
+| `ledger_entry_correlation_id` | [string](#string) |  |  |
 | `amount` | [string](#string) |  |  |
 | `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
 | `memo` | [string](#string) |  |  |
@@ -4639,7 +4661,7 @@ FundTransferEntryWithSettlement represents a fund transfer with settlement instr
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `ledger_entry_uuid` | [string](#string) |  |  |
+| `ledger_entry_correlation_id` | [string](#string) |  |  |
 | `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
 
@@ -4671,7 +4693,8 @@ LedgerEntry
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `uuid` | [string](#string) |  | Unique uuid for a ledger entry. |
+| `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
+| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
 | `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
@@ -4752,6 +4775,37 @@ LedgerEntryType
 
 
 
+<a name="provenance-ledger-v1-QueryBalancesAsOfRequest"></a>
+
+### QueryBalancesAsOfRequest
+QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `as_of_date` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryBalancesAsOfResponse"></a>
+
+### QueryBalancesAsOfResponse
+QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `balances` | [Balances](#provenance-ledger-v1-Balances) |  |  |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-QueryLedgerConfigRequest"></a>
 
 ### QueryLedgerConfigRequest
@@ -4776,6 +4830,37 @@ LedgerEntryType
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerEntryRequest"></a>
+
+### QueryLedgerEntryRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `correlation_id` | [string](#string) |  | Free-form string up to 50 characters |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerEntryResponse"></a>
+
+### QueryLedgerEntryResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
 
 
 
@@ -4827,6 +4912,8 @@ Query defines the gRPC querier service for ledger module.
 | ----------- | ------------ | ------------- | ------------|
 | `Config` | [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest) | [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse) | Params queries params of the ledger module. |
 | `Entries` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) |  |
+| `GetLedgerEntry` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
+| `GetBalancesAsOf` | [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest) | [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
 
  <!-- end services -->
 
@@ -4899,7 +4986,7 @@ EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  | The address of the NFT |
-| `entry_uuid` | [string](#string) |  | The unique identifier of the entry |
+| `correlation_id` | [string](#string) |  | The correlation ID of the entry (max 50 characters) |
 | `entry_type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  | The type of the entry |
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry was posted |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry takes effect |
@@ -4930,12 +5017,6 @@ EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
 
 ### GenesisState
 Initial state of the ledger store.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `ledgers` | [Ledger](#provenance-ledger-v1-Ledger) | repeated |  |
-| `ledger_entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 
 
 

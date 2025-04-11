@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -26,6 +27,7 @@ func CmdQuery() *cobra.Command {
 	queryCmd.AddCommand(
 		GetConfigCmd(),
 		GetLedgerEntriesCmd(),
+		GetBalancesAsOfCmd(),
 	)
 
 	return queryCmd
@@ -96,5 +98,42 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func GetBalancesAsOfCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "balances [nft-address] [as-of-date]",
+		Short: "Query balances for an NFT as of a specific date",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			nftAddress := args[0]
+			asOfDate := args[1]
+
+			// Validate the date format
+			_, err = time.Parse(time.RFC3339, asOfDate)
+			if err != nil {
+				return fmt.Errorf("invalid date format. Please use RFC3339 format (e.g., 2024-01-01T00:00:00Z): %w", err)
+			}
+
+			queryClient := ledger.NewQueryClient(clientCtx)
+			res, err := queryClient.GetBalancesAsOf(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
+				NftAddress: nftAddress,
+				AsOfDate:   asOfDate,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

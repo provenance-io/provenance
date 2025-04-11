@@ -34,9 +34,25 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		return err
 	}
 
-	// TODO validate that the {addr} can be modified by the signer...
+	// Validate dates
+	if err := validateEntryDates(&le, ctx); err != nil {
+		return err
+	}
 
-	key := collections.Join(nftAddress, le.Uuid)
+	// Validate amounts
+	if err := validateEntryAmounts(&le); err != nil {
+		return err
+	}
+
+	// Validate entry type
+	if err := validateEntryType(&le); err != nil {
+		return err
+	}
+
+	// TODO validate that the {addr} can be modified by the signer...
+	// TODO validate that the ledger entry is not a duplicate
+
+	key := collections.Join(nftAddress, le.CorrelationId)
 	err = k.LedgerEntries.Set(ctx, key, le)
 	if err != nil {
 		return err
@@ -45,7 +61,7 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 	// Emit the ledger entry added event
 	ctx.EventManager().EmitEvent(ledger.NewEventLedgerEntryAdded(
 		nftAddress,
-		le.Uuid,
+		le.CorrelationId,
 		le.Type.String(),
 		le.PostedDate,
 		le.EffectiveDate,
@@ -59,6 +75,44 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		le.IntBalAmt.String(),
 		le.OtherBalAmt.String(),
 	))
+
+	return nil
+}
+
+// validateEntryDates checks if the dates are valid
+func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
+	blockTime := ctx.BlockTime()
+
+	// Check if posted date is in the future
+	if le.PostedDate.After(blockTime) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "posted date cannot be in the future")
+	}
+
+	return nil
+}
+
+// validateEntryAmounts checks if the amounts are valid
+func validateEntryAmounts(le *ledger.LedgerEntry) error {
+	// Check if total amount matches sum of applied amounts
+	totalApplied := le.PrinAppliedAmt.Add(le.IntAppliedAmt).Add(le.OtherAppliedAmt)
+	if !le.Amt.Equal(totalApplied) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "total amount must equal sum of applied amounts")
+	}
+
+	// Check for negative amounts
+	if le.Amt.IsNegative() || le.PrinAppliedAmt.IsNegative() ||
+		le.IntAppliedAmt.IsNegative() || le.OtherAppliedAmt.IsNegative() {
+		return NewLedgerCodedError(ErrCodeInvalidField, "amounts cannot be negative")
+	}
+
+	return nil
+}
+
+// validateEntryType checks if the entry type is valid
+func validateEntryType(le *ledger.LedgerEntry) error {
+	if le.Type == ledger.LedgerEntryType_Unspecified {
+		return NewLedgerCodedError(ErrCodeInvalidField, "entry type cannot be unspecified")
+	}
 
 	return nil
 }

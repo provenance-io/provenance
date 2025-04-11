@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/spf13/cobra"
 )
@@ -63,15 +62,15 @@ func CmdCreate() *cobra.Command {
 // CmdAppend creates a new ledger entry for a given nft
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append <nft_address> <uuid> <type> <posted_date> <effective_date> <amount> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
+		Use:     "append <nft_address> <correlation_id> <sequence> <type> <posted_date> <effective_date> <amount> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
 		Aliases: []string{},
 		Short:   "Append an entry to an existing ledger",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 12 {
+			if len(args) < 13 {
 				return fmt.Errorf("missing arguments")
 			}
 
-			if len(args) > 12 {
+			if len(args) > 13 {
 				return fmt.Errorf("to many arguments")
 			}
 
@@ -82,60 +81,65 @@ func CmdAppend() *cobra.Command {
 
 			nftAddress := args[0]
 			if nftAddress == "" {
-				return fmt.Errorf("invalid <nft_address>: %s", err.Error())
+				return fmt.Errorf("invalid <nft_address>")
 			}
 
-			entryUuid, err := uuid.Parse(args[1])
+			correlation_id := args[1]
+			if correlation_id == "" {
+				return fmt.Errorf("invalid <correlation_id>")
+			}
+
+			sequence, err := parseUint32(args[2])
 			if err != nil {
-				return fmt.Errorf("invalid <uuid>: %s", err.Error())
+				return fmt.Errorf("invalid <sequence>: %v", err)
 			}
 
-			amt, ok := sdkmath.NewIntFromString(args[5])
+			amt, ok := sdkmath.NewIntFromString(args[6])
 			if !ok {
-				return fmt.Errorf("invalid <amount>: %s", err.Error())
+				return fmt.Errorf("invalid <amount>")
 			}
 
-			prinAppliedAmt, ok := sdkmath.NewIntFromString(args[6])
+			prinAppliedAmt, ok := sdkmath.NewIntFromString(args[7])
 			if !ok {
-				return fmt.Errorf("invalid <prin_applied_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <prin_applied_amt>")
 			}
 
-			prinBalAmt, ok := sdkmath.NewIntFromString(args[7])
+			prinBalAmt, ok := sdkmath.NewIntFromString(args[8])
 			if !ok {
-				return fmt.Errorf("invalid <prin_bal_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <prin_bal_amt>")
 			}
 
-			intAppliedAmt, ok := sdkmath.NewIntFromString(args[8])
+			intAppliedAmt, ok := sdkmath.NewIntFromString(args[9])
 			if !ok {
-				return fmt.Errorf("invalid <int_applied_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <int_applied_amt>")
 			}
 
-			intBalAmt, ok := sdkmath.NewIntFromString(args[9])
+			intBalAmt, ok := sdkmath.NewIntFromString(args[10])
 			if !ok {
-				return fmt.Errorf("invalid <int_bal_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <int_bal_amt>")
 			}
 
-			otherAppliedAmt, ok := sdkmath.NewIntFromString(args[10])
+			otherAppliedAmt, ok := sdkmath.NewIntFromString(args[11])
 			if !ok {
-				return fmt.Errorf("invalid <other_applied_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <other_applied_amt>")
 			}
 
-			otherBalAmt, ok := sdkmath.NewIntFromString(args[11])
+			otherBalAmt, ok := sdkmath.NewIntFromString(args[12])
 			if !ok {
-				return fmt.Errorf("invalid <other_bal_amt>: %s", err.Error())
+				return fmt.Errorf("invalid <other_bal_amt>")
 			}
 
-			postedDate, err := time.Parse(time.RFC3339, args[3])
+			postedDate, err := time.Parse(time.RFC3339, args[4])
 			if err != nil {
-				return fmt.Errorf("invalid <posted_date>: %s", err.Error())
+				return fmt.Errorf("invalid <posted_date>: %v", err)
 			}
 
-			effectiveDate, err := time.Parse(time.RFC3339, args[4])
+			effectiveDate, err := time.Parse(time.RFC3339, args[5])
 			if err != nil {
-				return fmt.Errorf("invalid <effective_date>: %s", err.Error())
+				return fmt.Errorf("invalid <effective_date>: %v", err)
 			}
 
-			entryType, ok := ledger.LedgerEntryType_value[args[2]]
+			entryType, ok := ledger.LedgerEntryType_value[args[3]]
 			if !ok {
 				return fmt.Errorf("invalid <type>")
 			}
@@ -143,7 +147,8 @@ func CmdAppend() *cobra.Command {
 			m := ledger.MsgAppendRequest{
 				NftAddress: nftAddress,
 				Entry: &ledger.LedgerEntry{
-					Uuid:            entryUuid.String(),
+					CorrelationId:   correlation_id,
+					Sequence:        sequence,
 					Type:            ledger.LedgerEntryType(entryType),
 					PostedDate:      postedDate,
 					EffectiveDate:   effectiveDate,
@@ -164,6 +169,18 @@ func CmdAppend() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+// parseUint32 parses a string into a uint32
+func parseUint32(s string) (uint32, error) {
+	val, err := sdkmath.ParseUint(s)
+	if err != nil {
+		return 0, err
+	}
+	if val.GT(sdkmath.NewUint(100)) {
+		return 0, fmt.Errorf("sequence must be less than 100")
+	}
+	return uint32(val.Uint64()), nil
 }
 
 // name := args[0]

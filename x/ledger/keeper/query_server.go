@@ -2,9 +2,13 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ ledger.QueryServer = LedgerQueryServer{}
@@ -49,4 +53,42 @@ func (qs LedgerQueryServer) Entries(goCtx context.Context, req *ledger.QueryLedg
 	}
 
 	return &resp, nil
+}
+
+// GetBalancesAsOf returns the balances for a specific NFT as of a given date
+func (qs LedgerQueryServer) GetBalancesAsOf(ctx context.Context, req *ledger.QueryBalancesAsOfRequest) (*ledger.QueryBalancesAsOfResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	// Parse the date string
+	asOfDate, err := time.Parse(time.RFC3339, req.AsOfDate)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid date format: %v", err))
+	}
+
+	balances, err := qs.k.GetBalancesAsOf(ctx, req.NftAddress, asOfDate)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &ledger.QueryBalancesAsOfResponse{
+		Balances: balances,
+	}, nil
+}
+
+// GetLedgerEntry returns a specific ledger entry for an NFT
+func (qs LedgerQueryServer) GetLedgerEntry(ctx context.Context, req *ledger.QueryLedgerEntryRequest) (*ledger.QueryLedgerEntryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	entry, err := qs.k.GetLedgerEntry(ctx, req.NftAddress, req.CorrelationId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &ledger.QueryLedgerEntryResponse{
+		Entry: entry,
+	}, nil
 }

@@ -3,9 +3,12 @@ package keeper
 import (
 	"context"
 	"errors"
+	"sort"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +21,8 @@ type ViewKeeper interface {
 	GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error)
 	HasLedger(ctx sdk.Context, nftAddress string) bool
 	ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error)
-	GetLedgerEntry(ctx context.Context, nftAddress string, uuid string) (*ledger.LedgerEntry, error)
+	GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error)
+	GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error)
 }
 
 type BaseViewKeeper struct {
@@ -132,19 +136,28 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string
 		}
 		entries = append(entries, le)
 	}
+
+	// Sort entries by effective date and then by sequence
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].EffectiveDate.Equal(entries[j].EffectiveDate) {
+			return entries[i].Sequence < entries[j].Sequence
+		}
+		return entries[i].EffectiveDate.Before(entries[j].EffectiveDate)
+	})
+
 	return entries, nil
 }
 
-// GetLedgerEntry retrieves a ledger entry by its UUID for a specific NFT address
-func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, uuid string) (*ledger.LedgerEntry, error) {
+// GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
+func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error) {
 	// Validate the NFT address
 	_, err := getAddress(&nftAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	if !isUUIDValid(uuid) {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "uuid")
+	if !isCorrelationIDValid(correlationID) {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "correlation_id")
 	}
 
 	entries, err := k.ListLedgerEntries(ctx, nftAddress)
@@ -153,7 +166,7 @@ func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, u
 	}
 
 	for _, entry := range entries {
-		if entry.Uuid == uuid {
+		if entry.CorrelationId == correlationID {
 			return &entry, nil
 		}
 	}
@@ -183,8 +196,53 @@ func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 		}
 		// Set the NftAddress back since it's not stored in the value
 		value.NftAddress = key
-		state.Ledgers = append(state.Ledgers, value)
+		// state.Ledgers = append(state.Ledgers, value)
 	}
 
 	return state
+}
+
+// GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
+func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error) {
+	// Validate the NFT address
+	_, err := getAddress(&nftAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all ledger entries for this NFT
+	entries, err := k.ListLedgerEntries(ctx, nftAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize balances
+	balances := &ledger.Balances{
+		Principal: math.NewInt(0),
+		Interest:  math.NewInt(0),
+		Other:     math.NewInt(0),
+	}
+
+	// Sort entries by effective date to ensure proper balance calculation
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].EffectiveDate.Equal(entries[j].EffectiveDate) {
+			return entries[i].Sequence < entries[j].Sequence
+		}
+		return entries[i].EffectiveDate.Before(entries[j].EffectiveDate)
+	})
+
+	// Calculate balances up to the specified date
+	for _, entry := range entries {
+		// Skip entries after the asOfDate
+		if entry.EffectiveDate.After(asOfDate) {
+			break
+		}
+
+		// Update balances based on the entry
+		balances.Principal = balances.Principal.Add(entry.PrinAppliedAmt)
+		balances.Interest = balances.Interest.Add(entry.IntAppliedAmt)
+		balances.Other = balances.Other.Add(entry.OtherAppliedAmt)
+	}
+
+	return balances, nil
 }
