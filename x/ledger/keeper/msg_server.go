@@ -8,12 +8,12 @@ import (
 )
 
 type MsgServer struct {
-	LedgerKeeper
+	BaseKeeper
 }
 
-func NewMsgServer(k LedgerKeeper) ledger.MsgServer {
+func NewMsgServer(k BaseKeeper) ledger.MsgServer {
 	ms := MsgServer{
-		LedgerKeeper: k,
+		BaseKeeper: k,
 	}
 	return &ms
 }
