@@ -4635,13 +4635,13 @@ Balances represents the current balances for principal, interest, and other amou
 <a name="provenance-ledger-v1-FundTransfer"></a>
 
 ### FundTransfer
-FundTransferEntry represents a single fund transfer to process
+FundTransfer represents a single fund transfer to process
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `ledger_entry_uuid` | [string](#string) |  |  |
+| `ledger_entry_correlation_id` | [string](#string) |  |  |
 | `amount` | [string](#string) |  |  |
 | `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
 | `memo` | [string](#string) |  |  |
@@ -4661,7 +4661,7 @@ FundTransferEntryWithSettlement represents a fund transfer with settlement instr
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `ledger_entry_uuid` | [string](#string) |  |  |
+| `ledger_entry_correlation_id` | [string](#string) |  |  |
 | `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
 
@@ -4693,7 +4693,7 @@ LedgerEntry
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `uuid` | [string](#string) |  | Unique uuid for a ledger entry. |
+| `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
 | `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
@@ -4844,7 +4844,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `uuid` | [string](#string) |  |  |
+| `correlation_id` | [string](#string) |  | Free-form string up to 50 characters |
 
 
 
@@ -4985,7 +4985,7 @@ EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  | The address of the NFT |
-| `entry_uuid` | [string](#string) |  | The unique identifier of the entry |
+| `correlation_id` | [string](#string) |  | The correlation ID of the entry (max 50 characters) |
 | `entry_type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  | The type of the entry |
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry was posted |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry takes effect |

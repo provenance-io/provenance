@@ -8,8 +8,6 @@ option java_multiple_files = true;
 
 import "google/api/annotations.proto";
 import "provenance/ledger/v1/ledger.proto";
-import "google/protobuf/timestamp.proto";
-import "gogoproto/gogo.proto";
 
 // Query defines the gRPC querier service for ledger module.
 service Query {
@@ -24,7 +22,7 @@ service Query {
 
   // GetLedgerEntry returns a specific ledger entry for an NFT
   rpc GetLedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_address}/entry/{uuid}";
+    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_address}/entry/{correlation_id}";
   }
 
   // GetBalancesAsOf returns the balances for a specific NFT as of a given date
@@ -50,8 +48,8 @@ message QueryLedgerResponse {
 }
 
 message QueryLedgerEntryRequest {
-  string nft_address = 1;
-  string uuid        = 2;
+  string nft_address    = 1;
+  string correlation_id = 2; // Free-form string up to 50 characters
 }
 
 message QueryLedgerEntryResponse {

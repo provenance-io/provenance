@@ -18,11 +18,11 @@ func ValidateLedgerBasic(l *ledger.Ledger) error {
 }
 
 func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
-	if emptyString(&e.Uuid) {
-		return NewLedgerCodedError(ErrCodeMissingField, "uuid")
+	if emptyString(&e.CorrelationId) {
+		return NewLedgerCodedError(ErrCodeMissingField, "correlation_id")
 	} else {
-		if !isUUIDValid(e.Uuid) {
-			return NewLedgerCodedError(ErrCodeInvalidField, "uuid")
+		if !isCorrelationIDValid(e.CorrelationId) {
+			return NewLedgerCodedError(ErrCodeInvalidField, "correlation_id")
 		}
 	}
 

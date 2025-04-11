@@ -33,3 +33,12 @@ func isUUIDValid(uuidStr string) bool {
 	}
 	return true
 }
+
+// validateCorrelationID validates that the provided string is a valid correlation ID.
+// Returns true if the string is a valid correlation ID (non-empty and max 50 characters), false otherwise.
+func isCorrelationIDValid(correlationID string) bool {
+	if len(correlationID) == 0 || len(correlationID) > 50 {
+		return false
+	}
+	return true
+}

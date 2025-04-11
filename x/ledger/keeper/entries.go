@@ -52,7 +52,7 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 	// TODO validate that the {addr} can be modified by the signer...
 	// TODO validate that the ledger entry is not a duplicate
 
-	key := collections.Join(nftAddress, le.Uuid)
+	key := collections.Join(nftAddress, le.CorrelationId)
 	err = k.LedgerEntries.Set(ctx, key, le)
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 	// Emit the ledger entry added event
 	ctx.EventManager().EmitEvent(ledger.NewEventLedgerEntryAdded(
 		nftAddress,
-		le.Uuid,
+		le.CorrelationId,
 		le.Type.String(),
 		le.PostedDate,
 		le.EffectiveDate,

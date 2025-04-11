@@ -127,15 +127,15 @@ func request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime.Marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_address", err)
 	}
 
-	val, ok = pathParams["uuid"]
+	val, ok = pathParams["correlation_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "uuid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "correlation_id")
 	}
 
-	protoReq.Uuid, err = runtime.String(val)
+	protoReq.CorrelationId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "uuid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "correlation_id", err)
 	}
 
 	msg, err := client.GetLedgerEntry(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -165,15 +165,15 @@ func local_request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_address", err)
 	}
 
-	val, ok = pathParams["uuid"]
+	val, ok = pathParams["correlation_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "uuid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "correlation_id")
 	}
 
-	protoReq.Uuid, err = runtime.String(val)
+	protoReq.CorrelationId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "uuid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "correlation_id", err)
 	}
 
 	msg, err := server.GetLedgerEntry(ctx, &protoReq)
@@ -484,7 +484,7 @@ var (
 
 	pattern_Query_Entries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "ledger", "v1", "entries"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetLedgerEntry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_address", "entry", "uuid"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetLedgerEntry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_address", "entry", "correlation_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GetBalancesAsOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_address", "balances", "as_of_date"}, "", runtime.AssumeColonVerbOpt(false)))
 )
