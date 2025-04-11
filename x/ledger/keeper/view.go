@@ -3,9 +3,12 @@ package keeper
 import (
 	"context"
 	"errors"
+	"sort"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,6 +22,7 @@ type ViewKeeper interface {
 	HasLedger(ctx sdk.Context, nftAddress string) bool
 	ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error)
 	GetLedgerEntry(ctx context.Context, nftAddress string, uuid string) (*ledger.LedgerEntry, error)
+	GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error)
 }
 
 type BaseViewKeeper struct {
@@ -183,8 +187,50 @@ func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 		}
 		// Set the NftAddress back since it's not stored in the value
 		value.NftAddress = key
-		state.Ledgers = append(state.Ledgers, value)
+		// state.Ledgers = append(state.Ledgers, value)
 	}
 
 	return state
+}
+
+// GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
+func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error) {
+	// Validate the NFT address
+	_, err := getAddress(&nftAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all ledger entries for this NFT
+	entries, err := k.ListLedgerEntries(ctx, nftAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize balances
+	balances := &ledger.Balances{
+		Principal: math.NewInt(0),
+		Interest:  math.NewInt(0),
+		Other:     math.NewInt(0),
+	}
+
+	// Sort entries by effective date to ensure proper balance calculation
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].EffectiveDate.Before(entries[j].EffectiveDate)
+	})
+
+	// Calculate balances up to the specified date
+	for _, entry := range entries {
+		// Skip entries after the asOfDate
+		if entry.EffectiveDate.After(asOfDate) {
+			break
+		}
+
+		// Update balances based on the entry
+		balances.Principal = balances.Principal.Add(entry.PrinAppliedAmt)
+		balances.Interest = balances.Interest.Add(entry.IntAppliedAmt)
+		balances.Other = balances.Other.Add(entry.OtherAppliedAmt)
+	}
+
+	return balances, nil
 }
