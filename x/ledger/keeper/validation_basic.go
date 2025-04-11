@@ -46,19 +46,19 @@ func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 	if e.PrinAppliedAmt.IsNil() || e.PrinAppliedAmt.IsNegative() {
 		return NewLedgerCodedError(ErrCodeInvalidField, "principal_applied_amount")
 	}
-	if e.PrinBalAmt.IsNil() || e.PrinBalAmt.IsNegative() {
+	if e.PrinBalAmt.IsNil() {
 		return NewLedgerCodedError(ErrCodeInvalidField, "principal_balance_amount")
 	}
 	if e.IntAppliedAmt.IsNil() || e.IntAppliedAmt.IsNegative() {
 		return NewLedgerCodedError(ErrCodeInvalidField, "interest_applied_amount")
 	}
-	if e.IntBalAmt.IsNil() || e.IntBalAmt.IsNegative() {
+	if e.IntBalAmt.IsNil() {
 		return NewLedgerCodedError(ErrCodeInvalidField, "interest_balance_amount")
 	}
 	if e.OtherAppliedAmt.IsNil() || e.OtherAppliedAmt.IsNegative() {
 		return NewLedgerCodedError(ErrCodeInvalidField, "other_applied_amount")
 	}
-	if e.OtherBalAmt.IsNil() || e.OtherBalAmt.IsNegative() {
+	if e.OtherBalAmt.IsNil() {
 		return NewLedgerCodedError(ErrCodeInvalidField, "other_balance_amount")
 	}
 

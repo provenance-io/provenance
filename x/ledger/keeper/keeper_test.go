@@ -492,6 +492,42 @@ func (s *TestSuite) TestAppendEntry() {
 			},
 			expErr: nil,
 		},
+		{
+			name:    "negative amount",
+			nftAddr: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				Type:            ledger.LedgerEntryType_Payment,
+				PostedDate:      pastDate,
+				EffectiveDate:   pastDate,
+				Amt:             s.int(-100),
+				PrinAppliedAmt:  s.int(50),
+				PrinBalAmt:      s.int(50),
+				IntAppliedAmt:   s.int(25),
+				IntBalAmt:       s.int(25),
+				OtherAppliedAmt: s.int(25),
+				OtherBalAmt:     s.int(25),
+				CorrelationId:   "test-correlation-id-12",
+			},
+			expErr: fmt.Errorf("provided [field] value is invalid; amount"),
+		},
+		{
+			name:    "allow negative principal applied amount",
+			nftAddr: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				Type:            ledger.LedgerEntryType_Payment,
+				PostedDate:      pastDate,
+				EffectiveDate:   pastDate,
+				Amt:             s.int(100),
+				PrinAppliedAmt:  s.int(50),
+				PrinBalAmt:      s.int(-50),
+				IntAppliedAmt:   s.int(25),
+				IntBalAmt:       s.int(0),
+				OtherAppliedAmt: s.int(25),
+				OtherBalAmt:     s.int(0),
+				CorrelationId:   "test-correlation-id-12",
+			},
+			expErr: nil,
+		},
 	}
 
 	for _, tc := range tests {
