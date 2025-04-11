@@ -30,8 +30,8 @@ enum LedgerEntryType {
 
 // LedgerEntry
 message LedgerEntry {
-  // Unique uuid for a ledger entry.
-  string uuid = 1;
+  // Correlation ID for tracking ledger entries with external systems (max 50 characters)
+  string correlation_id = 1;
 
   LedgerEntryType type = 2;
 
@@ -98,13 +98,13 @@ enum FundingTransferStatus {
   FUNDING_TRANSFER_STATUS_FAILED      = 4;
 }
 
-// FundTransferEntry represents a single fund transfer to process
+// FundTransfer represents a single fund transfer to process
 message FundTransfer {
-  string                nft_address       = 1;
-  string                ledger_entry_uuid = 2;
-  string                amount            = 3;
-  FundingTransferStatus status            = 4;
-  string                memo              = 5;
+  string                nft_address                 = 1;
+  string                ledger_entry_correlation_id = 2;
+  string                amount                      = 3;
+  FundingTransferStatus status                      = 4;
+  string                memo                        = 5;
 
   // The minimum block height or timestamp for settlement
   int64 settlement_block = 6;
@@ -126,9 +126,9 @@ message SettlementInstruction {
 
 // FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
 message FundTransferWithSettlement {
-  string                         nft_address            = 1;
-  string                         ledger_entry_uuid      = 2;
-  repeated SettlementInstruction settlementInstructions = 3;
+  string                         nft_address                 = 1;
+  string                         ledger_entry_correlation_id = 2;
+  repeated SettlementInstruction settlementInstructions      = 3;
 }
 
 // Balances represents the current balances for principal, interest, and other amounts

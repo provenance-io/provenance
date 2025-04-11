@@ -83,7 +83,7 @@ func (qs LedgerQueryServer) GetLedgerEntry(ctx context.Context, req *ledger.Quer
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	entry, err := qs.k.GetLedgerEntry(ctx, req.NftAddress, req.Uuid)
+	entry, err := qs.k.GetLedgerEntry(ctx, req.NftAddress, req.CorrelationId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

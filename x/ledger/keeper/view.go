@@ -21,7 +21,7 @@ type ViewKeeper interface {
 	GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error)
 	HasLedger(ctx sdk.Context, nftAddress string) bool
 	ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error)
-	GetLedgerEntry(ctx context.Context, nftAddress string, uuid string) (*ledger.LedgerEntry, error)
+	GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error)
 	GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error)
 }
 
@@ -139,16 +139,16 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string
 	return entries, nil
 }
 
-// GetLedgerEntry retrieves a ledger entry by its UUID for a specific NFT address
-func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, uuid string) (*ledger.LedgerEntry, error) {
+// GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
+func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error) {
 	// Validate the NFT address
 	_, err := getAddress(&nftAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	if !isUUIDValid(uuid) {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "uuid")
+	if !isCorrelationIDValid(correlationID) {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "correlation_id")
 	}
 
 	entries, err := k.ListLedgerEntries(ctx, nftAddress)
@@ -157,7 +157,7 @@ func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, u
 	}
 
 	for _, entry := range entries {
-		if entry.Uuid == uuid {
+		if entry.CorrelationId == correlationID {
 			return &entry, nil
 		}
 	}

@@ -44,13 +44,13 @@ message QueryBalancesAsOfResponse {
 }
 ```
 
-### Get Entry by UUID
-Retrieves a specific ledger entry by its UUID.
+### Get Entry by Correlation ID
+Retrieves a specific ledger entry by its correlation ID.
 
 ```protobuf
 message QueryLedgerEntryRequest {
     string nft_address = 1;
-    string uuid = 2;
+    string correlation_id = 2;  // Free-form string up to 50 characters
 }
 
 message QueryLedgerEntryResponse {
@@ -79,9 +79,9 @@ provenanced query ledger balances [nft-address] [as-of-date]
 provenanced query ledger balances [nft-address] "2024-01-01T00:00:00Z"
 ```
 
-### Get Entry by UUID
+### Get Entry by Correlation ID
 ```bash
-provenanced query ledger entry [nft-address] [uuid]
+provenanced query ledger entry [nft-address] [correlation-id]
 ```
 
 ## Response Data
@@ -91,7 +91,7 @@ provenanced query ledger entry [nft-address] [uuid]
 - Denomination
 
 ### Ledger Entries
-- Entry UUID
+- Correlation ID (free-form string up to 50 characters)
 - Entry type
 - Posted date
 - Effective date
@@ -103,7 +103,7 @@ provenanced query ledger entry [nft-address] [uuid]
 - Interest balance
 - Other balance
 
-### Entry by UUID
+### Entry by Correlation ID
 - Complete ledger entry details including all amounts and dates
 
 ## Error Handling
@@ -111,7 +111,7 @@ provenanced query ledger entry [nft-address] [uuid]
 The module returns appropriate error messages for:
 - Invalid NFT addresses
 - Non-existent ledgers
-- Invalid entry UUIDs
+- Invalid correlation IDs (e.g., exceeding 50 characters)
 - Invalid date formats
 - Permission issues
 - Invalid query parameters
@@ -122,6 +122,7 @@ The module returns appropriate error messages for:
 - The balances query will return the cumulative balances up to and including the specified date
 - Entries are sorted by effective date when calculating balances
 - The module maintains separate balances for principal, interest, and other amounts
+- Correlation IDs are free-form strings up to 50 characters, used to track and correlate ledger entries with external systems
 
 ## Pagination
 

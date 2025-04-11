@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/spf13/cobra"
 )
@@ -63,7 +62,7 @@ func CmdCreate() *cobra.Command {
 // CmdAppend creates a new ledger entry for a given nft
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append <nft_address> <uuid> <type> <posted_date> <effective_date> <amount> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
+		Use:     "append <nft_address> <correlation_id> <type> <posted_date> <effective_date> <amount> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
 		Aliases: []string{},
 		Short:   "Append an entry to an existing ledger",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -85,9 +84,9 @@ func CmdAppend() *cobra.Command {
 				return fmt.Errorf("invalid <nft_address>: %s", err.Error())
 			}
 
-			entryUuid, err := uuid.Parse(args[1])
-			if err != nil {
-				return fmt.Errorf("invalid <uuid>: %s", err.Error())
+			correlation_id := args[1]
+			if correlation_id == "" {
+				return fmt.Errorf("invalid <correlation_id>: %s", err.Error())
 			}
 
 			amt, ok := sdkmath.NewIntFromString(args[5])
@@ -143,7 +142,7 @@ func CmdAppend() *cobra.Command {
 			m := ledger.MsgAppendRequest{
 				NftAddress: nftAddress,
 				Entry: &ledger.LedgerEntry{
-					Uuid:            entryUuid.String(),
+					CorrelationId:   correlation_id,
 					Type:            ledger.LedgerEntryType(entryType),
 					PostedDate:      postedDate,
 					EffectiveDate:   effectiveDate,

@@ -19,8 +19,8 @@ message EventLedgerCreated {
 message EventLedgerEntryAdded {
   // The address of the NFT
   string nft_address = 1;
-  // The unique identifier of the entry
-  string entry_uuid = 2;
+  // The correlation ID of the entry (max 50 characters)
+  string correlation_id = 2;
   // The type of the entry
   LedgerEntryType entry_type = 3;
   // The date the entry was posted
