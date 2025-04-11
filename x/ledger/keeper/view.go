@@ -136,6 +136,15 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string
 		}
 		entries = append(entries, le)
 	}
+
+	// Sort entries by effective date and then by sequence
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].EffectiveDate.Equal(entries[j].EffectiveDate) {
+			return entries[i].Sequence < entries[j].Sequence
+		}
+		return entries[i].EffectiveDate.Before(entries[j].EffectiveDate)
+	})
+
 	return entries, nil
 }
 
@@ -216,6 +225,9 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 
 	// Sort entries by effective date to ensure proper balance calculation
 	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].EffectiveDate.Equal(entries[j].EffectiveDate) {
+			return entries[i].Sequence < entries[j].Sequence
+		}
 		return entries[i].EffectiveDate.Before(entries[j].EffectiveDate)
 	})
 
