@@ -8,6 +8,8 @@ option java_multiple_files = true;
 
 import "google/api/annotations.proto";
 import "provenance/ledger/v1/ledger.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
 
 // Query defines the gRPC querier service for ledger module.
 service Query {
@@ -18,6 +20,16 @@ service Query {
 
   rpc Entries(QueryLedgerRequest) returns (QueryLedgerResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/entries";
+  }
+
+  // GetLedgerEntry returns a specific ledger entry for an NFT
+  rpc GetLedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_address}/entry/{uuid}";
+  }
+
+  // GetBalancesAsOf returns the balances for a specific NFT as of a given date
+  rpc GetBalancesAsOf(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_address}/balances/{as_of_date}";
   }
 }
 
@@ -35,4 +47,24 @@ message QueryLedgerRequest {
 
 message QueryLedgerResponse {
   repeated LedgerEntry entries = 1;
+}
+
+message QueryLedgerEntryRequest {
+  string nft_address = 1;
+  string uuid        = 2;
+}
+
+message QueryLedgerEntryResponse {
+  LedgerEntry entry = 1;
+}
+
+// QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
+message QueryBalancesAsOfRequest {
+  string nft_address = 1;
+  string as_of_date  = 2;
+}
+
+// QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
+message QueryBalancesAsOfResponse {
+  Balances balances = 1;
 }

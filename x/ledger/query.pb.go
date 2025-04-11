@@ -6,12 +6,14 @@ package ledger
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -204,40 +206,251 @@ func (m *QueryLedgerResponse) GetEntries() []*LedgerEntry {
 	return nil
 }
 
+type QueryLedgerEntryRequest struct {
+	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	Uuid       string `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
+}
+
+func (m *QueryLedgerEntryRequest) Reset()         { *m = QueryLedgerEntryRequest{} }
+func (m *QueryLedgerEntryRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerEntryRequest) ProtoMessage()    {}
+func (*QueryLedgerEntryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{4}
+}
+func (m *QueryLedgerEntryRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerEntryRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerEntryRequest.Merge(m, src)
+}
+func (m *QueryLedgerEntryRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerEntryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerEntryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerEntryRequest proto.InternalMessageInfo
+
+func (m *QueryLedgerEntryRequest) GetNftAddress() string {
+	if m != nil {
+		return m.NftAddress
+	}
+	return ""
+}
+
+func (m *QueryLedgerEntryRequest) GetUuid() string {
+	if m != nil {
+		return m.Uuid
+	}
+	return ""
+}
+
+type QueryLedgerEntryResponse struct {
+	Entry *LedgerEntry `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry,omitempty"`
+}
+
+func (m *QueryLedgerEntryResponse) Reset()         { *m = QueryLedgerEntryResponse{} }
+func (m *QueryLedgerEntryResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerEntryResponse) ProtoMessage()    {}
+func (*QueryLedgerEntryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{5}
+}
+func (m *QueryLedgerEntryResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerEntryResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerEntryResponse.Merge(m, src)
+}
+func (m *QueryLedgerEntryResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerEntryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerEntryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerEntryResponse proto.InternalMessageInfo
+
+func (m *QueryLedgerEntryResponse) GetEntry() *LedgerEntry {
+	if m != nil {
+		return m.Entry
+	}
+	return nil
+}
+
+// QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
+type QueryBalancesAsOfRequest struct {
+	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	AsOfDate   string `protobuf:"bytes,2,opt,name=as_of_date,json=asOfDate,proto3" json:"as_of_date,omitempty"`
+}
+
+func (m *QueryBalancesAsOfRequest) Reset()         { *m = QueryBalancesAsOfRequest{} }
+func (m *QueryBalancesAsOfRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryBalancesAsOfRequest) ProtoMessage()    {}
+func (*QueryBalancesAsOfRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{6}
+}
+func (m *QueryBalancesAsOfRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryBalancesAsOfRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryBalancesAsOfRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryBalancesAsOfRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryBalancesAsOfRequest.Merge(m, src)
+}
+func (m *QueryBalancesAsOfRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryBalancesAsOfRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryBalancesAsOfRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryBalancesAsOfRequest proto.InternalMessageInfo
+
+func (m *QueryBalancesAsOfRequest) GetNftAddress() string {
+	if m != nil {
+		return m.NftAddress
+	}
+	return ""
+}
+
+func (m *QueryBalancesAsOfRequest) GetAsOfDate() string {
+	if m != nil {
+		return m.AsOfDate
+	}
+	return ""
+}
+
+// QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
+type QueryBalancesAsOfResponse struct {
+	Balances *Balances `protobuf:"bytes,1,opt,name=balances,proto3" json:"balances,omitempty"`
+}
+
+func (m *QueryBalancesAsOfResponse) Reset()         { *m = QueryBalancesAsOfResponse{} }
+func (m *QueryBalancesAsOfResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryBalancesAsOfResponse) ProtoMessage()    {}
+func (*QueryBalancesAsOfResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{7}
+}
+func (m *QueryBalancesAsOfResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryBalancesAsOfResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryBalancesAsOfResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryBalancesAsOfResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryBalancesAsOfResponse.Merge(m, src)
+}
+func (m *QueryBalancesAsOfResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryBalancesAsOfResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryBalancesAsOfResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryBalancesAsOfResponse proto.InternalMessageInfo
+
+func (m *QueryBalancesAsOfResponse) GetBalances() *Balances {
+	if m != nil {
+		return m.Balances
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryLedgerConfigRequest)(nil), "provenance.ledger.v1.QueryLedgerConfigRequest")
 	proto.RegisterType((*QueryLedgerConfigResponse)(nil), "provenance.ledger.v1.QueryLedgerConfigResponse")
 	proto.RegisterType((*QueryLedgerRequest)(nil), "provenance.ledger.v1.QueryLedgerRequest")
 	proto.RegisterType((*QueryLedgerResponse)(nil), "provenance.ledger.v1.QueryLedgerResponse")
+	proto.RegisterType((*QueryLedgerEntryRequest)(nil), "provenance.ledger.v1.QueryLedgerEntryRequest")
+	proto.RegisterType((*QueryLedgerEntryResponse)(nil), "provenance.ledger.v1.QueryLedgerEntryResponse")
+	proto.RegisterType((*QueryBalancesAsOfRequest)(nil), "provenance.ledger.v1.QueryBalancesAsOfRequest")
+	proto.RegisterType((*QueryBalancesAsOfResponse)(nil), "provenance.ledger.v1.QueryBalancesAsOfResponse")
 }
 
 func init() { proto.RegisterFile("provenance/ledger/v1/query.proto", fileDescriptor_7955b82df44e45aa) }
 
 var fileDescriptor_7955b82df44e45aa = []byte{
-	// 363 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x41, 0x4b, 0x32, 0x41,
-	0x1c, 0xc6, 0x1d, 0x5f, 0x5e, 0xa5, 0xbf, 0xb7, 0x29, 0xc8, 0xc4, 0x56, 0x5d, 0x0a, 0x0c, 0x6a,
-	0x06, 0xad, 0x4e, 0x9e, 0x2a, 0xbc, 0x75, 0xc8, 0x3d, 0x76, 0x89, 0x55, 0xc7, 0x6d, 0xc0, 0x66,
-	0xd6, 0xd9, 0x51, 0xf2, 0x1a, 0x74, 0x2e, 0xe8, 0x13, 0xf4, 0x6d, 0x3a, 0x0a, 0x5d, 0x3a, 0x86,
-	0xf6, 0x41, 0xc2, 0x9d, 0x95, 0x0c, 0xa6, 0xf2, 0x3a, 0x3c, 0xbf, 0xe7, 0xf9, 0xcd, 0xec, 0x42,
-	0x39, 0x54, 0x72, 0xc4, 0x84, 0x2f, 0x3a, 0x8c, 0xf6, 0x59, 0x37, 0x60, 0x8a, 0x8e, 0x6a, 0x74,
-	0x30, 0x64, 0x6a, 0x4c, 0x42, 0x25, 0xb5, 0xc4, 0x1b, 0x5f, 0x09, 0x62, 0x12, 0x64, 0x54, 0x2b,
-	0x14, 0x03, 0x29, 0x83, 0x3e, 0xa3, 0x7e, 0xc8, 0xa9, 0x2f, 0x84, 0xd4, 0xbe, 0xe6, 0x52, 0x44,
-	0x86, 0x29, 0x54, 0xac, 0xad, 0x09, 0x1d, 0x47, 0xdc, 0x06, 0xe4, 0x5b, 0xf3, 0x95, 0xf3, 0xf8,
-	0xf0, 0x4c, 0x8a, 0x1e, 0x0f, 0x3c, 0x36, 0x18, 0xb2, 0x48, 0xe3, 0x12, 0xe4, 0x44, 0x4f, 0x5f,
-	0xf9, 0xdd, 0xae, 0x62, 0x51, 0x94, 0x47, 0x65, 0x54, 0x5d, 0xf3, 0x40, 0xf4, 0xf4, 0x89, 0x39,
-	0x71, 0x5b, 0xb0, 0x65, 0x81, 0xa3, 0x50, 0x8a, 0x88, 0xe1, 0x23, 0xc8, 0x98, 0xa5, 0x18, 0xcc,
-	0xd5, 0x8b, 0xc4, 0x76, 0x03, 0x62, 0x58, 0x2f, 0xc9, 0xba, 0xc7, 0x80, 0x97, 0x2a, 0x57, 0x36,
-	0xf1, 0x60, 0xfd, 0x1b, 0x96, 0x38, 0x34, 0x20, 0xcb, 0x84, 0x56, 0x9c, 0xcd, 0x99, 0x7f, 0xd5,
-	0x5c, 0xbd, 0xf2, 0x9b, 0x44, 0x53, 0x68, 0x35, 0xf6, 0x16, 0x44, 0xfd, 0x39, 0x0d, 0xff, 0xe3,
-	0x52, 0xfc, 0x80, 0x20, 0x63, 0x6e, 0x87, 0x89, 0xbd, 0xe0, 0xa7, 0x37, 0x2c, 0xd0, 0x95, 0xf3,
-	0x46, 0xd9, 0xdd, 0xb9, 0x7b, 0xfd, 0x78, 0x4a, 0x3b, 0xb8, 0x48, 0xad, 0x1f, 0xaf, 0x63, 0x34,
-	0xee, 0x11, 0x64, 0x9b, 0xc6, 0x13, 0x57, 0xff, 0x9c, 0x58, 0xc8, 0xec, 0xad, 0x90, 0x4c, 0x34,
-	0x76, 0x63, 0x8d, 0x12, 0xde, 0xb6, 0x6b, 0x24, 0x6f, 0x74, 0xea, 0xbf, 0x4c, 0x1d, 0x34, 0x99,
-	0x3a, 0xe8, 0x7d, 0xea, 0xa0, 0xc7, 0x99, 0x93, 0x9a, 0xcc, 0x9c, 0xd4, 0xdb, 0xcc, 0x49, 0xc1,
-	0x26, 0x97, 0xd6, 0xb5, 0x0b, 0x74, 0xb9, 0x1f, 0x70, 0x7d, 0x3d, 0x6c, 0x93, 0x8e, 0xbc, 0x59,
-	0x6a, 0x3f, 0xe0, 0x72, 0x79, 0xeb, 0x36, 0x59, 0x6b, 0x67, 0xe2, 0x1f, 0xf5, 0xf0, 0x33, 0x00,
-	0x00, 0xff, 0xff, 0x32, 0x9c, 0x35, 0x18, 0x23, 0x03, 0x00, 0x00,
+	// 576 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0xc1, 0x6a, 0x13, 0x41,
+	0x1c, 0xc6, 0xbb, 0xd5, 0xa6, 0xf5, 0x1f, 0x50, 0x18, 0x0b, 0x8d, 0x21, 0x6e, 0xda, 0x45, 0x21,
+	0x82, 0xdd, 0xa1, 0x51, 0x29, 0xda, 0x83, 0x36, 0x5a, 0xea, 0x41, 0xac, 0x5d, 0x0f, 0xa2, 0x97,
+	0x30, 0x49, 0x66, 0xd7, 0x85, 0x64, 0x26, 0xdd, 0x99, 0x0d, 0x86, 0x90, 0x8b, 0xe0, 0x59, 0xa1,
+	0x2f, 0xe2, 0x03, 0xf8, 0x00, 0x1e, 0x0b, 0x5e, 0x3c, 0x4a, 0xe2, 0x83, 0xc8, 0xce, 0x4c, 0xec,
+	0x06, 0xd6, 0x74, 0xbd, 0x4d, 0x66, 0xbf, 0xef, 0x9b, 0x5f, 0xf6, 0xff, 0xed, 0xc0, 0x66, 0x3f,
+	0xe2, 0x03, 0xca, 0x08, 0x6b, 0x53, 0xdc, 0xa5, 0x9d, 0x80, 0x46, 0x78, 0xb0, 0x83, 0x4f, 0x62,
+	0x1a, 0x0d, 0xdd, 0x7e, 0xc4, 0x25, 0x47, 0xeb, 0xe7, 0x0a, 0x57, 0x2b, 0xdc, 0xc1, 0x4e, 0xb9,
+	0x12, 0x70, 0x1e, 0x74, 0x29, 0x26, 0xfd, 0x10, 0x13, 0xc6, 0xb8, 0x24, 0x32, 0xe4, 0x4c, 0x68,
+	0x4f, 0x79, 0x2b, 0x33, 0xd5, 0xb8, 0xb5, 0xa4, 0x6a, 0x02, 0xd4, 0xaf, 0x56, 0xec, 0x63, 0x19,
+	0xf6, 0xa8, 0x90, 0xa4, 0xd7, 0x37, 0x82, 0xf5, 0x80, 0x07, 0x5c, 0x2d, 0x71, 0xb2, 0xd2, 0xbb,
+	0xce, 0x1e, 0x94, 0x8e, 0x13, 0xb8, 0x17, 0x2a, 0xeb, 0x29, 0x67, 0x7e, 0x18, 0x78, 0xf4, 0x24,
+	0xa6, 0x42, 0xa2, 0x2a, 0x14, 0x99, 0x2f, 0x9b, 0xa4, 0xd3, 0x89, 0xa8, 0x10, 0x25, 0x6b, 0xd3,
+	0xaa, 0x5d, 0xf1, 0x80, 0xf9, 0x72, 0x5f, 0xef, 0x38, 0xc7, 0x70, 0x23, 0xc3, 0x2c, 0xfa, 0x9c,
+	0x09, 0x8a, 0xee, 0x43, 0x41, 0x03, 0x2a, 0x63, 0xb1, 0x5e, 0x71, 0xb3, 0xfe, 0xb8, 0xab, 0xbd,
+	0x9e, 0xd1, 0x3a, 0x0f, 0x00, 0xa5, 0x22, 0x73, 0x93, 0x78, 0x70, 0x7d, 0xce, 0x66, 0x18, 0xf6,
+	0x60, 0x95, 0x32, 0x19, 0x85, 0x34, 0xf1, 0x5c, 0xaa, 0x15, 0xeb, 0x5b, 0x8b, 0x20, 0x0e, 0x98,
+	0x8c, 0x86, 0xde, 0xcc, 0xe1, 0xbc, 0x84, 0x8d, 0x54, 0xa6, 0x7e, 0x98, 0x93, 0x07, 0x21, 0xb8,
+	0x1c, 0xc7, 0x61, 0xa7, 0xb4, 0xac, 0x9e, 0xa8, 0xb5, 0xf3, 0x7a, 0xee, 0x55, 0x9b, 0x3c, 0x03,
+	0xba, 0x0b, 0x2b, 0xc9, 0xb1, 0x43, 0xf3, 0xae, 0x72, 0x60, 0x6a, 0xbd, 0xf3, 0xd6, 0x84, 0x36,
+	0x48, 0x37, 0x11, 0x8b, 0x7d, 0x71, 0xe4, 0xe7, 0xa6, 0xac, 0x00, 0x10, 0xd1, 0xe4, 0x7e, 0xb3,
+	0x43, 0x24, 0x35, 0xac, 0x6b, 0x44, 0x1c, 0xf9, 0xcf, 0x88, 0xa4, 0xce, 0x1b, 0x33, 0xdd, 0xf9,
+	0x68, 0x03, 0xfc, 0x08, 0xd6, 0x5a, 0x66, 0xdf, 0x30, 0xdb, 0xd9, 0xcc, 0x33, 0xb7, 0xf7, 0x57,
+	0x5f, 0x3f, 0x5d, 0x81, 0x15, 0x95, 0x8c, 0x3e, 0x5b, 0x50, 0xd0, 0xb5, 0x41, 0x6e, 0xb6, 0xfd,
+	0x5f, 0xe5, 0x2c, 0xe3, 0xdc, 0x7a, 0x4d, 0xec, 0xdc, 0xfa, 0xf8, 0xe3, 0xf7, 0xe9, 0xb2, 0x8d,
+	0x2a, 0x38, 0xf3, 0x63, 0x6a, 0x6b, 0x8c, 0x4f, 0x16, 0xac, 0x1e, 0xe8, 0x02, 0xa0, 0xda, 0x85,
+	0x47, 0xcc, 0x60, 0xee, 0xe4, 0x50, 0x1a, 0x8c, 0xdb, 0x0a, 0xa3, 0x8a, 0x6e, 0x66, 0x63, 0x98,
+	0xf2, 0xa1, 0xaf, 0x16, 0x5c, 0x3d, 0xa4, 0x32, 0x35, 0x71, 0xb4, 0x7d, 0xe1, 0x21, 0xe9, 0x8e,
+	0x96, 0xdd, 0xbc, 0x72, 0x03, 0xf6, 0x58, 0x81, 0x3d, 0x44, 0xbb, 0x78, 0xc1, 0x65, 0x83, 0x47,
+	0xa9, 0x46, 0x8d, 0x15, 0xed, 0x10, 0x8f, 0x92, 0x7a, 0x8f, 0xd1, 0x37, 0x0b, 0xae, 0x1d, 0x52,
+	0x99, 0xae, 0xcb, 0xc2, 0xa9, 0x66, 0x54, 0x76, 0xe1, 0x54, 0xb3, 0x7a, 0xe8, 0x3c, 0x57, 0xd4,
+	0x0d, 0xf4, 0xe4, 0x3f, 0xa8, 0x67, 0x45, 0xc4, 0xa3, 0xf3, 0xf6, 0x8f, 0x1b, 0xe4, 0xfb, 0xc4,
+	0xb6, 0xce, 0x26, 0xb6, 0xf5, 0x6b, 0x62, 0x5b, 0x5f, 0xa6, 0xf6, 0xd2, 0xd9, 0xd4, 0x5e, 0xfa,
+	0x39, 0xb5, 0x97, 0x60, 0x23, 0xe4, 0x99, 0x58, 0xaf, 0xac, 0x77, 0x77, 0x83, 0x50, 0xbe, 0x8f,
+	0x5b, 0x6e, 0x9b, 0xf7, 0x52, 0x00, 0xdb, 0x21, 0x4f, 0xe3, 0x7c, 0x30, 0x18, 0xad, 0x82, 0xba,
+	0x73, 0xef, 0xfd, 0x09, 0x00, 0x00, 0xff, 0xff, 0x8d, 0x91, 0x6f, 0x90, 0x25, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -255,6 +468,10 @@ type QueryClient interface {
 	// Params queries params of the ledger module.
 	Config(ctx context.Context, in *QueryLedgerConfigRequest, opts ...grpc.CallOption) (*QueryLedgerConfigResponse, error)
 	Entries(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
+	// GetLedgerEntry returns a specific ledger entry for an NFT
+	GetLedgerEntry(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
+	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
+	GetBalancesAsOf(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error)
 }
 
 type queryClient struct {
@@ -283,11 +500,33 @@ func (c *queryClient) Entries(ctx context.Context, in *QueryLedgerRequest, opts 
 	return out, nil
 }
 
+func (c *queryClient) GetLedgerEntry(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error) {
+	out := new(QueryLedgerEntryResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/GetLedgerEntry", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetBalancesAsOf(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error) {
+	out := new(QueryBalancesAsOfResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/GetBalancesAsOf", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries params of the ledger module.
 	Config(context.Context, *QueryLedgerConfigRequest) (*QueryLedgerConfigResponse, error)
 	Entries(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
+	// GetLedgerEntry returns a specific ledger entry for an NFT
+	GetLedgerEntry(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
+	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
+	GetBalancesAsOf(context.Context, *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -299,6 +538,12 @@ func (*UnimplementedQueryServer) Config(ctx context.Context, req *QueryLedgerCon
 }
 func (*UnimplementedQueryServer) Entries(ctx context.Context, req *QueryLedgerRequest) (*QueryLedgerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Entries not implemented")
+}
+func (*UnimplementedQueryServer) GetLedgerEntry(ctx context.Context, req *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLedgerEntry not implemented")
+}
+func (*UnimplementedQueryServer) GetBalancesAsOf(ctx context.Context, req *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBalancesAsOf not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -341,6 +586,42 @@ func _Query_Entries_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetLedgerEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLedgerEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetLedgerEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Query/GetLedgerEntry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetLedgerEntry(ctx, req.(*QueryLedgerEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetBalancesAsOf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBalancesAsOfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetBalancesAsOf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Query/GetBalancesAsOf",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetBalancesAsOf(ctx, req.(*QueryBalancesAsOfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.ledger.v1.Query",
@@ -353,6 +634,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Entries",
 			Handler:    _Query_Entries_Handler,
+		},
+		{
+			MethodName: "GetLedgerEntry",
+			Handler:    _Query_GetLedgerEntry_Handler,
+		},
+		{
+			MethodName: "GetBalancesAsOf",
+			Handler:    _Query_GetBalancesAsOf_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -491,6 +780,150 @@ func (m *QueryLedgerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryLedgerEntryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerEntryRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerEntryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Uuid) > 0 {
+		i -= len(m.Uuid)
+		copy(dAtA[i:], m.Uuid)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Uuid)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.NftAddress) > 0 {
+		i -= len(m.NftAddress)
+		copy(dAtA[i:], m.NftAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.NftAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerEntryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerEntryResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerEntryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Entry != nil {
+		{
+			size, err := m.Entry.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryBalancesAsOfRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryBalancesAsOfRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryBalancesAsOfRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AsOfDate) > 0 {
+		i -= len(m.AsOfDate)
+		copy(dAtA[i:], m.AsOfDate)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AsOfDate)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.NftAddress) > 0 {
+		i -= len(m.NftAddress)
+		copy(dAtA[i:], m.NftAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.NftAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryBalancesAsOfResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryBalancesAsOfResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryBalancesAsOfResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Balances != nil {
+		{
+			size, err := m.Balances.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -552,6 +985,66 @@ func (m *QueryLedgerResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *QueryLedgerEntryRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.NftAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.Uuid)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerEntryResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Entry != nil {
+		l = m.Entry.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryBalancesAsOfRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.NftAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.AsOfDate)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryBalancesAsOfResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Balances != nil {
+		l = m.Balances.Size()
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -872,6 +1365,406 @@ func (m *QueryLedgerResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Entries = append(m.Entries, &LedgerEntry{})
 			if err := m.Entries[len(m.Entries)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerEntryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerEntryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerEntryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NftAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Uuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Uuid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerEntryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerEntryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerEntryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entry", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Entry == nil {
+				m.Entry = &LedgerEntry{}
+			}
+			if err := m.Entry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryBalancesAsOfRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryBalancesAsOfRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryBalancesAsOfRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NftAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsOfDate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AsOfDate = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryBalancesAsOfResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryBalancesAsOfResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryBalancesAsOfResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Balances", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Balances == nil {
+				m.Balances = &Balances{}
+			}
+			if err := m.Balances.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
