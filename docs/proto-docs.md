@@ -358,27 +358,6 @@
     - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest)
     - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse)
   
-    - [Msg](#provenance-msgfees-v1-Msg)
-  
-- [provenance/msgfees/v1/query.proto](#provenance_msgfees_v1_query-proto)
-    - [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest)
-    - [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse)
-    - [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest)
-    - [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse)
-    - [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest)
-    - [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse)
-  
-    - [Query](#provenance-msgfees-v1-Query)
-  
-- [provenance/msgfees/v1/genesis.proto](#provenance_msgfees_v1_genesis-proto)
-    - [GenesisState](#provenance-msgfees-v1-GenesisState)
-  
-- [provenance/msgfees/v1/msgfees.proto](#provenance_msgfees_v1_msgfees-proto)
-    - [EventMsgFee](#provenance-msgfees-v1-EventMsgFee)
-    - [EventMsgFees](#provenance-msgfees-v1-EventMsgFees)
-    - [MsgFee](#provenance-msgfees-v1-MsgFee)
-    - [Params](#provenance-msgfees-v1-Params)
-  
 - [provenance/msgfees/v1/proposals.proto](#provenance_msgfees_v1_proposals-proto)
     - [AddMsgFeeProposal](#provenance-msgfees-v1-AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance-msgfees-v1-RemoveMsgFeeProposal)
@@ -5564,6 +5543,9 @@ GenesisState defines the attribute module's genesis state.
 
 ### MsgAddMsgFeeProposalRequest
 AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5593,6 +5575,9 @@ MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
 
 ### MsgAssessCustomMsgFeeRequest
 MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5622,6 +5607,9 @@ MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 ### MsgRemoveMsgFeeProposalRequest
 RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5648,6 +5636,9 @@ MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateConversionFeeDenomProposalRequest
 UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5674,6 +5665,9 @@ MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeD
 
 ### MsgUpdateMsgFeeProposalRequest
 UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5703,6 +5697,9 @@ MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateNhashPerUsdMilProposalRequest
 UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5719,255 +5716,6 @@ UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash p
 
 ### MsgUpdateNhashPerUsdMilProposalResponse
 MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProposal response type
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="provenance-msgfees-v1-Msg"></a>
-
-### Msg
-Msg defines the msgfees Msg service.
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance-msgfees-v1-MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance-msgfees-v1-MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts |
-| `AddMsgFeeProposal` | [MsgAddMsgFeeProposalRequest](#provenance-msgfees-v1-MsgAddMsgFeeProposalRequest) | [MsgAddMsgFeeProposalResponse](#provenance-msgfees-v1-MsgAddMsgFeeProposalResponse) | AddMsgFeeProposal defines a governance proposal to add additional msg based fee |
-| `UpdateMsgFeeProposal` | [MsgUpdateMsgFeeProposalRequest](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalRequest) | [MsgUpdateMsgFeeProposalResponse](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalResponse) | UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee |
-| `RemoveMsgFeeProposal` | [MsgRemoveMsgFeeProposalRequest](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalRequest) | [MsgRemoveMsgFeeProposalResponse](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalResponse) | RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee |
-| `UpdateNhashPerUsdMilProposal` | [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest) | [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse) | UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param |
-| `UpdateConversionFeeDenomProposal` | [MsgUpdateConversionFeeDenomProposalRequest](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalRequest) | [MsgUpdateConversionFeeDenomProposalResponse](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalResponse) | UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom |
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_query-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/query.proto
-
-
-
-<a name="provenance-msgfees-v1-CalculateTxFeesRequest"></a>
-
-### CalculateTxFeesRequest
-CalculateTxFeesRequest is the request type for the Query RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
-| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
-| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-CalculateTxFeesResponse"></a>
-
-### CalculateTxFeesResponse
-CalculateTxFeesResponse is the response type for the Query RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees |
-| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg fees + gas fee) note: the gas fee is calculated with the floor gas price module param. |
-| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesRequest"></a>
-
-### QueryAllMsgFeesRequest
-QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesResponse"></a>
-
-### QueryAllMsgFeesResponse
-response for querying all msg's with fees associated with them
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines the parameters of the module. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="provenance-msgfees-v1-Query"></a>
-
-### Query
-Query defines the gRPC querier service for marker module.
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `Params` | [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse) | Params queries the parameters for x/msgfees |
-| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. |
-| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. |
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_genesis-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/genesis.proto
-
-
-
-<a name="provenance-msgfees-v1-GenesisState"></a>
-
-### GenesisState
-GenesisState contains a set of msg fees, persisted from the store
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines all the parameters of the module. |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_msgfees-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/msgfees.proto
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFee"></a>
-
-### EventMsgFee
-EventMsgFee final event property for msg fee on type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type` | [string](#string) |  |  |
-| `count` | [string](#string) |  |  |
-| `total` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFees"></a>
-
-### EventMsgFees
-EventMsgFees event emitted with summary of msg fees
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [EventMsgFee](#provenance-msgfees-v1-EventMsgFee) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-MsgFee"></a>
-
-### MsgFee
-MsgFee is the core of what gets stored on the blockchain to define a msg-based fee.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message with the added fee, e.g. "/cosmos.bank.v1beta1.MsgSend". |
-| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional_fee is the extra fee that is required for the given message type (can be in any denom). |
-| `recipient` | [string](#string) |  | recipient is an option address that will receive a portion of the additional fee. There can only be a recipient if the recipient_basis_points is not zero. |
-| `recipient_basis_points` | [uint32](#uint32) |  | recipient_basis_points is an optional portion of the additional fee to be sent to the recipient. Must be between 0 and 10,000 (inclusive).<br>If there is a recipient, this must not be zero. If there is not a recipient, this must be zero.<br>The recipient will receive additional_fee * recipient_basis_points / 10,000. The fee collector will receive the rest, i.e. additional_fee * (10,000 - recipient_basis_points) / 10,000. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-Params"></a>
-
-### Params
-Params defines the set of params for the msgfees module.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.<br>Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil<br>Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
-| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
 
 
 
