@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+	"time"
+
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
@@ -85,7 +88,9 @@ func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
 
 	// Check if posted date is in the future
 	if le.PostedDate.After(blockTime) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "posted date cannot be in the future")
+		return NewLedgerCodedError(ErrCodeInvalidField,
+			fmt.Sprintf("posted date cannot be in the future %s (block time: %s)",
+				le.PostedDate.Format(time.RFC3339), blockTime.Format(time.RFC3339)))
 	}
 
 	return nil
