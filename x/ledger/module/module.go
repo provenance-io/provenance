@@ -58,36 +58,14 @@ func NewAppModule(cdc codec.Codec, k keeper.BaseKeeper) AppModule {
 // RegisterInvariants registers the invariants of the module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the module.
-// func (am AppModule) Route() types.RouterKey {
-// 	return ledger.RouterKey
-// }
-
-// NewHandler returns an sdk.Handler for the module.
-// func (am AppModule) NewHandler() sdk.Handler {
-// 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-// 		// Handle messages. This is a placeholder.
-// 		return nil, nil
-// 	}
-// }
-
 // QuerierRoute returns the module's querier route name.
 func (am AppModule) QuerierRoute() string {
 	return ledger.ModuleName
 }
 
-// LegacyQuerierHandler returns the module sdk.Querier.
-// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-// 	// Implement query handlers if needed.
-// 	return nil
-// }
-
 // InitGenesis initializes the genesis state.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
-	ctx.Logger().Info("Genesising Ledger Module")
-	var state ledger.GenesisState
-	cdc.MustUnmarshalJSON(gs, &state)
-	am.keeper.InitGenesis(ctx, &state)
+	// no-op: we start with a clean ledger state.
 	return nil
 }
 
@@ -102,10 +80,10 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // ExportGenesis exports the module's genesis state.
-// func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-// 	// Export current state as genesis state.
-// 	return cdc.MustMarshalJSON(struct{}{})
-// }
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	// TODO wire up the export genesis.
+	return cdc.MustMarshalJSON(&ledger.GenesisState{})
+}
 
 // Satisfy the AppModule interface for now..
 func (AppModule) IsAppModule()                                {}
