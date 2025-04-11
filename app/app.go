@@ -156,6 +156,7 @@ import (
 	"github.com/provenance-io/provenance/x/metadata"
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -342,6 +343,7 @@ func New(
 
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
+	msgfeestypes.RegisterInterfaces(interfaceRegistry)
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter())

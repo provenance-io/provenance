@@ -4,22 +4,14 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-const (
-	PropTypeAddMsgFee                string = "AddMsgFee"
-	PropTypeUpdateMsgFee             string = "UpdateMsgFee"
-	PropTypeRemoveMsgFee             string = "RemoveMsgFee"
-	PropTypeUpdateUsdConversionRate  string = "UpdateUsdConversionRate"
-	PropTypeUpdateConversionFeeDenom string = "UpdateConversionFeeDenom"
-)
-
 var routerKey = ModuleName
 
 var (
-	_ govtypesv1beta1.Content = &AddMsgFeeProposal{}
-	_ govtypesv1beta1.Content = &UpdateMsgFeeProposal{}
-	_ govtypesv1beta1.Content = &RemoveMsgFeeProposal{}
-	_ govtypesv1beta1.Content = &UpdateNhashPerUsdMilProposal{}
-	_ govtypesv1beta1.Content = &UpdateConversionFeeDenomProposal{}
+	_ govtypesv1beta1.Content = (*AddMsgFeeProposal)(nil)
+	_ govtypesv1beta1.Content = (*UpdateMsgFeeProposal)(nil)
+	_ govtypesv1beta1.Content = (*RemoveMsgFeeProposal)(nil)
+	_ govtypesv1beta1.Content = (*UpdateNhashPerUsdMilProposal)(nil)
+	_ govtypesv1beta1.Content = (*UpdateConversionFeeDenomProposal)(nil)
 )
 
 func (p AddMsgFeeProposal) ProposalRoute() string { return routerKey }
