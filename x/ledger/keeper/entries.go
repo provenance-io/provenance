@@ -104,12 +104,6 @@ func validateEntryAmounts(le *ledger.LedgerEntry) error {
 		return NewLedgerCodedError(ErrCodeInvalidField, "total amount must equal sum of applied amounts")
 	}
 
-	// Check for negative amounts
-	if le.Amt.IsNegative() || le.PrinAppliedAmt.IsNegative() ||
-		le.IntAppliedAmt.IsNegative() || le.OtherAppliedAmt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "amounts cannot be negative")
-	}
-
 	return nil
 }
 
