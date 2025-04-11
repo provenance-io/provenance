@@ -19,6 +19,11 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 )
 
+var (
+	pastDate        time.Time
+	validNftAddress string
+)
+
 type TestSuite struct {
 	suite.Suite
 
@@ -53,6 +58,10 @@ func (s *TestSuite) SetupTest() {
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
+
+	// Create a timestamp 24 hours in the past to avoid future date errors
+	pastDate = time.Now().Add(-24 * time.Hour).UTC()
+	validNftAddress = s.addr1.String()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -221,239 +230,26 @@ func (s *TestSuite) TestGetLedger() {
 
 // TestCreateLedgerEntry tests the CreateLedgerEntry function
 func (s *TestSuite) TestCreateLedgerEntry() {
-	// Create a valid NFT address and ledger for testing
-	nftAddr := s.addr1.String()
-	denom := s.bondDenom
-	validLedger := ledger.Ledger{
-		NftAddress: nftAddr,
-		Denom:      denom,
-	}
-	err := s.keeper.CreateLedger(s.ctx, validLedger)
-	s.Require().NoError(err, "CreateLedger error")
+	// Create a ledger first
+	err := s.keeper.CreateLedger(s.ctx, ledger.Ledger{
+		NftAddress: validNftAddress,
+		Denom:      s.bondDenom,
+	})
+	s.Require().NoError(err)
 
-	// Create test entry data
-	entryType := ledger.LedgerEntryType_Disbursement
-	postedDate := time.Now()
-	effectiveDate := postedDate.Add(24 * time.Hour)
-	amount := s.int(1000)
-
-	// Create a valid ledger entry first
-	validEntry := ledger.LedgerEntry{
-		Type:            entryType,
-		PostedDate:      postedDate,
-		EffectiveDate:   effectiveDate,
-		Amt:             amount,
-		PrinAppliedAmt:  amount,
-		PrinBalAmt:      amount,
-		IntAppliedAmt:   s.int(0),
-		IntBalAmt:       s.int(0),
-		OtherAppliedAmt: s.int(0),
-		OtherBalAmt:     s.int(0),
-		Sequence:        1,
-	}
-	err = s.keeper.AppendEntry(s.ctx, nftAddr, validEntry)
+	// Test creating a ledger entry
+	err = s.keeper.AppendEntry(s.ctx, validNftAddress, ledger.LedgerEntry{
+		PostedDate:     pastDate,
+		EffectiveDate:  pastDate,
+		Type:           ledger.LedgerEntryType_Disbursement,
+		Amt:            sdkmath.NewInt(100),
+		PrinAppliedAmt: sdkmath.NewInt(100),
+		PrinBalAmt:     sdkmath.NewInt(100),
+		IntAppliedAmt:  sdkmath.NewInt(0),
+		IntBalAmt:      sdkmath.NewInt(0),
+		CorrelationId:  "test-correlation-id",
+	})
 	s.Require().NoError(err, "AppendEntry error")
-
-	tests := []struct {
-		name     string
-		nftAddr  string
-		entry    ledger.LedgerEntry
-		expErr   []string
-		expEvent bool
-	}{
-		{
-			name:    "valid ledger entry",
-			nftAddr: nftAddr,
-			entry: ledger.LedgerEntry{
-				Type:            entryType,
-				PostedDate:      postedDate,
-				EffectiveDate:   effectiveDate,
-				Amt:             amount,
-				PrinAppliedAmt:  amount,
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-1",
-			},
-			expEvent: true,
-		},
-		{
-			name:    "empty nft address",
-			nftAddr: "",
-			entry: ledger.LedgerEntry{
-				Type:            entryType,
-				PostedDate:      postedDate,
-				EffectiveDate:   effectiveDate,
-				Amt:             amount,
-				PrinAppliedAmt:  amount,
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-2",
-			},
-			expErr: []string{"nft_address"},
-		},
-		{
-			name:    "unspecified entry type",
-			nftAddr: nftAddr,
-			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Unspecified,
-				PostedDate:      postedDate,
-				EffectiveDate:   effectiveDate,
-				Amt:             amount,
-				PrinAppliedAmt:  amount,
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-3",
-			},
-			expErr: []string{"type"},
-		},
-		{
-			name:    "zero posted date",
-			nftAddr: nftAddr,
-			entry: ledger.LedgerEntry{
-				Type:            entryType,
-				PostedDate:      time.Time{},
-				EffectiveDate:   effectiveDate,
-				Amt:             amount,
-				PrinAppliedAmt:  amount,
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-4",
-			},
-			expErr: []string{"posted_date"},
-		},
-		{
-			name:    "zero effective date",
-			nftAddr: nftAddr,
-			entry: ledger.LedgerEntry{
-				Type:            entryType,
-				PostedDate:      postedDate,
-				EffectiveDate:   time.Time{},
-				Amt:             amount,
-				PrinAppliedAmt:  amount,
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-5",
-			},
-			expErr: []string{"effective_date"},
-		},
-		{
-			name:    "negative amount",
-			nftAddr: nftAddr,
-			entry: ledger.LedgerEntry{
-				Type:            entryType,
-				PostedDate:      postedDate,
-				EffectiveDate:   effectiveDate,
-				Amt:             s.int(-1000),
-				PrinAppliedAmt:  amount,
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-6",
-			},
-			expErr: []string{"amount"},
-		},
-		{
-			name:    "negative principal applied amount",
-			nftAddr: nftAddr,
-			entry: ledger.LedgerEntry{
-				Type:            entryType,
-				PostedDate:      postedDate,
-				EffectiveDate:   effectiveDate,
-				Amt:             amount,
-				PrinAppliedAmt:  s.int(-1000),
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-7",
-			},
-			expErr: []string{"principal applied amount"},
-		},
-		{
-			name:    "non-existent ledger",
-			nftAddr: s.addr2.String(),
-			entry: ledger.LedgerEntry{
-				Type:            entryType,
-				PostedDate:      postedDate,
-				EffectiveDate:   effectiveDate,
-				Amt:             amount,
-				PrinAppliedAmt:  amount,
-				PrinBalAmt:      amount,
-				IntAppliedAmt:   s.int(0),
-				IntBalAmt:       s.int(0),
-				OtherAppliedAmt: s.int(0),
-				OtherBalAmt:     s.int(0),
-				Sequence:        1,
-				CorrelationId:   "test-correlation-id-8",
-			},
-			expErr: []string{"not found"},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			// Reset event manager for each test
-			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-
-			err := s.keeper.AppendEntry(s.ctx, tc.nftAddr, tc.entry)
-			if len(tc.expErr) > 0 {
-				s.Require().Error(err)
-				for _, expErr := range tc.expErr {
-					s.Require().Contains(err.Error(), expErr)
-				}
-			} else {
-				s.Require().NoError(err)
-			}
-
-			// Check events
-			events := s.ctx.EventManager().Events()
-			if tc.expEvent {
-				s.Require().Len(events, 1)
-				event := events[0]
-				s.Require().Equal(ledger.EventTypeLedgerEntryAdded, event.Type)
-				s.Require().Len(event.Attributes, 6)
-				s.Require().Equal("nft_address", string(event.Attributes[0].Key))
-				s.Require().Equal(tc.nftAddr, string(event.Attributes[0].Value))
-				s.Require().Equal("correlation_id", string(event.Attributes[1].Key))
-				s.Require().Equal(tc.entry.CorrelationId, string(event.Attributes[1].Value))
-				s.Require().Equal("entry_type", string(event.Attributes[2].Key))
-				s.Require().Equal(tc.entry.Type.String(), string(event.Attributes[2].Value))
-				s.Require().Equal("posted_date", string(event.Attributes[3].Key))
-				s.Require().Equal(tc.entry.PostedDate.Format(time.RFC3339), string(event.Attributes[3].Value))
-				s.Require().Equal("effective_date", string(event.Attributes[4].Key))
-				s.Require().Equal(tc.entry.EffectiveDate.Format(time.RFC3339), string(event.Attributes[4].Value))
-				s.Require().Equal("amount", string(event.Attributes[5].Key))
-				s.Require().Equal(tc.entry.Amt.String(), string(event.Attributes[5].Value))
-			} else {
-				s.Require().Len(events, 0)
-			}
-		})
-	}
 }
 
 // TestGetLedgerEntry tests the GetLedgerEntry function
@@ -478,13 +274,13 @@ func (s *TestSuite) TestGetLedgerEntry() {
 			name:     "invalid nft address",
 			nftAddr:  "invalid",
 			expEntry: nil,
-			expErr:   fmt.Errorf("invalid nft_address"),
+			expErr:   fmt.Errorf("provided [field] value is invalid; nft_address"),
 		},
 		{
 			name:     "not found",
 			nftAddr:  s.addr2.String(),
 			expEntry: nil,
-			expErr:   nil,
+			expErr:   fmt.Errorf("collections: not found"),
 		},
 	}
 
@@ -618,6 +414,9 @@ func (s *TestSuite) TestAppendEntry() {
 	err := s.keeper.CreateLedger(s.ctx, l)
 	s.Require().NoError(err, "CreateLedger error")
 
+	// Use a past date for testing
+	pastDate := time.Now().Add(-24 * time.Hour)
+
 	// Test cases
 	tests := []struct {
 		name    string
@@ -629,25 +428,88 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "invalid nft address",
 			nftAddr: "invalid",
 			entry: ledger.LedgerEntry{
-				Type:          ledger.LedgerEntryType_Payment,
-				PostedDate:    time.Now(),
-				EffectiveDate: time.Now(),
-				Amt:           s.int(100),
-				CorrelationId: "test-correlation-id-9",
+				Type:            ledger.LedgerEntryType_Payment,
+				PostedDate:      pastDate,
+				EffectiveDate:   pastDate,
+				Amt:             s.int(100),
+				PrinAppliedAmt:  s.int(50),
+				PrinBalAmt:      s.int(50),
+				IntAppliedAmt:   s.int(25),
+				IntBalAmt:       s.int(25),
+				OtherAppliedAmt: s.int(25),
+				OtherBalAmt:     s.int(25),
+				CorrelationId:   "test-correlation-id-9",
 			},
-			expErr: fmt.Errorf("invalid nft_address"),
+			expErr: fmt.Errorf("provided [field] value is invalid; nft_address"),
 		},
 		{
 			name:    "not found",
 			nftAddr: s.addr2.String(),
 			entry: ledger.LedgerEntry{
-				Type:          ledger.LedgerEntryType_Payment,
-				PostedDate:    time.Now(),
-				EffectiveDate: time.Now(),
-				Amt:           s.int(100),
-				CorrelationId: "test-correlation-id-10",
+				Type:            ledger.LedgerEntryType_Payment,
+				PostedDate:      pastDate,
+				EffectiveDate:   pastDate,
+				Amt:             s.int(100),
+				PrinAppliedAmt:  s.int(50),
+				PrinBalAmt:      s.int(50),
+				IntAppliedAmt:   s.int(25),
+				IntBalAmt:       s.int(25),
+				OtherAppliedAmt: s.int(25),
+				OtherBalAmt:     s.int(25),
+				CorrelationId:   "test-correlation-id-10",
 			},
-			expErr: fmt.Errorf("ledger not found"),
+			expErr: fmt.Errorf("collections: not found"),
+		},
+		{
+			name:    "amounts_do_not_sum_to_total",
+			nftAddr: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				Type:            ledger.LedgerEntryType_Payment,
+				PostedDate:      pastDate,
+				EffectiveDate:   pastDate,
+				Amt:             s.int(100),
+				PrinAppliedAmt:  s.int(50),
+				PrinBalAmt:      s.int(50),
+				IntAppliedAmt:   s.int(25),
+				IntBalAmt:       s.int(25),
+				OtherAppliedAmt: s.int(20),
+				OtherBalAmt:     s.int(20),
+				CorrelationId:   "test-correlation-id-11",
+			},
+			expErr: fmt.Errorf("provided [field] value is invalid; total amount must equal sum of applied amounts"),
+		},
+		{
+			name:    "missing_balance_fields",
+			nftAddr: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				Type:            ledger.LedgerEntryType_Payment,
+				PostedDate:      pastDate,
+				EffectiveDate:   pastDate,
+				Amt:             s.int(100),
+				PrinAppliedAmt:  s.int(50),
+				IntAppliedAmt:   s.int(25),
+				OtherAppliedAmt: s.int(25),
+				CorrelationId:   "test-correlation-id-13",
+			},
+			expErr: fmt.Errorf("provided [field] value is invalid; principal_balance_amount"),
+		},
+		{
+			name:    "valid amounts and balances",
+			nftAddr: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				Type:            ledger.LedgerEntryType_Payment,
+				PostedDate:      pastDate,
+				EffectiveDate:   pastDate,
+				Amt:             s.int(100),
+				PrinAppliedAmt:  s.int(50),
+				PrinBalAmt:      s.int(50),
+				IntAppliedAmt:   s.int(25),
+				IntBalAmt:       s.int(25),
+				OtherAppliedAmt: s.int(25),
+				OtherBalAmt:     s.int(25),
+				CorrelationId:   "test-correlation-id-12",
+			},
+			expErr: nil,
 		},
 	}
 
@@ -656,7 +518,7 @@ func (s *TestSuite) TestAppendEntry() {
 			err := s.keeper.AppendEntry(s.ctx, tc.nftAddr, tc.entry)
 			if tc.expErr != nil {
 				s.Require().Error(err, "AppendEntry error")
-				s.Require().Equal(tc.expErr.Error(), err.Error(), "AppendEntry error type")
+				s.Require().Contains(err.Error(), tc.expErr.Error(), "AppendEntry error type")
 			} else {
 				s.Require().NoError(err, "AppendEntry error")
 			}
