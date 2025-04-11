@@ -39,6 +39,8 @@ The module supports several types of ledger entries:
 5. `LEDGER_ENTRY_TYPE_OTHER`: Represents other types of financial activities
    - Example: Adjustments, corrections, or special transactions
 
+Ledgers are not meant to track every potential transaction type since there are only a few that are proven on-chain.
+
 ## Balance Tracking
 
 The module maintains several types of balances:
@@ -47,16 +49,18 @@ The module maintains several types of balances:
    - Original amount disbursed
    - Reduced by principal payments
    - Increased by disbursements
+   - Reduced/Increased based on "other" adjustments
 
 2. **Interest Balance**
    - Accrued interest
    - Reduced by interest payments
-   - Updated based on interest calculations
+   - Reduced/Increased based on "other" adjustments
 
 3. **Other Balance**
    - Fees and charges
    - Special adjustments
    - Miscellaneous amounts
+   - Can effect principal/interest applications and balances
 
 ## State Management
 
