@@ -4694,6 +4694,7 @@ LedgerEntry
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
+| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
 | `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
