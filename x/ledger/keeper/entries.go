@@ -21,18 +21,14 @@ type BaseEntriesKeeper struct {
 
 // SetValue stores a value with a given key.
 func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le ledger.LedgerEntry) error {
-	// Validate the NFT address
-	_, err := getAddress(&nftAddress)
-	if err != nil {
-		return err
-	}
-
 	if err := ValidateLedgerEntryBasic(&le); err != nil {
 		return err
 	}
 
+	// TODO validate that the {addr} can be modified by the signer...
+
 	// Validate that the ledger exists
-	_, err = k.Ledgers.Get(ctx, nftAddress)
+	_, err := k.Ledgers.Get(ctx, nftAddress)
 	if err != nil {
 		return err
 	}
@@ -52,7 +48,6 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		return err
 	}
 
-	// TODO validate that the {addr} can be modified by the signer...
 	// TODO validate that the ledger entry is not a duplicate
 
 	key := collections.Join(nftAddress, le.CorrelationId)
