@@ -63,6 +63,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	// TODO[fees]: New upgrades that removes msgfees and adds flatfees.
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.

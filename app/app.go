@@ -156,9 +156,6 @@ import (
 	"github.com/provenance-io/provenance/x/metadata"
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
-	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -253,7 +250,6 @@ type App struct {
 	GroupKeeper           groupkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
-	MsgFeesKeeper         msgfeeskeeper.Keeper
 	FlatFeesKeeper        flatfeeskeeper.Keeper
 	QuarantineKeeper      quarantinekeeper.Keeper
 	SanctionKeeper        sanctionkeeper.Keeper
@@ -372,7 +368,6 @@ func New(
 		markertypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
-		msgfeestypes.StoreKey,
 		flatfeestypes.StoreKey,
 		wasmtypes.StoreKey,
 		quarantine.StoreKey,
@@ -482,12 +477,6 @@ func New(
 		homePath = DefaultNodeHome
 	}
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, govAuthority)
-
-	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
-		appCodec, keys[msgfeestypes.StoreKey], authtypes.FeeCollectorName,
-		pioconfig.GetProvenanceConfig().FeeDenom, app.SimulateProv,
-		app.txConfig.TxDecoder(), interfaceRegistry,
-	)
 
 	app.FlatFeesKeeper = flatfeeskeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName,
@@ -750,7 +739,6 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		flatfeesmodule.NewAppModule(appCodec, app.FlatFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), nil),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
@@ -858,7 +846,6 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
-		msgfeestypes.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName, // must be after the hold module.
 
@@ -909,7 +896,6 @@ func New(
 
 		attributetypes.ModuleName,
 		markertypes.ModuleName,
-		msgfeestypes.ModuleName,
 		flatfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,

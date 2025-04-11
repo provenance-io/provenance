@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
+// TODO[fees]: Add a call to RegisterInterfaces from app.New.
+
 // RegisterInterfaces registers concrete implementations for this module.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	messages := make([]proto.Message, len(AllRequestMsgs))
