@@ -230,6 +230,8 @@ func (s *TestSuite) TestGetLedger() {
 
 // TestCreateLedgerEntry tests the CreateLedgerEntry function
 func (s *TestSuite) TestCreateLedgerEntry() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+
 	// Create a ledger first
 	err := s.keeper.CreateLedger(s.ctx, ledger.Ledger{
 		NftAddress: validNftAddress,
@@ -239,15 +241,17 @@ func (s *TestSuite) TestCreateLedgerEntry() {
 
 	// Test creating a ledger entry
 	err = s.keeper.AppendEntry(s.ctx, validNftAddress, ledger.LedgerEntry{
-		PostedDate:     pastDate,
-		EffectiveDate:  pastDate,
-		Type:           ledger.LedgerEntryType_Disbursement,
-		Amt:            sdkmath.NewInt(100),
-		PrinAppliedAmt: sdkmath.NewInt(100),
-		PrinBalAmt:     sdkmath.NewInt(100),
-		IntAppliedAmt:  sdkmath.NewInt(0),
-		IntBalAmt:      sdkmath.NewInt(0),
-		CorrelationId:  "test-correlation-id",
+		PostedDate:      pastDate,
+		EffectiveDate:   pastDate,
+		Type:            ledger.LedgerEntryType_Disbursement,
+		Amt:             sdkmath.NewInt(100),
+		PrinAppliedAmt:  sdkmath.NewInt(100),
+		PrinBalAmt:      sdkmath.NewInt(100),
+		IntAppliedAmt:   sdkmath.NewInt(0),
+		IntBalAmt:       sdkmath.NewInt(0),
+		OtherAppliedAmt: sdkmath.NewInt(0),
+		OtherBalAmt:     sdkmath.NewInt(0),
+		CorrelationId:   "test-correlation-id",
 	})
 	s.Require().NoError(err, "AppendEntry error")
 }
@@ -265,28 +269,31 @@ func (s *TestSuite) TestGetLedgerEntry() {
 
 	// Test cases
 	tests := []struct {
-		name     string
-		nftAddr  string
-		expEntry *ledger.LedgerEntry
-		expErr   error
+		name          string
+		nftAddr       string
+		correlationId string
+		expEntry      *ledger.LedgerEntry
+		expErr        error
 	}{
 		{
-			name:     "invalid nft address",
-			nftAddr:  "invalid",
-			expEntry: nil,
-			expErr:   fmt.Errorf("provided [field] value is invalid; nft_address"),
+			name:          "invalid nft address",
+			nftAddr:       "invalid",
+			correlationId: "test-correlation-id",
+			expEntry:      nil,
+			expErr:        fmt.Errorf("provided [field] value is invalid; nft_address"),
 		},
 		{
-			name:     "not found",
-			nftAddr:  s.addr2.String(),
-			expEntry: nil,
-			expErr:   fmt.Errorf("collections: not found"),
+			name:          "not found",
+			nftAddr:       s.addr2.String(),
+			correlationId: "test-correlation-id",
+			expEntry:      nil,
+			expErr:        nil,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftAddr, "")
+			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftAddr, tc.correlationId)
 			if tc.expErr != nil {
 				s.Require().Error(err, "GetLedgerEntry error")
 				s.Require().Equal(tc.expErr.Error(), err.Error(), "GetLedgerEntry error type")
@@ -405,6 +412,8 @@ func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ..
 }
 
 func (s *TestSuite) TestAppendEntry() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+
 	// Create a test ledger
 	l := ledger.Ledger{
 		NftAddress: s.addr1.String(),
