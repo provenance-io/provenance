@@ -18,37 +18,29 @@ message QueryLedgerConfigResponse {
 ```
 
 ### Get Ledger Entries
-Retrieves ledger entries for a specific NFT with optional filtering.
+Retrieves all ledger entries for a specific NFT.
 
 ```protobuf
 message QueryLedgerRequest {
     string nft_address = 1;
-    LedgerEntryType entry_type = 2;
-    google.protobuf.Timestamp start_date = 3;
-    google.protobuf.Timestamp end_date = 4;
-    cosmos.base.query.v1beta1.PageRequest pagination = 5;
 }
 
 message QueryLedgerResponse {
     repeated LedgerEntry entries = 1;
-    cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 ```
 
-### Get Current Balances
-Retrieves the current balances for a specific NFT.
+### Get Balances As Of Date
+Retrieves the balances for a specific NFT as of a given date.
 
 ```protobuf
-message QueryBalancesRequest {
+message QueryBalancesAsOfRequest {
     string nft_address = 1;
+    string as_of_date = 2;  // RFC3339 format (e.g., "2024-01-01T00:00:00Z")
 }
 
-message QueryBalancesResponse {
-    string principal_balance = 1;
-    string interest_balance = 2;
-    string other_balance = 3;
-    string total_balance = 4;
-    google.protobuf.Timestamp as_of = 5;
+message QueryBalancesAsOfResponse {
+    Balances balances = 1;
 }
 ```
 
@@ -56,12 +48,12 @@ message QueryBalancesResponse {
 Retrieves a specific ledger entry by its UUID.
 
 ```protobuf
-message QueryEntryRequest {
+message QueryLedgerEntryRequest {
     string nft_address = 1;
-    string entry_uuid = 2;
+    string uuid = 2;
 }
 
-message QueryEntryResponse {
+message QueryLedgerEntryResponse {
     LedgerEntry entry = 1;
 }
 ```
@@ -77,19 +69,19 @@ provenanced query ledger config [nft-address]
 ```bash
 # Get all entries
 provenanced query ledger entries [nft-address]
-
-# Get entries with filters
-provenanced query ledger entries [nft-address] --entry-type=PAYMENT --start-date=2024-01-01 --end-date=2024-03-31
 ```
 
-### Get Current Balances
+### Get Balances As Of Date
 ```bash
-provenanced query ledger balances [nft-address]
+# Get balances as of a specific date
+provenanced query ledger balances [nft-address] [as-of-date]
+# Example:
+provenanced query ledger balances [nft-address] "2024-01-01T00:00:00Z"
 ```
 
 ### Get Entry by UUID
 ```bash
-provenanced query ledger entry [nft-address] [entry-uuid]
+provenanced query ledger entry [nft-address] [uuid]
 ```
 
 ## Response Data
@@ -97,10 +89,6 @@ provenanced query ledger entry [nft-address] [entry-uuid]
 ### Ledger Configuration
 - NFT address
 - Denomination
-- Creation timestamp
-- Update timestamp
-- Status
-- Metadata
 
 ### Ledger Entries
 - Entry UUID
@@ -109,15 +97,14 @@ provenanced query ledger entry [nft-address] [entry-uuid]
 - Effective date
 - Amounts (total, principal, interest, other)
 - Balance information
-- Metadata
-- Created by
 
-### Current Balances
+### Balances As Of Date
 - Principal balance
 - Interest balance
 - Other balance
-- Total balance
-- As of timestamp
+
+### Entry by UUID
+- Complete ledger entry details including all amounts and dates
 
 ## Error Handling
 
@@ -125,9 +112,16 @@ The module returns appropriate error messages for:
 - Invalid NFT addresses
 - Non-existent ledgers
 - Invalid entry UUIDs
+- Invalid date formats
 - Permission issues
 - Invalid query parameters
-- Pagination errors
+
+## Notes
+
+- All dates should be provided in RFC3339 format (e.g., "2024-01-01T00:00:00Z")
+- The balances query will return the cumulative balances up to and including the specified date
+- Entries are sorted by effective date when calculating balances
+- The module maintains separate balances for principal, interest, and other amounts
 
 ## Pagination
 
