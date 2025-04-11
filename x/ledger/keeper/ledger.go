@@ -55,10 +55,5 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 }
 
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
-	for _, l := range state.Ledgers {
-		if err := k.CreateLedger(ctx, l); err != nil {
-			// May as well panic here as there is no way we should genesis with bad data.
-			panic(err)
-		}
-	}
+	// no-op: we start with a clean ledger state.
 }
