@@ -4524,8 +4524,7 @@ MsgCreateRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `denom` | [string](#string) |  |  |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
 | `owner` | [string](#string) |  |  |
 
 

@@ -33,12 +33,7 @@ func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) 
 func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	l := ledger.Ledger{
-		NftAddress: req.NftAddress,
-		Denom:      req.Denom,
-	}
-
-	err := k.CreateLedger(ctx, l)
+	err := k.CreateLedger(ctx, *req.Ledger)
 	if err != nil {
 		return nil, err
 	}
