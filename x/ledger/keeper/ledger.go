@@ -9,6 +9,7 @@ var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
 	CreateLedger(ctx sdk.Context, l ledger.Ledger) error
+	DestroyLedger(ctx sdk.Context, nftAddress string) error
 }
 
 type BaseConfigKeeper struct {
@@ -56,4 +57,22 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 	// no-op: we start with a clean ledger state.
+}
+
+// DestroyLedger removes a ledger from the store by NFT address
+func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, nftAddress string) error {
+	if !k.HasLedger(ctx, nftAddress) {
+		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
+	// Remove the ledger from the store
+	err := k.Ledgers.Delete(ctx, nftAddress)
+	if err != nil {
+		return err
+	}
+
+	// Emit the ledger destroyed event
+	ctx.EventManager().EmitEvent(ledger.NewEventLedgerDestroyed(nftAddress))
+
+	return nil
 }

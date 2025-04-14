@@ -26,6 +26,7 @@ func CmdTx() *cobra.Command {
 	cmd.AddCommand(
 		CmdCreate(),
 		CmdAppend(),
+		CmdDestroy(),
 	)
 
 	return cmd
@@ -208,4 +209,35 @@ func parseUint32(s string) (uint32, error) {
 		return 0, fmt.Errorf("sequence must be less than 100")
 	}
 	return uint32(val.Uint64()), nil
+}
+
+func CmdDestroy() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "destroy <nft_address>",
+		Aliases: []string{},
+		Short:   "Destroy a ledger by NFT address",
+		Example: `$ provenanced tx ledger destroy pb1a2b3c4... --from mykey`,
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			nftAddress := args[0]
+			if nftAddress == "" {
+				return fmt.Errorf("invalid <nft_address>")
+			}
+
+			msg := &ledger.MsgDestroyRequest{
+				NftAddress: nftAddress,
+				Owner:      clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
