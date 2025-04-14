@@ -172,9 +172,9 @@ $ provenanced tx ledger append pb1a2b3c4... txn124 2 FEE 2024-04-16 2024-04-16 5
 				return fmt.Errorf("invalid <type>")
 			}
 
-			m := ledger.MsgAppendRequest{
-				NftAddress: nftAddress,
-				Entry: &ledger.LedgerEntry{
+			// Create a single entry for the ledger.
+			entries := []*ledger.LedgerEntry{
+				&ledger.LedgerEntry{
 					CorrelationId:   correlation_id,
 					Sequence:        sequence,
 					Type:            ledger.LedgerEntryType(entryType),
@@ -188,7 +188,12 @@ $ provenanced tx ledger append pb1a2b3c4... txn124 2 FEE 2024-04-16 2024-04-16 5
 					OtherAppliedAmt: otherAppliedAmt,
 					OtherBalAmt:     otherBalAmt,
 				},
-				Owner: clientCtx.FromAddress.String(),
+			}
+
+			m := ledger.MsgAppendRequest{
+				NftAddress: nftAddress,
+				Entries:    entries,
+				Owner:      clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)

@@ -11,6 +11,11 @@ import (
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
+// StrPtr returns a pointer to the string s.
+func StrPtr(s string) *string {
+	return &s
+}
+
 func getAddress(s *string) (sdk.AccAddress, error) {
 	addr, err := sdk.AccAddressFromBech32(*s)
 	if err != nil || addr == nil {
@@ -52,19 +57,19 @@ func parseIS08601Date(dateStr string) (time.Time, error) {
 }
 
 // sortLedgerEntries sorts the ledger entries by effective date and then by sequence.
-func sortLedgerEntries(entries *[]ledger.LedgerEntry) {
-	sort.Slice(*entries, func(i, j int) bool {
-		effectiveDateI, err := parseIS08601Date((*entries)[i].EffectiveDate)
+func sortLedgerEntries(entries []*ledger.LedgerEntry) {
+	sort.Slice(entries, func(i, j int) bool {
+		effectiveDateI, err := parseIS08601Date((entries)[i].EffectiveDate)
 		if err != nil {
 			return false
 		}
-		effectiveDateJ, err := parseIS08601Date((*entries)[j].EffectiveDate)
+		effectiveDateJ, err := parseIS08601Date((entries)[j].EffectiveDate)
 		if err != nil {
 			return false
 		}
 
 		if effectiveDateI.Equal(effectiveDateJ) {
-			return (*entries)[i].Sequence < (*entries)[j].Sequence
+			return (entries)[i].Sequence < (entries)[j].Sequence
 		}
 		return effectiveDateI.Before(effectiveDateJ)
 	})

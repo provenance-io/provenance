@@ -55,7 +55,7 @@ func (qs LedgerQueryServer) Entries(goCtx context.Context, req *ledger.QueryLedg
 
 	// Add entries to the response.
 	for _, entry := range entries {
-		resp.Entries = append(resp.Entries, &entry)
+		resp.Entries = append(resp.Entries, entry)
 	}
 
 	return &resp, nil

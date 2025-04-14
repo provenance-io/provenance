@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 var _ EntriesKeeper = (*BaseEntriesKeeper)(nil)
 
 type EntriesKeeper interface {
-	AppendEntry(ctx sdk.Context, nftAddress string, le ledger.LedgerEntry) error
+	AppendEntries(ctx sdk.Context, nftAddress string, les []*ledger.LedgerEntry) error
 }
 
 type BaseEntriesKeeper struct {
@@ -21,32 +20,15 @@ type BaseEntriesKeeper struct {
 }
 
 // SetValue stores a value with a given key.
-func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le ledger.LedgerEntry) error {
-	if err := ValidateLedgerEntryBasic(&le); err != nil {
-		return err
-	}
-
+func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftAddress string, les []*ledger.LedgerEntry) error {
 	// TODO validate that the {addr} can be modified by the signer...
 
-	// Validate that the ledger exists
-	_, err := k.Ledgers.Get(ctx, nftAddress)
-	if err != nil {
-		return err
+	if len(les) == 0 {
+		return NewLedgerCodedError(ErrCodeInvalidField, "entries", "cannot be nil or empty")
 	}
 
-	// Validate dates
-	if err := validateEntryDates(&le, ctx); err != nil {
-		return err
-	}
-
-	// Validate amounts
-	if err := validateEntryAmounts(&le); err != nil {
-		return err
-	}
-
-	// Validate entry type
-	if err := validateEntryType(&le); err != nil {
-		return err
+	if !k.HasLedger(ctx, nftAddress) {
+		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
 	// Get all existing entries for this NFT
@@ -55,16 +37,46 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		return err
 	}
 
+	for _, le := range les {
+		if err := ValidateLedgerEntryBasic(le); err != nil {
+			return err
+		}
+
+		// Validate dates
+		if err := validateEntryDates(le, ctx); err != nil {
+			return err
+		}
+
+		// Validate amounts
+		if err := validateEntryAmounts(le); err != nil {
+			return err
+		}
+
+		// Validate entry type
+		if err := validateEntryType(le); err != nil {
+			return err
+		}
+
+		err := k.saveEntry(ctx, nftAddress, entries, le)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, nftAddress string, entries []*ledger.LedgerEntry, le *ledger.LedgerEntry) error {
 	// Find entries with the same effective date
 	var sameDateEntries []ledger.LedgerEntry
 	for _, entry := range entries {
 		if entry.EffectiveDate == le.EffectiveDate {
-			sameDateEntries = append(sameDateEntries, entry)
+			sameDateEntries = append(sameDateEntries, *entry)
 		}
 
 		// If the entry's correlation id is already in the list, we need to error
 		if entry.CorrelationId == le.CorrelationId {
-			return NewLedgerCodedError(ErrCodeInvalidField, "correlation id already exists")
+			return NewLedgerCodedError(ErrCodeAlreadyExists, "correlation_id")
 		}
 	}
 
@@ -93,7 +105,7 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 
 	// Store the new entry
 	key := collections.Join(nftAddress, le.CorrelationId)
-	err = k.LedgerEntries.Set(ctx, key, le)
+	err := k.LedgerEntries.Set(ctx, key, *le)
 	if err != nil {
 		return err
 	}
@@ -125,14 +137,12 @@ func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
 
 	postedDate, err := time.Parse("2006-01-02", le.PostedDate)
 	if err != nil {
-		return NewLedgerCodedError(ErrCodeInvalidField, "posted date is not a valid date")
+		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date", "is not a valid date")
 	}
 
 	// Check if posted date is in the future
 	if postedDate.After(blockTime) {
-		return NewLedgerCodedError(ErrCodeInvalidField,
-			fmt.Sprintf("posted date cannot be in the future %s (block time: %s)",
-				postedDate, blockTime.Format(time.RFC3339)))
+		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date", "cannot be in the future")
 	}
 
 	return nil
@@ -143,7 +153,7 @@ func validateEntryAmounts(le *ledger.LedgerEntry) error {
 	// Check if total amount matches sum of applied amounts
 	totalApplied := le.PrinAppliedAmt.Add(le.IntAppliedAmt).Add(le.OtherAppliedAmt)
 	if !le.Amt.Equal(totalApplied) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "total amount must equal sum of applied amounts")
+		return NewLedgerCodedError(ErrCodeInvalidField, "amount", "must equal sum of applied amounts")
 	}
 
 	return nil
@@ -152,7 +162,7 @@ func validateEntryAmounts(le *ledger.LedgerEntry) error {
 // validateEntryType checks if the entry type is valid
 func validateEntryType(le *ledger.LedgerEntry) error {
 	if le.Type == ledger.LedgerEntryType_Unspecified {
-		return NewLedgerCodedError(ErrCodeInvalidField, "entry type cannot be unspecified")
+		return NewLedgerCodedError(ErrCodeInvalidField, "entry_type", "cannot be unspecified")
 	}
 
 	return nil

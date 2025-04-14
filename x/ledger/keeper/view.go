@@ -19,7 +19,7 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 type ViewKeeper interface {
 	GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error)
 	HasLedger(ctx sdk.Context, nftAddress string) bool
-	ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error)
+	ListLedgerEntries(ctx context.Context, nftAddress string) ([]*ledger.LedgerEntry, error)
 	GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error)
 	GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error)
 }
@@ -118,7 +118,7 @@ func (k BaseViewKeeper) HasLedger(ctx sdk.Context, nftAddress string) bool {
 	return has
 }
 
-func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error) {
+func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]*ledger.LedgerEntry, error) {
 	// Garbage in, garbage out.
 	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), nftAddress) {
 		return nil, nil
@@ -133,17 +133,17 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string
 	defer iter.Close()
 
 	// Iterate through all entries for the ledger.
-	var entries []ledger.LedgerEntry
+	var entries []*ledger.LedgerEntry
 	for ; iter.Valid(); iter.Next() {
 		le, err := iter.Value()
 		if err != nil {
 			return nil, err
 		}
-		entries = append(entries, le)
+		entries = append(entries, &le)
 	}
 
 	// Sort the entries by effective date and sequence number.
-	sortLedgerEntries(&entries)
+	sortLedgerEntries(entries)
 
 	return entries, nil
 }
@@ -167,7 +167,7 @@ func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, c
 
 	for _, entry := range entries {
 		if entry.CorrelationId == correlationID {
-			return &entry, nil
+			return entry, nil
 		}
 	}
 
@@ -227,7 +227,7 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 		Other:     math.NewInt(0),
 	}
 
-	sortLedgerEntries(&entries)
+	sortLedgerEntries(entries)
 
 	// Calculate balances up to the specified date
 	for _, entry := range entries {
