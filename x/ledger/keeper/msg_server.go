@@ -69,3 +69,15 @@ func (k *MsgServer) ProcessFundTransfersWithSettlement(goCtx context.Context, re
 	resp := ledger.MsgProcessFundTransfersResponse{}
 	return &resp, nil
 }
+
+func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest) (*ledger.MsgDestroyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := k.DestroyLedger(ctx, req.NftAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.MsgDestroyResponse{}
+	return &resp, nil
+}
