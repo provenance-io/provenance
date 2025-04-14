@@ -36,7 +36,9 @@ func CmdCreate() *cobra.Command {
 		Use:     "create <nft_address> <denom> [next_pmt_date] [next_pmt_amt] [status] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
-		Args:    cobra.MinimumNArgs(2),
+		Example: `$ provenanced tx ledger create pb1a2b3c4... usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
+$ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example with required fields only`,
+		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -88,6 +90,8 @@ func CmdAppend() *cobra.Command {
 		Use:     "append <nft_address> <correlation_id> <sequence> <type> <posted_date> <effective_date> <amount> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
 		Aliases: []string{},
 		Short:   "Append an entry to an existing ledger",
+		Example: `$ provenanced tx ledger append pb1a2b3c4... txn123 1 SCHEDULED_PAYMENT 2024-04-15 2024-04-15 1000.00 800.00 9200.00 200.00 400.00 0.00 0.00 --from mykey
+$ provenanced tx ledger append pb1a2b3c4... txn124 2 FEE 2024-04-16 2024-04-16 50.00 0.00 9200.00 0.00 400.00 50.00 50.00 --from mykey`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 13 {
 				return fmt.Errorf("missing arguments")
