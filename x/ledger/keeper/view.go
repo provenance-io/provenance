@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"sort"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -137,13 +136,7 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string
 		entries = append(entries, le)
 	}
 
-	// Sort entries by effective date and then by sequence
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].EffectiveDate.Equal(entries[j].EffectiveDate) {
-			return entries[i].Sequence < entries[j].Sequence
-		}
-		return entries[i].EffectiveDate.Before(entries[j].EffectiveDate)
-	})
+	sortLedgerEntries(&entries)
 
 	return entries, nil
 }
@@ -223,18 +216,16 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 		Other:     math.NewInt(0),
 	}
 
-	// Sort entries by effective date to ensure proper balance calculation
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].EffectiveDate.Equal(entries[j].EffectiveDate) {
-			return entries[i].Sequence < entries[j].Sequence
-		}
-		return entries[i].EffectiveDate.Before(entries[j].EffectiveDate)
-	})
+	sortLedgerEntries(&entries)
 
 	// Calculate balances up to the specified date
 	for _, entry := range entries {
+		// Safe to ignore the error since the sort parses the effective date already.
+		// This should also be safe since we should have already validated the date format when the entry was added.
+		effectiveDate, _ := parseIS08601Date(entry.EffectiveDate)
+
 		// Skip entries after the asOfDate
-		if entry.EffectiveDate.After(asOfDate) {
+		if effectiveDate.After(asOfDate) {
 			break
 		}
 
