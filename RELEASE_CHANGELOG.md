@@ -1,4 +1,4 @@
-## [v1.22.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.22.0-rc1) 2025-03-28
+## [v1.22.0](https://github.com/provenance-io/provenance/releases/tag/v1.22.0) 2025-04-14
 
 Provenance Blockchain version `v1.22.0` updates several libraries to address some vulnerabilities.  Upgrading to this version will be done with a coordinated chain upgrade.
 
@@ -56,5 +56,5 @@ Provenance Blockchain version `v1.22.0` updates several libraries to address som
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.21.1...v1.22.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.21.1...v1.22.0
 
