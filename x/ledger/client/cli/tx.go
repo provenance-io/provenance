@@ -33,9 +33,10 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <nft_address> <denom> <",
+		Use:     "create <nft_address> <denom> [next_pmt_date] [next_pmt_amt] [status] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
+		Args:    cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -45,13 +46,35 @@ func CmdCreate() *cobra.Command {
 			nftAddress := args[0]
 			denom := args[1]
 
-			m := ledger.MsgCreateRequest{
+			// Create the ledger with required fields
+			ledgerObj := &ledger.Ledger{
 				NftAddress: nftAddress,
 				Denom:      denom,
-				Owner:      clientCtx.FromAddress.String(),
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
+			// Add optional fields if provided
+			if len(args) > 2 {
+				ledgerObj.NextPmtDate = args[2]
+			}
+			if len(args) > 3 {
+				ledgerObj.NextPmtAmt = args[3]
+			}
+			if len(args) > 4 {
+				ledgerObj.Status = args[4]
+			}
+			if len(args) > 5 {
+				ledgerObj.InterestRate = args[5]
+			}
+			if len(args) > 6 {
+				ledgerObj.MaturityDate = args[6]
+			}
+
+			msg := &ledger.MsgCreateRequest{
+				Ledger: ledgerObj,
+				Owner:  clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -182,38 +205,3 @@ func parseUint32(s string) (uint32, error) {
 	}
 	return uint32(val.Uint64()), nil
 }
-
-// name := args[0]
-// account := args[1]
-
-// err = types.ValidateAttributeAddress(account)
-// if err != nil {
-// 	return fmt.Errorf("invalid address: %w", err)
-// }
-// attributeType, err := types.AttributeTypeFromString(strings.TrimSpace(args[2]))
-// if err != nil {
-// 	return fmt.Errorf("account attribute type is invalid: %w", err)
-// }
-// valueString := strings.TrimSpace(args[3])
-// value, err := encodeAttributeValue(valueString, attributeType)
-// if err != nil {
-// 	return fmt.Errorf("error encoding value %s to type %s : %w", valueString, attributeType.String(), err)
-// }
-
-// msg := types.NewMsgAddAttributeRequest(
-// 	account,
-// 	clientCtx.GetFromAddress(),
-// 	name,
-// 	attributeType,
-// 	value,
-// )
-
-// if len(args) == 5 {
-// 	expireTime, err := time.Parse(time.RFC3339, args[4])
-// 	if err != nil {
-// 		return fmt.Errorf("unable to parse time %q required format is RFC3339 (%v): %w", args[4], time.RFC3339, err)
-// 	}
-// 	msg.ExpirationDate = &expireTime
-// }
-
-// return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

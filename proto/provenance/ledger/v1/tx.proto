@@ -30,10 +30,8 @@ service Msg {
 // MsgCreateRequest
 message MsgCreateRequest {
   option (cosmos.msg.v1.signer) = "owner";
-
-  string nft_address = 1;
-  string denom       = 2;
-  string owner       = 3;
+  Ledger ledger                 = 1;
+  string owner                  = 2;
 }
 
 // MsgCreateResponse

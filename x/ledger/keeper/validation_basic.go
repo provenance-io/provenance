@@ -3,6 +3,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
@@ -12,6 +13,39 @@ func ValidateLedgerBasic(l *ledger.Ledger) error {
 	}
 	if emptyString(&l.NftAddress) {
 		return NewLedgerCodedError(ErrCodeMissingField, "nft_address")
+	}
+
+	// Validate next payment date format if provided
+	if !emptyString(&l.NextPmtDate) {
+		if _, err := parseIS08601Date(l.NextPmtDate); err != nil {
+			return NewLedgerCodedError(ErrCodeInvalidField, "next_pmt_date")
+		}
+	}
+
+	// Validate next payment amount if provided
+	if !emptyString(&l.NextPmtAmt) {
+		if _, ok := math.NewIntFromString(l.NextPmtAmt); !ok {
+			return NewLedgerCodedError(ErrCodeInvalidField, "next_pmt_amt")
+		}
+	}
+
+	// Validate status if provided
+	if !emptyString(&l.Status) {
+		// Add any specific status validation here if needed
+	}
+
+	// Validate interest rate if provided
+	if !emptyString(&l.InterestRate) {
+		if _, ok := math.NewIntFromString(l.InterestRate); !ok {
+			return NewLedgerCodedError(ErrCodeInvalidField, "interest_rate")
+		}
+	}
+
+	// Validate maturity date format if provided
+	if !emptyString(&l.MaturityDate) {
+		if _, err := parseIS08601Date(l.MaturityDate); err != nil {
+			return NewLedgerCodedError(ErrCodeInvalidField, "maturity_date")
+		}
 	}
 
 	return nil
