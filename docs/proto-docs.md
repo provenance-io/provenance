@@ -4500,7 +4500,7 @@ MsgAppendRequest
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 | `owner` | [string](#string) |  |  |
 
 

@@ -44,9 +44,9 @@ message MsgCreateResponse {}
 message MsgAppendRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  string      nft_address = 1;
-  LedgerEntry entry       = 2;
-  string      owner       = 3;
+  string               nft_address = 1;
+  repeated LedgerEntry entries     = 2;
+  string               owner       = 3;
 }
 
 // MsgAppendResponse

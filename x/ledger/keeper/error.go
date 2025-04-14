@@ -14,7 +14,7 @@ const (
 )
 
 var ValidationMessages = map[string]string{
-	ErrCodeInvalidField:  "provided field(%s) value is invalid",
+	ErrCodeInvalidField:  "provided field(%s) value is invalid; %s",
 	ErrCodeMissingField:  "required field(%s) is missing or empty",
 	ErrCodeAlreadyExists: "%s already exists",
 	ErrCodeUnauthorized:  "unauthorized access",
@@ -39,7 +39,13 @@ func NewLedgerCodedError(code string, msgs ...string) *LedgerCodedError {
 		errMsg = "unknown error"
 	}
 
-	errMsg = fmt.Sprintf(errMsg, msgs)
+	// Convert []string to []interface{} for fmt.Sprintf
+	args := make([]interface{}, len(msgs))
+	for i, v := range msgs {
+		args[i] = v
+	}
+
+	errMsg = fmt.Sprintf(errMsg, args...)
 
 	return &LedgerCodedError{
 		Code:    code,
@@ -48,5 +54,5 @@ func NewLedgerCodedError(code string, msgs ...string) *LedgerCodedError {
 }
 
 func (e LedgerCodedError) Error() string {
-	return e.Message
+	return e.Code + ": " + e.Message
 }

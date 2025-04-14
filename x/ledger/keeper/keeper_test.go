@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -239,20 +238,22 @@ func (s *TestSuite) TestGetLedgerEntry() {
 	err := s.keeper.CreateLedger(s.ctx, l)
 	s.Require().NoError(err, "CreateLedger error")
 
+	expErr := keeper.ErrCodeInvalidField
+
 	// Test cases
 	tests := []struct {
 		name          string
 		nftAddr       string
 		correlationId string
 		expEntry      *ledger.LedgerEntry
-		expErr        error
+		expErr        *string
 	}{
 		{
 			name:          "invalid nft address",
 			nftAddr:       "invalid",
 			correlationId: "test-correlation-id",
 			expEntry:      nil,
-			expErr:        fmt.Errorf("provided [field] value is invalid; nft_address"),
+			expErr:        &expErr,
 		},
 		{
 			name:          "not found",
@@ -267,10 +268,10 @@ func (s *TestSuite) TestGetLedgerEntry() {
 		s.Run(tc.name, func() {
 			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftAddr, tc.correlationId)
 			if tc.expErr != nil {
-				s.Require().Error(err, "GetLedgerEntry error")
-				s.Require().Equal(tc.expErr.Error(), err.Error(), "GetLedgerEntry error type")
+				s.Require().Error(err, "expected GetLedgerEntry error")
+				s.Require().Contains(err.Error(), *tc.expErr, "expected INVALID_FIELD error")
 			} else {
-				s.Require().NoError(err, "GetLedgerEntry error")
+				s.Require().NoError(err, "expected no GetLedgerEntry error")
 				s.Require().Equal(tc.expEntry, entry, "GetLedgerEntry result")
 			}
 		})
@@ -403,7 +404,7 @@ func (s *TestSuite) TestAppendEntry() {
 		name    string
 		nftAddr string
 		entry   ledger.LedgerEntry
-		expErr  error
+		expErr  *string
 	}{
 		{
 			name:    "invalid nft address",
@@ -421,7 +422,7 @@ func (s *TestSuite) TestAppendEntry() {
 				OtherBalAmt:     s.int(25),
 				CorrelationId:   "test-correlation-id-9",
 			},
-			expErr: fmt.Errorf("provided [field] value is invalid; nft_address"),
+			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
 		},
 		{
 			name:    "not found",
@@ -439,7 +440,7 @@ func (s *TestSuite) TestAppendEntry() {
 				OtherBalAmt:     s.int(25),
 				CorrelationId:   "test-correlation-id-10",
 			},
-			expErr: fmt.Errorf("collections: not found"),
+			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
 		},
 		{
 			name:    "amounts_do_not_sum_to_total",
@@ -457,7 +458,7 @@ func (s *TestSuite) TestAppendEntry() {
 				OtherBalAmt:     s.int(20),
 				CorrelationId:   "test-correlation-id-11",
 			},
-			expErr: fmt.Errorf("provided [field] value is invalid; total amount must equal sum of applied amounts"),
+			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
 		},
 		{
 			name:    "missing_balance_fields",
@@ -472,7 +473,7 @@ func (s *TestSuite) TestAppendEntry() {
 				OtherAppliedAmt: s.int(25),
 				CorrelationId:   "test-correlation-id-13",
 			},
-			expErr: fmt.Errorf("provided [field] value is invalid; principal_balance_amount"),
+			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
 		},
 		{
 			name:    "valid amounts and balances",
@@ -508,7 +509,7 @@ func (s *TestSuite) TestAppendEntry() {
 				OtherBalAmt:     s.int(25),
 				CorrelationId:   "test-correlation-id-13",
 			},
-			expErr: fmt.Errorf("provided [field] value is invalid; amount"),
+			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
 		},
 		{
 			name:    "allow negative principal applied amount",
@@ -532,10 +533,10 @@ func (s *TestSuite) TestAppendEntry() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.AppendEntry(s.ctx, tc.nftAddr, tc.entry)
+			err := s.keeper.AppendEntries(s.ctx, tc.nftAddr, []*ledger.LedgerEntry{&tc.entry})
 			if tc.expErr != nil {
 				s.Require().Error(err, "AppendEntry error")
-				s.Require().Contains(err.Error(), tc.expErr.Error(), "AppendEntry error type")
+				s.Require().Contains(err.Error(), *tc.expErr, "AppendEntry error type")
 			} else {
 				s.Require().NoError(err, "AppendEntry error")
 			}
@@ -559,7 +560,7 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
 
 	// Create test entries with the same effective date but different sequence numbers
-	entries := []ledger.LedgerEntry{
+	entries := []*ledger.LedgerEntry{
 		{
 			Type:            ledger.LedgerEntryType_Scheduled_Payment,
 			PostedDate:      pastDate,
@@ -606,21 +607,21 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 
 	// Add entries in a specific order to test sequence number adjustment
 	// First add entry with sequence 2
-	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), entries[1])
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[1]})
 	s.Require().NoError(err, "AppendEntry error for sequence 2")
 	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(2), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Then add entry with sequence 1
-	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), entries[0])
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[0]})
 	s.Require().NoError(err, "AppendEntry error for sequence 1")
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Finally add entry with sequence 3
-	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), entries[2])
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[2]})
 	s.Require().NoError(err, "AppendEntry error for sequence 3")
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
 	s.Require().NoError(err, "ListLedgerEntries error")
@@ -652,7 +653,7 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 		CorrelationId:   "test-correlation-id-4",
 	}
 
-	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), newEntry)
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{&newEntry})
 	s.Require().NoError(err, "AppendEntry error for new entry with sequence 2")
 
 	// Get all entries again and verify updated sequence numbers
@@ -699,13 +700,13 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 	}
 
 	// Add the entry successfully
-	err = s.keeper.AppendEntry(s.ctx, s.addr1.String(), entry)
+	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
 	s.Require().NoError(err, "AppendEntry error for first entry")
 
 	// Try to add the same entry again with the same correlation ID
-	err = s.keeper.AppendEntry(s.ctx, s.addr1.String(), entry)
+	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
-	s.Require().Contains(err.Error(), "already exists", "error should mention duplicate correlation ID")
+	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
 	// Verify that only one entry exists
 	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
@@ -728,9 +729,9 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 		CorrelationId:   "test-correlation-id-1", // Same correlation ID
 	}
 
-	err = s.keeper.AppendEntry(s.ctx, s.addr1.String(), entry2)
+	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry2})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
-	s.Require().Contains(err.Error(), "already exists", "error should mention duplicate correlation ID")
+	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
 	// Verify that still only one entry exists
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
