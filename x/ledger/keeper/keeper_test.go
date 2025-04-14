@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 
@@ -541,4 +542,133 @@ func (s *TestSuite) TestAppendEntry() {
 			}
 		})
 	}
+}
+
+func (s *TestSuite) TestAppendEntrySequenceNumbers() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+
+	// Create a test ledger
+	l := ledger.Ledger{
+		NftAddress: s.addr2.String(),
+		Denom:      s.bondDenom,
+	}
+
+	err := s.keeper.CreateLedger(s.ctx, l)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Use a past date for testing
+	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
+
+	// Create test entries with the same effective date but different sequence numbers
+	entries := []ledger.LedgerEntry{
+		{
+			Type:            ledger.LedgerEntryType_Scheduled_Payment,
+			PostedDate:      pastDate,
+			EffectiveDate:   pastDate,
+			Sequence:        1,
+			Amt:             s.int(100),
+			PrinAppliedAmt:  s.int(50),
+			PrinBalAmt:      s.int(50),
+			IntAppliedAmt:   s.int(25),
+			IntBalAmt:       s.int(25),
+			OtherAppliedAmt: s.int(25),
+			OtherBalAmt:     s.int(25),
+			CorrelationId:   "test-correlation-id-1",
+		},
+		{
+			Type:            ledger.LedgerEntryType_Scheduled_Payment,
+			PostedDate:      pastDate,
+			EffectiveDate:   pastDate,
+			Sequence:        2,
+			Amt:             s.int(100),
+			PrinAppliedAmt:  s.int(50),
+			PrinBalAmt:      s.int(50),
+			IntAppliedAmt:   s.int(25),
+			IntBalAmt:       s.int(25),
+			OtherAppliedAmt: s.int(25),
+			OtherBalAmt:     s.int(25),
+			CorrelationId:   "test-correlation-id-2",
+		},
+		{
+			Type:            ledger.LedgerEntryType_Scheduled_Payment,
+			PostedDate:      pastDate,
+			EffectiveDate:   pastDate,
+			Sequence:        3,
+			Amt:             s.int(100),
+			PrinAppliedAmt:  s.int(50),
+			PrinBalAmt:      s.int(50),
+			IntAppliedAmt:   s.int(25),
+			IntBalAmt:       s.int(25),
+			OtherAppliedAmt: s.int(25),
+			OtherBalAmt:     s.int(25),
+			CorrelationId:   "test-correlation-id-3",
+		},
+	}
+
+	// Add entries in a specific order to test sequence number adjustment
+	// First add entry with sequence 2
+	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), entries[1])
+	s.Require().NoError(err, "AppendEntry error for sequence 2")
+	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Equal(uint32(2), allEntries[0].Sequence, "sequence number for correlation-id-2")
+
+	// Then add entry with sequence 1
+	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), entries[0])
+	s.Require().NoError(err, "AppendEntry error for sequence 1")
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-2")
+
+	// Finally add entry with sequence 3
+	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), entries[2])
+	s.Require().NoError(err, "AppendEntry error for sequence 3")
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2")
+
+	// Get all entries and verify their sequence numbers
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+
+	// Verify sequence numbers
+	s.Require().Len(allEntries, 3, "number of entries")
+	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
+	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-2")
+	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-3")
+
+	// Add another entry with sequence 2 to test sequence number adjustment
+	newEntry := ledger.LedgerEntry{
+		Type:            ledger.LedgerEntryType_Scheduled_Payment,
+		PostedDate:      pastDate,
+		EffectiveDate:   pastDate,
+		Sequence:        2,
+		Amt:             s.int(100),
+		PrinAppliedAmt:  s.int(50),
+		PrinBalAmt:      s.int(50),
+		IntAppliedAmt:   s.int(25),
+		IntBalAmt:       s.int(25),
+		OtherAppliedAmt: s.int(25),
+		OtherBalAmt:     s.int(25),
+		CorrelationId:   "test-correlation-id-4",
+	}
+
+	err = s.keeper.AppendEntry(s.ctx, s.addr2.String(), newEntry)
+	s.Require().NoError(err, "AppendEntry error for new entry with sequence 2")
+
+	// Get all entries again and verify updated sequence numbers
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+
+	// Sort entries by correlation ID for consistent testing
+	sort.Slice(allEntries, func(i, j int) bool {
+		return allEntries[i].CorrelationId < allEntries[j].CorrelationId
+	})
+
+	// Verify updated sequence numbers
+	s.Require().Len(allEntries, 4, "number of entries after adding new entry")
+	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
+	s.Require().Equal(uint32(3), allEntries[1].Sequence, "sequence number for correlation-id-4 (new entry)")
+	s.Require().Equal(uint32(4), allEntries[2].Sequence, "sequence number for correlation-id-2 (shifted)")
+	s.Require().Equal(uint32(5), allEntries[3].Sequence, "sequence number for correlation-id-3 (shifted)")
 }

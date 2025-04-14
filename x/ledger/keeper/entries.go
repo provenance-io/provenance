@@ -71,8 +71,11 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		})
 
 		// Check if the new entry's sequence number conflicts with existing entries
+		pushNext := false
 		for _, entry := range sameDateEntries {
-			if entry.Sequence >= le.Sequence {
+			if pushNext || entry.Sequence == le.Sequence {
+				pushNext = true
+
 				// Update the sequence number of the existing entry
 				entry.Sequence++
 				key := collections.Join(nftAddress, entry.CorrelationId)
