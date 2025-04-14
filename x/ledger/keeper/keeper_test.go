@@ -506,7 +506,7 @@ func (s *TestSuite) TestAppendEntry() {
 				IntBalAmt:       s.int(25),
 				OtherAppliedAmt: s.int(25),
 				OtherBalAmt:     s.int(25),
-				CorrelationId:   "test-correlation-id-12",
+				CorrelationId:   "test-correlation-id-13",
 			},
 			expErr: fmt.Errorf("provided [field] value is invalid; amount"),
 		},
@@ -524,7 +524,7 @@ func (s *TestSuite) TestAppendEntry() {
 				IntBalAmt:       s.int(0),
 				OtherAppliedAmt: s.int(25),
 				OtherBalAmt:     s.int(0),
-				CorrelationId:   "test-correlation-id-12",
+				CorrelationId:   "test-correlation-id-14",
 			},
 			expErr: nil,
 		},
@@ -665,4 +665,76 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-4 (new entry)")
 	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2 (shifted)")
 	s.Require().Equal(uint32(4), allEntries[3].Sequence, "sequence number for correlation-id-3 (shifted)")
+}
+
+func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+
+	// Create a test ledger
+	l := ledger.Ledger{
+		NftAddress: s.addr1.String(),
+		Denom:      s.bondDenom,
+	}
+
+	err := s.keeper.CreateLedger(s.ctx, l)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Use a past date for testing
+	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
+
+	// Create a test entry
+	entry := ledger.LedgerEntry{
+		Type:            ledger.LedgerEntryType_Scheduled_Payment,
+		PostedDate:      pastDate,
+		EffectiveDate:   pastDate,
+		Sequence:        1,
+		Amt:             s.int(100),
+		PrinAppliedAmt:  s.int(50),
+		PrinBalAmt:      s.int(50),
+		IntAppliedAmt:   s.int(25),
+		IntBalAmt:       s.int(25),
+		OtherAppliedAmt: s.int(25),
+		OtherBalAmt:     s.int(25),
+		CorrelationId:   "test-correlation-id-1",
+	}
+
+	// Add the entry successfully
+	err = s.keeper.AppendEntry(s.ctx, s.addr1.String(), entry)
+	s.Require().NoError(err, "AppendEntry error for first entry")
+
+	// Try to add the same entry again with the same correlation ID
+	err = s.keeper.AppendEntry(s.ctx, s.addr1.String(), entry)
+	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
+	s.Require().Contains(err.Error(), "already exists", "error should mention duplicate correlation ID")
+
+	// Verify that only one entry exists
+	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Len(allEntries, 1, "should only have one entry")
+
+	// Try to add a different entry with the same correlation ID
+	entry2 := ledger.LedgerEntry{
+		Type:            ledger.LedgerEntryType_Scheduled_Payment,
+		PostedDate:      pastDate,
+		EffectiveDate:   pastDate,
+		Sequence:        2,
+		Amt:             s.int(200),
+		PrinAppliedAmt:  s.int(100),
+		PrinBalAmt:      s.int(100),
+		IntAppliedAmt:   s.int(50),
+		IntBalAmt:       s.int(50),
+		OtherAppliedAmt: s.int(50),
+		OtherBalAmt:     s.int(50),
+		CorrelationId:   "test-correlation-id-1", // Same correlation ID
+	}
+
+	err = s.keeper.AppendEntry(s.ctx, s.addr1.String(), entry2)
+	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
+	s.Require().Contains(err.Error(), "already exists", "error should mention duplicate correlation ID")
+
+	// Verify that still only one entry exists
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Len(allEntries, 1, "should still only have one entry")
+	s.Require().Equal(entry.Amt, allEntries[0].Amt, "entry amount should match original entry")
 }
