@@ -7,7 +7,6 @@ option java_multiple_files = true;
 
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
-import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 
 // Ledger
@@ -17,6 +16,21 @@ message Ledger {
 
   // This denom will represent the entry values within the ledger.
   string denom = 2;
+
+  // Next payment date in ISO 8601 format: YYYY-MM-DD
+  string next_pmt_date = 3;
+
+  // Next payment amount
+  string next_pmt_amt = 4;
+
+  // Status of the ledger
+  string status = 5;
+
+  // Interest rate
+  string interest_rate = 6;
+
+  // Maturity date in ISO 8601 format: YYYY-MM-DD
+  string maturity_date = 7;
 }
 
 // LedgerEntryType
@@ -40,9 +54,11 @@ message LedgerEntry {
 
   LedgerEntryType type = 3;
 
-  google.protobuf.Timestamp posted_date = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Posted date in ISO 8601 format: YYYY-MM-DD
+  string posted_date = 4;
 
-  google.protobuf.Timestamp effective_date = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Effective date in ISO 8601 format: YYYY-MM-DD
+  string effective_date = 5;
 
   string amt = 6 [
     (cosmos_proto.scalar)  = "cosmos.Int",
