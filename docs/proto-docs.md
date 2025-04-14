@@ -4760,9 +4760,12 @@ LedgerEntryType
 | ---- | ------ | ----------- |
 | `LEDGER_ENTRY_TYPE_UNSPECIFIED` | `0` |  |
 | `LEDGER_ENTRY_TYPE_DISBURSEMENT` | `1` |  |
-| `LEDGER_ENTRY_TYPE_PAYMENT` | `2` |  |
-| `LEDGER_ENTRY_TYPE_FEE` | `3` |  |
-| `LEDGER_ENTRY_TYPE_OTHER` | `4` |  |
+| `LEDGER_ENTRY_TYPE_SCHEDULED_PAYMENT` | `2` |  |
+| `LEDGER_ENTRY_TYPE_UNSCHEDULED_PAYMENT` | `3` |  |
+| `LEDGER_ENTRY_TYPE_FORECLOSURE_PAYMENT` | `4` |  |
+| `LEDGER_ENTRY_TYPE_PAYMENT` | `5` |  |
+| `LEDGER_ENTRY_TYPE_FEE` | `6` |  |
+| `LEDGER_ENTRY_TYPE_OTHER` | `7` |  |
 
 
  <!-- end enums -->
