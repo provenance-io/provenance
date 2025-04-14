@@ -264,6 +264,8 @@
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
     - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
     - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
+    - [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest)
+    - [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse)
     - [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest)
     - [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse)
     - [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest)
@@ -4542,6 +4544,32 @@ MsgCreateResponse
 
 
 
+<a name="provenance-ledger-v1-MsgDestroyRequest"></a>
+
+### MsgDestroyRequest
+MsgDestroyRequest represents a request to destroy a ledger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgDestroyResponse"></a>
+
+### MsgDestroyResponse
+MsgDestroyResponse represents the response from destroying a ledger
+
+
+
+
+
+
 <a name="provenance-ledger-v1-MsgProcessFundTransfersRequest"></a>
 
 ### MsgProcessFundTransfersRequest
@@ -4602,6 +4630,7 @@ Msg defines the attribute module Msg service.
 | `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
 | `ProcessFundTransfers` | [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers (payments and disbursements) |
 | `ProcessFundTransfersWithSettlement` | [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers with manual settlement instructions |
+| `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
 
  <!-- end services -->
 
