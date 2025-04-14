@@ -61,6 +61,11 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		if entry.EffectiveDate == le.EffectiveDate {
 			sameDateEntries = append(sameDateEntries, entry)
 		}
+
+		// If the entry's correlation id is already in the list, we need to error
+		if entry.CorrelationId == le.CorrelationId {
+			return NewLedgerCodedError(ErrCodeInvalidField, "correlation id already exists")
+		}
 	}
 
 	// If there are entries with the same date, check for sequence number conflicts
