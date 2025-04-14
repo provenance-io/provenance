@@ -216,6 +216,10 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 		return nil, err
 	}
 
+	if len(entries) == 0 {
+		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger entries")
+	}
+
 	// Initialize balances
 	balances := &ledger.Balances{
 		Principal: math.NewInt(0),
