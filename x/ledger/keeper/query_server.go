@@ -72,7 +72,7 @@ func (qs LedgerQueryServer) GetBalancesAsOf(ctx context.Context, req *ledger.Que
 	}
 
 	// Parse the date string
-	asOfDate, err := time.Parse(time.RFC3339, req.AsOfDate)
+	asOfDate, err := time.Parse("2006-01-02", req.AsOfDate)
 	if err != nil {
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "as-of-date")
 	}
