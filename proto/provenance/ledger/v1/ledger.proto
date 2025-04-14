@@ -40,9 +40,8 @@ enum LedgerEntryType {
   LEDGER_ENTRY_TYPE_SCHEDULED_PAYMENT   = 2 [(gogoproto.enumvalue_customname) = "Scheduled_Payment"];
   LEDGER_ENTRY_TYPE_UNSCHEDULED_PAYMENT = 3 [(gogoproto.enumvalue_customname) = "Unscheduled_Payment"];
   LEDGER_ENTRY_TYPE_FORECLOSURE_PAYMENT = 4 [(gogoproto.enumvalue_customname) = "Foreclosure_Payment"];
-  LEDGER_ENTRY_TYPE_PAYMENT             = 5 [(gogoproto.enumvalue_customname) = "Payment"];
-  LEDGER_ENTRY_TYPE_FEE                 = 6 [(gogoproto.enumvalue_customname) = "Fee"];
-  LEDGER_ENTRY_TYPE_OTHER               = 7 [(gogoproto.enumvalue_customname) = "Other"];
+  LEDGER_ENTRY_TYPE_FEE                 = 5 [(gogoproto.enumvalue_customname) = "Fee"];
+  LEDGER_ENTRY_TYPE_OTHER               = 6 [(gogoproto.enumvalue_customname) = "Other"];
 }
 
 // LedgerEntry
