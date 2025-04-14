@@ -396,7 +396,7 @@ func (s *TestSuite) TestAppendEntry() {
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Use a past date for testing
-	pastDate := time.Now().Add(-24 * time.Hour)
+	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
 
 	// Test cases
 	tests := []struct {

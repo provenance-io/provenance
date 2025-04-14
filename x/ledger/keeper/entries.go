@@ -81,11 +81,16 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
 	blockTime := ctx.BlockTime()
 
+	postedDate, err := time.Parse("2006-01-02", le.PostedDate)
+	if err != nil {
+		return NewLedgerCodedError(ErrCodeInvalidField, "posted date is not a valid date")
+	}
+
 	// Check if posted date is in the future
-	if le.PostedDate.After(blockTime) {
+	if postedDate.After(blockTime) {
 		return NewLedgerCodedError(ErrCodeInvalidField,
 			fmt.Sprintf("posted date cannot be in the future %s (block time: %s)",
-				le.PostedDate.Format(time.RFC3339), blockTime.Format(time.RFC3339)))
+				postedDate, blockTime.Format(time.RFC3339)))
 	}
 
 	return nil
