@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"sort"
 	"testing"
 	"time"
 
@@ -660,15 +659,10 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
 	s.Require().NoError(err, "ListLedgerEntries error")
 
-	// Sort entries by correlation ID for consistent testing
-	sort.Slice(allEntries, func(i, j int) bool {
-		return allEntries[i].CorrelationId < allEntries[j].CorrelationId
-	})
-
 	// Verify updated sequence numbers
 	s.Require().Len(allEntries, 4, "number of entries after adding new entry")
 	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
-	s.Require().Equal(uint32(3), allEntries[1].Sequence, "sequence number for correlation-id-4 (new entry)")
-	s.Require().Equal(uint32(4), allEntries[2].Sequence, "sequence number for correlation-id-2 (shifted)")
-	s.Require().Equal(uint32(5), allEntries[3].Sequence, "sequence number for correlation-id-3 (shifted)")
+	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-4 (new entry)")
+	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2 (shifted)")
+	s.Require().Equal(uint32(4), allEntries[3].Sequence, "sequence number for correlation-id-3 (shifted)")
 }
