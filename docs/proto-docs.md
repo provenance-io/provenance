@@ -4679,6 +4679,11 @@ Ledger
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
 | `denom` | [string](#string) |  | This denom will represent the entry values within the ledger. |
+| `next_pmt_date` | [string](#string) |  | Next payment date in ISO 8601 format: YYYY-MM-DD |
+| `next_pmt_amt` | [string](#string) |  | Next payment amount |
+| `status` | [string](#string) |  | Status of the ledger |
+| `interest_rate` | [string](#string) |  | Interest rate |
+| `maturity_date` | [string](#string) |  | Maturity date in ISO 8601 format: YYYY-MM-DD |
 
 
 
@@ -4696,8 +4701,8 @@ LedgerEntry
 | `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
 | `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
 | `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
-| `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| `posted_date` | [string](#string) |  | Posted date in ISO 8601 format: YYYY-MM-DD |
+| `effective_date` | [string](#string) |  | Effective date in ISO 8601 format: YYYY-MM-DD |
 | `amt` | [string](#string) |  |  |
 | `prin_applied_amt` | [string](#string) |  |  |
 | `prin_bal_amt` | [string](#string) |  |  |
