@@ -119,14 +119,20 @@ func (k BaseViewKeeper) HasLedger(ctx sdk.Context, nftAddress string) bool {
 }
 
 func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]ledger.LedgerEntry, error) {
-	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
+	// Garbage in, garbage out.
+	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), nftAddress) {
+		return nil, nil
+	}
 
+	// Get all entries for the ledger.
+	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
 	if err != nil {
 		return nil, err
 	}
 	defer iter.Close()
 
+	// Iterate through all entries for the ledger.
 	var entries []ledger.LedgerEntry
 	for ; iter.Valid(); iter.Next() {
 		le, err := iter.Value()
@@ -136,6 +142,7 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string
 		entries = append(entries, le)
 	}
 
+	// Sort the entries by effective date and sequence number.
 	sortLedgerEntries(&entries)
 
 	return entries, nil

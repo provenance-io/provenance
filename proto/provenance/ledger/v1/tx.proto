@@ -77,7 +77,7 @@ message MsgDestroyRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
   string nft_address = 1;
-  string owner      = 2;
+  string owner       = 2;
 }
 
 // MsgDestroyResponse represents the response from destroying a ledger

@@ -31,6 +31,10 @@ func (qs LedgerQueryServer) Config(goCtx context.Context, req *ledger.QueryLedge
 		return nil, err
 	}
 
+	if l == nil {
+		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
 	resp := ledger.QueryLedgerConfigResponse{
 		Ledger: l,
 	}
@@ -46,8 +50,13 @@ func (qs LedgerQueryServer) Entries(goCtx context.Context, req *ledger.QueryLedg
 		return nil, err
 	}
 
+	if len(entries) == 0 {
+		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
 	resp := ledger.QueryLedgerResponse{}
 
+	// Add entries to the response.
 	for _, entry := range entries {
 		resp.Entries = append(resp.Entries, &entry)
 	}

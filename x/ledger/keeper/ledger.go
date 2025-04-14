@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
 )
@@ -62,17 +63,33 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 // DestroyLedger removes a ledger from the store by NFT address
 func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, nftAddress string) error {
 	if !k.HasLedger(ctx, nftAddress) {
-		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger")
 	}
 
 	// Remove the ledger from the store
-	err := k.Ledgers.Delete(ctx, nftAddress)
+	err := k.Ledgers.Remove(ctx, nftAddress)
 	if err != nil {
 		return err
 	}
 
-	// Emit the ledger destroyed event
-	ctx.EventManager().EmitEvent(ledger.NewEventLedgerDestroyed(nftAddress))
+	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
+
+	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return err
+		}
+		err = k.LedgerEntries.Remove(ctx, key)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
