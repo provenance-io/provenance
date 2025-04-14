@@ -409,7 +409,7 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "invalid nft address",
 			nftAddr: "invalid",
 			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Payment,
+				Type:            ledger.LedgerEntryType_Scheduled_Payment,
 				PostedDate:      pastDate,
 				EffectiveDate:   pastDate,
 				Amt:             s.int(100),
@@ -427,7 +427,7 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "not found",
 			nftAddr: s.addr2.String(),
 			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Payment,
+				Type:            ledger.LedgerEntryType_Scheduled_Payment,
 				PostedDate:      pastDate,
 				EffectiveDate:   pastDate,
 				Amt:             s.int(100),
@@ -445,7 +445,7 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "amounts_do_not_sum_to_total",
 			nftAddr: s.addr1.String(),
 			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Payment,
+				Type:            ledger.LedgerEntryType_Scheduled_Payment,
 				PostedDate:      pastDate,
 				EffectiveDate:   pastDate,
 				Amt:             s.int(100),
@@ -463,7 +463,7 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "missing_balance_fields",
 			nftAddr: s.addr1.String(),
 			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Payment,
+				Type:            ledger.LedgerEntryType_Scheduled_Payment,
 				PostedDate:      pastDate,
 				EffectiveDate:   pastDate,
 				Amt:             s.int(100),
@@ -478,7 +478,7 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "valid amounts and balances",
 			nftAddr: s.addr1.String(),
 			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Payment,
+				Type:            ledger.LedgerEntryType_Scheduled_Payment,
 				PostedDate:      pastDate,
 				EffectiveDate:   pastDate,
 				Amt:             s.int(100),
@@ -496,7 +496,7 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "negative amount",
 			nftAddr: s.addr1.String(),
 			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Payment,
+				Type:            ledger.LedgerEntryType_Scheduled_Payment,
 				PostedDate:      pastDate,
 				EffectiveDate:   pastDate,
 				Amt:             s.int(-100),
@@ -514,7 +514,7 @@ func (s *TestSuite) TestAppendEntry() {
 			name:    "allow negative principal applied amount",
 			nftAddr: s.addr1.String(),
 			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Payment,
+				Type:            ledger.LedgerEntryType_Scheduled_Payment,
 				PostedDate:      pastDate,
 				EffectiveDate:   pastDate,
 				Amt:             s.int(100),
