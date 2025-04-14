@@ -241,9 +241,9 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 		}
 
 		// Update balances based on the entry
-		balances.Principal = balances.Principal.Add(entry.PrinAppliedAmt)
-		balances.Interest = balances.Interest.Add(entry.IntAppliedAmt)
-		balances.Other = balances.Other.Add(entry.OtherAppliedAmt)
+		balances.Principal = entry.PrinBalAmt
+		balances.Interest = entry.IntBalAmt
+		balances.Other = entry.OtherBalAmt
 	}
 
 	return balances, nil
