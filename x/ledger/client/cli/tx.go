@@ -129,12 +129,12 @@ func CmdAppend() *cobra.Command {
 				return fmt.Errorf("invalid <other_bal_amt>")
 			}
 
-			postedDate, err := time.Parse(time.RFC3339, args[4])
+			postedDate, err := time.Parse("2006-01-02", args[4])
 			if err != nil {
 				return fmt.Errorf("invalid <posted_date>: %v", err)
 			}
 
-			effectiveDate, err := time.Parse(time.RFC3339, args[5])
+			effectiveDate, err := time.Parse("2006-01-02", args[5])
 			if err != nil {
 				return fmt.Errorf("invalid <effective_date>: %v", err)
 			}
@@ -150,8 +150,8 @@ func CmdAppend() *cobra.Command {
 					CorrelationId:   correlation_id,
 					Sequence:        sequence,
 					Type:            ledger.LedgerEntryType(entryType),
-					PostedDate:      postedDate,
-					EffectiveDate:   effectiveDate,
+					PostedDate:      postedDate.Format("2006-01-02"),
+					EffectiveDate:   effectiveDate.Format("2006-01-02"),
 					Amt:             amt,
 					PrinAppliedAmt:  prinAppliedAmt,
 					PrinBalAmt:      prinBalAmt,

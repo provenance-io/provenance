@@ -31,14 +31,6 @@ func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 		return NewLedgerCodedError(ErrCodeMissingField, "type")
 	}
 
-	// Validate dates are set
-	if e.PostedDate == "" {
-		return NewLedgerCodedError(ErrCodeMissingField, "posted_date")
-	}
-	if e.EffectiveDate == "" {
-		return NewLedgerCodedError(ErrCodeMissingField, "effective_date")
-	}
-
 	// Validate dates are valid
 	if _, err := parseIS08601Date(e.PostedDate); err != nil {
 		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date")
