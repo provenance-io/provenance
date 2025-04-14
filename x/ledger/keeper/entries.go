@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -48,8 +49,41 @@ func (k BaseEntriesKeeper) AppendEntry(ctx sdk.Context, nftAddress string, le le
 		return err
 	}
 
-	// TODO validate that the ledger entry is not a duplicate
+	// Get all existing entries for this NFT
+	entries, err := k.ListLedgerEntries(ctx, nftAddress)
+	if err != nil {
+		return err
+	}
 
+	// Find entries with the same effective date
+	var sameDateEntries []ledger.LedgerEntry
+	for _, entry := range entries {
+		if entry.EffectiveDate == le.EffectiveDate {
+			sameDateEntries = append(sameDateEntries, entry)
+		}
+	}
+
+	// If there are entries with the same date, check for sequence number conflicts
+	if len(sameDateEntries) > 0 {
+		// Sort entries by sequence number
+		sort.Slice(sameDateEntries, func(i, j int) bool {
+			return sameDateEntries[i].Sequence < sameDateEntries[j].Sequence
+		})
+
+		// Check if the new entry's sequence number conflicts with existing entries
+		for _, entry := range sameDateEntries {
+			if entry.Sequence >= le.Sequence {
+				// Update the sequence number of the existing entry
+				entry.Sequence++
+				key := collections.Join(nftAddress, entry.CorrelationId)
+				if err := k.LedgerEntries.Set(ctx, key, entry); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// Store the new entry
 	key := collections.Join(nftAddress, le.CorrelationId)
 	err = k.LedgerEntries.Set(ctx, key, le)
 	if err != nil {
