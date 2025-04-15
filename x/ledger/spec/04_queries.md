@@ -1,11 +1,11 @@
 # Queries
 
-The Ledger module provides several query endpoints to access ledger information and financial data.
+The Ledger module provides several query endpoints to access ledger state and information.
 
-## Query Endpoints
+## Query Types
 
 ### Get Ledger Configuration
-Retrieves the configuration for a specific NFT's ledger.
+Retrieves the ledger configuration for a specific NFT:
 
 ```protobuf
 message QueryLedgerConfigRequest {
@@ -18,7 +18,7 @@ message QueryLedgerConfigResponse {
 ```
 
 ### Get Ledger Entries
-Retrieves all ledger entries for a specific NFT.
+Retrieves all ledger entries for a specific NFT:
 
 ```protobuf
 message QueryLedgerRequest {
@@ -30,22 +30,8 @@ message QueryLedgerResponse {
 }
 ```
 
-### Get Balances As Of Date
-Retrieves the balances for a specific NFT as of a given date.
-
-```protobuf
-message QueryBalancesAsOfRequest {
-    string nft_address = 1;
-    string as_of_date = 2;  // RFC3339 format (e.g., "2024-01-01T00:00:00Z")
-}
-
-message QueryBalancesAsOfResponse {
-    Balances balances = 1;
-}
-```
-
-### Get Entry by Correlation ID
-Retrieves a specific ledger entry by its correlation ID.
+### Get Ledger Entry
+Retrieves a specific ledger entry by NFT address and correlation ID:
 
 ```protobuf
 message QueryLedgerEntryRequest {
@@ -58,67 +44,119 @@ message QueryLedgerEntryResponse {
 }
 ```
 
-## Query Usage Examples
-
-### Get Ledger Configuration
-```bash
-provenanced query ledger config [nft-address]
-```
-
-### Get Ledger Entries
-```bash
-# Get all entries
-provenanced query ledger entries [nft-address]
-```
-
 ### Get Balances As Of Date
-```bash
-# Get balances as of a specific date
-provenanced query ledger balances [nft-address] [as-of-date]
-# Example:
-provenanced query ledger balances [nft-address] "2024-01-01T00:00:00Z"
+Retrieves the balances for a specific NFT as of a given date:
+
+```protobuf
+message QueryBalancesAsOfRequest {
+    string nft_address = 1;
+    string as_of_date = 2;  // Date in ISO 8601 format: YYYY-MM-DD
+}
+
+message QueryBalancesAsOfResponse {
+    Balances balances = 1;
+}
 ```
 
-### Get Entry by Correlation ID
-```bash
-provenanced query ledger entry [nft-address] [correlation-id]
+## Query Implementation
+
+### Ledger Queries
+1. **Get Ledger Configuration**
+   - Validates NFT address
+   - Retrieves ledger from store
+   - Returns ledger configuration
+
+2. **Get Ledger Entries**
+   - Validates NFT address
+   - Retrieves all entries from store
+   - Returns list of entries
+
+3. **Get Ledger Entry**
+   - Validates NFT address and correlation ID
+   - Retrieves specific entry from store
+   - Returns entry details
+
+### Balance Queries
+1. **Get Balances As Of Date**
+   - Validates NFT address and date format
+   - Calculates balances as of specified date
+   - Returns principal, interest, and other balances
+
+## Query Response Format
+
+All query responses follow a standard format:
+
+```protobuf
+message QueryResponse {
+    // Response data
+    oneof response {
+        QueryLedgerConfigResponse config = 1;
+        QueryLedgerResponse entries = 2;
+        QueryLedgerEntryResponse entry = 3;
+        QueryBalancesAsOfResponse balances = 4;
+    }
+}
 ```
-
-## Response Data
-
-### Ledger Configuration
-- NFT address
-- Denomination
-
-### Ledger Entries
-- Correlation ID (free-form string up to 50 characters)
-- Entry type
-- Posted date
-- Effective date
-- Amounts (total, principal, interest, other)
-- Balance information
-
-### Balances As Of Date
-- Principal balance
-- Interest balance
-- Other balance
-
-### Entry by Correlation ID
-- Complete ledger entry details including all amounts and dates
 
 ## Error Handling
 
-The module returns appropriate error messages for:
-- Invalid NFT addresses
-- Non-existent ledgers
-- Invalid correlation IDs (e.g., exceeding 50 characters)
-- Invalid date formats
-- Permission issues
-- Invalid query parameters
+Queries may return the following errors:
+
+1. **Invalid NFT Address**
+   - Code: 1
+   - Message: "invalid nft address"
+
+2. **Ledger Not Found**
+   - Code: 2
+   - Message: "ledger not found"
+
+3. **Entry Not Found**
+   - Code: 3
+   - Message: "entry not found"
+
+4. **Invalid Correlation ID**
+   - Code: 4
+   - Message: "invalid correlation id"
+
+5. **Invalid Date Format**
+   - Code: 5
+   - Message: "invalid date format"
+
+## Query Usage Examples
+
+### CLI
+```bash
+# Get ledger configuration
+provenanced q ledger config [nft-address]
+
+# Get ledger entries
+provenanced q ledger entries [nft-address]
+
+# Get ledger entry
+provenanced q ledger entry [nft-address] [correlation-id]
+
+# Get balances as of date
+provenanced q ledger balances [nft-address] [as-of-date]
+```
+
+### REST
+```http
+# Get ledger configuration
+GET /provenance/ledger/v1/config?nft_address={nft_address}
+
+# Get ledger entries
+GET /provenance/ledger/v1/entries?nft_address={nft_address}
+
+# Get ledger entry
+GET /provenance/ledger/v1/ledger/{nft_address}/entry/{correlation_id}
+
+# Get balances as of date
+GET /provenance/ledger/v1/ledger/{nft_address}/balances/{as_of_date}
+```
 
 ## Notes
 
-- All dates should be provided in RFC3339 format (e.g., "2024-01-01T00:00:00Z")
+- All dates should be provided in ISO8601 format (e.g., "2024-01-01")
 - The balances query will return the cumulative balances up to and including the specified date
 - Entries are sorted by effective date when calculating balances
 - The module maintains separate balances for principal, interest, and other amounts
