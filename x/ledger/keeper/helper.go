@@ -2,11 +2,19 @@
 package keeper
 
 import (
+	"sort"
 	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
+	"github.com/provenance-io/provenance/x/ledger"
 )
+
+// StrPtr returns a pointer to the string s.
+func StrPtr(s string) *string {
+	return &s
+}
 
 func getAddress(s *string) (sdk.AccAddress, error) {
 	addr, err := sdk.AccAddressFromBech32(*s)
@@ -41,4 +49,28 @@ func isCorrelationIDValid(correlationID string) bool {
 		return false
 	}
 	return true
+}
+
+// parseIS08601Date parses an ISO 8601 date string 2006-01-02 into a time.Time object.
+func parseIS08601Date(dateStr string) (time.Time, error) {
+	return time.Parse("2006-01-02", dateStr)
+}
+
+// sortLedgerEntries sorts the ledger entries by effective date and then by sequence.
+func sortLedgerEntries(entries []*ledger.LedgerEntry) {
+	sort.Slice(entries, func(i, j int) bool {
+		effectiveDateI, err := parseIS08601Date((entries)[i].EffectiveDate)
+		if err != nil {
+			return false
+		}
+		effectiveDateJ, err := parseIS08601Date((entries)[j].EffectiveDate)
+		if err != nil {
+			return false
+		}
+
+		if effectiveDateI.Equal(effectiveDateJ) {
+			return (entries)[i].Sequence < (entries)[j].Sequence
+		}
+		return effectiveDateI.Before(effectiveDateJ)
+	})
 }

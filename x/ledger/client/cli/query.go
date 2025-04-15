@@ -116,9 +116,9 @@ func GetBalancesAsOfCmd() *cobra.Command {
 			asOfDate := args[1]
 
 			// Validate the date format
-			_, err = time.Parse(time.RFC3339, asOfDate)
+			_, err = time.Parse("2006-01-02", asOfDate)
 			if err != nil {
-				return fmt.Errorf("invalid date format. Please use RFC3339 format (e.g., 2024-01-01T00:00:00Z): %w", err)
+				return fmt.Errorf("invalid date format. Please use ISO8601 format (e.g., 2024-01-01): %w", err)
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)

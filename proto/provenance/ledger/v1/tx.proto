@@ -25,15 +25,16 @@ service Msg {
   // Process multiple fund transfers with manual settlement instructions
   rpc ProcessFundTransfersWithSettlement(MsgProcessFundTransfersWithSettlementRequest)
       returns (MsgProcessFundTransfersResponse);
+
+  // Destroy a ledger by NFT address
+  rpc Destroy(MsgDestroyRequest) returns (MsgDestroyResponse);
 }
 
 // MsgCreateRequest
 message MsgCreateRequest {
   option (cosmos.msg.v1.signer) = "owner";
-
-  string nft_address = 1;
-  string denom       = 2;
-  string owner       = 3;
+  Ledger ledger                 = 1;
+  string owner                  = 2;
 }
 
 // MsgCreateResponse
@@ -43,9 +44,9 @@ message MsgCreateResponse {}
 message MsgAppendRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  string      nft_address = 1;
-  LedgerEntry entry       = 2;
-  string      owner       = 3;
+  string               nft_address = 1;
+  repeated LedgerEntry entries     = 2;
+  string               owner       = 3;
 }
 
 // MsgAppendResponse
@@ -70,3 +71,14 @@ message MsgProcessFundTransfersWithSettlementRequest {
   string                              owner     = 1;
   repeated FundTransferWithSettlement transfers = 2;
 }
+
+// MsgDestroyRequest represents a request to destroy a ledger
+message MsgDestroyRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
+  string nft_address = 1;
+  string owner       = 2;
+}
+
+// MsgDestroyResponse represents the response from destroying a ledger
+message MsgDestroyResponse {}

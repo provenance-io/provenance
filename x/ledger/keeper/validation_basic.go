@@ -3,6 +3,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
@@ -14,6 +15,39 @@ func ValidateLedgerBasic(l *ledger.Ledger) error {
 		return NewLedgerCodedError(ErrCodeMissingField, "nft_address")
 	}
 
+	// Validate next payment date format if provided
+	if !emptyString(&l.NextPmtDate) {
+		if _, err := parseIS08601Date(l.NextPmtDate); err != nil {
+			return NewLedgerCodedError(ErrCodeInvalidField, "next_pmt_date", "must be a valid ISO 8601 date '2006-01-02'")
+		}
+	}
+
+	// Validate next payment amount if provided
+	if !emptyString(&l.NextPmtAmt) {
+		if _, ok := math.NewIntFromString(l.NextPmtAmt); !ok {
+			return NewLedgerCodedError(ErrCodeInvalidField, "next_pmt_amt", "must be a valid integer")
+		}
+	}
+
+	// Validate status if provided
+	if !emptyString(&l.Status) {
+		// Add any specific status validation here if needed
+	}
+
+	// Validate interest rate if provided
+	if !emptyString(&l.InterestRate) {
+		if _, ok := math.NewIntFromString(l.InterestRate); !ok {
+			return NewLedgerCodedError(ErrCodeInvalidField, "interest_rate", "must be a valid integer")
+		}
+	}
+
+	// Validate maturity date format if provided
+	if !emptyString(&l.MaturityDate) {
+		if _, err := parseIS08601Date(l.MaturityDate); err != nil {
+			return NewLedgerCodedError(ErrCodeInvalidField, "maturity_date", "must be a valid ISO 8601 date '2006-01-02'")
+		}
+	}
+
 	return nil
 }
 
@@ -22,7 +56,7 @@ func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 		return NewLedgerCodedError(ErrCodeMissingField, "correlation_id")
 	} else {
 		if !isCorrelationIDValid(e.CorrelationId) {
-			return NewLedgerCodedError(ErrCodeInvalidField, "correlation_id")
+			return NewLedgerCodedError(ErrCodeInvalidField, "correlation_id", "must be a valid string that is less than 50 characters")
 		}
 	}
 
@@ -31,35 +65,35 @@ func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 		return NewLedgerCodedError(ErrCodeMissingField, "type")
 	}
 
-	// Validate dates are set
-	if e.PostedDate.IsZero() {
-		return NewLedgerCodedError(ErrCodeMissingField, "posted_date")
+	// Validate dates are valid
+	if _, err := parseIS08601Date(e.PostedDate); err != nil {
+		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date", "must be a valid ISO 8601 date '2006-01-02'")
 	}
-	if e.EffectiveDate.IsZero() {
-		return NewLedgerCodedError(ErrCodeMissingField, "effective_date")
+	if _, err := parseIS08601Date(e.EffectiveDate); err != nil {
+		return NewLedgerCodedError(ErrCodeInvalidField, "effective_date", "must be a valid ISO 8601 date '2006-01-02'")
 	}
 
 	// Validate amounts are non-negative
 	if e.Amt.IsNil() || e.Amt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "amount")
+		return NewLedgerCodedError(ErrCodeInvalidField, "amount", "must be a non-negative integer")
 	}
 	if e.PrinAppliedAmt.IsNil() || e.PrinAppliedAmt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "principal_applied_amount")
+		return NewLedgerCodedError(ErrCodeInvalidField, "principal_applied_amount", "must be a non-negative integer")
 	}
-	if e.PrinBalAmt.IsNil() || e.PrinBalAmt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "principal_balance_amount")
+	if e.PrinBalAmt.IsNil() {
+		return NewLedgerCodedError(ErrCodeInvalidField, "principal_balance_amount", "must be a integer")
 	}
 	if e.IntAppliedAmt.IsNil() || e.IntAppliedAmt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "interest_applied_amount")
+		return NewLedgerCodedError(ErrCodeInvalidField, "interest_applied_amount", "must be a non-negative integer")
 	}
-	if e.IntBalAmt.IsNil() || e.IntBalAmt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "interest_balance_amount")
+	if e.IntBalAmt.IsNil() {
+		return NewLedgerCodedError(ErrCodeInvalidField, "interest_balance_amount", "must be a integer")
 	}
 	if e.OtherAppliedAmt.IsNil() || e.OtherAppliedAmt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "other_applied_amount")
+		return NewLedgerCodedError(ErrCodeInvalidField, "other_applied_amount", "must be a non-negative integer")
 	}
-	if e.OtherBalAmt.IsNil() || e.OtherBalAmt.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "other_balance_amount")
+	if e.OtherBalAmt.IsNil() {
+		return NewLedgerCodedError(ErrCodeInvalidField, "other_balance_amount", "must be a integer")
 	}
 
 	return nil

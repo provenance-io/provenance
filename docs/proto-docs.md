@@ -264,6 +264,8 @@
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
     - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
     - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
+    - [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest)
+    - [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse)
     - [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest)
     - [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse)
     - [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest)
@@ -4498,7 +4500,7 @@ MsgAppendRequest
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 | `owner` | [string](#string) |  |  |
 
 
@@ -4524,8 +4526,7 @@ MsgCreateRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `denom` | [string](#string) |  |  |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
 | `owner` | [string](#string) |  |  |
 
 
@@ -4537,6 +4538,32 @@ MsgCreateRequest
 
 ### MsgCreateResponse
 MsgCreateResponse
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgDestroyRequest"></a>
+
+### MsgDestroyRequest
+MsgDestroyRequest represents a request to destroy a ledger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgDestroyResponse"></a>
+
+### MsgDestroyResponse
+MsgDestroyResponse represents the response from destroying a ledger
 
 
 
@@ -4603,6 +4630,7 @@ Msg defines the attribute module Msg service.
 | `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
 | `ProcessFundTransfers` | [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers (payments and disbursements) |
 | `ProcessFundTransfersWithSettlement` | [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers with manual settlement instructions |
+| `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
 
  <!-- end services -->
 
@@ -4679,6 +4707,11 @@ Ledger
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
 | `denom` | [string](#string) |  | This denom will represent the entry values within the ledger. |
+| `next_pmt_date` | [string](#string) |  | Next payment date in ISO 8601 format: YYYY-MM-DD |
+| `next_pmt_amt` | [string](#string) |  | Next payment amount |
+| `status` | [string](#string) |  | Status of the ledger |
+| `interest_rate` | [string](#string) |  | Interest rate |
+| `maturity_date` | [string](#string) |  | Maturity date in ISO 8601 format: YYYY-MM-DD |
 
 
 
@@ -4696,8 +4729,8 @@ LedgerEntry
 | `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
 | `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
 | `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
-| `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| `posted_date` | [string](#string) |  | Posted date in ISO 8601 format: YYYY-MM-DD |
+| `effective_date` | [string](#string) |  | Effective date in ISO 8601 format: YYYY-MM-DD |
 | `amt` | [string](#string) |  |  |
 | `prin_applied_amt` | [string](#string) |  |  |
 | `prin_bal_amt` | [string](#string) |  |  |
@@ -4755,9 +4788,11 @@ LedgerEntryType
 | ---- | ------ | ----------- |
 | `LEDGER_ENTRY_TYPE_UNSPECIFIED` | `0` |  |
 | `LEDGER_ENTRY_TYPE_DISBURSEMENT` | `1` |  |
-| `LEDGER_ENTRY_TYPE_PAYMENT` | `2` |  |
-| `LEDGER_ENTRY_TYPE_FEE` | `3` |  |
-| `LEDGER_ENTRY_TYPE_OTHER` | `4` |  |
+| `LEDGER_ENTRY_TYPE_SCHEDULED_PAYMENT` | `2` |  |
+| `LEDGER_ENTRY_TYPE_UNSCHEDULED_PAYMENT` | `3` |  |
+| `LEDGER_ENTRY_TYPE_FORECLOSURE_PAYMENT` | `4` |  |
+| `LEDGER_ENTRY_TYPE_FEE` | `5` |  |
+| `LEDGER_ENTRY_TYPE_OTHER` | `6` |  |
 
 
  <!-- end enums -->

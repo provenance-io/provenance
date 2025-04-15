@@ -7,7 +7,6 @@ option java_multiple_files = true;
 
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
-import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 
 // Ledger
@@ -16,16 +15,33 @@ message Ledger {
   string nft_address = 1;
 
   // This denom will represent the entry values within the ledger.
-  string denom = 3;
+  string denom = 2;
+
+  // Next payment date in ISO 8601 format: YYYY-MM-DD
+  string next_pmt_date = 3;
+
+  // Next payment amount
+  string next_pmt_amt = 4;
+
+  // Status of the ledger
+  string status = 5;
+
+  // Interest rate
+  string interest_rate = 6;
+
+  // Maturity date in ISO 8601 format: YYYY-MM-DD
+  string maturity_date = 7;
 }
 
 // LedgerEntryType
 enum LedgerEntryType {
-  LEDGER_ENTRY_TYPE_UNSPECIFIED  = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
-  LEDGER_ENTRY_TYPE_DISBURSEMENT = 1 [(gogoproto.enumvalue_customname) = "Disbursement"];
-  LEDGER_ENTRY_TYPE_PAYMENT      = 2 [(gogoproto.enumvalue_customname) = "Payment"];
-  LEDGER_ENTRY_TYPE_FEE          = 3 [(gogoproto.enumvalue_customname) = "Fee"];
-  LEDGER_ENTRY_TYPE_OTHER        = 4 [(gogoproto.enumvalue_customname) = "Other"];
+  LEDGER_ENTRY_TYPE_UNSPECIFIED         = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  LEDGER_ENTRY_TYPE_DISBURSEMENT        = 1 [(gogoproto.enumvalue_customname) = "Disbursement"];
+  LEDGER_ENTRY_TYPE_SCHEDULED_PAYMENT   = 2 [(gogoproto.enumvalue_customname) = "Scheduled_Payment"];
+  LEDGER_ENTRY_TYPE_UNSCHEDULED_PAYMENT = 3 [(gogoproto.enumvalue_customname) = "Unscheduled_Payment"];
+  LEDGER_ENTRY_TYPE_FORECLOSURE_PAYMENT = 4 [(gogoproto.enumvalue_customname) = "Foreclosure_Payment"];
+  LEDGER_ENTRY_TYPE_FEE                 = 5 [(gogoproto.enumvalue_customname) = "Fee"];
+  LEDGER_ENTRY_TYPE_OTHER               = 6 [(gogoproto.enumvalue_customname) = "Other"];
 }
 
 // LedgerEntry
@@ -40,9 +56,11 @@ message LedgerEntry {
 
   LedgerEntryType type = 3;
 
-  google.protobuf.Timestamp posted_date = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Posted date in ISO 8601 format: YYYY-MM-DD
+  string posted_date = 4;
 
-  google.protobuf.Timestamp effective_date = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Effective date in ISO 8601 format: YYYY-MM-DD
+  string effective_date = 5;
 
   string amt = 6 [
     (cosmos_proto.scalar)  = "cosmos.Int",
@@ -120,7 +138,7 @@ message SettlementInstruction {
   string amount = 1;
 
   // The recipient's blockchain address
-  string recipient_address = 2;
+  string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // Optional memo or note for the transaction
   string memo = 3;

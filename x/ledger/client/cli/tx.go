@@ -26,6 +26,7 @@ func CmdTx() *cobra.Command {
 	cmd.AddCommand(
 		CmdCreate(),
 		CmdAppend(),
+		CmdDestroy(),
 	)
 
 	return cmd
@@ -33,9 +34,12 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <nft_address> <denom> <",
+		Use:     "create <nft_address> <denom> [next_pmt_date] [next_pmt_amt] [status] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
+		Example: `$ provenanced tx ledger create pb1a2b3c4... usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
+$ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example with required fields only`,
+		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -45,13 +49,35 @@ func CmdCreate() *cobra.Command {
 			nftAddress := args[0]
 			denom := args[1]
 
-			m := ledger.MsgCreateRequest{
+			// Create the ledger with required fields
+			ledgerObj := &ledger.Ledger{
 				NftAddress: nftAddress,
 				Denom:      denom,
-				Owner:      clientCtx.FromAddress.String(),
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
+			// Add optional fields if provided
+			if len(args) > 2 {
+				ledgerObj.NextPmtDate = args[2]
+			}
+			if len(args) > 3 {
+				ledgerObj.NextPmtAmt = args[3]
+			}
+			if len(args) > 4 {
+				ledgerObj.Status = args[4]
+			}
+			if len(args) > 5 {
+				ledgerObj.InterestRate = args[5]
+			}
+			if len(args) > 6 {
+				ledgerObj.MaturityDate = args[6]
+			}
+
+			msg := &ledger.MsgCreateRequest{
+				Ledger: ledgerObj,
+				Owner:  clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -65,6 +91,8 @@ func CmdAppend() *cobra.Command {
 		Use:     "append <nft_address> <correlation_id> <sequence> <type> <posted_date> <effective_date> <amount> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
 		Aliases: []string{},
 		Short:   "Append an entry to an existing ledger",
+		Example: `$ provenanced tx ledger append pb1a2b3c4... txn123 1 SCHEDULED_PAYMENT 2024-04-15 2024-04-15 1000.00 800.00 9200.00 200.00 400.00 0.00 0.00 --from mykey
+$ provenanced tx ledger append pb1a2b3c4... txn124 2 FEE 2024-04-16 2024-04-16 50.00 0.00 9200.00 0.00 400.00 50.00 50.00 --from mykey`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 13 {
 				return fmt.Errorf("missing arguments")
@@ -129,12 +157,12 @@ func CmdAppend() *cobra.Command {
 				return fmt.Errorf("invalid <other_bal_amt>")
 			}
 
-			postedDate, err := time.Parse(time.RFC3339, args[4])
+			postedDate, err := time.Parse("2006-01-02", args[4])
 			if err != nil {
 				return fmt.Errorf("invalid <posted_date>: %v", err)
 			}
 
-			effectiveDate, err := time.Parse(time.RFC3339, args[5])
+			effectiveDate, err := time.Parse("2006-01-02", args[5])
 			if err != nil {
 				return fmt.Errorf("invalid <effective_date>: %v", err)
 			}
@@ -144,14 +172,14 @@ func CmdAppend() *cobra.Command {
 				return fmt.Errorf("invalid <type>")
 			}
 
-			m := ledger.MsgAppendRequest{
-				NftAddress: nftAddress,
-				Entry: &ledger.LedgerEntry{
+			// Create a single entry for the ledger.
+			entries := []*ledger.LedgerEntry{
+				&ledger.LedgerEntry{
 					CorrelationId:   correlation_id,
 					Sequence:        sequence,
 					Type:            ledger.LedgerEntryType(entryType),
-					PostedDate:      postedDate,
-					EffectiveDate:   effectiveDate,
+					PostedDate:      postedDate.Format("2006-01-02"),
+					EffectiveDate:   effectiveDate.Format("2006-01-02"),
 					Amt:             amt,
 					PrinAppliedAmt:  prinAppliedAmt,
 					PrinBalAmt:      prinBalAmt,
@@ -160,7 +188,12 @@ func CmdAppend() *cobra.Command {
 					OtherAppliedAmt: otherAppliedAmt,
 					OtherBalAmt:     otherBalAmt,
 				},
-				Owner: clientCtx.FromAddress.String(),
+			}
+
+			m := ledger.MsgAppendRequest{
+				NftAddress: nftAddress,
+				Entries:    entries,
+				Owner:      clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
@@ -183,37 +216,33 @@ func parseUint32(s string) (uint32, error) {
 	return uint32(val.Uint64()), nil
 }
 
-// name := args[0]
-// account := args[1]
+func CmdDestroy() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "destroy <nft_address>",
+		Aliases: []string{},
+		Short:   "Destroy a ledger by NFT address",
+		Example: `$ provenanced tx ledger destroy pb1a2b3c4... --from mykey`,
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
 
-// err = types.ValidateAttributeAddress(account)
-// if err != nil {
-// 	return fmt.Errorf("invalid address: %w", err)
-// }
-// attributeType, err := types.AttributeTypeFromString(strings.TrimSpace(args[2]))
-// if err != nil {
-// 	return fmt.Errorf("account attribute type is invalid: %w", err)
-// }
-// valueString := strings.TrimSpace(args[3])
-// value, err := encodeAttributeValue(valueString, attributeType)
-// if err != nil {
-// 	return fmt.Errorf("error encoding value %s to type %s : %w", valueString, attributeType.String(), err)
-// }
+			nftAddress := args[0]
+			if nftAddress == "" {
+				return fmt.Errorf("invalid <nft_address>")
+			}
 
-// msg := types.NewMsgAddAttributeRequest(
-// 	account,
-// 	clientCtx.GetFromAddress(),
-// 	name,
-// 	attributeType,
-// 	value,
-// )
+			msg := &ledger.MsgDestroyRequest{
+				NftAddress: nftAddress,
+				Owner:      clientCtx.FromAddress.String(),
+			}
 
-// if len(args) == 5 {
-// 	expireTime, err := time.Parse(time.RFC3339, args[4])
-// 	if err != nil {
-// 		return fmt.Errorf("unable to parse time %q required format is RFC3339 (%v): %w", args[4], time.RFC3339, err)
-// 	}
-// 	msg.ExpirationDate = &expireTime
-// }
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
 
-// return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}

@@ -30,9 +30,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgCreateRequest
 type MsgCreateRequest struct {
-	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	Denom      string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
-	Owner      string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+	Ledger *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
+	Owner  string  `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
 func (m *MsgCreateRequest) Reset()         { *m = MsgCreateRequest{} }
@@ -68,18 +67,11 @@ func (m *MsgCreateRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateRequest proto.InternalMessageInfo
 
-func (m *MsgCreateRequest) GetNftAddress() string {
+func (m *MsgCreateRequest) GetLedger() *Ledger {
 	if m != nil {
-		return m.NftAddress
+		return m.Ledger
 	}
-	return ""
-}
-
-func (m *MsgCreateRequest) GetDenom() string {
-	if m != nil {
-		return m.Denom
-	}
-	return ""
+	return nil
 }
 
 func (m *MsgCreateRequest) GetOwner() string {
@@ -128,9 +120,9 @@ var xxx_messageInfo_MsgCreateResponse proto.InternalMessageInfo
 
 // MsgAppendRequest
 type MsgAppendRequest struct {
-	NftAddress string       `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	Entry      *LedgerEntry `protobuf:"bytes,2,opt,name=entry,proto3" json:"entry,omitempty"`
-	Owner      string       `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+	NftAddress string         `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	Entries    []*LedgerEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
+	Owner      string         `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
 func (m *MsgAppendRequest) Reset()         { *m = MsgAppendRequest{} }
@@ -173,9 +165,9 @@ func (m *MsgAppendRequest) GetNftAddress() string {
 	return ""
 }
 
-func (m *MsgAppendRequest) GetEntry() *LedgerEntry {
+func (m *MsgAppendRequest) GetEntries() []*LedgerEntry {
 	if m != nil {
-		return m.Entry
+		return m.Entries
 	}
 	return nil
 }
@@ -372,6 +364,96 @@ func (m *MsgProcessFundTransfersWithSettlementRequest) GetTransfers() []*FundTra
 	return nil
 }
 
+// MsgDestroyRequest represents a request to destroy a ledger
+type MsgDestroyRequest struct {
+	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
+	Owner      string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+}
+
+func (m *MsgDestroyRequest) Reset()         { *m = MsgDestroyRequest{} }
+func (m *MsgDestroyRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgDestroyRequest) ProtoMessage()    {}
+func (*MsgDestroyRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{7}
+}
+func (m *MsgDestroyRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDestroyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDestroyRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDestroyRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDestroyRequest.Merge(m, src)
+}
+func (m *MsgDestroyRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDestroyRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDestroyRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDestroyRequest proto.InternalMessageInfo
+
+func (m *MsgDestroyRequest) GetNftAddress() string {
+	if m != nil {
+		return m.NftAddress
+	}
+	return ""
+}
+
+func (m *MsgDestroyRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+// MsgDestroyResponse represents the response from destroying a ledger
+type MsgDestroyResponse struct {
+}
+
+func (m *MsgDestroyResponse) Reset()         { *m = MsgDestroyResponse{} }
+func (m *MsgDestroyResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDestroyResponse) ProtoMessage()    {}
+func (*MsgDestroyResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{8}
+}
+func (m *MsgDestroyResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDestroyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDestroyResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDestroyResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDestroyResponse.Merge(m, src)
+}
+func (m *MsgDestroyResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDestroyResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDestroyResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDestroyResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCreateRequest)(nil), "provenance.ledger.v1.MsgCreateRequest")
 	proto.RegisterType((*MsgCreateResponse)(nil), "provenance.ledger.v1.MsgCreateResponse")
@@ -380,43 +462,48 @@ func init() {
 	proto.RegisterType((*MsgProcessFundTransfersRequest)(nil), "provenance.ledger.v1.MsgProcessFundTransfersRequest")
 	proto.RegisterType((*MsgProcessFundTransfersResponse)(nil), "provenance.ledger.v1.MsgProcessFundTransfersResponse")
 	proto.RegisterType((*MsgProcessFundTransfersWithSettlementRequest)(nil), "provenance.ledger.v1.MsgProcessFundTransfersWithSettlementRequest")
+	proto.RegisterType((*MsgDestroyRequest)(nil), "provenance.ledger.v1.MsgDestroyRequest")
+	proto.RegisterType((*MsgDestroyResponse)(nil), "provenance.ledger.v1.MsgDestroyResponse")
 }
 
 func init() { proto.RegisterFile("provenance/ledger/v1/tx.proto", fileDescriptor_3c124d2e9569f84d) }
 
 var fileDescriptor_3c124d2e9569f84d = []byte{
-	// 486 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x41, 0x6b, 0x13, 0x41,
-	0x14, 0xc7, 0x33, 0x0d, 0x29, 0xf4, 0xe5, 0xa2, 0x63, 0xa0, 0x61, 0xc1, 0x6d, 0xb3, 0x07, 0x2d,
-	0xa5, 0xee, 0xda, 0xa8, 0x08, 0x9e, 0x6c, 0x45, 0x4f, 0x46, 0x4a, 0x14, 0x44, 0x2f, 0xb2, 0xcd,
-	0xbe, 0x6c, 0x83, 0xdd, 0x99, 0x75, 0xde, 0x24, 0xd6, 0x9b, 0xa8, 0x67, 0xf1, 0x1b, 0xe8, 0x47,
-	0xe8, 0xc7, 0xf0, 0xd8, 0xa3, 0x47, 0x49, 0x0e, 0x05, 0x3f, 0x85, 0x64, 0x67, 0x63, 0x92, 0x3a,
-	0x49, 0xda, 0xde, 0x76, 0xe6, 0xfd, 0xdf, 0x7f, 0x7e, 0xfb, 0xe6, 0xcf, 0xc0, 0xf5, 0x54, 0xc9,
-	0x1e, 0x8a, 0x50, 0xb4, 0x30, 0x38, 0xc4, 0x28, 0x46, 0x15, 0xf4, 0xb6, 0x03, 0x7d, 0xe4, 0xa7,
-	0x4a, 0x6a, 0xc9, 0x2b, 0xe3, 0xb2, 0x6f, 0xca, 0x7e, 0x6f, 0xdb, 0x59, 0x6d, 0x49, 0x4a, 0x24,
-	0x05, 0x09, 0xc5, 0x43, 0x75, 0x42, 0xb1, 0x91, 0x3b, 0x35, 0xab, 0x5b, 0xde, 0x98, 0x49, 0xbc,
-	0xb7, 0x70, 0xa5, 0x41, 0xf1, 0x23, 0x85, 0xa1, 0xc6, 0x26, 0xbe, 0xeb, 0x22, 0x69, 0xbe, 0x06,
-	0x65, 0xd1, 0xd6, 0x6f, 0xc2, 0x28, 0x52, 0x48, 0x54, 0x65, 0xeb, 0x6c, 0x63, 0xa5, 0x09, 0xa2,
-	0xad, 0x77, 0xcc, 0x0e, 0xaf, 0x40, 0x29, 0x42, 0x21, 0x93, 0xea, 0x52, 0x56, 0x32, 0x8b, 0xe1,
-	0xae, 0x7c, 0x2f, 0x50, 0x55, 0x8b, 0x66, 0x37, 0x5b, 0x3c, 0x80, 0x4f, 0xa7, 0xc7, 0x9b, 0xe6,
-	0xdb, 0xbb, 0x06, 0x57, 0x27, 0x0e, 0xa3, 0x54, 0x0a, 0x42, 0xef, 0x2b, 0xcb, 0x10, 0x76, 0xd2,
-	0x14, 0x45, 0x74, 0x6e, 0x84, 0xfb, 0x50, 0x42, 0xa1, 0xd5, 0x87, 0x0c, 0xa1, 0x5c, 0xaf, 0xf9,
-	0xb6, 0xc9, 0xf8, 0x4f, 0xb3, 0xaf, 0xc7, 0x43, 0x61, 0xd3, 0xe8, 0xcf, 0x4d, 0x39, 0xe2, 0xc9,
-	0x29, 0xbf, 0x30, 0x70, 0x1b, 0x14, 0xef, 0x29, 0xd9, 0x42, 0xa2, 0x27, 0x5d, 0x11, 0xbd, 0x50,
-	0xa1, 0xa0, 0x36, 0x2a, 0x1a, 0x31, 0xff, 0x73, 0x66, 0x13, 0xce, 0xfc, 0x21, 0xac, 0xe8, 0x91,
-	0xb2, 0xba, 0xb4, 0x5e, 0xdc, 0x28, 0xd7, 0x3d, 0x3b, 0xec, 0xa4, 0x69, 0x73, 0xdc, 0x34, 0xc5,
-	0x56, 0x83, 0xb5, 0x99, 0x14, 0x39, 0xe9, 0x0f, 0x06, 0x5b, 0x33, 0x34, 0x2f, 0x3b, 0xfa, 0xe0,
-	0x39, 0x6a, 0x7d, 0x88, 0x09, 0x0a, 0x3d, 0x9f, 0xfb, 0xd9, 0xff, 0xdc, 0xb7, 0x17, 0x73, 0x9f,
-	0x39, 0xc1, 0xfe, 0x17, 0xf5, 0x3f, 0x45, 0x28, 0x36, 0x28, 0xe6, 0xaf, 0x60, 0xd9, 0x84, 0x81,
-	0xdf, 0xb0, 0x5b, 0x9f, 0x8d, 0xa6, 0x73, 0x73, 0xa1, 0xce, 0x4c, 0x61, 0x68, 0x6d, 0x6e, 0x70,
-	0x8e, 0xf5, 0x54, 0xe4, 0xe6, 0x58, 0x4f, 0x47, 0x81, 0x7f, 0x66, 0x50, 0xb1, 0x4d, 0x97, 0xdf,
-	0x9d, 0xe9, 0x30, 0x27, 0x36, 0xce, 0xbd, 0x0b, 0x76, 0xe5, 0x14, 0xdf, 0x19, 0x78, 0x8b, 0xef,
-	0x98, 0xef, 0x5e, 0xc8, 0xdd, 0x1a, 0x90, 0x4b, 0x12, 0x3a, 0xa5, 0x8f, 0xa7, 0xc7, 0x9b, 0x6c,
-	0x37, 0xfc, 0xd9, 0x77, 0xd9, 0x49, 0xdf, 0x65, 0xbf, 0xfb, 0x2e, 0xfb, 0x36, 0x70, 0x0b, 0x27,
-	0x03, 0xb7, 0xf0, 0x6b, 0xe0, 0x16, 0x60, 0xb5, 0x23, 0xad, 0xce, 0x7b, 0xec, 0xf5, 0x56, 0xdc,
-	0xd1, 0x07, 0xdd, 0x7d, 0xbf, 0x25, 0x93, 0x60, 0x2c, 0xb9, 0xd5, 0x91, 0x13, 0xab, 0xe0, 0x28,
-	0x7f, 0xca, 0xf6, 0x97, 0xb3, 0xb7, 0xec, 0xce, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf5, 0xba,
-	0xd9, 0x11, 0x3e, 0x05, 0x00, 0x00,
+	// 531 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x4f, 0x6f, 0xd3, 0x30,
+	0x18, 0xc6, 0xeb, 0x95, 0x75, 0xea, 0xdb, 0x0b, 0x98, 0x4a, 0xab, 0x22, 0xc8, 0xda, 0x1e, 0xa0,
+	0x9a, 0x46, 0xc2, 0xca, 0xb8, 0xc0, 0x85, 0x8d, 0x3f, 0x27, 0x8a, 0xa6, 0x80, 0x40, 0x20, 0x24,
+	0xd4, 0xb5, 0x6f, 0xb3, 0xa2, 0xc5, 0x0e, 0xb6, 0x5b, 0xb6, 0x1b, 0x02, 0x3e, 0x00, 0xe2, 0x0b,
+	0xc0, 0x47, 0xd8, 0xc7, 0xd8, 0x71, 0x47, 0x8e, 0xa8, 0x3d, 0xec, 0x6b, 0xa0, 0xc5, 0x09, 0x4d,
+	0x47, 0xfe, 0xb0, 0xdd, 0xec, 0xf8, 0x79, 0x9f, 0xf7, 0x67, 0xfb, 0x89, 0xe1, 0xba, 0x2f, 0xf8,
+	0x18, 0x59, 0x97, 0xf5, 0xd0, 0xde, 0xc3, 0xbe, 0x8b, 0xc2, 0x1e, 0xaf, 0xdb, 0x6a, 0xdf, 0xf2,
+	0x05, 0x57, 0x9c, 0x56, 0x67, 0xcb, 0x96, 0x5e, 0xb6, 0xc6, 0xeb, 0xc6, 0x72, 0x8f, 0x4b, 0x8f,
+	0x4b, 0xdb, 0x93, 0xee, 0xa9, 0xda, 0x93, 0xae, 0x96, 0x1b, 0x8d, 0x44, 0xb7, 0xb0, 0x30, 0x90,
+	0x34, 0xdf, 0xc3, 0xe5, 0x8e, 0x74, 0x1f, 0x0a, 0xec, 0x2a, 0x74, 0xf0, 0xc3, 0x08, 0xa5, 0xa2,
+	0x1b, 0x50, 0xd2, 0x9a, 0x1a, 0xa9, 0x93, 0x56, 0xa5, 0x7d, 0xcd, 0x4a, 0x6a, 0x6b, 0x3d, 0x0d,
+	0x46, 0x4e, 0xa8, 0xa5, 0x55, 0x58, 0xe4, 0x1f, 0x19, 0x8a, 0xda, 0x42, 0x9d, 0xb4, 0xca, 0x8e,
+	0x9e, 0xdc, 0x83, 0xcf, 0x27, 0x87, 0xab, 0x7a, 0xdc, 0xbc, 0x0a, 0x57, 0x62, 0xbd, 0xa4, 0xcf,
+	0x99, 0xc4, 0xe6, 0x77, 0x12, 0x10, 0x6c, 0xfa, 0x3e, 0xb2, 0x7e, 0x44, 0xb0, 0x02, 0x15, 0x36,
+	0x50, 0xef, 0xba, 0xfd, 0xbe, 0x40, 0x29, 0x03, 0x8c, 0xb2, 0x03, 0x6c, 0xa0, 0x36, 0xf5, 0x17,
+	0x7a, 0x1f, 0x96, 0x90, 0x29, 0x31, 0x44, 0x59, 0x5b, 0xa8, 0x17, 0x5b, 0x95, 0x76, 0x23, 0x8b,
+	0xf1, 0x31, 0x53, 0xe2, 0xc0, 0x89, 0x2a, 0x66, 0xa4, 0xc5, 0x6c, 0xd2, 0x88, 0x29, 0x24, 0xfd,
+	0x4a, 0xc0, 0xec, 0x48, 0x77, 0x5b, 0xf0, 0x1e, 0x4a, 0xf9, 0x64, 0xc4, 0xfa, 0x2f, 0x44, 0x97,
+	0xc9, 0x01, 0x0a, 0x19, 0x71, 0xff, 0x75, 0x26, 0x31, 0x67, 0xfa, 0x00, 0xca, 0x2a, 0x52, 0x86,
+	0xb8, 0xcd, 0x64, 0xdc, 0xb8, 0xa9, 0x33, 0x2b, 0x9a, 0x63, 0x6b, 0xc0, 0x4a, 0x2a, 0x45, 0x48,
+	0xfa, 0x93, 0xc0, 0x5a, 0x8a, 0xe6, 0xd5, 0x50, 0xed, 0x3e, 0x47, 0xa5, 0xf6, 0xd0, 0x43, 0xa6,
+	0xb2, 0xb9, 0x9f, 0xfd, 0xcb, 0x7d, 0x3b, 0x9f, 0xfb, 0x4c, 0x87, 0x94, 0x5d, 0xbc, 0x0c, 0x4e,
+	0xf8, 0x11, 0x4a, 0x25, 0xf8, 0xc1, 0x7f, 0x5f, 0x7b, 0x7e, 0xc6, 0xaa, 0x40, 0xe3, 0xbe, 0xfa,
+	0x40, 0xda, 0x47, 0x97, 0xa0, 0xd8, 0x91, 0x2e, 0x7d, 0x0d, 0x25, 0x1d, 0x3f, 0x7a, 0x23, 0x79,
+	0x23, 0x67, 0xff, 0x05, 0xe3, 0x66, 0xae, 0x4e, 0xb7, 0x38, 0xb5, 0xd6, 0x79, 0xc9, 0xb0, 0x9e,
+	0x0b, 0x79, 0x86, 0xf5, 0x7c, 0xf0, 0xe8, 0x17, 0x02, 0xd5, 0xa4, 0xbb, 0xa4, 0x1b, 0xa9, 0x0e,
+	0x19, 0x21, 0x35, 0xee, 0x9e, 0xb3, 0x2a, 0xa4, 0xf8, 0x41, 0xa0, 0x99, 0x9f, 0x28, 0xba, 0x75,
+	0x2e, 0xf7, 0xc4, 0x38, 0x5e, 0x94, 0xf0, 0x2d, 0x2c, 0x85, 0x17, 0x4f, 0xd3, 0xcf, 0x76, 0x3e,
+	0x72, 0x46, 0x2b, 0x5f, 0xa8, 0xdd, 0x8d, 0xc5, 0x4f, 0x27, 0x87, 0xab, 0x64, 0xab, 0x7b, 0x34,
+	0x31, 0xc9, 0xf1, 0xc4, 0x24, 0xbf, 0x27, 0x26, 0xf9, 0x36, 0x35, 0x0b, 0xc7, 0x53, 0xb3, 0xf0,
+	0x6b, 0x6a, 0x16, 0x60, 0x79, 0xc8, 0x13, 0xcd, 0xb6, 0xc9, 0x9b, 0x35, 0x77, 0xa8, 0x76, 0x47,
+	0x3b, 0x56, 0x8f, 0x7b, 0xf6, 0x4c, 0x72, 0x6b, 0xc8, 0x63, 0x33, 0x7b, 0x3f, 0x7c, 0x99, 0x77,
+	0x4a, 0xc1, 0xd3, 0x7c, 0xe7, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xec, 0xb5, 0xca, 0x26, 0x0d,
+	0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -439,6 +526,8 @@ type MsgClient interface {
 	ProcessFundTransfers(ctx context.Context, in *MsgProcessFundTransfersRequest, opts ...grpc.CallOption) (*MsgProcessFundTransfersResponse, error)
 	// Process multiple fund transfers with manual settlement instructions
 	ProcessFundTransfersWithSettlement(ctx context.Context, in *MsgProcessFundTransfersWithSettlementRequest, opts ...grpc.CallOption) (*MsgProcessFundTransfersResponse, error)
+	// Destroy a ledger by NFT address
+	Destroy(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error)
 }
 
 type msgClient struct {
@@ -485,6 +574,15 @@ func (c *msgClient) ProcessFundTransfersWithSettlement(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *msgClient) Destroy(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error) {
+	out := new(MsgDestroyResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/Destroy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Create a new NFT ledger
@@ -495,6 +593,8 @@ type MsgServer interface {
 	ProcessFundTransfers(context.Context, *MsgProcessFundTransfersRequest) (*MsgProcessFundTransfersResponse, error)
 	// Process multiple fund transfers with manual settlement instructions
 	ProcessFundTransfersWithSettlement(context.Context, *MsgProcessFundTransfersWithSettlementRequest) (*MsgProcessFundTransfersResponse, error)
+	// Destroy a ledger by NFT address
+	Destroy(context.Context, *MsgDestroyRequest) (*MsgDestroyResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -512,6 +612,9 @@ func (*UnimplementedMsgServer) ProcessFundTransfers(ctx context.Context, req *Ms
 }
 func (*UnimplementedMsgServer) ProcessFundTransfersWithSettlement(ctx context.Context, req *MsgProcessFundTransfersWithSettlementRequest) (*MsgProcessFundTransfersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessFundTransfersWithSettlement not implemented")
+}
+func (*UnimplementedMsgServer) Destroy(ctx context.Context, req *MsgDestroyRequest) (*MsgDestroyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Destroy not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -590,6 +693,24 @@ func _Msg_ProcessFundTransfersWithSettlement_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_Destroy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDestroyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Destroy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Msg/Destroy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Destroy(ctx, req.(*MsgDestroyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.ledger.v1.Msg",
@@ -610,6 +731,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProcessFundTransfersWithSettlement",
 			Handler:    _Msg_ProcessFundTransfersWithSettlement_Handler,
+		},
+		{
+			MethodName: "Destroy",
+			Handler:    _Msg_Destroy_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -641,19 +766,17 @@ func (m *MsgCreateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Owner)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
 		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
-		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.NftAddress) > 0 {
-		i -= len(m.NftAddress)
-		copy(dAtA[i:], m.NftAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.NftAddress)))
+	if m.Ledger != nil {
+		{
+			size, err := m.Ledger.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0xa
 	}
@@ -710,17 +833,19 @@ func (m *MsgAppendRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if m.Entry != nil {
-		{
-			size, err := m.Entry.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
+	if len(m.Entries) > 0 {
+		for iNdEx := len(m.Entries) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Entries[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
 			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
+			i--
+			dAtA[i] = 0x12
 		}
-		i--
-		dAtA[i] = 0x12
 	}
 	if len(m.NftAddress) > 0 {
 		i -= len(m.NftAddress)
@@ -866,6 +991,66 @@ func (m *MsgProcessFundTransfersWithSettlementRequest) MarshalToSizedBuffer(dAtA
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgDestroyRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDestroyRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDestroyRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.NftAddress) > 0 {
+		i -= len(m.NftAddress)
+		copy(dAtA[i:], m.NftAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.NftAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDestroyResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDestroyResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDestroyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -883,12 +1068,8 @@ func (m *MsgCreateRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.NftAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Denom)
-	if l > 0 {
+	if m.Ledger != nil {
+		l = m.Ledger.Size()
 		n += 1 + l + sovTx(uint64(l))
 	}
 	l = len(m.Owner)
@@ -917,9 +1098,11 @@ func (m *MsgAppendRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.Entry != nil {
-		l = m.Entry.Size()
-		n += 1 + l + sovTx(uint64(l))
+	if len(m.Entries) > 0 {
+		for _, e := range m.Entries {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	l = len(m.Owner)
 	if l > 0 {
@@ -984,6 +1167,32 @@ func (m *MsgProcessFundTransfersWithSettlementRequest) Size() (n int) {
 	return n
 }
 
+func (m *MsgDestroyRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.NftAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgDestroyResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -1021,9 +1230,9 @@ func (m *MsgCreateRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Ledger", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1033,57 +1242,29 @@ func (m *MsgCreateRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NftAddress = string(dAtA[iNdEx:postIndex])
+			if m.Ledger == nil {
+				m.Ledger = &Ledger{}
+			}
+			if err := m.Ledger.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
 			}
@@ -1249,7 +1430,7 @@ func (m *MsgAppendRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Entry", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Entries", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1276,10 +1457,8 @@ func (m *MsgAppendRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Entry == nil {
-				m.Entry = &LedgerEntry{}
-			}
-			if err := m.Entry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Entries = append(m.Entries, &LedgerEntry{})
+			if err := m.Entries[len(m.Entries)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1647,6 +1826,170 @@ func (m *MsgProcessFundTransfersWithSettlementRequest) Unmarshal(dAtA []byte) er
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDestroyRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDestroyRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDestroyRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NftAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDestroyResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDestroyResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDestroyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
