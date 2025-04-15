@@ -78,13 +78,12 @@ func TestCmdTestSuite(t *testing.T) {
 
 func (s *CmdTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
 	s.cfg.ChainID = antewrapper.SimAppChainID
 	s.cfg.TimeoutCommit = 500 * time.Millisecond
-	s.feeDenom = pioconfig.GetProvenanceConfig().FeeDenom
+	s.feeDenom = pioconfig.GetProvConfig().FeeDenom
 
 	s.generateAccountsWithKeyring(10)
 	s.addr0 = s.accountAddrs[0]

@@ -10,14 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/flatfees/keeper"
 	"github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 func TestGenesisTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(GenesisTestSuite))
 }
 

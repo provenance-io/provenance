@@ -17,8 +17,6 @@ import (
 const (
 	// CustomDenomFlag flag to take in custom denom, defaults to nhash if not passed in.
 	CustomDenomFlag = "custom-denom"
-	// CustomMsgFeeFloorPriceFlag flag to take in custom msg floor fees, defaults to 1905nhash if not passed in.
-	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
 	// EnvTypeFlag is a flag for indicating a testnet
 	EnvTypeFlag = "testnet"
 	// CoinTypeFlag is a flag for indicating coin type.
@@ -75,8 +73,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 func SetPioConfigFromFlags(flagSet *pflag.FlagSet) {
 	// Ignoring errors here in the off chance that the flags weren't defined originally.
 	customDenom, _ := flagSet.GetString(CustomDenomFlag)
-	customMsgFeeFloor, _ := flagSet.GetInt64(CustomMsgFeeFloorPriceFlag)
-	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
+	pioconfig.SetProvConfig(customDenom)
 }
 
 // Binds viper flags using the PIO ENV prefix.

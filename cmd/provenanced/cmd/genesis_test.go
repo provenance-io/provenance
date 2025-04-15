@@ -29,7 +29,6 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/mocks"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -200,7 +199,6 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 	defer sdk.SetAddrCacheEnabled(origCache)
 	sdk.SetAddrCacheEnabled(false)
 
-	pioconfig.SetProvenanceConfig("", 0)
 	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	expDefaultMarket := func(marketID uint32, denom string, addrs ...string) exchange.Market {
 		rv := provenancecmd.MakeDefaultMarket(denom, addrs)

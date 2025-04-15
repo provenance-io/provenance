@@ -1338,7 +1338,7 @@ func (s *TestSuite) TestKeeper_ValidateAndCollectCommitmentCreationFee() {
 
 func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 	// These tests all assume that the fee denom is nhash.
-	s.Require().Equal("nhash", pioconfig.GetProvenanceConfig().FeeDenom, "pioconfig.GetProvenanceConfig().FeeDenom")
+	s.Require().Equal("nhash", pioconfig.GetProvConfig().FeeDenom, "pioconfig.GetProvConfig().FeeDenom")
 
 	tests := []struct {
 		name         string

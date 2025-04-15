@@ -18,7 +18,7 @@ import (
 )
 
 func TestDefaultParams(t *testing.T) {
-	pioconfig.SetProvenanceConfig("pineapple", 1)
+	pioconfig.SetProvConfig("pineapple")
 
 	var params Params
 	testFunc := func() {
@@ -35,7 +35,6 @@ func TestDefaultParams(t *testing.T) {
 }
 
 func TestParams_Validate(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	coin := func(amt int64, denom string) sdk.Coin {
 		return sdk.Coin{
 			Denom:  denom,

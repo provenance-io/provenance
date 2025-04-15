@@ -146,7 +146,7 @@ func NewAttribute(key, value string) abci.EventAttribute {
 }
 
 func TestFailedTx(tt *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -265,7 +265,7 @@ func TestFailedTx(tt *testing.T) {
 }
 
 func TestMsgService(tt *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // set denom as stake and floor gas price as 1 stake.
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom) // Set denom as stake.
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -428,7 +428,7 @@ func TestMsgService(tt *testing.T) {
 }
 
 func TestMsgServiceAuthz(tt *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	_, _, addr3 := testdata.KeyTestPubAddr()

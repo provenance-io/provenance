@@ -27,7 +27,7 @@ func DefaultParams() Params {
 		DefaultCost: sdk.NewInt64Coin(DefaultFeeDefinitionDenom, 1),
 		ConversionFactor: ConversionFactor{
 			BaseAmount:      sdk.NewInt64Coin(DefaultFeeDefinitionDenom, 1),
-			ConvertedAmount: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1),
+			ConvertedAmount: sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
 		},
 	}
 }

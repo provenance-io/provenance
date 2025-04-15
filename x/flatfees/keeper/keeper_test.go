@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/mocks"
 	"github.com/provenance-io/provenance/x/flatfees/keeper"
@@ -31,7 +30,6 @@ import (
 )
 
 func TestKeeperTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(KeeperTestSuite))
 }
 

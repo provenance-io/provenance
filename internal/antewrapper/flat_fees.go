@@ -434,7 +434,7 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		gasWanted = DefaultGasLimit
 	default:
 		fee := feeTx.GetFee()
-		if len(fee) == 1 && fee[0].Denom == pioconfig.GetProvenanceConfig().FeeDenom && fee[0].Amount.Equal(sdkmath.NewIntFromUint64(gasWanted)) {
+		if len(fee) == 1 && fee[0].Denom == pioconfig.GetProvConfig().FeeDenom && fee[0].Amount.Equal(sdkmath.NewIntFromUint64(gasWanted)) {
 			// The gas wanted is equal to the amount of nhash provided in the fee.
 			// Assume they simulated with gas-prices 1nhash, and switch to the default gas.
 			gasWanted = DefaultGasLimit

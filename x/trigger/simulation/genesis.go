@@ -57,7 +57,7 @@ func NewRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
 	return &banktypes.MsgSend{
 		FromAddress: from,
 		ToAddress:   to,
-		Amount:      sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, amount)),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvConfig().BondDenom, amount)),
 	}
 }
 

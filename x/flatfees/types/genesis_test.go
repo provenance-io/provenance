@@ -23,7 +23,7 @@ import (
 )
 
 func TestGenesisState_Validate(t *testing.T) {
-	pioconfig.SetProvenanceConfig("pineapple", 1)
+	pioconfig.SetProvConfig("pineapple")
 
 	coin := func(amt int64, denom string) sdk.Coin {
 		return sdk.Coin{
@@ -122,7 +122,7 @@ func TestGenesisState_Validate(t *testing.T) {
 }
 
 func TestDefaultGenesisState(t *testing.T) {
-	pioconfig.SetProvenanceConfig("pineapple", 1)
+	pioconfig.SetProvConfig("pineapple")
 
 	genState := DefaultGenesisState()
 	require.NotNil(t, genState, "DefaultGenesisState()")

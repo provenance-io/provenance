@@ -65,7 +65,7 @@ func (s *AnteTestSuite) TestFlatFeeSetupDecorator_SimulatingPassesAllChecks() {
 
 func (s *AnteTestSuite) TestFlatFeeSetupDecorator_WrongDenomOnlyMsg() {
 	antehandler := setUpApp(s, true, NHash, 100)
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	ctx := s.ctxWithFlatFeeGasMeter().WithChainID("test-chain")
 

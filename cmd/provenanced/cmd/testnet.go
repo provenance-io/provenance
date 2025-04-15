@@ -141,6 +141,8 @@ func InitTestnet(
 	simappConfig.Telemetry.EnableHostnameLabel = false
 	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", chainID}}
 
+	provCfg := pioconfig.GetProvConfig()
+
 	var (
 		genAccounts []authtypes.GenesisAccount
 		genBalances []banktypes.Balance
@@ -215,7 +217,7 @@ func InitTestnet(
 		nhashAmt := hashAmt.Mul(convAmt)
 
 		coins := sdk.Coins{
-			sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, nhashAmt),
+			sdk.NewCoin(provCfg.FeeDenom, nhashAmt),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -226,7 +228,7 @@ func InitTestnet(
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr).String(),
 			valPubKeys[i],
-			sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, valTokens),
+			sdk.NewCoin(provCfg.BondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
 			sdkmath.OneInt(),
@@ -262,7 +264,7 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	markerAcc := markertypes.NewEmptyMarkerAccount(pioconfig.GetProvenanceConfig().FeeDenom, genAccounts[0].GetAddress().String(),
+	markerAcc := markertypes.NewEmptyMarkerAccount(provCfg.FeeDenom, genAccounts[0].GetAddress().String(),
 		[]markertypes.AccessGrant{
 			*markertypes.NewAccessGrant(genAccounts[0].GetAddress(), []markertypes.Access{
 				markertypes.Access_Admin,
@@ -272,7 +274,7 @@ func InitTestnet(
 			}),
 		})
 
-	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdkmath.NewInt(100_000_000_000).MulRaw(1_000_000_000))); err != nil {
+	if err := markerAcc.SetSupply(sdk.NewCoin(provCfg.FeeDenom, sdkmath.NewInt(100_000_000_000).MulRaw(1_000_000_000))); err != nil {
 		return err
 	}
 
@@ -282,9 +284,9 @@ func InitTestnet(
 
 	genMarkers = append(genMarkers, *markerAcc)
 
-	genMarkets = append(genMarkets, makeDefaultMarket(pioconfig.GetProvenanceConfig().BondDenom, valAddrs))
+	genMarkets = append(genMarkets, makeDefaultMarket(provCfg.FeeDenom, valAddrs))
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genMarkets, genFiles, numValidators, pioconfig.GetProvenanceConfig().BondDenom); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genMarkets, genFiles, numValidators, provCfg.BondDenom); err != nil {
 		return err
 	}
 

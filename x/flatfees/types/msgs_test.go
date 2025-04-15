@@ -26,7 +26,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 }
 
 func TestMsgUpdateParamsRequest_ValidateBasic(t *testing.T) {
-	pioconfig.SetProvenanceConfig("cherry", 1)
+	pioconfig.SetProvConfig("cherry")
 
 	tests := []struct {
 		name   string

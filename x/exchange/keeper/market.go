@@ -1578,7 +1578,7 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 	}
 
 	if len(convDenom) > 0 {
-		feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+		feeDenom := pioconfig.GetProvConfig().FeeDenom
 		feeNav := k.GetNav(ctx, convDenom, feeDenom)
 		if feeNav == nil {
 			errs = append(errs, fmt.Errorf("no nav exists from intermediary denom %q to fee denom %q", convDenom, feeDenom))

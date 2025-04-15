@@ -26,7 +26,7 @@ import (
 
 func TestBankSend(tt *testing.T) {
 	txFailureCode := uint32(1)
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // set denom as stake and floor gas price as 1 stake.
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom) // Set denom as stake.
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
@@ -52,7 +52,7 @@ func TestBankSend(tt *testing.T) {
 	nrMarkerAcct := markertypes.NewMarkerAccount(nrMarkerBaseAcct, sdk.NewInt64Coin(nrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
 		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, true, false, []string{})
 	require.NoError(tt, app.MarkerKeeper.SetNetAssetValue(ctx, nrMarkerAcct, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 1),
+		Price:  sdk.NewInt64Coin(pioconfig.GetProvConfig().BondDenom, 1),
 		Volume: 1,
 	}, "test"), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, nrMarkerAcct),
@@ -63,7 +63,7 @@ func TestBankSend(tt *testing.T) {
 	rMarkerAcct := markertypes.NewMarkerAccount(rMarkerBaseAcct, sdk.NewInt64Coin(restrictedMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
 		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{})
 	require.NoError(tt, app.MarkerKeeper.SetNetAssetValue(ctx, rMarkerAcct, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 1),
+		Price:  sdk.NewInt64Coin(pioconfig.GetProvConfig().BondDenom, 1),
 		Volume: 1,
 	}, "test"), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rMarkerAcct), "AddFinalizeAndActivateMarker failed to create marker")
@@ -73,7 +73,7 @@ func TestBankSend(tt *testing.T) {
 	raMarkerAcct := markertypes.NewMarkerAccount(raMarkerBaseAcct, sdk.NewInt64Coin(restrictedAttrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
 		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{"some.kyc.provenance.io"})
 	require.NoError(tt, app.MarkerKeeper.SetNetAssetValue(ctx, raMarkerAcct, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 1),
+		Price:  sdk.NewInt64Coin(pioconfig.GetProvConfig().BondDenom, 1),
 		Volume: 1,
 	}, "test"), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, raMarkerAcct), "AddFinalizeAndActivateMarker failed to create marker")

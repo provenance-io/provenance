@@ -51,7 +51,6 @@ import (
 
 func init() {
 	simcli.GetSimulatorFlags()
-	pioconfig.SetProvenanceConfig("", 0)
 }
 
 // provAppStateFn wraps the simtypes.AppStateFn and sets the ICA and ICQ GenesisState if isn't yet defined in the appState.

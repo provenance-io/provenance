@@ -1233,7 +1233,7 @@ func (app *App) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 	// That way, we can tell people to use --gas-prices 1nhash
 	// and it will properly set the fee to the required amount (at least for most stuff).
 	reqFee := gasMeter.GetRequiredFee()
-	ok, feeCoin := reqFee.Find(pioconfig.GetProvenanceConfig().FeeDenom)
+	ok, feeCoin := reqFee.Find(pioconfig.GetProvConfig().FeeDenom)
 	if ok && !feeCoin.IsNil() && feeCoin.IsPositive() {
 		gasInfo.GasUsed = feeCoin.Amount.Uint64()
 	} else {

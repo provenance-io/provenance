@@ -15,8 +15,6 @@ The following environment variables control the behavior of this script:
                         Default: provenanced
   DENOM --------------- The denomination to use as the utility token.
                         Default: nhash
-  MIN_FLOOR_PRICE ----- The minimum floor gas price that validators are allowed to set.
-                        Default: 1905
   PIO_TESTNET --------- Whether this is a testnet setup.
                         Default: true
   PIO_KEYRING_BACKEND - The keyring backend type to use for the new validator's keys.
@@ -44,7 +42,6 @@ done
 PIO_HOME="${PIO_HOME:-$HOME/.provenance}"
 PROV_CMD=${PROV_CMD:-provenanced}
 DENOM="${DENOM:-${PIO_CUSTOM_DENOM:-nhash}}"
-MIN_FLOOR_PRICE="${MIN_FLOOR_PRICE:-1905}"
 PIO_TESTNET="${PIO_TESTNET:-true}"
 PIO_KEYRING_BACKEND="${PIO_KEYRING_BACKEND:-test}"
 PIO_CHAIN_ID="${PIO_CHAIN_ID:-testing}"
@@ -69,7 +66,6 @@ if [ -n "$VERBOSE" ]; then
         PIO_HOME "$PIO_HOME" \
         PROV_CMD "$PROV_CMD" \
         DENOM "$DENOM" \
-        MIN_FLOOR_PRICE "$MIN_FLOOR_PRICE" \
         PIO_TESTNET "$PIO_TESTNET" \
         PIO_KEYRING_BACKEND "$PIO_KEYRING_BACKEND" \
         PIO_CHAIN_ID "$PIO_CHAIN_ID" \

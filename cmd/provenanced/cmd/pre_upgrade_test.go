@@ -218,7 +218,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 	defer sdk.SetAddrCacheEnabled(origCache)
 	sdk.SetAddrCacheEnabled(false)
 
-	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.SetProvConfig("") // Undo any config changes done in any other tests before.
 	encodingConfig := app.MakeTestEncodingConfig(t)
 	cdc := encodingConfig.Marshaler
 

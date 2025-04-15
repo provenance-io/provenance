@@ -66,7 +66,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(err, "account2Addr")
 
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("atom", 0)
+	pioconfig.SetProvConfig("atom")
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 
 	s.cfg = testutil.DefaultTestNetworkConfig()

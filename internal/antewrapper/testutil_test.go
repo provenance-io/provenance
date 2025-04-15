@@ -74,7 +74,7 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	s.app, s.ctx = createTestApp(s.T(), isCheckTx)
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.

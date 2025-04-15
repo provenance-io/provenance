@@ -16,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -3660,7 +3659,6 @@ func TestMsgGovCloseMarketRequest_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgUpdateParamsRequest_ValidateBasic(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	authority := sdk.AccAddress("authority___________").String()
 
 	tests := []struct {

@@ -297,7 +297,7 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 		return nil, fmt.Errorf("market %d does not have an intermediary denom", req.MarketId)
 	}
 
-	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+	feeDenom := pioconfig.GetProvConfig().FeeDenom
 	if convDenom != feeDenom {
 		rv.ToFeeNav = k.lookupNav(ctx, convDenom, feeDenom, req.Navs)
 		if rv.ToFeeNav == nil {
