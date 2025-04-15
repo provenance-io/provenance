@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -239,7 +240,34 @@ var (
 // Part of the yellow upgrade.
 func setupFlatFees(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Setting up flat fees.")
-	// TODO[fees]: Set flat-fees params and msg costs.
+
+	feeDefCoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin(flatfeestypes.DefaultFeeDefinitionDenom, amount)
+	}
+
+	params := flatfeestypes.Params{ // TODO[fees]: Set these params with more accurate values.
+		DefaultCost: feeDefCoin(1),
+		ConversionFactor: flatfeestypes.ConversionFactor{
+			BaseAmount:      feeDefCoin(1),
+			ConvertedAmount: sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
+		},
+	}
+	err := app.FlatFeesKeeper.SetParams(ctx, params)
+	if err != nil {
+		return fmt.Errorf("could not set x/flatfees params: %w", err)
+	}
+
+	// TODO[fees]: Define all the non-default msg fees.
+	msgFees := []*flatfeestypes.MsgFee{
+		// flatfeestypes.NewMsgFee("url", feeDefCoin(2)),
+	}
+	for _, msgFee := range msgFees {
+		err = app.FlatFeesKeeper.SetMsgFee(ctx, *msgFee)
+		if err != nil {
+			return fmt.Errorf("could not set msg fee %s: %w", msgFee, err)
+		}
+	}
+
 	ctx.Logger().Info("Done setting up flat fees.")
 	return nil
 }
