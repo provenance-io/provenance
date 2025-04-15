@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -9,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/provenance-io/provenance/x/ledger"
+	"github.com/provenance-io/provenance/x/ledger/keeper"
 	"github.com/spf13/cobra"
 )
 
@@ -57,19 +59,34 @@ $ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example 
 
 			// Add optional fields if provided
 			if len(args) > 2 {
-				ledgerObj.NextPmtDate = args[2]
+				nextPmtDate, err := keeper.StrToDate(args[2])
+				if err != nil {
+					return fmt.Errorf("invalid <next_pmt_date>: %v", err)
+				}
+				ledgerObj.NextPmtDate = keeper.DaysSinceEpoch(nextPmtDate.UTC())
 			}
 			if len(args) > 3 {
-				ledgerObj.NextPmtAmt = args[3]
+				ledgerObj.NextPmtAmt, err = strconv.ParseInt(args[3], 10, 64)
+				if err != nil {
+					return fmt.Errorf("invalid <next_pmt_amt>: %v", err)
+				}
 			}
 			if len(args) > 4 {
 				ledgerObj.Status = args[4]
 			}
 			if len(args) > 5 {
-				ledgerObj.InterestRate = args[5]
+				intRate, err := strconv.ParseInt(args[5], 10, 32)
+				if err != nil {
+					return fmt.Errorf("invalid <interest_rate>: %v", err)
+				}
+				ledgerObj.InterestRate = int32(intRate)
 			}
 			if len(args) > 6 {
-				ledgerObj.MaturityDate = args[6]
+				maturityDate, err := keeper.StrToDate(args[6])
+				if err != nil {
+					return fmt.Errorf("invalid <maturity_date>: %v", err)
+				}
+				ledgerObj.MaturityDate = keeper.DaysSinceEpoch(maturityDate.UTC())
 			}
 
 			msg := &ledger.MsgCreateRequest{
@@ -174,19 +191,30 @@ $ provenanced tx ledger append pb1a2b3c4... txn124 2 FEE 2024-04-16 2024-04-16 5
 
 			// Create a single entry for the ledger.
 			entries := []*ledger.LedgerEntry{
-				&ledger.LedgerEntry{
-					CorrelationId:   correlation_id,
-					Sequence:        sequence,
-					Type:            ledger.LedgerEntryType(entryType),
-					PostedDate:      postedDate.Format("2006-01-02"),
-					EffectiveDate:   effectiveDate.Format("2006-01-02"),
-					Amt:             amt,
-					PrinAppliedAmt:  prinAppliedAmt,
-					PrinBalAmt:      prinBalAmt,
-					IntAppliedAmt:   intAppliedAmt,
-					IntBalAmt:       intBalAmt,
-					OtherAppliedAmt: otherAppliedAmt,
-					OtherBalAmt:     otherBalAmt,
+				{
+					CorrelationId: correlation_id,
+					Sequence:      sequence,
+					Type:          ledger.LedgerEntryType(entryType),
+					PostedDate:    keeper.DaysSinceEpoch(postedDate.UTC()),
+					EffectiveDate: keeper.DaysSinceEpoch(effectiveDate.UTC()),
+					TotalAmt:      amt.Int64(),
+					AppliedAmounts: []*ledger.LedgerBucketAmount{
+						{
+							Bucket:     "PRINCIPAL",
+							AppliedAmt: prinAppliedAmt.Int64(),
+							BalanceAmt: prinBalAmt.Int64(),
+						},
+						{
+							Bucket:     "INTEREST",
+							AppliedAmt: intAppliedAmt.Int64(),
+							BalanceAmt: intBalAmt.Int64(),
+						},
+						{
+							Bucket:     "OTHER",
+							AppliedAmt: otherAppliedAmt.Int64(),
+							BalanceAmt: otherBalAmt.Int64(),
+						},
+					},
 				},
 			}
 

@@ -3,11 +3,11 @@ package keeper
 import (
 	"context"
 	"errors"
+	"sort"
 	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,9 +29,10 @@ type BaseViewKeeper struct {
 	storeKey storetypes.StoreKey
 	schema   collections.Schema
 
-	Ledgers       collections.Map[string, ledger.Ledger]
-	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
-	FundTransfers collections.Map[collections.Pair[string, string], ledger.FundTransfer]
+	Ledgers           collections.Map[string, ledger.Ledger]
+	LedgerEntries     collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
+	FundTransfers     collections.Map[collections.Pair[string, string], ledger.FundTransfer]
+	BucketTypeMapping collections.Map[string, string]
 }
 
 func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) BaseViewKeeper {
@@ -204,6 +205,8 @@ func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
 func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error) {
+	asOfDateInt := DaysSinceEpoch(asOfDate.UTC())
+
 	// Validate the NFT address
 	_, err := getAddress(&nftAddress)
 	if err != nil {
@@ -220,31 +223,35 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger entries")
 	}
 
-	// Initialize balances
-	balances := &ledger.Balances{
-		Principal: math.NewInt(0),
-		Interest:  math.NewInt(0),
-		Other:     math.NewInt(0),
-	}
-
-	sortLedgerEntries(entries)
+	// Map of bucket name to list of bucket balances.
+	bucketBalances := make(map[string]*ledger.BucketBalance, 0)
 
 	// Calculate balances up to the specified date
 	for _, entry := range entries {
-		// Safe to ignore the error since the sort parses the effective date already.
-		// This should also be safe since we should have already validated the date format when the entry was added.
-		effectiveDate, _ := parseIS08601Date(entry.EffectiveDate)
-
 		// Skip entries after the asOfDate
-		if effectiveDate.After(asOfDate) {
+		if entry.EffectiveDate > asOfDateInt {
 			break
 		}
 
-		// Update balances based on the entry
-		balances.Principal = entry.PrinBalAmt
-		balances.Interest = entry.IntBalAmt
-		balances.Other = entry.OtherBalAmt
+		// store the balance for each bucket
+		for _, appliedAmount := range entry.AppliedAmounts {
+			bucketBalances[appliedAmount.Bucket] = &ledger.BucketBalance{
+				Bucket:  appliedAmount.Bucket,
+				Balance: appliedAmount.BalanceAmt,
+			}
+		}
 	}
 
-	return balances, nil
+	bucketBalancesList := make([]*ledger.BucketBalance, 0)
+	for _, balance := range bucketBalances {
+		bucketBalancesList = append(bucketBalancesList, balance)
+	}
+
+	sort.Slice(bucketBalancesList, func(i, j int) bool {
+		return bucketBalancesList[i].Bucket < bucketBalancesList[j].Bucket
+	})
+
+	return &ledger.Balances{
+		BucketBalances: bucketBalancesList,
+	}, nil
 }

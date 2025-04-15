@@ -6,7 +6,6 @@ option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
 import "cosmos_proto/cosmos.proto";
-import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 
 // Ledger
@@ -17,20 +16,20 @@ message Ledger {
   // This denom will represent the entry values within the ledger.
   string denom = 2;
 
-  // Next payment date in ISO 8601 format: YYYY-MM-DD
-  string next_pmt_date = 3;
+  // Next payment date days since epoch
+  int32 next_pmt_date = 3;
 
   // Next payment amount
-  string next_pmt_amt = 4;
+  int64 next_pmt_amt = 4;
 
   // Status of the ledger
   string status = 5;
 
   // Interest rate
-  string interest_rate = 6;
+  int32 interest_rate = 6;
 
-  // Maturity date in ISO 8601 format: YYYY-MM-DD
-  string maturity_date = 7;
+  // Maturity date days since epoch
+  int32 maturity_date = 7;
 }
 
 // LedgerEntryType
@@ -54,62 +53,24 @@ message LedgerEntry {
   // share the same effective date. Entries are sorted first by effective date, then by sequence.
   uint32 sequence = 2;
 
-  LedgerEntryType type = 3;
+  LedgerEntryType type     = 3;
+  string          sub_type = 4;
 
-  // Posted date in ISO 8601 format: YYYY-MM-DD
-  string posted_date = 4;
+  // Posted date days since epoch
+  int32 posted_date = 5;
 
-  // Effective date in ISO 8601 format: YYYY-MM-DD
-  string effective_date = 5;
+  // Effective date days since epoch
+  int32 effective_date = 6;
 
-  string amt = 6 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
+  int64 total_amt = 7;
 
-  string prin_applied_amt = 7 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
+  repeated LedgerBucketAmount applied_amounts = 8;
+}
 
-  string prin_bal_amt = 8 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-
-  string int_applied_amt = 9 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-
-  string int_bal_amt = 10 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-
-  string other_applied_amt = 11 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-
-  string other_bal_amt = 12 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
+message LedgerBucketAmount {
+  string bucket      = 1;
+  int64  applied_amt = 2;
+  int64  balance_amt = 3;
 }
 
 // FlowStatus represents the current status of a flow
@@ -156,24 +117,10 @@ message FundTransferWithSettlement {
 
 // Balances represents the current balances for principal, interest, and other amounts
 message Balances {
-  string principal = 1 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
+  repeated BucketBalance bucket_balances = 1;
+}
 
-  string interest = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-
-  string other = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
+message BucketBalance {
+  string bucket  = 1;
+  int64  balance = 2;
 }
