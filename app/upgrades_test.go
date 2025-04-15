@@ -586,20 +586,22 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
-func (s *UpgradeTestSuite) TestXenonRC1() {
+func (s *UpgradeTestSuite) TestYellowRC1() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing inactive validator delegations.",
+		"INF Setting up flat fees.",
 	}
-	s.AssertUpgradeHandlerLogs("xenon-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("yellow-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestXenon() {
+func (s *UpgradeTestSuite) TestYellow() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing inactive validator delegations.",
+		"INF Setting up flat fees.",
 	}
-	s.AssertUpgradeHandlerLogs("xenon", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("yellow", expInLog, nil)
 }

@@ -5,5 +5,5 @@ const (
 	ModuleName = "msgfees"
 
 	// StoreKey defines the primary module store key
-	StoreKey = ModuleName
+	StoreKey = ModuleName // TODO: Delete this variable with the yellow upgrade.
 )

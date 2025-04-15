@@ -11,6 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -37,7 +40,9 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"xenon-rc1": { // Upgrade for v1.22.0-rc1.
+	"yellow-rc1": { // Upgrade for v1.23.0-rc1.
+		Added:   []string{flatfeestypes.StoreKey},
+		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
@@ -47,10 +52,13 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			removeInactiveValidatorDelegations(ctx, app)
+			if err = setupFlatFees(ctx, app); err != nil {
+				return nil, err
+			}
 			return vm, nil
 		},
 	},
-	"xenon": { // Upgrade for v1.22.0.
+	"yellow": { // Upgrade for v1.23.0.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
@@ -60,10 +68,12 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			removeInactiveValidatorDelegations(ctx, app)
+			if err = setupFlatFees(ctx, app); err != nil {
+				return nil, err
+			}
 			return vm, nil
 		},
 	},
-	// TODO[fees]: New upgrades that removes msgfees and adds flatfees.
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
@@ -224,3 +234,12 @@ var (
 	_ = removeInactiveValidatorDelegations
 	_ = pruneIBCExpiredConsensusStates
 )
+
+// setupFlatFees defines the flatfees module params and msg costs.
+// Part of the yellow upgrade.
+func setupFlatFees(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting up flat fees.")
+	// TODO[fees]: Set flat-fees params and msg costs.
+	ctx.Logger().Info("Done setting up flat fees.")
+	return nil
+}
