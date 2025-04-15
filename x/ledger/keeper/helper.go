@@ -16,6 +16,14 @@ func StrPtr(s string) *string {
 	return &s
 }
 
+func DaysSinceEpoch(date time.Time) int32 {
+	return int32(date.Sub(time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)).Hours() / 24)
+}
+
+func StrToDate(dateStr string) (time.Time, error) {
+	return time.Parse("2006-01-02", dateStr)
+}
+
 func getAddress(s *string) (sdk.AccAddress, error) {
 	addr, err := sdk.AccAddressFromBech32(*s)
 	if err != nil || addr == nil {
@@ -51,26 +59,12 @@ func isCorrelationIDValid(correlationID string) bool {
 	return true
 }
 
-// parseIS08601Date parses an ISO 8601 date string 2006-01-02 into a time.Time object.
-func parseIS08601Date(dateStr string) (time.Time, error) {
-	return time.Parse("2006-01-02", dateStr)
-}
-
 // sortLedgerEntries sorts the ledger entries by effective date and then by sequence.
 func sortLedgerEntries(entries []*ledger.LedgerEntry) {
 	sort.Slice(entries, func(i, j int) bool {
-		effectiveDateI, err := parseIS08601Date((entries)[i].EffectiveDate)
-		if err != nil {
-			return false
-		}
-		effectiveDateJ, err := parseIS08601Date((entries)[j].EffectiveDate)
-		if err != nil {
-			return false
-		}
-
-		if effectiveDateI.Equal(effectiveDateJ) {
+		if entries[i].EffectiveDate == entries[j].EffectiveDate {
 			return (entries)[i].Sequence < (entries)[j].Sequence
 		}
-		return effectiveDateI.Before(effectiveDateJ)
+		return entries[i].EffectiveDate < entries[j].EffectiveDate
 	})
 }
