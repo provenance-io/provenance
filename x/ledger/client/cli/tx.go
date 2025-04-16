@@ -90,8 +90,8 @@ $ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example 
 			}
 
 			msg := &ledger.MsgCreateRequest{
-				Ledger: ledgerObj,
-				Owner:  clientCtx.FromAddress.String(),
+				Ledger:    ledgerObj,
+				Authority: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -221,7 +221,7 @@ $ provenanced tx ledger append pb1a2b3c4... txn124 2 FEE 2024-04-16 2024-04-16 5
 			m := ledger.MsgAppendRequest{
 				NftAddress: nftAddress,
 				Entries:    entries,
-				Owner:      clientCtx.FromAddress.String(),
+				Authority:  clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
@@ -264,7 +264,7 @@ func CmdDestroy() *cobra.Command {
 
 			msg := &ledger.MsgDestroyRequest{
 				NftAddress: nftAddress,
-				Owner:      clientCtx.FromAddress.String(),
+				Authority:  clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

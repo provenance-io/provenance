@@ -4605,7 +4605,7 @@ MsgAppendRequest
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
 | `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
-| `owner` | [string](#string) |  |  |
+| `authority` | [string](#string) |  |  |
 
 
 
@@ -4631,7 +4631,7 @@ MsgCreateRequest
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
-| `owner` | [string](#string) |  |  |
+| `authority` | [string](#string) |  |  |
 
 
 
@@ -4657,7 +4657,7 @@ MsgDestroyRequest represents a request to destroy a ledger
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
+| `authority` | [string](#string) |  |  |
 
 
 
@@ -4682,7 +4682,7 @@ MsgProcessFundTransfersRequest represents a request to process multiple fund tra
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `owner` | [string](#string) |  |  |
+| `authority` | [string](#string) |  |  |
 | `transfers` | [FundTransfer](#provenance-ledger-v1-FundTransfer) | repeated |  |
 
 
@@ -4709,7 +4709,7 @@ instructions
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `owner` | [string](#string) |  |  |
+| `authority` | [string](#string) |  |  |
 | `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated |  |
 
 
