@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/ledger"
+	"github.com/provenance-io/provenance/x/ledger/keeper"
 )
 
 // GetQueryCmd is the top-level command for attribute CLI queries.
@@ -56,11 +58,18 @@ func GetConfigCmd() *cobra.Command {
 				return err
 			}
 
-			resp := ledger.QueryLedgerConfigResponse{
-				Ledger: l.Ledger,
+			// Convert to PlainText
+			plainText := ledger.LedgerPlainText{
+				NftAddress:   l.Ledger.NftAddress,
+				Denom:        l.Ledger.Denom,
+				NextPmtDate:  keeper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
+				NextPmtAmt:   strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
+				Status:       l.Ledger.Status,
+				InterestRate: strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
+				MaturityDate: keeper.EpochDaysToISO8601(l.Ledger.MaturityDate),
 			}
 
-			return clientCtx.PrintProto(&resp)
+			return clientCtx.PrintProto(&plainText)
 		},
 	}
 
@@ -92,7 +101,35 @@ func GetLedgerEntriesCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintProto(l)
+			plainTextEntries := make([]*ledger.LedgerEntryPlainText, len(l.Entries))
+			for i, entry := range l.Entries {
+				appliedAmounts := make([]*ledger.LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
+				for j, amount := range entry.AppliedAmounts {
+					appliedAmounts[j] = &ledger.LedgerBucketAmountPlainText{
+						Bucket:     amount.Bucket,
+						AppliedAmt: strconv.FormatInt(amount.AppliedAmt, 10),
+						BalanceAmt: strconv.FormatInt(amount.BalanceAmt, 10),
+					}
+				}
+
+				plainTextEntries[i] = &ledger.LedgerEntryPlainText{
+					CorrelationId:  entry.CorrelationId,
+					Sequence:       entry.Sequence,
+					Type:           entry.Type,
+					SubType:        entry.SubType,
+					PostedDate:     keeper.EpochDaysToISO8601(entry.PostedDate),
+					EffectiveDate:  keeper.EpochDaysToISO8601(entry.EffectiveDate),
+					TotalAmt:       strconv.FormatInt(entry.TotalAmt, 10),
+					AppliedAmounts: appliedAmounts,
+				}
+			}
+
+			// Convert to a response proto for printing.
+			plainTextResponse := ledger.QueryLedgerEntryResponsePlainText{
+				Entries: plainTextEntries,
+			}
+
+			return clientCtx.PrintProto(&plainTextResponse)
 		},
 	}
 
