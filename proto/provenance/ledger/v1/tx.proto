@@ -32,9 +32,9 @@ service Msg {
 
 // MsgCreateRequest
 message MsgCreateRequest {
-  option (cosmos.msg.v1.signer) = "owner";
+  option (cosmos.msg.v1.signer) = "authority";
   Ledger ledger                 = 1;
-  string owner                  = 2;
+  string authority              = 2;
 }
 
 // MsgCreateResponse
@@ -42,11 +42,11 @@ message MsgCreateResponse {}
 
 // MsgAppendRequest
 message MsgAppendRequest {
-  option (cosmos.msg.v1.signer) = "owner";
+  option (cosmos.msg.v1.signer) = "authority";
 
   string               nft_address = 1;
   repeated LedgerEntry entries     = 2;
-  string               owner       = 3;
+  string               authority   = 3;
 }
 
 // MsgAppendResponse
@@ -54,9 +54,9 @@ message MsgAppendResponse {}
 
 // MsgProcessFundTransfersRequest represents a request to process multiple fund transfers
 message MsgProcessFundTransfersRequest {
-  option (cosmos.msg.v1.signer) = "owner";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  string                owner     = 1;
+  string                authority = 1;
   repeated FundTransfer transfers = 2;
 }
 
@@ -66,18 +66,18 @@ message MsgProcessFundTransfersResponse {}
 // MsgProcessFundTransfersWithSettlementRequest represents a request to process fund transfers with settlement
 // instructions
 message MsgProcessFundTransfersWithSettlementRequest {
-  option (cosmos.msg.v1.signer) = "owner";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  string                              owner     = 1;
+  string                              authority = 1;
   repeated FundTransferWithSettlement transfers = 2;
 }
 
 // MsgDestroyRequest represents a request to destroy a ledger
 message MsgDestroyRequest {
-  option (cosmos.msg.v1.signer) = "owner";
+  option (cosmos.msg.v1.signer) = "authority";
 
   string nft_address = 1;
-  string owner       = 2;
+  string authority   = 2;
 }
 
 // MsgDestroyResponse represents the response from destroying a ledger
