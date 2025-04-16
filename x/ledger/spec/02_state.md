@@ -11,11 +11,11 @@ The module stores configuration information for each NFT's ledger:
 message Ledger {
     string nft_address = 1;
     string denom = 2;
-    string next_pmt_date = 3;  // Next payment date in ISO 8601 format: YYYY-MM-DD
-    string next_pmt_amt = 4;   // Next payment amount
+    int32 next_pmt_date = 3;  // Next payment date in epoch days
+    int64 next_pmt_amt = 4;   // Next payment amount
     string status = 5;         // Status of the ledger
-    string interest_rate = 6;  // Interest rate
-    string maturity_date = 7;  // Maturity date in ISO 8601 format: YYYY-MM-DD
+    int32 interest_rate = 6;  // Interest rate
+    int32 maturity_date = 7;  // Maturity date in epoch days
 }
 ```
 
@@ -27,15 +27,17 @@ message LedgerEntry {
     string correlation_id = 1;  // Correlation ID for tracking with external systems (max 50 characters)
     uint32 sequence = 2;        // Sequence number for ordering entries with same effective date
     LedgerEntryType type = 3;
-    string posted_date = 4;     // Posted date in ISO 8601 format: YYYY-MM-DD
-    string effective_date = 5;  // Effective date in ISO 8601 format: YYYY-MM-DD
-    string amt = 6;             // Total amount
-    string prin_applied_amt = 7;  // Principal applied amount
-    string prin_bal_amt = 8;      // Principal balance amount
-    string int_applied_amt = 9;   // Interest applied amount
-    string int_bal_amt = 10;      // Interest balance amount
-    string other_applied_amt = 11; // Other applied amount
-    string other_bal_amt = 12;     // Other balance amount
+    string sub_type = 4;
+    int32 posted_date = 5;     // Posted date in epoch days
+    int32 effective_date = 6;  // Effective date in epoch days
+    int64 total_amt = 7;       // Total amount
+    repeated LedgerBucketAmount applied_amounts = 8;
+}
+
+message LedgerBucketAmount {
+    string bucket = 1;      // The bucket name (e.g., "principal", "interest", "other")
+    int64 applied_amt = 2;  // Amount applied to this bucket
+    int64 balance_amt = 3;  // Remaining balance in this bucket
 }
 ```
 
@@ -60,7 +62,7 @@ message FundTransferWithSettlement {
 
 message SettlementInstruction {
     string amount = 1;
-    string recipient_address = 2;  // The recipient's blockchain address
+    string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];  // The recipient's blockchain address
     string memo = 3;               // Optional memo or note for the transaction
     int64 settlement_block = 4;    // Minimum block height or timestamp for settlement
 }
@@ -71,9 +73,12 @@ Current balances for principal, interest, and other amounts:
 
 ```protobuf
 message Balances {
-    string principal = 1;  // Current principal balance
-    string interest = 2;   // Current interest balance
-    string other = 3;      // Current other balance
+    repeated BucketBalance bucket_balances = 1;
+}
+
+message BucketBalance {
+    string bucket = 1;  // The bucket name (e.g., "principal", "interest", "other")
+    int64 balance = 2;  // Current balance in this bucket
 }
 ```
 

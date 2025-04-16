@@ -9,7 +9,7 @@ The Ledger module provides several message types for creating and managing NFT l
 ```protobuf
 message MsgCreateRequest {
     Ledger ledger = 1;
-    string owner = 2;
+    string authority = 2;
 }
 
 message MsgCreateResponse {}
@@ -19,16 +19,16 @@ message MsgCreateResponse {}
 - `ledger`: The ledger configuration to create
   - `nft_address`: The address of the NFT to create a ledger for
   - `denom`: The denomination to use for the ledger entries
-  - `next_pmt_date`: The next scheduled payment date in ISO 8601 format: YYYY-MM-DD
-  - `next_pmt_amt`: The amount of the next scheduled payment
+  - `next_pmt_date`: The next scheduled payment date in epoch days (int32)
+  - `next_pmt_amt`: The amount of the next scheduled payment (int64)
   - `status`: The current status of the ledger
-  - `interest_rate`: The interest rate for the ledger
-  - `maturity_date`: The maturity date in ISO 8601 format: YYYY-MM-DD
-- `owner`: The address of the owner who is creating the ledger
+  - `interest_rate`: The interest rate for the ledger (int32)
+  - `maturity_date`: The maturity date in epoch days (int32)
+- `authority`: The address of the authority who is creating the ledger
 
 ### CLI Command
 ```bash
-provenanced tx ledger create [ledger-fields...] --from [owner]
+provenanced tx ledger create [ledger-fields...] --from [authority]
 ```
 
 ## MsgAppend
@@ -39,7 +39,7 @@ provenanced tx ledger create [ledger-fields...] --from [owner]
 message MsgAppendRequest {
     string nft_address = 1;
     repeated LedgerEntry entries = 2;
-    string owner = 3;
+    string authority = 3;
 }
 
 message MsgAppendResponse {}
@@ -47,13 +47,24 @@ message MsgAppendResponse {}
 
 ### Fields
 - `nft_address`: The address of the NFT whose ledger to append to
-- `entries`: One or more ledger entries to append (each with correlation_id and sequence)
-- `owner`: The address of the owner who is appending the entries
+- `entries`: One or more ledger entries to append
+  - `correlation_id`: Unique identifier for tracking with external systems (max 50 characters)
+  - `sequence`: Sequence number for ordering entries with same effective date (less than 100)
+  - `type`: The type of ledger entry (see LedgerEntryType)
+  - `sub_type`: Additional classification for the entry
+  - `posted_date`: The date when the entry was recorded (epoch days, int32)
+  - `effective_date`: The date when the entry takes effect (epoch days, int32)
+  - `total_amt`: The total amount of the entry (int64)
+  - `applied_amounts`: List of amounts applied to different buckets
+    - `bucket`: The bucket name (e.g., "principal", "interest", "other")
+    - `applied_amt`: Amount applied to this bucket (int64)
+    - `balance_amt`: Remaining balance in this bucket (int64)
+- `authority`: The address of the authority who is appending the entries
 
 ### CLI Command
 Only allows a single entry, use the RPC endpoint to add multiple entries in a single call.
 ```bash
-provenanced tx ledger append [nft-address] [entries fields...] --from [owner]
+provenanced tx ledger append [nft-address] [entries fields...] --from [authority]
 ```
 
 ## MsgProcessFundTransfers
@@ -62,7 +73,7 @@ provenanced tx ledger append [nft-address] [entries fields...] --from [owner]
 
 ```protobuf
 message MsgProcessFundTransfersRequest {
-    string owner = 1;
+    string authority = 1;
     repeated FundTransfer transfers = 2;
 }
 
@@ -70,12 +81,18 @@ message MsgProcessFundTransfersResponse {}
 ```
 
 ### Fields
-- `owner`: The address of the owner processing the transfers
+- `authority`: The address of the authority processing the transfers
 - `transfers`: List of fund transfers to process
+  - `nft_address`: The address of the NFT
+  - `ledger_entry_correlation_id`: Correlation ID of the associated ledger entry
+  - `amount`: The amount to transfer
+  - `status`: The status of the transfer (see FundingTransferStatus)
+  - `memo`: Optional memo for the transfer
+  - `settlement_block`: Minimum block height or timestamp for settlement (int64)
 
 ### CLI Command
 ```bash
-provenanced tx ledger process-transfers [transfers-json] --from [owner]
+provenanced tx ledger process-transfers [transfers-json] --from [authority]
 ```
 
 ## MsgProcessFundTransfersWithSettlement
@@ -84,7 +101,7 @@ provenanced tx ledger process-transfers [transfers-json] --from [owner]
 
 ```protobuf
 message MsgProcessFundTransfersWithSettlementRequest {
-    string owner = 1;
+    string authority = 1;
     repeated FundTransferWithSettlement transfers = 2;
 }
 
@@ -92,12 +109,19 @@ message MsgProcessFundTransfersResponse {}
 ```
 
 ### Fields
-- `owner`: The address of the owner processing the transfers
+- `authority`: The address of the authority processing the transfers
 - `transfers`: List of fund transfers with settlement instructions to process
+  - `nft_address`: The address of the NFT
+  - `ledger_entry_correlation_id`: Correlation ID of the associated ledger entry
+  - `settlementInstructions`: List of settlement instructions
+    - `amount`: The amount to transfer
+    - `recipient_address`: The recipient's blockchain address
+    - `memo`: Optional memo for the transaction
+    - `settlement_block`: Minimum block height or timestamp for settlement (int64)
 
 ### CLI Command
 ```bash
-provenanced tx ledger process-transfers-with-settlement [transfers-json] --from [owner]
+provenanced tx ledger process-transfers-with-settlement [transfers-json] --from [authority]
 ```
 
 ## MsgDestroy
@@ -107,7 +131,7 @@ provenanced tx ledger process-transfers-with-settlement [transfers-json] --from 
 ```protobuf
 message MsgDestroyRequest {
     string nft_address = 1;
-    string owner = 2;
+    string authority = 2;
 }
 
 message MsgDestroyResponse {}
@@ -115,45 +139,30 @@ message MsgDestroyResponse {}
 
 ### Fields
 - `nft_address`: The address of the NFT whose ledger to destroy
-- `owner`: The address of the owner who is destroying the ledger
+- `authority`: The address of the authority who is destroying the ledger
 
 ### CLI Command
 ```bash
-provenanced tx ledger destroy [nft-address] --from [owner]
+provenanced tx ledger destroy [nft-address] --from [authority]
 ```
 
-## Fund Transfer Types
+## Ledger Entry Types
 
-### FundTransfer
-```protobuf
-message FundTransfer {
-    string nft_address = 1;
-    string ledger_entry_correlation_id = 2;  // Correlation ID of the associated ledger entry
-    string amount = 3;
-    FundingTransferStatus status = 4;
-    string memo = 5;
-    int64 settlement_block = 6;  // Minimum block height or timestamp for settlement
-}
-```
+The module supports several types of ledger entries:
 
-### FundTransferWithSettlement
-```protobuf
-message FundTransferWithSettlement {
-    string nft_address = 1;
-    string ledger_entry_correlation_id = 2;  // Correlation ID of the associated ledger entry
-    repeated SettlementInstruction settlementInstructions = 3;
-}
-```
-
-### SettlementInstruction
-```protobuf
-message SettlementInstruction {
-    string amount = 1;
-    string recipient_address = 2;  // The recipient's blockchain address
-    string memo = 3;               // Optional memo or note for the transaction
-    int64 settlement_block = 4;    // Minimum block height or timestamp for settlement
-}
-```
+1. `LEDGER_ENTRY_TYPE_UNSPECIFIED`: Default type, not used in normal operations
+2. `LEDGER_ENTRY_TYPE_DISBURSEMENT`: Represents funds being disbursed
+   - Example: Initial loan amount disbursed to borrower
+3. `LEDGER_ENTRY_TYPE_SCHEDULED_PAYMENT`: Represents a scheduled payment
+   - Example: Regular monthly payment
+4. `LEDGER_ENTRY_TYPE_UNSCHEDULED_PAYMENT`: Represents an unscheduled payment
+   - Example: Extra payment or early payoff
+5. `LEDGER_ENTRY_TYPE_FORECLOSURE_PAYMENT`: Represents a foreclosure-related payment
+   - Example: Payment from foreclosure proceeds
+6. `LEDGER_ENTRY_TYPE_FEE`: Represents a fee charged
+   - Example: Origination fee, late payment fee
+7. `LEDGER_ENTRY_TYPE_OTHER`: Represents other types of financial activities
+   - Example: Adjustments, corrections, or special transactions
 
 ## Funding Transfer Status
 
@@ -173,7 +182,7 @@ All messages are validated before processing:
    - Ledger configuration must be valid
    - NFT address must be valid
    - Denomination must be valid
-   - Owner must have permission
+   - Authority must have permission
    - Dates must be in correct format
    - Amounts must be valid
 
@@ -181,18 +190,18 @@ All messages are validated before processing:
    - NFT address must be valid
    - Ledger must exist
    - Entries must be valid
-   - Owner must have permission
+   - Authority must have permission
    - Correlation IDs must be unique
    - Sequences must be valid
 
 3. **MsgProcessFundTransfers**
-   - Owner must have permission
+   - Authority must have permission
    - Transfers must be valid
    - Status transitions must be valid
    - Settlement timing must be valid
 
 4. **MsgProcessFundTransfersWithSettlement**
-   - Owner must have permission
+   - Authority must have permission
    - Transfers must be valid
    - Settlement instructions must be valid
    - Recipient addresses must be valid
@@ -200,5 +209,5 @@ All messages are validated before processing:
 5. **MsgDestroy**
    - NFT address must be valid
    - Ledger must exist
-   - Owner must have permission
+   - Authority must have permission
    - All associated data must be properly cleaned up 
