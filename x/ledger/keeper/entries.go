@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"sort"
-	"time"
 
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -114,18 +113,6 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, nftAddress string, entries
 	ctx.EventManager().EmitEvent(ledger.NewEventLedgerEntryAdded(
 		nftAddress,
 		le.CorrelationId,
-		le.Type.String(),
-		le.PostedDate,
-		le.EffectiveDate,
-		le.Amt.String(),
-	))
-
-	// Emit the balance updated event
-	ctx.EventManager().EmitEvent(ledger.NewEventBalanceUpdated(
-		nftAddress,
-		le.PrinBalAmt.String(),
-		le.IntBalAmt.String(),
-		le.OtherBalAmt.String(),
 	))
 
 	return nil
@@ -133,15 +120,14 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, nftAddress string, entries
 
 // validateEntryDates checks if the dates are valid
 func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
-	blockTime := ctx.BlockTime()
+	blockTimeDays := DaysSinceEpoch(ctx.BlockTime().UTC())
 
-	postedDate, err := time.Parse("2006-01-02", le.PostedDate)
-	if err != nil {
+	if le.PostedDate <= 0 {
 		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date", "is not a valid date")
 	}
 
 	// Check if posted date is in the future
-	if postedDate.After(blockTime) {
+	if le.PostedDate > blockTimeDays {
 		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date", "cannot be in the future")
 	}
 
@@ -151,8 +137,12 @@ func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
 // validateEntryAmounts checks if the amounts are valid
 func validateEntryAmounts(le *ledger.LedgerEntry) error {
 	// Check if total amount matches sum of applied amounts
-	totalApplied := le.PrinAppliedAmt.Add(le.IntAppliedAmt).Add(le.OtherAppliedAmt)
-	if !le.Amt.Equal(totalApplied) {
+	totalApplied := int64(0)
+	for _, applied := range le.AppliedAmounts {
+		totalApplied += applied.AppliedAmt
+	}
+
+	if le.TotalAmt != totalApplied {
 		return NewLedgerCodedError(ErrCodeInvalidField, "amount", "must equal sum of applied amounts")
 	}
 

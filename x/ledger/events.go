@@ -5,11 +5,9 @@ import (
 )
 
 const (
-	EventTypeLedgerCreated        = "ledger_created"
-	EventTypeLedgerEntryAdded     = "ledger_entry_added"
-	EventTypeBalanceUpdated       = "ledgerbalance_updated"
-	EventTypeLedgerConfigUpdated  = "ledger_config_updated"
-	EventTypeLedgerEntryRetrieved = "ledger_entry_retrieved"
+	EventTypeLedgerCreated       = "ledger_created"
+	EventTypeLedgerConfigUpdated = "ledger_config_updated"
+	EventTypeLedgerEntryAdded    = "ledger_entry_added"
 )
 
 // NewEventLedgerCreated creates a new EventLedgerCreated event
@@ -21,45 +19,19 @@ func NewEventLedgerCreated(nftAddress, denom string) sdk.Event {
 	)
 }
 
-// NewEventLedgerEntryAdded creates a new EventLedgerEntryAdded event
-func NewEventLedgerEntryAdded(nftAddress, entryUUID, entryType, postedDate, effectiveDate, amount string) sdk.Event {
-	return sdk.NewEvent(
-		EventTypeLedgerEntryAdded,
-		sdk.NewAttribute("nft_address", nftAddress),
-		sdk.NewAttribute("entry_uuid", entryUUID),
-		sdk.NewAttribute("entry_type", entryType),
-		sdk.NewAttribute("posted_date", postedDate),
-		sdk.NewAttribute("effective_date", effectiveDate),
-		sdk.NewAttribute("amount", amount),
-	)
-}
-
-// NewEventBalanceUpdated creates a new EventBalanceUpdated event
-func NewEventBalanceUpdated(nftAddress, principalBalance, interestBalance, otherBalance string) sdk.Event {
-	return sdk.NewEvent(
-		EventTypeBalanceUpdated,
-		sdk.NewAttribute("nft_address", nftAddress),
-		sdk.NewAttribute("principal_balance", principalBalance),
-		sdk.NewAttribute("interest_balance", interestBalance),
-		sdk.NewAttribute("other_balance", otherBalance),
-	)
-}
-
 // NewEventLedgerConfigUpdated creates a new EventLedgerConfigUpdated event
-func NewEventLedgerConfigUpdated(nftAddress, denom, previousDenom string) sdk.Event {
+func NewEventLedgerUpdated(nftAddress string) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeLedgerConfigUpdated,
 		sdk.NewAttribute("nft_address", nftAddress),
-		sdk.NewAttribute("denom", denom),
-		sdk.NewAttribute("previous_denom", previousDenom),
 	)
 }
 
-// NewEventLedgerEntryRetrieved creates a new EventLedgerEntryRetrieved event
-func NewEventLedgerEntryRetrieved(nftAddress, entryUUID string) sdk.Event {
+// NewEventLedgerEntryAdded creates a new EventLedgerEntryAdded event
+func NewEventLedgerEntryAdded(nftAddress, correlationID string) sdk.Event {
 	return sdk.NewEvent(
-		EventTypeLedgerEntryRetrieved,
+		EventTypeLedgerEntryAdded,
 		sdk.NewAttribute("nft_address", nftAddress),
-		sdk.NewAttribute("entry_uuid", entryUUID),
+		sdk.NewAttribute("correlation_id", correlationID),
 	)
 }

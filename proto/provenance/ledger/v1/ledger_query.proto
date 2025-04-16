@@ -1,0 +1,66 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "provenance/ledger/v1/ledger.proto";
+
+// Ledger
+message LedgerPlainText {
+  // Address of the NFT to which this ledger is linked.
+  string nft_address = 1;
+
+  // This denom will represent the entry values within the ledger.
+  string denom = 2;
+
+  // Next payment date days since epoch
+  string next_pmt_date = 3;
+
+  // Next payment amount
+  string next_pmt_amt = 4;
+
+  // Status of the ledger
+  string status = 5;
+
+  // Interest rate
+  string interest_rate = 6;
+
+  // Maturity date days since epoch
+  string maturity_date = 7;
+}
+
+// LedgerEntry
+message LedgerEntryPlainText {
+  // Correlation ID for tracking ledger entries with external systems (max 50 characters)
+  string correlation_id = 1;
+
+  // Sequence number of the ledger entry (less than 100)
+  // This field is used to maintain the correct order of entries when multiple entries
+  // share the same effective date. Entries are sorted first by effective date, then by sequence.
+  uint32 sequence = 2;
+
+  LedgerEntryType type     = 3;
+  string          sub_type = 4;
+
+  // Posted date days since epoch
+  string posted_date = 5;
+
+  // Effective date days since epoch
+  string effective_date = 6;
+
+  string total_amt = 7;
+
+  repeated LedgerBucketAmountPlainText applied_amounts = 8;
+}
+
+message LedgerBucketAmountPlainText {
+  string bucket      = 1;
+  string applied_amt = 2;
+  string balance_amt = 3;
+}
+
+message QueryLedgerEntryResponsePlainText {
+  repeated LedgerEntryPlainText entries = 1;
+}

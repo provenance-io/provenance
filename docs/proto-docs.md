@@ -274,9 +274,11 @@
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
     - [Balances](#provenance-ledger-v1-Balances)
+    - [BucketBalance](#provenance-ledger-v1-BucketBalance)
     - [FundTransfer](#provenance-ledger-v1-FundTransfer)
     - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
     - [Ledger](#provenance-ledger-v1-Ledger)
+    - [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
     - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
   
@@ -300,6 +302,12 @@
     - [EventLedgerConfigUpdated](#provenance-ledger-v1-EventLedgerConfigUpdated)
     - [EventLedgerCreated](#provenance-ledger-v1-EventLedgerCreated)
     - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
+  
+- [provenance/ledger/v1/ledger_query.proto](#provenance_ledger_v1_ledger_query-proto)
+    - [LedgerBucketAmountPlainText](#provenance-ledger-v1-LedgerBucketAmountPlainText)
+    - [LedgerEntryPlainText](#provenance-ledger-v1-LedgerEntryPlainText)
+    - [LedgerPlainText](#provenance-ledger-v1-LedgerPlainText)
+    - [QueryLedgerEntryResponsePlainText](#provenance-ledger-v1-QueryLedgerEntryResponsePlainText)
   
 - [provenance/ledger/v1/genesis.proto](#provenance_ledger_v1_genesis-proto)
     - [GenesisState](#provenance-ledger-v1-GenesisState)
@@ -4651,9 +4659,23 @@ Balances represents the current balances for principal, interest, and other amou
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `principal` | [string](#string) |  |  |
-| `interest` | [string](#string) |  |  |
-| `other` | [string](#string) |  |  |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-BucketBalance"></a>
+
+### BucketBalance
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket` | [string](#string) |  |  |
+| `balance` | [int64](#int64) |  |  |
 
 
 
@@ -4707,11 +4729,28 @@ Ledger
 | ----- | ---- | ----- | ----------- |
 | `nft_address` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
 | `denom` | [string](#string) |  | This denom will represent the entry values within the ledger. |
-| `next_pmt_date` | [string](#string) |  | Next payment date in ISO 8601 format: YYYY-MM-DD |
-| `next_pmt_amt` | [string](#string) |  | Next payment amount |
+| `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
+| `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
 | `status` | [string](#string) |  | Status of the ledger |
-| `interest_rate` | [string](#string) |  | Interest rate |
-| `maturity_date` | [string](#string) |  | Maturity date in ISO 8601 format: YYYY-MM-DD |
+| `interest_rate` | [int32](#int32) |  | Interest rate |
+| `maturity_date` | [int32](#int32) |  | Maturity date days since epoch |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerBucketAmount"></a>
+
+### LedgerBucketAmount
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket` | [string](#string) |  |  |
+| `applied_amt` | [int64](#int64) |  |  |
+| `balance_amt` | [int64](#int64) |  |  |
 
 
 
@@ -4729,15 +4768,11 @@ LedgerEntry
 | `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
 | `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
 | `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
-| `posted_date` | [string](#string) |  | Posted date in ISO 8601 format: YYYY-MM-DD |
-| `effective_date` | [string](#string) |  | Effective date in ISO 8601 format: YYYY-MM-DD |
-| `amt` | [string](#string) |  |  |
-| `prin_applied_amt` | [string](#string) |  |  |
-| `prin_bal_amt` | [string](#string) |  |  |
-| `int_applied_amt` | [string](#string) |  |  |
-| `int_bal_amt` | [string](#string) |  |  |
-| `other_applied_amt` | [string](#string) |  |  |
-| `other_bal_amt` | [string](#string) |  |  |
+| `sub_type` | [string](#string) |  |  |
+| `posted_date` | [int32](#int32) |  | Posted date days since epoch |
+| `effective_date` | [int32](#int32) |  | Effective date days since epoch |
+| `total_amt` | [int64](#int64) |  |  |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated |  |
 
 
 
@@ -5026,6 +5061,97 @@ EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
 | `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry was posted |
 | `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry takes effect |
 | `amount` | [string](#string) |  | The total amount of the entry |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_ledger_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/ledger_query.proto
+
+
+
+<a name="provenance-ledger-v1-LedgerBucketAmountPlainText"></a>
+
+### LedgerBucketAmountPlainText
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket` | [string](#string) |  |  |
+| `applied_amt` | [string](#string) |  |  |
+| `balance_amt` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerEntryPlainText"></a>
+
+### LedgerEntryPlainText
+LedgerEntry
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
+| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
+| `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
+| `sub_type` | [string](#string) |  |  |
+| `posted_date` | [string](#string) |  | Posted date days since epoch |
+| `effective_date` | [string](#string) |  | Effective date days since epoch |
+| `total_amt` | [string](#string) |  |  |
+| `applied_amounts` | [LedgerBucketAmountPlainText](#provenance-ledger-v1-LedgerBucketAmountPlainText) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerPlainText"></a>
+
+### LedgerPlainText
+Ledger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_address` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
+| `denom` | [string](#string) |  | This denom will represent the entry values within the ledger. |
+| `next_pmt_date` | [string](#string) |  | Next payment date days since epoch |
+| `next_pmt_amt` | [string](#string) |  | Next payment amount |
+| `status` | [string](#string) |  | Status of the ledger |
+| `interest_rate` | [string](#string) |  | Interest rate |
+| `maturity_date` | [string](#string) |  | Maturity date days since epoch |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerEntryResponsePlainText"></a>
+
+### QueryLedgerEntryResponsePlainText
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [LedgerEntryPlainText](#provenance-ledger-v1-LedgerEntryPlainText) | repeated |  |
 
 
 
