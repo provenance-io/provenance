@@ -7,11 +7,11 @@ A Ledger is the primary data structure that tracks financial activities for a sp
 ### Fields
 - `nft_address`: The address of the NFT to which this ledger is linked
 - `denom`: The denomination used for all entries in this ledger
-- `next_pmt_date`: The next scheduled payment date in ISO 8601 format (YYYY-MM-DD)
+- `next_pmt_date`: The next scheduled payment date in epoch days
 - `next_pmt_amt`: The amount of the next scheduled payment
 - `status`: The current status of the ledger
 - `interest_rate`: The interest rate applied to the ledger
-- `maturity_date`: The maturity date of the ledger in ISO 8601 format (YYYY-MM-DD)
+- `maturity_date`: The maturity date of the ledger in epoch days
 
 ## Ledger Entry
 
@@ -21,8 +21,8 @@ A Ledger Entry represents a single financial transaction or activity in the ledg
 - `correlation_id`: Unique identifier for tracking with external systems (max 50 characters)
 - `sequence`: Sequence number for ordering entries with the same effective date
 - `type`: The type of ledger entry (see LedgerEntryType)
-- `posted_date`: The date when the entry was recorded (ISO 8601 format: YYYY-MM-DD)
-- `effective_date`: The date when the entry takes effect (ISO 8601 format: YYYY-MM-DD)
+- `posted_date`: The date when the entry was recorded in epoch days
+- `effective_date`: The date when the entry takes effect in epoch days
 - `amt`: The total amount of the entry
 - `prin_applied_amt`: Amount applied to principal
 - `prin_bal_amt`: Remaining principal balance
