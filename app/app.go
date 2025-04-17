@@ -35,6 +35,9 @@ import (
 	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/nft"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
+	nftmodule "cosmossdk.io/x/nft/module"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -132,6 +135,9 @@ import (
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/internal/provwasm"
+	assetkeeper "github.com/provenance-io/provenance/x/asset/keeper"
+	assetmodule "github.com/provenance-io/provenance/x/asset/module"
+	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -201,18 +207,27 @@ var (
 		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		ibchookstypes.ModuleName:    nil,
 
+		assettypes.ModuleName:     nil,
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		wasmtypes.ModuleName:      {authtypes.Burner},
-		triggertypes.ModuleName:   nil,
-		oracletypes.ModuleName:    nil,
-		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName:      {authtypes.Burner},
+		triggertypes.ModuleName:  nil,
+		oracletypes.ModuleName:   nil,
+		metadatatypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		nft.ModuleName:           nil,
 	}
 )
 
 var (
 	_ runtime.AppI            = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
+)
+
+// These are some values defined in the params module that we still need so that
+// the params module can be deleted. But I don't want the imports, so they're copied here.
+// TODO[viridian]: Delete these params constants after the upgrade.
+const (
+	paramsName = "params" // = paramstypes.ModuleName
 )
 
 // WasmWrapper allows us to use namespacing in the config file
@@ -250,6 +265,7 @@ type App struct {
 	CircuitKeeper         circuitkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
+	NFTKeeper             nftkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             govkeeper.Keeper
 	CrisisKeeper          *crisiskeeper.Keeper
@@ -274,6 +290,7 @@ type App struct {
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
+	AssetKeeper     assetkeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
@@ -383,18 +400,18 @@ func New(
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
+		assettypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
 		flatfeestypes.StoreKey,
 		wasmtypes.StoreKey,
-		quarantine.StoreKey,
-		sanction.StoreKey,
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
 		registry.StoreKey,
 		ledger.StoreKey,
 		exchange.StoreKey,
+		nft.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys()
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -569,7 +586,6 @@ func New(
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
-		authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins.
 		authtypes.NewModuleAddress(govtypes.ModuleName),            // Allow restricted coins in deposits.
 		authtypes.NewModuleAddress(distrtypes.ModuleName),          // Allow fee denoms to be restricted coins.
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
@@ -585,6 +601,17 @@ func New(
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
 		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper, app.BankKeeper,
+	)
+
+	app.NFTKeeper = nftkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[nft.StoreKey]),
+		appCodec,
+		app.AccountKeeper,
+		app.BankKeeper,
+	)
+
+	app.AssetKeeper = assetkeeper.NewKeeper(
+		appCodec, keys[assettypes.StoreKey], app.NFTKeeper, app.BaseApp.MsgServiceRouter(),
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
@@ -683,15 +710,6 @@ func New(
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper)
 
-	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
-	for mName := range maccPerms {
-		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
-	}
-	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
-	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
-		app.BankKeeper, &app.GovKeeper,
-		govAuthority, unsanctionableAddrs)
-
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
@@ -702,8 +720,7 @@ func New(
 
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
-
-	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(app.SanctionKeeper))
+	app.GovKeeper = *govKeeper
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -726,8 +743,6 @@ func New(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
-
-	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	/****  Module Options ****/
 
@@ -756,9 +771,11 @@ func New(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		circuit.NewAppModule(appCodec, app.CircuitKeeper),
+		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
+		assetmodule.NewAppModule(appCodec, app.AssetKeeper, app.AccountKeeper, app.NFTKeeper, app.BaseApp.MsgServiceRouter()),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
@@ -771,8 +788,6 @@ func New(
 		registrymodule.NewAppModule(appCodec, app.RegistryKeeper),
 		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
-		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -866,9 +881,8 @@ func New(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
+		nft.ModuleName,
 
-		quarantine.ModuleName,
-		sanction.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
@@ -876,6 +890,7 @@ func New(
 		registry.ModuleName,
 		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
+		assettypes.ModuleName,
 
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -883,7 +898,7 @@ func New(
 		icatypes.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
-		wasmtypes.ModuleName, // must be after ibctransfer.
+		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName, // must be after ibctransfer.
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
 	}
@@ -909,20 +924,19 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		quarantine.ModuleName,
-		sanction.ModuleName,
 		hold.ModuleName,
 		registry.ModuleName,
 		ledger.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
+		nft.ModuleName,
 
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		icqtypes.ModuleName,
-		wasmtypes.ModuleName,
+		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName,
 
 		attributetypes.ModuleName,
 		markertypes.ModuleName,
@@ -932,6 +946,7 @@ func New(
 		nametypes.ModuleName,
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
+		assettypes.ModuleName,
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
@@ -954,7 +969,7 @@ func New(
 
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
-		wasmtypes.ModuleName: provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, pioMessageRouter),
+		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName: provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, pioMessageRouter),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.mm.Modules, overrideModules)
 
