@@ -5978,7 +5978,7 @@ It is replaced by providing a MsgAddMsgFeeProposalRequest in a governance propos
 | `description` | [string](#string) |  | propsal description |
 | `msg_type_url` | [string](#string) |  | type url of msg to add fee |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional fee for msg type |
-| `recipient` | [string](#string) |  | optional recipient to recieve basis points |
+| `recipient` | [string](#string) |  | optional recipient to receive basis points |
 | `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
 
 
@@ -6041,7 +6041,7 @@ It is replaced by providing a MsgUpdateMsgFeeProposalRequest in a governance pro
 | `description` | [string](#string) |  | propsal description |
 | `msg_type_url` | [string](#string) |  | type url of msg to update fee |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional fee for msg type |
-| `recipient` | [string](#string) |  | optional recipient to recieve basis points |
+| `recipient` | [string](#string) |  | optional recipient to receive basis points |
 | `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
 
 
@@ -7499,7 +7499,7 @@ MsgUpdateParamsResponse is a response message for the UpdateParams endpoint.
 <a name="provenance-marker-v1-MsgUpdateRequiredAttributesRequest"></a>
 
 ### MsgUpdateRequiredAttributesRequest
-MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a resticted marker
+MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a restricted marker
 signer must have transfer authority to change attributes, to update attribute add current to remove list and new to
 add list
 
@@ -7529,7 +7529,7 @@ MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes res
 <a name="provenance-marker-v1-MsgUpdateSendDenyListRequest"></a>
 
 ### MsgUpdateSendDenyListRequest
-MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
+MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a restricted marker
 signer must have transfer authority
 
 
@@ -7937,7 +7937,7 @@ EventMarkerSetDenomMetadata event emitted when metadata is set on marker with de
 <a name="provenance-marker-v1-EventMarkerTransfer"></a>
 
 ### EventMarkerTransfer
-EventMarkerTransfer event emitted when coins are transfered to from account to another
+EventMarkerTransfer event emitted when coins are transferred to from account to another
 
 
 | Field | Type | Label | Description |
