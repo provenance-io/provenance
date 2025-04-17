@@ -1,0 +1,45 @@
+syntax = "proto3";
+package provenance.asset.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/asset/types";
+
+message AssetClass {
+  // id defines the unique identifier of the asset classification, similar to the contract address of ERC721
+  string id = 1;
+
+  // name defines the human-readable name of the asset classification
+  string name = 2;
+
+  // symbol is an abbreviated name for asset classification
+  string symbol = 3;
+
+  // description is a brief description of asset classification
+  string description = 4;
+
+  // uri for the class metadata stored off chain. It can define schema for Class and asset `Data` attributes
+  string uri = 5;
+
+  // uri_hash is a hash of the document pointed by uri
+  string uri_hash = 6;
+
+  // data is the app specific json schema of the asset class
+  string data = 7;
+}
+
+// Asset defines the asset.
+message Asset {
+  // class_id associated with the asset, similar to the contract address of ERC721
+  string class_id = 1;
+
+  // id is a unique identifier of the asseet
+  string id = 2;
+
+  // uri for the asset metadata stored off chain
+  string uri = 3;
+
+  // uri_hash is a hash of the document pointed by uri
+  string uri_hash = 4;
+
+  // data is an app specific json data of the asset
+  string data = 5;
+}
