@@ -1,0 +1,16 @@
+syntax = "proto3";
+package provenance.asset.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/asset/types";
+
+import "gogoproto/gogo.proto";
+import "provenance/asset/v1/asset.proto";
+
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated Asset asset = 1 [(gogoproto.nullable) = false];
+
+  repeated AssetClass asset_classes = 2 [(gogoproto.nullable) = false];
+}
