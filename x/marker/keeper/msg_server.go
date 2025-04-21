@@ -264,9 +264,15 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 	}
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+	recipient := sdk.MustAccAddressFromBech32(msg.Recipient)
 
 	if err := k.Keeper.MintCoin(ctx, admin, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
+		ctx.Logger().Error("unable to withdraw coins for recepient", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 

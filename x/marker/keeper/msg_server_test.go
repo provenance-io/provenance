@@ -927,9 +927,8 @@ func (s *MsgServerTestSuite) TestMsgMintMarkerRequest() {
 	hotdogDenom := "hotdog"
 	access := types.AccessGrant{
 		Address:     s.owner1,
-		Permissions: types.AccessListByNames("MINT,BURN"),
+		Permissions: types.AccessListByNames("MINT,BURN,WITHDRAW"),
 	}
-
 	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
 	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
 	s.Assert().NoError(err, "should successfully add marker")
@@ -938,6 +937,10 @@ func (s *MsgServerTestSuite) TestMsgMintMarkerRequest() {
 	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)
 	s.Assert().NoError(err, "should not throw error when adding access to marker")
 
+	updateStatusProposal := types.NewMsgChangeStatusProposalRequest(hotdogDenom, types.StatusActive, s.app.MarkerKeeper.GetAuthority())
+	_, err = s.msgServer.ChangeStatusProposal(s.ctx, updateStatusProposal)
+	s.Assert().NoError(err, "should not throw error when status proposal changed")
+
 	testcases := []struct {
 		name          string
 		msg           *types.MsgMintRequest
@@ -945,7 +948,7 @@ func (s *MsgServerTestSuite) TestMsgMintMarkerRequest() {
 	}{
 		{
 			name:          "should successfully mint marker",
-			msg:           types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 100)),
+			msg:           types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 100), s.owner2Addr),
 			expectedEvent: types.NewEventMarkerMint("100", hotdogDenom, s.owner1),
 		},
 	}
@@ -1074,7 +1077,7 @@ func (s *MsgServerTestSuite) TestMsgTransferMarkerRequest() {
 	_, err = s.msgServer.Activate(s.ctx, activateMsg)
 	s.Assert().NoError(err, "should not throw error when activating marker message")
 
-	mintMsg := types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 1000))
+	mintMsg := types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 1000), s.owner2Addr)
 	_, err = s.msgServer.Mint(s.ctx, mintMsg)
 	s.Assert().NoError(err, "should not throw error when minting marker")
 
@@ -1163,13 +1166,17 @@ func (s *MsgServerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 	denom := "hotdog"
 	rdenom := "restrictedhotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
-
+	access_owner_1 := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessList{types.Access_Mint, types.Access_Withdraw, types.Access_Admin},
+	}
 	testcases := []struct {
 		name          string
 		handler       func(sdk.Context) error
 		expectedEvent proto.Message
 		errorMsg      string
 	}{
+
 		{
 			name: "should successfully ADD,FINALIZE,ACTIVATE new marker",
 			handler: func(ctx sdk.Context) error {
@@ -1216,9 +1223,19 @@ func (s *MsgServerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 			expectedEvent: types.NewEventMarkerAdd(denomWithDashPeriod, types.MustGetMarkerAddress(denomWithDashPeriod).String(), "1000", "proposed", s.owner1, types.MarkerType_Coin.String()),
 		},
 		{
+			name: "should not throw error when adding access to marker",
+			handler: func(ctx sdk.Context) error {
+				msg := types.NewMsgAddAccessRequest(denom, s.owner1Addr, access_owner_1)
+				_, err := s.msgServer.AddAccess(s.ctx, msg)
+				return err
+			},
+			expectedEvent: types.NewEventMarkerAddAccess(&access_owner_1, denom, s.owner1Addr.String()),
+		},
+
+		{
 			name: "should successfully mint denom",
 			handler: func(ctx sdk.Context) error {
-				msg := types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(denom, 1000))
+				msg := types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(denom, 1000), s.owner1Addr)
 				_, err := s.msgServer.Mint(s.ctx, msg)
 				return err
 			},
@@ -1234,7 +1251,6 @@ func (s *MsgServerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 			errorMsg: s.noAccessErr(s.owner1, types.Access_Burn, denom) + ": invalid request",
 		},
 	}
-
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
