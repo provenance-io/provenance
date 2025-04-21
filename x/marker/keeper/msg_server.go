@@ -272,7 +272,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 	}
 
 	if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
-		ctx.Logger().Error("unable to withdraw coins for recepient", "err", err)
+		ctx.Logger().Error("unable to withdraw coins for recipient", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
