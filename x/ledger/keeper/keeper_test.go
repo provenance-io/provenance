@@ -70,20 +70,10 @@ func TestKeeperTestSuite(t *testing.T) {
 
 // TestCreateLedger tests the CreateLedger function
 func (s *TestSuite) TestCreateLedger() {
+	s.ConfigureTest()
+
 	// Create a valid NFT address for testing
 	nftId := s.addr1.String()
-	denom := s.bondDenom
-
-	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
-		AssetClassId: "test-asset-class-id",
-		Denom:        denom,
-	})
-
-	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active",
-	})
 
 	tests := []struct {
 		name     string
@@ -172,20 +162,10 @@ func (s *TestSuite) TestCreateLedger() {
 
 // TestGetLedger tests the GetLedger function
 func (s *TestSuite) TestGetLedger() {
+	s.ConfigureTest()
+
 	// Create a valid NFT address for testing
 	nftId := s.addr1.String()
-	denom := s.bondDenom
-
-	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
-		AssetClassId: "test-asset-class-id",
-		Denom:        denom,
-	})
-
-	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active",
-	})
 
 	// Create a valid ledger first that we can try to get
 	validLedger := ledger.Ledger{
@@ -247,22 +227,7 @@ func (s *TestSuite) TestGetLedger() {
 
 // TestGetLedgerEntry tests the GetLedgerEntry function
 func (s *TestSuite) TestGetLedgerEntry() {
-	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
-		AssetClassId: "test-asset-class-id",
-		Denom:        s.bondDenom,
-	})
-
-	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
-		Id:          1,
-		Code:        "SCHEDULED_PAYMENT",
-		Description: "Scheduled Payment",
-	})
-
-	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active",
-	})
+	s.ConfigureTest()
 
 	// Create a test ledger
 	l := ledger.Ledger{
@@ -349,108 +314,8 @@ func (s *TestSuite) TestExportGenesis() {
 	s.Require().NotNil(genState, "exported genesis state should not be nil")
 }
 
-// coins creates an sdk.Coins from a string, requiring it to work.
-func (s *TestSuite) coins(coins string) sdk.Coins {
-	s.T().Helper()
-	rv, err := sdk.ParseCoinsNormalized(coins)
-	s.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
-	return rv
-}
-
-// coin creates a new coin without doing any validation on it.
-func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
-	return sdk.Coin{
-		Amount: s.int(amount),
-		Denom:  denom,
-	}
-}
-
-// int is a shorter way to call sdkmath.NewInt.
-func (s *TestSuite) int(amount int64) sdkmath.Int {
-	return sdkmath.NewInt(amount)
-}
-
-// intStr creates an sdkmath.Int from a string, requiring it to work.
-func (s *TestSuite) intStr(amount string) sdkmath.Int {
-	s.T().Helper()
-	rv, ok := sdkmath.NewIntFromString(amount)
-	s.Require().True(ok, "NewIntFromString(%q) ok bool", amount)
-	return rv
-}
-
-// assertErrorContents asserts that the provided error is as expected.
-func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
-}
-
-// assertErrorValue asserts that the provided error equals the expected.
-func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
-	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)
-}
-
-// requirePanicContents asserts that, if contains is empty, the provided func does not panic
-func (s *TestSuite) requirePanicContents(f assertions.PanicTestFunc, contains []string, msgAndArgs ...interface{}) {
-	assertions.RequirePanicContents(s.T(), f, contains, msgAndArgs...)
-}
-
-// getAddrName returns the name of the variable in this TestSuite holding the provided address.
-func (s *TestSuite) getAddrName(addr string) string {
-	switch addr {
-	case s.addr1.String():
-		return "addr1"
-	case s.addr2.String():
-		return "addr2"
-	case s.addr3.String():
-		return "addr3"
-	default:
-		return addr
-	}
-}
-
-// fundAccount funds an account with the provided coins.
-func (s *TestSuite) fundAccount(addr sdk.AccAddress, coins string) {
-	s.T().Helper()
-	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
-	}, "FundAccount(%s, %q)", s.getAddrName(addr.String()), coins)
-}
-
-// assertEqualEvents asserts that the expected events equal the actual events.
-func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
-	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
-}
-
 func (s *TestSuite) TestAppendEntry() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
-		AssetClassId: "test-asset-class-id",
-		Denom:        s.bondDenom,
-	})
-
-	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
-		Id:          1,
-		Code:        "SCHEDULED_PAYMENT",
-		Description: "Scheduled Payment",
-	})
-
-	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
-		Id:          1,
-		Code:        "PRINCIPAL",
-		Description: "Principal",
-	})
-
-	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
-		Id:          2,
-		Code:        "INTEREST",
-		Description: "Interest",
-	})
-
-	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active",
-	})
+	s.ConfigureTest()
 
 	// Create a test ledger
 	l := ledger.Ledger{
@@ -642,36 +507,7 @@ func (s *TestSuite) TestAppendEntry() {
 }
 
 func (s *TestSuite) TestAppendEntrySequenceNumbers() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
-		AssetClassId: "test-asset-class-id",
-		Denom:        s.bondDenom,
-	})
-
-	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
-		Id:          1,
-		Code:        "SCHEDULED_PAYMENT",
-		Description: "Scheduled Payment",
-	})
-
-	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
-		Id:          1,
-		Code:        "PRINCIPAL",
-		Description: "Principal",
-	})
-
-	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
-		Id:          2,
-		Code:        "INTEREST",
-		Description: "Interest",
-	})
-
-	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active",
-	})
+	s.ConfigureTest()
 
 	// Create a test ledger
 	l := ledger.Ledger{
@@ -812,36 +648,7 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 }
 
 func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
-		AssetClassId: "test-asset-class-id",
-		Denom:        s.bondDenom,
-	})
-
-	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
-		Id:          1,
-		Code:        "SCHEDULED_PAYMENT",
-		Description: "Scheduled Payment",
-	})
-
-	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
-		Id:          1,
-		Code:        "PRINCIPAL",
-		Description: "Principal",
-	})
-
-	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
-		Id:          2,
-		Code:        "INTEREST",
-		Description: "Interest",
-	})
-
-	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active",
-	})
+	s.ConfigureTest()
 
 	// Use a past date for testing
 	pastDate := keeper.DaysSinceEpoch(time.Now().Add(-1 * time.Hour))
@@ -919,4 +726,108 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Len(allEntries, 1, "should still only have one entry")
 	s.Require().Equal(entry.TotalAmt, allEntries[0].TotalAmt, "entry amount should match original entry")
+}
+
+func (s *TestSuite) ConfigureTest() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+
+	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
+		AssetClassId: "test-asset-class-id",
+		Denom:        s.bondDenom,
+	})
+
+	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
+		Id:          1,
+		Code:        "SCHEDULED_PAYMENT",
+		Description: "Scheduled Payment",
+	})
+
+	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
+		Id:          1,
+		Code:        "PRINCIPAL",
+		Description: "Principal",
+	})
+
+	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
+		Id:          2,
+		Code:        "INTEREST",
+		Description: "Interest",
+	})
+
+	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
+		Id:          1,
+		Code:        "IN_REPAYMENT",
+		Description: "In Repayment",
+	})
+}
+
+// coins creates an sdk.Coins from a string, requiring it to work.
+func (s *TestSuite) coins(coins string) sdk.Coins {
+	s.T().Helper()
+	rv, err := sdk.ParseCoinsNormalized(coins)
+	s.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
+	return rv
+}
+
+// coin creates a new coin without doing any validation on it.
+func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
+	return sdk.Coin{
+		Amount: s.int(amount),
+		Denom:  denom,
+	}
+}
+
+// int is a shorter way to call sdkmath.NewInt.
+func (s *TestSuite) int(amount int64) sdkmath.Int {
+	return sdkmath.NewInt(amount)
+}
+
+// intStr creates an sdkmath.Int from a string, requiring it to work.
+func (s *TestSuite) intStr(amount string) sdkmath.Int {
+	s.T().Helper()
+	rv, ok := sdkmath.NewIntFromString(amount)
+	s.Require().True(ok, "NewIntFromString(%q) ok bool", amount)
+	return rv
+}
+
+// assertErrorContents asserts that the provided error is as expected.
+func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+}
+
+// assertErrorValue asserts that the provided error equals the expected.
+func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
+	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)
+}
+
+// requirePanicContents asserts that, if contains is empty, the provided func does not panic
+func (s *TestSuite) requirePanicContents(f assertions.PanicTestFunc, contains []string, msgAndArgs ...interface{}) {
+	assertions.RequirePanicContents(s.T(), f, contains, msgAndArgs...)
+}
+
+// getAddrName returns the name of the variable in this TestSuite holding the provided address.
+func (s *TestSuite) getAddrName(addr string) string {
+	switch addr {
+	case s.addr1.String():
+		return "addr1"
+	case s.addr2.String():
+		return "addr2"
+	case s.addr3.String():
+		return "addr3"
+	default:
+		return addr
+	}
+}
+
+// fundAccount funds an account with the provided coins.
+func (s *TestSuite) fundAccount(addr sdk.AccAddress, coins string) {
+	s.T().Helper()
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
+	}, "FundAccount(%s, %q)", s.getAddrName(addr.String()), coins)
+}
+
+// assertEqualEvents asserts that the expected events equal the actual events.
+func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
+	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
 }
