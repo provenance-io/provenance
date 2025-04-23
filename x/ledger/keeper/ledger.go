@@ -15,7 +15,7 @@ type ConfigKeeper interface {
 	AddClassBucketType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassBucketType) error
 
 	CreateLedger(ctx sdk.Context, l ledger.Ledger) error
-	DestroyLedger(ctx sdk.Context, nftAddress string) error
+	DestroyLedger(ctx sdk.Context, nftId string) error
 }
 
 type BaseConfigKeeper struct {
@@ -119,11 +119,11 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 		return err
 	}
 
-	if k.HasLedger(ctx, l.NftAddress) {
+	if k.HasLedger(ctx, l.NftId) {
 		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger")
 	}
 
-	_, err := getAddress(&l.NftAddress)
+	_, err := getAddress(&l.NftId)
 	if err != nil {
 		return err
 	}
@@ -152,16 +152,16 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 
 	// We omit the nftAddress out of the data we store intentionally as
 	// a minor optimization since it is also our data key.
-	nftAddress := l.NftAddress
-	l.NftAddress = ""
+	nftId := l.NftId
+	l.NftId = ""
 
-	err = k.Ledgers.Set(ctx, nftAddress, l)
+	err = k.Ledgers.Set(ctx, nftId, l)
 	if err != nil {
 		return err
 	}
 
 	// Emit the ledger created event
-	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(nftAddress))
+	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(nftId))
 
 	return nil
 }
@@ -171,18 +171,18 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 }
 
 // DestroyLedger removes a ledger from the store by NFT address
-func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, nftAddress string) error {
-	if !k.HasLedger(ctx, nftAddress) {
+func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, nftId string) error {
+	if !k.HasLedger(ctx, nftId) {
 		return NewLedgerCodedError(ErrCodeInvalidField, "ledger")
 	}
 
 	// Remove the ledger from the store
-	err := k.Ledgers.Remove(ctx, nftAddress)
+	err := k.Ledgers.Remove(ctx, nftId)
 	if err != nil {
 		return err
 	}
 
-	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
+	prefix := collections.NewPrefixedPairRange[string, string](nftId)
 
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
 	if err != nil {

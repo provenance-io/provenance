@@ -18,7 +18,7 @@ enum FundingTransferStatus {
 
 // FundTransfer represents a single fund transfer to process
 message FundTransfer {
-  string                nft_address                 = 1;
+  string                nft_id                      = 1;
   string                ledger_entry_correlation_id = 2;
   string                amount                      = 3;
   FundingTransferStatus status                      = 4;
@@ -44,7 +44,7 @@ message SettlementInstruction {
 
 // FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
 message FundTransferWithSettlement {
-  string                         nft_address                 = 1;
+  string                         nft_id                      = 1;
   string                         ledger_entry_correlation_id = 2;
   repeated SettlementInstruction settlementInstructions      = 3;
 }

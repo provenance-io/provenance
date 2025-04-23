@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
 )
@@ -144,13 +145,13 @@ func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
 // validateEntryAmounts checks if the amounts are valid
 func validateEntryAmounts(le *ledger.LedgerEntry) error {
 	// Check if total amount matches sum of applied amounts
-	totalApplied := int64(0)
+	totalApplied := math.NewInt(0)
 	for _, applied := range le.AppliedAmounts {
-		totalApplied += applied.AppliedAmt
+		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
 	}
 
-	if le.TotalAmt != totalApplied {
-		return NewLedgerCodedError(ErrCodeInvalidField, "amount", "must equal sum of applied amounts")
+	if !le.TotalAmt.Equal(totalApplied) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must equal sum of abs(applied amounts)")
 	}
 
 	return nil

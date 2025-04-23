@@ -11,26 +11,26 @@ const (
 )
 
 // NewEventLedgerCreated creates a new EventLedgerCreated event
-func NewEventLedgerCreated(nftAddress string) sdk.Event {
+func NewEventLedgerCreated(nftId string) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeLedgerCreated,
-		sdk.NewAttribute("nft_address", nftAddress),
+		sdk.NewAttribute("nft_id", nftId),
 	)
 }
 
 // NewEventLedgerConfigUpdated creates a new EventLedgerConfigUpdated event
-func NewEventLedgerUpdated(nftAddress string) sdk.Event {
+func NewEventLedgerUpdated(nftId string) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeLedgerConfigUpdated,
-		sdk.NewAttribute("nft_address", nftAddress),
+		sdk.NewAttribute("nft_id", nftId),
 	)
 }
 
 // NewEventLedgerEntryAdded creates a new EventLedgerEntryAdded event
-func NewEventLedgerEntryAdded(nftAddress, correlationID string) sdk.Event {
+func NewEventLedgerEntryAdded(nftId, correlationID string) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeLedgerEntryAdded,
-		sdk.NewAttribute("nft_address", nftAddress),
+		sdk.NewAttribute("nft_id", nftId),
 		sdk.NewAttribute("correlation_id", correlationID),
 	)
 }

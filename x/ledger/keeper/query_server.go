@@ -23,7 +23,7 @@ func NewLedgerQueryServer(k ViewKeeper) LedgerQueryServer {
 func (qs LedgerQueryServer) Config(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	l, err := qs.k.GetLedger(ctx, req.NftAddress)
+	l, err := qs.k.GetLedger(ctx, req.NftId)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (qs LedgerQueryServer) Config(goCtx context.Context, req *ledger.QueryLedge
 func (qs LedgerQueryServer) Entries(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	entries, err := qs.k.ListLedgerEntries(ctx, req.NftAddress)
+	entries, err := qs.k.ListLedgerEntries(ctx, req.NftId)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (qs LedgerQueryServer) GetBalancesAsOf(ctx context.Context, req *ledger.Que
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
 	}
 
-	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.NftAddress) {
+	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.NftId) {
 		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
@@ -77,7 +77,7 @@ func (qs LedgerQueryServer) GetBalancesAsOf(ctx context.Context, req *ledger.Que
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "as-of-date")
 	}
 
-	balances, err := qs.k.GetBalancesAsOf(ctx, req.NftAddress, asOfDate)
+	balances, err := qs.k.GetBalancesAsOf(ctx, req.NftId, asOfDate)
 	if err != nil {
 		return nil, err
 	}
@@ -97,11 +97,11 @@ func (qs LedgerQueryServer) GetLedgerEntry(ctx context.Context, req *ledger.Quer
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
 	}
 
-	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.NftAddress) {
+	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.NftId) {
 		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
-	entry, err := qs.k.GetLedgerEntry(ctx, req.NftAddress, req.CorrelationId)
+	entry, err := qs.k.GetLedgerEntry(ctx, req.NftId, req.CorrelationId)
 	if err != nil {
 		return nil, err
 	}
