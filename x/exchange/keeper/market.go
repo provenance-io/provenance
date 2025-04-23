@@ -1055,6 +1055,12 @@ func (k Keeper) CanReleaseCommitmentsForMarket(ctx sdk.Context, marketID uint32,
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
 }
 
+// CanReleaseCommitmentsForMarket returns true if the provided admin bech32 address has permission to
+// release commitments for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanTransferCommitments(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
+}
+
 // CanWithdrawMarketFunds returns true if the provided admin bech32 address has permission to
 // withdraw funds from the given market's account. Also returns true if the provided address is the authority address.
 func (k Keeper) CanWithdrawMarketFunds(ctx sdk.Context, marketID uint32, admin string) bool {

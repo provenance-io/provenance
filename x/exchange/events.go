@@ -71,6 +71,15 @@ func NewEventCommitmentReleased(account string, marketID uint32, amount sdk.Coin
 	}
 }
 
+func NewEventCommitmentTransferd(account string, marketID uint32, amount sdk.Coins, tag string) *EventCommitmentReleased {
+	return &EventCommitmentReleased{
+		Account:  account,
+		MarketId: marketID,
+		Amount:   amount.String(),
+		Tag:      tag,
+	}
+}
+
 func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination sdk.AccAddress, withdrawnBy string) *EventMarketWithdraw {
 	return &EventMarketWithdraw{
 		MarketId:    marketID,

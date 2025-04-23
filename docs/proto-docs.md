@@ -125,6 +125,8 @@
     - [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse)
+    - [MsgMarketTransferCommitmentsRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentsRequest)
+    - [MsgMarketTransferCommitmentsResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentsResponse)
     - [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsRequest)
     - [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsResponse)
     - [MsgMarketUpdateAcceptingOrdersRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingOrdersRequest)
@@ -150,6 +152,7 @@
   
 - [provenance/exchange/v1/events.proto](#provenance_exchange_v1_events-proto)
     - [EventCommitmentReleased](#provenance-exchange-v1-EventCommitmentReleased)
+    - [EventCommitmentTransferred](#provenance-exchange-v1-EventCommitmentTransferred)
     - [EventFundsCommitted](#provenance-exchange-v1-EventFundsCommitted)
     - [EventMarketCommitmentsDisabled](#provenance-exchange-v1-EventMarketCommitmentsDisabled)
     - [EventMarketCommitmentsEnabled](#provenance-exchange-v1-EventMarketCommitmentsEnabled)
@@ -2400,6 +2403,37 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 
 
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentsRequest"></a>
+
+### MsgMarketTransferCommitmentsRequest
+MsgMarketTransferCommitmentsRequest is a request message for the MarketTransferCommitments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this transfer. |
+| `account` | [string](#string) |  | account is the Bech32 address string of the account receiving the transferred funds. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | amount to transfer. |
+| `current_market_id` | [uint32](#uint32) |  | current_market_id is the numerical identifier of the market where the funds are currently committed and are being released from. |
+| `new_market_id` | [uint32](#uint32) |  | new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement. |
+| `creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | optional | creation_fee is the fee that is being paid to transfer this funds. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentsResponse"></a>
+
+### MsgMarketTransferCommitmentsResponse
+MsgMarketTransferCommitmentsResponse is a response message for the MarketTransferCommitments endpoint.
+
+
+
+
+
+
 <a name="provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsRequest"></a>
 
 ### MsgMarketUpdateAcceptingCommitmentsRequest
@@ -2693,6 +2727,7 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketSettle` | [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. |
 | `MarketCommitmentSettle` | [MsgMarketCommitmentSettleRequest](#provenance-exchange-v1-MsgMarketCommitmentSettleRequest) | [MsgMarketCommitmentSettleResponse](#provenance-exchange-v1-MsgMarketCommitmentSettleResponse) | MarketCommitmentSettle is a market endpoint to transfer committed funds. |
 | `MarketReleaseCommitments` | [MsgMarketReleaseCommitmentsRequest](#provenance-exchange-v1-MsgMarketReleaseCommitmentsRequest) | [MsgMarketReleaseCommitmentsResponse](#provenance-exchange-v1-MsgMarketReleaseCommitmentsResponse) | MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s). |
+| `MarketTransferCommitment` | [MsgMarketTransferCommitmentsRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentsRequest) | [MsgMarketTransferCommitmentsResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentsResponse) | MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another. |
 | `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance-exchange-v1-MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance-exchange-v1-MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance-exchange-v1-MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance-exchange-v1-MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance-exchange-v1-MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. |
@@ -2737,6 +2772,25 @@ EventCommitmentReleased is an event emitted when funds are released from their c
 | `account` | [string](#string) |  | account is the bech32 address string of the account. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `amount` | [string](#string) |  | amount is the coins string of the funds that were released from commitment. |
+| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
+
+
+
+
+
+
+<a name="provenance-exchange-v1-EventCommitmentTransferred"></a>
+
+### EventCommitmentTransferred
+EventCommitmentTransferred is an event emitted when funds are transferd from one market to another.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `current_market_id` | [uint32](#uint32) |  | current_market_id is the numerical identifier of the market. |
+| `new_market_id` | [uint32](#uint32) |  | new_market_id is the numerical identifier of the market. |
+| `amount` | [string](#string) |  | amount is the coins amount string of funds transfer from the market account. |
+| `account` | [string](#string) |  | account that received the funds. |
 | `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
 
 

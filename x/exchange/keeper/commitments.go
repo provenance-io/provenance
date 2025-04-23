@@ -417,6 +417,13 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	return nil
 }
 
+// TransferCommitments transfers funds from a market account to another market account.
+// The caller is responsible for making sure this TransferCommitments should be allowed.
+func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentsRequest) error {
+	//todo
+	return nil
+}
+
 // consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.
 func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
 	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)

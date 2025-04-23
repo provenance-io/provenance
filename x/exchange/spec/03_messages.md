@@ -15,6 +15,7 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
     - [MarketSettle](#marketsettle)
     - [MarketCommitmentSettle](#marketcommitmentsettle)
     - [MarketReleaseCommitments](#marketreleasecommitments)
+    - [MarketTransferCommitments](#markettransfercommitments)
     - [MarketSetOrderExternalID](#marketsetorderexternalid)
     - [MarketWithdraw](#marketwithdraw)
     - [MarketUpdateDetails](#marketupdatedetails)

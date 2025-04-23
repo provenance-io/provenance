@@ -48,6 +48,9 @@ service Msg {
   // MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s).
   rpc MarketReleaseCommitments(MsgMarketReleaseCommitmentsRequest) returns (MsgMarketReleaseCommitmentsResponse);
 
+  // MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another.
+  rpc MarketTransferCommitment(MsgMarketTransferCommitmentsRequest) returns (MsgMarketTransferCommitmentsResponse);
+
   // MarketSetOrderExternalID updates an order's external id field.
   rpc MarketSetOrderExternalID(MsgMarketSetOrderExternalIDRequest) returns (MsgMarketSetOrderExternalIDResponse);
 
@@ -316,6 +319,35 @@ message MsgMarketReleaseCommitmentsRequest {
 
 // MsgMarketReleaseCommitmentsResponse is a response message for the MarketReleaseCommitments endpoint.
 message MsgMarketReleaseCommitmentsResponse {}
+
+// MsgMarketTransferCommitmentsRequest is a request message for the MarketTransferCommitments endpoint.
+message MsgMarketTransferCommitmentsRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "cancel" permission requesting this transfer.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // account is the Bech32 address string of the account receiving the transferred funds.
+  string account = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount to transfer.
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
+  // current_market_id is the numerical identifier of the market where the funds are currently committed and are being
+  // released from.
+  uint32 current_market_id = 4;
+  // new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement.
+  uint32 new_market_id = 5;
+  // creation_fee is the fee that is being paid to transfer this funds.
+  optional cosmos.base.v1beta1.Coin creation_fee = 6;
+  // event_tag is a string that is included in the funds-released events. Max length is 100 characters.
+  string event_tag = 7;
+}
+
+// MsgMarketTransferCommitmentsResponse is a response message for the MarketTransferCommitments endpoint.
+message MsgMarketTransferCommitmentsResponse {}
 
 // MsgMarketSetOrderExternalIDRequest is a request message for the MarketSetOrderExternalID endpoint.
 message MsgMarketSetOrderExternalIDRequest {

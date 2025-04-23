@@ -11,6 +11,7 @@ The exchange module emits several events for various actions.
   - [EventOrderExternalIDUpdated](#eventorderexternalidupdated)
   - [EventFundsCommitted](#eventfundscommitted)
   - [EventCommitmentReleased](#eventcommitmentreleased)
+  - [EventCommitmentTransferred](#eventcommitmenttransferred)
   - [EventMarketWithdraw](#eventmarketwithdraw)
   - [EventMarketDetailsUpdated](#eventmarketdetailsupdated)
   - [EventMarketOrdersEnabled](#eventmarketordersenabled)
