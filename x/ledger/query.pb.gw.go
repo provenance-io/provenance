@@ -278,15 +278,15 @@ func request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["nft_address"]
+	val, ok = pathParams["nft_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
 	}
 
-	protoReq.NftAddress, err = runtime.String(val)
+	protoReq.NftId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
 	}
 
 	val, ok = pathParams["correlation_id"]
@@ -316,15 +316,15 @@ func local_request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
-	val, ok = pathParams["nft_address"]
+	val, ok = pathParams["nft_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
 	}
 
-	protoReq.NftAddress, err = runtime.String(val)
+	protoReq.NftId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
 	}
 
 	val, ok = pathParams["correlation_id"]
@@ -354,15 +354,15 @@ func request_Query_GetBalancesAsOf_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["nft_address"]
+	val, ok = pathParams["nft_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
 	}
 
-	protoReq.NftAddress, err = runtime.String(val)
+	protoReq.NftId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
 	}
 
 	val, ok = pathParams["as_of_date"]
@@ -392,15 +392,15 @@ func local_request_Query_GetBalancesAsOf_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["nft_address"]
+	val, ok = pathParams["nft_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
 	}
 
-	protoReq.NftAddress, err = runtime.String(val)
+	protoReq.NftId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
 	}
 
 	val, ok = pathParams["as_of_date"]
@@ -781,9 +781,9 @@ var (
 
 	pattern_Query_ClassBucketTypes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "ledger", "v1", "bucket_types", "asset_class_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetLedgerEntry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_address", "entry", "correlation_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetLedgerEntry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_id", "entry", "correlation_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetBalancesAsOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_address", "balances", "as_of_date"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetBalancesAsOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_id", "balances", "as_of_date"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

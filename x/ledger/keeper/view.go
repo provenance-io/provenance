@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -127,15 +128,15 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 //   - Returns (nil, err) if an error occurs during retrieval
 //   - Returns (&ledger, nil) if the ledger is found successfully
 //   - The returned ledger will have its NftAddress field set to the provided nftAddress
-func (k BaseViewKeeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error) {
+func (k BaseViewKeeper) GetLedger(ctx sdk.Context, nftId string) (*ledger.Ledger, error) {
 	// Validate the NFT address
-	_, err := getAddress(&nftAddress)
+	_, err := getAddress(&nftId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Lookup the NFT address in the ledger
-	l, err := k.Ledgers.Get(ctx, nftAddress)
+	l, err := k.Ledgers.Get(ctx, nftId)
 	if err != nil {
 		// Eat the not found error as it is expected, and return nil.
 		if errors.Is(err, collections.ErrNotFound) {
@@ -147,7 +148,7 @@ func (k BaseViewKeeper) GetLedger(ctx sdk.Context, nftAddress string) (*ledger.L
 	}
 
 	// The NFT address isn't stored in the ledger, so we add it back in.
-	l.NftAddress = nftAddress
+	l.NftId = nftId
 	return &l, nil
 }
 
@@ -233,7 +234,7 @@ func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 			panic(err)
 		}
 		// Set the NftAddress back since it's not stored in the value
-		value.NftAddress = key
+		value.NftId = key
 		// state.Ledgers = append(state.Ledgers, value)
 	}
 
@@ -276,12 +277,11 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 			if !ok {
 				bucketBalance = &ledger.BucketBalance{
 					BucketTypeId: appliedAmount.BucketTypeId,
-					Balance:      0,
+					Balance:      math.NewInt(0),
 				}
 			}
 
-			bucketBalance.Balance += appliedAmount.AppliedAmt
-
+			bucketBalance.Balance = bucketBalance.Balance.Add(appliedAmount.AppliedAmt)
 		}
 	}
 

@@ -1,6 +1,9 @@
 syntax = "proto3";
 package provenance.ledger.v1;
 
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
 option go_package          = "github.com/provenance-io/provenance/x/ledger";
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
@@ -49,7 +52,7 @@ message Ledger {
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
   // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
-  string nft_address = 1;
+  string nft_id = 1;
 
   // Asset class id for the ledger
   string asset_class_id = 2;
@@ -108,7 +111,12 @@ message LedgerEntry {
   int32 effective_date = 8;
 
   // Total amount of the ledger entry
-  int64 total_amt = 9;
+
+  string total_amt = 9 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
 
   // Applied amounts for each bucket
   repeated LedgerBucketAmount applied_amounts = 10;
@@ -119,7 +127,11 @@ message LedgerBucketAmount {
   int32 bucket_type_id = 1;
 
   // The amount applied to the bucket
-  int64 applied_amt = 2;
+  string applied_amt = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // Balances represents the current balances for principal, interest, and other amounts
@@ -132,5 +144,9 @@ message BucketBalance {
   int32 bucket_type_id = 1;
 
   // The balance of the bucket
-  int64 balance = 2;
+  string balance = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
 }

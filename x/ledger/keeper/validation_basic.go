@@ -5,6 +5,7 @@ package keeper
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
@@ -12,8 +13,8 @@ func ValidateLedgerBasic(l *ledger.Ledger) error {
 	if emptyString(&l.AssetClassId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "asset_class_id")
 	}
-	if emptyString(&l.NftAddress) {
-		return NewLedgerCodedError(ErrCodeMissingField, "nft_address")
+	if emptyString(&l.NftId) {
+		return NewLedgerCodedError(ErrCodeMissingField, "nft_id")
 	}
 
 	epochTime, _ := time.Parse("2006-01-02", "1970-01-01")
@@ -60,7 +61,7 @@ func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 	}
 
 	// Validate amounts are non-negative
-	if e.TotalAmt <= 0 {
+	if e.TotalAmt.LT(math.NewInt(0)) {
 		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must be a non-negative integer")
 	}
 

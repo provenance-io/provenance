@@ -38,8 +38,8 @@ func CmdQuery() *cobra.Command {
 // GetAttributeParamsCmd returns the command handler for name parameter querying.
 func GetConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "config <nft_address>",
-		Short:   "Query the ledger for the specified nft address",
+		Use:     "config <nft_id>",
+		Short:   "Query the ledger for the specified nft id",
 		Example: fmt.Sprintf(`$ %s query attribute params`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -47,9 +47,9 @@ func GetConfigCmd() *cobra.Command {
 				return err
 			}
 
-			nftAddress := args[0]
+			nftId := args[0]
 			req := ledger.QueryLedgerConfigRequest{
-				NftAddress: nftAddress,
+				NftId: nftId,
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
@@ -60,7 +60,7 @@ func GetConfigCmd() *cobra.Command {
 
 			// Convert to PlainText
 			plainText := ledger.LedgerPlainText{
-				NftId:        l.Ledger.NftAddress,
+				NftId:        l.Ledger.NftId,
 				Status:       strconv.Itoa(int(l.Ledger.StatusTypeId)),
 				NextPmtDate:  keeper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
 				NextPmtAmt:   strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
@@ -94,7 +94,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 			getConfig := func(nftId string) *ledger.QueryLedgerConfigResponse {
 				req := ledger.QueryLedgerConfigRequest{
-					NftAddress: nftId,
+					NftId: nftId,
 				}
 
 				config, err := queryClient.Config(context.Background(), &req)
@@ -107,7 +107,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 			getEntries := func(nftId string) []*ledger.LedgerEntry {
 				req := ledger.QueryLedgerRequest{
-					NftAddress: nftId,
+					NftId: nftId,
 				}
 
 				l, err := queryClient.Entries(context.Background(), &req)
@@ -159,7 +159,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 				for j, amount := range entry.AppliedAmounts {
 					appliedAmounts[j] = &ledger.LedgerBucketAmountPlainText{
 						Bucket:     bucketTypes[amount.BucketTypeId],
-						AppliedAmt: strconv.FormatInt(amount.AppliedAmt, 10),
+						AppliedAmt: amount.AppliedAmt.String(),
 						BalanceAmt: "0",
 					}
 				}
@@ -170,7 +170,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					Type:           entryTypes[entry.EntryTypeId],
 					PostedDate:     keeper.EpochDaysToISO8601(entry.PostedDate),
 					EffectiveDate:  keeper.EpochDaysToISO8601(entry.EffectiveDate),
-					TotalAmt:       strconv.FormatInt(entry.TotalAmt, 10),
+					TotalAmt:       entry.TotalAmt.String(),
 					AppliedAmounts: appliedAmounts,
 				}
 			}
@@ -200,7 +200,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 				return err
 			}
 
-			nftAddress := args[0]
+			nftId := args[0]
 			asOfDate := args[1]
 
 			// Validate the date format
@@ -211,8 +211,8 @@ func GetBalancesAsOfCmd() *cobra.Command {
 
 			queryClient := ledger.NewQueryClient(clientCtx)
 			res, err := queryClient.GetBalancesAsOf(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
-				NftAddress: nftAddress,
-				AsOfDate:   asOfDate,
+				NftId:    nftId,
+				AsOfDate: asOfDate,
 			})
 			if err != nil {
 				return err

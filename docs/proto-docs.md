@@ -4776,7 +4776,7 @@ Balances represents the current balances for principal, interest, and other amou
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id |
-| `balance` | [int64](#int64) |  | The balance of the bucket |
+| `balance` | [string](#string) |  | The balance of the bucket |
 
 
 
@@ -4791,7 +4791,7 @@ Ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
+| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
 | `asset_class_id` | [string](#string) |  | Asset class id for the ledger |
 | `status_type_id` | [int32](#int32) |  | Status of the ledger |
 | `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
@@ -4813,7 +4813,7 @@ Ledger
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id |
-| `applied_amt` | [int64](#int64) |  | The amount applied to the bucket |
+| `applied_amt` | [string](#string) |  | The amount applied to the bucket |
 
 
 
@@ -4905,7 +4905,7 @@ LedgerEntry
 | `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id |
 | `posted_date` | [int32](#int32) |  | Posted date days since epoch |
 | `effective_date` | [int32](#int32) |  | Effective date days since epoch |
-| `total_amt` | [int64](#int64) |  | Total amount of the ledger entry |
+| `total_amt` | [string](#string) |  |  |
 | `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts for each bucket |
 
 
@@ -4937,7 +4937,7 @@ QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC m
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 | `as_of_date` | [string](#string) |  |  |
 
 
@@ -5058,7 +5058,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 
 
 
@@ -5088,7 +5088,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 | `correlation_id` | [string](#string) |  | Free-form string up to 50 characters |
 
 
@@ -5119,7 +5119,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 
 
 
@@ -5181,7 +5181,7 @@ FundTransfer represents a single fund transfer to process
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 | `ledger_entry_correlation_id` | [string](#string) |  |  |
 | `amount` | [string](#string) |  |  |
 | `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
@@ -5201,7 +5201,7 @@ FundTransferEntryWithSettlement represents a fund transfer with settlement instr
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 | `ledger_entry_correlation_id` | [string](#string) |  |  |
 | `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 

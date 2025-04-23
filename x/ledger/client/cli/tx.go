@@ -37,7 +37,7 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <nft_address> <asset_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
+		Use:     "create <nft_id> <asset_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
 		Example: `$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
@@ -49,12 +49,12 @@ $ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1
 				return err
 			}
 
-			nftAddress := args[0]
+			nftId := args[0]
 			assetClassId := args[1]
 
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
-				NftAddress:   nftAddress,
+				NftId:        nftId,
 				AssetClassId: assetClassId,
 			}
 
@@ -121,14 +121,14 @@ func CmdDestroy() *cobra.Command {
 				return err
 			}
 
-			nftAddress := args[0]
-			if nftAddress == "" {
-				return fmt.Errorf("invalid <nft_address>")
+			nftId := args[0]
+			if nftId == "" {
+				return fmt.Errorf("invalid <nft_id>")
 			}
 
 			msg := &ledger.MsgDestroyRequest{
-				NftAddress: nftAddress,
-				Authority:  clientCtx.FromAddress.String(),
+				NftId:     nftId,
+				Authority: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -177,9 +177,9 @@ func CmdAppend() *cobra.Command {
 				return err
 			}
 
-			nftAddress := args[0]
-			if nftAddress == "" {
-				return fmt.Errorf("invalid <nft_address>")
+			nftId := args[0]
+			if nftId == "" {
+				return fmt.Errorf("invalid <nft_id>")
 			}
 
 			jsonFile := args[1]
@@ -204,9 +204,9 @@ func CmdAppend() *cobra.Command {
 			}
 
 			msg := &ledger.MsgAppendRequest{
-				NftAddress: nftAddress,
-				Entries:    entries,
-				Authority:  clientCtx.FromAddress.String(),
+				NftId:     nftId,
+				Entries:   entries,
+				Authority: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
