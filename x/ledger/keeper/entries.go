@@ -30,6 +30,8 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftAddress string, les
 		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
+	ledger, _ := k.GetLedger(ctx, nftAddress)
+
 	// Get all existing entries for this NFT
 	entries, err := k.ListLedgerEntries(ctx, nftAddress)
 	if err != nil {
@@ -51,12 +53,17 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftAddress string, les
 			return err
 		}
 
-		// Validate entry type
-		if err := validateEntryType(le); err != nil {
+		// Validate that the LedgerClassEntryType exists
+		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.AssetClassId, le.EntryTypeId))
+		if err != nil {
 			return err
 		}
 
-		err := k.saveEntry(ctx, nftAddress, entries, le)
+		if !hasLedgerClassEntryType {
+			return NewLedgerCodedError(ErrCodeInvalidField, "entry_type_id")
+		}
+
+		err = k.saveEntry(ctx, nftAddress, entries, le)
 		if err != nil {
 			return err
 		}
@@ -144,15 +151,6 @@ func validateEntryAmounts(le *ledger.LedgerEntry) error {
 
 	if le.TotalAmt != totalApplied {
 		return NewLedgerCodedError(ErrCodeInvalidField, "amount", "must equal sum of applied amounts")
-	}
-
-	return nil
-}
-
-// validateEntryType checks if the entry type is valid
-func validateEntryType(le *ledger.LedgerEntry) error {
-	if le.Type == ledger.LedgerEntryType_Unspecified {
-		return NewLedgerCodedError(ErrCodeInvalidField, "entry_type", "cannot be unspecified")
 	}
 
 	return nil

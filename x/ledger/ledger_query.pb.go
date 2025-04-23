@@ -25,19 +25,17 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Ledger
 type LedgerPlainText struct {
 	// Address of the NFT to which this ledger is linked.
-	NftAddress string `protobuf:"bytes,1,opt,name=nft_address,json=nftAddress,proto3" json:"nft_address,omitempty"`
-	// This denom will represent the entry values within the ledger.
-	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
-	// Next payment date days since epoch
+	NftId string `protobuf:"bytes,1,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
+	// Status of the ledger
+	Status string `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	// Next payment date
 	NextPmtDate string `protobuf:"bytes,3,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"next_pmt_date,omitempty"`
 	// Next payment amount
 	NextPmtAmt string `protobuf:"bytes,4,opt,name=next_pmt_amt,json=nextPmtAmt,proto3" json:"next_pmt_amt,omitempty"`
-	// Status of the ledger
-	Status string `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
 	// Interest rate
-	InterestRate string `protobuf:"bytes,6,opt,name=interest_rate,json=interestRate,proto3" json:"interest_rate,omitempty"`
-	// Maturity date days since epoch
-	MaturityDate string `protobuf:"bytes,7,opt,name=maturity_date,json=maturityDate,proto3" json:"maturity_date,omitempty"`
+	InterestRate string `protobuf:"bytes,5,opt,name=interest_rate,json=interestRate,proto3" json:"interest_rate,omitempty"`
+	// Maturity date
+	MaturityDate string `protobuf:"bytes,6,opt,name=maturity_date,json=maturityDate,proto3" json:"maturity_date,omitempty"`
 }
 
 func (m *LedgerPlainText) Reset()         { *m = LedgerPlainText{} }
@@ -73,16 +71,16 @@ func (m *LedgerPlainText) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LedgerPlainText proto.InternalMessageInfo
 
-func (m *LedgerPlainText) GetNftAddress() string {
+func (m *LedgerPlainText) GetNftId() string {
 	if m != nil {
-		return m.NftAddress
+		return m.NftId
 	}
 	return ""
 }
 
-func (m *LedgerPlainText) GetDenom() string {
+func (m *LedgerPlainText) GetStatus() string {
 	if m != nil {
-		return m.Denom
+		return m.Status
 	}
 	return ""
 }
@@ -97,13 +95,6 @@ func (m *LedgerPlainText) GetNextPmtDate() string {
 func (m *LedgerPlainText) GetNextPmtAmt() string {
 	if m != nil {
 		return m.NextPmtAmt
-	}
-	return ""
-}
-
-func (m *LedgerPlainText) GetStatus() string {
-	if m != nil {
-		return m.Status
 	}
 	return ""
 }
@@ -129,14 +120,16 @@ type LedgerEntryPlainText struct {
 	// Sequence number of the ledger entry (less than 100)
 	// This field is used to maintain the correct order of entries when multiple entries
 	// share the same effective date. Entries are sorted first by effective date, then by sequence.
-	Sequence uint32          `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	Type     LedgerEntryType `protobuf:"varint,3,opt,name=type,proto3,enum=provenance.ledger.v1.LedgerEntryType" json:"type,omitempty"`
-	SubType  string          `protobuf:"bytes,4,opt,name=sub_type,json=subType,proto3" json:"sub_type,omitempty"`
-	// Posted date days since epoch
+	Sequence uint32 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	// The type of ledger entry specified by the LedgerClassEntryType.id
+	Type *LedgerClassEntryType `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	// Posted date
 	PostedDate string `protobuf:"bytes,5,opt,name=posted_date,json=postedDate,proto3" json:"posted_date,omitempty"`
-	// Effective date days since epoch
-	EffectiveDate  string                         `protobuf:"bytes,6,opt,name=effective_date,json=effectiveDate,proto3" json:"effective_date,omitempty"`
-	TotalAmt       string                         `protobuf:"bytes,7,opt,name=total_amt,json=totalAmt,proto3" json:"total_amt,omitempty"`
+	// Effective date
+	EffectiveDate string `protobuf:"bytes,6,opt,name=effective_date,json=effectiveDate,proto3" json:"effective_date,omitempty"`
+	// The total amount of the ledger entry
+	TotalAmt string `protobuf:"bytes,7,opt,name=total_amt,json=totalAmt,proto3" json:"total_amt,omitempty"`
+	// The amounts applied to each bucket
 	AppliedAmounts []*LedgerBucketAmountPlainText `protobuf:"bytes,8,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"applied_amounts,omitempty"`
 }
 
@@ -187,18 +180,11 @@ func (m *LedgerEntryPlainText) GetSequence() uint32 {
 	return 0
 }
 
-func (m *LedgerEntryPlainText) GetType() LedgerEntryType {
+func (m *LedgerEntryPlainText) GetType() *LedgerClassEntryType {
 	if m != nil {
 		return m.Type
 	}
-	return LedgerEntryType_Unspecified
-}
-
-func (m *LedgerEntryPlainText) GetSubType() string {
-	if m != nil {
-		return m.SubType
-	}
-	return ""
+	return nil
 }
 
 func (m *LedgerEntryPlainText) GetPostedDate() string {
@@ -230,9 +216,9 @@ func (m *LedgerEntryPlainText) GetAppliedAmounts() []*LedgerBucketAmountPlainTex
 }
 
 type LedgerBucketAmountPlainText struct {
-	Bucket     string `protobuf:"bytes,1,opt,name=bucket,proto3" json:"bucket,omitempty"`
-	AppliedAmt string `protobuf:"bytes,2,opt,name=applied_amt,json=appliedAmt,proto3" json:"applied_amt,omitempty"`
-	BalanceAmt string `protobuf:"bytes,3,opt,name=balance_amt,json=balanceAmt,proto3" json:"balance_amt,omitempty"`
+	Bucket     *LedgerClassBucketType `protobuf:"bytes,1,opt,name=bucket,proto3" json:"bucket,omitempty"`
+	AppliedAmt string                 `protobuf:"bytes,2,opt,name=applied_amt,json=appliedAmt,proto3" json:"applied_amt,omitempty"`
+	BalanceAmt string                 `protobuf:"bytes,3,opt,name=balance_amt,json=balanceAmt,proto3" json:"balance_amt,omitempty"`
 }
 
 func (m *LedgerBucketAmountPlainText) Reset()         { *m = LedgerBucketAmountPlainText{} }
@@ -268,11 +254,11 @@ func (m *LedgerBucketAmountPlainText) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LedgerBucketAmountPlainText proto.InternalMessageInfo
 
-func (m *LedgerBucketAmountPlainText) GetBucket() string {
+func (m *LedgerBucketAmountPlainText) GetBucket() *LedgerClassBucketType {
 	if m != nil {
 		return m.Bucket
 	}
-	return ""
+	return nil
 }
 
 func (m *LedgerBucketAmountPlainText) GetAppliedAmt() string {
@@ -345,42 +331,41 @@ func init() {
 }
 
 var fileDescriptor_2d5ebc9f31c7f052 = []byte{
-	// 548 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x53, 0xbf, 0x4e, 0xdc, 0x4e,
-	0x10, 0xc6, 0xfc, 0x3d, 0x06, 0x7c, 0x48, 0x16, 0xfa, 0xfd, 0x1c, 0x90, 0x1c, 0x38, 0x84, 0x82,
-	0xa2, 0xc4, 0x27, 0x48, 0x95, 0xf2, 0x10, 0x29, 0x22, 0xa5, 0x20, 0x16, 0x15, 0x8d, 0xb5, 0xb6,
-	0xe7, 0xc8, 0x2a, 0xf6, 0xae, 0xd9, 0x1d, 0x5f, 0xb8, 0xb7, 0xc8, 0x63, 0xa5, 0xa4, 0x4c, 0x19,
-	0xc1, 0x0b, 0xf0, 0x08, 0xd1, 0xee, 0x9a, 0xf3, 0x15, 0xe8, 0xd2, 0x79, 0xbe, 0xf9, 0x66, 0x3c,
-	0xdf, 0x37, 0x3b, 0xf0, 0xa6, 0x56, 0x72, 0x82, 0x82, 0x89, 0x1c, 0x87, 0x25, 0x16, 0x37, 0xa8,
-	0x86, 0x93, 0xd3, 0xf6, 0x2b, 0xbd, 0x6d, 0x50, 0x4d, 0xe3, 0x5a, 0x49, 0x92, 0xc1, 0x6e, 0x47,
-	0x8c, 0x5d, 0x3a, 0x9e, 0x9c, 0xee, 0x1d, 0x2e, 0x28, 0x77, 0x85, 0x83, 0x27, 0x0f, 0x76, 0xbe,
-	0x58, 0xe0, 0xb2, 0x64, 0x5c, 0x5c, 0xe1, 0x1d, 0x05, 0xaf, 0x61, 0x4b, 0x8c, 0x29, 0x65, 0x45,
-	0xa1, 0x50, 0xeb, 0xd0, 0x3b, 0xf0, 0x4e, 0x36, 0x13, 0x10, 0x63, 0x1a, 0x39, 0x24, 0xd8, 0x85,
-	0xb5, 0x02, 0x85, 0xac, 0xc2, 0x65, 0x9b, 0x72, 0x41, 0x30, 0x00, 0x5f, 0xe0, 0x1d, 0xa5, 0x75,
-	0x45, 0x69, 0xc1, 0x08, 0xc3, 0x15, 0x9b, 0xdd, 0x32, 0xe0, 0x65, 0x45, 0x17, 0x8c, 0x30, 0x38,
-	0x80, 0xed, 0x19, 0x87, 0x55, 0x14, 0xae, 0xb6, 0xbd, 0x1d, 0x65, 0x54, 0x51, 0xf0, 0x1f, 0xac,
-	0x6b, 0x62, 0xd4, 0xe8, 0x70, 0xcd, 0xe6, 0xda, 0x28, 0x38, 0x02, 0x9f, 0x0b, 0x42, 0x85, 0x9a,
-	0x52, 0x65, 0xba, 0xaf, 0xdb, 0xf4, 0xf6, 0x33, 0x98, 0x98, 0xf6, 0x47, 0xe0, 0x57, 0x8c, 0x1a,
-	0xc5, 0x69, 0xea, 0x46, 0xd8, 0x70, 0xa4, 0x67, 0xd0, 0xcc, 0x30, 0x78, 0x5a, 0x86, 0x5d, 0x27,
-	0xf9, 0x93, 0x20, 0x35, 0xed, 0x74, 0x1f, 0x43, 0x3f, 0x97, 0x4a, 0x61, 0xc9, 0x88, 0x4b, 0x91,
-	0xf2, 0xa2, 0x95, 0xee, 0xcf, 0xa1, 0x9f, 0x8b, 0x60, 0x0f, 0x7a, 0x1a, 0x6f, 0x1b, 0x14, 0x39,
-	0x5a, 0x03, 0xfc, 0x64, 0x16, 0x07, 0x1f, 0x61, 0x95, 0xa6, 0xb5, 0x93, 0xde, 0x3f, 0x3b, 0x8e,
-	0x5f, 0x5a, 0x4b, 0x3c, 0xf7, 0xf3, 0xab, 0x69, 0x8d, 0x89, 0x2d, 0x09, 0x5e, 0x41, 0x4f, 0x37,
-	0x59, 0x6a, 0xcb, 0x9d, 0x2d, 0x1b, 0xba, 0xc9, 0x0c, 0xc1, 0x2c, 0xa4, 0x96, 0x9a, 0xb0, 0x70,
-	0xa2, 0x9c, 0x31, 0xe0, 0x20, 0x6b, 0xeb, 0x31, 0xf4, 0x71, 0x3c, 0xc6, 0x9c, 0xf8, 0x04, 0x1d,
-	0xc7, 0xb9, 0xe3, 0xcf, 0x50, 0x4b, 0xdb, 0x87, 0x4d, 0x92, 0xc4, 0x4a, 0x6b, 0xbd, 0xb3, 0xa6,
-	0x67, 0x01, 0x63, 0xfc, 0x35, 0xec, 0xb0, 0xba, 0x2e, 0x39, 0x16, 0x29, 0xab, 0x64, 0x23, 0x48,
-	0x87, 0xbd, 0x83, 0x95, 0x93, 0xad, 0xb3, 0xd3, 0x45, 0x2a, 0xce, 0x9b, 0xfc, 0x3b, 0xd2, 0xc8,
-	0x16, 0xcc, 0x9c, 0x4c, 0xfa, 0x6d, 0x27, 0x87, 0xeb, 0xc1, 0x0f, 0xd8, 0x5f, 0x40, 0x37, 0x3b,
-	0xcf, 0x6c, 0xa2, 0x35, 0xbc, 0x8d, 0x8c, 0xee, 0x6e, 0x24, 0x6a, 0x5f, 0x1b, 0xcc, 0x7a, 0x5b,
-	0x42, 0xc6, 0x4a, 0x33, 0x98, 0x25, 0xb8, 0x07, 0x07, 0x2d, 0x34, 0xaa, 0x68, 0xc0, 0xe1, 0xf0,
-	0xab, 0x39, 0x93, 0x39, 0xcb, 0x13, 0xd4, 0xb5, 0x14, 0x1a, 0xbb, 0xdf, 0x5f, 0xc0, 0x06, 0x0a,
-	0x52, 0x1c, 0xcd, 0x5b, 0x37, 0x8a, 0xdf, 0xfe, 0x73, 0x6f, 0x9d, 0xd4, 0xe7, 0xd2, 0x73, 0xf6,
-	0xeb, 0x21, 0xf2, 0xee, 0x1f, 0x22, 0xef, 0xcf, 0x43, 0xe4, 0xfd, 0x7c, 0x8c, 0x96, 0xee, 0x1f,
-	0xa3, 0xa5, 0xdf, 0x8f, 0xd1, 0x12, 0xfc, 0xcf, 0xe5, 0x8b, 0x0d, 0x2f, 0xbd, 0xeb, 0x77, 0x37,
-	0x9c, 0xbe, 0x35, 0x59, 0x9c, 0xcb, 0x6a, 0xd8, 0x51, 0xde, 0x73, 0x39, 0x17, 0x0d, 0xef, 0xda,
-	0x93, 0xcd, 0xd6, 0xed, 0xcd, 0x7e, 0xf8, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xd3, 0xd7, 0xb9, 0xb6,
-	0x17, 0x04, 0x00, 0x00,
+	// 537 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x53, 0xcd, 0x4e, 0xdb, 0x4c,
+	0x14, 0xc5, 0xfc, 0x04, 0xb8, 0xc1, 0x20, 0x59, 0x7c, 0x5f, 0x2d, 0x90, 0x5c, 0x08, 0x42, 0x45,
+	0xfd, 0x71, 0x94, 0x74, 0x5f, 0x29, 0x40, 0x17, 0x48, 0x5d, 0xa4, 0x16, 0x2b, 0x36, 0xd6, 0xc4,
+	0xbe, 0xa1, 0xa3, 0xda, 0x33, 0xc6, 0x73, 0x1d, 0x25, 0x6f, 0xd1, 0x87, 0xe8, 0xc3, 0x74, 0x99,
+	0x65, 0xd5, 0x55, 0x95, 0xbc, 0x48, 0xe5, 0x19, 0x27, 0x4e, 0x25, 0x94, 0xee, 0x3c, 0x67, 0xce,
+	0x3d, 0x73, 0xcf, 0xf1, 0xbd, 0xf0, 0x2a, 0xcb, 0xe5, 0x08, 0x05, 0x13, 0x11, 0xb6, 0x13, 0x8c,
+	0x1f, 0x31, 0x6f, 0x8f, 0x3a, 0xd5, 0x57, 0xf8, 0x54, 0x60, 0x3e, 0xf1, 0xb3, 0x5c, 0x92, 0x74,
+	0x8e, 0x6b, 0xa2, 0x6f, 0xae, 0xfd, 0x51, 0xe7, 0xe4, 0x7c, 0x4d, 0xb9, 0x29, 0x6c, 0x4d, 0x2d,
+	0x38, 0xfa, 0xa4, 0x81, 0x7e, 0xc2, 0xb8, 0xb8, 0xc7, 0x31, 0x39, 0xff, 0x41, 0x43, 0x0c, 0x29,
+	0xe4, 0xb1, 0x6b, 0x9d, 0x59, 0x57, 0xfb, 0xc1, 0x8e, 0x18, 0xd2, 0x5d, 0xec, 0xfc, 0x0f, 0x0d,
+	0x45, 0x8c, 0x0a, 0xe5, 0x6e, 0x6a, 0xb8, 0x3a, 0x39, 0x2d, 0xb0, 0x05, 0x8e, 0x29, 0xcc, 0x52,
+	0x0a, 0x63, 0x46, 0xe8, 0x6e, 0xe9, 0xeb, 0x66, 0x09, 0xf6, 0x53, 0xba, 0x65, 0x84, 0xce, 0x19,
+	0x1c, 0x2c, 0x39, 0x2c, 0x25, 0x77, 0x5b, 0x53, 0xa0, 0xa2, 0xf4, 0x52, 0x72, 0x2e, 0xc0, 0xe6,
+	0x82, 0x30, 0x47, 0x45, 0x61, 0x5e, 0xaa, 0xec, 0x68, 0xca, 0xc1, 0x02, 0x0c, 0x4a, 0x99, 0x0b,
+	0xb0, 0x53, 0x46, 0x45, 0xce, 0x69, 0x62, 0x9e, 0x6a, 0x18, 0xd2, 0x02, 0x2c, 0xdf, 0x6a, 0xfd,
+	0xda, 0x84, 0x63, 0x63, 0xe9, 0xa3, 0xa0, 0x7c, 0x52, 0xfb, 0xba, 0x84, 0xc3, 0x48, 0xe6, 0x39,
+	0x26, 0x8c, 0xb8, 0x14, 0xb5, 0x3f, 0x7b, 0x05, 0xbd, 0x8b, 0x9d, 0x13, 0xd8, 0x53, 0xf8, 0x54,
+	0xa0, 0x88, 0x50, 0x3b, 0xb5, 0x83, 0xe5, 0xd9, 0xf9, 0x00, 0xdb, 0x34, 0xc9, 0x8c, 0xc5, 0x66,
+	0xf7, 0xb5, 0xff, 0x5c, 0xec, 0xbe, 0x79, 0xfc, 0x26, 0x61, 0x4a, 0xe9, 0x0e, 0xee, 0x27, 0x19,
+	0x06, 0xba, 0xce, 0x79, 0x09, 0xcd, 0x4c, 0x2a, 0xc2, 0xd8, 0xb4, 0x6f, 0x3c, 0x82, 0x81, 0x74,
+	0x50, 0x97, 0x70, 0x88, 0xc3, 0x21, 0x46, 0xc4, 0x47, 0xb8, 0x6a, 0xd1, 0x5e, 0xa2, 0x9a, 0x76,
+	0x0a, 0xfb, 0x24, 0x89, 0x25, 0x3a, 0xcc, 0x5d, 0xcd, 0xd8, 0xd3, 0x40, 0x19, 0xe5, 0x03, 0x1c,
+	0xb1, 0x2c, 0x4b, 0x38, 0xc6, 0x21, 0x4b, 0x65, 0x21, 0x48, 0xb9, 0x7b, 0x67, 0x5b, 0x57, 0xcd,
+	0x6e, 0x67, 0x5d, 0xbf, 0xd7, 0x45, 0xf4, 0x15, 0xa9, 0xa7, 0x0b, 0x96, 0x99, 0x05, 0x87, 0x95,
+	0x92, 0xc1, 0x55, 0xeb, 0xbb, 0x05, 0xa7, 0x6b, 0xf8, 0xce, 0x0d, 0x34, 0x06, 0xfa, 0x42, 0x67,
+	0xdb, 0xec, 0xbe, 0xf9, 0x67, 0x44, 0x46, 0x47, 0x67, 0x54, 0x95, 0x96, 0x29, 0xd5, 0x06, 0xa8,
+	0x1a, 0x37, 0x58, 0x76, 0xa2, 0x09, 0x03, 0x96, 0x94, 0x9a, 0x9a, 0x60, 0x06, 0x0e, 0x2a, 0xa8,
+	0x97, 0x52, 0x8b, 0xc3, 0xf9, 0xe7, 0x72, 0x3d, 0x56, 0xe6, 0x20, 0x40, 0x95, 0x49, 0xa1, 0xb0,
+	0xee, 0xf5, 0x16, 0x76, 0x51, 0x50, 0xce, 0x51, 0xb9, 0x96, 0xce, 0x67, 0xed, 0xff, 0xfc, 0x7b,
+	0x98, 0x82, 0x45, 0xe9, 0x35, 0xfb, 0x31, 0xf3, 0xac, 0xe9, 0xcc, 0xb3, 0x7e, 0xcf, 0x3c, 0xeb,
+	0xdb, 0xdc, 0xdb, 0x98, 0xce, 0xbd, 0x8d, 0x9f, 0x73, 0x6f, 0x03, 0x5e, 0x70, 0xf9, 0xac, 0x60,
+	0xdf, 0x7a, 0x78, 0xfb, 0xc8, 0xe9, 0x4b, 0x31, 0xf0, 0x23, 0x99, 0xb6, 0x6b, 0xca, 0x3b, 0x2e,
+	0x57, 0x4e, 0xed, 0x71, 0xb5, 0xaa, 0x83, 0x86, 0xde, 0xd5, 0xf7, 0x7f, 0x02, 0x00, 0x00, 0xff,
+	0xff, 0xa9, 0x5a, 0x23, 0xcf, 0x0f, 0x04, 0x00, 0x00,
 }
 
 func (m *LedgerPlainText) Marshal() (dAtA []byte, err error) {
@@ -408,19 +393,12 @@ func (m *LedgerPlainText) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.MaturityDate)
 		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.MaturityDate)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x32
 	}
 	if len(m.InterestRate) > 0 {
 		i -= len(m.InterestRate)
 		copy(dAtA[i:], m.InterestRate)
 		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.InterestRate)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.Status) > 0 {
-		i -= len(m.Status)
-		copy(dAtA[i:], m.Status)
-		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.Status)))
 		i--
 		dAtA[i] = 0x2a
 	}
@@ -438,17 +416,17 @@ func (m *LedgerPlainText) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.Denom)))
+	if len(m.Status) > 0 {
+		i -= len(m.Status)
+		copy(dAtA[i:], m.Status)
+		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.Status)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.NftAddress) > 0 {
-		i -= len(m.NftAddress)
-		copy(dAtA[i:], m.NftAddress)
-		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.NftAddress)))
+	if len(m.NftId) > 0 {
+		i -= len(m.NftId)
+		copy(dAtA[i:], m.NftId)
+		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.NftId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -510,17 +488,17 @@ func (m *LedgerEntryPlainText) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	if len(m.SubType) > 0 {
-		i -= len(m.SubType)
-		copy(dAtA[i:], m.SubType)
-		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.SubType)))
+	if m.Type != nil {
+		{
+			size, err := m.Type.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintLedgerQuery(dAtA, i, uint64(size))
+		}
 		i--
-		dAtA[i] = 0x22
-	}
-	if m.Type != 0 {
-		i = encodeVarintLedgerQuery(dAtA, i, uint64(m.Type))
-		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x1a
 	}
 	if m.Sequence != 0 {
 		i = encodeVarintLedgerQuery(dAtA, i, uint64(m.Sequence))
@@ -571,10 +549,15 @@ func (m *LedgerBucketAmountPlainText) MarshalToSizedBuffer(dAtA []byte) (int, er
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Bucket) > 0 {
-		i -= len(m.Bucket)
-		copy(dAtA[i:], m.Bucket)
-		i = encodeVarintLedgerQuery(dAtA, i, uint64(len(m.Bucket)))
+	if m.Bucket != nil {
+		{
+			size, err := m.Bucket.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintLedgerQuery(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0xa
 	}
@@ -635,11 +618,11 @@ func (m *LedgerPlainText) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.NftAddress)
+	l = len(m.NftId)
 	if l > 0 {
 		n += 1 + l + sovLedgerQuery(uint64(l))
 	}
-	l = len(m.Denom)
+	l = len(m.Status)
 	if l > 0 {
 		n += 1 + l + sovLedgerQuery(uint64(l))
 	}
@@ -648,10 +631,6 @@ func (m *LedgerPlainText) Size() (n int) {
 		n += 1 + l + sovLedgerQuery(uint64(l))
 	}
 	l = len(m.NextPmtAmt)
-	if l > 0 {
-		n += 1 + l + sovLedgerQuery(uint64(l))
-	}
-	l = len(m.Status)
 	if l > 0 {
 		n += 1 + l + sovLedgerQuery(uint64(l))
 	}
@@ -679,11 +658,8 @@ func (m *LedgerEntryPlainText) Size() (n int) {
 	if m.Sequence != 0 {
 		n += 1 + sovLedgerQuery(uint64(m.Sequence))
 	}
-	if m.Type != 0 {
-		n += 1 + sovLedgerQuery(uint64(m.Type))
-	}
-	l = len(m.SubType)
-	if l > 0 {
+	if m.Type != nil {
+		l = m.Type.Size()
 		n += 1 + l + sovLedgerQuery(uint64(l))
 	}
 	l = len(m.PostedDate)
@@ -713,8 +689,8 @@ func (m *LedgerBucketAmountPlainText) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Bucket)
-	if l > 0 {
+	if m.Bucket != nil {
+		l = m.Bucket.Size()
 		n += 1 + l + sovLedgerQuery(uint64(l))
 	}
 	l = len(m.AppliedAmt)
@@ -780,7 +756,7 @@ func (m *LedgerPlainText) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NftAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NftId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -808,11 +784,11 @@ func (m *LedgerPlainText) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NftAddress = string(dAtA[iNdEx:postIndex])
+			m.NftId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -840,7 +816,7 @@ func (m *LedgerPlainText) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
+			m.Status = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -908,38 +884,6 @@ func (m *LedgerPlainText) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowLedgerQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthLedgerQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthLedgerQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InterestRate", wireType)
 			}
 			var stringLen uint64
@@ -970,7 +914,7 @@ func (m *LedgerPlainText) Unmarshal(dAtA []byte) error {
 			}
 			m.InterestRate = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaturityDate", wireType)
 			}
@@ -1104,10 +1048,10 @@ func (m *LedgerEntryPlainText) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
 			}
-			m.Type = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowLedgerQuery
@@ -1117,42 +1061,27 @@ func (m *LedgerEntryPlainText) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Type |= LedgerEntryType(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SubType", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowLedgerQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthLedgerQuery
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthLedgerQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SubType = string(dAtA[iNdEx:postIndex])
+			if m.Type == nil {
+				m.Type = &LedgerClassEntryType{}
+			}
+			if err := m.Type.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -1338,7 +1267,7 @@ func (m *LedgerBucketAmountPlainText) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Bucket", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowLedgerQuery
@@ -1348,23 +1277,27 @@ func (m *LedgerBucketAmountPlainText) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthLedgerQuery
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthLedgerQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Bucket = string(dAtA[iNdEx:postIndex])
+			if m.Bucket == nil {
+				m.Bucket = &LedgerClassBucketType{}
+			}
+			if err := m.Bucket.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {

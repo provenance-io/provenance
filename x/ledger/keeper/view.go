@@ -22,6 +22,9 @@ type ViewKeeper interface {
 	ListLedgerEntries(ctx context.Context, nftAddress string) ([]*ledger.LedgerEntry, error)
 	GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error)
 	GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error)
+	GetLedgerClassEntryTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassEntryType, error)
+	GetLedgerClassStatusTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassStatusType, error)
+	GetLedgerClassBucketTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassBucketType, error)
 }
 
 type BaseViewKeeper struct {
@@ -29,10 +32,15 @@ type BaseViewKeeper struct {
 	storeKey storetypes.StoreKey
 	schema   collections.Schema
 
-	Ledgers           collections.Map[string, ledger.Ledger]
-	LedgerEntries     collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
-	FundTransfers     collections.Map[collections.Pair[string, string], ledger.FundTransfer]
-	BucketTypeMapping collections.Map[string, string]
+	Ledgers       collections.Map[string, ledger.Ledger]
+	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
+	FundTransfers collections.Map[collections.Pair[string, string], ledger.FundTransfer]
+
+	// LedgerClasses stores the configuration of all ledgers for a given class of asset.
+	LedgerClasses          collections.Map[string, ledger.LedgerClass]
+	LedgerClassEntryTypes  collections.Map[collections.Pair[string, int32], ledger.LedgerClassEntryType]
+	LedgerClassStatusTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassStatusType]
+	LedgerClassBucketTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassBucketType]
 }
 
 func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) BaseViewKeeper {
@@ -63,8 +71,37 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[ledger.FundTransfer](cdc),
 		),
-	}
 
+		// Ledger Class configuration data
+		LedgerClasses: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassesPrefix),
+			ledgerClassesPrefix,
+			collections.StringKey,
+			codec.CollValue[ledger.LedgerClass](cdc),
+		),
+		LedgerClassEntryTypes: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassEntryTypesPrefix),
+			ledgerClassEntryTypesPrefix,
+			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
+			codec.CollValue[ledger.LedgerClassEntryType](cdc),
+		),
+		LedgerClassStatusTypes: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassStatusTypesPrefix),
+			ledgerClassStatusTypesPrefix,
+			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
+			codec.CollValue[ledger.LedgerClassStatusType](cdc),
+		),
+		LedgerClassBucketTypes: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassBucketTypesPrefix),
+			ledgerClassBucketTypesPrefix,
+			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
+			codec.CollValue[ledger.LedgerClassBucketType](cdc),
+		),
+	}
 	// Build and set the schema
 	schema, err := sb.Build()
 	if err != nil {
@@ -224,7 +261,7 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 	}
 
 	// Map of bucket name to list of bucket balances.
-	bucketBalances := make(map[string]*ledger.BucketBalance, 0)
+	bucketBalances := make(map[int32]*ledger.BucketBalance, 0)
 
 	// Calculate balances up to the specified date
 	for _, entry := range entries {
@@ -233,12 +270,18 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 			break
 		}
 
-		// store the balance for each bucket
+		// Add the applied amount to the balance for the bucket
 		for _, appliedAmount := range entry.AppliedAmounts {
-			bucketBalances[appliedAmount.Bucket] = &ledger.BucketBalance{
-				Bucket:  appliedAmount.Bucket,
-				Balance: appliedAmount.BalanceAmt,
+			bucketBalance, ok := bucketBalances[appliedAmount.BucketTypeId]
+			if !ok {
+				bucketBalance = &ledger.BucketBalance{
+					BucketTypeId: appliedAmount.BucketTypeId,
+					Balance:      0,
+				}
 			}
+
+			bucketBalance.Balance += appliedAmount.AppliedAmt
+
 		}
 	}
 
@@ -247,11 +290,79 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 		bucketBalancesList = append(bucketBalancesList, balance)
 	}
 
+	// Not sure this really helps sort anything since the id's are arbitrary.
 	sort.Slice(bucketBalancesList, func(i, j int) bool {
-		return bucketBalancesList[i].Bucket < bucketBalancesList[j].Bucket
+		return bucketBalancesList[i].BucketTypeId < bucketBalancesList[j].BucketTypeId
 	})
 
 	return &ledger.Balances{
 		BucketBalances: bucketBalancesList,
 	}, nil
+}
+
+func (k BaseViewKeeper) GetLedgerClassEntryTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassEntryType, error) {
+	prefix := collections.NewPrefixedPairRange[string, int32](assetClassId)
+	iter, err := k.LedgerClassEntryTypes.Iterate(ctx, prefix)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+
+	entryTypes := make([]*ledger.LedgerClassEntryType, 0)
+	for ; iter.Valid(); iter.Next() {
+		entryType, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+
+		entryTypes = append(entryTypes, &entryType)
+	}
+
+	return entryTypes, nil
+}
+
+func SliceToMap[T any, K comparable](list []T, keyFn func(T) K) map[K]T {
+	result := make(map[K]T, len(list))
+	for _, item := range list {
+		result[keyFn(item)] = item
+	}
+	return result
+}
+
+func (k BaseViewKeeper) GetLedgerClassStatusTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassStatusType, error) {
+	prefix := collections.NewPrefixedPairRange[string, int32](assetClassId)
+	iter, err := k.LedgerClassStatusTypes.Iterate(ctx, prefix)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+
+	statusTypes := make([]*ledger.LedgerClassStatusType, 0)
+	for ; iter.Valid(); iter.Next() {
+		statusType, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+		statusTypes = append(statusTypes, &statusType)
+	}
+	return statusTypes, nil
+}
+
+func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassBucketType, error) {
+	prefix := collections.NewPrefixedPairRange[string, int32](assetClassId)
+	iter, err := k.LedgerClassBucketTypes.Iterate(ctx, prefix)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+
+	bucketTypes := make([]*ledger.LedgerClassBucketType, 0)
+	for ; iter.Valid(); iter.Next() {
+		bucketType, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+		bucketTypes = append(bucketTypes, &bucketType)
+	}
+	return bucketTypes, nil
 }

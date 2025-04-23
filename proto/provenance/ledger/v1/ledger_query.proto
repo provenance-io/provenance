@@ -10,25 +10,22 @@ import "provenance/ledger/v1/ledger.proto";
 // Ledger
 message LedgerPlainText {
   // Address of the NFT to which this ledger is linked.
-  string nft_address = 1;
+  string nft_id = 1;
 
-  // This denom will represent the entry values within the ledger.
-  string denom = 2;
+  // Status of the ledger
+  string status = 2;
 
-  // Next payment date days since epoch
+  // Next payment date
   string next_pmt_date = 3;
 
   // Next payment amount
   string next_pmt_amt = 4;
 
-  // Status of the ledger
-  string status = 5;
-
   // Interest rate
-  string interest_rate = 6;
+  string interest_rate = 5;
 
-  // Maturity date days since epoch
-  string maturity_date = 7;
+  // Maturity date
+  string maturity_date = 6;
 }
 
 // LedgerEntry
@@ -41,24 +38,26 @@ message LedgerEntryPlainText {
   // share the same effective date. Entries are sorted first by effective date, then by sequence.
   uint32 sequence = 2;
 
-  LedgerEntryType type     = 3;
-  string          sub_type = 4;
+  // The type of ledger entry specified by the LedgerClassEntryType.id
+  LedgerClassEntryType type = 3;
 
-  // Posted date days since epoch
+  // Posted date
   string posted_date = 5;
 
-  // Effective date days since epoch
+  // Effective date
   string effective_date = 6;
 
+  // The total amount of the ledger entry
   string total_amt = 7;
 
+  // The amounts applied to each bucket
   repeated LedgerBucketAmountPlainText applied_amounts = 8;
 }
 
 message LedgerBucketAmountPlainText {
-  string bucket      = 1;
-  string applied_amt = 2;
-  string balance_amt = 3;
+  LedgerClassBucketType bucket      = 1;
+  string                applied_amt = 2;
+  string                balance_amt = 3;
 }
 
 message QueryLedgerEntryResponsePlainText {
