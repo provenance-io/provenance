@@ -20,9 +20,13 @@ type BaseKeeper struct {
 }
 
 const (
-	ledgerPrefix        = "ledgers"
-	entriesPrefix       = "ledger_entries"
-	fundTransfersPrefix = "fund_transfers"
+	ledgerPrefix                 = "ledgers"
+	entriesPrefix                = "ledger_entries"
+	fundTransfersPrefix          = "fund_transfers"
+	ledgerClassesPrefix          = "ledger_classes"
+	ledgerClassEntryTypesPrefix  = "ledger_class_entry_types"
+	ledgerClassStatusTypesPrefix = "ledger_class_status_types"
+	ledgerClassBucketTypesPrefix = "ledger_class_bucket_types"
 )
 
 // NewKeeper returns a new mymodule Keeper.

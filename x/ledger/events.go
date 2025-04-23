@@ -11,11 +11,10 @@ const (
 )
 
 // NewEventLedgerCreated creates a new EventLedgerCreated event
-func NewEventLedgerCreated(nftAddress, denom string) sdk.Event {
+func NewEventLedgerCreated(nftAddress string) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeLedgerCreated,
 		sdk.NewAttribute("nft_address", nftAddress),
-		sdk.NewAttribute("denom", denom),
 	)
 }
 

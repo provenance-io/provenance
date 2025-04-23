@@ -9,6 +9,11 @@ import (
 var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
+	CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error
+	AddClassEntryType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassEntryType) error
+	AddClassStatusType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassStatusType) error
+	AddClassBucketType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassBucketType) error
+
 	CreateLedger(ctx sdk.Context, l ledger.Ledger) error
 	DestroyLedger(ctx sdk.Context, nftAddress string) error
 }
@@ -16,6 +21,96 @@ type ConfigKeeper interface {
 type BaseConfigKeeper struct {
 	BaseViewKeeper
 	BankKeeper
+}
+
+func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	has, err := k.LedgerClasses.Has(ctx, l.AssetClassId)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class")
+	}
+
+	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
+	if !k.HasSupply(ctx, l.Denom) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
+	}
+
+	err = k.LedgerClasses.Set(ctx, l.AssetClassId, l)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassEntryType) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	key := collections.Join(assetClassId, l.Id)
+
+	has, err := k.LedgerClassEntryTypes.Has(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class entry type")
+	}
+
+	err = k.LedgerClassEntryTypes.Set(ctx, key, l)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassStatusType) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	key := collections.Join(assetClassId, l.Id)
+
+	has, err := k.LedgerClassStatusTypes.Has(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class status type")
+	}
+
+	err = k.LedgerClassStatusTypes.Set(ctx, key, l)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassBucketType) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	key := collections.Join(assetClassId, l.Id)
+
+	has, err := k.LedgerClassBucketTypes.Has(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class bucket type")
+	}
+
+	err = k.LedgerClassBucketTypes.Set(ctx, key, l)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SetValue stores a value with a given key.
@@ -33,9 +128,24 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 		return err
 	}
 
-	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
-	if !k.HasSupply(ctx, l.Denom) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
+	// Validate that the LedgerClass exists
+	hasLedgerClass, err := k.LedgerClasses.Has(ctx, l.AssetClassId)
+	if err != nil {
+		return err
+	}
+
+	if !hasLedgerClass {
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class")
+	}
+
+	// Validate that the LedgerClassStatusType exists
+	hasLedgerClassStatusType, err := k.LedgerClassStatusTypes.Has(ctx, collections.Join(l.AssetClassId, l.StatusTypeId))
+	if err != nil {
+		return err
+	}
+
+	if !hasLedgerClassStatusType {
+		return NewLedgerCodedError(ErrCodeInvalidField, "status_type_id")
 	}
 
 	// TODO validate that the {addr} can be modified by the signer...
@@ -51,7 +161,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 	}
 
 	// Emit the ledger created event
-	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(nftAddress, l.Denom))
+	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(nftAddress))
 
 	return nil
 }

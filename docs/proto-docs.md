@@ -275,19 +275,23 @@
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
     - [Balances](#provenance-ledger-v1-Balances)
     - [BucketBalance](#provenance-ledger-v1-BucketBalance)
-    - [FundTransfer](#provenance-ledger-v1-FundTransfer)
-    - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
     - [Ledger](#provenance-ledger-v1-Ledger)
     - [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount)
+    - [LedgerClass](#provenance-ledger-v1-LedgerClass)
+    - [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType)
+    - [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType)
+    - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
-    - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
-  
-    - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
-    - [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
     - [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest)
     - [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse)
+    - [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest)
+    - [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse)
+    - [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest)
+    - [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse)
+    - [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest)
+    - [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse)
     - [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest)
     - [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse)
     - [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest)
@@ -297,11 +301,12 @@
   
     - [Query](#provenance-ledger-v1-Query)
   
-- [provenance/ledger/v1/event.proto](#provenance_ledger_v1_event-proto)
-    - [EventBalanceUpdated](#provenance-ledger-v1-EventBalanceUpdated)
-    - [EventLedgerConfigUpdated](#provenance-ledger-v1-EventLedgerConfigUpdated)
-    - [EventLedgerCreated](#provenance-ledger-v1-EventLedgerCreated)
-    - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
+- [provenance/ledger/v1/ledger_settlement.proto](#provenance_ledger_v1_ledger_settlement-proto)
+    - [FundTransfer](#provenance-ledger-v1-FundTransfer)
+    - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
+    - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
+  
+    - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
   
 - [provenance/ledger/v1/ledger_query.proto](#provenance_ledger_v1_ledger_query-proto)
     - [LedgerBucketAmountPlainText](#provenance-ledger-v1-LedgerBucketAmountPlainText)
@@ -4674,45 +4679,8 @@ Balances represents the current balances for principal, interest, and other amou
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bucket` | [string](#string) |  |  |
-| `balance` | [int64](#int64) |  |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-FundTransfer"></a>
-
-### FundTransfer
-FundTransfer represents a single fund transfer to process
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `ledger_entry_correlation_id` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
-| `memo` | [string](#string) |  |  |
-| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
-
-### FundTransferWithSettlement
-FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
-| `ledger_entry_correlation_id` | [string](#string) |  |  |
-| `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id |
+| `balance` | [int64](#int64) |  | The balance of the bucket |
 
 
 
@@ -4727,11 +4695,11 @@ Ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
-| `denom` | [string](#string) |  | This denom will represent the entry values within the ledger. |
+| `nft_address` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
+| `asset_class_id` | [string](#string) |  | Asset class id for the ledger |
+| `status_type_id` | [int32](#int32) |  | Status of the ledger |
 | `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
 | `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
-| `status` | [string](#string) |  | Status of the ledger |
 | `interest_rate` | [int32](#int32) |  | Interest rate |
 | `maturity_date` | [int32](#int32) |  | Maturity date days since epoch |
 
@@ -4748,9 +4716,78 @@ Ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bucket` | [string](#string) |  |  |
-| `applied_amt` | [int64](#int64) |  |  |
-| `balance_amt` | [int64](#int64) |  |  |
+| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id |
+| `applied_amt` | [int64](#int64) |  | The amount applied to the bucket |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClass"></a>
+
+### LedgerClass
+LedgerClass contains the configuration for a ledger related to a particular class of asset. The asset class
+is defined by the either a scope spec `x/metadata`, or nft class `x/nft`. Ultimately, the configuration will
+assist in verifying the types that are associated with particular ledger entries.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
+| `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClassBucketType"></a>
+
+### LedgerClassBucketType
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [int32](#int32) |  | Unique ID for the bucket type (eg. 1, 2, 3, etc.) |
+| `code` | [string](#string) |  | Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "OTHER") |
+| `description` | [string](#string) |  | Description of the bucket type (eg. "Principal", "Interest", "Other") |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClassEntryType"></a>
+
+### LedgerClassEntryType
+LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
+for minimal data storage while providing a human readable description of the entry type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [int32](#int32) |  | Unique ID for the entry type (eg. 1, 2, 3, etc.) |
+| `code` | [string](#string) |  | Code for the entry type (eg. "DISBURSEMENT", "SCHEDULED_PAYMENT", "UNSCHEDULED_PAYMENT", "FORECLOSURE_PAYMENT", "FEE", "OTHER") |
+| `description` | [string](#string) |  | Description of the entry type (eg. "Disbursement", "Scheduled Payment", "Unscheduled Payment", "Foreclosure Payment", "Fee", "Other") |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClassStatusType"></a>
+
+### LedgerClassStatusType
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [int32](#int32) |  | Unique ID for the status type (eg. 1, 2, 3, etc.) |
+| `code` | [string](#string) |  | Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY""CLOSED", "CANCELLED", "SUSPENDED", "OTHER") |
+| `description` | [string](#string) |  | Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy", "Closed", "Cancelled", "Suspended", "Other") |
 
 
 
@@ -4766,69 +4803,20 @@ LedgerEntry
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
-| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
-| `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
-| `sub_type` | [string](#string) |  |  |
+| `reverses_correlation_id` | [string](#string) |  | If this entry reverses another entry, the correlation id of the entry it reverses |
+| `is_void` | [bool](#bool) |  | If true, this entry is a void and should not be included in the ledger balance calculations |
+| `sequence` | [uint32](#uint32) |  | The NFT address that this ledger entry pertains to Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
+| `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id |
 | `posted_date` | [int32](#int32) |  | Posted date days since epoch |
 | `effective_date` | [int32](#int32) |  | Effective date days since epoch |
-| `total_amt` | [int64](#int64) |  |  |
-| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-SettlementInstruction"></a>
-
-### SettlementInstruction
-SettlementInstruction represents blockchain-specific settlement instructions
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `amount` | [string](#string) |  |  |
-| `recipient_address` | [string](#string) |  | The recipient's blockchain address |
-| `memo` | [string](#string) |  | Optional memo or note for the transaction |
-| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
+| `total_amt` | [int64](#int64) |  | Total amount of the ledger entry |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts for each bucket |
 
 
 
 
 
  <!-- end messages -->
-
-
-<a name="provenance-ledger-v1-FundingTransferStatus"></a>
-
-### FundingTransferStatus
-FlowStatus represents the current status of a flow
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` |  |
-| `FUNDING_TRANSFER_STATUS_PENDING` | `1` |  |
-| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` |  |
-| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` |  |
-| `FUNDING_TRANSFER_STATUS_FAILED` | `4` |  |
-
-
-
-<a name="provenance-ledger-v1-LedgerEntryType"></a>
-
-### LedgerEntryType
-LedgerEntryType
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| `LEDGER_ENTRY_TYPE_UNSPECIFIED` | `0` |  |
-| `LEDGER_ENTRY_TYPE_DISBURSEMENT` | `1` |  |
-| `LEDGER_ENTRY_TYPE_SCHEDULED_PAYMENT` | `2` |  |
-| `LEDGER_ENTRY_TYPE_UNSCHEDULED_PAYMENT` | `3` |  |
-| `LEDGER_ENTRY_TYPE_FORECLOSURE_PAYMENT` | `4` |  |
-| `LEDGER_ENTRY_TYPE_FEE` | `5` |  |
-| `LEDGER_ENTRY_TYPE_OTHER` | `6` |  |
-
 
  <!-- end enums -->
 
@@ -4870,6 +4858,96 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `balances` | [Balances](#provenance-ledger-v1-Balances) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassBucketTypesRequest"></a>
+
+### QueryLedgerClassBucketTypesRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassBucketTypesResponse"></a>
+
+### QueryLedgerClassBucketTypesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket_types` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassEntryTypesRequest"></a>
+
+### QueryLedgerClassEntryTypesRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassEntryTypesResponse"></a>
+
+### QueryLedgerClassEntryTypesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entry_types` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassStatusTypesRequest"></a>
+
+### QueryLedgerClassStatusTypesRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassStatusTypesResponse"></a>
+
+### QueryLedgerClassStatusTypesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `status_types` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated |  |
 
 
 
@@ -4982,6 +5060,9 @@ Query defines the gRPC querier service for ledger module.
 | ----------- | ------------ | ------------- | ------------|
 | `Config` | [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest) | [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse) | Params queries params of the ledger module. |
 | `Entries` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) |  |
+| `ClassEntryTypes` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) |  |
+| `ClassStatusTypes` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) |  |
+| `ClassBucketTypes` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) |  |
 | `GetLedgerEntry` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
 | `GetBalancesAsOf` | [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest) | [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
 
@@ -4989,84 +5070,83 @@ Query defines the gRPC querier service for ledger module.
 
 
 
-<a name="provenance_ledger_v1_event-proto"></a>
+<a name="provenance_ledger_v1_ledger_settlement-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/ledger/v1/event.proto
+## provenance/ledger/v1/ledger_settlement.proto
 
 
 
-<a name="provenance-ledger-v1-EventBalanceUpdated"></a>
+<a name="provenance-ledger-v1-FundTransfer"></a>
 
-### EventBalanceUpdated
-EventBalanceUpdated is emitted when balances are updated due to a ledger entry.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  | The address of the NFT |
-| `principal_balance` | [string](#string) |  | The new principal balance |
-| `interest_balance` | [string](#string) |  | The new interest balance |
-| `other_balance` | [string](#string) |  | The new other balance |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-EventLedgerConfigUpdated"></a>
-
-### EventLedgerConfigUpdated
-EventLedgerConfigUpdated is emitted when ledger configuration is modified.
+### FundTransfer
+FundTransfer represents a single fund transfer to process
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  | The address of the NFT |
-| `denom` | [string](#string) |  | The new denomination |
-| `previous_denom` | [string](#string) |  | The previous denomination (if changed) |
+| `nft_address` | [string](#string) |  |  |
+| `ledger_entry_correlation_id` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
+| `memo` | [string](#string) |  |  |
+| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
 
 
 
 
 
 
-<a name="provenance-ledger-v1-EventLedgerCreated"></a>
+<a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
 
-### EventLedgerCreated
-EventLedgerCreated is emitted when a new ledger is created for an NFT.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  | The address of the NFT |
-| `denom` | [string](#string) |  | The denomination used for the ledger |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-EventLedgerEntryAdded"></a>
-
-### EventLedgerEntryAdded
-EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
+### FundTransferWithSettlement
+FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  | The address of the NFT |
-| `correlation_id` | [string](#string) |  | The correlation ID of the entry (max 50 characters) |
-| `entry_type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  | The type of the entry |
-| `posted_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry was posted |
-| `effective_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | The date the entry takes effect |
-| `amount` | [string](#string) |  | The total amount of the entry |
+| `nft_address` | [string](#string) |  |  |
+| `ledger_entry_correlation_id` | [string](#string) |  |  |
+| `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-SettlementInstruction"></a>
+
+### SettlementInstruction
+SettlementInstruction represents blockchain-specific settlement instructions
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [string](#string) |  |  |
+| `recipient_address` | [string](#string) |  | The recipient's blockchain address |
+| `memo` | [string](#string) |  | Optional memo or note for the transaction |
+| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
 
 
 
 
 
  <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-FundingTransferStatus"></a>
+
+### FundingTransferStatus
+FlowStatus represents the current status of a flow
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` |  |
+| `FUNDING_TRANSFER_STATUS_PENDING` | `1` |  |
+| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` |  |
+| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` |  |
+| `FUNDING_TRANSFER_STATUS_FAILED` | `4` |  |
+
 
  <!-- end enums -->
 
@@ -5091,7 +5171,7 @@ EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bucket` | [string](#string) |  |  |
+| `bucket` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  |  |
 | `applied_amt` | [string](#string) |  |  |
 | `balance_amt` | [string](#string) |  |  |
 
@@ -5110,12 +5190,11 @@ LedgerEntry
 | ----- | ---- | ----- | ----------- |
 | `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
 | `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
-| `type` | [LedgerEntryType](#provenance-ledger-v1-LedgerEntryType) |  |  |
-| `sub_type` | [string](#string) |  |  |
-| `posted_date` | [string](#string) |  | Posted date days since epoch |
-| `effective_date` | [string](#string) |  | Effective date days since epoch |
-| `total_amt` | [string](#string) |  |  |
-| `applied_amounts` | [LedgerBucketAmountPlainText](#provenance-ledger-v1-LedgerBucketAmountPlainText) | repeated |  |
+| `type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  | The type of ledger entry specified by the LedgerClassEntryType.id |
+| `posted_date` | [string](#string) |  | Posted date |
+| `effective_date` | [string](#string) |  | Effective date |
+| `total_amt` | [string](#string) |  | The total amount of the ledger entry |
+| `applied_amounts` | [LedgerBucketAmountPlainText](#provenance-ledger-v1-LedgerBucketAmountPlainText) | repeated | The amounts applied to each bucket |
 
 
 
@@ -5130,13 +5209,12 @@ Ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
-| `denom` | [string](#string) |  | This denom will represent the entry values within the ledger. |
-| `next_pmt_date` | [string](#string) |  | Next payment date days since epoch |
-| `next_pmt_amt` | [string](#string) |  | Next payment amount |
+| `nft_id` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
 | `status` | [string](#string) |  | Status of the ledger |
+| `next_pmt_date` | [string](#string) |  | Next payment date |
+| `next_pmt_amt` | [string](#string) |  | Next payment amount |
 | `interest_rate` | [string](#string) |  | Interest rate |
-| `maturity_date` | [string](#string) |  | Maturity date days since epoch |
+| `maturity_date` | [string](#string) |  | Maturity date |
 
 
 
