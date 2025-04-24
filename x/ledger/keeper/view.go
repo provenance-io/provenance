@@ -23,9 +23,9 @@ type ViewKeeper interface {
 	ListLedgerEntries(ctx context.Context, nftId string) ([]*ledger.LedgerEntry, error)
 	GetLedgerEntry(ctx context.Context, nftId string, correlationID string) (*ledger.LedgerEntry, error)
 	GetBalancesAsOf(ctx context.Context, nftId string, asOfDate time.Time) (*ledger.Balances, error)
-	GetLedgerClassEntryTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassEntryType, error)
-	GetLedgerClassStatusTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassStatusType, error)
-	GetLedgerClassBucketTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassBucketType, error)
+	GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error)
+	GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error)
+	GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error)
 }
 
 type BaseViewKeeper struct {
@@ -157,14 +157,14 @@ func (k BaseViewKeeper) HasLedger(ctx sdk.Context, nftAddress string) bool {
 	return has
 }
 
-func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string) ([]*ledger.LedgerEntry, error) {
+func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftId string) ([]*ledger.LedgerEntry, error) {
 	// Garbage in, garbage out.
-	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), nftAddress) {
+	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), nftId) {
 		return nil, nil
 	}
 
 	// Get all entries for the ledger.
-	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
+	prefix := collections.NewPrefixedPairRange[string, string](nftId)
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
 	if err != nil {
 		return nil, err
@@ -188,9 +188,9 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftAddress string
 }
 
 // GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
-func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error) {
+func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftId string, correlationID string) (*ledger.LedgerEntry, error) {
 	// Validate the NFT address
-	_, err := getAddress(&nftAddress)
+	_, err := getAddress(&nftId)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +199,7 @@ func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftAddress string, c
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "correlation_id")
 	}
 
-	entries, err := k.ListLedgerEntries(ctx, nftAddress)
+	entries, err := k.ListLedgerEntries(ctx, nftId)
 	if err != nil {
 		return nil, err
 	}
@@ -304,8 +304,8 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftId string, asOfD
 	}, nil
 }
 
-func (k BaseViewKeeper) GetLedgerClassEntryTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassEntryType, error) {
-	prefix := collections.NewPrefixedPairRange[string, int32](assetClassId)
+func (k BaseViewKeeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error) {
+	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 	iter, err := k.LedgerClassEntryTypes.Iterate(ctx, prefix)
 	if err != nil {
 		return nil, err
@@ -333,8 +333,8 @@ func SliceToMap[T any, K comparable](list []T, keyFn func(T) K) map[K]T {
 	return result
 }
 
-func (k BaseViewKeeper) GetLedgerClassStatusTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassStatusType, error) {
-	prefix := collections.NewPrefixedPairRange[string, int32](assetClassId)
+func (k BaseViewKeeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error) {
+	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 	iter, err := k.LedgerClassStatusTypes.Iterate(ctx, prefix)
 	if err != nil {
 		return nil, err
@@ -352,8 +352,8 @@ func (k BaseViewKeeper) GetLedgerClassStatusTypes(ctx context.Context, assetClas
 	return statusTypes, nil
 }
 
-func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassBucketType, error) {
-	prefix := collections.NewPrefixedPairRange[string, int32](assetClassId)
+func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error) {
+	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 	iter, err := k.LedgerClassBucketTypes.Iterate(ctx, prefix)
 	if err != nil {
 		return nil, err

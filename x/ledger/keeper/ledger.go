@@ -10,9 +10,9 @@ var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
 	CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error
-	AddClassEntryType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassEntryType) error
-	AddClassStatusType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassStatusType) error
-	AddClassBucketType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassBucketType) error
+	AddClassEntryType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassEntryType) error
+	AddClassStatusType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassStatusType) error
+	AddClassBucketType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassBucketType) error
 
 	CreateLedger(ctx sdk.Context, l ledger.Ledger) error
 	DestroyLedger(ctx sdk.Context, nftId string) error
@@ -21,12 +21,16 @@ type ConfigKeeper interface {
 type BaseConfigKeeper struct {
 	BaseViewKeeper
 	BankKeeper
+	NFTKeeper
 }
 
 func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error {
-	// TODO verify that signature has authority over the assetClassId
+	_, found := k.NFTKeeper.GetClass(ctx, l.AssetClassId)
+	if !found {
+		return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id")
+	}
 
-	has, err := k.LedgerClasses.Has(ctx, l.AssetClassId)
+	has, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
 	if err != nil {
 		return err
 	}
@@ -40,7 +44,7 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClas
 		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
 	}
 
-	err = k.LedgerClasses.Set(ctx, l.AssetClassId, l)
+	err = k.LedgerClasses.Set(ctx, l.LedgerClassId, l)
 	if err != nil {
 		return err
 	}
@@ -48,10 +52,10 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClas
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassEntryType) error {
+func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassEntryType) error {
 	// TODO verify that signature has authority over the assetClassId
 
-	key := collections.Join(assetClassId, l.Id)
+	key := collections.Join(ledgerClassId, l.Id)
 
 	has, err := k.LedgerClassEntryTypes.Has(ctx, key)
 	if err != nil {
@@ -70,10 +74,10 @@ func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, assetClassId string
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassStatusType) error {
+func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassStatusType) error {
 	// TODO verify that signature has authority over the assetClassId
 
-	key := collections.Join(assetClassId, l.Id)
+	key := collections.Join(ledgerClassId, l.Id)
 
 	has, err := k.LedgerClassStatusTypes.Has(ctx, key)
 	if err != nil {
@@ -91,10 +95,10 @@ func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, assetClassId strin
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassBucketType) error {
+func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassBucketType) error {
 	// TODO verify that signature has authority over the assetClassId
 
-	key := collections.Join(assetClassId, l.Id)
+	key := collections.Join(ledgerClassId, l.Id)
 
 	has, err := k.LedgerClassBucketTypes.Has(ctx, key)
 	if err != nil {
@@ -129,7 +133,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 	}
 
 	// Validate that the LedgerClass exists
-	hasLedgerClass, err := k.LedgerClasses.Has(ctx, l.AssetClassId)
+	hasLedgerClass, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
 	if err != nil {
 		return err
 	}
@@ -139,7 +143,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 	}
 
 	// Validate that the LedgerClassStatusType exists
-	hasLedgerClassStatusType, err := k.LedgerClassStatusTypes.Has(ctx, collections.Join(l.AssetClassId, l.StatusTypeId))
+	hasLedgerClassStatusType, err := k.LedgerClassStatusTypes.Has(ctx, collections.Join(l.LedgerClassId, l.StatusTypeId))
 	if err != nil {
 		return err
 	}

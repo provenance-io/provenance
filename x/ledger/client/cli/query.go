@@ -150,8 +150,8 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 			config := getConfig(nftId)
 			entries := getEntries(nftId)
-			entryTypes := getEntryTypes(config.Ledger.AssetClassId)
-			bucketTypes := getBucketTypes(config.Ledger.AssetClassId)
+			entryTypes := getEntryTypes(config.Ledger.LedgerClassId)
+			bucketTypes := getBucketTypes(config.Ledger.LedgerClassId)
 
 			plainTextEntries := make([]*ledger.LedgerEntryPlainText, len(entries))
 			for i, entry := range entries {

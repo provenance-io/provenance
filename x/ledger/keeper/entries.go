@@ -55,7 +55,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftId string, les []*l
 		}
 
 		// Validate that the LedgerClassEntryType exists
-		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.AssetClassId, le.EntryTypeId))
+		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.LedgerClassId, le.EntryTypeId))
 		if err != nil {
 			return err
 		}
