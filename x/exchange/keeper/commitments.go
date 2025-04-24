@@ -417,6 +417,12 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	return nil
 }
 
+// ReleaseCommitments calls ReleaseCommitment for several entries.
+func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentsRequest) error {
+	var errs []error
+	return errors.Join(errs...)
+}
+
 // consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.
 func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
 	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)
