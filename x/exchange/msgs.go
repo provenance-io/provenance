@@ -24,6 +24,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgMarketSettleRequest)(nil),
 	(*MsgMarketCommitmentSettleRequest)(nil),
 	(*MsgMarketReleaseCommitmentsRequest)(nil),
+	(*MsgMarketTransferCommitmentsRequest)(nil),
 	(*MsgMarketSetOrderExternalIDRequest)(nil),
 	(*MsgMarketWithdrawRequest)(nil),
 	(*MsgMarketUpdateDetailsRequest)(nil),
@@ -359,6 +360,40 @@ func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
 		errs = append(errs, err)
 	}
 
+	return errors.Join(errs...)
+}
+
+func (m MsgMarketTransferCommitmentsRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.CurrentMarketId == 0 {
+		errs = append(errs, errors.New("invalid current market id: cannot be zero"))
+	}
+
+	if m.NewMarketId == 0 {
+		errs = append(errs, errors.New("invalid new market id: cannot be zero"))
+	}
+
+	if m.CurrentMarketId == m.NewMarketId {
+		errs = append(errs, errors.New("invalid new market id: cannot be the same as current market id"))
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.Account); err != nil {
+		errs = append(errs, fmt.Errorf("invalid to address %q: %w", m.Account, err))
+	}
+
+	if err := m.Amount.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid amount %q: %w", m.Amount, err))
+	} else if m.Amount.IsZero() {
+		errs = append(errs, fmt.Errorf("invalid amount %q: cannot be zero", m.Amount))
+	}
+	if err := ValidateEventTag(m.EventTag); err != nil {
+		errs = append(errs, err)
+	}
 	return errors.Join(errs...)
 }
 

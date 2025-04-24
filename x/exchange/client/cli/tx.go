@@ -33,6 +33,7 @@ func CmdTx() *cobra.Command {
 		CmdTxMarketSettle(),
 		CmdTxMarketCommitmentSettle(),
 		CmdTxMarketReleaseCommitments(),
+		CmdTxMarketTransferCommitments(),
 		CmdTxMarketSetOrderExternalID(),
 		CmdTxMarketWithdraw(),
 		CmdTxMarketUpdateDetails(),
@@ -178,6 +179,19 @@ func CmdTxMarketReleaseCommitments() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketReleaseCommitments(cmd)
+	return cmd
+}
+
+func CmdTxMarketTransferCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-transfer-commitments",
+		Aliases: []string{"transfer-commitments"},
+		Short:   "Transfer funds from one market to another market",
+		RunE:    genericTxRunE(MakeMsgMarketTransferCommitments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketTransferCommitments(cmd)
 	return cmd
 }
 

@@ -68,6 +68,8 @@ const (
 	FlagIcon                 = "icon"
 	FlagInputs               = "inputs"
 	FlagMarket               = "market"
+	FlagCurrentMarket        = "current-market"
+	FlagNewMarket            = "new-market"
 	FlagName                 = "name"
 	FlagNavs                 = "navs"
 	FlagNewTarget            = "new-target"
