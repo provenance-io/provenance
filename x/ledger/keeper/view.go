@@ -18,11 +18,11 @@ import (
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
 
 type ViewKeeper interface {
-	GetLedger(ctx sdk.Context, nftAddress string) (*ledger.Ledger, error)
-	HasLedger(ctx sdk.Context, nftAddress string) bool
-	ListLedgerEntries(ctx context.Context, nftAddress string) ([]*ledger.LedgerEntry, error)
-	GetLedgerEntry(ctx context.Context, nftAddress string, correlationID string) (*ledger.LedgerEntry, error)
-	GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error)
+	GetLedger(ctx sdk.Context, nftId string) (*ledger.Ledger, error)
+	HasLedger(ctx sdk.Context, nftId string) bool
+	ListLedgerEntries(ctx context.Context, nftId string) ([]*ledger.LedgerEntry, error)
+	GetLedgerEntry(ctx context.Context, nftId string, correlationID string) (*ledger.LedgerEntry, error)
+	GetBalancesAsOf(ctx context.Context, nftId string, asOfDate time.Time) (*ledger.Balances, error)
 	GetLedgerClassEntryTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassEntryType, error)
 	GetLedgerClassStatusTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassStatusType, error)
 	GetLedgerClassBucketTypes(ctx context.Context, assetClassId string) ([]*ledger.LedgerClassBucketType, error)
@@ -242,17 +242,18 @@ func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 }
 
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
-func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, asOfDate time.Time) (*ledger.Balances, error) {
+func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftId string, asOfDate time.Time) (*ledger.Balances, error) {
 	asOfDateInt := DaysSinceEpoch(asOfDate.UTC())
 
 	// Validate the NFT address
-	_, err := getAddress(&nftAddress)
+	// TODO Update this to look for scope id or nft id instead...
+	_, err := getAddress(&nftId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get all ledger entries for this NFT
-	entries, err := k.ListLedgerEntries(ctx, nftAddress)
+	entries, err := k.ListLedgerEntries(ctx, nftId)
 	if err != nil {
 		return nil, err
 	}
@@ -279,6 +280,9 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftAddress string, 
 					BucketTypeId: appliedAmount.BucketTypeId,
 					Balance:      math.NewInt(0),
 				}
+
+				// Add the bucket balance to the map
+				bucketBalances[appliedAmount.BucketTypeId] = bucketBalance
 			}
 
 			bucketBalance.Balance = bucketBalance.Balance.Add(appliedAmount.AppliedAmt)

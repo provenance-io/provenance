@@ -20,21 +20,21 @@ type BaseEntriesKeeper struct {
 }
 
 // SetValue stores a value with a given key.
-func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftAddress string, les []*ledger.LedgerEntry) error {
+func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftId string, les []*ledger.LedgerEntry) error {
 	// TODO validate that the {addr} can be modified by the signer...
 
 	if len(les) == 0 {
 		return NewLedgerCodedError(ErrCodeInvalidField, "entries", "cannot be nil or empty")
 	}
 
-	if !k.HasLedger(ctx, nftAddress) {
+	if !k.HasLedger(ctx, nftId) {
 		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
-	ledger, _ := k.GetLedger(ctx, nftAddress)
+	ledger, _ := k.GetLedger(ctx, nftId)
 
 	// Get all existing entries for this NFT
-	entries, err := k.ListLedgerEntries(ctx, nftAddress)
+	entries, err := k.ListLedgerEntries(ctx, nftId)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftAddress string, les
 			return NewLedgerCodedError(ErrCodeInvalidField, "entry_type_id")
 		}
 
-		err = k.saveEntry(ctx, nftAddress, entries, le)
+		err = k.saveEntry(ctx, nftId, entries, le)
 		if err != nil {
 			return err
 		}
