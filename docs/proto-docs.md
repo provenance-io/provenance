@@ -402,6 +402,31 @@
 - [provenance/attribute/v1/genesis.proto](#provenance_attribute_v1_genesis-proto)
     - [GenesisState](#provenance-attribute-v1-GenesisState)
   
+- [provenance/asset/v1/tx.proto](#provenance_asset_v1_tx-proto)
+    - [MsgAddAsset](#provenance-asset-v1-MsgAddAsset)
+    - [MsgAddAssetClass](#provenance-asset-v1-MsgAddAssetClass)
+    - [MsgAddAssetClassResponse](#provenance-asset-v1-MsgAddAssetClassResponse)
+    - [MsgAddAssetResponse](#provenance-asset-v1-MsgAddAssetResponse)
+  
+    - [Msg](#provenance-asset-v1-Msg)
+  
+- [provenance/asset/v1/asset.proto](#provenance_asset_v1_asset-proto)
+    - [Asset](#provenance-asset-v1-Asset)
+    - [AssetClass](#provenance-asset-v1-AssetClass)
+  
+- [provenance/asset/v1/query.proto](#provenance_asset_v1_query-proto)
+    - [QueryGetClass](#provenance-asset-v1-QueryGetClass)
+    - [QueryGetClassResponse](#provenance-asset-v1-QueryGetClassResponse)
+    - [QueryListAssetClasses](#provenance-asset-v1-QueryListAssetClasses)
+    - [QueryListAssetClassesResponse](#provenance-asset-v1-QueryListAssetClassesResponse)
+    - [QueryListAssets](#provenance-asset-v1-QueryListAssets)
+    - [QueryListAssetsResponse](#provenance-asset-v1-QueryListAssetsResponse)
+  
+    - [Query](#provenance-asset-v1-Query)
+  
+- [provenance/asset/v1/genesis.proto](#provenance_asset_v1_genesis-proto)
+    - [GenesisState](#provenance-asset-v1-GenesisState)
+  
 - [provenance/msgfees/v1/tx.proto](#provenance_msgfees_v1_tx-proto)
     - [MsgAddMsgFeeProposalRequest](#provenance-msgfees-v1-MsgAddMsgFeeProposalRequest)
     - [MsgAddMsgFeeProposalResponse](#provenance-msgfees-v1-MsgAddMsgFeeProposalResponse)
@@ -4512,7 +4537,7 @@ MsgAppendRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 | `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 | `authority` | [string](#string) |  |  |
 
@@ -4565,7 +4590,7 @@ MsgDestroyRequest represents a request to destroy a ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_address` | [string](#string) |  |  |
+| `nft_id` | [string](#string) |  |  |
 | `authority` | [string](#string) |  |  |
 
 
@@ -4696,7 +4721,7 @@ Ledger
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
-| `asset_class_id` | [string](#string) |  | Asset class id for the ledger |
+| `ledger_class_id` | [string](#string) |  | Ledger class id for the ledger |
 | `status_type_id` | [int32](#int32) |  | Status of the ledger |
 | `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
 | `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
@@ -4734,6 +4759,7 @@ assist in verifying the types that are associated with particular ledger entries
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | Unique ID for the ledger class (eg. 1, 2, 3, etc.) This is necessary since the nft class does not have an owner. |
 | `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
 | `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in |
 
@@ -6371,6 +6397,281 @@ GenesisState defines the attribute module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance-attribute-v1-Params) |  | params defines all the parameters of the module. |
 | `attributes` | [Attribute](#provenance-attribute-v1-Attribute) | repeated | deposits defines all the deposits present at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/tx.proto
+
+
+
+<a name="provenance-asset-v1-MsgAddAsset"></a>
+
+### MsgAddAsset
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset` | [Asset](#provenance-asset-v1-Asset) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgAddAssetClass"></a>
+
+### MsgAddAssetClass
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgAddAssetClassResponse"></a>
+
+### MsgAddAssetClassResponse
+
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgAddAssetResponse"></a>
+
+### MsgAddAssetResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-asset-v1-Msg"></a>
+
+### Msg
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `AddAsset` | [MsgAddAsset](#provenance-asset-v1-MsgAddAsset) | [MsgAddAssetResponse](#provenance-asset-v1-MsgAddAssetResponse) |  |
+| `AddAssetClass` | [MsgAddAssetClass](#provenance-asset-v1-MsgAddAssetClass) | [MsgAddAssetClassResponse](#provenance-asset-v1-MsgAddAssetClassResponse) |  |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_asset-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/asset.proto
+
+
+
+<a name="provenance-asset-v1-Asset"></a>
+
+### Asset
+Asset defines the asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id associated with the asset, similar to the contract address of ERC721 |
+| `id` | [string](#string) |  | id is a unique identifier of the asseet |
+| `uri` | [string](#string) |  | uri for the asset metadata stored off chain |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri |
+| `data` | [string](#string) |  | data is an app specific json data of the asset |
+
+
+
+
+
+
+<a name="provenance-asset-v1-AssetClass"></a>
+
+### AssetClass
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | id defines the unique identifier of the asset classification, similar to the contract address of ERC721 |
+| `name` | [string](#string) |  | name defines the human-readable name of the asset classification |
+| `symbol` | [string](#string) |  | symbol is an abbreviated name for asset classification |
+| `description` | [string](#string) |  | description is a brief description of asset classification |
+| `uri` | [string](#string) |  | uri for the class metadata stored off chain. It can define schema for Class and asset `Data` attributes |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri |
+| `data` | [string](#string) |  | data is the app specific json schema of the asset class |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/query.proto
+
+
+
+<a name="provenance-asset-v1-QueryGetClass"></a>
+
+### QueryGetClass
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryGetClassResponse"></a>
+
+### QueryGetClassResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assetClass` | [AssetClass](#provenance-asset-v1-AssetClass) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryListAssetClasses"></a>
+
+### QueryListAssetClasses
+
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryListAssetClassesResponse"></a>
+
+### QueryListAssetClassesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assetClasses` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryListAssets"></a>
+
+### QueryListAssets
+
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryListAssetsResponse"></a>
+
+### QueryListAssetsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-asset-v1-Query"></a>
+
+### Query
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `ListAssets` | [QueryListAssets](#provenance-asset-v1-QueryListAssets) | [QueryListAssetsResponse](#provenance-asset-v1-QueryListAssetsResponse) |  |
+| `ListAssetClasses` | [QueryListAssetClasses](#provenance-asset-v1-QueryListAssetClasses) | [QueryListAssetClassesResponse](#provenance-asset-v1-QueryListAssetClassesResponse) |  |
+| `GetClass` | [QueryGetClass](#provenance-asset-v1-QueryGetClass) | [QueryGetClassResponse](#provenance-asset-v1-QueryGetClassResponse) |  |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/genesis.proto
+
+
+
+<a name="provenance-asset-v1-GenesisState"></a>
+
+### GenesisState
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset` | [Asset](#provenance-asset-v1-Asset) | repeated |  |
+| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated |  |
 
 
 

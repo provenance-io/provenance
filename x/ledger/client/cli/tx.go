@@ -37,7 +37,7 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <nft_id> <asset_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
+		Use:     "create <nft_id> <ledger_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
 		Example: `$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
@@ -50,12 +50,12 @@ $ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1
 			}
 
 			nftId := args[0]
-			assetClassId := args[1]
+			ledgerClassId := args[1]
 
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
-				NftId:        nftId,
-				AssetClassId: assetClassId,
+				NftId:         nftId,
+				LedgerClassId: ledgerClassId,
 			}
 
 			// Add optional fields if provided

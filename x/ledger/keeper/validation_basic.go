@@ -10,8 +10,8 @@ import (
 )
 
 func ValidateLedgerBasic(l *ledger.Ledger) error {
-	if emptyString(&l.AssetClassId) {
-		return NewLedgerCodedError(ErrCodeMissingField, "asset_class_id")
+	if emptyString(&l.LedgerClassId) {
+		return NewLedgerCodedError(ErrCodeMissingField, "ledger_class_id")
 	}
 	if emptyString(&l.NftId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "nft_id")
