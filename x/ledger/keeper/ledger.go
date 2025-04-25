@@ -9,13 +9,108 @@ import (
 var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
+	CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error
+	AddClassEntryType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassEntryType) error
+	AddClassStatusType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassStatusType) error
+	AddClassBucketType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassBucketType) error
+
 	CreateLedger(ctx sdk.Context, l ledger.Ledger) error
-	DestroyLedger(ctx sdk.Context, nftAddress string) error
+	DestroyLedger(ctx sdk.Context, nftId string) error
 }
 
 type BaseConfigKeeper struct {
 	BaseViewKeeper
 	BankKeeper
+}
+
+func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	has, err := k.LedgerClasses.Has(ctx, l.AssetClassId)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class")
+	}
+
+	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
+	if !k.HasSupply(ctx, l.Denom) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
+	}
+
+	err = k.LedgerClasses.Set(ctx, l.AssetClassId, l)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassEntryType) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	key := collections.Join(assetClassId, l.Id)
+
+	has, err := k.LedgerClassEntryTypes.Has(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class entry type")
+	}
+
+	err = k.LedgerClassEntryTypes.Set(ctx, key, l)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassStatusType) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	key := collections.Join(assetClassId, l.Id)
+
+	has, err := k.LedgerClassStatusTypes.Has(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class status type")
+	}
+
+	err = k.LedgerClassStatusTypes.Set(ctx, key, l)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, assetClassId string, l ledger.LedgerClassBucketType) error {
+	// TODO verify that signature has authority over the assetClassId
+
+	key := collections.Join(assetClassId, l.Id)
+
+	has, err := k.LedgerClassBucketTypes.Has(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class bucket type")
+	}
+
+	err = k.LedgerClassBucketTypes.Set(ctx, key, l)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SetValue stores a value with a given key.
@@ -24,34 +119,49 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, l ledger.Ledger) error {
 		return err
 	}
 
-	if k.HasLedger(ctx, l.NftAddress) {
+	if k.HasLedger(ctx, l.NftId) {
 		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger")
 	}
 
-	_, err := getAddress(&l.NftAddress)
+	_, err := getAddress(&l.NftId)
 	if err != nil {
 		return err
 	}
 
-	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
-	if !k.HasSupply(ctx, l.Denom) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
+	// Validate that the LedgerClass exists
+	hasLedgerClass, err := k.LedgerClasses.Has(ctx, l.AssetClassId)
+	if err != nil {
+		return err
+	}
+
+	if !hasLedgerClass {
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class")
+	}
+
+	// Validate that the LedgerClassStatusType exists
+	hasLedgerClassStatusType, err := k.LedgerClassStatusTypes.Has(ctx, collections.Join(l.AssetClassId, l.StatusTypeId))
+	if err != nil {
+		return err
+	}
+
+	if !hasLedgerClassStatusType {
+		return NewLedgerCodedError(ErrCodeInvalidField, "status_type_id")
 	}
 
 	// TODO validate that the {addr} can be modified by the signer...
 
 	// We omit the nftAddress out of the data we store intentionally as
 	// a minor optimization since it is also our data key.
-	nftAddress := l.NftAddress
-	l.NftAddress = ""
+	nftId := l.NftId
+	l.NftId = ""
 
-	err = k.Ledgers.Set(ctx, nftAddress, l)
+	err = k.Ledgers.Set(ctx, nftId, l)
 	if err != nil {
 		return err
 	}
 
 	// Emit the ledger created event
-	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(nftAddress, l.Denom))
+	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(nftId))
 
 	return nil
 }
@@ -61,18 +171,18 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 }
 
 // DestroyLedger removes a ledger from the store by NFT address
-func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, nftAddress string) error {
-	if !k.HasLedger(ctx, nftAddress) {
+func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, nftId string) error {
+	if !k.HasLedger(ctx, nftId) {
 		return NewLedgerCodedError(ErrCodeInvalidField, "ledger")
 	}
 
 	// Remove the ledger from the store
-	err := k.Ledgers.Remove(ctx, nftAddress)
+	err := k.Ledgers.Remove(ctx, nftId)
 	if err != nil {
 		return err
 	}
 
-	prefix := collections.NewPrefixedPairRange[string, string](nftAddress)
+	prefix := collections.NewPrefixedPairRange[string, string](nftId)
 
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
 	if err != nil {

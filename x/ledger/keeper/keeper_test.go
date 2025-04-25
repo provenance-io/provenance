@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,6 +39,8 @@ type TestSuite struct {
 	addr1 sdk.AccAddress
 	addr2 sdk.AccAddress
 	addr3 sdk.AccAddress
+
+	pastDate int32
 }
 
 func (s *TestSuite) SetupTest() {
@@ -59,8 +62,61 @@ func (s *TestSuite) SetupTest() {
 	s.addr3 = addrs[2]
 
 	// Create a timestamp 24 hours in the past to avoid future date errors
-	pastDate = time.Now().Add(-24 * time.Hour).UTC()
-	validNftAddress = s.addr1.String()
+	s.pastDate = keeper.DaysSinceEpoch(time.Now().Add(-24 * time.Hour).UTC())
+
+	// Load the test ledger class configs
+	s.ConfigureTest()
+}
+
+func (s *TestSuite) ConfigureTest() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+
+	s.keeper.CreateLedgerClass(s.ctx, ledger.LedgerClass{
+		AssetClassId: "test-asset-class-id",
+		Denom:        s.bondDenom,
+	})
+
+	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
+		Id:          1,
+		Code:        "SCHEDULED_PAYMENT",
+		Description: "Scheduled Payment",
+	})
+
+	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
+		Id:          2,
+		Code:        "DISBURSEMENT",
+		Description: "Disbursement",
+	})
+
+	s.keeper.AddClassEntryType(s.ctx, "test-asset-class-id", ledger.LedgerClassEntryType{
+		Id:          3,
+		Code:        "ORIGINATION_FEE",
+		Description: "Origination Fee",
+	})
+
+	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
+		Id:          1,
+		Code:        "PRINCIPAL",
+		Description: "Principal",
+	})
+
+	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
+		Id:          2,
+		Code:        "INTEREST",
+		Description: "Interest",
+	})
+
+	s.keeper.AddClassBucketType(s.ctx, "test-asset-class-id", ledger.LedgerClassBucketType{
+		Id:          3,
+		Code:        "ESCROW",
+		Description: "Escrow",
+	})
+
+	s.keeper.AddClassStatusType(s.ctx, "test-asset-class-id", ledger.LedgerClassStatusType{
+		Id:          1,
+		Code:        "IN_REPAYMENT",
+		Description: "In Repayment",
+	})
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -70,8 +126,7 @@ func TestKeeperTestSuite(t *testing.T) {
 // TestCreateLedger tests the CreateLedger function
 func (s *TestSuite) TestCreateLedger() {
 	// Create a valid NFT address for testing
-	nftAddr := s.addr1.String()
-	denom := s.bondDenom
+	nftId := s.addr1.String()
 
 	tests := []struct {
 		name     string
@@ -82,40 +137,36 @@ func (s *TestSuite) TestCreateLedger() {
 		{
 			name: "valid ledger",
 			ledger: ledger.Ledger{
-				NftAddress: nftAddr,
-				Denom:      denom,
+				NftId:        nftId,
+				AssetClassId: "test-asset-class-id",
+				StatusTypeId: 1,
 			},
 			expEvent: true,
 		},
 		{
 			name: "empty nft address",
 			ledger: ledger.Ledger{
-				NftAddress: "",
-				Denom:      denom,
+				NftId:        "",
+				AssetClassId: "test-asset-class-id",
+				StatusTypeId: 1,
 			},
-			expErr: []string{"nft_address"},
-		},
-		{
-			name: "empty denom",
-			ledger: ledger.Ledger{
-				NftAddress: nftAddr,
-				Denom:      "",
-			},
-			expErr: []string{"denom"},
+			expErr: []string{"nft_id"},
 		},
 		{
 			name: "invalid nft address",
 			ledger: ledger.Ledger{
-				NftAddress: "invalid",
-				Denom:      denom,
+				NftId:        "invalid",
+				AssetClassId: "test-asset-class-id",
+				StatusTypeId: 1,
 			},
-			expErr: []string{"nft_address"},
+			expErr: []string{"nft_id"},
 		},
 		{
 			name: "duplicate ledger",
 			ledger: ledger.Ledger{
-				NftAddress: nftAddr,
-				Denom:      denom,
+				NftId:        nftId,
+				AssetClassId: "test-asset-class-id",
+				StatusTypeId: 1,
 			},
 			expErr: []string{"already exists"},
 		},
@@ -134,11 +185,11 @@ func (s *TestSuite) TestCreateLedger() {
 				s.Require().NoError(err, "CreateLedger error")
 
 				// Verify the ledger was created
-				l, err := s.keeper.GetLedger(s.ctx, tc.ledger.NftAddress)
+				l, err := s.keeper.GetLedger(s.ctx, tc.ledger.NftId)
 				s.Require().NoError(err, "GetLedger error")
 				s.Require().NotNil(l, "GetLedger result")
-				s.Require().Equal(tc.ledger.NftAddress, l.NftAddress, "ledger nft address")
-				s.Require().Equal(tc.ledger.Denom, l.Denom, "ledger denom")
+				s.Require().Equal(tc.ledger.NftId, l.NftId, "ledger nft address")
+				s.Require().Equal(tc.ledger.AssetClassId, l.AssetClassId, "ledger asset class id")
 
 				// Verify event emission
 				if tc.expEvent {
@@ -153,11 +204,9 @@ func (s *TestSuite) TestCreateLedger() {
 
 					s.Require().NotNil(foundEvent)
 					s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvent.Type, "event type")
-					s.Require().Len(foundEvent.Attributes, 2, "event attributes length")
-					s.Require().Equal("nft_address", foundEvent.Attributes[0].Key, "event nft address key")
-					s.Require().Equal(tc.ledger.NftAddress, foundEvent.Attributes[0].Value, "event nft address value")
-					s.Require().Equal("denom", foundEvent.Attributes[1].Key, "event denom key")
-					s.Require().Equal(tc.ledger.Denom, foundEvent.Attributes[1].Value, "event denom value")
+					s.Require().Len(foundEvent.Attributes, 1, "event attributes length")
+					s.Require().Equal("nft_id", foundEvent.Attributes[0].Key, "event nft address key")
+					s.Require().Equal(tc.ledger.NftId, foundEvent.Attributes[0].Value, "event nft address value")
 				}
 			}
 		})
@@ -167,48 +216,48 @@ func (s *TestSuite) TestCreateLedger() {
 // TestGetLedger tests the GetLedger function
 func (s *TestSuite) TestGetLedger() {
 	// Create a valid NFT address for testing
-	nftAddr := s.addr1.String()
-	denom := s.bondDenom
+	nftId := s.addr1.String()
 
 	// Create a valid ledger first that we can try to get
 	validLedger := ledger.Ledger{
-		NftAddress: nftAddr,
-		Denom:      denom,
+		NftId:        nftId,
+		AssetClassId: "test-asset-class-id",
+		StatusTypeId: 1,
 	}
 	err := s.keeper.CreateLedger(s.ctx, validLedger)
 	s.Require().NoError(err, "CreateLedger error")
 
 	tests := []struct {
 		name      string
-		nftAddr   string
+		nftId     string
 		expErr    []string
 		expLedger *ledger.Ledger
 	}{
 		{
 			name:      "valid ledger retrieval",
-			nftAddr:   nftAddr,
+			nftId:     nftId,
 			expLedger: &validLedger,
 		},
 		{
-			name:    "empty nft address",
-			nftAddr: "",
-			expErr:  []string{"nft_address"},
+			name:   "empty nft address",
+			nftId:  "",
+			expErr: []string{"nft_id"},
 		},
 		{
 			name:      "non-existent ledger",
-			nftAddr:   s.addr2.String(),
+			nftId:     s.addr2.String(),
 			expLedger: nil,
 		},
 		{
-			name:    "invalid nft address",
-			nftAddr: "invalid",
-			expErr:  []string{"nft_address"},
+			name:   "invalid nft address",
+			nftId:  "invalid",
+			expErr: []string{"nft_id"},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			ledger, err := s.keeper.GetLedger(s.ctx, tc.nftAddr)
+			ledger, err := s.keeper.GetLedger(s.ctx, tc.nftId)
 
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "GetLedger error")
@@ -219,8 +268,8 @@ func (s *TestSuite) TestGetLedger() {
 					s.Require().Nil(ledger, "GetLedger result should be nil for non-existent ledger")
 				} else {
 					s.Require().NotNil(ledger, "GetLedger result")
-					s.Require().Equal(tc.expLedger.NftAddress, ledger.NftAddress, "ledger nft address")
-					s.Require().Equal(tc.expLedger.Denom, ledger.Denom, "ledger denom")
+					s.Require().Equal(tc.expLedger.NftId, ledger.NftId, "ledger nft address")
+					s.Require().Equal(tc.expLedger.AssetClassId, ledger.AssetClassId, "ledger asset class id")
 				}
 			}
 		})
@@ -231,8 +280,9 @@ func (s *TestSuite) TestGetLedger() {
 func (s *TestSuite) TestGetLedgerEntry() {
 	// Create a test ledger
 	l := ledger.Ledger{
-		NftAddress: s.addr1.String(),
-		Denom:      s.bondDenom,
+		NftId:        s.addr1.String(),
+		AssetClassId: "test-asset-class-id",
+		StatusTypeId: 1,
 	}
 
 	err := s.keeper.CreateLedger(s.ctx, l)
@@ -243,21 +293,21 @@ func (s *TestSuite) TestGetLedgerEntry() {
 	// Test cases
 	tests := []struct {
 		name          string
-		nftAddr       string
+		nftId         string
 		correlationId string
 		expEntry      *ledger.LedgerEntry
 		expErr        *string
 	}{
 		{
 			name:          "invalid nft address",
-			nftAddr:       "invalid",
+			nftId:         "invalid",
 			correlationId: "test-correlation-id",
 			expEntry:      nil,
 			expErr:        &expErr,
 		},
 		{
 			name:          "not found",
-			nftAddr:       s.addr2.String(),
+			nftId:         s.addr2.String(),
 			correlationId: "test-correlation-id",
 			expEntry:      nil,
 			expErr:        nil,
@@ -266,7 +316,7 @@ func (s *TestSuite) TestGetLedgerEntry() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftAddr, tc.correlationId)
+			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftId, tc.correlationId)
 			if tc.expErr != nil {
 				s.Require().Error(err, "expected GetLedgerEntry error")
 				s.Require().Contains(err.Error(), *tc.expErr, "expected INVALID_FIELD error")
@@ -311,6 +361,499 @@ func (s *TestSuite) TestExportGenesis() {
 	// Export genesis state
 	genState := s.keeper.ExportGenesis(s.ctx)
 	s.Require().NotNil(genState, "exported genesis state should not be nil")
+}
+
+func (s *TestSuite) TestAppendEntry() {
+	// Create a test ledger
+	l := ledger.Ledger{
+		NftId:        s.addr1.String(),
+		AssetClassId: "test-asset-class-id",
+		StatusTypeId: 1,
+	}
+
+	err := s.keeper.CreateLedger(s.ctx, l)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Test cases
+	tests := []struct {
+		name   string
+		nftId  string
+		entry  ledger.LedgerEntry
+		expErr *string
+	}{
+		{
+			name:  "invalid nft address",
+			nftId: "invalid",
+			entry: ledger.LedgerEntry{
+				EntryTypeId:   1,
+				PostedDate:    s.pastDate,
+				EffectiveDate: s.pastDate,
+				TotalAmt:      math.NewInt(100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 2,
+					},
+				},
+				CorrelationId: "test-correlation-id-9",
+			},
+			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
+		},
+		{
+			name:  "not found",
+			nftId: s.addr2.String(),
+			entry: ledger.LedgerEntry{
+				EntryTypeId:   1,
+				PostedDate:    s.pastDate,
+				EffectiveDate: s.pastDate,
+				TotalAmt:      math.NewInt(100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 2,
+					},
+				},
+				CorrelationId: "test-correlation-id-10",
+			},
+			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
+		},
+		{
+			name:  "amounts_do_not_sum_to_total",
+			nftId: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				EntryTypeId:   1,
+				PostedDate:    s.pastDate,
+				EffectiveDate: s.pastDate,
+				TotalAmt:      math.NewInt(100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(25),
+						BucketTypeId: 2,
+					},
+				},
+				CorrelationId: "test-correlation-id-11",
+			},
+			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
+		},
+		{
+			name:  "valid amounts and balances",
+			nftId: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				EntryTypeId:   1,
+				PostedDate:    s.pastDate,
+				EffectiveDate: s.pastDate,
+				TotalAmt:      math.NewInt(100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 2,
+					},
+				},
+				CorrelationId: "test-correlation-id-12",
+			},
+			expErr: nil,
+		},
+		{
+			name:  "valid amounts and balances with negative applied amount",
+			nftId: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				EntryTypeId:   1,
+				PostedDate:    s.pastDate,
+				EffectiveDate: s.pastDate,
+				TotalAmt:      math.NewInt(100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(-50),
+						BucketTypeId: 2,
+					},
+				},
+				CorrelationId: "test-correlation-id-13",
+			},
+			expErr: nil,
+		},
+		{
+			name:  "negative amount",
+			nftId: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				EntryTypeId:   1,
+				PostedDate:    s.pastDate,
+				EffectiveDate: s.pastDate,
+				TotalAmt:      math.NewInt(-100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 2,
+					},
+				},
+				CorrelationId: "test-correlation-id-14",
+			},
+			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
+		},
+		{
+			name:  "allow negative principal applied amount",
+			nftId: s.addr1.String(),
+			entry: ledger.LedgerEntry{
+				EntryTypeId:   1,
+				PostedDate:    s.pastDate,
+				EffectiveDate: s.pastDate,
+				TotalAmt:      math.NewInt(100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(-50),
+						BucketTypeId: 2,
+					},
+				},
+				CorrelationId: "test-correlation-id-15",
+			},
+			expErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := s.keeper.AppendEntries(s.ctx, tc.nftId, []*ledger.LedgerEntry{&tc.entry})
+			if tc.expErr != nil {
+				s.Require().Error(err, "AppendEntry error")
+				s.Require().Contains(err.Error(), *tc.expErr, "AppendEntry error type")
+			} else {
+				s.Require().NoError(err, "AppendEntry error")
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestAppendEntrySequenceNumbers() {
+	// Create a test ledger
+	l := ledger.Ledger{
+		NftId:        s.addr2.String(),
+		AssetClassId: "test-asset-class-id",
+		StatusTypeId: 1,
+	}
+
+	err := s.keeper.CreateLedger(s.ctx, l)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Create test entries with the same effective date but different sequence numbers
+	entries := []*ledger.LedgerEntry{
+		{
+			EntryTypeId:   1,
+			PostedDate:    s.pastDate,
+			EffectiveDate: s.pastDate,
+			Sequence:      1,
+			TotalAmt:      math.NewInt(100),
+			AppliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					AppliedAmt:   math.NewInt(50),
+					BucketTypeId: 1,
+				},
+				{
+					AppliedAmt:   math.NewInt(50),
+					BucketTypeId: 2,
+				},
+			},
+			CorrelationId: "test-correlation-id-1",
+		},
+		{
+			EntryTypeId:   1,
+			PostedDate:    s.pastDate,
+			EffectiveDate: s.pastDate,
+			Sequence:      2,
+			TotalAmt:      math.NewInt(100),
+			AppliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					AppliedAmt:   math.NewInt(50),
+					BucketTypeId: 1,
+				},
+				{
+					AppliedAmt:   math.NewInt(50),
+					BucketTypeId: 2,
+				},
+			},
+			CorrelationId: "test-correlation-id-2",
+		},
+		{
+			EntryTypeId:   1,
+			PostedDate:    s.pastDate,
+			EffectiveDate: s.pastDate,
+			Sequence:      3,
+			TotalAmt:      math.NewInt(100),
+			AppliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					AppliedAmt:   math.NewInt(50),
+					BucketTypeId: 1,
+				},
+				{
+					AppliedAmt:   math.NewInt(50),
+					BucketTypeId: 2,
+				},
+			},
+			CorrelationId: "test-correlation-id-3",
+		},
+	}
+
+	// Add entries in a specific order to test sequence number adjustment
+	// First add entry with sequence 2
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[1]})
+	s.Require().NoError(err, "AppendEntry error for sequence 2")
+	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Equal(uint32(2), allEntries[0].Sequence, "sequence number for correlation-id-2")
+
+	// Then add entry with sequence 1
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[0]})
+	s.Require().NoError(err, "AppendEntry error for sequence 1")
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-2")
+
+	// Finally add entry with sequence 3
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[2]})
+	s.Require().NoError(err, "AppendEntry error for sequence 3")
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2")
+
+	// Get all entries and verify their sequence numbers
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+
+	// Verify sequence numbers
+	s.Require().Len(allEntries, 3, "number of entries")
+	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
+	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-2")
+	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-3")
+
+	// Add another entry with sequence 2 to test sequence number adjustment
+	newEntry := ledger.LedgerEntry{
+		EntryTypeId:   1,
+		PostedDate:    s.pastDate,
+		EffectiveDate: s.pastDate,
+		Sequence:      2,
+		TotalAmt:      math.NewInt(100),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{
+			{
+				AppliedAmt:   math.NewInt(50),
+				BucketTypeId: 1,
+			},
+			{
+				AppliedAmt:   math.NewInt(50),
+				BucketTypeId: 2,
+			},
+		},
+		CorrelationId: "test-correlation-id-4",
+	}
+
+	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{&newEntry})
+	s.Require().NoError(err, "AppendEntry error for new entry with sequence 2")
+
+	// Get all entries again and verify updated sequence numbers
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+
+	// Verify updated sequence numbers
+	s.Require().Len(allEntries, 4, "number of entries after adding new entry")
+	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
+	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-4 (new entry)")
+	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2 (shifted)")
+	s.Require().Equal(uint32(4), allEntries[3].Sequence, "sequence number for correlation-id-3 (shifted)")
+}
+
+func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
+	// Create a test ledger
+	l := ledger.Ledger{
+		NftId:        s.addr1.String(),
+		AssetClassId: "test-asset-class-id",
+		StatusTypeId: 1,
+	}
+
+	err := s.keeper.CreateLedger(s.ctx, l)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Create a test entry
+	entry := ledger.LedgerEntry{
+		EntryTypeId:   1,
+		PostedDate:    s.pastDate,
+		EffectiveDate: s.pastDate,
+		Sequence:      1,
+		TotalAmt:      math.NewInt(100),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{
+			{
+				AppliedAmt:   math.NewInt(50),
+				BucketTypeId: 1,
+			},
+			{
+				AppliedAmt:   math.NewInt(50),
+				BucketTypeId: 2,
+			},
+		},
+		CorrelationId: "test-correlation-id-1",
+	}
+
+	// Add the entry successfully
+	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
+	s.Require().NoError(err, "AppendEntry error for first entry")
+
+	// Try to add the same entry again with the same correlation ID
+	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
+	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
+	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
+
+	// Verify that only one entry exists
+	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Len(allEntries, 1, "should only have one entry")
+
+	// Try to add a different entry with the same correlation ID
+	entry2 := ledger.LedgerEntry{
+		EntryTypeId:   1,
+		PostedDate:    s.pastDate,
+		EffectiveDate: s.pastDate,
+		Sequence:      2,
+		TotalAmt:      math.NewInt(200),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{
+			{
+				AppliedAmt:   math.NewInt(100),
+				BucketTypeId: 1,
+			},
+			{
+				AppliedAmt:   math.NewInt(100),
+				BucketTypeId: 2,
+			},
+		},
+		CorrelationId: "test-correlation-id-1",
+	}
+
+	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry2})
+	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
+	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
+
+	// Verify that still only one entry exists
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Len(allEntries, 1, "should still only have one entry")
+	s.Require().Equal(entry.TotalAmt, allEntries[0].TotalAmt, "entry amount should match original entry")
+}
+
+func (s *TestSuite) TestGetBalances() {
+	// Create a test ledger
+	l := ledger.Ledger{
+		NftId:        s.addr1.String(),
+		AssetClassId: "test-asset-class-id",
+		StatusTypeId: 1,
+	}
+
+	err := s.keeper.CreateLedger(s.ctx, l)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Create a test entry
+	entries := []*ledger.LedgerEntry{
+		{
+			// Disbursement
+			EntryTypeId:   2,
+			PostedDate:    s.pastDate,
+			EffectiveDate: s.pastDate,
+			Sequence:      1,
+			TotalAmt:      math.NewInt(1000),
+			AppliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					// Principal
+					BucketTypeId: 1,
+					AppliedAmt:   math.NewInt(1000),
+				},
+			},
+			CorrelationId: "test-correlation-id-1",
+		},
+		{
+			// Origination Fee
+			EntryTypeId:   3,
+			PostedDate:    s.pastDate,
+			EffectiveDate: s.pastDate,
+			Sequence:      1,
+			TotalAmt:      math.NewInt(10),
+			AppliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					// Principal
+					BucketTypeId: 1,
+					AppliedAmt:   math.NewInt(10),
+				},
+			},
+			CorrelationId: "test-correlation-id-2",
+		},
+
+		{
+			// Payment
+			EntryTypeId:   1,
+			PostedDate:    s.pastDate,
+			EffectiveDate: s.pastDate,
+			Sequence:      1,
+			TotalAmt:      math.NewInt(500),
+			AppliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					// Principal
+					BucketTypeId: 1,
+					AppliedAmt:   math.NewInt(-100),
+				},
+				{
+					// Interest
+					BucketTypeId: 2,
+					AppliedAmt:   math.NewInt(-300),
+				},
+				{
+					// Escrow
+					BucketTypeId: 3,
+					AppliedAmt:   math.NewInt(100),
+				},
+			},
+			CorrelationId: "test-correlation-id-3",
+		},
+	}
+
+	// Add entries to the ledger
+	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), entries)
+	s.Require().NoError(err, "AppendEntries error")
+
+	entries, err = s.keeper.ListLedgerEntries(s.ctx, l.NftId)
+	s.Require().NoError(err, "ListLedgerEntries error")
+	s.Require().Equal(3, len(entries), "number of entries")
+
+	s.Require().Less(s.pastDate, keeper.DaysSinceEpoch(time.Now().UTC()))
+
+	// Get balances
+	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.NftId, time.Now().UTC())
+	s.Require().NoError(err, "GetBalances error")
+	s.Require().Equal(3, len(balances.BucketBalances), "number of bucket balances")
+
+	s.Require().Equal(math.NewInt(910), balances.BucketBalances[0].Balance)
+	s.Require().Equal(math.NewInt(-300), balances.BucketBalances[1].Balance)
+	s.Require().Equal(math.NewInt(100), balances.BucketBalances[2].Balance)
 }
 
 // coins creates an sdk.Coins from a string, requiring it to work.
@@ -382,403 +925,4 @@ func (s *TestSuite) fundAccount(addr sdk.AccAddress, coins string) {
 // assertEqualEvents asserts that the expected events equal the actual events.
 func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
 	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
-}
-
-func (s *TestSuite) TestAppendEntry() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	// Create a test ledger
-	l := ledger.Ledger{
-		NftAddress: s.addr1.String(),
-		Denom:      s.bondDenom,
-	}
-
-	err := s.keeper.CreateLedger(s.ctx, l)
-	s.Require().NoError(err, "CreateLedger error")
-
-	// Use a past date for testing
-	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
-
-	// Test cases
-	tests := []struct {
-		name    string
-		nftAddr string
-		entry   ledger.LedgerEntry
-		expErr  *string
-	}{
-		{
-			name:    "invalid nft address",
-			nftAddr: "invalid",
-			entry: ledger.LedgerEntry{
-				Type:          ledger.LedgerEntryType_Scheduled_Payment,
-				PostedDate:    pastDate,
-				EffectiveDate: pastDate,
-				TotalAmt:      s.int(100),
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt: s.int(50),
-						BalanceAmt: s.int(50),
-						Bucket:     "principal",
-					},
-					{
-						AppliedAmt: s.int(25),
-						BalanceAmt: s.int(25),
-						Bucket:     "interest",
-					},
-				},
-				CorrelationId: "test-correlation-id-9",
-			},
-			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
-		},
-		{
-			name:    "not found",
-			nftAddr: s.addr2.String(),
-			entry: ledger.LedgerEntry{
-				Type:          ledger.LedgerEntryType_Scheduled_Payment,
-				PostedDate:    pastDate,
-				EffectiveDate: pastDate,
-				TotalAmt:      s.int(100),
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt: s.int(50),
-						BalanceAmt: s.int(50),
-						Bucket:     "principal",
-					},
-					{
-						AppliedAmt: s.int(25),
-						BalanceAmt: s.int(25),
-						Bucket:     "interest",
-					},
-				},
-				CorrelationId: "test-correlation-id-10",
-			},
-			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
-		},
-		{
-			name:    "amounts_do_not_sum_to_total",
-			nftAddr: s.addr1.String(),
-			entry: ledger.LedgerEntry{
-				Type:          ledger.LedgerEntryType_Scheduled_Payment,
-				PostedDate:    pastDate,
-				EffectiveDate: pastDate,
-				TotalAmt:      s.int(100),
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt: s.int(50),
-						BalanceAmt: s.int(50),
-						Bucket:     "principal",
-					},
-					{
-						AppliedAmt: s.int(25),
-						BalanceAmt: s.int(25),
-						Bucket:     "interest",
-					},
-				},
-				CorrelationId: "test-correlation-id-11",
-			},
-			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
-		},
-		{
-			name:    "missing_balance_fields",
-			nftAddr: s.addr1.String(),
-			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Scheduled_Payment,
-				PostedDate:      pastDate,
-				EffectiveDate: pastDate,
-				TotalAmt:      s.int(100),
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt: s.int(50),
-						BalanceAmt: s.int(50),
-						Bucket:     "principal",
-					},
-					{
-						AppliedAmt: s.int(25),
-						BalanceAmt: s.int(25),
-					},
-				},
-				CorrelationId: "test-correlation-id-13",
-			},
-			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
-		},
-		{
-			name:    "valid amounts and balances",
-			nftAddr: s.addr1.String(),
-			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Scheduled_Payment,
-				PostedDate:      pastDate,
-				EffectiveDate:   pastDate,
-				TotalAmt:      s.int(100),
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt: s.int(50),
-						BalanceAmt: s.int(50),
-						Bucket:     "principal",
-					},
-					{
-						AppliedAmt: s.int(25),
-						BalanceAmt: s.int(25),
-						Bucket:     "interest",
-					},
-				},
-				CorrelationId: "test-correlation-id-12",
-			},
-			expErr: nil,
-		},
-		{
-			name:    "negative amount",
-			nftAddr: s.addr1.String(),
-			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Scheduled_Payment,
-				PostedDate:      pastDate,
-				EffectiveDate:   pastDate,
-				TotalAmt:      s.int(-100),
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt: s.int(50),
-						BalanceAmt: s.int(50),
-						Bucket:     "principal",
-					},
-					{
-						AppliedAmt: s.int(25),
-						BalanceAmt: s.int(25),
-						Bucket:     "interest",
-					},
-				},
-				CorrelationId:   "test-correlation-id-13",
-			},
-			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
-		},
-		{
-			name:    "allow negative principal applied amount",
-			nftAddr: s.addr1.String(),
-			entry: ledger.LedgerEntry{
-				Type:            ledger.LedgerEntryType_Scheduled_Payment,
-				PostedDate:      pastDate,
-				EffectiveDate:   pastDate,
-				TotalAmt:      s.int(100),
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt: s.int(50),
-						BalanceAmt: s.int(50),
-						Bucket:     "principal",
-					},
-					{
-						AppliedAmt: s.int(25),
-						BalanceAmt: s.int(25),
-						Bucket:     "interest",
-					},
-				CorrelationId:   "test-correlation-id-14",
-			},
-			expErr: nil,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			err := s.keeper.AppendEntries(s.ctx, tc.nftAddr, []*ledger.LedgerEntry{&tc.entry})
-			if tc.expErr != nil {
-				s.Require().Error(err, "AppendEntry error")
-				s.Require().Contains(err.Error(), *tc.expErr, "AppendEntry error type")
-			} else {
-				s.Require().NoError(err, "AppendEntry error")
-			}
-		})
-	}
-}
-
-func (s *TestSuite) TestAppendEntrySequenceNumbers() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	// Create a test ledger
-	l := ledger.Ledger{
-		NftAddress: s.addr2.String(),
-		Denom:      s.bondDenom,
-	}
-
-	err := s.keeper.CreateLedger(s.ctx, l)
-	s.Require().NoError(err, "CreateLedger error")
-
-	// Use a past date for testing
-	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
-
-	// Create test entries with the same effective date but different sequence numbers
-	entries := []*ledger.LedgerEntry{
-		{
-			Type:            ledger.LedgerEntryType_Scheduled_Payment,
-			PostedDate:      pastDate,
-			EffectiveDate:   pastDate,
-			Sequence:        1,
-			Amt:             s.int(100),
-			PrinAppliedAmt:  s.int(50),
-			PrinBalAmt:      s.int(50),
-			IntAppliedAmt:   s.int(25),
-			IntBalAmt:       s.int(25),
-			OtherAppliedAmt: s.int(25),
-			OtherBalAmt:     s.int(25),
-			CorrelationId:   "test-correlation-id-1",
-		},
-		{
-			Type:            ledger.LedgerEntryType_Scheduled_Payment,
-			PostedDate:      pastDate,
-			EffectiveDate:   pastDate,
-			Sequence:        2,
-			Amt:             s.int(100),
-			PrinAppliedAmt:  s.int(50),
-			PrinBalAmt:      s.int(50),
-			IntAppliedAmt:   s.int(25),
-			IntBalAmt:       s.int(25),
-			OtherAppliedAmt: s.int(25),
-			OtherBalAmt:     s.int(25),
-			CorrelationId:   "test-correlation-id-2",
-		},
-		{
-			Type:            ledger.LedgerEntryType_Scheduled_Payment,
-			PostedDate:      pastDate,
-			EffectiveDate:   pastDate,
-			Sequence:        3,
-			Amt:             s.int(100),
-			PrinAppliedAmt:  s.int(50),
-			PrinBalAmt:      s.int(50),
-			IntAppliedAmt:   s.int(25),
-			IntBalAmt:       s.int(25),
-			OtherAppliedAmt: s.int(25),
-			OtherBalAmt:     s.int(25),
-			CorrelationId:   "test-correlation-id-3",
-		},
-	}
-
-	// Add entries in a specific order to test sequence number adjustment
-	// First add entry with sequence 2
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[1]})
-	s.Require().NoError(err, "AppendEntry error for sequence 2")
-	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
-	s.Require().NoError(err, "ListLedgerEntries error")
-	s.Require().Equal(uint32(2), allEntries[0].Sequence, "sequence number for correlation-id-2")
-
-	// Then add entry with sequence 1
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[0]})
-	s.Require().NoError(err, "AppendEntry error for sequence 1")
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
-	s.Require().NoError(err, "ListLedgerEntries error")
-	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-2")
-
-	// Finally add entry with sequence 3
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[2]})
-	s.Require().NoError(err, "AppendEntry error for sequence 3")
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
-	s.Require().NoError(err, "ListLedgerEntries error")
-	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2")
-
-	// Get all entries and verify their sequence numbers
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
-	s.Require().NoError(err, "ListLedgerEntries error")
-
-	// Verify sequence numbers
-	s.Require().Len(allEntries, 3, "number of entries")
-	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
-	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-2")
-	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-3")
-
-	// Add another entry with sequence 2 to test sequence number adjustment
-	newEntry := ledger.LedgerEntry{
-		Type:            ledger.LedgerEntryType_Scheduled_Payment,
-		PostedDate:      pastDate,
-		EffectiveDate:   pastDate,
-		Sequence:        2,
-		Amt:             s.int(100),
-		PrinAppliedAmt:  s.int(50),
-		PrinBalAmt:      s.int(50),
-		IntAppliedAmt:   s.int(25),
-		IntBalAmt:       s.int(25),
-		OtherAppliedAmt: s.int(25),
-		OtherBalAmt:     s.int(25),
-		CorrelationId:   "test-correlation-id-4",
-	}
-
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{&newEntry})
-	s.Require().NoError(err, "AppendEntry error for new entry with sequence 2")
-
-	// Get all entries again and verify updated sequence numbers
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
-	s.Require().NoError(err, "ListLedgerEntries error")
-
-	// Verify updated sequence numbers
-	s.Require().Len(allEntries, 4, "number of entries after adding new entry")
-	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
-	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-4 (new entry)")
-	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2 (shifted)")
-	s.Require().Equal(uint32(4), allEntries[3].Sequence, "sequence number for correlation-id-3 (shifted)")
-}
-
-func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	// Create a test ledger
-	l := ledger.Ledger{
-		NftAddress: s.addr1.String(),
-		Denom:      s.bondDenom,
-	}
-
-	err := s.keeper.CreateLedger(s.ctx, l)
-	s.Require().NoError(err, "CreateLedger error")
-
-	// Use a past date for testing
-	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
-
-	// Create a test entry
-	entry := ledger.LedgerEntry{
-		Type:            ledger.LedgerEntryType_Scheduled_Payment,
-		PostedDate:      pastDate,
-		EffectiveDate:   pastDate,
-		Sequence:        1,
-		Amt:             s.int(100),
-		PrinAppliedAmt:  s.int(50),
-		PrinBalAmt:      s.int(50),
-		IntAppliedAmt:   s.int(25),
-		IntBalAmt:       s.int(25),
-		OtherAppliedAmt: s.int(25),
-		OtherBalAmt:     s.int(25),
-		CorrelationId:   "test-correlation-id-1",
-	}
-
-	// Add the entry successfully
-	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
-	s.Require().NoError(err, "AppendEntry error for first entry")
-
-	// Try to add the same entry again with the same correlation ID
-	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
-	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
-	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
-
-	// Verify that only one entry exists
-	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
-	s.Require().NoError(err, "ListLedgerEntries error")
-	s.Require().Len(allEntries, 1, "should only have one entry")
-
-	// Try to add a different entry with the same correlation ID
-	entry2 := ledger.LedgerEntry{
-		Type:            ledger.LedgerEntryType_Scheduled_Payment,
-		PostedDate:      pastDate,
-		EffectiveDate:   pastDate,
-		Sequence:        2,
-		Amt:             s.int(200),
-		PrinAppliedAmt:  s.int(100),
-		PrinBalAmt:      s.int(100),
-		IntAppliedAmt:   s.int(50),
-		IntBalAmt:       s.int(50),
-		OtherAppliedAmt: s.int(50),
-		OtherBalAmt:     s.int(50),
-		CorrelationId:   "test-correlation-id-1", // Same correlation ID
-	}
-
-	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry2})
-	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
-	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
-
-	// Verify that still only one entry exists
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
-	s.Require().NoError(err, "ListLedgerEntries error")
-	s.Require().Len(allEntries, 1, "should still only have one entry")
-	s.Require().Equal(entry.Amt, allEntries[0].Amt, "entry amount should match original entry")
 }

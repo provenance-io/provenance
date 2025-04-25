@@ -1,9 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
-	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,11 +37,11 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <nft_address> <denom> [next_pmt_date] [next_pmt_amt] [status] [interest_rate] [maturity_date]",
+		Use:     "create <nft_id> <asset_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
-		Example: `$ provenanced tx ledger create pb1a2b3c4... usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
-$ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example with required fields only`,
+		Example: `$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
+$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd --from mykey  # minimal example with required fields only`,
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -48,13 +49,13 @@ $ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example 
 				return err
 			}
 
-			nftAddress := args[0]
-			denom := args[1]
+			nftId := args[0]
+			assetClassId := args[1]
 
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
-				NftAddress: nftAddress,
-				Denom:      denom,
+				NftId:        nftId,
+				AssetClassId: assetClassId,
 			}
 
 			// Add optional fields if provided
@@ -72,7 +73,12 @@ $ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example 
 				}
 			}
 			if len(args) > 4 {
-				ledgerObj.Status = args[4]
+				statusTypeId, err := strconv.ParseInt(args[4], 10, 32)
+				if err != nil {
+					return fmt.Errorf("invalid <status_type_id>: %v", err)
+				}
+
+				ledgerObj.StatusTypeId = int32(statusTypeId)
 			}
 			if len(args) > 5 {
 				intRate, err := strconv.ParseInt(args[5], 10, 32)
@@ -102,129 +108,108 @@ $ provenanced tx ledger create pb1a2b3c4... usd --from mykey  # minimal example 
 	return cmd
 }
 
-// CmdAppend creates a new ledger entry for a given nft
-func CmdAppend() *cobra.Command {
+func CmdDestroy() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append <nft_address> <correlation_id> <sequence> <type> <posted_date> <effective_date> <amount> <prin_applied_amt> <prin_balance_amt>  <int_applied_amt> <int_balance_amt>  <other_applied_amt> <other_balance_amt>",
+		Use:     "destroy <nft_address>",
 		Aliases: []string{},
-		Short:   "Append an entry to an existing ledger",
-		Example: `$ provenanced tx ledger append pb1a2b3c4... txn123 1 SCHEDULED_PAYMENT 2024-04-15 2024-04-15 1000.00 800.00 9200.00 200.00 400.00 0.00 0.00 --from mykey
-$ provenanced tx ledger append pb1a2b3c4... txn124 2 FEE 2024-04-16 2024-04-16 50.00 0.00 9200.00 0.00 400.00 50.00 50.00 --from mykey`,
+		Short:   "Destroy a ledger by NFT address",
+		Example: `$ provenanced tx ledger destroy pb1a2b3c4... --from mykey`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 13 {
-				return fmt.Errorf("missing arguments")
-			}
-
-			if len(args) > 13 {
-				return fmt.Errorf("to many arguments")
-			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			nftAddress := args[0]
-			if nftAddress == "" {
-				return fmt.Errorf("invalid <nft_address>")
+			nftId := args[0]
+			if nftId == "" {
+				return fmt.Errorf("invalid <nft_id>")
 			}
 
-			correlation_id := args[1]
-			if correlation_id == "" {
-				return fmt.Errorf("invalid <correlation_id>")
+			msg := &ledger.MsgDestroyRequest{
+				NftId:     nftId,
+				Authority: clientCtx.FromAddress.String(),
 			}
 
-			sequence, err := parseUint32(args[2])
-			if err != nil {
-				return fmt.Errorf("invalid <sequence>: %v", err)
-			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
 
-			amt, ok := sdkmath.NewIntFromString(args[6])
-			if !ok {
-				return fmt.Errorf("invalid <amount>")
-			}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
 
-			prinAppliedAmt, ok := sdkmath.NewIntFromString(args[7])
-			if !ok {
-				return fmt.Errorf("invalid <prin_applied_amt>")
-			}
-
-			prinBalAmt, ok := sdkmath.NewIntFromString(args[8])
-			if !ok {
-				return fmt.Errorf("invalid <prin_bal_amt>")
-			}
-
-			intAppliedAmt, ok := sdkmath.NewIntFromString(args[9])
-			if !ok {
-				return fmt.Errorf("invalid <int_applied_amt>")
-			}
-
-			intBalAmt, ok := sdkmath.NewIntFromString(args[10])
-			if !ok {
-				return fmt.Errorf("invalid <int_bal_amt>")
-			}
-
-			otherAppliedAmt, ok := sdkmath.NewIntFromString(args[11])
-			if !ok {
-				return fmt.Errorf("invalid <other_applied_amt>")
-			}
-
-			otherBalAmt, ok := sdkmath.NewIntFromString(args[12])
-			if !ok {
-				return fmt.Errorf("invalid <other_bal_amt>")
-			}
-
-			postedDate, err := time.Parse("2006-01-02", args[4])
-			if err != nil {
-				return fmt.Errorf("invalid <posted_date>: %v", err)
-			}
-
-			effectiveDate, err := time.Parse("2006-01-02", args[5])
-			if err != nil {
-				return fmt.Errorf("invalid <effective_date>: %v", err)
-			}
-
-			entryType, ok := ledger.LedgerEntryType_value[args[3]]
-			if !ok {
-				return fmt.Errorf("invalid <type>")
-			}
-
-			// Create a single entry for the ledger.
-			entries := []*ledger.LedgerEntry{
+// CmdAppendJson creates a new ledger entry from a JSON file
+func CmdAppend() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "append-json <nft_address> <json_file>",
+		Aliases: []string{"aj"},
+		Short:   "Append ledger entries from a JSON file",
+		Example: `$ provenanced tx ledger append-json pb1a2b3c4... entries.json --from mykey
+		where the json file is formatted as follows:
+		[
+			{
+				"correlation_id": "entry1",
+				"reverses_correlation_id": "",
+				"is_void": false,
+				"sequence": 1,
+				"entry_type_id": 1,
+				"posted_date": 19700,
+				"effective_date": 19700,
+				"total_amt": 1000,
+				"applied_amounts": [
 				{
-					CorrelationId: correlation_id,
-					Sequence:      sequence,
-					Type:          ledger.LedgerEntryType(entryType),
-					PostedDate:    keeper.DaysSinceEpoch(postedDate.UTC()),
-					EffectiveDate: keeper.DaysSinceEpoch(effectiveDate.UTC()),
-					TotalAmt:      amt.Int64(),
-					AppliedAmounts: []*ledger.LedgerBucketAmount{
-						{
-							Bucket:     "PRINCIPAL",
-							AppliedAmt: prinAppliedAmt.Int64(),
-							BalanceAmt: prinBalAmt.Int64(),
-						},
-						{
-							Bucket:     "INTEREST",
-							AppliedAmt: intAppliedAmt.Int64(),
-							BalanceAmt: intBalAmt.Int64(),
-						},
-						{
-							Bucket:     "OTHER",
-							AppliedAmt: otherAppliedAmt.Int64(),
-							BalanceAmt: otherBalAmt.Int64(),
-						},
-					},
+					"bucket_type_id": 1,
+					"applied_amt": 800
 				},
+				{
+					"bucket_type_id": 2,
+					"applied_amt": 200
+				}
+				]
+			}
+		]
+		`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
 			}
 
-			m := ledger.MsgAppendRequest{
-				NftAddress: nftAddress,
-				Entries:    entries,
-				Authority:  clientCtx.FromAddress.String(),
+			nftId := args[0]
+			if nftId == "" {
+				return fmt.Errorf("invalid <nft_id>")
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &m)
+			jsonFile := args[1]
+			jsonData, err := os.ReadFile(jsonFile)
+			if err != nil {
+				return fmt.Errorf("failed to read JSON file: %w", err)
+			}
+
+			var entries []*ledger.LedgerEntry
+			if err := json.Unmarshal(jsonData, &entries); err != nil {
+				return fmt.Errorf("failed to unmarshal JSON: %w", err)
+			}
+
+			// Validate entries
+			for _, entry := range entries {
+				if entry.Sequence >= 100 {
+					return fmt.Errorf("sequence must be less than 100")
+				}
+				if len(entry.CorrelationId) > 50 {
+					return fmt.Errorf("correlation_id must be 50 characters or less")
+				}
+			}
+
+			msg := &ledger.MsgAppendRequest{
+				NftId:     nftId,
+				Entries:   entries,
+				Authority: clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -242,35 +227,4 @@ func parseUint32(s string) (uint32, error) {
 		return 0, fmt.Errorf("sequence must be less than 100")
 	}
 	return uint32(val.Uint64()), nil
-}
-
-func CmdDestroy() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "destroy <nft_address>",
-		Aliases: []string{},
-		Short:   "Destroy a ledger by NFT address",
-		Example: `$ provenanced tx ledger destroy pb1a2b3c4... --from mykey`,
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			nftAddress := args[0]
-			if nftAddress == "" {
-				return fmt.Errorf("invalid <nft_address>")
-			}
-
-			msg := &ledger.MsgDestroyRequest{
-				NftAddress: nftAddress,
-				Authority:  clientCtx.FromAddress.String(),
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
 }

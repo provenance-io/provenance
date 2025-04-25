@@ -20,19 +20,31 @@ service Query {
     option (google.api.http).get = "/provenance/ledger/v1/entries";
   }
 
+  rpc ClassEntryTypes(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/entry_types/{asset_class_id}";
+  }
+
+  rpc ClassStatusTypes(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/status_types/{asset_class_id}";
+  }
+
+  rpc ClassBucketTypes(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/bucket_types/{asset_class_id}";
+  }
+
   // GetLedgerEntry returns a specific ledger entry for an NFT
   rpc GetLedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_address}/entry/{correlation_id}";
+    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_id}/entry/{correlation_id}";
   }
 
   // GetBalancesAsOf returns the balances for a specific NFT as of a given date
   rpc GetBalancesAsOf(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_address}/balances/{as_of_date}";
+    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_id}/balances/{as_of_date}";
   }
 }
 
 message QueryLedgerConfigRequest {
-  string nft_address = 1;
+  string nft_id = 1;
 }
 
 message QueryLedgerConfigResponse {
@@ -40,7 +52,7 @@ message QueryLedgerConfigResponse {
 }
 
 message QueryLedgerRequest {
-  string nft_address = 1;
+  string nft_id = 1;
 }
 
 message QueryLedgerResponse {
@@ -48,7 +60,7 @@ message QueryLedgerResponse {
 }
 
 message QueryLedgerEntryRequest {
-  string nft_address    = 1;
+  string nft_id         = 1;
   string correlation_id = 2; // Free-form string up to 50 characters
 }
 
@@ -58,11 +70,35 @@ message QueryLedgerEntryResponse {
 
 // QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
 message QueryBalancesAsOfRequest {
-  string nft_address = 1;
-  string as_of_date  = 2;
+  string nft_id     = 1;
+  string as_of_date = 2;
 }
 
 // QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
 message QueryBalancesAsOfResponse {
   Balances balances = 1;
+}
+
+message QueryLedgerClassEntryTypesRequest {
+  string asset_class_id = 1;
+}
+
+message QueryLedgerClassEntryTypesResponse {
+  repeated LedgerClassEntryType entry_types = 1;
+}
+
+message QueryLedgerClassStatusTypesRequest {
+  string asset_class_id = 1;
+}
+
+message QueryLedgerClassStatusTypesResponse {
+  repeated LedgerClassStatusType status_types = 1;
+}
+
+message QueryLedgerClassBucketTypesRequest {
+  string asset_class_id = 1;
+}
+
+message QueryLedgerClassBucketTypesResponse {
+  repeated LedgerClassBucketType bucket_types = 1;
 }

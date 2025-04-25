@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
 )
@@ -19,19 +20,21 @@ type BaseEntriesKeeper struct {
 }
 
 // SetValue stores a value with a given key.
-func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftAddress string, les []*ledger.LedgerEntry) error {
+func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftId string, les []*ledger.LedgerEntry) error {
 	// TODO validate that the {addr} can be modified by the signer...
 
 	if len(les) == 0 {
 		return NewLedgerCodedError(ErrCodeInvalidField, "entries", "cannot be nil or empty")
 	}
 
-	if !k.HasLedger(ctx, nftAddress) {
+	if !k.HasLedger(ctx, nftId) {
 		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
+	ledger, _ := k.GetLedger(ctx, nftId)
+
 	// Get all existing entries for this NFT
-	entries, err := k.ListLedgerEntries(ctx, nftAddress)
+	entries, err := k.ListLedgerEntries(ctx, nftId)
 	if err != nil {
 		return err
 	}
@@ -51,12 +54,17 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftAddress string, les
 			return err
 		}
 
-		// Validate entry type
-		if err := validateEntryType(le); err != nil {
+		// Validate that the LedgerClassEntryType exists
+		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.AssetClassId, le.EntryTypeId))
+		if err != nil {
 			return err
 		}
 
-		err := k.saveEntry(ctx, nftAddress, entries, le)
+		if !hasLedgerClassEntryType {
+			return NewLedgerCodedError(ErrCodeInvalidField, "entry_type_id")
+		}
+
+		err = k.saveEntry(ctx, nftId, entries, le)
 		if err != nil {
 			return err
 		}
@@ -137,22 +145,13 @@ func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
 // validateEntryAmounts checks if the amounts are valid
 func validateEntryAmounts(le *ledger.LedgerEntry) error {
 	// Check if total amount matches sum of applied amounts
-	totalApplied := int64(0)
+	totalApplied := math.NewInt(0)
 	for _, applied := range le.AppliedAmounts {
-		totalApplied += applied.AppliedAmt
+		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
 	}
 
-	if le.TotalAmt != totalApplied {
-		return NewLedgerCodedError(ErrCodeInvalidField, "amount", "must equal sum of applied amounts")
-	}
-
-	return nil
-}
-
-// validateEntryType checks if the entry type is valid
-func validateEntryType(le *ledger.LedgerEntry) error {
-	if le.Type == ledger.LedgerEntryType_Unspecified {
-		return NewLedgerCodedError(ErrCodeInvalidField, "entry_type", "cannot be unspecified")
+	if !le.TotalAmt.Equal(totalApplied) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must equal sum of abs(applied amounts)")
 	}
 
 	return nil

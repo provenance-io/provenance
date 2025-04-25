@@ -1,0 +1,50 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+
+// FlowStatus represents the current status of a flow
+enum FundingTransferStatus {
+  FUNDING_TRANSFER_STATUS_UNSPECIFIED = 0;
+  FUNDING_TRANSFER_STATUS_PENDING     = 1;
+  FUNDING_TRANSFER_STATUS_PROCESSING  = 2;
+  FUNDING_TRANSFER_STATUS_COMPLETED   = 3;
+  FUNDING_TRANSFER_STATUS_FAILED      = 4;
+}
+
+// FundTransfer represents a single fund transfer to process
+message FundTransfer {
+  string                nft_id                      = 1;
+  string                ledger_entry_correlation_id = 2;
+  string                amount                      = 3;
+  FundingTransferStatus status                      = 4;
+  string                memo                        = 5;
+
+  // The minimum block height or timestamp for settlement
+  int64 settlement_block = 6;
+}
+
+// SettlementInstruction represents blockchain-specific settlement instructions
+message SettlementInstruction {
+  string amount = 1;
+
+  // The recipient's blockchain address
+  string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // Optional memo or note for the transaction
+  string memo = 3;
+
+  // The minimum block height or timestamp for settlement
+  int64 settlement_block = 4;
+}
+
+// FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
+message FundTransferWithSettlement {
+  string                         nft_id                      = 1;
+  string                         ledger_entry_correlation_id = 2;
+  repeated SettlementInstruction settlementInstructions      = 3;
+}

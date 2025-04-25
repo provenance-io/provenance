@@ -38,8 +38,8 @@ func CmdQuery() *cobra.Command {
 // GetAttributeParamsCmd returns the command handler for name parameter querying.
 func GetConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "config <nft_address>",
-		Short:   "Query the ledger for the specified nft address",
+		Use:     "config <nft_id>",
+		Short:   "Query the ledger for the specified nft id",
 		Example: fmt.Sprintf(`$ %s query attribute params`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -47,9 +47,9 @@ func GetConfigCmd() *cobra.Command {
 				return err
 			}
 
-			nftAddress := args[0]
+			nftId := args[0]
 			req := ledger.QueryLedgerConfigRequest{
-				NftAddress: nftAddress,
+				NftId: nftId,
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
@@ -60,11 +60,10 @@ func GetConfigCmd() *cobra.Command {
 
 			// Convert to PlainText
 			plainText := ledger.LedgerPlainText{
-				NftAddress:   l.Ledger.NftAddress,
-				Denom:        l.Ledger.Denom,
+				NftId:        l.Ledger.NftId,
+				Status:       strconv.Itoa(int(l.Ledger.StatusTypeId)),
 				NextPmtDate:  keeper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
 				NextPmtAmt:   strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
-				Status:       l.Ledger.Status,
 				InterestRate: strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
 				MaturityDate: keeper.EpochDaysToISO8601(l.Ledger.MaturityDate),
 			}
@@ -90,36 +89,88 @@ func GetLedgerEntriesCmd() *cobra.Command {
 				return err
 			}
 
-			nftAddress := args[0]
-			req := ledger.QueryLedgerRequest{
-				NftAddress: nftAddress,
-			}
-
+			nftId := args[0]
 			queryClient := ledger.NewQueryClient(clientCtx)
-			l, err := queryClient.Entries(context.Background(), &req)
-			if err != nil {
-				return err
+
+			getConfig := func(nftId string) *ledger.QueryLedgerConfigResponse {
+				req := ledger.QueryLedgerConfigRequest{
+					NftId: nftId,
+				}
+
+				config, err := queryClient.Config(context.Background(), &req)
+				if err != nil {
+					return nil
+				}
+
+				return config
 			}
 
-			plainTextEntries := make([]*ledger.LedgerEntryPlainText, len(l.Entries))
-			for i, entry := range l.Entries {
+			getEntries := func(nftId string) []*ledger.LedgerEntry {
+				req := ledger.QueryLedgerRequest{
+					NftId: nftId,
+				}
+
+				l, err := queryClient.Entries(context.Background(), &req)
+				if err != nil {
+					return nil
+				}
+
+				return l.Entries
+			}
+
+			getEntryTypes := func(assetClassId string) map[int32]*ledger.LedgerClassEntryType {
+				req := ledger.QueryLedgerClassEntryTypesRequest{
+					AssetClassId: assetClassId,
+				}
+
+				types, err := queryClient.ClassEntryTypes(context.Background(), &req)
+				if err != nil {
+					return nil
+				}
+
+				return keeper.SliceToMap(types.EntryTypes, func(t *ledger.LedgerClassEntryType) int32 {
+					return t.Id
+				})
+			}
+
+			getBucketTypes := func(assetClassId string) map[int32]*ledger.LedgerClassBucketType {
+				req := ledger.QueryLedgerClassBucketTypesRequest{
+					AssetClassId: assetClassId,
+				}
+
+				types, err := queryClient.ClassBucketTypes(context.Background(), &req)
+				if err != nil {
+					return nil
+				}
+
+				return keeper.SliceToMap(types.BucketTypes, func(t *ledger.LedgerClassBucketType) int32 {
+					return t.Id
+				})
+			}
+
+			config := getConfig(nftId)
+			entries := getEntries(nftId)
+			entryTypes := getEntryTypes(config.Ledger.AssetClassId)
+			bucketTypes := getBucketTypes(config.Ledger.AssetClassId)
+
+			plainTextEntries := make([]*ledger.LedgerEntryPlainText, len(entries))
+			for i, entry := range entries {
 				appliedAmounts := make([]*ledger.LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
 				for j, amount := range entry.AppliedAmounts {
 					appliedAmounts[j] = &ledger.LedgerBucketAmountPlainText{
-						Bucket:     amount.Bucket,
-						AppliedAmt: strconv.FormatInt(amount.AppliedAmt, 10),
-						BalanceAmt: strconv.FormatInt(amount.BalanceAmt, 10),
+						Bucket:     bucketTypes[amount.BucketTypeId],
+						AppliedAmt: amount.AppliedAmt.String(),
+						BalanceAmt: "0",
 					}
 				}
 
 				plainTextEntries[i] = &ledger.LedgerEntryPlainText{
 					CorrelationId:  entry.CorrelationId,
 					Sequence:       entry.Sequence,
-					Type:           entry.Type,
-					SubType:        entry.SubType,
+					Type:           entryTypes[entry.EntryTypeId],
 					PostedDate:     keeper.EpochDaysToISO8601(entry.PostedDate),
 					EffectiveDate:  keeper.EpochDaysToISO8601(entry.EffectiveDate),
-					TotalAmt:       strconv.FormatInt(entry.TotalAmt, 10),
+					TotalAmt:       entry.TotalAmt.String(),
 					AppliedAmounts: appliedAmounts,
 				}
 			}
@@ -149,7 +200,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 				return err
 			}
 
-			nftAddress := args[0]
+			nftId := args[0]
 			asOfDate := args[1]
 
 			// Validate the date format
@@ -160,8 +211,8 @@ func GetBalancesAsOfCmd() *cobra.Command {
 
 			queryClient := ledger.NewQueryClient(clientCtx)
 			res, err := queryClient.GetBalancesAsOf(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
-				NftAddress: nftAddress,
-				AsOfDate:   asOfDate,
+				NftId:    nftId,
+				AsOfDate: asOfDate,
 			})
 			if err != nil {
 				return err
