@@ -21,7 +21,12 @@ func NewMsgServer(k BaseKeeper) ledger.MsgServer {
 func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.AppendEntries(ctx, req.NftId, req.Entries)
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.AppendEntries(ctx, authorityAddr, req.Key, req.Entries)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +38,12 @@ func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) 
 func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.CreateLedger(ctx, *req.Ledger)
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.CreateLedger(ctx, authorityAddr, *req.Ledger)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +83,12 @@ func (k *MsgServer) ProcessFundTransfersWithSettlement(goCtx context.Context, re
 func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest) (*ledger.MsgDestroyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.DestroyLedger(ctx, req.NftId)
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.DestroyLedger(ctx, authorityAddr, req.Key)
 	if err != nil {
 		return nil, err
 	}

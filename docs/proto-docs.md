@@ -282,6 +282,7 @@
     - [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType)
     - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
+    - [LedgerKey](#provenance-ledger-v1-LedgerKey)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
     - [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest)
@@ -4537,7 +4538,7 @@ MsgAppendRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 | `authority` | [string](#string) |  |  |
 
@@ -4590,7 +4591,7 @@ MsgDestroyRequest represents a request to destroy a ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `authority` | [string](#string) |  |  |
 
 
@@ -4720,7 +4721,7 @@ Ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `ledger_class_id` | [string](#string) |  | Ledger class id for the ledger |
 | `status_type_id` | [int32](#int32) |  | Status of the ledger |
 | `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
@@ -4842,6 +4843,22 @@ LedgerEntry
 
 
 
+
+<a name="provenance-ledger-v1-LedgerKey"></a>
+
+### LedgerKey
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
+| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4867,7 +4884,7 @@ QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC m
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `as_of_date` | [string](#string) |  |  |
 
 
@@ -4988,7 +5005,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 
 
 
@@ -5018,7 +5035,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `correlation_id` | [string](#string) |  | Free-form string up to 50 characters |
 
 
@@ -5049,7 +5066,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 
 
 
@@ -5235,7 +5252,7 @@ Ledger
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  | Address of the NFT to which this ledger is linked. |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key |
 | `status` | [string](#string) |  | Status of the ledger |
 | `next_pmt_date` | [string](#string) |  | Next payment date |
 | `next_pmt_amt` | [string](#string) |  | Next payment amount |

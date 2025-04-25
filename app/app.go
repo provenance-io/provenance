@@ -847,12 +847,9 @@ func New(
 	// can do so safely.
 	moduleGenesisOrder := []string{
 		capabilitytypes.ModuleName, // Must be first.
-
 		authtypes.ModuleName,
 		banktypes.ModuleName,
-
 		markertypes.ModuleName,
-
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -869,7 +866,6 @@ func New(
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
 		nft.ModuleName,
-
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
@@ -879,7 +875,6 @@ func New(
 		registry.ModuleName,
 		exchange.ModuleName, // must be after the hold module.
 		assettypes.ModuleName,
-
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -913,13 +908,12 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		hold.ModuleName,
-		ledger.ModuleName,
-		registry.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
 		nft.ModuleName,
-
+		ledger.ModuleName,
+		registry.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,

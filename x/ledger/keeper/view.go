@@ -18,11 +18,11 @@ import (
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
 
 type ViewKeeper interface {
-	GetLedger(ctx sdk.Context, nftId string) (*ledger.Ledger, error)
-	HasLedger(ctx sdk.Context, nftId string) bool
-	ListLedgerEntries(ctx context.Context, nftId string) ([]*ledger.LedgerEntry, error)
-	GetLedgerEntry(ctx context.Context, nftId string, correlationID string) (*ledger.LedgerEntry, error)
-	GetBalancesAsOf(ctx context.Context, nftId string, asOfDate time.Time) (*ledger.Balances, error)
+	GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error)
+	HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool
+	ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error)
+	GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error)
+	GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.Balances, error)
 	GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error)
 	GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error)
 	GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error)
@@ -128,15 +128,20 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 //   - Returns (nil, err) if an error occurs during retrieval
 //   - Returns (&ledger, nil) if the ledger is found successfully
 //   - The returned ledger will have its NftAddress field set to the provided nftAddress
-func (k BaseViewKeeper) GetLedger(ctx sdk.Context, nftId string) (*ledger.Ledger, error) {
-	// Validate the NFT address
-	_, err := getAddress(&nftId)
+func (k BaseViewKeeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error) {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(key)
+	if err != nil {
+		return nil, err
+	}
+
+	keyStr, err := LedgerKeyToString(key)
 	if err != nil {
 		return nil, err
 	}
 
 	// Lookup the NFT address in the ledger
-	l, err := k.Ledgers.Get(ctx, nftId)
+	l, err := k.Ledgers.Get(ctx, *keyStr)
 	if err != nil {
 		// Eat the not found error as it is expected, and return nil.
 		if errors.Is(err, collections.ErrNotFound) {
@@ -148,23 +153,45 @@ func (k BaseViewKeeper) GetLedger(ctx sdk.Context, nftId string) (*ledger.Ledger
 	}
 
 	// The NFT address isn't stored in the ledger, so we add it back in.
-	l.NftId = nftId
+	l.Key = key
 	return &l, nil
 }
 
-func (k BaseViewKeeper) HasLedger(ctx sdk.Context, nftAddress string) bool {
-	has, _ := k.Ledgers.Has(ctx, nftAddress)
+func (k BaseViewKeeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(key)
+	if err != nil {
+		return false
+	}
+
+	keyStr, err := LedgerKeyToString(key)
+	if err != nil {
+		return false
+	}
+
+	has, _ := k.Ledgers.Has(ctx, *keyStr)
 	return has
 }
 
-func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftId string) ([]*ledger.LedgerEntry, error) {
+func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error) {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(key)
+	if err != nil {
+		return nil, err
+	}
+
+	keyStr, err := LedgerKeyToString(key)
+	if err != nil {
+		return nil, err
+	}
+
 	// Garbage in, garbage out.
-	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), nftId) {
+	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), key) {
 		return nil, nil
 	}
 
 	// Get all entries for the ledger.
-	prefix := collections.NewPrefixedPairRange[string, string](nftId)
+	prefix := collections.NewPrefixedPairRange[string, string](*keyStr)
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
 	if err != nil {
 		return nil, err
@@ -188,18 +215,22 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, nftId string) ([]
 }
 
 // GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
-func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, nftId string, correlationID string) (*ledger.LedgerEntry, error) {
-	// Validate the NFT address
-	_, err := getAddress(&nftId)
+func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(key)
 	if err != nil {
 		return nil, err
+	}
+
+	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), key) {
+		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
 	if !isCorrelationIDValid(correlationID) {
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "correlation_id")
 	}
 
-	entries, err := k.ListLedgerEntries(ctx, nftId)
+	entries, err := k.ListLedgerEntries(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -225,35 +256,32 @@ func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		key, err := iter.Key()
+		_, err := iter.Key()
 		if err != nil {
 			panic(err)
 		}
-		value, err := iter.Value()
+		_, err = iter.Value()
 		if err != nil {
 			panic(err)
 		}
-		// Set the NftAddress back since it's not stored in the value
-		value.NftId = key
-		// state.Ledgers = append(state.Ledgers, value)
+
 	}
 
 	return state
 }
 
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
-func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, nftId string, asOfDate time.Time) (*ledger.Balances, error) {
-	asOfDateInt := DaysSinceEpoch(asOfDate.UTC())
-
-	// Validate the NFT address
-	// TODO Update this to look for scope id or nft id instead...
-	_, err := getAddress(&nftId)
+func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.Balances, error) {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(key)
 	if err != nil {
 		return nil, err
 	}
 
+	asOfDateInt := DaysSinceEpoch(asOfDate.UTC())
+
 	// Get all ledger entries for this NFT
-	entries, err := k.ListLedgerEntries(ctx, nftId)
+	entries, err := k.ListLedgerEntries(ctx, key)
 	if err != nil {
 		return nil, err
 	}
