@@ -48,7 +48,7 @@ service Msg {
   // MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s).
   rpc MarketReleaseCommitments(MsgMarketReleaseCommitmentsRequest) returns (MsgMarketReleaseCommitmentsResponse);
 
-  // MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another.
+  // MarketTransferCommitments is a market endpoint to transfers committed funds from one market to another.
   rpc MarketTransferCommitments(MsgMarketTransferCommitmentsRequest) returns (MsgMarketTransferCommitmentsResponse);
 
   // MarketSetOrderExternalID updates an order's external id field.
