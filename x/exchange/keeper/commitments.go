@@ -417,10 +417,60 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	return nil
 }
 
-// ReleaseCommitments calls ReleaseCommitment for several entries.
+// TransferCommitments transfers committed funds from one market to another.
 func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentsRequest) error {
-	var errs []error
-	return errors.Join(errs...)
+	admin, err := sdk.AccAddressFromBech32(req.Admin)
+	if err != nil {
+		return fmt.Errorf("invalid admin %q: %w", admin, err)
+	}
+	account, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return fmt.Errorf("invalid account %q: %w", account, err)
+	}
+	if k.bankKeeper.BlockedAddr(sdk.AccAddress(account)) {
+		return fmt.Errorf("%s is not allowed to receive funds", account)
+	}
+	//validate the current_market_id exists
+	store := k.getStore(ctx)
+	if err := validateMarketExists(store, req.CurrentMarketId); err != nil {
+		return fmt.Errorf("%d current market id not exists", req.CurrentMarketId)
+	}
+	//validate new market exists and is accepting commitments
+	if err := validateMarketIsAcceptingCommitments(store, req.NewMarketId); err != nil {
+		return fmt.Errorf("%d new market id not exists", req.NewMarketId)
+	}
+	//validate the user can create commitment in the market
+	if err := k.validateUserCanCreateCommitment(ctx, req.NewMarketId, account); err != nil {
+		return err
+	}
+	//check account contains has sufficient funds committed in the current market.
+	cur := getCommitmentAmount(store, req.CurrentMarketId, account)
+	if cur.IsZero() {
+		return fmt.Errorf("account %s does not have any funds committed to market %d", account, req.CurrentMarketId)
+	}
+	//check if requested amount is available - using SafeSub
+	newAmt, isNeg := cur.SafeSub(req.Amount...)
+	if isNeg {
+		return fmt.Errorf("commitment amount to transfer %q is more than currently committed amount %q for %s in market %d",
+			req.Amount, cur, req.Account, req.CurrentMarketId)
+	}
+	//TODO() creation_fee fees part.
+	//Release the hold from the current market without releasing commitment.
+	err = k.holdKeeper.ReleaseHold(ctx, account, req.Amount)
+	if err != nil {
+		return err
+	}
+	//update current market commitment amount
+	setCommitmentAmount(store, req.CurrentMarketId, account, newAmt)
+	//Add a hold on the funds for the new market
+	err = k.holdKeeper.AddHold(ctx, account, req.Amount, fmt.Sprintf("x/exchange:commitment to %d", req.NewMarketId))
+	if err != nil {
+		return err
+	}
+	//Add commitment to the new market.
+	addCommitmentAmount(store, req.NewMarketId, account, req.Amount)
+	k.emitEvent(ctx, exchange.NewEventCommitmentTransferd(req.Account, req.Amount, req.CurrentMarketId, req.NewMarketId, req.EventTag))
+	return nil
 }
 
 // consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.

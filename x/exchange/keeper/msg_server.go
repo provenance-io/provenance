@@ -142,7 +142,7 @@ func (k MsgServer) MarketReleaseCommitments(goCtx context.Context, msg *exchange
 // MarketTransferCommitments is a market endpoint transfer funds from one market to another market back to the account owner(s).
 func (k MsgServer) MarketTransferCommitments(goCtx context.Context, msg *exchange.MsgMarketTransferCommitmentsRequest) (*exchange.MsgMarketTransferCommitmentsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.CanTransferCommitments(ctx, msg.CurrentMarketId, msg.Admin) {
+	if !k.CanTransferCommitmentsForMarket(ctx, msg.CurrentMarketId, msg.Admin) {
 		return nil, permError("transfer commitments for", msg.Admin, msg.CurrentMarketId)
 	}
 	err := k.TransferCommitments(ctx, msg)
