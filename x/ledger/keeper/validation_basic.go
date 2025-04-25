@@ -9,12 +9,25 @@ import (
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
-func ValidateLedgerBasic(l *ledger.Ledger) error {
-	if emptyString(&l.AssetClassId) {
+func ValidateLedgerKeyBasic(key *ledger.LedgerKey) error {
+	if emptyString(&key.NftId) {
+		return NewLedgerCodedError(ErrCodeMissingField, "nft_id")
+	}
+	if emptyString(&key.AssetClassId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "asset_class_id")
 	}
-	if emptyString(&l.NftId) {
-		return NewLedgerCodedError(ErrCodeMissingField, "nft_id")
+	return nil
+}
+
+func ValidateLedgerBasic(l *ledger.Ledger) error {
+	// Validate the LedgerClassId field
+	if emptyString(&l.LedgerClassId) {
+		return NewLedgerCodedError(ErrCodeMissingField, "ledger_class_id")
+	}
+
+	keyError := ValidateLedgerKeyBasic(l.Key)
+	if keyError != nil {
+		return keyError
 	}
 
 	epochTime, _ := time.Parse("2006-01-02", "1970-01-01")

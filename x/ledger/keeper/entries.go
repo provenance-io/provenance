@@ -12,34 +12,46 @@ import (
 var _ EntriesKeeper = (*BaseEntriesKeeper)(nil)
 
 type EntriesKeeper interface {
-	AppendEntries(ctx sdk.Context, nftAddress string, les []*ledger.LedgerEntry) error
+	AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error
 }
 
 type BaseEntriesKeeper struct {
 	BaseViewKeeper
+	NFTKeeper
 }
 
 // SetValue stores a value with a given key.
-func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftId string, les []*ledger.LedgerEntry) error {
-	// TODO validate that the {addr} can be modified by the signer...
-
-	if len(les) == 0 {
-		return NewLedgerCodedError(ErrCodeInvalidField, "entries", "cannot be nil or empty")
-	}
-
-	if !k.HasLedger(ctx, nftId) {
-		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
-	}
-
-	ledger, _ := k.GetLedger(ctx, nftId)
-
-	// Get all existing entries for this NFT
-	entries, err := k.ListLedgerEntries(ctx, nftId)
+func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(ledgerKey)
 	if err != nil {
 		return err
 	}
 
-	for _, le := range les {
+	// Need to resolve the ledger class for validation purposes
+	ledger, err := k.GetLedger(ctx, ledgerKey)
+	if err != nil {
+		return err
+	}
+	if ledger == nil {
+		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
+	// TODO validate against the registry that the authority address is the servicer for this NFT.
+	// If there isn't a registry entry we'll verify against the owner of the nftId.
+
+	// Validate that the NFT exists
+	if !k.NFTKeeper.HasNFT(ctx, ledgerKey.AssetClassId, ledgerKey.NftId) {
+		return NewLedgerCodedError(ErrCodeNotFound, "nft")
+	}
+
+	// Get all existing entries for this NFT
+	existingEntries, err := k.ListLedgerEntries(ctx, ledgerKey)
+	if err != nil {
+		return err
+	}
+
+	for _, le := range entries {
 		if err := ValidateLedgerEntryBasic(le); err != nil {
 			return err
 		}
@@ -55,16 +67,15 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftId string, les []*l
 		}
 
 		// Validate that the LedgerClassEntryType exists
-		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.AssetClassId, le.EntryTypeId))
+		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.LedgerClassId, le.EntryTypeId))
 		if err != nil {
 			return err
 		}
-
 		if !hasLedgerClassEntryType {
 			return NewLedgerCodedError(ErrCodeInvalidField, "entry_type_id")
 		}
 
-		err = k.saveEntry(ctx, nftId, entries, le)
+		err = k.saveEntry(ctx, ledgerKey, existingEntries, le)
 		if err != nil {
 			return err
 		}
@@ -73,7 +84,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, nftId string, les []*l
 	return nil
 }
 
-func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, nftAddress string, entries []*ledger.LedgerEntry, le *ledger.LedgerEntry) error {
+func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry, le *ledger.LedgerEntry) error {
 	// Find entries with the same effective date
 	var sameDateEntries []ledger.LedgerEntry
 	for _, entry := range entries {
@@ -85,6 +96,12 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, nftAddress string, entries
 		if entry.CorrelationId == le.CorrelationId {
 			return NewLedgerCodedError(ErrCodeAlreadyExists, "correlation_id")
 		}
+	}
+
+	// Get the string representation of the ledger key for use in k/v store
+	ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
+	if err != nil {
+		return err
 	}
 
 	// If there are entries with the same date, check for sequence number conflicts
@@ -102,7 +119,7 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, nftAddress string, entries
 
 				// Update the sequence number of the existing entry
 				entry.Sequence++
-				key := collections.Join(nftAddress, entry.CorrelationId)
+				key := collections.Join(*ledgerKeyStr, entry.CorrelationId)
 				if err := k.LedgerEntries.Set(ctx, key, entry); err != nil {
 					return err
 				}
@@ -111,15 +128,15 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, nftAddress string, entries
 	}
 
 	// Store the new entry
-	key := collections.Join(nftAddress, le.CorrelationId)
-	err := k.LedgerEntries.Set(ctx, key, *le)
+	entryKey := collections.Join(*ledgerKeyStr, le.CorrelationId)
+	err = k.LedgerEntries.Set(ctx, entryKey, *le)
 	if err != nil {
 		return err
 	}
 
 	// Emit the ledger entry added event
 	ctx.EventManager().EmitEvent(ledger.NewEventLedgerEntryAdded(
-		nftAddress,
+		ledgerKey,
 		le.CorrelationId,
 	))
 

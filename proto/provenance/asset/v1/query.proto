@@ -1,0 +1,39 @@
+syntax = "proto3";
+package provenance.asset.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/asset/types";
+
+import "provenance/asset/v1/asset.proto";
+import "google/api/annotations.proto";
+
+service Query {
+  rpc ListAssets(QueryListAssets) returns (QueryListAssetsResponse) {
+    option (google.api.http).get = "/provenance/asset/v1/asset";
+  }
+
+  rpc ListAssetClasses(QueryListAssetClasses) returns (QueryListAssetClassesResponse) {
+    option (google.api.http).get = "/provenance/asset/v1/class";
+  }
+
+  rpc GetClass(QueryGetClass) returns (QueryGetClassResponse) {
+    option (google.api.http).get = "/provenance/asset/v1/class/{id}";
+  }
+}
+
+message QueryListAssetClassesResponse {
+  repeated AssetClass assetClasses = 1;
+}
+message QueryGetClassResponse {
+  AssetClass assetClass = 1;
+}
+message QueryListAssetsResponse {
+  repeated Asset assets = 1;
+}
+
+message QueryListAssetClasses {}
+
+message QueryGetClass {
+  string id = 1;
+}
+
+message QueryListAssets {}

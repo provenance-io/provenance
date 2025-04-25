@@ -38,7 +38,7 @@ func CmdQuery() *cobra.Command {
 // GetAttributeParamsCmd returns the command handler for name parameter querying.
 func GetConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "config <nft_id>",
+		Use:     "config <asset_class_id> <nft_id>",
 		Short:   "Query the ledger for the specified nft id",
 		Example: fmt.Sprintf(`$ %s query attribute params`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,9 +47,13 @@ func GetConfigCmd() *cobra.Command {
 				return err
 			}
 
-			nftId := args[0]
+			assetClassId := args[0]
+			nftId := args[1]
 			req := ledger.QueryLedgerConfigRequest{
-				NftId: nftId,
+				Key: &ledger.LedgerKey{
+					AssetClassId: assetClassId,
+					NftId:        nftId,
+				},
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
@@ -60,7 +64,7 @@ func GetConfigCmd() *cobra.Command {
 
 			// Convert to PlainText
 			plainText := ledger.LedgerPlainText{
-				NftId:        l.Ledger.NftId,
+				Key:          req.Key,
 				Status:       strconv.Itoa(int(l.Ledger.StatusTypeId)),
 				NextPmtDate:  keeper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
 				NextPmtAmt:   strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
@@ -80,7 +84,7 @@ func GetConfigCmd() *cobra.Command {
 // GetAttributeParamsCmd returns the command handler for name parameter querying.
 func GetLedgerEntriesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "entries <nft_address>",
+		Use:     "entries <asset_class_id> <nft_id>",
 		Short:   "Query the ledger for the specified nft address",
 		Example: fmt.Sprintf(`$ %s query attribute params`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -89,12 +93,16 @@ func GetLedgerEntriesCmd() *cobra.Command {
 				return err
 			}
 
-			nftId := args[0]
+			assetClassId := args[0]
+			nftId := args[1]
 			queryClient := ledger.NewQueryClient(clientCtx)
 
 			getConfig := func(nftId string) *ledger.QueryLedgerConfigResponse {
 				req := ledger.QueryLedgerConfigRequest{
-					NftId: nftId,
+					Key: &ledger.LedgerKey{
+						AssetClassId: assetClassId,
+						NftId:        nftId,
+					},
 				}
 
 				config, err := queryClient.Config(context.Background(), &req)
@@ -107,7 +115,10 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 			getEntries := func(nftId string) []*ledger.LedgerEntry {
 				req := ledger.QueryLedgerRequest{
-					NftId: nftId,
+					Key: &ledger.LedgerKey{
+						AssetClassId: assetClassId,
+						NftId:        nftId,
+					},
 				}
 
 				l, err := queryClient.Entries(context.Background(), &req)
@@ -150,8 +161,8 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 			config := getConfig(nftId)
 			entries := getEntries(nftId)
-			entryTypes := getEntryTypes(config.Ledger.AssetClassId)
-			bucketTypes := getBucketTypes(config.Ledger.AssetClassId)
+			entryTypes := getEntryTypes(config.Ledger.LedgerClassId)
+			bucketTypes := getBucketTypes(config.Ledger.LedgerClassId)
 
 			plainTextEntries := make([]*ledger.LedgerEntryPlainText, len(entries))
 			for i, entry := range entries {
@@ -191,17 +202,18 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 func GetBalancesAsOfCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "balances [nft-address] [as-of-date]",
+		Use:   "balances <asset_class_id> <nft_id> <as_of_date>",
 		Short: "Query balances for an NFT as of a specific date",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			nftId := args[0]
-			asOfDate := args[1]
+			assetClassId := args[0]
+			nftId := args[1]
+			asOfDate := args[2]
 
 			// Validate the date format
 			_, err = time.Parse("2006-01-02", asOfDate)
@@ -211,7 +223,10 @@ func GetBalancesAsOfCmd() *cobra.Command {
 
 			queryClient := ledger.NewQueryClient(clientCtx)
 			res, err := queryClient.GetBalancesAsOf(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
-				NftId:    nftId,
+				Key: &ledger.LedgerKey{
+					AssetClassId: assetClassId,
+					NftId:        nftId,
+				},
 				AsOfDate: asOfDate,
 			})
 			if err != nil {

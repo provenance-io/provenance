@@ -1,0 +1,33 @@
+syntax = "proto3";
+package provenance.asset.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/asset/types";
+
+import "provenance/asset/v1/asset.proto";
+import "cosmos/msg/v1/msg.proto";
+
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc AddAsset(MsgAddAsset) returns (MsgAddAssetResponse);
+
+  rpc AddAssetClass(MsgAddAssetClass) returns (MsgAddAssetClassResponse);
+}
+
+message MsgAddAsset {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  Asset  asset        = 1;
+  string from_address = 2;
+}
+
+message MsgAddAssetResponse {}
+
+message MsgAddAssetClass {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  AssetClass asset_class  = 1;
+  string     from_address = 2;
+}
+
+message MsgAddAssetClassResponse {}

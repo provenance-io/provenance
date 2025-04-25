@@ -37,7 +37,7 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <nft_id> <asset_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
+		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
 		Example: `$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
@@ -49,13 +49,17 @@ $ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1
 				return err
 			}
 
-			nftId := args[0]
-			assetClassId := args[1]
+			assetClassId := args[0]
+			nftId := args[1]
+			ledgerClassId := args[2]
 
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
-				NftId:        nftId,
-				AssetClassId: assetClassId,
+				Key: &ledger.LedgerKey{
+					AssetClassId: assetClassId,
+					NftId:        nftId,
+				},
+				LedgerClassId: ledgerClassId,
 			}
 
 			// Add optional fields if provided
@@ -110,24 +114,28 @@ $ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1
 
 func CmdDestroy() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "destroy <nft_address>",
+		Use:     "destroy <asset_class_id> <nft_id>",
 		Aliases: []string{},
-		Short:   "Destroy a ledger by NFT address",
+		Short:   "Destroy a ledger by asset_class_id and nft_id",
 		Example: `$ provenanced tx ledger destroy pb1a2b3c4... --from mykey`,
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			nftId := args[0]
+			assetClassId := args[0]
+			nftId := args[1]
 			if nftId == "" {
 				return fmt.Errorf("invalid <nft_id>")
 			}
 
 			msg := &ledger.MsgDestroyRequest{
-				NftId:     nftId,
+				Key: &ledger.LedgerKey{
+					AssetClassId: assetClassId,
+					NftId:        nftId,
+				},
 				Authority: clientCtx.FromAddress.String(),
 			}
 
@@ -142,10 +150,10 @@ func CmdDestroy() *cobra.Command {
 // CmdAppendJson creates a new ledger entry from a JSON file
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append-json <nft_address> <json_file>",
+		Use:     "append <asset_class_id> <nft_id> <json_file>",
 		Aliases: []string{"aj"},
 		Short:   "Append ledger entries from a JSON file",
-		Example: `$ provenanced tx ledger append-json pb1a2b3c4... entries.json --from mykey
+		Example: `$ provenanced tx ledger append pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 entries.json --from mykey
 		where the json file is formatted as follows:
 		[
 			{
@@ -170,14 +178,15 @@ func CmdAppend() *cobra.Command {
 			}
 		]
 		`,
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			nftId := args[0]
+			assetClassId := args[0]
+			nftId := args[1]
 			if nftId == "" {
 				return fmt.Errorf("invalid <nft_id>")
 			}
@@ -204,7 +213,10 @@ func CmdAppend() *cobra.Command {
 			}
 
 			msg := &ledger.MsgAppendRequest{
-				NftId:     nftId,
+				Key: &ledger.LedgerKey{
+					AssetClassId: assetClassId,
+					NftId:        nftId,
+				},
 				Entries:   entries,
 				Authority: clientCtx.FromAddress.String(),
 			}

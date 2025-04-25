@@ -12,11 +12,15 @@ option java_multiple_files = true;
 // is defined by the either a scope spec `x/metadata`, or nft class `x/nft`. Ultimately, the configuration will
 // assist in verifying the types that are associated with particular ledger entries.
 message LedgerClass {
+  // Unique ID for the ledger class (eg. 1, 2, 3, etc.)
+  // This is necessary since the nft class does not have an owner.
+  string ledger_class_id = 1;
+
   // Scope Specification ID or NFT Class ID
-  string asset_class_id = 1;
+  string asset_class_id = 2;
 
   // Denom that this class of asset will be ledgered in
-  string denom = 2;
+  string denom = 3;
 }
 
 // LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
@@ -47,15 +51,22 @@ message LedgerClassStatusType {
   string description = 3;
 }
 
-// Ledger
-message Ledger {
+message LedgerKey {
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
   // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
   string nft_id = 1;
 
-  // Asset class id for the ledger
+  // Scope Specification ID or NFT Class ID
   string asset_class_id = 2;
+}
+
+// Ledger
+message Ledger {
+  LedgerKey key = 1;
+
+  // Ledger class id for the ledger
+  string ledger_class_id = 2;
 
   // Status of the ledger
   int32 status_type_id = 3;
