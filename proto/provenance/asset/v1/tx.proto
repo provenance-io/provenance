@@ -12,13 +12,12 @@ service Msg {
   rpc AddAsset(MsgAddAsset) returns (MsgAddAssetResponse);
 
   rpc AddAssetClass(MsgAddAssetClass) returns (MsgAddAssetClassResponse);
-
 }
 
 message MsgAddAsset {
   option (cosmos.msg.v1.signer) = "from_address";
-  
-  Asset asset = 1;
+
+  Asset  asset        = 1;
   string from_address = 2;
 }
 
@@ -27,8 +26,8 @@ message MsgAddAssetResponse {}
 message MsgAddAssetClass {
   option (cosmos.msg.v1.signer) = "from_address";
 
-  AssetClass asset_class = 1;
-  string from_address = 2;
+  AssetClass asset_class  = 1;
+  string     from_address = 2;
 }
 
 message MsgAddAssetClassResponse {}

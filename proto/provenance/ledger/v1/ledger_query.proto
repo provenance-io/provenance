@@ -9,8 +9,8 @@ import "provenance/ledger/v1/ledger.proto";
 
 // Ledger
 message LedgerPlainText {
-  // Address of the NFT to which this ledger is linked.
-  string nft_id = 1;
+  // Ledger key
+  LedgerKey key = 1;
 
   // Status of the ledger
   string status = 2;

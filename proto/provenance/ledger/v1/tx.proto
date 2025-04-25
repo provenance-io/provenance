@@ -34,8 +34,9 @@ service Msg {
 // MsgCreateRequest
 message MsgCreateRequest {
   option (cosmos.msg.v1.signer) = "authority";
-  Ledger ledger                 = 1;
-  string authority              = 2;
+
+  Ledger ledger    = 1;
+  string authority = 2;
 }
 
 // MsgCreateResponse
@@ -45,7 +46,7 @@ message MsgCreateResponse {}
 message MsgAppendRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  string               nft_id    = 1;
+  LedgerKey            key       = 1;
   repeated LedgerEntry entries   = 2;
   string               authority = 3;
 }
@@ -77,8 +78,8 @@ message MsgProcessFundTransfersWithSettlementRequest {
 message MsgDestroyRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  string nft_id    = 1;
-  string authority = 2;
+  LedgerKey key       = 1;
+  string    authority = 2;
 }
 
 // MsgDestroyResponse represents the response from destroying a ledger

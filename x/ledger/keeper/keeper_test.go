@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/nft"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -19,11 +20,6 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 )
 
-var (
-	pastDate        time.Time
-	validNftAddress string
-)
-
 type TestSuite struct {
 	suite.Suite
 
@@ -31,6 +27,7 @@ type TestSuite struct {
 	ctx        sdk.Context
 	keeper     keeper.BaseKeeper
 	bankKeeper bankkeeper.Keeper
+	nftKeeper  nftkeeper.Keeper
 
 	bondDenom  string
 	initBal    sdk.Coins
@@ -44,6 +41,7 @@ type TestSuite struct {
 
 	validLedgerClass ledger.LedgerClass
 	validNFTClass    nft.Class
+	validNFT         nft.NFT
 }
 
 func (s *TestSuite) SetupTest() {
@@ -51,6 +49,7 @@ func (s *TestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(false)
 	s.keeper = s.app.LedgerKeeper
 	s.bankKeeper = s.app.BankKeeper
+	s.nftKeeper = s.app.NFTKeeper
 
 	var err error
 	s.bondDenom, err = s.app.StakingKeeper.BondDenom(s.ctx)
@@ -77,7 +76,13 @@ func (s *TestSuite) ConfigureTest() {
 	s.validNFTClass = nft.Class{
 		Id: "test-nft-class-id",
 	}
-	s.app.NFTKeeper.SaveClass(s.ctx, s.validNFTClass)
+	s.nftKeeper.SaveClass(s.ctx, s.validNFTClass)
+
+	s.validNFT = nft.NFT{
+		ClassId: s.validNFTClass.Id,
+		Id:      "test-nft-id",
+	}
+	s.nftKeeper.Mint(s.ctx, s.validNFT, s.addr1)
 
 	s.validLedgerClass = ledger.LedgerClass{
 		LedgerClassId: "test-ledger-class-id",
@@ -175,9 +180,6 @@ func (s *TestSuite) TestCreateLedgerClass() {
 
 // TestCreateLedger tests the CreateLedger function
 func (s *TestSuite) TestCreateLedger() {
-	// Create a valid NFT address for testing
-	nftId := s.addr1.String()
-
 	tests := []struct {
 		name     string
 		ledger   ledger.Ledger
@@ -187,7 +189,10 @@ func (s *TestSuite) TestCreateLedger() {
 		{
 			name: "valid ledger",
 			ledger: ledger.Ledger{
-				NftId:         nftId,
+				Key: &ledger.LedgerKey{
+					AssetClassId: s.validNFTClass.Id,
+					NftId:        s.validNFT.Id,
+				},
 				LedgerClassId: s.validLedgerClass.LedgerClassId,
 				StatusTypeId:  1,
 			},
@@ -196,16 +201,10 @@ func (s *TestSuite) TestCreateLedger() {
 		{
 			name: "empty nft address",
 			ledger: ledger.Ledger{
-				NftId:         "",
-				LedgerClassId: s.validLedgerClass.LedgerClassId,
-				StatusTypeId:  1,
-			},
-			expErr: []string{"nft_id"},
-		},
-		{
-			name: "invalid nft address",
-			ledger: ledger.Ledger{
-				NftId:         "invalid",
+				Key: &ledger.LedgerKey{
+					AssetClassId: s.validNFTClass.Id,
+					NftId:        "",
+				},
 				LedgerClassId: s.validLedgerClass.LedgerClassId,
 				StatusTypeId:  1,
 			},
@@ -214,7 +213,10 @@ func (s *TestSuite) TestCreateLedger() {
 		{
 			name: "duplicate ledger",
 			ledger: ledger.Ledger{
-				NftId:         nftId,
+				Key: &ledger.LedgerKey{
+					AssetClassId: s.validNFTClass.Id,
+					NftId:        s.validNFT.Id,
+				},
 				LedgerClassId: s.validLedgerClass.LedgerClassId,
 				StatusTypeId:  1,
 			},
@@ -227,7 +229,7 @@ func (s *TestSuite) TestCreateLedger() {
 			// Clear events before each test
 			s.ctx.EventManager().Events()
 
-			err := s.keeper.CreateLedger(s.ctx, tc.ledger)
+			err := s.keeper.CreateLedger(s.ctx, s.addr1, tc.ledger)
 
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "CreateLedger error")
@@ -235,10 +237,11 @@ func (s *TestSuite) TestCreateLedger() {
 				s.Require().NoError(err, "CreateLedger error")
 
 				// Verify the ledger was created
-				l, err := s.keeper.GetLedger(s.ctx, tc.ledger.NftId)
+				l, err := s.keeper.GetLedger(s.ctx, tc.ledger.Key)
 				s.Require().NoError(err, "GetLedger error")
 				s.Require().NotNil(l, "GetLedger result")
-				s.Require().Equal(tc.ledger.NftId, l.NftId, "ledger nft address")
+				s.Require().Equal(tc.ledger.Key.NftId, l.Key.NftId, "ledger nft address")
+				s.Require().Equal(tc.ledger.Key.AssetClassId, l.Key.AssetClassId, "ledger asset class id")
 				s.Require().Equal(tc.ledger.LedgerClassId, l.LedgerClassId, "ledger asset class id")
 
 				// Verify event emission
@@ -254,9 +257,11 @@ func (s *TestSuite) TestCreateLedger() {
 
 					s.Require().NotNil(foundEvent)
 					s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvent.Type, "event type")
-					s.Require().Len(foundEvent.Attributes, 1, "event attributes length")
-					s.Require().Equal("nft_id", foundEvent.Attributes[0].Key, "event nft address key")
-					s.Require().Equal(tc.ledger.NftId, foundEvent.Attributes[0].Value, "event nft address value")
+					s.Require().Len(foundEvent.Attributes, 2, "event attributes length")
+					s.Require().Equal("asset_class_id", foundEvent.Attributes[0].Key, "event asset class id key")
+					s.Require().Equal(tc.ledger.Key.AssetClassId, foundEvent.Attributes[0].Value, "event asset class id value")
+					s.Require().Equal("nft_id", foundEvent.Attributes[1].Key, "event nft id key")
+					s.Require().Equal(tc.ledger.Key.NftId, foundEvent.Attributes[1].Value, "event nft id value")
 				}
 			}
 		})
@@ -265,16 +270,16 @@ func (s *TestSuite) TestCreateLedger() {
 
 // TestGetLedger tests the GetLedger function
 func (s *TestSuite) TestGetLedger() {
-	// Create a valid NFT address for testing
-	nftId := s.addr1.String()
-
 	// Create a valid ledger first that we can try to get
 	validLedger := ledger.Ledger{
-		NftId:         nftId,
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
-	err := s.keeper.CreateLedger(s.ctx, validLedger)
+	err := s.keeper.CreateLedger(s.ctx, s.addr1, validLedger)
 	s.Require().NoError(err, "CreateLedger error")
 
 	tests := []struct {
@@ -285,7 +290,7 @@ func (s *TestSuite) TestGetLedger() {
 	}{
 		{
 			name:      "valid ledger retrieval",
-			nftId:     nftId,
+			nftId:     s.validNFT.Id,
 			expLedger: &validLedger,
 		},
 		{
@@ -301,13 +306,16 @@ func (s *TestSuite) TestGetLedger() {
 		{
 			name:   "invalid nft address",
 			nftId:  "invalid",
-			expErr: []string{"nft_id"},
+			expErr: nil,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			ledger, err := s.keeper.GetLedger(s.ctx, tc.nftId)
+			ledger, err := s.keeper.GetLedger(s.ctx, &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        tc.nftId,
+			})
 
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "GetLedger error")
@@ -318,7 +326,8 @@ func (s *TestSuite) TestGetLedger() {
 					s.Require().Nil(ledger, "GetLedger result should be nil for non-existent ledger")
 				} else {
 					s.Require().NotNil(ledger, "GetLedger result")
-					s.Require().Equal(tc.expLedger.NftId, ledger.NftId, "ledger nft address")
+					s.Require().Equal(tc.expLedger.Key.NftId, ledger.Key.NftId, "ledger nft address")
+					s.Require().Equal(tc.expLedger.Key.AssetClassId, ledger.Key.AssetClassId, "ledger asset class id")
 					s.Require().Equal(tc.expLedger.LedgerClassId, ledger.LedgerClassId, "ledger class id")
 				}
 			}
@@ -330,35 +339,44 @@ func (s *TestSuite) TestGetLedger() {
 func (s *TestSuite) TestGetLedgerEntry() {
 	// Create a test ledger
 	l := ledger.Ledger{
-		NftId:         s.addr1.String(),
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, l)
+	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
-	expErr := keeper.ErrCodeInvalidField
+	expErr := keeper.ErrCodeNotFound
 
 	// Test cases
 	tests := []struct {
 		name          string
-		nftId         string
+		key           *ledger.LedgerKey
 		correlationId string
 		expEntry      *ledger.LedgerEntry
 		expErr        *string
 	}{
 		{
-			name:          "invalid nft address",
-			nftId:         "invalid",
+			name: "invalid nft address",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        "invalid",
+			},
 			correlationId: "test-correlation-id",
 			expEntry:      nil,
 			expErr:        &expErr,
 		},
 		{
-			name:          "not found",
-			nftId:         s.addr2.String(),
-			correlationId: "test-correlation-id",
+			name: "not found",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
+			correlationId: "test-correlation-id-222",
 			expEntry:      nil,
 			expErr:        nil,
 		},
@@ -366,7 +384,7 @@ func (s *TestSuite) TestGetLedgerEntry() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.nftId, tc.correlationId)
+			entry, err := s.keeper.GetLedgerEntry(s.ctx, tc.key, tc.correlationId)
 			if tc.expErr != nil {
 				s.Require().Error(err, "expected GetLedgerEntry error")
 				s.Require().Contains(err.Error(), *tc.expErr, "expected INVALID_FIELD error")
@@ -416,24 +434,30 @@ func (s *TestSuite) TestExportGenesis() {
 func (s *TestSuite) TestAppendEntry() {
 	// Create a test ledger
 	l := ledger.Ledger{
-		NftId:         s.addr1.String(),
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, l)
+	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Test cases
 	tests := []struct {
 		name   string
-		nftId  string
+		key    *ledger.LedgerKey
 		entry  ledger.LedgerEntry
 		expErr *string
 	}{
 		{
-			name:  "invalid nft address",
-			nftId: "invalid",
+			name: "invalid nft address",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        "invalid",
+			},
 			entry: ledger.LedgerEntry{
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
@@ -454,8 +478,11 @@ func (s *TestSuite) TestAppendEntry() {
 			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
 		},
 		{
-			name:  "not found",
-			nftId: s.addr2.String(),
+			name: "not found",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        "unknown nft",
+			},
 			entry: ledger.LedgerEntry{
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
@@ -476,8 +503,11 @@ func (s *TestSuite) TestAppendEntry() {
 			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
 		},
 		{
-			name:  "amounts_do_not_sum_to_total",
-			nftId: s.addr1.String(),
+			name: "amounts_do_not_sum_to_total",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
 			entry: ledger.LedgerEntry{
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
@@ -498,8 +528,11 @@ func (s *TestSuite) TestAppendEntry() {
 			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
 		},
 		{
-			name:  "valid amounts and balances",
-			nftId: s.addr1.String(),
+			name: "valid amounts and balances",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
 			entry: ledger.LedgerEntry{
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
@@ -520,8 +553,11 @@ func (s *TestSuite) TestAppendEntry() {
 			expErr: nil,
 		},
 		{
-			name:  "valid amounts and balances with negative applied amount",
-			nftId: s.addr1.String(),
+			name: "valid amounts and balances with negative applied amount",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
 			entry: ledger.LedgerEntry{
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
@@ -542,8 +578,11 @@ func (s *TestSuite) TestAppendEntry() {
 			expErr: nil,
 		},
 		{
-			name:  "negative amount",
-			nftId: s.addr1.String(),
+			name: "negative amount",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
 			entry: ledger.LedgerEntry{
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
@@ -564,8 +603,11 @@ func (s *TestSuite) TestAppendEntry() {
 			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
 		},
 		{
-			name:  "allow negative principal applied amount",
-			nftId: s.addr1.String(),
+			name: "allow negative principal applied amount",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
 			entry: ledger.LedgerEntry{
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
@@ -589,7 +631,7 @@ func (s *TestSuite) TestAppendEntry() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.AppendEntries(s.ctx, tc.nftId, []*ledger.LedgerEntry{&tc.entry})
+			err := s.keeper.AppendEntries(s.ctx, s.addr1, tc.key, []*ledger.LedgerEntry{&tc.entry})
 			if tc.expErr != nil {
 				s.Require().Error(err, "AppendEntry error")
 				s.Require().Contains(err.Error(), *tc.expErr, "AppendEntry error type")
@@ -603,12 +645,15 @@ func (s *TestSuite) TestAppendEntry() {
 func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 	// Create a test ledger
 	l := ledger.Ledger{
-		NftId:         s.addr2.String(),
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, l)
+	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create test entries with the same effective date but different sequence numbers
@@ -671,28 +716,28 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 
 	// Add entries in a specific order to test sequence number adjustment
 	// First add entry with sequence 2
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[1]})
+	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{entries[1]})
 	s.Require().NoError(err, "AppendEntry error for sequence 2")
-	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(2), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Then add entry with sequence 1
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[0]})
+	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{entries[0]})
 	s.Require().NoError(err, "AppendEntry error for sequence 1")
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Finally add entry with sequence 3
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{entries[2]})
+	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{entries[2]})
 	s.Require().NoError(err, "AppendEntry error for sequence 3")
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2")
 
 	// Get all entries and verify their sequence numbers
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 
 	// Verify sequence numbers
@@ -721,11 +766,11 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 		CorrelationId: "test-correlation-id-4",
 	}
 
-	err = s.keeper.AppendEntries(s.ctx, s.addr2.String(), []*ledger.LedgerEntry{&newEntry})
+	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{&newEntry})
 	s.Require().NoError(err, "AppendEntry error for new entry with sequence 2")
 
 	// Get all entries again and verify updated sequence numbers
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr2.String())
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 
 	// Verify updated sequence numbers
@@ -739,12 +784,15 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 	// Create a test ledger
 	l := ledger.Ledger{
-		NftId:         s.addr1.String(),
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, l)
+	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create a test entry
@@ -768,16 +816,16 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 	}
 
 	// Add the entry successfully
-	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry})
 	s.Require().NoError(err, "AppendEntry error for first entry")
 
 	// Try to add the same entry again with the same correlation ID
-	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry})
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
 	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
 	// Verify that only one entry exists
-	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
+	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Len(allEntries, 1, "should only have one entry")
 
@@ -801,12 +849,12 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 		CorrelationId: "test-correlation-id-1",
 	}
 
-	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), []*ledger.LedgerEntry{&entry2})
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry2})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
 	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
 	// Verify that still only one entry exists
-	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, s.addr1.String())
+	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Len(allEntries, 1, "should still only have one entry")
 	s.Require().Equal(entry.TotalAmt, allEntries[0].TotalAmt, "entry amount should match original entry")
@@ -815,12 +863,15 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 func (s *TestSuite) TestGetBalances() {
 	// Create a test ledger
 	l := ledger.Ledger{
-		NftId:         s.addr1.String(),
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, l)
+	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create a test entry
@@ -887,23 +938,43 @@ func (s *TestSuite) TestGetBalances() {
 	}
 
 	// Add entries to the ledger
-	err = s.keeper.AppendEntries(s.ctx, s.addr1.String(), entries)
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, entries)
 	s.Require().NoError(err, "AppendEntries error")
 
-	entries, err = s.keeper.ListLedgerEntries(s.ctx, l.NftId)
+	entries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(3, len(entries), "number of entries")
 
 	s.Require().Less(s.pastDate, keeper.DaysSinceEpoch(time.Now().UTC()))
 
 	// Get balances
-	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.NftId, time.Now().UTC())
+	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.Key, time.Now().UTC())
 	s.Require().NoError(err, "GetBalances error")
 	s.Require().Equal(3, len(balances.BucketBalances), "number of bucket balances")
 
 	s.Require().Equal(math.NewInt(910), balances.BucketBalances[0].Balance)
 	s.Require().Equal(math.NewInt(-300), balances.BucketBalances[1].Balance)
 	s.Require().Equal(math.NewInt(100), balances.BucketBalances[2].Balance)
+}
+
+func (s *TestSuite) TestBech32() {
+	ledgerKey := &ledger.LedgerKey{
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.addr1.String(),
+	}
+
+	expectedBech32Str := "ledger1w3jhxapdden8gttrd3shxuedd9jr5cm0wdkk7ue3x44hjwtyw5uxzvnhd3ehg73kvec8svmsx3khzur209ex6dtrvack5amv8pehzv7wxj4"
+
+	bech32Id, err := keeper.LedgerKeyToString(ledgerKey)
+	s.Require().NoError(err, "LedgerKeyToString error")
+	s.Require().Equal(expectedBech32Str, *bech32Id)
+
+	ledgerKey2, err := keeper.StringToLedgerKey(*bech32Id)
+	s.Require().NoError(err, "StringToLedgerKey error")
+	s.Require().Equal(ledgerKey, ledgerKey2, "ledger keys should be equal")
+
+	_, err = keeper.StringToLedgerKey("ledgerasdf1w3jhxapdden8gttrd3shxuedd9jr5cm0wdkk7ue3x44hjwtyw5uxzvnhd3ehg73kvec8svmsx3khzur209ex6dtrvack5amv8pehzv7wxj4")
+	s.Require().Error(err, "StringToLedgerKey error")
 }
 
 // coins creates an sdk.Coins from a string, requiring it to work.

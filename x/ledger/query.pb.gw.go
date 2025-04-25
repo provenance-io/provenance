@@ -34,12 +34,41 @@ var _ = descriptor.ForMessage
 var _ = metadata.Join
 
 var (
-	filter_Query_Config_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_Query_Config_0 = &utilities.DoubleArray{Encoding: map[string]int{"key": 0, "asset_class_id": 1, "nft_id": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
 func request_Query_Config_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryLedgerConfigRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["key.asset_class_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -57,6 +86,35 @@ func local_request_Query_Config_0(ctx context.Context, marshaler runtime.Marshal
 	var protoReq QueryLedgerConfigRequest
 	var metadata runtime.ServerMetadata
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["key.asset_class_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
+	}
+
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -70,12 +128,41 @@ func local_request_Query_Config_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 var (
-	filter_Query_Entries_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_Query_Entries_0 = &utilities.DoubleArray{Encoding: map[string]int{"key": 0, "asset_class_id": 1, "nft_id": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
 func request_Query_Entries_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryLedgerRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["key.asset_class_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -92,6 +179,35 @@ func request_Query_Entries_0(ctx context.Context, marshaler runtime.Marshaler, c
 func local_request_Query_Entries_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryLedgerRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["key.asset_class_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -267,6 +383,10 @@ func local_request_Query_ClassBucketTypes_0(ctx context.Context, marshaler runti
 
 }
 
+var (
+	filter_Query_GetLedgerEntry_0 = &utilities.DoubleArray{Encoding: map[string]int{"key": 0, "asset_class_id": 1, "nft_id": 2, "correlation_id": 3}, Base: []int{1, 1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 2, 2, 1, 3, 4, 5}}
+)
+
 func request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryLedgerEntryRequest
 	var metadata runtime.ServerMetadata
@@ -278,15 +398,26 @@ func request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["nft_id"]
+	val, ok = pathParams["key.asset_class_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
 	}
 
-	protoReq.NftId, err = runtime.String(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
 	}
 
 	val, ok = pathParams["correlation_id"]
@@ -298,6 +429,13 @@ func request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime.Marsh
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "correlation_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetLedgerEntry_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.GetLedgerEntry(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -316,15 +454,26 @@ func local_request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
-	val, ok = pathParams["nft_id"]
+	val, ok = pathParams["key.asset_class_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
 	}
 
-	protoReq.NftId, err = runtime.String(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
 	}
 
 	val, ok = pathParams["correlation_id"]
@@ -338,10 +487,21 @@ func local_request_Query_GetLedgerEntry_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "correlation_id", err)
 	}
 
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetLedgerEntry_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
 	msg, err := server.GetLedgerEntry(ctx, &protoReq)
 	return msg, metadata, err
 
 }
+
+var (
+	filter_Query_GetBalancesAsOf_0 = &utilities.DoubleArray{Encoding: map[string]int{"key": 0, "asset_class_id": 1, "nft_id": 2, "as_of_date": 3}, Base: []int{1, 1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 2, 2, 1, 3, 4, 5}}
+)
 
 func request_Query_GetBalancesAsOf_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryBalancesAsOfRequest
@@ -354,15 +514,26 @@ func request_Query_GetBalancesAsOf_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["nft_id"]
+	val, ok = pathParams["key.asset_class_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
 	}
 
-	protoReq.NftId, err = runtime.String(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
 	}
 
 	val, ok = pathParams["as_of_date"]
@@ -374,6 +545,13 @@ func request_Query_GetBalancesAsOf_0(ctx context.Context, marshaler runtime.Mars
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "as_of_date", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetBalancesAsOf_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.GetBalancesAsOf(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -392,15 +570,26 @@ func local_request_Query_GetBalancesAsOf_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["nft_id"]
+	val, ok = pathParams["key.asset_class_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nft_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.asset_class_id")
 	}
 
-	protoReq.NftId, err = runtime.String(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.asset_class_id", val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nft_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.asset_class_id", err)
+	}
+
+	val, ok = pathParams["key.nft_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key.nft_id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "key.nft_id", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key.nft_id", err)
 	}
 
 	val, ok = pathParams["as_of_date"]
@@ -412,6 +601,13 @@ func local_request_Query_GetBalancesAsOf_0(ctx context.Context, marshaler runtim
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "as_of_date", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetBalancesAsOf_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.GetBalancesAsOf(ctx, &protoReq)
@@ -771,9 +967,9 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Config_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "ledger", "v1", "config"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Config_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "config", "key.asset_class_id", "key.nft_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Entries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "ledger", "v1", "entries"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Entries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "entries", "key.asset_class_id", "key.nft_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_ClassEntryTypes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "ledger", "v1", "entry_types", "asset_class_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
@@ -781,9 +977,9 @@ var (
 
 	pattern_Query_ClassBucketTypes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "ledger", "v1", "bucket_types", "asset_class_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetLedgerEntry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_id", "entry", "correlation_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetLedgerEntry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "ledger", "v1", "key.asset_class_id", "key.nft_id", "entry", "correlation_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetBalancesAsOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "ledger", "v1", "nft_id", "balances", "as_of_date"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetBalancesAsOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "ledger", "v1", "key.asset_class_id", "key.nft_id", "balances", "as_of_date"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

@@ -51,12 +51,19 @@ message LedgerClassStatusType {
   string description = 3;
 }
 
-// Ledger
-message Ledger {
+message LedgerKey {
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
   // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
   string nft_id = 1;
+
+  // Scope Specification ID or NFT Class ID
+  string asset_class_id = 2;
+}
+
+// Ledger
+message Ledger {
+  LedgerKey key = 1;
 
   // Ledger class id for the ledger
   string ledger_class_id = 2;

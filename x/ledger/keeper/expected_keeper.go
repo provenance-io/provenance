@@ -28,4 +28,7 @@ type NFTKeeper interface {
 
 	// GetClass returns an NFT class by ID
 	GetClass(ctx context.Context, classID string) (nft.Class, bool)
+
+	// HasNFT checks if an NFT exists
+	HasNFT(ctx context.Context, classID, id string) bool
 }

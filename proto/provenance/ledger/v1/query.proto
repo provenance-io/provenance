@@ -13,11 +13,11 @@ import "provenance/ledger/v1/ledger.proto";
 service Query {
   // Params queries params of the ledger module.
   rpc Config(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/config";
+    option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
 
   rpc Entries(QueryLedgerRequest) returns (QueryLedgerResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/entries";
+    option (google.api.http).get = "/provenance/ledger/v1/entries/{key.asset_class_id}/{key.nft_id}";
   }
 
   rpc ClassEntryTypes(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
@@ -34,17 +34,19 @@ service Query {
 
   // GetLedgerEntry returns a specific ledger entry for an NFT
   rpc GetLedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_id}/entry/{correlation_id}";
+    option (google.api.http).get =
+        "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/entry/{correlation_id}";
   }
 
   // GetBalancesAsOf returns the balances for a specific NFT as of a given date
   rpc GetBalancesAsOf(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/ledger/{nft_id}/balances/{as_of_date}";
+    option (google.api.http).get =
+        "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/balances/{as_of_date}";
   }
 }
 
 message QueryLedgerConfigRequest {
-  string nft_id = 1;
+  LedgerKey key = 1;
 }
 
 message QueryLedgerConfigResponse {
@@ -52,7 +54,7 @@ message QueryLedgerConfigResponse {
 }
 
 message QueryLedgerRequest {
-  string nft_id = 1;
+  LedgerKey key = 1;
 }
 
 message QueryLedgerResponse {
@@ -60,8 +62,8 @@ message QueryLedgerResponse {
 }
 
 message QueryLedgerEntryRequest {
-  string nft_id         = 1;
-  string correlation_id = 2; // Free-form string up to 50 characters
+  LedgerKey key            = 1;
+  string    correlation_id = 2; // Free-form string up to 50 characters
 }
 
 message QueryLedgerEntryResponse {
@@ -70,8 +72,8 @@ message QueryLedgerEntryResponse {
 
 // QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
 message QueryBalancesAsOfRequest {
-  string nft_id     = 1;
-  string as_of_date = 2;
+  LedgerKey key        = 1;
+  string    as_of_date = 2;
 }
 
 // QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
