@@ -24,10 +24,20 @@ enum RegistryRole {
   REGISTRY_ROLE_ORIGINATOR = 6;
 }
 
+message RegistryKey {
+  // Identifier for the nft that this ledger is linked to.
+  // This could be a `x/metadata` scope id or an `x/nft` nft id.
+  // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
+  string nft_id = 1;
+
+  // Scope Specification ID or NFT Class ID
+  string asset_class_id = 2;
+}
+
 // RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
 message RegistryEntry {
-  // address is the blockchain address that this registry entry pertains to
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Key ties the registry entry to an asset class and nft id
+  RegistryKey key = 1;
 
   // roles is a map of role names to lists of addresses that can perform that role
   map<string, RoleAddresses> roles = 2 [(gogoproto.nullable) = false];
