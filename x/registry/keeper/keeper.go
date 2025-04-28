@@ -14,23 +14,28 @@ import (
 	"github.com/provenance-io/provenance/x/registry"
 )
 
-var _ Keeper = (*RegistryKeeper)(nil)
+var _ RegistryKeeper = (*BaseRegistryKeeper)(nil)
 
-type Keeper interface {
+type RegistryKeeper interface {
 	CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles map[string]registry.RoleAddresses) error
 	GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
 	RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
 	HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error)
 	GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error)
+
+	InitGenesis(ctx sdk.Context, state *registry.GenesisState)
+	ExportGenesis(ctx sdk.Context) *registry.GenesisState
 }
 
 // RegistryKeeper defines the registry keeper
-type RegistryKeeper struct {
+type BaseRegistryKeeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	schema   collections.Schema
 
 	Registry collections.Map[string, registry.RegistryEntry]
+
+	NFTKeeper
 }
 
 const (
@@ -40,10 +45,10 @@ const (
 )
 
 // NewKeeper returns a new registry Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService) RegistryKeeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, nftKeeper NFTKeeper) RegistryKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
-	rk := RegistryKeeper{
+	rk := BaseRegistryKeeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 
@@ -54,6 +59,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 			collections.StringKey,
 			codec.CollValue[registry.RegistryEntry](cdc),
 		),
+
+		NFTKeeper: nftKeeper,
 	}
 
 	// Build and set the schema
@@ -66,7 +73,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 	return rk
 }
 
-func (k RegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles map[string]registry.RoleAddresses) error {
+func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles map[string]registry.RoleAddresses) error {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return err
@@ -87,7 +94,7 @@ func (k RegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAdd
 	return nil
 }
 
-func (k RegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error {
+func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return err
@@ -126,7 +133,7 @@ func (k RegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress,
 	return nil
 }
 
-func (k RegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error {
+func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return err
@@ -169,7 +176,7 @@ func (k RegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress
 	return nil
 }
 
-func (k RegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error) {
+func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error) {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return false, err
@@ -191,7 +198,7 @@ func (k RegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, role
 	return slices.Contains(registryEntry.Roles[role].Addresses, address), nil
 }
 
-func (k RegistryKeeper) GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error) {
+func (k BaseRegistryKeeper) GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error) {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return nil, err
@@ -205,11 +212,11 @@ func (k RegistryKeeper) GetRegistry(ctx sdk.Context, key *registry.RegistryKey) 
 	return &registryEntry, nil
 }
 
-func (k RegistryKeeper) InitGenesis(ctx sdk.Context, state *registry.GenesisState) {
+func (k BaseRegistryKeeper) InitGenesis(ctx sdk.Context, state *registry.GenesisState) {
 	// Initialize genesis state
 }
 
-func (k RegistryKeeper) ExportGenesis(ctx sdk.Context) *registry.GenesisState {
+func (k BaseRegistryKeeper) ExportGenesis(ctx sdk.Context) *registry.GenesisState {
 	return &registry.GenesisState{}
 }
 
