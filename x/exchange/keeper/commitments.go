@@ -443,32 +443,21 @@ func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTran
 	if err := k.validateUserCanCreateCommitment(ctx, req.NewMarketId, account); err != nil {
 		return err
 	}
-	//check account contains has sufficient funds committed in the current market.
-	cur := getCommitmentAmount(store, req.CurrentMarketId, account)
-	if cur.IsZero() {
+	currentAmount := getCommitmentAmount(store, req.CurrentMarketId, account)
+	if currentAmount.IsZero() {
 		return fmt.Errorf("account %s does not have any funds committed to market %d", account, req.CurrentMarketId)
 	}
-	//check if requested amount is available - using SafeSub
-	newAmt, isNeg := cur.SafeSub(req.Amount...)
+	newAmt, isNeg := currentAmount.SafeSub(req.Amount...)
 	if isNeg {
-		return fmt.Errorf("commitment amount to transfer %q is more than currently committed amount %q for %s in market %d",
-			req.Amount, cur, req.Account, req.CurrentMarketId)
+		return fmt.Errorf("commitment amount to release %q is more than currently committed amount %q for %s in market %d",
+			req.Amount, currentAmount, account, req.CurrentMarketId)
 	}
-	//TODO() creation_fee fees part.
-	//Release the hold from the current market without releasing commitment.
-	err = k.holdKeeper.ReleaseHold(ctx, account, req.Amount)
-	if err != nil {
-		return err
-	}
-	//update current market commitment amount
-	setCommitmentAmount(store, req.CurrentMarketId, account, newAmt)
-	//Add a hold on the funds for the new market
-	err = k.holdKeeper.AddHold(ctx, account, req.Amount, fmt.Sprintf("x/exchange:commitment to %d", req.NewMarketId))
-	if err != nil {
-		return err
-	}
-	//Add commitment to the new market.
-	addCommitmentAmount(store, req.NewMarketId, account, req.Amount)
+	//need to implement authorize 
+	setCommitmentAmount(store, req.CurrentMarketId, sdk.AccAddress(req.Account), newAmt)
+	new_market := getCommitmentAmount(store, req.NewMarketId, account)
+	newToCommitment := new_market.Add(req.Amount...)
+	setCommitmentAmount(store, req.NewMarketId, sdk.AccAddress(req.Account), newToCommitment)
+
 	k.emitEvent(ctx, exchange.NewEventCommitmentTransferd(req.Account, req.Amount, req.CurrentMarketId, req.NewMarketId, req.EventTag))
 	return nil
 }

@@ -403,10 +403,11 @@ func SetupCmdTxMarketTransferCommitments(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
 	cmd.Flags().String(FlagAccount, "", "The account that will receive the funds (required)")
 	cmd.Flags().String(FlagAmount, "", "The amount to withdraw (required)")
-	cmd.Flags().Uint32(FlagMarket, 0, "The current market id (required)")
-	cmd.Flags().Uint32(FlagMarket, 0, "The new market id (required)")
+	cmd.Flags().Uint32(FlagCurrentMarket, 0, "The current market id (required)")
+	cmd.Flags().Uint32(FlagNewMarket, 0, "The new market id (required)")
+	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of these transfer")
 
-	MarkFlagsRequired(cmd, FlagAccount, FlagAmount, FlagMarket, FlagMarket)
+	MarkFlagsRequired(cmd, FlagAccount, FlagAmount, FlagCurrentMarket, FlagNewMarket)
 
 	AddUseArgs(cmd,
 		ReqAdminUse,
@@ -414,6 +415,7 @@ func SetupCmdTxMarketTransferCommitments(cmd *cobra.Command) {
 		ReqFlagUse(FlagAmount, "amount"),
 		ReqFlagUse(FlagCurrentMarket, "current market id"),
 		ReqFlagUse(FlagNewMarket, "new market id"),
+		OptFlagUse(FlagTag, "event tag"),
 	)
 	AddUseDetails(cmd, ReqAdminDesc)
 

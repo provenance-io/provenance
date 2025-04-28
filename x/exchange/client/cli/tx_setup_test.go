@@ -883,6 +883,102 @@ func TestMakeMsgMarketReleaseCommitments(t *testing.T) {
 	}
 }
 
+func TestSetupCmdTxMarketTransferCommitments(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxMarketTransferCommitments",
+		setup: cli.SetupCmdTxMarketTransferCommitments,
+		expFlags: []string{
+			cli.FlagAdmin, cli.FlagAuthority,
+			cli.FlagAccount, cli.FlagAmount, cli.FlagCurrentMarket, cli.FlagNewMarket,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			cli.FlagAdmin: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagAuthority: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagAccount:       {required: {"true"}},
+			cli.FlagAmount:        {required: {"true"}},
+			cli.FlagCurrentMarket: {required: {"true"}},
+			cli.FlagNewMarket:     {required: {"true"}},
+		},
+		expInUse: []string{
+			cli.ReqAdminDesc,
+			cli.ReqAdminUse, "--account <account>", "--amount <amount>", "--current-market <current market id>", "--new-market <new market id>", "[--tag <event tag>]",
+		},
+	})
+}
+
+func TestMakeMsgMarketTransferCommitments(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketTransferCommitmentsRequest]{
+		makerName: "MakeMsgMarketTransferCommitments",
+		maker:     cli.MakeMsgMarketTransferCommitments,
+		setup:     cli.SetupCmdTxMarketTransferCommitments,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketTransferCommitmentsRequest]{
+		{
+			name:   "nothing",
+			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{},
+			expErr: "no <admin> provided",
+		},
+		{
+			name:      "admin from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: sdk.AccAddress("FromAddress_________").String(),
+			},
+		},
+		{
+			name:  "admin from flag",
+			flags: []string{"--admin", "forest"},
+			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: "forest",
+			},
+		},
+		{
+			name:  "authority",
+			flags: []string{"--authority"},
+			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: cli.AuthorityAddr.String(),
+			},
+		},
+		{
+			name:  "some errors",
+			flags: []string{"--account", "annie", "--amount", "bill", "--current-market", "5", "--new-market", "0"},
+			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: "", Account: "annie", Amount: nil, CurrentMarketId: 5, NewMarketId: 0},
+			expErr: joinErrs(
+				"no <admin> provided",
+				"error parsing --amount as coins: invalid coin expression: \"bill\"",
+			),
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--account", "samantha", "--amount", "52plum", "--current-market", "2", "--new-market", "4"},
+			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           sdk.AccAddress("FromAddress_________").String(),
+				Account:         "samantha",
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("plum", 52)),
+				CurrentMarketId: 2,
+				NewMarketId:     4,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
 func TestSetupCmdTxMarketSetOrderExternalID(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxMarketSetOrderExternalID",
