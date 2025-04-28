@@ -395,7 +395,6 @@ func New(
 		registry.StoreKey,
 		ledger.StoreKey,
 		exchange.StoreKey,
-		registry.StoreKey,
 		nft.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys()
@@ -915,7 +914,6 @@ func New(
 		circuittypes.ModuleName,
 		nft.ModuleName,
 		ledger.ModuleName,
-		registry.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
