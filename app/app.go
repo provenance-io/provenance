@@ -927,7 +927,6 @@ func New(
 		circuittypes.ModuleName,
 		nft.ModuleName,
 		ledger.ModuleName,
-		registry.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
