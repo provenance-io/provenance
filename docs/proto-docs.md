@@ -518,6 +518,7 @@
     - [GenesisState](#provenance-registry-v1-GenesisState)
     - [RegistryEntry](#provenance-registry-v1-RegistryEntry)
     - [RegistryEntry.RolesEntry](#provenance-registry-v1-RegistryEntry-RolesEntry)
+    - [RegistryKey](#provenance-registry-v1-RegistryKey)
     - [RoleAddresses](#provenance-registry-v1-RoleAddresses)
   
     - [RegistryRole](#provenance-registry-v1-RegistryRole)
@@ -7779,7 +7780,7 @@ RegistryEntry represents a single entry in the registry, mapping a blockchain ad
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the blockchain address that owns this registry entry |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | Key ties the registry entry to an asset class and nft id |
 | `roles` | [RegistryEntry.RolesEntry](#provenance-registry-v1-RegistryEntry-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
 
 
@@ -7797,6 +7798,22 @@ RegistryEntry represents a single entry in the registry, mapping a blockchain ad
 | ----- | ---- | ----- | ----------- |
 | `key` | [string](#string) |  |  |
 | `value` | [RoleAddresses](#provenance-registry-v1-RoleAddresses) |  |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RegistryKey"></a>
+
+### RegistryKey
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
+| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
 
 
 
