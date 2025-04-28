@@ -17,6 +17,7 @@ import (
 var _ RegistryKeeper = (*BaseRegistryKeeper)(nil)
 
 type RegistryKeeper interface {
+	CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey) error
 	CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles map[string]registry.RoleAddresses) error
 	GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
 	RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
@@ -71,6 +72,18 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 	rk.schema = schema
 
 	return rk
+}
+
+// Generate a default registry for a given nft key.
+func (k BaseRegistryKeeper) CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey) error {
+	ownerAddrStr := authorityAddr.String()
+
+	// Set the default roles for originator and servicer.
+	roles := make(map[string]registry.RoleAddresses)
+	roles[registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String()] = registry.RoleAddresses{Addresses: []string{ownerAddrStr}}
+	roles[registry.RegistryRole_REGISTRY_ROLE_SERVICER.String()] = registry.RoleAddresses{Addresses: []string{ownerAddrStr}}
+
+	return k.CreateRegistry(ctx, authorityAddr, key, roles)
 }
 
 func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles map[string]registry.RoleAddresses) error {

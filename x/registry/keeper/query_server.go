@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
 
@@ -16,14 +17,26 @@ func NewQueryServer(keeper RegistryKeeper) *QueryServer {
 	return &QueryServer{keeper: keeper}
 }
 
-// GetRegistryEntry returns a registry entry by address
-func (qs QueryServer) GetRegistryEntry(ctx context.Context, req *registry.QueryGetRegistryEntryRequest) (*registry.QueryGetRegistryEntryResponse, error) {
-	// TODO: Implement
-	return &registry.QueryGetRegistryEntryResponse{}, nil
+// GetRegistry returns the registry for a given key
+func (qs QueryServer) GetRegistry(ctx context.Context, req *registry.QueryGetRegistryRequest) (*registry.QueryGetRegistryResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	reg, err := qs.keeper.GetRegistry(sdkCtx, req.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &registry.QueryGetRegistryResponse{Registry: *reg}, nil
 }
 
-// ListRegistryEntries returns all registry entries
-func (qs QueryServer) ListRegistryEntries(ctx context.Context, req *registry.QueryListRegistryEntriesRequest) (*registry.QueryListRegistryEntriesResponse, error) {
-	// TODO: Implement
-	return &registry.QueryListRegistryEntriesResponse{}, nil
+// HasRole returns true if the address has the role for the given key
+func (qs QueryServer) HasRole(ctx context.Context, req *registry.QueryHasRoleRequest) (*registry.QueryHasRoleResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	hasRole, err := qs.keeper.HasRole(sdkCtx, req.Key, req.Role.String(), req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &registry.QueryHasRoleResponse{HasRole: hasRole}, nil
 }

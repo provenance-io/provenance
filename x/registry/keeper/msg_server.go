@@ -16,20 +16,18 @@ func NewMsgServer(keeper RegistryKeeper) registry.MsgServer {
 	return &msgServer{keeper: keeper}
 }
 
-// RegisterAddress handles MsgRegisterAddress
-func (k msgServer) RegisterAddress(ctx context.Context, msg *registry.MsgRegisterAddress) (*registry.MsgRegisterAddressResponse, error) {
-	// TODO: Implement
-	return &registry.MsgRegisterAddressResponse{}, nil
+func (k msgServer) RegisterNFT(ctx context.Context, msg *registry.MsgRegisterNFT) (*registry.MsgRegisterNFTResponse, error) {
+	return nil, nil
 }
 
-// UpdateRoles handles MsgUpdateRoles
-func (k msgServer) UpdateRoles(ctx context.Context, msg *registry.MsgUpdateRoles) (*registry.MsgUpdateRolesResponse, error) {
-	// TODO: Implement
-	return &registry.MsgUpdateRolesResponse{}, nil
+func (k msgServer) GrantRole(ctx context.Context, msg *registry.MsgGrantRole) (*registry.MsgGrantRoleResponse, error) {
+	return nil, nil
 }
 
-// RemoveAddress handles MsgRemoveAddress
-func (k msgServer) RemoveAddress(ctx context.Context, msg *registry.MsgRemoveAddress) (*registry.MsgRemoveAddressResponse, error) {
-	// TODO: Implement
-	return &registry.MsgRemoveAddressResponse{}, nil
+func (k msgServer) RevokeRole(ctx context.Context, msg *registry.MsgRevokeRole) (*registry.MsgRevokeRoleResponse, error) {
+	return nil, nil
+}
+
+func (k msgServer) UnregisterNFT(ctx context.Context, msg *registry.MsgUnregisterNFT) (*registry.MsgUnregisterNFTResponse, error) {
+	return nil, nil
 }

@@ -495,22 +495,23 @@
     - [GenesisState](#provenance-oracle-v1-GenesisState)
   
 - [provenance/registry/v1/tx.proto](#provenance_registry_v1_tx-proto)
-    - [MsgRegisterAddress](#provenance-registry-v1-MsgRegisterAddress)
-    - [MsgRegisterAddress.RolesEntry](#provenance-registry-v1-MsgRegisterAddress-RolesEntry)
-    - [MsgRegisterAddressResponse](#provenance-registry-v1-MsgRegisterAddressResponse)
-    - [MsgRemoveAddress](#provenance-registry-v1-MsgRemoveAddress)
-    - [MsgRemoveAddressResponse](#provenance-registry-v1-MsgRemoveAddressResponse)
-    - [MsgUpdateRoles](#provenance-registry-v1-MsgUpdateRoles)
-    - [MsgUpdateRoles.RolesEntry](#provenance-registry-v1-MsgUpdateRoles-RolesEntry)
-    - [MsgUpdateRolesResponse](#provenance-registry-v1-MsgUpdateRolesResponse)
+    - [MsgGrantRole](#provenance-registry-v1-MsgGrantRole)
+    - [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse)
+    - [MsgRegisterNFT](#provenance-registry-v1-MsgRegisterNFT)
+    - [MsgRegisterNFT.RolesEntry](#provenance-registry-v1-MsgRegisterNFT-RolesEntry)
+    - [MsgRegisterNFTResponse](#provenance-registry-v1-MsgRegisterNFTResponse)
+    - [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole)
+    - [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse)
+    - [MsgUnregisterNFT](#provenance-registry-v1-MsgUnregisterNFT)
+    - [MsgUnregisterNFTResponse](#provenance-registry-v1-MsgUnregisterNFTResponse)
   
     - [Msg](#provenance-registry-v1-Msg)
   
 - [provenance/registry/v1/query.proto](#provenance_registry_v1_query-proto)
-    - [QueryGetRegistryEntryRequest](#provenance-registry-v1-QueryGetRegistryEntryRequest)
-    - [QueryGetRegistryEntryResponse](#provenance-registry-v1-QueryGetRegistryEntryResponse)
-    - [QueryListRegistryEntriesRequest](#provenance-registry-v1-QueryListRegistryEntriesRequest)
-    - [QueryListRegistryEntriesResponse](#provenance-registry-v1-QueryListRegistryEntriesResponse)
+    - [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest)
+    - [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse)
+    - [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest)
+    - [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse)
   
     - [Query](#provenance-registry-v1-Query)
   
@@ -7529,26 +7530,54 @@ GenesisState defines the oracle module's genesis state.
 
 
 
-<a name="provenance-registry-v1-MsgRegisterAddress"></a>
+<a name="provenance-registry-v1-MsgGrantRole"></a>
 
-### MsgRegisterAddress
-MsgRegisterAddress represents a message to register a new address with roles
+### MsgGrantRole
+MsgGrantRole represents a message to grant a role to an address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that is authorized to grant the role |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to grant the role to |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to grant |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses to grant the role to |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgGrantRoleResponse"></a>
+
+### MsgGrantRoleResponse
+MsgGrantRoleResponse defines the response for GrantRole
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRegisterNFT"></a>
+
+### MsgRegisterNFT
+MsgRegisterNFT represents a message to register a new NFT
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | authority is the address that is authorized to register addresses |
-| `address` | [string](#string) |  | address is the blockchain address to register |
-| `roles` | [MsgRegisterAddress.RolesEntry](#provenance-registry-v1-MsgRegisterAddress-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to register |
+| `roles` | [MsgRegisterNFT.RolesEntry](#provenance-registry-v1-MsgRegisterNFT-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
 
 
 
 
 
 
-<a name="provenance-registry-v1-MsgRegisterAddress-RolesEntry"></a>
+<a name="provenance-registry-v1-MsgRegisterNFT-RolesEntry"></a>
 
-### MsgRegisterAddress.RolesEntry
+### MsgRegisterNFT.RolesEntry
 
 
 
@@ -7562,79 +7591,64 @@ MsgRegisterAddress represents a message to register a new address with roles
 
 
 
-<a name="provenance-registry-v1-MsgRegisterAddressResponse"></a>
+<a name="provenance-registry-v1-MsgRegisterNFTResponse"></a>
 
-### MsgRegisterAddressResponse
-MsgRegisterAddressResponse defines the response for RegisterAddress
-
-
+### MsgRegisterNFTResponse
+MsgRegisterNFTResponse defines the response for RegisterNFT
 
 
 
 
-<a name="provenance-registry-v1-MsgRemoveAddress"></a>
 
-### MsgRemoveAddress
-MsgRemoveAddress represents a message to remove an address from the registry
+
+<a name="provenance-registry-v1-MsgRevokeRole"></a>
+
+### MsgRevokeRole
+MsgRevokeRole represents a message to revoke a role from an address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that is authorized to revoke the role |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to revoke the role from |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to revoke |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses to revoke the role from |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRevokeRoleResponse"></a>
+
+### MsgRevokeRoleResponse
+MsgRevokeRoleResponse defines the response for RevokeRole
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgUnregisterNFT"></a>
+
+### MsgUnregisterNFT
+MsgUnregisterNFT represents a message to unregister an NFT from the registry
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | authority is the address that is authorized to remove addresses |
-| `address` | [string](#string) |  | address is the blockchain address to remove |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to remove |
 
 
 
 
 
 
-<a name="provenance-registry-v1-MsgRemoveAddressResponse"></a>
+<a name="provenance-registry-v1-MsgUnregisterNFTResponse"></a>
 
-### MsgRemoveAddressResponse
-MsgRemoveAddressResponse defines the response for RemoveAddress
-
-
-
-
-
-
-<a name="provenance-registry-v1-MsgUpdateRoles"></a>
-
-### MsgUpdateRoles
-MsgUpdateRoles represents a message to update roles for an existing address
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to update roles |
-| `address` | [string](#string) |  | address is the blockchain address to update |
-| `roles` | [MsgUpdateRoles.RolesEntry](#provenance-registry-v1-MsgUpdateRoles-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
-
-
-
-
-
-
-<a name="provenance-registry-v1-MsgUpdateRoles-RolesEntry"></a>
-
-### MsgUpdateRoles.RolesEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [RoleAddresses](#provenance-registry-v1-RoleAddresses) |  |  |
-
-
-
-
-
-
-<a name="provenance-registry-v1-MsgUpdateRolesResponse"></a>
-
-### MsgUpdateRolesResponse
-MsgUpdateRolesResponse defines the response for UpdateRoles
+### MsgUnregisterNFTResponse
+MsgUnregisterNFTResponse defines the response for UnregisterNFT
 
 
 
@@ -7654,9 +7668,10 @@ Msg defines the registry Msg service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `RegisterAddress` | [MsgRegisterAddress](#provenance-registry-v1-MsgRegisterAddress) | [MsgRegisterAddressResponse](#provenance-registry-v1-MsgRegisterAddressResponse) | RegisterAddress registers a new address with roles |
-| `UpdateRoles` | [MsgUpdateRoles](#provenance-registry-v1-MsgUpdateRoles) | [MsgUpdateRolesResponse](#provenance-registry-v1-MsgUpdateRolesResponse) | UpdateRoles updates the roles for an existing address |
-| `RemoveAddress` | [MsgRemoveAddress](#provenance-registry-v1-MsgRemoveAddress) | [MsgRemoveAddressResponse](#provenance-registry-v1-MsgRemoveAddressResponse) | RemoveAddress removes an address from the registry |
+| `RegisterNFT` | [MsgRegisterNFT](#provenance-registry-v1-MsgRegisterNFT) | [MsgRegisterNFTResponse](#provenance-registry-v1-MsgRegisterNFTResponse) | RegisterNFT registers a new NFT |
+| `GrantRole` | [MsgGrantRole](#provenance-registry-v1-MsgGrantRole) | [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse) | GrantRole grants a role to an address |
+| `RevokeRole` | [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole) | [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse) | RevokeRole revokes a role from an address |
+| `UnregisterNFT` | [MsgUnregisterNFT](#provenance-registry-v1-MsgUnregisterNFT) | [MsgUnregisterNFTResponse](#provenance-registry-v1-MsgUnregisterNFTResponse) | UnregisterNFT unregisters an NFT from the registry |
 
  <!-- end services -->
 
@@ -7669,61 +7684,62 @@ Msg defines the registry Msg service.
 
 
 
-<a name="provenance-registry-v1-QueryGetRegistryEntryRequest"></a>
+<a name="provenance-registry-v1-QueryGetRegistryRequest"></a>
 
-### QueryGetRegistryEntryRequest
-QueryGetRegistryEntryRequest is the request type for the Query/GetRegistryEntry RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the blockchain address to query |
-
-
-
-
-
-
-<a name="provenance-registry-v1-QueryGetRegistryEntryResponse"></a>
-
-### QueryGetRegistryEntryResponse
-QueryGetRegistryEntryResponse is the response type for the Query/GetRegistryEntry RPC method
+### QueryGetRegistryRequest
+QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `entry` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) |  | entry is the registry entry for the requested address |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to query |
 
 
 
 
 
 
-<a name="provenance-registry-v1-QueryListRegistryEntriesRequest"></a>
+<a name="provenance-registry-v1-QueryGetRegistryResponse"></a>
 
-### QueryListRegistryEntriesRequest
-QueryListRegistryEntriesRequest is the request type for the Query/ListRegistryEntries RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request |
-
-
-
-
-
-
-<a name="provenance-registry-v1-QueryListRegistryEntriesResponse"></a>
-
-### QueryListRegistryEntriesResponse
-QueryListRegistryEntriesResponse is the response type for the Query/ListRegistryEntries RPC method
+### QueryGetRegistryResponse
+QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response |
+| `registry` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) |  | entry is the registry entry for the requested key |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryHasRoleRequest"></a>
+
+### QueryHasRoleRequest
+QueryHasRoleRequest is the request type for the Query/HasRole RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to query |
+| `address` | [string](#string) |  | address is the address to query |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to query |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryHasRoleResponse"></a>
+
+### QueryHasRoleResponse
+QueryHasRoleResponse is the response type for the Query/HasRole RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `has_role` | [bool](#bool) |  | has_role is true if the address has the role for the given key |
 
 
 
@@ -7743,8 +7759,8 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `GetRegistryEntry` | [QueryGetRegistryEntryRequest](#provenance-registry-v1-QueryGetRegistryEntryRequest) | [QueryGetRegistryEntryResponse](#provenance-registry-v1-QueryGetRegistryEntryResponse) | GetRegistryEntry returns the registry entry for a given address |
-| `ListRegistryEntries` | [QueryListRegistryEntriesRequest](#provenance-registry-v1-QueryListRegistryEntriesRequest) | [QueryListRegistryEntriesResponse](#provenance-registry-v1-QueryListRegistryEntriesResponse) | ListRegistryEntries returns all registry entries |
+| `GetRegistry` | [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest) | [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse) | GetRegistry returns the registry for a given key |
+| `HasRole` | [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest) | [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse) | HasRole returns true if the address has the role for the given key |
 
  <!-- end services -->
 
