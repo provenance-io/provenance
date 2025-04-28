@@ -21,18 +21,18 @@ func CmdQuery() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetCmdQueryRegistryEntry(),
-		GetCmdQueryRegistryEntries(),
+		GetCmdQueryRegistry(),
+		GetCmdQueryHasRole(),
 	)
 
 	return cmd
 }
 
-// GetCmdQueryRegistryEntry returns the command for querying a registry entry
-func GetCmdQueryRegistryEntry() *cobra.Command {
+// GetCmdQueryRegistry returns the command for querying a registry entry
+func GetCmdQueryRegistry() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "entry [address]",
-		Short: "Query a registry entry by address",
+		Use:   "registry [key]",
+		Short: "Query a registry entry by key",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -42,8 +42,9 @@ func GetCmdQueryRegistryEntry() *cobra.Command {
 
 			queryClient := registry.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GetRegistryEntry(context.Background(), &registry.QueryGetRegistryEntryRequest{
-				Address: args[0],
+			// TODO: Parse key from args[0]
+			res, err := queryClient.GetRegistry(context.Background(), &registry.QueryGetRegistryRequest{
+				Key: nil, // Need to parse key from args[0]
 			})
 			if err != nil {
 				return err
@@ -58,27 +59,25 @@ func GetCmdQueryRegistryEntry() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryRegistryEntries returns the command for querying all registry entries
-func GetCmdQueryRegistryEntries() *cobra.Command {
+// GetCmdQueryHasRole returns the command for querying if an address has a role
+func GetCmdQueryHasRole() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "entries",
-		Short: "Query all registry entries",
-		Args:  cobra.NoArgs,
+		Use:   "has-role [key] [address] [role]",
+		Short: "Query if an address has a role for a given key",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
 			queryClient := registry.NewQueryClient(clientCtx)
 
-			res, err := queryClient.ListRegistryEntries(context.Background(), &registry.QueryListRegistryEntriesRequest{
-				Pagination: pageReq,
+			// TODO: Parse key and role from args
+			res, err := queryClient.HasRole(context.Background(), &registry.QueryHasRoleRequest{
+				Key:     nil, // Need to parse key from args[0]
+				Address: args[1],
+				Role:    0, // Need to parse role from args[2]
 			})
 			if err != nil {
 				return err
@@ -89,7 +88,6 @@ func GetCmdQueryRegistryEntries() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "registry entries")
 
 	return cmd
 }
