@@ -181,7 +181,7 @@ func CmdTxMarketReleaseCommitments() *cobra.Command {
 	SetupCmdTxMarketReleaseCommitments(cmd)
 	return cmd
 }
-
+// CmdTxMarketTransferCommitments creates the market-transfer-commitments sub-command for the exchange tx command.
 func CmdTxMarketTransferCommitments() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-transfer-commitments",
