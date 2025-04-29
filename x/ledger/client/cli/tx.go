@@ -42,7 +42,7 @@ func CmdCreate() *cobra.Command {
 		Short:   "Create a ledger for the nft_address",
 		Example: `$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
 $ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd --from mykey  # minimal example with required fields only`,
-		Args: cobra.MinimumNArgs(2),
+		Args: cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
