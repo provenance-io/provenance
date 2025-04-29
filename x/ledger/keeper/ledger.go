@@ -171,7 +171,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 
 	// Validate that the authority has ownership of the NFT
 	nftOwner := k.BaseViewKeeper.GetNFTOwner(ctx, &l.Key.AssetClassId, &l.Key.NftId)
-	if nftOwner.String() != authorityAddr.String() {
+	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
 		return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner")
 	}
 

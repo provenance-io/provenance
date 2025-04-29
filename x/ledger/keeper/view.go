@@ -398,7 +398,7 @@ func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerCla
 }
 
 func (k BaseViewKeeper) AssetClassExists(ctx context.Context, assetClassId *string) bool {
-	metadataAddress, isMetadataScope := metadataScopeSpec(*assetClassId)
+	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		_, found := k.MetaDataKeeper.GetScopeSpecification(sdkCtx, metadataAddress)
@@ -408,7 +408,7 @@ func (k BaseViewKeeper) AssetClassExists(ctx context.Context, assetClassId *stri
 	}
 }
 
-func metadataScopeSpec(assetClassId string) (metadataTypes.MetadataAddress, bool) {
+func metadataScopeID(assetClassId string) (metadataTypes.MetadataAddress, bool) {
 	// Do a bech32 decode if the prefix is "scope1"
 	if strings.HasPrefix(assetClassId, "scope1") {
 		metadataAddress, err := metadataTypes.MetadataAddressFromBech32(assetClassId)
@@ -421,9 +421,11 @@ func metadataScopeSpec(assetClassId string) (metadataTypes.MetadataAddress, bool
 }
 
 func (k BaseViewKeeper) GetNFTOwner(ctx context.Context, assetClassId, nftId *string) sdk.AccAddress {
-	if strings.HasPrefix(*assetClassId, "scope") {
+	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
+	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		scope, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataTypes.MetadataAddress(*assetClassId))
+
+		scope, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataAddress)
 		if !found {
 			return nil
 		}
@@ -434,7 +436,7 @@ func (k BaseViewKeeper) GetNFTOwner(ctx context.Context, assetClassId, nftId *st
 			}
 		}
 
-		return sdk.AccAddress(scope.Owners[0].Address)
+		return nil
 	} else {
 		return k.NFTKeeper.GetOwner(ctx, *assetClassId, *nftId)
 	}
