@@ -586,20 +586,51 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
-func (s *UpgradeTestSuite) TestXenonRC1() {
+func (s *UpgradeTestSuite) TestYellow() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing inactive validator delegations.",
+		"INF Converting TODO specific accounts to vesting accounts.", // TODO[yellow]: Update number.
 	}
-	s.AssertUpgradeHandlerLogs("xenon-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("yellow", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestXenon() {
-	expInLog := []string{
-		"INF Pruning expired consensus states for IBC.",
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Removing inactive validator delegations.",
+func (s *UpgradeTestSuite) TestGetAcctsToConvertToVesting() {
+	// Make sure the HRP is set to pb since that's what they'll all have.
+	addrConfig := sdk.GetConfig()
+	if origHRP := addrConfig.GetBech32AccountAddrPrefix(); origHRP != AccountAddressPrefixMainNet {
+		origHRPPub := addrConfig.GetBech32AccountPubPrefix()
+		s.Require().NotPanics(func() {
+			addrConfig.SetBech32PrefixForAccount(AccountAddressPrefixMainNet, AccountAddressPrefixMainNet+"pub")
+		}, "SetBech32PrefixForAccount")
+		defer addrConfig.SetBech32PrefixForAccount(origHRP, origHRPPub)
 	}
-	s.AssertUpgradeHandlerLogs("xenon", expInLog, nil)
+
+	expLen := 0 // TODO[yellow]: Update this.
+	var addrs []sdk.AccAddress
+	testFunc := func() {
+		addrs = getAcctsToConvertToVesting()
+	}
+	s.Require().NotPanics(testFunc, "getAcctsToConvertToVesting")
+	s.Assert().Equal(expLen, len(addrs), "number of addresses returned from getAcctsToConvertToVesting")
+
+	indexes := make(map[string][]int)
+	var dups []sdk.AccAddress
+	for i, addr := range addrs {
+		key := string(addr)
+		indexes[key] = append(indexes[key], i)
+		if len(indexes[key]) == 2 {
+			dups = append(dups, addr)
+		}
+	}
+
+	if len(dups) == 0 {
+		return
+	}
+
+	lines := make([]string, len(dups))
+	for i, addr := range dups {
+		lines[i] = fmt.Sprintf("[%d/%d] %s found at indexes %v", i+1, len(dups), addr.String(), indexes[string(addr)])
+	}
+	s.FailNow("getAcctsToConvertToVesting() has duplicate entries.", "Found %d duplicate addresses:\n%s", len(dups), strings.Join(lines, "\n"))
 }

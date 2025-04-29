@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
@@ -10,7 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+
+	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -37,29 +44,16 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"xenon-rc1": { // Upgrade for v1.22.0-rc1.
+	"yellow": { // Upgrade for v1.23.0.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
 			removeInactiveValidatorDelegations(ctx, app)
-			return vm, nil
-		},
-	},
-	"xenon": { // Upgrade for v1.22.0.
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+			if err = convertAcctsToVesting(ctx, app); err != nil {
 				return nil, err
 			}
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-			removeInactiveValidatorDelegations(ctx, app)
 			return vm, nil
 		},
 	},
@@ -223,3 +217,53 @@ var (
 	_ = removeInactiveValidatorDelegations
 	_ = pruneIBCExpiredConsensusStates
 )
+
+// convertAcctsToVesting will convert a small set of accounts to vesting accounts.
+func convertAcctsToVesting(ctx sdk.Context, app *App) error {
+	addrs := getAcctsToConvertToVesting()
+	ctx.Logger().Info(fmt.Sprintf("Converting %d specific accounts to vesting accounts.", len(addrs)))
+	var errs []error
+	for _, addr := range addrs {
+		acctI := app.AccountKeeper.GetAccount(ctx, addr)
+		if acctI == nil {
+			errs = append(errs, fmt.Errorf("account %s does not exist", addr.String()))
+			continue
+		}
+
+		// TODO[yellow]: Finish converting the accounts.
+		switch acct := acctI.(type) {
+		case *authtypes.BaseAccount:
+		case *authtypes.ModuleAccount:
+		case *vestingtypes.BaseVestingAccount:
+		case *vestingtypes.ContinuousVestingAccount:
+		case *vestingtypes.DelayedVestingAccount:
+		case *vestingtypes.PeriodicVestingAccount:
+		case *vestingtypes.PermanentLockedAccount:
+		case *exchange.MarketAccount:
+		case *markertypes.MarkerAccount:
+		case *icatypes.InterchainAccount:
+		default:
+			return fmt.Errorf("account %s has unexpected type: %T", addr.String(), acct)
+		}
+	}
+	ctx.Logger().Info(fmt.Sprintf("Done converting %d specific accounts to vesting accounts.", len(addrs)))
+	return errors.Join(errs...)
+}
+
+// getAcctsToConvertToVesting returns the AccAddress of each account that should be converted to a vesting account.
+func getAcctsToConvertToVesting() []sdk.AccAddress {
+	bech32s := []string{
+		// TODO[yellow]: Define all the accounts here.
+	}
+
+	var err error
+	rv := make([]sdk.AccAddress, len(bech32s))
+	for i, str := range bech32s {
+		rv[i], err = sdk.AccAddressFromBech32(str)
+		if err != nil {
+			panic(fmt.Errorf("could not convert %q to AccAddress: %w", str, err))
+		}
+	}
+
+	return rv
+}
