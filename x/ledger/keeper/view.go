@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
-	"github.com/provenance-io/provenance/x/metadata/types"
+	metadataTypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
@@ -398,22 +398,40 @@ func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerCla
 }
 
 func (k BaseViewKeeper) AssetClassExists(ctx context.Context, assetClassId *string) bool {
-	// Assume that the asset class id is a scope id if it starts with "scope"
-	if strings.HasPrefix(*assetClassId, "scope") {
+	metadataAddress, isMetadataScope := metadataScopeSpec(*assetClassId)
+	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		_, found := k.MetaDataKeeper.GetScopeSpecification(sdkCtx, types.MetadataAddress(*assetClassId))
+		_, found := k.MetaDataKeeper.GetScopeSpecification(sdkCtx, metadataAddress)
 		return found
 	} else {
 		return k.NFTKeeper.HasClass(ctx, *assetClassId)
 	}
 }
 
+func metadataScopeSpec(assetClassId string) (metadataTypes.MetadataAddress, bool) {
+	// Do a bech32 decode if the prefix is "scope1"
+	if strings.HasPrefix(assetClassId, "scope1") {
+		metadataAddress, err := metadataTypes.MetadataAddressFromBech32(assetClassId)
+		if err != nil {
+			return nil, false
+		}
+		return metadataAddress, true
+	}
+	return nil, false
+}
+
 func (k BaseViewKeeper) GetNFTOwner(ctx context.Context, assetClassId, nftId *string) sdk.AccAddress {
 	if strings.HasPrefix(*assetClassId, "scope") {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		scope, found := k.MetaDataKeeper.GetScope(sdkCtx, types.MetadataAddress(*assetClassId))
+		scope, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataTypes.MetadataAddress(*assetClassId))
 		if !found {
 			return nil
+		}
+
+		for _, owner := range scope.Owners {
+			if owner.Role == metadataTypes.PartyType_PARTY_TYPE_OWNER {
+				return sdk.AccAddress(owner.Address)
+			}
 		}
 
 		return sdk.AccAddress(scope.Owners[0].Address)
