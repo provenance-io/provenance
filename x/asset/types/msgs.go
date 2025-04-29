@@ -7,8 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ sdk.Msg = &MsgAddAsset{}
-var _ sdk.Msg = &MsgAddAssetClass{}
+//var _ sdk.Msg = &MsgAddAsset{}
+//var _ sdk.Msg = &MsgAddAssetClass{}
+
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgAddAsset)(nil),
+	(*MsgAddAssetClass)(nil),
+}
 
 // ValidateBasic implements Msg
 func (msg MsgAddAsset) ValidateBasic() error {
@@ -110,6 +116,3 @@ func (msg MsgAddAssetClass) GetSigners() []sdk.AccAddress {
 	// based on the asset class's authority or other business logic
 	return []sdk.AccAddress{}
 }
-
-// AllRequestMsgs defines all the Msg*Request messages.
-var AllRequestMsgs = []sdk.Msg{}
