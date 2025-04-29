@@ -18,7 +18,6 @@ type EntriesKeeper interface {
 
 type BaseEntriesKeeper struct {
 	BaseViewKeeper
-	NFTKeeper
 }
 
 // SetValue stores a value with a given key.
