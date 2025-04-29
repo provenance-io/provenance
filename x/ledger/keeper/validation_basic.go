@@ -80,3 +80,11 @@ func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 
 	return nil
 }
+
+func ValidateBucketBalance(bb *ledger.BucketBalance) error {
+	if bb.BucketTypeId <= 0 {
+		return NewLedgerCodedError(ErrCodeInvalidField, "bucket_type_id", "must be a positive integer")
+	}
+
+	return nil
+}

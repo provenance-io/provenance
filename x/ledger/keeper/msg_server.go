@@ -35,6 +35,23 @@ func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) 
 	return &resp, nil
 }
 
+func (k *MsgServer) UpdateBalances(goCtx context.Context, req *ledger.MsgUpdateBalancesRequest) (*ledger.MsgUpdateBalancesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.UpdateEntryBalances(ctx, authorityAddr, req.Key, req.CorrelationId, req.BucketBalances)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.MsgUpdateBalancesResponse{}
+	return &resp, nil
+}
+
 func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

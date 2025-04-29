@@ -20,6 +20,9 @@ service Msg {
   // Append a ledger entry
   rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
 
+  // Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied
+  rpc UpdateBalances(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
+
   // Process multiple fund transfers (payments and disbursements)
   rpc ProcessFundTransfers(MsgProcessFundTransfersRequest) returns (MsgProcessFundTransfersResponse);
 
@@ -53,6 +56,21 @@ message MsgAppendRequest {
 
 // MsgAppendResponse
 message MsgAppendResponse {}
+
+// MsgUpdateBalancesRequest
+message MsgUpdateBalancesRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key       = 1;
+  string    authority = 2;
+
+  string correlation_id = 3;
+
+  repeated BucketBalance bucket_balances = 4;
+}
+
+// MsgUpdateBalancesResponse
+message MsgUpdateBalancesResponse {}
 
 // MsgProcessFundTransfersRequest represents a request to process multiple fund transfers
 message MsgProcessFundTransfersRequest {
