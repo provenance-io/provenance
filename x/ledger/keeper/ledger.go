@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"strings"
+
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
@@ -22,20 +25,29 @@ type BaseConfigKeeper struct {
 	BaseViewKeeper
 	BankKeeper
 	NFTKeeper
+	MetaDataKeeper
 }
 
 func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error {
-	// Validate that the asset class exists
-	_, found := k.NFTKeeper.GetClass(ctx, l.AssetClassId)
-	if !found {
-		return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id")
+	// Validate that the asset class id is a valid scope id or a valid nft class id
+	// Assume that the asset class id is a scope id if it starts with "scope"
+	if strings.HasPrefix(l.AssetClassId, "scope") {
+		_, found := k.MetaDataKeeper.GetScopeSpecification(ctx, types.MetadataAddress(l.AssetClassId))
+		if !found {
+			return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id")
+		}
+	} else {
+		// Validate that the asset class exists
+		_, found := k.NFTKeeper.GetClass(ctx, l.AssetClassId)
+		if !found {
+			return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id")
+		}
 	}
 
 	has, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
 	if err != nil {
 		return err
 	}
-
 	if has {
 		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class")
 	}

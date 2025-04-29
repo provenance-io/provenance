@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/x/nft"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // BankKeeper is an interface that allows the ledger keeper to send coins.
@@ -17,6 +18,8 @@ type BankKeeper interface {
 }
 
 type MetaDataKeeper interface {
+	GetScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) (spec types.ScopeSpecification, found bool)
+	GetScope(ctx sdk.Context, id types.MetadataAddress) (types.Scope, bool)
 }
 
 type NFTKeeper interface {
