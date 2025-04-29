@@ -9,6 +9,27 @@ import (
 	"github.com/provenance-io/provenance/x/ledger"
 )
 
+func ValidateLedgerClassBasic(l *ledger.LedgerClass) error {
+	if emptyString(&l.LedgerClassId) {
+		return NewLedgerCodedError(ErrCodeMissingField, "ledger_class_id")
+	}
+
+	if emptyString(&l.AssetClassId) {
+		return NewLedgerCodedError(ErrCodeMissingField, "asset_class_id")
+	}
+
+	if emptyString(&l.Denom) {
+		return NewLedgerCodedError(ErrCodeMissingField, "denom")
+	}
+
+	maintainerAddress := l.MaintainerAddress
+	if emptyString(&maintainerAddress) {
+		return NewLedgerCodedError(ErrCodeMissingField, "maintainer_address")
+	}
+
+	return nil
+}
+
 func ValidateLedgerKeyBasic(key *ledger.LedgerKey) error {
 	if emptyString(&key.NftId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "nft_id")

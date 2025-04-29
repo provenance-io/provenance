@@ -4797,6 +4797,7 @@ assist in verifying the types that are associated with particular ledger entries
 | `ledger_class_id` | [string](#string) |  | Unique ID for the ledger class (eg. 1, 2, 3, etc.) This is necessary since the nft class does not have an owner. |
 | `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
 | `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in |
+| `maintainer_address` | [string](#string) |  | Address of the maintainer for the ledger class |
 
 
 

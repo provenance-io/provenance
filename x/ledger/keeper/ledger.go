@@ -9,10 +9,10 @@ import (
 var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
-	CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error
-	AddClassEntryType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassEntryType) error
-	AddClassStatusType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassStatusType) error
-	AddClassBucketType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassBucketType) error
+	CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l ledger.LedgerClass) error
+	AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassEntryType) error
+	AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassStatusType) error
+	AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassBucketType) error
 
 	CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l ledger.Ledger) error
 	DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey) error
@@ -23,7 +23,11 @@ type BaseConfigKeeper struct {
 	BankKeeper
 }
 
-func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClass) error {
+func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l ledger.LedgerClass) error {
+	if err := ValidateLedgerClassBasic(&l); err != nil {
+		return err
+	}
+
 	hasAssetClass := k.BaseViewKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
 		return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id")
@@ -42,6 +46,12 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClas
 		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
 	}
 
+	// Validate that the maintainer in the ledger class is the same as the maintainer address
+	// We force them to be the same for now so that a ledger class isn't locked out.
+	if l.MaintainerAddress != maintainerAddr.String() {
+		return NewLedgerCodedError(ErrCodeInvalidField, "maintainer_address")
+	}
+
 	err = k.LedgerClasses.Set(ctx, l.LedgerClassId, l)
 	if err != nil {
 		return err
@@ -50,8 +60,10 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, l ledger.LedgerClas
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassEntryType) error {
-	// TODO verify that signature has authority over the assetClassId
+func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassEntryType) error {
+	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
+		return NewLedgerCodedError(ErrCodeUnauthorized)
+	}
 
 	key := collections.Join(ledgerClassId, l.Id)
 
@@ -72,8 +84,10 @@ func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, ledgerClassId strin
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassStatusType) error {
-	// TODO verify that signature has authority over the assetClassId
+func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassStatusType) error {
+	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
+		return NewLedgerCodedError(ErrCodeUnauthorized)
+	}
 
 	key := collections.Join(ledgerClassId, l.Id)
 
@@ -93,8 +107,10 @@ func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, ledgerClassId stri
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, ledgerClassId string, l ledger.LedgerClassBucketType) error {
-	// TODO verify that signature has authority over the assetClassId
+func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassBucketType) error {
+	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
+		return NewLedgerCodedError(ErrCodeUnauthorized)
+	}
 
 	key := collections.Join(ledgerClassId, l.Id)
 
@@ -113,6 +129,20 @@ func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, ledgerClassId stri
 	}
 
 	return nil
+}
+
+func (k BaseConfigKeeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string) bool {
+	// Validate that the maintainerAddr is the same as the maintainer address in the ledger class
+	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
+	if err != nil {
+		return false
+	}
+
+	if ledgerClass.MaintainerAddress == maintainerAddr.String() {
+		return true
+	}
+
+	return false
 }
 
 func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l ledger.Ledger) error {
