@@ -890,6 +890,12 @@ func (s *TestSuite) TestGetBalances() {
 					AppliedAmt:   math.NewInt(1000),
 				},
 			},
+			BucketBalances: map[int32]*ledger.BucketBalance{
+				1: {
+					BucketTypeId: 1,
+					Balance:      math.NewInt(1000),
+				},
+			},
 			CorrelationId: "test-correlation-id-1",
 		},
 		{
@@ -904,6 +910,12 @@ func (s *TestSuite) TestGetBalances() {
 					// Principal
 					BucketTypeId: 1,
 					AppliedAmt:   math.NewInt(10),
+				},
+			},
+			BucketBalances: map[int32]*ledger.BucketBalance{
+				1: {
+					BucketTypeId: 1,
+					Balance:      math.NewInt(10),
 				},
 			},
 			CorrelationId: "test-correlation-id-2",
@@ -931,6 +943,20 @@ func (s *TestSuite) TestGetBalances() {
 					// Escrow
 					BucketTypeId: 3,
 					AppliedAmt:   math.NewInt(100),
+				},
+			},
+			BucketBalances: map[int32]*ledger.BucketBalance{
+				1: {
+					BucketTypeId: 1,
+					Balance:      math.NewInt(910),
+				},
+				2: {
+					BucketTypeId: 2,
+					Balance:      math.NewInt(-300),
+				},
+				3: {
+					BucketTypeId: 3,
+					Balance:      math.NewInt(100),
 				},
 			},
 			CorrelationId: "test-correlation-id-3",

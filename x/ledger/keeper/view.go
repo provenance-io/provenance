@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -285,7 +284,6 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 	if err != nil {
 		return nil, err
 	}
-
 	if len(entries) == 0 {
 		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger entries")
 	}
@@ -300,20 +298,9 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 			break
 		}
 
-		// Add the applied amount to the balance for the bucket
-		for _, appliedAmount := range entry.AppliedAmounts {
-			bucketBalance, ok := bucketBalances[appliedAmount.BucketTypeId]
-			if !ok {
-				bucketBalance = &ledger.BucketBalance{
-					BucketTypeId: appliedAmount.BucketTypeId,
-					Balance:      math.NewInt(0),
-				}
-
-				// Add the bucket balance to the map
-				bucketBalances[appliedAmount.BucketTypeId] = bucketBalance
-			}
-
-			bucketBalance.Balance = bucketBalance.Balance.Add(appliedAmount.AppliedAmt)
+		// We just find the latest entry as of the asOfDate, and set the balances.
+		for _, bucketBalance := range entry.BucketBalances {
+			bucketBalances[bucketBalance.BucketTypeId] = bucketBalance
 		}
 	}
 
@@ -322,7 +309,7 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 		bucketBalancesList = append(bucketBalancesList, balance)
 	}
 
-	// Not sure this really helps sort anything since the id's are arbitrary.
+	// Not sure this really helps sort anything since the id's are arbitrary, but at least we're consistent.
 	sort.Slice(bucketBalancesList, func(i, j int) bool {
 		return bucketBalancesList[i].BucketTypeId < bucketBalancesList[j].BucketTypeId
 	})
