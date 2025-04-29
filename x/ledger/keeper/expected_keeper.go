@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/x/nft"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/provenance-io/provenance/x/registry"
 )
 
 // BankKeeper is an interface that allows the ledger keeper to send coins.
@@ -26,12 +26,14 @@ type NFTKeeper interface {
 	// GetOwner returns the owner of an NFT
 	GetOwner(ctx context.Context, classID, nftID string) sdk.AccAddress
 
-	// HasClass checks if an NFT class exists
-	HasClass(ctx context.Context, classID string) bool
-
-	// GetClass returns an NFT class by ID
-	GetClass(ctx context.Context, classID string) (nft.Class, bool)
-
 	// HasNFT checks if an NFT exists
 	HasNFT(ctx context.Context, classID, id string) bool
+
+	// HasClass checks if an NFT class exists
+	HasClass(ctx context.Context, classID string) bool
+}
+
+type RegistryKeeper interface {
+	HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error)
+	GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error)
 }
