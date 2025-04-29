@@ -321,7 +321,7 @@ func MakeQueryGetCommitment(_ client.Context, flagSet *pflag.FlagSet, _ []string
 // SetupCmdQueryGetAccountCommitments adds all the flags needed for MakeQueryGetAccountCommitments.
 func SetupCmdQueryGetAccountCommitments(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAccount, "", "The account's address")
-
+	cmd.Flags().String("asset", "", "Optional asset denom to filter commitments")
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<account>|--%s <account>}", FlagAccount),
 	)
@@ -330,6 +330,7 @@ func SetupCmdQueryGetAccountCommitments(cmd *cobra.Command) {
 	)
 	AddQueryExample(cmd, ExampleAddr)
 	AddQueryExample(cmd, "--"+FlagAccount, ExampleAddr)
+	AddQueryExample(cmd, "--asset", "nash")
 
 	cmd.Args = cobra.MaximumNArgs(1)
 }
@@ -341,6 +342,9 @@ func MakeQueryGetAccountCommitments(_ client.Context, flagSet *pflag.FlagSet, ar
 
 	var err error
 	rv.Account, err = ReadStringFlagOrArg(flagSet, args, FlagAccount, "account")
+	if asset, err := flagSet.GetString("asset"); err == nil && asset != "" {
+		rv.XAsset = &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: asset}
+	}
 
 	return rv, err
 }

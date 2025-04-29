@@ -404,6 +404,16 @@ func (s *CmdTestSuite) TestCmdQueryGetAccountCommitments() {
 				`{"market_id":421,"amount":[{"denom":"apple","amount":"4210"},{"denom":"peach","amount":"421"}]}`,
 			},
 		},
+		{
+			name:   "filter by asset = unknown",
+			args:   []string{"account-commitments", "--account", s.addr1.String(), "--asset", "mango"},
+			expOut: `commitments: []` + "\n",
+		},
+		{
+			name:   "filter by asset = apple with --output json",
+			args:   []string{"account-commitments", "--account", s.addr1.String(), "--asset", "apple", "--output", "json"},
+			expOut: `{"commitments":[{"market_id":421,"amount":[{"denom":"apple","amount":"4210"}]}]}` + "\n",
+		},
 	}
 
 	for _, tc := range tests {

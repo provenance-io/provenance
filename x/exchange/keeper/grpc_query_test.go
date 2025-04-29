@@ -3252,6 +3252,64 @@ func (s *TestSuite) TestQueryServer_GetAccountCommitments() {
 				},
 			},
 		},
+		{
+			name: "funds committed with asset filter by apple",
+			setup: func() {
+				store := s.getStore()
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				s.requireCreateMarket(exchange.Market{MarketId: 3})
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+			},
+			req: &exchange.QueryGetAccountCommitmentsRequest{
+				Account: s.addr2.String(),
+				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "apple"}, // filtering by 'apple'
+			},
+			expResp: &exchange.QueryGetAccountCommitmentsResponse{
+				Commitments: []*exchange.MarketAmount{
+					{MarketId: 1, Amount: s.coins("12apple")},
+					{MarketId: 2, Amount: s.coins("22apple")},
+					{MarketId: 3, Amount: s.coins("32apple")},
+				},
+			},
+		},
+		{
+			name: "funds committed with asset filter by banana",
+			setup: func() {
+				store := s.getStore()
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+			},
+			req: &exchange.QueryGetAccountCommitmentsRequest{
+				Account: s.addr2.String(),
+				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "banana"},
+			},
+			expResp: &exchange.QueryGetAccountCommitmentsResponse{
+				Commitments: []*exchange.MarketAmount{
+					{MarketId: 2, Amount: s.coins("157banana")},
+				},
+			},
+		},
+		{
+			name: "funds committed with asset filter by cherry",
+			setup: func() {
+				store := s.getStore()
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+			},
+			req: &exchange.QueryGetAccountCommitmentsRequest{
+				Account: s.addr2.String(),
+				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "cherry"},
+			},
+			expResp: &exchange.QueryGetAccountCommitmentsResponse{
+				Commitments: []*exchange.MarketAmount{
+					{MarketId: 2, Amount: s.coins("386cherry")},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {

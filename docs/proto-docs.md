@@ -3529,6 +3529,7 @@ QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitm
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `account` | [string](#string) |  | account is the bech32 address string of the account with the commitments. |
+| `asset` | [string](#string) | optional | asset is the denom of assets. |
 
 
 

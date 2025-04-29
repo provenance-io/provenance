@@ -68,8 +68,9 @@ service Query {
   }
 
   // GetAccountCommitments gets all the funds in an account that are committed to any market.
+  // Optionally, you can filter the results by a specific asset denomination using the `asset` query parameter.
   rpc GetAccountCommitments(QueryGetAccountCommitmentsRequest) returns (QueryGetAccountCommitmentsResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/commitments/account/{account}";
+    option (google.api.http).get = "/provenance/exchange/v1/commitments/account/{account}?asset={asset}";
   }
 
   // GetMarketCommitments gets all the funds committed to a market from any account.
@@ -314,6 +315,8 @@ message QueryGetCommitmentResponse {
 message QueryGetAccountCommitmentsRequest {
   // account is the bech32 address string of the account with the commitments.
   string account = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // asset is the denom of assets.
+  optional string asset = 2;
 }
 
 // QueryGetAccountCommitmentsResponse is a response message for the GetAccountCommitments query.

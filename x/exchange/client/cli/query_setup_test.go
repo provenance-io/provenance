@@ -793,6 +793,7 @@ func TestSetupCmdQueryGetAccountCommitments(t *testing.T) {
 		expExamples: []string{
 			exampleStart + " " + cli.ExampleAddr,
 			exampleStart + " --account " + cli.ExampleAddr,
+			exampleStart + " --asset nash",
 		},
 	})
 }
@@ -830,6 +831,23 @@ func TestMakeQueryGetAccountCommitments(t *testing.T) {
 			args:   []string{"otheraddr"},
 			expReq: &exchange.QueryGetAccountCommitmentsRequest{},
 			expErr: "cannot provide <account> as both an arg (\"otheraddr\") and flag (--account \"someaddr\")",
+		},
+		{
+			name:  "account and asset flags",
+			flags: []string{"--account", "addr1", "--asset", "nash"},
+			expReq: &exchange.QueryGetAccountCommitmentsRequest{
+				Account: "addr1",
+				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "nash"},
+			},
+		},
+		{
+			name:  "asset only (missing account)",
+			flags: []string{"--asset", "nash"},
+			expReq: &exchange.QueryGetAccountCommitmentsRequest{
+				Account: "",
+				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "nash"},
+			},
+			expErr: "no <account> provided",
 		},
 	}
 
