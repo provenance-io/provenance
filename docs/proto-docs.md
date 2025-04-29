@@ -269,6 +269,8 @@
     - [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest)
     - [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse)
     - [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest)
+    - [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest)
+    - [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse)
   
     - [Msg](#provenance-ledger-v1-Msg)
   
@@ -282,6 +284,7 @@
     - [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType)
     - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
+    - [LedgerEntry.BucketBalancesEntry](#provenance-ledger-v1-LedgerEntry-BucketBalancesEntry)
     - [LedgerKey](#provenance-ledger-v1-LedgerKey)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
@@ -4653,6 +4656,34 @@ instructions
 
 
 
+
+<a name="provenance-ledger-v1-MsgUpdateBalancesRequest"></a>
+
+### MsgUpdateBalancesRequest
+MsgUpdateBalancesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `authority` | [string](#string) |  |  |
+| `correlation_id` | [string](#string) |  |  |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateBalancesResponse"></a>
+
+### MsgUpdateBalancesResponse
+MsgUpdateBalancesResponse
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4669,6 +4700,7 @@ Msg defines the attribute module Msg service.
 | ----------- | ------------ | ------------- | ------------|
 | `Create` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
 | `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
+| `UpdateBalances` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied |
 | `ProcessFundTransfers` | [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers (payments and disbursements) |
 | `ProcessFundTransfersWithSettlement` | [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers with manual settlement instructions |
 | `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
@@ -4840,6 +4872,23 @@ LedgerEntry
 | `effective_date` | [int32](#int32) |  | Effective date days since epoch |
 | `total_amt` | [string](#string) |  |  |
 | `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts for each bucket |
+| `bucket_balances` | [LedgerEntry.BucketBalancesEntry](#provenance-ledger-v1-LedgerEntry-BucketBalancesEntry) | repeated | Balances for each bucket The key is the bucket type id |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerEntry-BucketBalancesEntry"></a>
+
+### LedgerEntry.BucketBalancesEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [int32](#int32) |  |  |
+| `value` | [BucketBalance](#provenance-ledger-v1-BucketBalance) |  |  |
 
 
 

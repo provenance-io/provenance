@@ -13,6 +13,7 @@ var _ EntriesKeeper = (*BaseEntriesKeeper)(nil)
 
 type EntriesKeeper interface {
 	AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error
+	UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance) error
 }
 
 type BaseEntriesKeeper struct {
@@ -79,6 +80,45 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance) error {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(ledgerKey)
+	if err != nil {
+		return err
+	}
+
+	// Get the existing entry
+	existingEntry, err := k.GetLedgerEntry(ctx, ledgerKey, correlationId)
+	if err != nil {
+		return err
+	}
+
+	if existingEntry == nil {
+		return NewLedgerCodedError(ErrCodeNotFound, "entry")
+	}
+
+	// Validate the bucket balances
+	for _, bb := range bucketBalances {
+		if err := ValidateBucketBalance(bb); err != nil {
+			return err
+		}
+
+		existingEntry.BucketBalances[bb.BucketTypeId] = bb
+	}
+
+	ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
+	if err != nil {
+		return err
+	}
+
+	err = k.LedgerEntries.Set(ctx, collections.Join(*ledgerKeyStr, correlationId), *existingEntry)
+	if err != nil {
+		return err
 	}
 
 	return nil

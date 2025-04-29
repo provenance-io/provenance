@@ -131,6 +131,10 @@ message LedgerEntry {
 
   // Applied amounts for each bucket
   repeated LedgerBucketAmount applied_amounts = 10;
+
+  // Balances for each bucket
+  // The key is the bucket type id
+  map<int32, BucketBalance> bucket_balances = 11;
 }
 
 message LedgerBucketAmount {
