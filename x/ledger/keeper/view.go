@@ -406,6 +406,17 @@ func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerCla
 	return bucketTypes, nil
 }
 
+func (k BaseViewKeeper) HasNFT(ctx context.Context, assetClassId, nftId *string) bool {
+	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
+	if isMetadataScope {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		_, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataAddress)
+		return found
+	} else {
+		return k.NFTKeeper.HasNFT(ctx, *assetClassId, *nftId)
+	}
+}
+
 func (k BaseViewKeeper) AssetClassExists(ctx context.Context, assetClassId *string) bool {
 	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
 	if isMetadataScope {
@@ -436,15 +447,19 @@ func (k BaseViewKeeper) GetNFTOwner(ctx context.Context, assetClassId, nftId *st
 
 		scope, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataAddress)
 		if !found {
+			sdkCtx.Logger().Error("scope not found", "metadata_address", metadataAddress)
 			return nil
 		}
 
 		for _, owner := range scope.Owners {
 			if owner.Role == metadataTypes.PartyType_PARTY_TYPE_OWNER {
+				sdkCtx.Logger().Info("scope found", "metadata_address", metadataAddress, "owner", owner.Address)
 				return sdk.AccAddress(owner.Address)
 			}
+			sdkCtx.Logger().Info("scope found", "metadata_address", metadataAddress, "owner", owner.Address, "role", owner.Role)
 		}
 
+		sdkCtx.Logger().Error("scope found but no owner", "metadata_address", metadataAddress)
 		return nil
 	} else {
 		return k.NFTKeeper.GetOwner(ctx, *assetClassId, *nftId)
