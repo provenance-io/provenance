@@ -8,7 +8,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/asset/types"
-	
+
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -111,10 +111,13 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 	}
 
 	// Get the asset module account address as the owner
-	owner := sdk.AccAddress(msg.FromAddress)
+	owner, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, fmt.Errorf("invalid owner address: %w", err)
+	}
 
 	// Mint the NFT with the module account as owner
-	err := m.nftKeeper.Mint(ctx, token, owner)
+	err = m.nftKeeper.Mint(ctx, token, owner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to mint NFT: %w", err)
 	}
