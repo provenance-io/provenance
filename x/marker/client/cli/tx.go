@@ -179,7 +179,7 @@ func GetCmdMint() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "mint [coin] [recipient]",
 		Aliases: []string{"m"},
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(1),
 		Short:   "Mint coins against the marker",
 		Long: strings.TrimSpace(`Mints coins of the marker's denomination and places them
 in the marker's account under escrow.  Caller must possess the mint permission and 
@@ -190,16 +190,18 @@ marker must be in the active status.`),
 			if err != nil {
 				return err
 			}
-
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[0])
 			}
-			recipient, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return sdkErrors.ErrInvalidAddress.Wrapf("invalid recipient %s", args[1])
-			}
 			callerAddr := clientCtx.GetFromAddress()
+			var recipient sdk.AccAddress
+			if len(args) > 1 {
+				recipient, err = sdk.AccAddressFromBech32(args[1])
+				if err != nil {
+					return sdkErrors.ErrInvalidAddress.Wrapf("invalid recipient %s", args[1])
+				}
+			}
 			msg := types.NewMsgMintRequest(callerAddr, coin, recipient)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

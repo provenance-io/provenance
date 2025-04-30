@@ -725,7 +725,6 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetCmdMint(),
 			[]string{
 				"100hotdog",
-				s.accountAddresses[0].String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

@@ -264,16 +264,24 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 	}
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
-	recipient := sdk.MustAccAddressFromBech32(msg.Recipient)
 
 	if err := k.Keeper.MintCoin(ctx, admin, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
-		ctx.Logger().Error("unable to withdraw coins for recipient", "err", err)
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	if r, ok := msg.XRecipient.(*types.MsgMintRequest_Recipient); ok && r.Recipient != "" {
+		recipient, err := sdk.AccAddressFromBech32(r.Recipient)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient: %s", r.Recipient)
+		}
+		if recipient.Empty() {
+			return nil, sdkerrors.ErrInvalidAddress.Wrap("recipient address is zero or empty")
+		}
+		if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
+			ctx.Logger().Error("unable to withdraw coins", "err", err)
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
 	}
 
 	defer func() {

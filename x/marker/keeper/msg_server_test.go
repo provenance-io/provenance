@@ -951,6 +951,11 @@ func (s *MsgServerTestSuite) TestMsgMintMarkerRequest() {
 			msg:           types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 100), s.owner2Addr),
 			expectedEvent: types.NewEventMarkerMint("100", hotdogDenom, s.owner1),
 		},
+		{
+			name:          "should successfully mint marker; recipient is empty, withdrawal skipped",
+			msg:           types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 100), sdk.AccAddress{}),
+			expectedEvent: types.NewEventMarkerMint("100", hotdogDenom, s.owner1),
+		},
 	}
 
 	for _, tc := range testcases {
