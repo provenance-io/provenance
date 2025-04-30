@@ -419,7 +419,7 @@ func (k BaseViewKeeper) AssetClassExists(ctx context.Context, assetClassId *stri
 
 func metadataScopeID(assetClassId string) (metadataTypes.MetadataAddress, bool) {
 	// Do a bech32 decode if the prefix is "scope1"
-	if strings.HasPrefix(assetClassId, "scope1") {
+	if strings.HasPrefix(assetClassId, "scope1") || strings.HasPrefix(assetClassId, "scopespec1") {
 		metadataAddress, err := metadataTypes.MetadataAddressFromBech32(assetClassId)
 		if err != nil {
 			return nil, false
