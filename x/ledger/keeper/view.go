@@ -24,6 +24,7 @@ type ViewKeeper interface {
 	ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error)
 	GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error)
 	GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.Balances, error)
+	GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error)
 	GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error)
 	GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error)
 	GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error)
@@ -328,6 +329,14 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 	return &ledger.Balances{
 		BucketBalances: bucketBalancesList,
 	}, nil
+}
+
+func (k BaseViewKeeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error) {
+	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
+	if err != nil {
+		return nil, err
+	}
+	return &ledgerClass, nil
 }
 
 func (k BaseViewKeeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error) {

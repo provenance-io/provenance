@@ -18,7 +18,7 @@ func NewMsgServer(k BaseKeeper) ledger.MsgServer {
 	return &ms
 }
 
-func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
+func (k *MsgServer) AppendTx(goCtx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
@@ -35,7 +35,7 @@ func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) 
 	return &resp, nil
 }
 
-func (k *MsgServer) UpdateBalances(goCtx context.Context, req *ledger.MsgUpdateBalancesRequest) (*ledger.MsgUpdateBalancesResponse, error) {
+func (k *MsgServer) UpdateBalancesTx(goCtx context.Context, req *ledger.MsgUpdateBalancesRequest) (*ledger.MsgUpdateBalancesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
@@ -52,7 +52,7 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *ledger.MsgUpdateB
 	return &resp, nil
 }
 
-func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
+func (k *MsgServer) CreateTx(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
@@ -69,7 +69,7 @@ func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) 
 	return &resp, nil
 }
 
-func (k *MsgServer) ProcessFundTransfers(goCtx context.Context, req *ledger.MsgProcessFundTransfersRequest) (*ledger.MsgProcessFundTransfersResponse, error) {
+func (k *MsgServer) ProcessFundTransfersTx(goCtx context.Context, req *ledger.MsgProcessFundTransfersRequest) (*ledger.MsgProcessFundTransfersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	for _, ft := range req.Transfers {
@@ -83,7 +83,7 @@ func (k *MsgServer) ProcessFundTransfers(goCtx context.Context, req *ledger.MsgP
 	return &resp, nil
 }
 
-func (k *MsgServer) ProcessFundTransfersWithSettlement(goCtx context.Context, req *ledger.MsgProcessFundTransfersWithSettlementRequest) (*ledger.MsgProcessFundTransfersResponse, error) {
+func (k *MsgServer) ProcessFundTransfersWithSettlementTx(goCtx context.Context, req *ledger.MsgProcessFundTransfersWithSettlementRequest) (*ledger.MsgProcessFundTransfersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	for _, ft := range req.Transfers {
@@ -97,7 +97,7 @@ func (k *MsgServer) ProcessFundTransfersWithSettlement(goCtx context.Context, re
 	return &resp, nil
 }
 
-func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest) (*ledger.MsgDestroyResponse, error) {
+func (k *MsgServer) DestroyTx(goCtx context.Context, req *ledger.MsgDestroyRequest) (*ledger.MsgDestroyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
@@ -112,4 +112,66 @@ func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest
 
 	resp := ledger.MsgDestroyResponse{}
 	return &resp, nil
+}
+
+// CreateLedgerClass handles the MsgCreateLedgerClassRequest message
+func (k *MsgServer) CreateLedgerClassTx(goCtx context.Context, req *ledger.MsgCreateLedgerClassRequest) (*ledger.MsgCreateLedgerClassResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if req == nil {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+	}
+
+	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.CreateLedgerClass(sdk.UnwrapSDKContext(ctx), authority, *req.LedgerClass)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ledger.MsgCreateLedgerClassResponse{}, nil
+}
+
+// AddLedgerClassStatusType handles the MsgAddLedgerClassStatusTypeRequest message
+func (k *MsgServer) AddLedgerClassStatusTypeTx(goCtx context.Context, req *ledger.MsgAddLedgerClassStatusTypeRequest) (*ledger.MsgAddLedgerClassStatusTypeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if req == nil {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+	}
+
+	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.AddClassStatusType(sdk.UnwrapSDKContext(ctx), authority, req.LedgerClassId, *req.StatusType)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ledger.MsgAddLedgerClassStatusTypeResponse{}, nil
+}
+
+// AddLedgerClassEntryType handles the MsgAddLedgerClassEntryTypeRequest message
+func (k *MsgServer) AddLedgerClassEntryTypeTx(goCtx context.Context, req *ledger.MsgAddLedgerClassEntryTypeRequest) (*ledger.MsgAddLedgerClassEntryTypeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if req == nil {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+	}
+
+	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.AddClassEntryType(sdk.UnwrapSDKContext(ctx), authority, req.LedgerClassId, *req.EntryType)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ledger.MsgAddLedgerClassEntryTypeResponse{}, nil
 }

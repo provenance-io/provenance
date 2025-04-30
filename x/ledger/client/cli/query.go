@@ -30,6 +30,9 @@ func CmdQuery() *cobra.Command {
 		GetConfigCmd(),
 		GetLedgerEntriesCmd(),
 		GetBalancesAsOfCmd(),
+		GetLedgerClassEntryTypesCmd(),
+		GetLedgerClassStatusTypesCmd(),
+		GetLedgerClassCmd(),
 	)
 
 	return queryCmd
@@ -57,7 +60,7 @@ func GetConfigCmd() *cobra.Command {
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			l, err := queryClient.Config(context.Background(), &req)
+			l, err := queryClient.ConfigQuery(context.Background(), &req)
 			if err != nil {
 				return err
 			}
@@ -105,7 +108,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					},
 				}
 
-				config, err := queryClient.Config(context.Background(), &req)
+				config, err := queryClient.ConfigQuery(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -121,7 +124,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					},
 				}
 
-				l, err := queryClient.Entries(context.Background(), &req)
+				l, err := queryClient.EntriesQuery(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -129,12 +132,12 @@ func GetLedgerEntriesCmd() *cobra.Command {
 				return l.Entries
 			}
 
-			getEntryTypes := func(assetClassId string) map[int32]*ledger.LedgerClassEntryType {
+			getEntryTypes := func(ledgerClassId string) map[int32]*ledger.LedgerClassEntryType {
 				req := ledger.QueryLedgerClassEntryTypesRequest{
-					AssetClassId: assetClassId,
+					LedgerClassId: ledgerClassId,
 				}
 
-				types, err := queryClient.ClassEntryTypes(context.Background(), &req)
+				types, err := queryClient.ClassEntryTypesQuery(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -144,12 +147,12 @@ func GetLedgerEntriesCmd() *cobra.Command {
 				})
 			}
 
-			getBucketTypes := func(assetClassId string) map[int32]*ledger.LedgerClassBucketType {
+			getBucketTypes := func(ledgerClassId string) map[int32]*ledger.LedgerClassBucketType {
 				req := ledger.QueryLedgerClassBucketTypesRequest{
-					AssetClassId: assetClassId,
+					LedgerClassId: ledgerClassId,
 				}
 
-				types, err := queryClient.ClassBucketTypes(context.Background(), &req)
+				types, err := queryClient.ClassBucketTypesQuery(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -222,7 +225,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			res, err := queryClient.GetBalancesAsOf(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
+			res, err := queryClient.GetBalancesAsOfQuery(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassId,
 					NftId:        nftId,
@@ -234,6 +237,105 @@ func GetBalancesAsOfCmd() *cobra.Command {
 			}
 
 			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetLedgerClassEntryTypesCmd returns the command handler for querying ledger class entry types
+func GetLedgerClassEntryTypesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "entry-types <asset_class_id>",
+		Short:   "Query the ledger class entry types for the specified asset class",
+		Example: fmt.Sprintf(`$ %s query ledger entry-types pb1a2b3c4...`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			queryClient := ledger.NewQueryClient(clientCtx)
+
+			req := ledger.QueryLedgerClassEntryTypesRequest{
+				LedgerClassId: ledgerClassId,
+			}
+
+			resp, err := queryClient.ClassEntryTypesQuery(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetLedgerClassStatusTypesCmd returns the command handler for querying ledger class status types
+func GetLedgerClassStatusTypesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "status-types <asset_class_id>",
+		Short:   "Query the ledger class status types for the specified asset class",
+		Example: fmt.Sprintf(`$ %s query ledger status-types pb1a2b3c4...`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			queryClient := ledger.NewQueryClient(clientCtx)
+
+			req := ledger.QueryLedgerClassStatusTypesRequest{
+				LedgerClassId: ledgerClassId,
+			}
+
+			resp, err := queryClient.ClassStatusTypesQuery(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetLedgerClassCmd returns the command handler for querying a ledger class
+func GetLedgerClassCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "class <ledger_class_id>",
+		Short:   "Query the ledger class for the specified ledger class",
+		Example: fmt.Sprintf(`$ %s query ledger class pb1a2b3c4...`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			queryClient := ledger.NewQueryClient(clientCtx)
+
+			req := ledger.QueryLedgerClassRequest{
+				LedgerClassId: ledgerClassId,
+			}
+
+			resp, err := queryClient.ClassQuery(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
 		},
 	}
 
