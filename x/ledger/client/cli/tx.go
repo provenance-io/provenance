@@ -30,6 +30,9 @@ func CmdTx() *cobra.Command {
 		CmdCreate(),
 		CmdAppend(),
 		CmdDestroy(),
+		CmdCreateLedgerClass(),
+		CmdAddLedgerClassStatusType(),
+		CmdAddLedgerClassEntryType(),
 	)
 
 	return cmd
@@ -37,12 +40,12 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> <denom> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
+		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
-		Example: `$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd 2024-12-31 1000.00 IN_REPAYMENT 0.05 2025-12-31 --from mykey
-$ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 usd --from mykey  # minimal example with required fields only`,
-		Args: cobra.MinimumNArgs(4),
+		Example: `$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" "2024-12-31" "1000.00" "IN_REPAYMENT" "0.05" "2025-12-31" --from mykey
+$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" --from mykey  # minimal example with required fields only`,
+		Args: cobra.MinimumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -52,7 +55,6 @@ $ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1
 			assetClassId := args[0]
 			nftId := args[1]
 			ledgerClassId := args[2]
-
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
 				Key: &ledger.LedgerKey{
@@ -63,36 +65,32 @@ $ provenanced tx ledger create pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1
 			}
 
 			// Add optional fields if provided
-			if len(args) > 2 {
-				nextPmtDate, err := keeper.StrToDate(args[2])
+			if len(args) > 3 {
+				nextPmtDate, err := keeper.StrToDate(args[3])
 				if err != nil {
 					return fmt.Errorf("invalid <next_pmt_date>: %v", err)
 				}
 				ledgerObj.NextPmtDate = keeper.DaysSinceEpoch(nextPmtDate.UTC())
-			}
-			if len(args) > 3 {
-				ledgerObj.NextPmtAmt, err = strconv.ParseInt(args[3], 10, 64)
+
+				ledgerObj.NextPmtAmt, err = strconv.ParseInt(args[4], 10, 64)
 				if err != nil {
 					return fmt.Errorf("invalid <next_pmt_amt>: %v", err)
 				}
-			}
-			if len(args) > 4 {
-				statusTypeId, err := strconv.ParseInt(args[4], 10, 32)
+
+				statusTypeId, err := strconv.ParseInt(args[5], 10, 32)
 				if err != nil {
 					return fmt.Errorf("invalid <status_type_id>: %v", err)
 				}
 
 				ledgerObj.StatusTypeId = int32(statusTypeId)
-			}
-			if len(args) > 5 {
-				intRate, err := strconv.ParseInt(args[5], 10, 32)
+
+				intRate, err := strconv.ParseInt(args[6], 10, 32)
 				if err != nil {
 					return fmt.Errorf("invalid <interest_rate>: %v", err)
 				}
 				ledgerObj.InterestRate = int32(intRate)
-			}
-			if len(args) > 6 {
-				maturityDate, err := keeper.StrToDate(args[6])
+
+				maturityDate, err := keeper.StrToDate(args[7])
 				if err != nil {
 					return fmt.Errorf("invalid <maturity_date>: %v", err)
 				}
@@ -239,4 +237,120 @@ func parseUint32(s string) (uint32, error) {
 		return 0, fmt.Errorf("sequence must be less than 100")
 	}
 	return uint32(val.Uint64()), nil
+}
+
+// CmdCreateLedgerClass creates a new ledger class
+func CmdCreateLedgerClass() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "create-class <ledger_class_id> <asset_class_id> <denom>",
+		Aliases: []string{"cc"},
+		Short:   "Create a new ledger class",
+		Example: `$ provenanced tx ledger create-class usd pb1a2b3c4... usd pb1a2b3c4... --from mykey`,
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			assetClassId := args[1]
+			denom := args[2]
+
+			msg := &ledger.MsgCreateLedgerClassRequest{
+				LedgerClass: &ledger.LedgerClass{
+					LedgerClassId:     ledgerClassId,
+					AssetClassId:      assetClassId,
+					Denom:             denom,
+					MaintainerAddress: clientCtx.FromAddress.String(),
+				},
+				Authority: clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdAddLedgerClassStatusType adds a new status type to a ledger class
+func CmdAddLedgerClassStatusType() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add-status-type <ledger_class_id> <id> <code> <description>",
+		Aliases: []string{"ast"},
+		Short:   "Add a new status type to a ledger class",
+		Example: `$ provenanced tx ledger add-status-type ledger-class-1 1 IN_REPAYMENT "In Repayment" --from mykey`,
+		Args:    cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			id, err := strconv.ParseInt(args[1], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid <id>: %v", err)
+			}
+			code := args[2]
+			description := args[3]
+
+			msg := &ledger.MsgAddLedgerClassStatusTypeRequest{
+				LedgerClassId: ledgerClassId,
+				StatusType: &ledger.LedgerClassStatusType{
+					Id:          int32(id),
+					Code:        code,
+					Description: description,
+				},
+				Authority: clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdAddLedgerClassEntryType adds a new entry type to a ledger class
+func CmdAddLedgerClassEntryType() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add-entry-type <ledger_class_id> <id> <code> <description>",
+		Aliases: []string{"aet"},
+		Short:   "Add a new entry type to a ledger class",
+		Example: `$ provenanced tx ledger add-entry-type ledger-class-1 1 DISBURSEMENT "Disbursement" --from mykey`,
+		Args:    cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			id, err := strconv.ParseInt(args[1], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid <id>: %v", err)
+			}
+			code := args[2]
+			description := args[3]
+
+			msg := &ledger.MsgAddLedgerClassEntryTypeRequest{
+				LedgerClassId: ledgerClassId,
+				EntryType: &ledger.LedgerClassEntryType{
+					Id:          int32(id),
+					Code:        code,
+					Description: description,
+				},
+				Authority: clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }

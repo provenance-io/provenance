@@ -11,35 +11,42 @@ import "provenance/ledger/v1/ledger.proto";
 
 // Query defines the gRPC querier service for ledger module.
 service Query {
+  /*****************************************************************
+    Ledger Class Queries
+  *****************************************************************/
+  rpc ClassQuery(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}";
+  }
+
+  rpc ClassEntryTypesQuery(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/entry_types";
+  }
+
+  rpc ClassStatusTypesQuery(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/status_types";
+  }
+
+  rpc ClassBucketTypesQuery(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/bucket_types";
+  }
+
   // Params queries params of the ledger module.
-  rpc Config(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
+  rpc ConfigQuery(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
 
-  rpc Entries(QueryLedgerRequest) returns (QueryLedgerResponse) {
+  rpc EntriesQuery(QueryLedgerRequest) returns (QueryLedgerResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/entries/{key.asset_class_id}/{key.nft_id}";
   }
 
-  rpc ClassEntryTypes(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/entry_types/{asset_class_id}";
-  }
-
-  rpc ClassStatusTypes(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/status_types/{asset_class_id}";
-  }
-
-  rpc ClassBucketTypes(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
-    option (google.api.http).get = "/provenance/ledger/v1/bucket_types/{asset_class_id}";
-  }
-
   // GetLedgerEntry returns a specific ledger entry for an NFT
-  rpc GetLedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
+  rpc GetLedgerEntryQuery(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/entry/{correlation_id}";
   }
 
   // GetBalancesAsOf returns the balances for a specific NFT as of a given date
-  rpc GetBalancesAsOf(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
+  rpc GetBalancesAsOfQuery(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/balances/{as_of_date}";
   }
@@ -82,7 +89,7 @@ message QueryBalancesAsOfResponse {
 }
 
 message QueryLedgerClassEntryTypesRequest {
-  string asset_class_id = 1;
+  string ledger_class_id = 1;
 }
 
 message QueryLedgerClassEntryTypesResponse {
@@ -90,7 +97,7 @@ message QueryLedgerClassEntryTypesResponse {
 }
 
 message QueryLedgerClassStatusTypesRequest {
-  string asset_class_id = 1;
+  string ledger_class_id = 1;
 }
 
 message QueryLedgerClassStatusTypesResponse {
@@ -98,9 +105,17 @@ message QueryLedgerClassStatusTypesResponse {
 }
 
 message QueryLedgerClassBucketTypesRequest {
-  string asset_class_id = 1;
+  string ledger_class_id = 1;
 }
 
 message QueryLedgerClassBucketTypesResponse {
   repeated LedgerClassBucketType bucket_types = 1;
+}
+
+message QueryLedgerClassRequest {
+  string ledger_class_id = 1;
+}
+
+message QueryLedgerClassResponse {
+  LedgerClass class = 1;
 }

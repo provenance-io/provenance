@@ -15,23 +15,32 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
 
   // Create a new NFT ledger
-  rpc Create(MsgCreateRequest) returns (MsgCreateResponse);
+  rpc CreateTx(MsgCreateRequest) returns (MsgCreateResponse);
 
   // Append a ledger entry
-  rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
+  rpc AppendTx(MsgAppendRequest) returns (MsgAppendResponse);
 
   // Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied
-  rpc UpdateBalances(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
+  rpc UpdateBalancesTx(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
 
   // Process multiple fund transfers (payments and disbursements)
-  rpc ProcessFundTransfers(MsgProcessFundTransfersRequest) returns (MsgProcessFundTransfersResponse);
+  rpc ProcessFundTransfersTx(MsgProcessFundTransfersRequest) returns (MsgProcessFundTransfersResponse);
 
   // Process multiple fund transfers with manual settlement instructions
-  rpc ProcessFundTransfersWithSettlement(MsgProcessFundTransfersWithSettlementRequest)
+  rpc ProcessFundTransfersWithSettlementTx(MsgProcessFundTransfersWithSettlementRequest)
       returns (MsgProcessFundTransfersResponse);
 
   // Destroy a ledger by NFT address
-  rpc Destroy(MsgDestroyRequest) returns (MsgDestroyResponse);
+  rpc DestroyTx(MsgDestroyRequest) returns (MsgDestroyResponse);
+
+  // Create a new ledger class
+  rpc CreateLedgerClassTx(MsgCreateLedgerClassRequest) returns (MsgCreateLedgerClassResponse);
+
+  // Add a status type to a ledger class
+  rpc AddLedgerClassStatusTypeTx(MsgAddLedgerClassStatusTypeRequest) returns (MsgAddLedgerClassStatusTypeResponse);
+
+  // Add an entry type to a ledger class
+  rpc AddLedgerClassEntryTypeTx(MsgAddLedgerClassEntryTypeRequest) returns (MsgAddLedgerClassEntryTypeResponse);
 }
 
 // MsgCreateRequest
@@ -102,3 +111,38 @@ message MsgDestroyRequest {
 
 // MsgDestroyResponse represents the response from destroying a ledger
 message MsgDestroyResponse {}
+
+// MsgCreateLedgerClassRequest represents a request to create a new ledger class
+message MsgCreateLedgerClassRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerClass ledger_class = 1;
+  string      authority    = 2;
+}
+
+// MsgCreateLedgerClassResponse represents the response from creating a ledger class
+message MsgCreateLedgerClassResponse {}
+
+// MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class
+message MsgAddLedgerClassStatusTypeRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string                ledger_class_id = 1;
+  LedgerClassStatusType status_type     = 2;
+  string                authority       = 3;
+}
+
+// MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type
+message MsgAddLedgerClassStatusTypeResponse {}
+
+// MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class
+message MsgAddLedgerClassEntryTypeRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string               ledger_class_id = 1;
+  LedgerClassEntryType entry_type      = 2;
+  string               authority       = 3;
+}
+
+// MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type
+message MsgAddLedgerClassEntryTypeResponse {}

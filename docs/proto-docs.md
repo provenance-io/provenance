@@ -260,8 +260,14 @@
     - [Params](#provenance-exchange-v1-Params)
   
 - [provenance/ledger/v1/tx.proto](#provenance_ledger_v1_tx-proto)
+    - [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest)
+    - [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse)
+    - [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest)
+    - [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse)
     - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
+    - [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest)
+    - [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse)
     - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
     - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
     - [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest)
@@ -294,6 +300,8 @@
     - [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse)
     - [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest)
     - [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse)
+    - [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest)
+    - [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse)
     - [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest)
     - [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse)
     - [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest)
@@ -4535,6 +4543,60 @@ Params is a representation of the exchange module parameters.
 
 
 
+<a name="provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest"></a>
+
+### MsgAddLedgerClassEntryTypeRequest
+MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+| `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  |  |
+| `authority` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse"></a>
+
+### MsgAddLedgerClassEntryTypeResponse
+MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest"></a>
+
+### MsgAddLedgerClassStatusTypeRequest
+MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+| `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  |  |
+| `authority` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse"></a>
+
+### MsgAddLedgerClassStatusTypeResponse
+MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type
+
+
+
+
+
+
 <a name="provenance-ledger-v1-MsgAppendRequest"></a>
 
 ### MsgAppendRequest
@@ -4556,6 +4618,32 @@ MsgAppendRequest
 
 ### MsgAppendResponse
 MsgAppendResponse
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateLedgerClassRequest"></a>
+
+### MsgCreateLedgerClassRequest
+MsgCreateLedgerClassRequest represents a request to create a new ledger class
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  |  |
+| `authority` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateLedgerClassResponse"></a>
+
+### MsgCreateLedgerClassResponse
+MsgCreateLedgerClassResponse represents the response from creating a ledger class
 
 
 
@@ -4698,12 +4786,15 @@ Msg defines the attribute module Msg service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `Create` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
-| `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
-| `UpdateBalances` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied |
-| `ProcessFundTransfers` | [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers (payments and disbursements) |
-| `ProcessFundTransfersWithSettlement` | [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers with manual settlement instructions |
-| `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
+| `CreateTx` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
+| `AppendTx` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
+| `UpdateBalancesTx` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied |
+| `ProcessFundTransfersTx` | [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers (payments and disbursements) |
+| `ProcessFundTransfersWithSettlementTx` | [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers with manual settlement instructions |
+| `DestroyTx` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
+| `CreateLedgerClassTx` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | Create a new ledger class |
+| `AddLedgerClassStatusTypeTx` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | Add a status type to a ledger class |
+| `AddLedgerClassEntryTypeTx` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | Add an entry type to a ledger class |
 
  <!-- end services -->
 
@@ -4967,7 +5058,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  |  |
+| `ledger_class_id` | [string](#string) |  |  |
 
 
 
@@ -4997,7 +5088,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  |  |
+| `ledger_class_id` | [string](#string) |  |  |
 
 
 
@@ -5019,6 +5110,36 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
+<a name="provenance-ledger-v1-QueryLedgerClassRequest"></a>
+
+### QueryLedgerClassRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassResponse"></a>
+
+### QueryLedgerClassResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  |  |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-QueryLedgerClassStatusTypesRequest"></a>
 
 ### QueryLedgerClassStatusTypesRequest
@@ -5027,7 +5148,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  |  |
+| `ledger_class_id` | [string](#string) |  |  |
 
 
 
@@ -5153,13 +5274,14 @@ Query defines the gRPC querier service for ledger module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `Config` | [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest) | [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse) | Params queries params of the ledger module. |
-| `Entries` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) |  |
-| `ClassEntryTypes` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) |  |
-| `ClassStatusTypes` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) |  |
-| `ClassBucketTypes` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) |  |
-| `GetLedgerEntry` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
-| `GetBalancesAsOf` | [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest) | [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
+| `ClassQuery` | [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest) | [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse) | Ledger Class Queries *************************************************************** |
+| `ClassEntryTypesQuery` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) |  |
+| `ClassStatusTypesQuery` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) |  |
+| `ClassBucketTypesQuery` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) |  |
+| `ConfigQuery` | [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest) | [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse) | Params queries params of the ledger module. |
+| `EntriesQuery` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) |  |
+| `GetLedgerEntryQuery` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
+| `GetBalancesAsOfQuery` | [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest) | [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
 
  <!-- end services -->
 
