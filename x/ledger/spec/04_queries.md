@@ -4,12 +4,26 @@ The Ledger module provides several query endpoints to access ledger state and in
 
 ## Query Types
 
+### Get Ledger Class
+Retrieves the ledger class configuration:
+
+```protobuf
+message QueryLedgerClassRequest {
+    string ledger_class_id = 1;
+}
+
+message QueryLedgerClassResponse {
+    LedgerClass ledger_class = 1;
+}
+```
+
 ### Get Ledger Configuration
-Retrieves the ledger configuration for a specific NFT:
+Retrieves the ledger configuration for a specific asset:
 
 ```protobuf
 message QueryLedgerConfigRequest {
-    string nft_address = 1;
+    string nft_id = 1;
+    string asset_class_id = 2;
 }
 
 message QueryLedgerConfigResponse {
@@ -18,11 +32,12 @@ message QueryLedgerConfigResponse {
 ```
 
 ### Get Ledger Entries
-Retrieves all ledger entries for a specific NFT:
+Retrieves all ledger entries for a specific asset:
 
 ```protobuf
 message QueryLedgerRequest {
-    string nft_address = 1;
+    string nft_id = 1;
+    string asset_class_id = 2;
 }
 
 message QueryLedgerResponse {
@@ -31,12 +46,13 @@ message QueryLedgerResponse {
 ```
 
 ### Get Ledger Entry
-Retrieves a specific ledger entry by NFT address and correlation ID:
+Retrieves a specific ledger entry by asset identifier and correlation ID:
 
 ```protobuf
 message QueryLedgerEntryRequest {
-    string nft_address = 1;
-    string correlation_id = 2;  // Free-form string up to 50 characters
+    string nft_id = 1;
+    string asset_class_id = 2;
+    string correlation_id = 3;  // Free-form string up to 50 characters
 }
 
 message QueryLedgerEntryResponse {
@@ -45,12 +61,13 @@ message QueryLedgerEntryResponse {
 ```
 
 ### Get Balances As Of Date
-Retrieves the balances for a specific NFT as of a given date:
+Retrieves the balances for a specific asset as of a given date:
 
 ```protobuf
 message QueryBalancesAsOfRequest {
-    string nft_address = 1;
-    string as_of_date = 2;  // Date in ISO 8601 format: YYYY-MM-DD
+    string nft_id = 1;
+    string asset_class_id = 2;
+    string as_of_date = 3;  // Date in ISO 8601 format: YYYY-MM-DD
 }
 
 message QueryBalancesAsOfResponse {
@@ -60,27 +77,33 @@ message QueryBalancesAsOfResponse {
 
 ## Query Implementation
 
+### Ledger Class Queries
+1. **Get Ledger Class**
+   - Validates ledger class ID
+   - Retrieves ledger class from store
+   - Returns ledger class configuration
+
 ### Ledger Queries
 1. **Get Ledger Configuration**
-   - Validates NFT address
+   - Validates asset identifiers
    - Retrieves ledger from store
    - Returns ledger configuration
 
 2. **Get Ledger Entries**
-   - Validates NFT address
+   - Validates asset identifiers
    - Retrieves all entries from store
    - Returns list of entries
 
 3. **Get Ledger Entry**
-   - Validates NFT address and correlation ID
+   - Validates asset identifiers and correlation ID
    - Retrieves specific entry from store
    - Returns entry details
 
 ### Balance Queries
 1. **Get Balances As Of Date**
-   - Validates NFT address and date format
+   - Validates asset identifiers and date format
    - Calculates balances as of specified date
-   - Returns principal, interest, and other balances
+   - Returns bucket balances
 
 ## Query Response Format
 
@@ -90,10 +113,11 @@ All query responses follow a standard format:
 message QueryResponse {
     // Response data
     oneof response {
-        QueryLedgerConfigResponse config = 1;
-        QueryLedgerResponse entries = 2;
-        QueryLedgerEntryResponse entry = 3;
-        QueryBalancesAsOfResponse balances = 4;
+        QueryLedgerClassResponse ledger_class = 1;
+        QueryLedgerConfigResponse config = 2;
+        QueryLedgerResponse entries = 3;
+        QueryLedgerEntryResponse entry = 4;
+        QueryBalancesAsOfResponse balances = 5;
     }
 }
 ```
@@ -102,56 +126,70 @@ message QueryResponse {
 
 Queries may return the following errors:
 
-1. **Invalid NFT Address**
+1. **Invalid Asset Identifier**
    - Code: 1
-   - Message: "invalid nft address"
+   - Message: "invalid asset identifier"
 
-2. **Ledger Not Found**
+2. **Invalid Asset Class**
    - Code: 2
+   - Message: "invalid asset class"
+
+3. **Ledger Class Not Found**
+   - Code: 3
+   - Message: "ledger class not found"
+
+4. **Ledger Not Found**
+   - Code: 4
    - Message: "ledger not found"
 
-3. **Entry Not Found**
-   - Code: 3
+5. **Entry Not Found**
+   - Code: 5
    - Message: "entry not found"
 
-4. **Invalid Correlation ID**
-   - Code: 4
+6. **Invalid Correlation ID**
+   - Code: 6
    - Message: "invalid correlation id"
 
-5. **Invalid Date Format**
-   - Code: 5
+7. **Invalid Date Format**
+   - Code: 7
    - Message: "invalid date format"
 
 ## Query Usage Examples
 
 ### CLI
 ```bash
+# Get ledger class
+provenanced q ledger class [ledger-class-id]
+
 # Get ledger configuration
-provenanced q ledger config [nft-address]
+provenanced q ledger config [nft-id] [asset-class-id]
 
 # Get ledger entries
-provenanced q ledger entries [nft-address]
+provenanced q ledger entries [nft-id] [asset-class-id]
 
 # Get ledger entry
-provenanced q ledger entry [nft-address] [correlation-id]
+provenanced q ledger entry [nft-id] [asset-class-id] [correlation-id]
 
 # Get balances as of date
-provenanced q ledger balances [nft-address] [as-of-date]
+provenanced q ledger balances [nft-id] [asset-class-id] [as-of-date]
 ```
 
 ### REST
 ```http
+# Get ledger class
+GET /provenance/ledger/v1/class/{ledger_class_id}
+
 # Get ledger configuration
-GET /provenance/ledger/v1/config?nft_address={nft_address}
+GET /provenance/ledger/v1/config?nft_id={nft_id}&asset_class_id={asset_class_id}
 
 # Get ledger entries
-GET /provenance/ledger/v1/entries?nft_address={nft_address}
+GET /provenance/ledger/v1/entries?nft_id={nft_id}&asset_class_id={asset_class_id}
 
 # Get ledger entry
-GET /provenance/ledger/v1/ledger/{nft_address}/entry/{correlation_id}
+GET /provenance/ledger/v1/ledger/{nft_id}/{asset_class_id}/entry/{correlation_id}
 
 # Get balances as of date
-GET /provenance/ledger/v1/ledger/{nft_address}/balances/{as_of_date}
+GET /provenance/ledger/v1/ledger/{nft_id}/{asset_class_id}/balances/{as_of_date}
 ```
 
 ## Notes
@@ -159,7 +197,7 @@ GET /provenance/ledger/v1/ledger/{nft_address}/balances/{as_of_date}
 - All dates should be provided in ISO8601 format (e.g., "2024-01-01")
 - The balances query will return the cumulative balances up to and including the specified date
 - Entries are sorted by effective date when calculating balances
-- The module maintains separate balances for principal, interest, and other amounts
+- The module maintains balances in configurable buckets as defined by the ledger class
 - Correlation IDs are free-form strings up to 50 characters, used to track and correlate ledger entries with external systems
 
 ## Pagination
@@ -184,8 +222,8 @@ message PageResponse {
 Example pagination usage:
 ```bash
 # Get first page
-provenanced query ledger entries [nft-address] --limit=10
+provenanced query ledger entries [nft_id] [asset_class_id] --limit=10
 
 # Get next page using the next_key from previous response
-provenanced query ledger entries [nft-address] --limit=10 --page-key=[next_key]
+provenanced query ledger entries [nft_id] [asset_class_id] --limit=10 --page-key=[next_key]
 ``` 
