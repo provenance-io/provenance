@@ -7,8 +7,8 @@ import (
 	nft "cosmossdk.io/x/nft"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/asset/types"
+	
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -37,12 +37,18 @@ func (m msgServer) AddAssetClass(goCtx context.Context, msg *types.MsgAddAssetCl
 	// If there's data, add it to the class
 	if msg.AssetClass.Data != "" {
 		// Convert string to Any type
-		strMsg := wrapperspb.String(msg.AssetClass.Data)
-		any, err := cdctypes.NewAnyWithValue(strMsg)
+		strMsg := &wrapperspb.StringValue{Value: msg.AssetClass.Data}
+		anyMsg, err := cdctypes.NewAnyWithValue(strMsg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create Any from data: %w", err)
 		}
-		class.Data = any
+		class.Data = anyMsg
+
+		// Validate the data is valid JSON schema
+		_, err = types.AnyToJSONSchema(m.cdc, anyMsg)
+		if err != nil {
+			return nil, fmt.Errorf("invalid data: %w", err)
+		}
 	}
 
 	// Save the NFT class
@@ -76,8 +82,27 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 
 	// If there's data, add it to the token
 	if msg.Asset.Data != "" {
+
+		// Validate the data against the Class schema if it exists
+		// otherwise it's an invalid Class id
+		class, ok := m.nftKeeper.GetClass(ctx, msg.Asset.ClassId)
+		if !ok {
+			return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
+		}
+
+		jsonSchema, err := types.AnyToJSONSchema(m.cdc, class.Data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert class data to JSON schema: %w", err)
+		}
+
+		// Validate the data against the JSON schema
+		err = types.ValidateJSONSchema(jsonSchema, []byte(msg.Asset.Data))
+		if err != nil {
+			return nil, fmt.Errorf("invalid data: %w", err)
+		}
+
 		// Convert string to Any type
-		strMsg := wrapperspb.String(msg.Asset.Data)
+		strMsg := &wrapperspb.StringValue{Value: msg.Asset.Data}
 		any, err := cdctypes.NewAnyWithValue(strMsg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create Any from data: %w", err)
@@ -86,13 +111,10 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 	}
 
 	// Get the asset module account address as the owner
-	moduleAddr := authtypes.NewModuleAddress(types.ModuleName)
-	if moduleAddr == nil {
-		return nil, fmt.Errorf("asset module account not found")
-	}
+	owner := sdk.AccAddress(msg.FromAddress)
 
 	// Mint the NFT with the module account as owner
-	err := m.nftKeeper.Mint(ctx, token, moduleAddr)
+	err := m.nftKeeper.Mint(ctx, token, owner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to mint NFT: %w", err)
 	}
@@ -100,7 +122,7 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 	m.Logger(ctx).Info("Created new asset as NFT",
 		"class_id", token.ClassId,
 		"token_id", token.Id,
-		"module_address", moduleAddr.String())
+		"owner", owner.String())
 
 	return &types.MsgAddAssetResponse{}, nil
 }

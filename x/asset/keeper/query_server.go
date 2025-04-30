@@ -129,17 +129,12 @@ func (q queryServer) GetClass(ctx context.Context, req *types.QueryGetClass) (*t
 		},
 	}
 
-	// If there's data, convert it to string
-	if nftClassResp.Data != nil {
-		// Try to extract string value from Any
-		var strValue string
-		if err := q.cdc.UnpackAny(nftClassResp.Data, &strValue); err == nil {
-			queryResp.AssetClass.Data = strValue
-		} else {
-			// If we can't unpack as string, just use the raw data
-			queryResp.AssetClass.Data = string(nftClassResp.Data.Value)
-		}
-	}	
+	dataString, err := types.AnyToString(q.cdc, nftClassResp.Data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert Any to string: %w", err)
+	}
+
+	queryResp.AssetClass.Data = dataString
 
 	return queryResp, nil
 }
