@@ -175,3 +175,24 @@ func (k *MsgServer) AddLedgerClassEntryTypeTx(goCtx context.Context, req *ledger
 
 	return &ledger.MsgAddLedgerClassEntryTypeResponse{}, nil
 }
+
+// AddLedgerClassBucketType handles the MsgAddLedgerClassBucketTypeRequest message
+func (k *MsgServer) AddLedgerClassBucketTypeTx(goCtx context.Context, req *ledger.MsgAddLedgerClassBucketTypeRequest) (*ledger.MsgAddLedgerClassBucketTypeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if req == nil {
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+	}
+
+	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.AddClassBucketType(sdk.UnwrapSDKContext(ctx), authority, req.LedgerClassId, *req.BucketType)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ledger.MsgAddLedgerClassBucketTypeResponse{}, nil
+}

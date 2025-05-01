@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 
 	sdkmath "cosmossdk.io/math"
@@ -33,6 +32,7 @@ func CmdTx() *cobra.Command {
 		CmdCreateLedgerClass(),
 		CmdAddLedgerClassStatusType(),
 		CmdAddLedgerClassEntryType(),
+		CmdAddLedgerClassBucketType(),
 	)
 
 	return cmd
@@ -40,12 +40,12 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> [next_pmt_date] [next_pmt_amt] [status_type_id] [interest_rate] [maturity_date]",
+		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> [status_type_id] [next_pmt_date] [next_pmt_amt] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
-		Example: `$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" "2024-12-31" "1000.00" "IN_REPAYMENT" "0.05" "2025-12-31" --from mykey
-$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" --from mykey  # minimal example with required fields only`,
-		Args: cobra.MinimumNArgs(3),
+		Example: `$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" "IN_REPAYMENT" "2024-12-31" "1000.00" "0.05" "2025-12-31" --from mykey
+$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" "IN_REPAYMENT" --from mykey  # minimal example with required fields only`,
+		Args: cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -55,6 +55,12 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" 
 			assetClassId := args[0]
 			nftId := args[1]
 			ledgerClassId := args[2]
+
+			statusTypeId, err := strconv.ParseInt(args[3], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid <status_type_id>: %v", err)
+			}
+
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
 				Key: &ledger.LedgerKey{
@@ -62,24 +68,20 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" 
 					NftId:        nftId,
 				},
 				LedgerClassId: ledgerClassId,
+				StatusTypeId:  int32(statusTypeId),
 			}
 
 			// Add optional fields if provided
-			if len(args) > 3 {
-				nextPmtDate, err := keeper.StrToDate(args[3])
+			if len(args) > 4 {
+				nextPmtDate, err := keeper.StrToDate(args[4])
 				if err != nil {
 					return fmt.Errorf("invalid <next_pmt_date>: %v", err)
 				}
 				ledgerObj.NextPmtDate = keeper.DaysSinceEpoch(nextPmtDate.UTC())
 
-				ledgerObj.NextPmtAmt, err = strconv.ParseInt(args[4], 10, 64)
+				ledgerObj.NextPmtAmt, err = strconv.ParseInt(args[5], 10, 64)
 				if err != nil {
 					return fmt.Errorf("invalid <next_pmt_amt>: %v", err)
-				}
-
-				statusTypeId, err := strconv.ParseInt(args[5], 10, 32)
-				if err != nil {
-					return fmt.Errorf("invalid <status_type_id>: %v", err)
 				}
 
 				ledgerObj.StatusTypeId = int32(statusTypeId)
@@ -148,11 +150,11 @@ func CmdDestroy() *cobra.Command {
 // CmdAppendJson creates a new ledger entry from a JSON file
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append <asset_class_id> <nft_id> <json_file>",
+		Use:     "append <asset_class_id> <nft_id> <json>",
 		Aliases: []string{"aj"},
 		Short:   "Append ledger entries from a JSON file",
-		Example: `$ provenanced tx ledger append pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 entries.json --from mykey
-		where the json file is formatted as follows:
+		Example: `$ provenanced tx ledger append pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 'json' --from mykey
+		where the json is formatted as follows:
 		[
 			{
 				"correlation_id": "entry1",
@@ -160,18 +162,50 @@ func CmdAppend() *cobra.Command {
 				"is_void": false,
 				"sequence": 1,
 				"entry_type_id": 1,
+				"posted_date": 19665,
+				"effective_date": 19665,
+				"total_amt": "80000",
+				"applied_amounts": [
+					{
+						"bucket_type_id": 1,
+						"applied_amt": "80000"
+					}
+				],
+				"balance_amounts": [
+					{
+						"bucket_type_id": 1,
+						"balance_amt": "80000"
+					}
+				]
+			},
+			{
+				"correlation_id": "entry2",
+				"reverses_correlation_id": "",
+				"is_void": false,
+				"sequence": 1,
+				"entry_type_id": 2,
 				"posted_date": 19700,
 				"effective_date": 19700,
-				"total_amt": 1000,
+				"total_amt": "1000",
 				"applied_amounts": [
-				{
-					"bucket_type_id": 1,
-					"applied_amt": 800
-				},
-				{
-					"bucket_type_id": 2,
-					"applied_amt": 200
-				}
+					{
+						"bucket_type_id": 1,
+						"applied_amt": "400"
+					},
+					{
+						"bucket_type_id": 2,
+						"applied_amt": "600"
+					}
+				],
+				"balance_amounts": [
+					{
+						"bucket_type_id": 1,
+						"balance_amt": "76600"
+					},
+					{
+						"bucket_type_id": 2,
+						"balance_amt": "0"
+					}
 				]
 			}
 		]
@@ -189,14 +223,10 @@ func CmdAppend() *cobra.Command {
 				return fmt.Errorf("invalid <nft_id>")
 			}
 
-			jsonFile := args[1]
-			jsonData, err := os.ReadFile(jsonFile)
-			if err != nil {
-				return fmt.Errorf("failed to read JSON file: %w", err)
-			}
+			jsonData := args[2]
 
 			var entries []*ledger.LedgerEntry
-			if err := json.Unmarshal(jsonData, &entries); err != nil {
+			if err := json.Unmarshal([]byte(jsonData), &entries); err != nil {
 				return fmt.Errorf("failed to unmarshal JSON: %w", err)
 			}
 
@@ -340,6 +370,46 @@ func CmdAddLedgerClassEntryType() *cobra.Command {
 			msg := &ledger.MsgAddLedgerClassEntryTypeRequest{
 				LedgerClassId: ledgerClassId,
 				EntryType: &ledger.LedgerClassEntryType{
+					Id:          int32(id),
+					Code:        code,
+					Description: description,
+				},
+				Authority: clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdAddLedgerClassBucketType adds a new bucket type to a ledger class
+func CmdAddLedgerClassBucketType() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add-bucket-type <ledger_class_id> <id> <code> <description>",
+		Aliases: []string{"abt"},
+		Short:   "Add a new bucket type to a ledger class",
+		Example: `$ provenanced tx ledger add-bucket-type ledger-class-1 1 PRINCIPAL "Principal" --from mykey`,
+		Args:    cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			id, err := strconv.ParseInt(args[1], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid <id>: %v", err)
+			}
+			code := args[2]
+			description := args[3]
+
+			msg := &ledger.MsgAddLedgerClassBucketTypeRequest{
+				LedgerClassId: ledgerClassId,
+				BucketType: &ledger.LedgerClassBucketType{
 					Id:          int32(id),
 					Code:        code,
 					Description: description,

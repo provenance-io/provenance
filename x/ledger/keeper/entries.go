@@ -106,9 +106,9 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 		if err := ValidateBucketBalance(bb); err != nil {
 			return err
 		}
-
-		existingEntry.BucketBalances[bb.BucketTypeId] = bb
 	}
+
+	existingEntry.BalanceAmounts = bucketBalances
 
 	ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
 	if err != nil {

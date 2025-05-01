@@ -24,6 +24,15 @@ message LedgerClass {
 
   // Address of the maintainer for the ledger class
   string maintainer_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // List of entry types for this ledger class
+  repeated LedgerClassEntryType entry_types = 5;
+
+  // List of status types for this ledger class
+  repeated LedgerClassStatusType status_types = 6;
+
+  // List of bucket types for this ledger class
+  repeated LedgerClassBucketType bucket_types = 7;
 }
 
 // LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
@@ -32,12 +41,10 @@ message LedgerClassEntryType {
   // Unique ID for the entry type (eg. 1, 2, 3, etc.)
   int32 id = 1;
 
-  // Code for the entry type (eg. "DISBURSEMENT", "SCHEDULED_PAYMENT", "UNSCHEDULED_PAYMENT", "FORECLOSURE_PAYMENT",
-  // "FEE", "OTHER")
+  // Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER")
   string code = 2;
 
-  // Description of the entry type (eg. "Disbursement", "Scheduled Payment", "Unscheduled Payment", "Foreclosure
-  // Payment", "Fee", "Other")
+  // Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other")
   string description = 3;
 }
 
@@ -87,14 +94,15 @@ message Ledger {
   int32 maturity_date = 7;
 }
 
+// LedgerClassBucketType represents a bucket type for a ledger class
 message LedgerClassBucketType {
   // Unique ID for the bucket type (eg. 1, 2, 3, etc.)
   int32 id = 1;
 
-  // Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "OTHER")
+  // Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER")
   string code = 2;
 
-  // Description of the bucket type (eg. "Principal", "Interest", "Other")
+  // Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other")
   string description = 3;
 }
 
@@ -125,7 +133,6 @@ message LedgerEntry {
   int32 effective_date = 8;
 
   // Total amount of the ledger entry
-
   string total_amt = 9 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -136,8 +143,7 @@ message LedgerEntry {
   repeated LedgerBucketAmount applied_amounts = 10;
 
   // Balances for each bucket
-  // The key is the bucket type id
-  map<int32, BucketBalance> bucket_balances = 11;
+  repeated BucketBalance balance_amounts = 11;
 }
 
 message LedgerBucketAmount {
@@ -162,7 +168,7 @@ message BucketBalance {
   int32 bucket_type_id = 1;
 
   // The balance of the bucket
-  string balance = 2 [
+  string balance_amt = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false

@@ -41,6 +41,9 @@ service Msg {
 
   // Add an entry type to a ledger class
   rpc AddLedgerClassEntryTypeTx(MsgAddLedgerClassEntryTypeRequest) returns (MsgAddLedgerClassEntryTypeResponse);
+
+  // Add a bucket type to a ledger class
+  rpc AddLedgerClassBucketTypeTx(MsgAddLedgerClassBucketTypeRequest) returns (MsgAddLedgerClassBucketTypeResponse);
 }
 
 // MsgCreateRequest
@@ -146,3 +149,15 @@ message MsgAddLedgerClassEntryTypeRequest {
 
 // MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type
 message MsgAddLedgerClassEntryTypeResponse {}
+
+// MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class
+message MsgAddLedgerClassBucketTypeRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string                ledger_class_id = 1;
+  LedgerClassBucketType bucket_type     = 2;
+  string                authority       = 3;
+}
+
+// MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type
+message MsgAddLedgerClassBucketTypeResponse {}
