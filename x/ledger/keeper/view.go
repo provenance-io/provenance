@@ -311,7 +311,7 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 		}
 
 		// We just find the latest entry as of the asOfDate, and set the balances.
-		for _, bucketBalance := range entry.BucketBalances {
+		for _, bucketBalance := range entry.BalanceAmounts {
 			bucketBalances[bucketBalance.BucketTypeId] = bucketBalance
 		}
 	}

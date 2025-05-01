@@ -260,6 +260,8 @@
     - [Params](#provenance-exchange-v1-Params)
   
 - [provenance/ledger/v1/tx.proto](#provenance_ledger_v1_tx-proto)
+    - [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest)
+    - [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse)
     - [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest)
     - [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse)
     - [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest)
@@ -290,7 +292,6 @@
     - [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType)
     - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
-    - [LedgerEntry.BucketBalancesEntry](#provenance-ledger-v1-LedgerEntry-BucketBalancesEntry)
     - [LedgerKey](#provenance-ledger-v1-LedgerKey)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
@@ -4543,6 +4544,33 @@ Params is a representation of the exchange module parameters.
 
 
 
+<a name="provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest"></a>
+
+### MsgAddLedgerClassBucketTypeRequest
+MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+| `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  |  |
+| `authority` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse"></a>
+
+### MsgAddLedgerClassBucketTypeResponse
+MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type
+
+
+
+
+
+
 <a name="provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest"></a>
 
 ### MsgAddLedgerClassEntryTypeRequest
@@ -4795,6 +4823,7 @@ Msg defines the attribute module Msg service.
 | `CreateLedgerClassTx` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | Create a new ledger class |
 | `AddLedgerClassStatusTypeTx` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | Add a status type to a ledger class |
 | `AddLedgerClassEntryTypeTx` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | Add an entry type to a ledger class |
+| `AddLedgerClassBucketTypeTx` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | Add a bucket type to a ledger class |
 
  <!-- end services -->
 
@@ -4831,7 +4860,7 @@ Balances represents the current balances for principal, interest, and other amou
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id |
-| `balance` | [string](#string) |  | The balance of the bucket |
+| `balance_amt` | [string](#string) |  | The balance of the bucket |
 
 
 
@@ -4889,6 +4918,9 @@ assist in verifying the types that are associated with particular ledger entries
 | `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
 | `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in |
 | `maintainer_address` | [string](#string) |  | Address of the maintainer for the ledger class |
+| `entry_types` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) | repeated | List of entry types for this ledger class |
+| `status_types` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated | List of status types for this ledger class |
+| `bucket_types` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) | repeated | List of bucket types for this ledger class |
 
 
 
@@ -4898,14 +4930,14 @@ assist in verifying the types that are associated with particular ledger entries
 <a name="provenance-ledger-v1-LedgerClassBucketType"></a>
 
 ### LedgerClassBucketType
-
+LedgerClassBucketType represents a bucket type for a ledger class
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [int32](#int32) |  | Unique ID for the bucket type (eg. 1, 2, 3, etc.) |
-| `code` | [string](#string) |  | Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "OTHER") |
-| `description` | [string](#string) |  | Description of the bucket type (eg. "Principal", "Interest", "Other") |
+| `code` | [string](#string) |  | Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER") |
+| `description` | [string](#string) |  | Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other") |
 
 
 
@@ -4922,8 +4954,8 @@ for minimal data storage while providing a human readable description of the ent
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [int32](#int32) |  | Unique ID for the entry type (eg. 1, 2, 3, etc.) |
-| `code` | [string](#string) |  | Code for the entry type (eg. "DISBURSEMENT", "SCHEDULED_PAYMENT", "UNSCHEDULED_PAYMENT", "FORECLOSURE_PAYMENT", "FEE", "OTHER") |
-| `description` | [string](#string) |  | Description of the entry type (eg. "Disbursement", "Scheduled Payment", "Unscheduled Payment", "Foreclosure Payment", "Fee", "Other") |
+| `code` | [string](#string) |  | Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER") |
+| `description` | [string](#string) |  | Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other") |
 
 
 
@@ -4962,25 +4994,9 @@ LedgerEntry
 | `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id |
 | `posted_date` | [int32](#int32) |  | Posted date days since epoch |
 | `effective_date` | [int32](#int32) |  | Effective date days since epoch |
-| `total_amt` | [string](#string) |  |  |
+| `total_amt` | [string](#string) |  | Total amount of the ledger entry |
 | `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts for each bucket |
-| `bucket_balances` | [LedgerEntry.BucketBalancesEntry](#provenance-ledger-v1-LedgerEntry-BucketBalancesEntry) | repeated | Balances for each bucket The key is the bucket type id |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-LedgerEntry-BucketBalancesEntry"></a>
-
-### LedgerEntry.BucketBalancesEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [int32](#int32) |  |  |
-| `value` | [BucketBalance](#provenance-ledger-v1-BucketBalance) |  |  |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | Balances for each bucket |
 
 
 

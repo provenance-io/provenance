@@ -163,18 +163,30 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			}
 
 			config := getConfig(nftId)
+
+			if config == nil {
+				return fmt.Errorf("ledger not found for nft id: %s", nftId)
+			}
+
 			entries := getEntries(nftId)
 			entryTypes := getEntryTypes(config.Ledger.LedgerClassId)
 			bucketTypes := getBucketTypes(config.Ledger.LedgerClassId)
 
 			plainTextEntries := make([]*ledger.LedgerEntryPlainText, len(entries))
 			for i, entry := range entries {
-				appliedAmounts := make([]*ledger.LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
-				for j, amount := range entry.AppliedAmounts {
-					appliedAmounts[j] = &ledger.LedgerBucketAmountPlainText{
-						Bucket:     bucketTypes[amount.BucketTypeId],
-						AppliedAmt: amount.AppliedAmt.String(),
-						BalanceAmt: "0",
+				appliedAmts := make([]*ledger.LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
+				for j, amt := range entry.AppliedAmounts {
+					appliedAmts[j] = &ledger.LedgerBucketAmountPlainText{
+						Bucket:     bucketTypes[amt.BucketTypeId],
+						AppliedAmt: amt.AppliedAmt.String(),
+					}
+				}
+
+				for _, balanceAmt := range entry.BalanceAmounts {
+					for _, appliedAmt := range appliedAmts {
+						if appliedAmt.Bucket.Id == balanceAmt.BucketTypeId {
+							appliedAmt.BalanceAmt = balanceAmt.BalanceAmt.String()
+						}
 					}
 				}
 
@@ -185,7 +197,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					PostedDate:     keeper.EpochDaysToISO8601(entry.PostedDate),
 					EffectiveDate:  keeper.EpochDaysToISO8601(entry.EffectiveDate),
 					TotalAmt:       entry.TotalAmt.String(),
-					AppliedAmounts: appliedAmounts,
+					AppliedAmounts: appliedAmts,
 				}
 			}
 
