@@ -405,13 +405,13 @@ func (s *CmdTestSuite) TestCmdQueryGetAccountCommitments() {
 			},
 		},
 		{
-			name:   "filter by asset = unknown",
-			args:   []string{"account-commitments", "--account", s.addr1.String(), "--asset", "mango"},
+			name:   "filter by denom = unknown",
+			args:   []string{"account-commitments", "--account", s.addr1.String(), "--denom", "mango"},
 			expOut: `commitments: []` + "\n",
 		},
 		{
-			name:   "filter by asset = apple with --output json",
-			args:   []string{"account-commitments", "--account", s.addr1.String(), "--asset", "apple", "--output", "json"},
+			name:   "filter by denom = apple with --output json",
+			args:   []string{"account-commitments", "--account", s.addr1.String(), "--denom", "apple", "--output", "json"},
 			expOut: `{"commitments":[{"market_id":421,"amount":[{"denom":"apple","amount":"4210"}]}]}` + "\n",
 		},
 	}

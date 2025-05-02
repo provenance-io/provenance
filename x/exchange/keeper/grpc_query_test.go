@@ -3266,7 +3266,7 @@ func (s *TestSuite) TestQueryServer_GetAccountCommitments() {
 			},
 			req: &exchange.QueryGetAccountCommitmentsRequest{
 				Account: s.addr2.String(),
-				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "apple"}, // filtering by 'apple'
+				Denom:   "apple", // filtering by 'apple'
 			},
 			expResp: &exchange.QueryGetAccountCommitmentsResponse{
 				Commitments: []*exchange.MarketAmount{
@@ -3285,7 +3285,7 @@ func (s *TestSuite) TestQueryServer_GetAccountCommitments() {
 			},
 			req: &exchange.QueryGetAccountCommitmentsRequest{
 				Account: s.addr2.String(),
-				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "banana"},
+				Denom:   "banana",
 			},
 			expResp: &exchange.QueryGetAccountCommitmentsResponse{
 				Commitments: []*exchange.MarketAmount{
@@ -3302,7 +3302,7 @@ func (s *TestSuite) TestQueryServer_GetAccountCommitments() {
 			},
 			req: &exchange.QueryGetAccountCommitmentsRequest{
 				Account: s.addr2.String(),
-				XAsset:  &exchange.QueryGetAccountCommitmentsRequest_Asset{Asset: "cherry"},
+				Denom:   "cherry",
 			},
 			expResp: &exchange.QueryGetAccountCommitmentsResponse{
 				Commitments: []*exchange.MarketAmount{

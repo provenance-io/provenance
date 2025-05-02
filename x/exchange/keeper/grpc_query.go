@@ -246,9 +246,9 @@ func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
 	}
-	if req.GetAsset() != "" {
-		if err := sdk.ValidateDenom(req.GetAsset()); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "invalid denom %q: %v", req.GetAsset(), err)
+	if req.Denom != "" {
+		if err := sdk.ValidateDenom(req.Denom); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid denom %q: %v", req.Denom, err)
 		}
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -258,12 +258,12 @@ func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.
 	k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
 		amount := getCommitmentAmount(store, marketID, addr)
 		if !amount.IsZero() {
-			if req.GetAsset() != "" {
-				filterAsset := amount.AmountOf(req.GetAsset())
+			if req.Denom != "" {
+				filterAsset := amount.AmountOf(req.Denom)
 				if filterAsset.IsZero() {
 					return false
 				}
-				amount = sdk.NewCoins(sdk.NewCoin(req.GetAsset(), filterAsset))
+				amount = sdk.NewCoins(sdk.NewCoin(req.Denom, filterAsset))
 			}
 			resp.Commitments = append(resp.Commitments, &exchange.MarketAmount{MarketId: marketID, Amount: amount})
 		}
