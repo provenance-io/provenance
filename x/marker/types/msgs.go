@@ -98,7 +98,7 @@ func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin, recipient sdk.AccA
 		Amount:        amount,
 	}
 	if !recipient.Empty() {
-		msg.XRecipient = &MsgMintRequest_Recipient{Recipient: recipient.String()}
+		msg.Recipient = recipient.String()
 	}
 	return msg
 }
@@ -107,9 +107,9 @@ func (msg MsgMintRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
 	}
-	if r, ok := msg.XRecipient.(*MsgMintRequest_Recipient); ok && r.Recipient != "" {
-		if _, err := sdk.AccAddressFromBech32(r.Recipient); err != nil {
-			return err
+	if msg.Recipient != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", msg.Recipient)
 		}
 	}
 	return msg.Amount.Validate()

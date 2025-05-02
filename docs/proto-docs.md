@@ -7210,7 +7210,7 @@ MsgMintRequest defines the Msg/Mint request type
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `recipient` | [string](#string) | optional |  |
+| `recipient` | [string](#string) |  | recipient is the optional address of the account to receive the newly minted funds. |
 
 
 

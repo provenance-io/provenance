@@ -177,14 +177,14 @@ with the given supply amount and denomination provided in the coin argument
 // GetCmdMint implements the mint additional supply for marker command.
 func GetCmdMint() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "mint [coin] [recipient]",
+		Use:     "mint <coin> [recipient]",
 		Aliases: []string{"m"},
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.RangeArgs(1, 2),
 		Short:   "Mint coins against the marker",
 		Long: strings.TrimSpace(`Mints coins of the marker's denomination and places them
 in the marker's account under escrow.  Caller must possess the mint permission and 
 marker must be in the active status.`),
-		Example: fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin recipient_address --from mykey`, version.AppName),
+		Example: fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

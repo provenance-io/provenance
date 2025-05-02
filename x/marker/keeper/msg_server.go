@@ -270,10 +270,10 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if r, ok := msg.XRecipient.(*types.MsgMintRequest_Recipient); ok && r.Recipient != "" {
-		recipient, err := sdk.AccAddressFromBech32(r.Recipient)
+	if len(msg.Recipient) > 0 {
+		recipient, err := sdk.AccAddressFromBech32(msg.Recipient)
 		if err != nil {
-			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient: %s", r.Recipient)
+			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient: %s", msg.Recipient)
 		}
 		if recipient.Empty() {
 			return nil, sdkerrors.ErrInvalidAddress.Wrap("recipient address is zero or empty")
