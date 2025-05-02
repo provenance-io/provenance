@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -12,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
@@ -51,7 +53,10 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			removeInactiveValidatorDelegations(ctx, app)
-			if err = convertAcctsToVesting(ctx, app); err != nil {
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = convertAcctsToVesting(ctx, app, getAcctsToConvertToVesting()); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -199,6 +204,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 }
 
 // pruneIBCExpiredConsensusStates prunes expired consensus states for IBC.
+// This should be applied in most upgrades.
 func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Pruning expired consensus states for IBC.")
 	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
@@ -210,44 +216,84 @@ func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	return nil
 }
 
+// convertFinishedVestingAccountsToBase will turn completed vesting accounts into regular BaseAccounts.
+// This should be applied in most upgrades.
+func convertFinishedVestingAccountsToBase(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Converting completed vesting accounts into base accounts.")
+	blockTime := ctx.BlockTime().UTC().Unix()
+	var updatedAccts []sdk.AccountI
+	err := app.AccountKeeper.Accounts.Walk(ctx, nil, func(_ sdk.AccAddress, acctI sdk.AccountI) (stop bool, err error) {
+		var baseVestAcct *vesting.BaseVestingAccount
+		switch acct := acctI.(type) {
+		case *vesting.ContinuousVestingAccount:
+			baseVestAcct = acct.BaseVestingAccount
+		case *vesting.DelayedVestingAccount:
+			baseVestAcct = acct.BaseVestingAccount
+		case *vesting.PeriodicVestingAccount:
+			baseVestAcct = acct.BaseVestingAccount
+		default:
+			// We don't care about permanent locked because they never end.
+			// Nothing should ever be a *vesting.BaseVestingAccount, so we ignore those too.
+			// All other accounts aren't a vesting account, so there's nothing to do with them here.
+			return false, nil
+		}
+
+		if baseVestAcct.EndTime <= blockTime {
+			updatedAccts = append(updatedAccts, baseVestAcct.BaseAccount)
+		}
+		return false, nil
+	})
+	if err != nil {
+		return fmt.Errorf("error walking accounts: %w", err)
+	}
+
+	if len(updatedAccts) == 0 {
+		ctx.Logger().Info("No completed vesting accounts found.")
+	} else {
+		ctx.Logger().Info(fmt.Sprintf("Found %d completed vesting accounts. Updating them now.", len(updatedAccts)))
+		for _, acct := range updatedAccts {
+			app.AccountKeeper.SetAccount(ctx, acct)
+		}
+	}
+
+	ctx.Logger().Info("Done converting completed vesting accounts into base accounts.")
+	return nil
+}
+
 // Create a use of the standard helpers so that the linter neither complains about it not being used,
 // nor complains about a nolint:unused directive that isn't needed because the function is used.
 var (
 	_ = runModuleMigrations
 	_ = removeInactiveValidatorDelegations
 	_ = pruneIBCExpiredConsensusStates
+	_ = convertFinishedVestingAccountsToBase
 )
 
-// convertAcctsToVesting will convert a small set of accounts to vesting accounts.
-func convertAcctsToVesting(ctx sdk.Context, app *App) error {
-	addrs := getAcctsToConvertToVesting()
-	ctx.Logger().Info(fmt.Sprintf("Converting %d specific accounts to vesting accounts.", len(addrs)))
-	var errs []error
-	for _, addr := range addrs {
-		acctI := app.AccountKeeper.GetAccount(ctx, addr)
-		if acctI == nil {
-			errs = append(errs, fmt.Errorf("account %s does not exist", addr.String()))
-			continue
-		}
+// nhashDenom is the denom for nhash.
+// Part of the yellow upgrade.
+const nhashDenom = "nhash"
 
-		// TODO[yellow]: Finish converting the accounts.
-		switch acct := acctI.(type) {
-		case *authtypes.BaseAccount:
-		case *authtypes.ModuleAccount:
-		case *vestingtypes.BaseVestingAccount:
-		case *vestingtypes.ContinuousVestingAccount:
-		case *vestingtypes.DelayedVestingAccount:
-		case *vestingtypes.PeriodicVestingAccount:
-		case *vestingtypes.PermanentLockedAccount:
-		case *exchange.MarketAccount:
-		case *markertypes.MarkerAccount:
-		case *icatypes.InterchainAccount:
-		default:
-			return fmt.Errorf("account %s has unexpected type: %T", addr.String(), acct)
+// convertAcctsToVesting will convert the provided accounts to vesting accounts.
+// Part of the yellow upgrade.
+func convertAcctsToVesting(ctx sdk.Context, app *App, addrs []sdk.AccAddress) error {
+	ctx.Logger().Info(fmt.Sprintf("Converting %d specific accounts to vesting accounts.", len(addrs)))
+
+	blockTime := ctx.BlockTime().UTC()
+	startTime := blockTime.Unix()
+	endTime := addMonths(blockTime, 48)
+
+	totalNowLocked := sdkmath.ZeroInt()
+
+	for _, addr := range addrs {
+		toVest, err := convertAcctToVesting(ctx, app, addr)
+		if err != nil {
+			return err
 		}
+		totalNowLocked = totalNowLocked.Add(toVest)
 	}
-	ctx.Logger().Info(fmt.Sprintf("Done converting %d specific accounts to vesting accounts.", len(addrs)))
-	return errors.Join(errs...)
+
+	ctx.Logger().Info(fmt.Sprintf("Done converting %d specific accounts to vesting accounts with a total of %snhash.", len(addrs), totalNowLocked))
+	return nil
 }
 
 // getAcctsToConvertToVesting returns the AccAddress of each account that should be converted to a vesting account.
@@ -266,4 +312,83 @@ func getAcctsToConvertToVesting() []sdk.AccAddress {
 	}
 
 	return rv
+}
+
+func convertAcctToVesting(ctx sdk.Context, app *App, addr sdk.AccAddress) (sdkmath.Int, error) {
+	logger := ctx.Logger().With("account", addr.String())
+	blockTime := ctx.BlockTime().UTC()
+	startTime := blockTime.Unix()
+	endTime := addMonths(blockTime, 48)
+
+	acctI := app.AccountKeeper.GetAccount(ctx, addr)
+	if acctI == nil {
+		logger.Error("Skipping account.", "reason", "does not exist")
+		return sdkmath.ZeroInt(), nil
+	}
+
+	baseAcct, ok := acctI.(*authtypes.BaseAccount)
+	if !ok {
+		logger.Error("Skipping account.", "reason", fmt.Sprintf("has unexpected type %T", acctI))
+		return sdkmath.ZeroInt(), nil
+	}
+
+	if app.WasmKeeper.HasContractInfo(ctx, addr) {
+		// Don't do anything to wasm accounts because it might break the contract.
+		logger.Error("Skipping account.", "reason", "is a wasm account")
+		return sdkmath.ZeroInt(), nil
+	}
+
+	// TODO[yellow]: Release all commitments. Need to identify all market ids (IterateKnownMarketIDs), then loop through them calling GetCommitmentAmount.
+
+	// TODO[yellow]: Cancel all orders. CancelOrder, admin := app.ExchangeKeeper.GetAuthority()
+
+	// TODO[yellow]: Cancel all payments. I'll need to write a keeper function to get these, then delete them.
+
+	nhashBal := app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
+	// TODO[yellow]: Only skip if toVest is not positive. I.e. maybe need to create vesting accounts when all their hash is delegated.
+	if !nhashBal.IsPositive() {
+		logger.Error("Skipping account.", "reason", fmt.Sprintf("has non-positive nhash balance %s", nhashBal))
+		return sdkmath.ZeroInt(), nil
+	}
+
+	delegated, err := app.StakingKeeper.GetDelegatorBonded(ctx, addr)
+	if err != nil {
+		logger.Error("Skipping account.", "reason", fmt.Errorf("could not look up delegated amount: %w", err))
+		return sdkmath.ZeroInt(), nil
+	}
+
+	toVest := nhashBal.AddAmount(delegated)
+
+	newAcct, err := vesting.NewContinuousVestingAccount(baseAcct, sdk.Coins{toVest}, startTime, endTime)
+	if err != nil {
+		logger.Error("Skipping account.", "reason", fmt.Errorf("could not create new continuous vesting account: %w", err))
+		return sdkmath.ZeroInt(), nil
+	}
+
+	if delegated.IsPositive() {
+		delCoin := sdk.NewCoin(nhashDenom, delegated)
+		// TODO[yellow]: Figure out which option we should use for delegated nhash.
+		// Option 1: Included delegated funds in the amount to vest.
+		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(delCoin)
+		// Option 2: Do NOT include delegated funds in the amount to vest (just use the amount currently in the account).
+		// newAcct.BaseVestingAccount.DelegatedFree = sdk.NewCoins(delCoin)
+		// If doing option 2, adjust toVest above.
+	}
+
+	// TODO[yellow]: Store the update account.
+	return toVest.Amount, nil
+}
+
+// addMonths will return an epoch that is the given months after the start time.
+// Part of the tokenomics2 upgrade.
+func addMonths(start time.Time, months int) int64 {
+	newDay := start.Day()
+	newMonth := start.Month()
+	newYear := start.Year()
+	if months > 12 {
+		newYear += months / 12
+		months %= 12
+	}
+	newMonth += time.Month(months)
+	return time.Date(newYear, newMonth, newDay+1, 0, 0, 0, 0, start.Location()).Unix()
 }
