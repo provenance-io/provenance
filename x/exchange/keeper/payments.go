@@ -441,6 +441,21 @@ func (k Keeper) IteratePayments(ctx sdk.Context, cb func(payment *exchange.Payme
 	})
 }
 
+// IteratePaymentsForSource iterates over the payments for a given source.
+// The callback takes in the payment and should return whether to stop iterating.
+func (k Keeper) IteratePaymentsForSource(ctx sdk.Context, source sdk.AccAddress, cb func(payment *exchange.Payment) bool) {
+	if len(source) == 0 {
+		return
+	}
+	k.iterate(ctx, GetKeyPrefixPaymentsForSource(source), func(_, value []byte) bool {
+		payment, err := k.parsePaymentStoreValue(value)
+		if err != nil || payment == nil {
+			return false
+		}
+		return cb(payment)
+	})
+}
+
 // CalculatePaymentFees calculates the fees required for the provided payment.
 func (k Keeper) CalculatePaymentFees(ctx sdk.Context, payment *exchange.Payment) *exchange.QueryPaymentFeeCalcResponse {
 	resp := &exchange.QueryPaymentFeeCalcResponse{}
