@@ -196,6 +196,11 @@ func (s *TestSuite) eventCommitmentReleased(addr sdk.AccAddress, marketID uint32
 	return s.untypeEvent(exchange.NewEventCommitmentReleased(addr.String(), marketID, s.coins(amount), eventTag))
 }
 
+// eventCommitmentTransferred creates a new event emitted when a commitment is transferred.
+func (s *TestSuite) eventCommitmentTransferred(addr sdk.AccAddress, amount string, currentMarketID, newMarketID uint32, eventTag string) sdk.Event {
+	return s.untypeEvent(exchange.NewEventCommitmentTransferred(addr.String(), s.coins(amount), currentMarketID, newMarketID, eventTag))
+}
+
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
@@ -3621,6 +3626,351 @@ func (s *TestSuite) TestMsgServer_MarketReleaseCommitments() {
 					expBal:   s.coins("100apple,200cherry"),
 					expHold:  []sdk.Coin{s.coin("90apple"), s.zeroCoin("cherry")},
 					expSpend: s.coins("10apple,200cherry"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
+	testDef := msgServerTestDef[exchange.MsgMarketTransferCommitmentsRequest, exchange.MsgMarketTransferCommitmentsResponse, []expBalances]{
+		endpointName: "MarketTransferCommitments",
+		endpoint:     keeper.NewMsgServer(s.k).MarketTransferCommitments,
+		expResp:      &exchange.MsgMarketTransferCommitmentsResponse{},
+		followup: func(_ *exchange.MsgMarketTransferCommitmentsRequest, expBals []expBalances) {
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketTransferCommitmentsRequest, []expBalances]{
+		{
+			name: "admin does not have permission to transfer",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanAllBut(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple")
+				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("50apple"), CurrentMarketId: 1, NewMarketId: 2,
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr1.String() + " does not have permission to transfer commitments for market 1"},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple"),
+					expHold:  s.coins("50apple"),
+					expSpend: s.coins("50apple"),
+				},
+			},
+		},
+		{
+			name: "current market does not accept commitments",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple")
+				s.requireSetCommitmentAmount(1, s.addr2, "100apple")
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("100apple"), CurrentMarketId: 1, NewMarketId: 2,
+			},
+			expInErr: []string{invReqErr, "market 1 is not accepting commitments"},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple"),
+					expHold:  s.coins("100apple"),
+					expSpend: s.coins("100apple"),
+				},
+			},
+		},
+		{
+			name: "new market does not exists",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "100apple")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     5,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("40apple"), CurrentMarketId: 1, NewMarketId: 2,
+			},
+			expInErr: []string{invReqErr, "market 2 does not exist"},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple"),
+					expHold:  s.coins("40apple"),
+					expSpend: s.coins("40apple"),
+				},
+			},
+		},
+		{
+			name: "new market not accpeting commitments",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "100apple")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     5,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("40apple"), CurrentMarketId: 1, NewMarketId: 5,
+			},
+			expInErr: []string{invReqErr, "market 5 is not accepting commitments"},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple"),
+					expHold:  s.coins("40apple"),
+					expSpend: s.coins("40apple"),
+				},
+			},
+		},
+		{
+			name: "insufficent fund to transfer",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "100apple")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             5,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("50apple"), CurrentMarketId: 1, NewMarketId: 5,
+			},
+			expInErr: []string{invReqErr, fmt.Sprintf(
+				"commitment amount to transfer %q is more than currently committed amount %q for %s in market %d: invalid request",
+				"50apple", "40apple", s.addr2.String(), 1)},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple"),
+					expHold:  s.coins("40apple"),
+					expSpend: s.coins("40apple"),
+				},
+			},
+		},
+		{
+			name: "negative amount rejected",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "100apple")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             5,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-30)}}, CurrentMarketId: 1, NewMarketId: 5,
+			},
+			expInErr: []string{invReqErr, fmt.Sprintf("cannot transfer negative commitment amount %q for %s in market %d", "-30apple", s.addr2, 1)},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple"),
+					expHold:  s.coins("40apple"),
+					expSpend: s.coins("40apple"),
+				},
+			},
+		},
+		{
+			name: "partial transfer with same denom",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "500cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "500cherry")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             2,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("100cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "partial transfer with same denom",
+			},
+			expEvents: sdk.Events{
+				s.eventCommitmentTransferred(s.addr2, "100cherry", 1, 2, "partial transfer with same denom"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("500cherry"),
+					expHold:  s.coins("500cherry"),
+					expSpend: s.coins("0cherry"),
+				},
+			},
+		},
+		{
+			name: "full transfer with same denom",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "500cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "500cherry")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             2,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("500cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "full transfer with same denom",
+			},
+			expEvents: sdk.Events{
+				s.eventCommitmentTransferred(s.addr2, "500cherry", 1, 2, "full transfer with same denom"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("500cherry"),
+					expHold:  s.coins("500cherry"),
+					expSpend: s.coins("0cherry"),
+				},
+			},
+		},
+		{
+			name: "partial transfer with multiple denom",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "500cherry,100apple")
+				s.requireSetCommitmentAmount(1, s.addr2, "500cherry,100apple")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             2,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("10cherry,29apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "fund transferred from current market to new market",
+			},
+			expEvents: sdk.Events{
+				s.eventCommitmentTransferred(s.addr2, "10cherry,29apple", 1, 2, "fund transferred from current market to new market"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("500cherry,100apple"),
+					expHold:  s.coins("500cherry,100apple"),
+					expSpend: s.coins("0cherry,0apple"),
+				},
+			},
+		},
+		{
+			name: "full transfer with multiple denom",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "500cherry,100apple")
+				s.requireSetCommitmentAmount(1, s.addr2, "500cherry,100apple")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             2,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("500cherry,100apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "fund transferred from current market to new market",
+			},
+			expEvents: sdk.Events{
+				s.eventCommitmentTransferred(s.addr2, "500cherry,100apple", 1, 2, "fund transferred from current market to new market"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("500cherry,100apple"),
+					expHold:  s.coins("500cherry,100apple"),
+					expSpend: s.coins("0cherry,0apple"),
+				},
+			},
+		},
+		{
+			name: "authority from admin",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "500cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "500cherry")
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             1,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             2,
+					AccessGrants:         []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+					AcceptingCommitments: true,
+				})
+
+			},
+			msg: exchange.MsgMarketTransferCommitmentsRequest{
+				Admin: s.k.GetAuthority(), Account: s.addr2.String(), Amount: s.coins("500cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "authadmin",
+			},
+			expEvents: sdk.Events{
+				s.eventCommitmentTransferred(s.addr2, "500cherry", 1, 2, "authadmin"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("500cherry"),
+					expHold:  s.coins("500cherry"),
+					expSpend: s.coins("0cherry"),
 				},
 			},
 		},

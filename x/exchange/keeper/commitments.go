@@ -419,10 +419,6 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 
 // TransferCommitments transfers committed funds from one market to another.
 func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentsRequest) error {
-	admin, err := sdk.AccAddressFromBech32(req.Admin)
-	if err != nil {
-		return fmt.Errorf("invalid admin %q: %w", admin, err)
-	}
 	account, err := sdk.AccAddressFromBech32(req.Account)
 	if err != nil {
 		return fmt.Errorf("invalid account %q: %w", account, err)
@@ -430,35 +426,41 @@ func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTran
 	if k.bankKeeper.BlockedAddr(sdk.AccAddress(account)) {
 		return fmt.Errorf("%s is not allowed to receive funds", account)
 	}
-	//validate the current_market_id exists
+	if req.Amount.IsAnyNegative() {
+		return fmt.Errorf("cannot transfer negative commitment amount %q for %s in market %d", req.Amount, req.Account, req.CurrentMarketId)
+	}
+
 	store := k.getStore(ctx)
-	if err := validateMarketExists(store, req.CurrentMarketId); err != nil {
-		return fmt.Errorf("%d current market id not exists", req.CurrentMarketId)
+	if err := validateMarketIsAcceptingCommitments(store, req.CurrentMarketId); err != nil {
+		return fmt.Errorf("invalid market %q: %w", req.CurrentMarketId, err)
 	}
-	//validate new market exists and is accepting commitments
 	if err := validateMarketIsAcceptingCommitments(store, req.NewMarketId); err != nil {
-		return fmt.Errorf("%d new market id not exists", req.NewMarketId)
+		return fmt.Errorf("invalid market %q: %w", req.NewMarketId, err)
 	}
-	//validate the user can create commitment in the market
-	if err := k.validateUserCanCreateCommitment(ctx, req.NewMarketId, account); err != nil {
-		return err
+	if err := k.validateUserCanCreateCommitment(ctx, req.CurrentMarketId, account); err != nil {
+		return fmt.Errorf("invalid user permission %q: %w", req.CurrentMarketId, err)
 	}
+
 	currentAmount := getCommitmentAmount(store, req.CurrentMarketId, account)
 	if currentAmount.IsZero() {
 		return fmt.Errorf("account %s does not have any funds committed to market %d", account, req.CurrentMarketId)
 	}
 	newAmt, isNeg := currentAmount.SafeSub(req.Amount...)
 	if isNeg {
-		return fmt.Errorf("commitment amount to release %q is more than currently committed amount %q for %s in market %d",
+		return fmt.Errorf("commitment amount to transfer %q is more than currently committed amount %q for %s in market %d",
 			req.Amount, currentAmount, account, req.CurrentMarketId)
 	}
-	//need to implement authorize 
+	//subtract requested amount and store the new balance for the current market
 	setCommitmentAmount(store, req.CurrentMarketId, sdk.AccAddress(req.Account), newAmt)
-	new_market := getCommitmentAmount(store, req.NewMarketId, account)
-	newToCommitment := new_market.Add(req.Amount...)
-	setCommitmentAmount(store, req.NewMarketId, sdk.AccAddress(req.Account), newToCommitment)
+	k.logInfof(ctx, "After subtraction: address=%s, newCurrentAmount=%s", account.String(), newAmt.String())
 
-	k.emitEvent(ctx, exchange.NewEventCommitmentTransferd(req.Account, req.Amount, req.CurrentMarketId, req.NewMarketId, req.EventTag))
+	newMarketAmt := getCommitmentAmount(store, req.NewMarketId, account)
+	newCommitment := newMarketAmt.Add(req.Amount...)
+	//update the new market for given account
+	addCommitmentAmount(store, req.NewMarketId, account, newCommitment)
+
+	k.logInfof(ctx, "Updated new market balance: address=%s, newMarketAmount=%s", account.String(), newCommitment.String())
+	k.emitEvent(ctx, exchange.NewEventCommitmentTransferred(req.Account, req.Amount, req.CurrentMarketId, req.NewMarketId, req.EventTag))
 	return nil
 }
 
