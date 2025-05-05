@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -15,11 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/provenance-io/provenance/x/exchange"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -278,21 +275,14 @@ const nhashDenom = "nhash"
 func convertAcctsToVesting(ctx sdk.Context, app *App, addrs []sdk.AccAddress) error {
 	ctx.Logger().Info(fmt.Sprintf("Converting %d specific accounts to vesting accounts.", len(addrs)))
 
-	blockTime := ctx.BlockTime().UTC()
-	startTime := blockTime.Unix()
-	endTime := addMonths(blockTime, 48)
-
-	totalNowLocked := sdkmath.ZeroInt()
-
+	converter := newAcctConverter(ctx, app)
 	for _, addr := range addrs {
-		toVest, err := convertAcctToVesting(ctx, app, addr)
-		if err != nil {
-			return err
-		}
-		totalNowLocked = totalNowLocked.Add(toVest)
+		// If there's an error, it's logged, but we want to keep moving, so we don't care about it here.
+		_ = converter.convert(ctx, addr)
 	}
 
-	ctx.Logger().Info(fmt.Sprintf("Done converting %d specific accounts to vesting accounts with a total of %snhash.", len(addrs), totalNowLocked))
+	// TODO[yellow]: Add stats to logs.
+	ctx.Logger().Info(fmt.Sprintf("Done converting %d specific accounts to vesting accounts.", len(addrs)))
 	return nil
 }
 
@@ -314,66 +304,110 @@ func getAcctsToConvertToVesting() []sdk.AccAddress {
 	return rv
 }
 
-func convertAcctToVesting(ctx sdk.Context, app *App, addr sdk.AccAddress) (sdkmath.Int, error) {
-	logger := ctx.Logger().With("account", addr.String())
-	blockTime := ctx.BlockTime().UTC()
-	startTime := blockTime.Unix()
-	endTime := addMonths(blockTime, 48)
+// acctConverter is a helper struct used to facilitate the conversion of accounts to vesting accounts.
+type acctConverter struct {
+	app *App
 
-	acctI := app.AccountKeeper.GetAccount(ctx, addr)
+	blockTime time.Time
+	startTime int64
+	endTime   int64
+	marketIDs []uint32
+	authority string
+
+	accountsAttempted  int
+	accountsConverted  int
+	undelegatedVesting sdkmath.Int
+	delegatedVesting   sdkmath.Int
+	totalVesting       sdkmath.Int
+}
+
+func newAcctConverter(ctx sdk.Context, app *App) *acctConverter {
+	rv := &acctConverter{
+		app:              app,
+		blockTime:        ctx.BlockTime().UTC(),
+		authority:        app.ExchangeKeeper.GetAuthority(),
+		delegatedVesting: sdkmath.ZeroInt(),
+		totalVesting:     sdkmath.ZeroInt(),
+	}
+	rv.startTime = rv.blockTime.Unix()
+	rv.endTime = addMonths(rv.blockTime, 48)
+
+	app.ExchangeKeeper.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
+		rv.marketIDs = append(rv.marketIDs, marketID)
+		return false
+	})
+
+	return rv
+}
+
+// convert will convert the provided account to a vesting account.
+func (c *acctConverter) convert(sdkCtx sdk.Context, addr sdk.AccAddress) (err error) {
+	logger := sdkCtx.Logger().With("account", addr.String())
+	defer func() {
+		if err != nil {
+			logger.Error("Skipping account.", "reason", err)
+		} else {
+			logger.Debug("Account converted.")
+		}
+	}()
+
+	c.accountsAttempted++
+	ctx, writeCache := sdkCtx.CacheContext()
+
+	acctI := c.app.AccountKeeper.GetAccount(ctx, addr)
 	if acctI == nil {
-		logger.Error("Skipping account.", "reason", "does not exist")
-		return sdkmath.ZeroInt(), nil
+		return fmt.Errorf("account does not exist")
 	}
 
 	baseAcct, ok := acctI.(*authtypes.BaseAccount)
 	if !ok {
-		logger.Error("Skipping account.", "reason", fmt.Sprintf("has unexpected type %T", acctI))
-		return sdkmath.ZeroInt(), nil
+		return fmt.Errorf("account has unexpected type %T", acctI)
 	}
 
-	if app.WasmKeeper.HasContractInfo(ctx, addr) {
+	if c.app.WasmKeeper.HasContractInfo(ctx, addr) {
 		// Don't do anything to wasm accounts because it might break the contract.
-		logger.Error("Skipping account.", "reason", "is a wasm account")
-		return sdkmath.ZeroInt(), nil
+		return fmt.Errorf("account is a wasm account")
 	}
 
-	// TODO[yellow]: Release all commitments. Need to identify all market ids (IterateKnownMarketIDs), then loop through them calling GetCommitmentAmount.
+	if err = c.cancelExchangeHolds(ctx, addr); err != nil {
+		return fmt.Errorf("could not cancel exchange holds: %w", err)
+	}
 
-	// TODO[yellow]: Cancel all orders. CancelOrder, admin := app.ExchangeKeeper.GetAuthority()
+	locked := c.app.BankKeeper.LockedCoins(ctx, addr)
+	hasLockedHash, lockedHash := locked.Find(nhashDenom)
+	if hasLockedHash && lockedHash.IsPositive() {
+		return fmt.Errorf("account has %s on hold", lockedHash)
+	}
 
-	// TODO[yellow]: Cancel all payments. I'll need to write a keeper function to get these, then delete them.
-
-	delegated, err := app.StakingKeeper.GetDelegatorBonded(ctx, addr)
+	delegated, err := c.app.StakingKeeper.GetDelegatorBonded(ctx, addr)
 	if err != nil {
-		logger.Error("Skipping account.", "reason", fmt.Errorf("could not look up delegated amount: %w", err))
-		return sdkmath.ZeroInt(), nil
+		return fmt.Errorf("could not look up delegated amount: %w", err)
 	}
 
-	nhashBal := app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
+	nhashBal := c.app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
 	toVest := nhashBal.AddAmount(delegated)
-	if !toVest.IsPositive() {
-		logger.Error("Skipping account.", "reason", fmt.Sprintf("has non-positive nhash balance %s", nhashBal))
-		return sdkmath.ZeroInt(), nil
+	if !toVest.IsPositive() || nhashBal.IsNegative() || delegated.IsNegative() {
+		return fmt.Errorf("account has invalid nhash amount %s = %s (balance) + %snhash (delegated)", toVest, nhashBal, delegated)
 	}
 
-	newAcct, err := vesting.NewContinuousVestingAccount(baseAcct, sdk.Coins{toVest}, startTime, endTime)
+	newAcct, err := vesting.NewContinuousVestingAccount(baseAcct, sdk.Coins{toVest}, c.startTime, c.endTime)
 	if err != nil {
-		logger.Error("Skipping account.", "reason", fmt.Errorf("could not create new continuous vesting account: %w", err))
-		return sdkmath.ZeroInt(), nil
+		return fmt.Errorf("could not create new continuous vesting account: %w", err)
 	}
 
 	if delegated.IsPositive() {
-		// TODO[yellow]: Figure out which option we should use for delegated nhash.
-		// Option 1: Included delegated funds in the amount to vest.
 		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(nhashDenom, delegated))
-		// Option 2: Do NOT include delegated funds in the amount to vest (just use the amount currently in the account).
-		// newAcct.BaseVestingAccount.DelegatedFree = sdk.NewCoins(sdk.NewCoin(nhashDenom, delegated))
-		// If doing option 2, get rid of toVest above and just use nhashBal.
 	}
 
-	// TODO[yellow]: Store the update account.
-	return toVest.Amount, nil
+	c.app.AccountKeeper.SetAccount(ctx, newAcct)
+	writeCache()
+
+	c.accountsConverted++
+	c.undelegatedVesting = c.undelegatedVesting.Add(nhashBal.Amount)
+	c.delegatedVesting = c.delegatedVesting.Add(delegated)
+	c.totalVesting = c.totalVesting.Add(toVest.Amount)
+
+	return nil
 }
 
 // addMonths will return an epoch that is the given months after the start time.
@@ -388,4 +422,56 @@ func addMonths(start time.Time, months int) int64 {
 	}
 	newMonth += time.Month(months)
 	return time.Date(newYear, newMonth, newDay+1, 0, 0, 0, 0, start.Location()).Unix()
+}
+
+// cancelExchangeHolds cancels everything in the exchange module that has a hold on some nhash for the given address.
+func (c *acctConverter) cancelExchangeHolds(ctx sdk.Context, addr sdk.AccAddress) error {
+	// Release any commitments.
+	for _, marketID := range c.marketIDs {
+		committed := c.app.ExchangeKeeper.GetCommitmentAmount(ctx, marketID, addr)
+		hasHash, nhashCoin := committed.Find(nhashDenom)
+		if !hasHash || !nhashCoin.IsPositive() {
+			continue
+		}
+		err := c.app.ExchangeKeeper.ReleaseCommitment(ctx, marketID, addr, sdk.Coins{nhashCoin}, "yellow upgrade")
+		if err != nil {
+			return fmt.Errorf("error releasing commitment of %s to market %d", nhashCoin, marketID)
+		}
+	}
+
+	// Cancel all orders.
+	var orderIDs []uint64
+	c.app.ExchangeKeeper.IterateAddressOrders(ctx, addr, func(orderID uint64, _ byte) bool {
+		order, err := c.app.ExchangeKeeper.GetOrder(ctx, orderID)
+		if err != nil && order == nil {
+			return false
+		}
+		hasHash, nhashCoin := order.GetHoldAmount().Find(nhashDenom)
+		if hasHash && nhashCoin.IsPositive() {
+			orderIDs = append(orderIDs, orderID)
+		}
+		return false
+	})
+	for _, orderID := range orderIDs {
+		err := c.app.ExchangeKeeper.CancelOrder(ctx, orderID, c.authority)
+		if err != nil {
+			return fmt.Errorf("error canceling order %d: %w", orderID, err)
+		}
+	}
+
+	// Cancel their payments.
+	var externalIDs []string
+	c.app.ExchangeKeeper.IteratePaymentsForSource(ctx, addr, func(payment *exchange.Payment) bool {
+		hasHash, nhashCoin := payment.SourceAmount.Find(nhashDenom)
+		if hasHash && nhashCoin.IsPositive() {
+			externalIDs = append(externalIDs, payment.ExternalId)
+		}
+		return false
+	})
+	if len(externalIDs) > 0 {
+		if err := c.app.ExchangeKeeper.CancelPayments(ctx, addr, externalIDs); err != nil {
+			return fmt.Errorf("error canceling payments: %w", err)
+		}
+	}
+	return nil
 }
