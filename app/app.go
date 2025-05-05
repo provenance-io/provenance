@@ -610,10 +610,6 @@ func New(
 		app.BankKeeper,
 	)
 
-	app.AssetKeeper = assetkeeper.NewKeeper(
-		appCodec, keys[assettypes.StoreKey], app.NFTKeeper, app.BaseApp.MsgServiceRouter(),
-	)
-
 	app.HoldKeeper = holdkeeper.NewKeeper(
 		appCodec, keys[hold.StoreKey], app.AccountKeeper, app.BankKeeper,
 	)
@@ -621,6 +617,10 @@ func New(
 	app.RegistryKeeper = registrykeeper.NewKeeper(appCodec, keys[registry.StoreKey], runtime.NewKVStoreService(keys[registry.StoreKey]), app.NFTKeeper)
 
 	app.LedgerKeeper = ledgerkeeper.NewKeeper(appCodec, keys[ledger.StoreKey], runtime.NewKVStoreService(keys[ledger.StoreKey]), app.BankKeeper, app.NFTKeeper, app.MetadataKeeper, app.RegistryKeeper)
+
+	app.AssetKeeper = assetkeeper.NewKeeper(
+		appCodec, keys[assettypes.StoreKey], app.NFTKeeper, app.BaseApp.MsgServiceRouter(), app.LedgerKeeper,
+	)
 
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
