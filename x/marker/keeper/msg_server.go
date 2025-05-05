@@ -275,9 +275,6 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient: %s", msg.Recipient)
 		}
-		if recipient.Empty() {
-			return nil, sdkerrors.ErrInvalidAddress.Wrap("recipient address is zero or empty")
-		}
 		if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
 			ctx.Logger().Error("unable to withdraw coins", "err", err)
 			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
