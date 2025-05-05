@@ -31,7 +31,7 @@ jobs:
         if: env.GIT_DIFF
         with:
           go-version-file: 'go.mod'
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v8
         if: env.GIT_DIFF
         with:
           # If you change this version, be sure to also change it in contrib/devtools/Makefile.
