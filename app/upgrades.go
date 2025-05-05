@@ -344,20 +344,18 @@ func convertAcctToVesting(ctx sdk.Context, app *App, addr sdk.AccAddress) (sdkma
 
 	// TODO[yellow]: Cancel all payments. I'll need to write a keeper function to get these, then delete them.
 
-	nhashBal := app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
-	// TODO[yellow]: Only skip if toVest is not positive. I.e. maybe need to create vesting accounts when all their hash is delegated.
-	if !nhashBal.IsPositive() {
-		logger.Error("Skipping account.", "reason", fmt.Sprintf("has non-positive nhash balance %s", nhashBal))
-		return sdkmath.ZeroInt(), nil
-	}
-
 	delegated, err := app.StakingKeeper.GetDelegatorBonded(ctx, addr)
 	if err != nil {
 		logger.Error("Skipping account.", "reason", fmt.Errorf("could not look up delegated amount: %w", err))
 		return sdkmath.ZeroInt(), nil
 	}
 
+	nhashBal := app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
 	toVest := nhashBal.AddAmount(delegated)
+	if !toVest.IsPositive() {
+		logger.Error("Skipping account.", "reason", fmt.Sprintf("has non-positive nhash balance %s", nhashBal))
+		return sdkmath.ZeroInt(), nil
+	}
 
 	newAcct, err := vesting.NewContinuousVestingAccount(baseAcct, sdk.Coins{toVest}, startTime, endTime)
 	if err != nil {
@@ -366,13 +364,12 @@ func convertAcctToVesting(ctx sdk.Context, app *App, addr sdk.AccAddress) (sdkma
 	}
 
 	if delegated.IsPositive() {
-		delCoin := sdk.NewCoin(nhashDenom, delegated)
 		// TODO[yellow]: Figure out which option we should use for delegated nhash.
 		// Option 1: Included delegated funds in the amount to vest.
-		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(delCoin)
+		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(nhashDenom, delegated))
 		// Option 2: Do NOT include delegated funds in the amount to vest (just use the amount currently in the account).
-		// newAcct.BaseVestingAccount.DelegatedFree = sdk.NewCoins(delCoin)
-		// If doing option 2, adjust toVest above.
+		// newAcct.BaseVestingAccount.DelegatedFree = sdk.NewCoins(sdk.NewCoin(nhashDenom, delegated))
+		// If doing option 2, get rid of toVest above and just use nhashBal.
 	}
 
 	// TODO[yellow]: Store the update account.
