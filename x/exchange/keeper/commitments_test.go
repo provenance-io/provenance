@@ -1025,6 +1025,291 @@ func (s *TestSuite) TestKeeper_ReleaseCommitments() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_TransferCommitments() {
+	tests := []struct {
+		name            string
+		setup           func()
+		holdKeeper      *MockHoldKeeper
+		req             *exchange.MsgMarketTransferCommitmentsRequest
+		expErr          string
+		expEvents       sdk.Events
+		expRelHoldCalls []*ReleaseHoldArgs
+		expAmount       sdk.Coins
+	}{
+		{
+			name: "current market does not exist",
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("100apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "current market does not exist",
+			},
+			expErr: "current market 3 is invalid: market 3 does not exist",
+		},
+		{
+			name: "invalid account",
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         "",
+				Amount:          s.coins("100apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "invalid accoun",
+			},
+			expErr: "invalid account : empty address string is not allowed",
+		},
+		{
+			name: "invalid amount",
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          nil,
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "invalid amount",
+			},
+			expErr: "account " + s.addr2.String() + " does not have any funds committed to market 3",
+		},
+		{
+			name: "negative amount",
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:       s.addr1.String(),
+				Account:     s.addr2.String(),
+				Amount:      sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-3)}},
+				NewMarketId: 5,
+				EventTag:    "source does not exist",
+			},
+			expErr: fmt.Sprintf("cannot transfer negative commitment amount \"-3apple\" for %s in market 0", s.addr2.String()),
+		},
+		{
+			name: "negative amount",
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:       s.addr1.String(),
+				Account:     s.addr2.String(),
+				Amount:      sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-3)}},
+				NewMarketId: 5,
+				EventTag:    "source does not exist",
+			},
+			expErr: fmt.Sprintf("cannot transfer negative commitment amount \"-3apple\" for %s in market 0", s.addr2.String()),
+		},
+		{
+			name: "current market is not accepting commitments",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("5apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "current market is not accepting commitments",
+			},
+			expErr: "current market 3 is invalid: market 3 is not accepting commitments",
+		},
+		{
+			name: "new market does not exist",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("5apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "new market does not exist",
+			},
+			expErr: "new market 5 is invalid: market 5 does not exist",
+		},
+		{
+			name: "new market is not accepting commitments",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
+				s.requireCreateMarket(exchange.Market{MarketId: 5, AcceptingCommitments: false})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("5apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "new market is not accepting commitments",
+			},
+			expErr:    "new market 5 is invalid: market 5 is not accepting commitments",
+			expAmount: s.coins("5apple"),
+		},
+		{
+			name: "transfer more than currently committed",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
+				s.requireCreateMarket(exchange.Market{MarketId: 5, AcceptingCommitments: true})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("20apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "transfer more than currently committed",
+			},
+			expErr:    fmt.Sprintf("commitment amount to transfer \"20apple\" is more than currently committed amount \"10apple\" for %s in market 3", s.addr2.String()),
+			expAmount: s.coins("10apple"),
+		},
+		{
+			name: "transfer more than currently committed denoms",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
+				s.requireCreateMarket(exchange.Market{MarketId: 5, AcceptingCommitments: true})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("5apple,1cheery"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "transfer more than currently committed",
+			},
+			expErr:    fmt.Sprintf("commitment amount to transfer \"5apple,1cheery\" is more than currently committed amount \"10apple\" for %s in market 3", s.addr2.String()),
+			expAmount: s.coins("5apple"),
+		},
+		{
+			name: "partially transfer committed denom",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
+				s.requireCreateMarket(exchange.Market{MarketId: 5, AcceptingCommitments: true})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("5apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "partially transfer committed denom",
+			},
+			expAmount: s.coins("5apple"),
+			expEvents: []sdk.Event{
+				s.untypeEvent(exchange.NewEventCommitmentTransferred(
+					s.addr2.String(),
+					s.coins("5apple"),
+					3,
+					5,
+					"partially transfer committed denom",
+				)),
+			},
+		},
+		{
+			name: "full transfer committed denom",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
+				s.requireCreateMarket(exchange.Market{MarketId: 5, AcceptingCommitments: true})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("10apple"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "full transfer committed denom",
+			},
+			expAmount: s.coins("10apple"),
+			expEvents: []sdk.Event{
+				s.untypeEvent(exchange.NewEventCommitmentTransferred(
+					s.addr2.String(),
+					s.coins("10apple"),
+					3,
+					5,
+					"partially transfer committed denom",
+				)),
+			},
+		},
+		{
+			name: "full transfer committed multiple denom",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
+				s.requireCreateMarket(exchange.Market{MarketId: 5, AcceptingCommitments: true})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple,20cherry"))
+			},
+			req: &exchange.MsgMarketTransferCommitmentsRequest{
+				Admin:           s.addr1.String(),
+				Account:         s.addr2.String(),
+				Amount:          s.coins("10apple,20cherry"),
+				CurrentMarketId: 3,
+				NewMarketId:     5,
+				EventTag:        "full transfer committed multiple denom",
+			},
+			expAmount: s.coins("10apple,20cherry"),
+			expEvents: []sdk.Event{
+				s.untypeEvent(exchange.NewEventCommitmentTransferred(
+					s.addr2.String(),
+					s.coins("10apple,20cherry"),
+					3,
+					5,
+					"full transfer committed multiple denom",
+				)),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expHoldCalls := HoldCalls{ReleaseHold: tc.expRelHoldCalls}
+
+			var expEvents sdk.Events
+			if tc.expEvents != nil {
+				expEvents = append(expEvents, s.untypeEvent(exchange.NewEventCommitmentTransferred(tc.req.Account, tc.req.Amount, tc.req.CurrentMarketId, tc.req.NewMarketId, tc.req.EventTag)))
+			}
+
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			if tc.holdKeeper == nil {
+				tc.holdKeeper = NewMockHoldKeeper()
+			}
+
+			kpr := s.k.WithHoldKeeper(tc.holdKeeper)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+
+			var err error
+			testFunc := func() {
+				err = kpr.TransferCommitments(ctx, tc.req)
+			}
+			s.Require().NotPanics(testFunc, "TransferCommitment(%d, %s, %q)",
+				tc.req.CurrentMarketId, s.getAddrName(sdk.AccAddress(tc.req.Account)), tc.req.Amount)
+			s.assertErrorValue(err, tc.expErr, "TransferCommitment(%d, %s, %q) error",
+				tc.req.CurrentMarketId, s.getAddrName(sdk.AccAddress(tc.req.Account)), tc.req.Amount)
+
+			s.assertHoldKeeperCalls(tc.holdKeeper, expHoldCalls, "TransferCommitment(%d, %s, %q)",
+				tc.req.CurrentMarketId, s.getAddrName(sdk.AccAddress(tc.req.Account)), tc.req.Amount)
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "events emitted during TransferCommitment(%d, %s, %q)",
+				tc.req.CurrentMarketId, s.getAddrName(sdk.AccAddress(tc.req.Account)), tc.req.Amount)
+		})
+
+	}
+}
+
 func (s *TestSuite) TestKeeper_ReleaseAllCommitmentsForMarket() {
 	type commitment struct {
 		marketID uint32
