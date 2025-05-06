@@ -441,7 +441,7 @@ func metadataScopeID(assetClassId string) (metadataTypes.MetadataAddress, bool) 
 }
 
 func (k BaseViewKeeper) GetNFTOwner(ctx context.Context, assetClassId, nftId *string) sdk.AccAddress {
-	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
+	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -454,7 +454,12 @@ func (k BaseViewKeeper) GetNFTOwner(ctx context.Context, assetClassId, nftId *st
 		for _, owner := range scope.Owners {
 			if owner.Role == metadataTypes.PartyType_PARTY_TYPE_OWNER {
 				sdkCtx.Logger().Info("scope found", "metadata_address", metadataAddress, "owner", owner.Address)
-				return sdk.AccAddress(owner.Address)
+				accAddr, err := sdk.AccAddressFromBech32(owner.Address)
+				if err != nil {
+					sdkCtx.Logger().Error("invalid owner address", "metadata_address", metadataAddress, "owner", owner.Address)
+					return nil
+				}
+				return accAddr
 			}
 			sdkCtx.Logger().Info("scope found", "metadata_address", metadataAddress, "owner", owner.Address, "role", owner.Role)
 		}

@@ -41,8 +41,14 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 	// If there isn't a registry entry we'll verify against the owner of the nftId.
 
 	// Validate that the NFT exists
-	if !k.NFTKeeper.HasNFT(ctx, ledgerKey.AssetClassId, ledgerKey.NftId) {
+	if !k.HasNFT(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId) {
 		return NewLedgerCodedError(ErrCodeNotFound, "nft")
+	}
+
+	// Validate that the authority has ownership of the NFT
+	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
+	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
+		return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
 	}
 
 	// Get all existing entries for this NFT
