@@ -23,8 +23,8 @@ var (
 	invReqCode = sdkerrors.ErrInvalidRequest.ABCICode()
 	// invSigCode is the TxResponse code for an ErrInvalidSigner.
 	invSigCode = govtypes.ErrInvalidSigner.ABCICode()
-	// insFeeCode is the TxResponse code for an ErrInsufficientFunds.
-	insFeeCode = sdkerrors.ErrInsufficientFunds.ABCICode()
+	// insFeeCode is the TxResponse code for an ErrInsufficientFee.
+	insFeeCode = sdkerrors.ErrInsufficientFee.ABCICode()
 )
 
 func (s *CmdTestSuite) TestCmdTxCreateAsk() {
@@ -523,9 +523,10 @@ func (s *CmdTestSuite) TestCmdTxMarketCommitmentSettle() {
 				return args, fups
 			},
 			args: []string{"market-settle-commitments", "--from", s.addr1.String()},
-			expInRawLog: []string{"insufficient funds",
-				"negative balance after sending coins to accounts and fee collector",
-				"remainingFees: \"10stake\", sentCoins: \"82nhash\"",
+			expInRawLog: []string{
+				"fee required: \"82nhash\"",
+				"fee provided: \"10stake\"",
+				"insufficient fee",
 			},
 			expectedCode: insFeeCode,
 		},
@@ -1141,8 +1142,11 @@ func (s *CmdTestSuite) TestCmdTxCreatePayment() {
 				"--target", s.addr2.String(), "--external-id", "also_oopsies",
 			},
 			addedFees: s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount / 2),
-			expInRawLog: []string{"insufficient funds",
-				"negative balance after sending coins to accounts and fee collector"},
+			expInRawLog: []string{
+				"fee required: \"10000000000nhash\"",
+				"fee provided: \"5000000000nhash,10stake\"",
+				"insufficient fee",
+			},
 			expectedCode: insFeeCode,
 		},
 		{

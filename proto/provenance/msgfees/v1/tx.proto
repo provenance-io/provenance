@@ -12,36 +12,12 @@ option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
 option java_package        = "io.provenance.msgfees.v1";
 option java_multiple_files = true;
 
-// Msg defines the msgfees Msg service.
-service Msg {
-  option (cosmos.msg.v1.service) = true;
-
-  // AssessCustomMsgFee endpoint executes the additional fee charges.
-  // This will only emit the event and not persist it to the keeper.  Fees are handled with the custom msg fee handlers
-  // Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
-  // for executing contracts
-  rpc AssessCustomMsgFee(MsgAssessCustomMsgFeeRequest) returns (MsgAssessCustomMsgFeeResponse);
-
-  // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
-  rpc AddMsgFeeProposal(MsgAddMsgFeeProposalRequest) returns (MsgAddMsgFeeProposalResponse);
-
-  // UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
-  rpc UpdateMsgFeeProposal(MsgUpdateMsgFeeProposalRequest) returns (MsgUpdateMsgFeeProposalResponse);
-
-  // RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
-  rpc RemoveMsgFeeProposal(MsgRemoveMsgFeeProposalRequest) returns (MsgRemoveMsgFeeProposalResponse);
-
-  // UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
-  rpc UpdateNhashPerUsdMilProposal(MsgUpdateNhashPerUsdMilProposalRequest)
-      returns (MsgUpdateNhashPerUsdMilProposalResponse);
-
-  // UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
-  rpc UpdateConversionFeeDenomProposal(MsgUpdateConversionFeeDenomProposalRequest)
-      returns (MsgUpdateConversionFeeDenomProposalResponse);
-}
-
 // MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by functionality in the flatfees module.
 message MsgAssessCustomMsgFeeRequest {
+  option deprecated                  = true;
   option (cosmos.msg.v1.signer)      = "from";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -57,7 +33,11 @@ message MsgAssessCustomMsgFeeRequest {
 message MsgAssessCustomMsgFeeResponse {}
 
 // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by functionality in the flatfees module.
 message MsgAddMsgFeeProposalRequest {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // type url of msg to add fee
@@ -83,7 +63,11 @@ message MsgAddMsgFeeProposalRequest {
 message MsgAddMsgFeeProposalResponse {}
 
 // UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by functionality in the flatfees module.
 message MsgUpdateMsgFeeProposalRequest {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // type url of msg to update fee
@@ -108,7 +92,11 @@ message MsgUpdateMsgFeeProposalRequest {
 message MsgUpdateMsgFeeProposalResponse {}
 
 // RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by functionality in the flatfees module.
 message MsgRemoveMsgFeeProposalRequest {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // type url of msg fee to remove
@@ -121,7 +109,11 @@ message MsgRemoveMsgFeeProposalRequest {
 message MsgRemoveMsgFeeProposalResponse {}
 
 // UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by functionality in the flatfees module.
 message MsgUpdateNhashPerUsdMilProposalRequest {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // nhash_per_usd_mil is number of nhash per usd mil
@@ -134,7 +126,11 @@ message MsgUpdateNhashPerUsdMilProposalRequest {
 message MsgUpdateNhashPerUsdMilProposalResponse {}
 
 // UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by functionality in the flatfees module.
 message MsgUpdateConversionFeeDenomProposalRequest {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // conversion_fee_denom is the denom that usd will be converted to

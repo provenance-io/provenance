@@ -1,8 +1,6 @@
 package antewrapper_test
 
 import (
-	"fmt"
-
 	sdkmath "cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -12,6 +10,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 const (
@@ -20,120 +19,74 @@ const (
 
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
-func (s *AnteTestSuite) TestMsgFeesDecoratorNotEnoughForMsgFee() {
+func (s *AnteTestSuite) TestFlatFeeSetupDecorator_NotEnoughForMsgFee() {
 	antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
-	ctx := s.ctx.WithChainID("test-chain")
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 99)))
+	ctx := s.ctxWithFlatFeeGasMeter().WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
-	// Example error: base fee + additional fee cannot be paid with provided fees: \"1nhash\", required: \"190500000nhash\" = \"190500000nhash\"(base-fee) + \"\"(additional-fees): insufficient fee: insufficient fee
+	// Example error: "fee required: \"100stake\", fee provided \"99stake\": insufficient fee"
 	s.Require().Error(err, "antehandler")
-	s.Assert().ErrorContains(err, `base fee + additional fee cannot be paid with provided fees: "100000stake"`)
-	s.Assert().ErrorContains(err, `required: "100100stake"`)
-	s.Assert().ErrorContains(err, `= "100000stake"(base-fee) + "100stake"(additional-fees)`)
+	s.Assert().ErrorContains(err, `fee required: "100stake"`)
+	s.Assert().ErrorContains(err, `fee provided: "99stake"`)
 	s.Assert().ErrorContains(err, "insufficient fee")
 }
 
-func (s *AnteTestSuite) TestMsgFeesDecoratorIgnoresMinGasPrice() {
+func (s *AnteTestSuite) TestFlatFeeSetupDecorator_IgnoresMinGasPrice() {
 	antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 0)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 
 	// Set gas price to 1,000,000 stake to make sure it's not being used in the handler.
 	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdkmath.LegacyNewDec(1_000_000))
 	highGasPrice := []sdk.DecCoin{stakePrice}
-	ctx := s.ctx.WithMinGasPrices(highGasPrice).WithChainID("test-chain")
+	ctx := s.ctxWithFlatFeeGasMeter().WithMinGasPrices(highGasPrice).WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
 	s.Require().NoError(err, "antehandler")
 }
 
-func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceNotMet() {
-	antehandler := setUpApp(s, true, NHash, 0)
-	pioconfig.SetProvenanceConfig(NHash, 1905)
-	reqFee := int64(1905 * s.NewTestGasLimit())
-	feeCoins := sdk.NewCoins(sdk.NewInt64Coin(NHash, reqFee-1))
-	tx, _ := createTestTx(s, feeCoins)
-	ctx := s.ctx.WithChainID("test-chain")
-
-	_, err := antehandler(ctx, tx, false)
-	// Example error: base fee cannot be paid with provided fees: \"190499999nhash\", required: \"190500000nhash\" = \"190500000nhash\"(base-fee) + \"\"(additional-fees): insufficient fee: insufficient fee
-	s.Require().Error(err, "antehandler")
-	s.Assert().ErrorContains(err, fmt.Sprintf(`base fee cannot be paid with provided fees: "%s"`, feeCoins))
-	s.Assert().ErrorContains(err, fmt.Sprintf(`required: "%dnhash"`, reqFee))
-	s.Assert().ErrorContains(err, fmt.Sprintf(`= "%dnhash"(base-fee) + ""(additional-fees)`, reqFee))
-	s.Assert().ErrorContains(err, "insufficient fee")
-}
-
-func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceMet() {
-	antehandler := setUpApp(s, true, NHash, 0)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
-	ctx := s.ctx.WithChainID("test-chain")
-
-	_, err := antehandler(ctx, tx, false)
-	s.Require().NoError(err, "antehandler")
-}
-
-func (s *AnteTestSuite) TestMsgFeesDecoratorNonCheckTxPassesAllChecks() {
+func (s *AnteTestSuite) TestFlatFeeSetupDecorator_NonCheckTxPassesAllChecks() {
 	antehandler := setUpApp(s, false, "bananas", 100)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(NHash, 88)))
 
 	// antehandler should not error since we do not check anything in DeliverTx
-	_, err := antehandler(s.ctx, tx, false)
+	_, err := antehandler(s.ctxWithFlatFeeGasMeter(), tx, false)
 	s.Require().NoError(err, "antehandler")
 }
 
-func (s *AnteTestSuite) TestMsgFeesDecoratorSimulatingPassesAllChecks() {
+func (s *AnteTestSuite) TestFlatFeeSetupDecorator_SimulatingPassesAllChecks() {
 	antehandler := setUpApp(s, true, "bananas", 100)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(NHash, 88)))
 
 	// antehandler should not error since we do not check anything in Simulate
-	_, err := antehandler(s.ctx, tx, true)
+	_, err := antehandler(s.ctxWithFlatFeeGasMeter(), tx, true)
 	s.Require().NoError(err, "antehandler")
 }
 
-func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenomOnlyMsg() {
+func (s *AnteTestSuite) TestFlatFeeSetupDecorator_WrongDenomOnlyMsg() {
 	antehandler := setUpApp(s, true, NHash, 100)
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
-	ctx := s.ctx.WithChainID("test-chain")
+	ctx := s.ctxWithFlatFeeGasMeter().WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
-	// Example error: base fee + additional fee cannot be paid with provided fees: "10000steak", required: "100nhash" = ""(base-fee) + "100nhash"(additional-fees): insufficient fee: insufficient fee
+	// Example error: "fee required: \"100nhash\", fee provided: \"10000steak\": insufficient fee"
 	s.Require().Error(err, "antehandler")
-	s.Assert().ErrorContains(err, `base fee + additional fee cannot be paid with provided fees: "10000steak"`)
-	s.Assert().ErrorContains(err, `required: "100nhash"`)
-	s.Assert().ErrorContains(err, `= ""(base-fee) + "100nhash"(additional-fees)`)
+	s.Assert().ErrorContains(err, `fee required: "100nhash"`)
+	s.Assert().ErrorContains(err, `fee provided: "10000steak"`)
 	s.Assert().ErrorContains(err, `insufficient fee`)
 }
 
-func (s *AnteTestSuite) TestMsgFeesDecoratorFloorFromParams() {
-	antehandler := setUpApp(s, true, NHash, 100)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(NHash, 10000)))
-	ctx := s.ctx.WithChainID("test-chain")
-	params := s.app.MsgFeesKeeper.GetParams(ctx)
-	params.FloorGasPrice = sdk.NewInt64Coin(NHash, 1905)
-	s.app.MsgFeesKeeper.SetParams(ctx, params)
-
-	_, err := antehandler(ctx, tx, false)
-	// Example error: base fee + additional fee cannot be paid with provided fees: "10000nhash", required: "190500100nhash" = "190500000nhash"(base-fee) + "100nhash"(additional-fees): insufficient fee: insufficient fee
-	s.Require().Error(err, "antehandler")
-	s.Assert().ErrorContains(err, `base fee + additional fee cannot be paid with provided fees: "10000nhash"`)
-	s.Assert().ErrorContains(err, `required: "190500100nhash"`)
-	s.Assert().ErrorContains(err, `= "190500000nhash"(base-fee) + "100nhash"(additional-fees)`)
-	s.Assert().ErrorContains(err, `insufficient fee`)
-}
-
-func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenom() {
+func (s *AnteTestSuite) TestFlatFeeSetupDecorator_WrongDenom() {
 	antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(NHash, 190500200)))
-	ctx := s.ctx.WithChainID("test-chain")
+	ctx := s.ctxWithFlatFeeGasMeter().WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
-	// Example error: base fee + additional fee cannot be paid with provided fees: "190500200nhash", required: "100100stake" = "100000stake"(base-fee) + "100stake"(additional-fees): insufficient fee: insufficient fee
+	// Example error: "fee required: \"100stake\", fee provided: \"190500200nhash\": insufficient fee"
 	s.Require().Error(err, "antehandler")
-	s.Assert().ErrorContains(err, `base fee + additional fee cannot be paid with provided fees: "190500200nhash"`)
-	s.Assert().ErrorContains(err, `required: "100100stake"`)
-	s.Assert().ErrorContains(err, `= "100000stake"(base-fee) + "100stake"(additional-fees)`)
+	s.Assert().ErrorContains(err, `fee required: "100stake"`)
+	s.Assert().ErrorContains(err, `fee provided: "190500200nhash"`)
 	s.Assert().ErrorContains(err, `insufficient fee`)
 }
 
@@ -166,8 +119,19 @@ func setUpApp(s *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string, add
 		err := s.CreateMsgFee(newCoin, &testdata.TestMsg{})
 		s.Require().NoError(err, "CreateMsgFee")
 	}
-	// setup NewMsgFeesDecorator
-	mfd := antewrapper.NewMsgFeesDecorator(s.app.MsgFeesKeeper)
+
+	// Set the x/flatfees params (for the default costs).
+	err := s.app.FlatFeesKeeper.SetParams(s.ctx, flatfeestypes.Params{
+		DefaultCost: sdk.NewInt64Coin(additionalFeeCoinDenom, 0),
+		ConversionFactor: flatfeestypes.ConversionFactor{
+			BaseAmount:      sdk.NewInt64Coin(additionalFeeCoinDenom, 1),
+			ConvertedAmount: sdk.NewInt64Coin(additionalFeeCoinDenom, 1),
+		},
+	})
+
+	// setup NewFlatFeeSetupDecorator
+	s.Require().NoError(err, "flatfees SetParams")
+	mfd := antewrapper.NewFlatFeeSetupDecorator()
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return antehandler
 }

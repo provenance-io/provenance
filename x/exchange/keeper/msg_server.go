@@ -275,7 +275,7 @@ func (k MsgServer) CreatePayment(goCtx context.Context, msg *exchange.MsgCreateP
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if !msg.Payment.SourceAmount.IsZero() {
-		k.consumeCreatePaymentFee(ctx, msg)
+		k.consumeCreatePaymentFee(ctx)
 	}
 	return &exchange.MsgCreatePaymentResponse{}, nil
 }
@@ -287,7 +287,7 @@ func (k MsgServer) AcceptPayment(goCtx context.Context, msg *exchange.MsgAcceptP
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if !msg.Payment.TargetAmount.IsZero() {
-		k.consumeAcceptPaymentFee(ctx, msg)
+		k.consumeAcceptPaymentFee(ctx)
 	}
 	return &exchange.MsgAcceptPaymentResponse{}, nil
 }

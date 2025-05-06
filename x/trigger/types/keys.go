@@ -20,7 +20,6 @@ const (
 	EventOrderLength = 8
 	TriggerIDLength  = 8
 	QueueIndexLength = 8
-	GasLimitLength   = 8
 )
 
 // KVStore Key Prefixes used for iterator/scans against the store and identification of key types
@@ -41,12 +40,6 @@ const (
 //   - 0x02<event_type_bytes><order_bytes><trigger_id_bytes>: []byte{}
 //     | 1 |       32       |      8      |        8        |
 //
-// The key in this section is used to track gas limits for triggers.
-// The <trigger_id_bytes> are 8 bytes that match the trigger that the gas limit belongs to.
-//
-//   - 0x04<trigger_id_bytes>: uint64 (GasLimit)
-//     | 1 |        8        |
-//
 // These keys are used to represent a queue in the store
 // The <queue_index_bytes> are 8 bytes representing the item's spot in the queue
 // The two additional keys are used as metadata to track and manage the queue.
@@ -66,8 +59,6 @@ var (
 	EventListenerKeyPrefix = []byte{0x02}
 	// QueueKeyPrefix is an initial byte to help group all queue entry keys
 	QueueKeyPrefix = []byte{0x03}
-	// GasLimitKeyPrefix is an initial byte to help group all gas limit keys
-	GasLimitKeyPrefix = []byte{0x04}
 	// NextTriggerIDKey is the key to obtain the next valid trigger id
 	NextTriggerIDKey = []byte{0x05}
 	// QueueStartIndexKey is the key to obtain the queue's starting index
@@ -159,28 +150,6 @@ func GetTriggerIDBytes(triggerID TriggerID) (triggerIDBz []byte) {
 	triggerIDBz = make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBz, triggerID)
 	return
-}
-
-// GetGasLimitKey converts a gas limit into key format.
-func GetGasLimitKey(id TriggerID) []byte {
-	triggerIDBytes := make([]byte, TriggerIDLength)
-	binary.BigEndian.PutUint64(triggerIDBytes, id)
-
-	key := GasLimitKeyPrefix
-	key = append(key, triggerIDBytes...)
-	return key
-}
-
-// GetGasLimitBytes returns the byte representation of the gas limit
-func GetGasLimitBytes(gasLimit uint64) (gasLimitBz []byte) {
-	gasLimitBz = make([]byte, GasLimitLength)
-	binary.BigEndian.PutUint64(gasLimitBz, gasLimit)
-	return
-}
-
-// GetGasLimitFromBytes returns gas limit in uint64 format from a byte array
-func GetGasLimitFromBytes(bz []byte) uint64 {
-	return binary.BigEndian.Uint64(bz)
 }
 
 // GetEventNameBytes returns a set of bytes that uniquely identifies the given event name

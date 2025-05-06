@@ -466,19 +466,19 @@ func (k Keeper) CalculatePaymentFees(ctx sdk.Context, payment *exchange.Payment)
 }
 
 // consumePaymentFee consumes the first entry in opts (if there is one) as a msg fee.
-func consumePaymentFee(ctx sdk.Context, opts []sdk.Coin, msg sdk.Msg) {
+func consumePaymentFee(ctx sdk.Context, opts []sdk.Coin) {
 	if len(opts) == 0 || opts[0].IsZero() {
 		return
 	}
-	antewrapper.ConsumeMsgFee(ctx, sdk.Coins{opts[0]}, msg, "")
+	antewrapper.ConsumeAdditionalFee(ctx, sdk.Coins{opts[0]})
 }
 
 // consumeCreatePaymentFee looks up and consumes the create-payment fee.
-func (k Keeper) consumeCreatePaymentFee(ctx sdk.Context, msg sdk.Msg) {
-	consumePaymentFee(ctx, getParamsFeeCreatePaymentFlat(k.getStore(ctx)), msg)
+func (k Keeper) consumeCreatePaymentFee(ctx sdk.Context) {
+	consumePaymentFee(ctx, getParamsFeeCreatePaymentFlat(k.getStore(ctx)))
 }
 
 // consumeAcceptPaymentFee looks up and consumes the accept-payment fee.
-func (k Keeper) consumeAcceptPaymentFee(ctx sdk.Context, msg sdk.Msg) {
-	consumePaymentFee(ctx, getParamsFeeAcceptPaymentFlat(k.getStore(ctx)), msg)
+func (k Keeper) consumeAcceptPaymentFee(ctx sdk.Context) {
+	consumePaymentFee(ctx, getParamsFeeAcceptPaymentFlat(k.getStore(ctx)))
 }

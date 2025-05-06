@@ -1557,10 +1557,9 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 		expInRawLog string
 	}{
 		{
-			name:        "invalid denom",
-			args:        argsWStdFlags("x", "true"),
-			expCode:     12,
-			expInRawLog: "invalid denom: x",
+			name:   "invalid denom",
+			args:   argsWStdFlags("x", "true"),
+			expErr: "invalid denom: x",
 		},
 		{
 			name:   "invalid bool",
