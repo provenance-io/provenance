@@ -319,7 +319,7 @@ It is expected to fail if:
 
 #### MsgMarketTransferCommitmentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L347-L348
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L346-L347
 
 
 ### MarketSetOrderExternalID
@@ -341,7 +341,7 @@ It is expected to fail if:
 
 #### MsgMarketSetOrderExternalIDRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L349-L363
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L350-L363
 
 #### MsgMarketSetOrderExternalIDResponse
 

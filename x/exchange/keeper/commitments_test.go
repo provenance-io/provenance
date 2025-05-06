@@ -1084,17 +1084,6 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 			expErr: fmt.Sprintf("cannot transfer negative commitment amount \"-3apple\" for %s in market 0", s.addr2.String()),
 		},
 		{
-			name: "negative amount",
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
-				Admin:       s.addr1.String(),
-				Account:     s.addr2.String(),
-				Amount:      sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-3)}},
-				NewMarketId: 5,
-				EventTag:    "source does not exist",
-			},
-			expErr: fmt.Sprintf("cannot transfer negative commitment amount \"-3apple\" for %s in market 0", s.addr2.String()),
-		},
-		{
 			name: "current market is not accepting commitments",
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{MarketId: 3})
@@ -1235,7 +1224,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 					s.coins("10apple"),
 					3,
 					5,
-					"partially transfer committed denom",
+					"full transfer committed denom",
 				)),
 			},
 		},
@@ -1272,10 +1261,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 		s.Run(tc.name, func() {
 			expHoldCalls := HoldCalls{ReleaseHold: tc.expRelHoldCalls}
 
-			var expEvents sdk.Events
-			if tc.expEvents != nil {
-				expEvents = append(expEvents, s.untypeEvent(exchange.NewEventCommitmentTransferred(tc.req.Account, tc.req.Amount, tc.req.CurrentMarketId, tc.req.NewMarketId, tc.req.EventTag)))
-			}
+			expEvents := tc.expEvents
 
 			s.clearExchangeState()
 			if tc.setup != nil {
