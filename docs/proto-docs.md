@@ -2413,7 +2413,7 @@ MsgMarketTransferCommitmentsRequest is a request message for the MarketTransferC
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this transfer. |
 | `account` | [string](#string) |  | account is the Bech32 address string of the account receiving the transferred funds. |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | amount to transfer. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-coin) | repeated | amount to transfer. |
 | `current_market_id` | [uint32](#uint32) |  | current_market_id is the numerical identifier of the market where the funds are currently committed and are being released from. |
 | `new_market_id` | [uint32](#uint32) |  | new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement. |
 | `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
