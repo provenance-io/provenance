@@ -305,8 +305,6 @@ It is expected to fail if:
 A market can transfer funds from one market to another using the `MarketTransferCommitments` endpoint.
 The `admin` must have the `PERMISSION_CANCEL` permission in the market (or be the `authority`).
 
-Providing an empty amount indicates that all funds currently committed in that account (to the market) should be released.
-
 It is expected to fail if:
 * The currentmarket does not exist.
 * The newmarket does not exist.
