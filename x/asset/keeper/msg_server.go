@@ -3,11 +3,13 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	nft "cosmossdk.io/x/nft"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/asset/types"
+	"github.com/provenance-io/provenance/x/ledger"
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -120,6 +122,62 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 	err = m.nftKeeper.Mint(ctx, token, owner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to mint NFT: %w", err)
+	}
+
+	// Create a ledger class for this asset class if it doesn't exist
+	ledgerClassId := fmt.Sprintf("ledgert_%s", msg.Asset.ClassId)
+	ledgerClass := ledger.LedgerClass{
+		LedgerClassId:     ledgerClassId,
+		AssetClassId:      msg.Asset.ClassId,
+		Denom:             "nhash", // Using nhash as the default denom
+		MaintainerAddress: owner.String(),
+	}
+
+	// Create the ledger class
+	err = m.ledgerKeeper.CreateLedgerClass(ctx, owner, ledgerClass)
+	if err != nil {
+		// If the error is not that the class already exists, return the error
+		return nil,fmt.Errorf("failed to create ledger class: %w", err)
+	}
+
+	// Add default entry type if it doesn't exist
+	entryType := ledger.LedgerClassEntryType{
+		Id:          1,
+		Code:        "DEFAULT",
+		Description: "Default entry type for asset ledger",
+	}
+	err = m.ledgerKeeper.AddClassEntryType(ctx, owner, ledgerClassId, entryType)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		return nil, fmt.Errorf("failed to add ledger class entry type: %w", err)
+	}
+
+	// Add default status type if it doesn't exist
+	statusType := ledger.LedgerClassStatusType{
+		Id:          1,
+		Code:        "ACTIVE",
+		Description: "Active status for asset ledger",
+	}
+	err = m.ledgerKeeper.AddClassStatusType(ctx, owner, ledgerClassId, statusType)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		return nil, fmt.Errorf("failed to add ledger class status type: %w", err)
+	}
+
+	// Create a ledger for this asset
+	ledgerKey := &ledger.LedgerKey{
+		AssetClassId: msg.Asset.ClassId,
+		NftId:        msg.Asset.Id,
+	}
+
+	ledgerObj := ledger.Ledger{
+		Key:           ledgerKey,
+		LedgerClassId: ledgerClassId,
+		StatusTypeId:  1, // Using 1 as the default status type
+	}
+
+	// Create the ledger
+	err = m.ledgerKeeper.CreateLedger(ctx, owner, ledgerObj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ledger: %w", err)
 	}
 
 	m.Logger(ctx).Info("Created new asset as NFT",
