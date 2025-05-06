@@ -15,6 +15,7 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
     - [MarketSettle](#marketsettle)
     - [MarketCommitmentSettle](#marketcommitmentsettle)
     - [MarketReleaseCommitments](#marketreleasecommitments)
+    - [MarketTransferCommitments](#markettransfercommitments)
     - [MarketSetOrderExternalID](#marketsetorderexternalid)
     - [MarketWithdraw](#marketwithdraw)
     - [MarketUpdateDetails](#marketupdatedetails)
@@ -299,6 +300,28 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L317-L318
 
 
+### MarketTransferCommitments
+
+A market can transfer funds from one market to another using the `MarketTransferCommitments` endpoint.
+The `admin` must have the `PERMISSION_CANCEL` permission in the market (or be the `authority`).
+
+Providing an empty amount indicates that all funds currently committed in that account (to the market) should be released.
+
+It is expected to fail if:
+* The currentmarket does not exist.
+* The newmarket does not exist.
+* The `admin` does not have `PERMISSION_CANCEL` in the market, and is not the `authority`.
+* One or more of the amounts is more than what is currently committed by the associated `account`.
+
+#### MsgMarketTransferCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L324-L344
+
+#### MsgMarketTransferCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L347-L348
+
+
 ### MarketSetOrderExternalID
 
 Some markets might want to attach their own identifiers to orders.
@@ -318,11 +341,11 @@ It is expected to fail if:
 
 #### MsgMarketSetOrderExternalIDRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L320-L334
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L349-L363
 
 #### MsgMarketSetOrderExternalIDResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L336-L337
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L365-L366
 
 
 ### MarketWithdraw
@@ -339,11 +362,11 @@ It is expected to fail if:
 
 #### MsgMarketWithdrawRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L339-L357
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L369-L386
 
 #### MsgMarketWithdrawResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L359-L360
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L388-L389
 
 
 ### MarketUpdateDetails
@@ -358,13 +381,13 @@ It is expected to fail if:
 
 #### MsgMarketUpdateDetailsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L362-L373
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L392-L402
 
 See also: [MarketDetails](#marketdetails).
 
 #### MsgMarketUpdateDetailsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L375-L376
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L404-L405
 
 
 ### MarketUpdateAcceptingOrders
@@ -381,11 +404,11 @@ It is expected to fail if:
 
 #### MsgMarketUpdateAcceptingOrdersRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L402-L413
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L431-L442
 
 #### MsgMarketUpdateAcceptingOrdersResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L415-L416
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L444-L445
 
 
 ### MarketUpdateUserSettle
@@ -403,11 +426,11 @@ It is expected to fail if:
 
 #### MsgMarketUpdateUserSettleRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L418-L431
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L447-L460
 
 #### MsgMarketUpdateUserSettleResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L433-L434
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L462-L463
 
 
 ### MarketUpdateAcceptingCommitments
@@ -426,11 +449,11 @@ It is expected to fail if:
 
 #### MsgMarketUpdateAcceptingCommitmentsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L436-L449
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L465-L478
 
 #### MsgMarketUpdateAcceptingCommitmentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L451-L452
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L480-L481
 
 
 ### MarketUpdateIntermediaryDenom
@@ -445,11 +468,11 @@ It is expected to fail if:
 
 #### MsgMarketUpdateIntermediaryDenomRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L454-L465
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L483-L494
 
 #### MsgMarketUpdateIntermediaryDenomResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L467-L468
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L496-L497
 
 
 ### MarketManagePermissions
@@ -466,13 +489,13 @@ It is expected to fail if:
 
 #### MsgMarketManagePermissionsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L470-L485
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L499-L514
 
 See also: [AccessGrant](#accessgrant) and [Permission](#permission).
 
 #### MsgMarketManagePermissionsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L487-L488
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L516-L517
 
 
 ### MarketManageReqAttrs
@@ -490,11 +513,11 @@ It is expected to fail if:
 
 #### MsgMarketManageReqAttrsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L490-L511
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L519-L540
 
 #### MsgMarketManageReqAttrsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L513-L514
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L542-L543
 
 
 ## Payment Endpoints
@@ -527,7 +550,7 @@ It is expected to fail if:
 
 #### MsgCreatePaymentRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L516-L523
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L545-L552
 
 #### Payment
 
@@ -535,7 +558,7 @@ It is expected to fail if:
 
 #### MsgCreatePaymentResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L525-L526
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L554-L555
 
 
 ### AcceptPayment
@@ -554,13 +577,13 @@ It is expected to fail if:
 
 #### MsgAcceptPaymentRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L528-L535
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L557-L564
 
 See also: [Payment](#payment).
 
 #### MsgAcceptPaymentResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L537-L538
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L566-L567
 
 
 ### RejectPayment
@@ -575,11 +598,11 @@ It is expected to fail if:
 
 #### MsgRejectPaymentRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L540-L550
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L569-L579
 
 #### MsgRejectPaymentResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L552-L553
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L581-L582
 
 
 ### RejectPayments
@@ -594,11 +617,11 @@ It is expected to fail if:
 
 #### MsgRejectPaymentsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L555-L563
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L584-L592
 
 #### MsgRejectPaymentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L565-L566
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L594-L595
 
 
 ### CancelPayments
@@ -613,11 +636,11 @@ It is expected to fail if:
 
 #### MsgCancelPaymentsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L568-L576
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L597-L605
 
 #### MsgCancelPaymentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L578-L579
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L607-L608
 
 
 ### ChangePaymentTarget
@@ -637,11 +660,11 @@ It is expected to fail if:
 
 #### MsgChangePaymentTargetRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L581-L591
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L610-L620
 
 #### MsgChangePaymentTargetResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L593-L594
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L622-L623
 
 
 ## Governance Proposals
@@ -667,7 +690,7 @@ It is expected to fail if:
 
 #### MsgGovCreateMarketRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L596-L607
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L625-L636
 
 #### Market
 
@@ -696,7 +719,7 @@ It is expected to fail if:
 
 #### MsgGovCreateMarketResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L609-L610
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L638-L639
 
 
 ### GovManageFees
@@ -710,13 +733,13 @@ It is expected to fail if:
 
 #### MsgGovManageFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L612-L662
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L641-L691
 
 See also: [FeeRatio](#feeratio).
 
 #### MsgGovManageFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L664-L665
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L693-L694
 
 
 ### GovCloseMarket
@@ -730,11 +753,11 @@ It is expected to fail if:
 
 #### MsgGovCloseMarketRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L667-L675
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L697-L704
 
 #### MsgGovCloseMarketResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L677-L678
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L706-L707
 
 
 ### UpdateParams
@@ -746,10 +769,10 @@ It is expected to fail if:
 
 #### MsgUpdateParamsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L699-L708
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L710-L720
 
 See also: [Params](06_params.md#params).
 
 #### MsgUpdateParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L710-L711
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L722-L726

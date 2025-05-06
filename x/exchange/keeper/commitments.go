@@ -423,22 +423,10 @@ func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTran
 	if err != nil {
 		return fmt.Errorf("invalid account %q: %w", account, err)
 	}
-	if k.bankKeeper.BlockedAddr(sdk.AccAddress(account)) {
-		return fmt.Errorf("%s is not allowed to receive funds", account)
-	}
-	if req.Amount.IsAnyNegative() {
-		return fmt.Errorf("cannot transfer negative commitment amount %q for %s in market %d", req.Amount, req.Account, req.CurrentMarketId)
-	}
 
 	store := k.getStore(ctx)
-	if err := validateMarketIsAcceptingCommitments(store, req.CurrentMarketId); err != nil {
-		return fmt.Errorf("invalid market %q: %w", req.CurrentMarketId, err)
-	}
-	if err := validateMarketIsAcceptingCommitments(store, req.NewMarketId); err != nil {
-		return fmt.Errorf("invalid market %q: %w", req.NewMarketId, err)
-	}
-	if err := k.validateUserCanCreateCommitment(ctx, req.CurrentMarketId, account); err != nil {
-		return fmt.Errorf("invalid user permission %q: %w", req.CurrentMarketId, err)
+	if err := k.validateTransferCommitments(ctx, store, req, account); err != nil {
+		return err
 	}
 
 	currentAmount := getCommitmentAmount(store, req.CurrentMarketId, account)
@@ -452,14 +440,13 @@ func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTran
 	}
 	//subtract requested amount and store the new balance for the current market
 	setCommitmentAmount(store, req.CurrentMarketId, sdk.AccAddress(req.Account), newAmt)
-	k.logInfof(ctx, "After subtraction: address=%s, newCurrentAmount=%s", account.String(), newAmt.String())
 
-	newMarketAmt := getCommitmentAmount(store, req.NewMarketId, account)
-	newCommitment := newMarketAmt.Add(req.Amount...)
-	//update the new market for given account
-	addCommitmentAmount(store, req.NewMarketId, account, newCommitment)
+	existingNewMarketCommitment := getCommitmentAmount(store, req.NewMarketId, account)
+	newTotalNewMarketCommitment := existingNewMarketCommitment.Add(req.Amount...)
 
-	k.logInfof(ctx, "Updated new market balance: address=%s, newMarketAmount=%s", account.String(), newCommitment.String())
+	//update the commitment to new market for given account
+	addCommitmentAmount(store, req.NewMarketId, account, newTotalNewMarketCommitment)
+
 	k.emitEvent(ctx, exchange.NewEventCommitmentTransferred(req.Account, req.Amount, req.CurrentMarketId, req.NewMarketId, req.EventTag))
 	return nil
 }
@@ -471,5 +458,45 @@ func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.Ms
 		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
 	}
 	antewrapper.ConsumeMsgFee(ctx, exchangeFees.ExchangeFees, req, "")
+	return nil
+}
+
+// validateTransferCommitments which validate TransferCommitments message request.
+func (k Keeper) validateTransferCommitments(
+	ctx sdk.Context,
+	store storetypes.KVStore,
+	req *exchange.MsgMarketTransferCommitmentsRequest,
+	account sdk.AccAddress,
+) error {
+	// Blocked address check
+	if k.bankKeeper.BlockedAddr(account) {
+		return fmt.Errorf("%s is not allowed to receive funds", account)
+	}
+	// Zero amount
+	if req.Amount.IsZero() {
+		return fmt.Errorf("account %s does not have any funds committed to market %d", account, req.CurrentMarketId)
+	}
+
+	// Negative amount
+	if req.Amount.IsAnyNegative() {
+		return fmt.Errorf("cannot transfer negative commitment amount %q for %s in market %d", req.Amount, req.Account, req.CurrentMarketId)
+	}
+
+	// Market validity
+	if err := validateMarketIsAcceptingCommitments(store, req.CurrentMarketId); err != nil {
+		return fmt.Errorf("current market %d is invalid: %w", req.CurrentMarketId, err)
+	}
+	if err := validateMarketIsAcceptingCommitments(store, req.NewMarketId); err != nil {
+		return fmt.Errorf("new market %d is invalid: %w", req.NewMarketId, err)
+	}
+
+	// User permission
+	if err := k.validateUserCanCreateCommitment(ctx, req.CurrentMarketId, account); err != nil {
+		return fmt.Errorf("account %s does not have permission to create commitments in market %d: %w", account, req.CurrentMarketId, err)
+	}
+	if err := k.validateUserCanCreateCommitment(ctx, req.NewMarketId, account); err != nil {
+		return fmt.Errorf("account %s does not have permission to create commitments in market %d: %w", account, req.NewMarketId, err)
+	}
+
 	return nil
 }
