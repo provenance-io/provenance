@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -54,9 +53,7 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
-			if err = convertAcctsToVesting(ctx, app); err != nil {
-				return nil, err
-			}
+			convertAcctsToVesting(ctx, app)
 			return vm, nil
 		},
 	},
@@ -273,7 +270,7 @@ const nhashDenom = "nhash"
 
 // convertAcctsToVesting will convert the provided accounts to vesting accounts.
 // Part of the yellow upgrade.
-func convertAcctsToVesting(ctx sdk.Context, app *App) error {
+func convertAcctsToVesting(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Converting designated accounts to vesting accounts.")
 
 	accts := getAcctsToConvertToVesting(ctx, app)
@@ -287,7 +284,29 @@ func convertAcctsToVesting(ctx sdk.Context, app *App) error {
 
 	converter.logStats(ctx)
 	ctx.Logger().Info("Done converting designated accounts to vesting accounts.")
-	return nil
+}
+
+// acctToConvert contains several pieces of information needed while converting accounts to vesting accounts.
+// Part of the yellow upgrade.
+type acctToConvert struct {
+	addr         sdk.AccAddress
+	baseAcct     *authtypes.BaseAccount
+	nhashBalance sdk.Coin
+	delegatedAmt sdkmath.Int
+	toVest       sdk.Coin
+}
+
+// convertedAcct contains info on what the account looked like before and after the conversion.
+// Part of the yellow upgrade.
+type convertedAcct struct {
+	*acctToConvert
+	vestingAcct *vesting.ContinuousVestingAccount
+}
+
+// newConvertedAcct creates a convertedAcct from the old and new ones.
+// Part of the yellow upgrade.
+func newConvertedAcct(orig *acctToConvert, vest *vesting.ContinuousVestingAccount) *convertedAcct {
+	return &convertedAcct{acctToConvert: orig, vestingAcct: vest}
 }
 
 // getAcctsToConvertToVestingOld returns info on each of the accounts that should be converted to a vesting account.
@@ -296,17 +315,6 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 	minAmt := sdkmath.NewInt(125_000_000_000_000_000) // = 125 million hash.
 	var rv []*acctToConvert
 	err := app.AccountKeeper.Accounts.Walk(ctx, nil, func(addr sdk.AccAddress, acctI sdk.AccountI) (stop bool, err error) {
-		baseAcct, ok := acctI.(*authtypes.BaseAccount)
-		if !ok {
-			// We can only convert base accounts.
-			return false, nil
-		}
-
-		if app.WasmKeeper.HasContractInfo(ctx, addr) {
-			// Don't do anything to wasm accounts because it might break the contract.
-			return false, nil
-		}
-
 		delegated, err := app.StakingKeeper.GetDelegatorBonded(ctx, addr)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("could not look up delegated amount: %v", err))
@@ -317,6 +325,19 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 		toVest := nhashBal.AddAmount(delegated)
 
 		if toVest.Amount.LT(minAmt) {
+			return false, nil
+		}
+
+		baseAcct, ok := acctI.(*authtypes.BaseAccount)
+		if !ok {
+			// Only base accounts can be converted to vesting accounts.
+			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", fmt.Sprintf("account has type %T", acctI))
+			return false, nil
+		}
+
+		if app.WasmKeeper.HasContractInfo(ctx, addr) {
+			// Don't do anything to wasm accounts because it might break the contract.
+			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", "account is a smart contract")
 			return false, nil
 		}
 
@@ -339,16 +360,6 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 	return rv
 }
 
-// acctToConvert contains several pieces of information needed while converting accounts to vesting accounts.
-// Part of the yellow upgrade.
-type acctToConvert struct {
-	addr         sdk.AccAddress
-	baseAcct     *authtypes.BaseAccount
-	nhashBalance sdk.Coin
-	delegatedAmt sdkmath.Int
-	toVest       sdk.Coin
-}
-
 // acctConverter is a helper struct used to facilitate the conversion of accounts to vesting accounts.
 // Part of the yellow upgrade.
 type acctConverter struct {
@@ -365,6 +376,8 @@ type acctConverter struct {
 	undelegatedVesting sdkmath.Int
 	delegatedVesting   sdkmath.Int
 	totalVesting       sdkmath.Int
+
+	converted []*convertedAcct
 }
 
 // newAcctConverter creates a new acctConverter and looks up all needed info.
@@ -434,6 +447,7 @@ func (c *acctConverter) convert(sdkCtx sdk.Context, acct *acctToConvert) (err er
 	c.undelegatedVesting = c.undelegatedVesting.Add(acct.nhashBalance.Amount)
 	c.delegatedVesting = c.delegatedVesting.Add(acct.delegatedAmt)
 	c.totalVesting = c.totalVesting.Add(acct.toVest.Amount)
+	c.converted = append(c.converted, newConvertedAcct(acct, newAcct))
 
 	return nil
 }
