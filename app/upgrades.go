@@ -391,11 +391,12 @@ type acctConverter struct {
 // Part of the yellow upgrade.
 func newAcctConverter(ctx sdk.Context, app *App) *acctConverter {
 	rv := &acctConverter{
-		app:              app,
-		blockTime:        ctx.BlockTime().UTC(),
-		authority:        app.ExchangeKeeper.GetAuthority(),
-		delegatedVesting: sdkmath.ZeroInt(),
-		totalVesting:     sdkmath.ZeroInt(),
+		app:                app,
+		blockTime:          ctx.BlockTime().UTC(),
+		authority:          app.ExchangeKeeper.GetAuthority(),
+		undelegatedVesting: sdkmath.ZeroInt(),
+		delegatedVesting:   sdkmath.ZeroInt(),
+		totalVesting:       sdkmath.ZeroInt(),
 	}
 	rv.startTime = rv.blockTime.Unix()
 	rv.endTime = addMonths(rv.blockTime, 48)
@@ -534,9 +535,9 @@ func (c *acctConverter) logStats(ctx sdk.Context) {
 	if c.accountsAttempted != c.accountsConverted {
 		logger.Info(fmt.Sprintf("  Accounts skipped: %s", strconv.Itoa(c.accountsAttempted-c.accountsConverted)))
 	}
-	logger.Info("Undelegated amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting))
-	logger.Info("  Delegated amount converted to vesting accounts: %25s hash", toHashString(c.delegatedVesting))
-	logger.Info("      Total amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting.Add(c.delegatedVesting)))
+	logger.Info(fmt.Sprintf("Undelegated amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting)))
+	logger.Info(fmt.Sprintf("  Delegated amount converted to vesting accounts: %25s hash", toHashString(c.delegatedVesting)))
+	logger.Info(fmt.Sprintf("      Total amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting.Add(c.delegatedVesting))))
 }
 
 // toHashString returns a string of the provided nhash amount as a hash amount. Essentially, it multiplies the amount
