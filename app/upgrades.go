@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,11 +14,14 @@ import (
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/provenance-io/provenance/internal/provutils"
@@ -288,7 +292,7 @@ func convertAcctsToVesting(ctx sdk.Context, app *App) {
 		_ = converter.convert(ctx, acct)
 	}
 
-	dumpAccountsToFile(ctx, "accounts_converted", converter.converted)
+	// dumpAccountsToFile(ctx, "accounts_converted", converter.converted)
 	converter.logStats(ctx)
 	ctx.Logger().Info("Done converting designated accounts to vesting accounts.")
 }
@@ -301,6 +305,8 @@ type acctToConvert struct {
 	nhashBalance sdk.Coin
 	delegatedAmt sdkmath.Int
 	toVest       sdk.Coin
+	onHold       sdk.Coin
+	groupPolicy  *group.GroupPolicyInfo
 }
 
 // convertedAcct contains info on what the account looked like before and after the conversion.
@@ -322,20 +328,23 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 	minAmt := sdkmath.NewInt(125_000_000_000_000_000) // = 125 million hash.
 	var rv []*acctToConvert
 	err := app.AccountKeeper.Accounts.Walk(ctx, nil, func(addr sdk.AccAddress, acctI sdk.AccountI) (stop bool, err error) {
-		delegated, err := app.StakingKeeper.GetDelegatorBonded(ctx, addr)
+		acct := &acctToConvert{addr: addr}
+
+		acct.delegatedAmt, err = app.StakingKeeper.GetDelegatorBonded(ctx, addr)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("could not look up delegated amount: %v", err))
 			return false, nil
 		}
 
-		nhashBal := app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
-		toVest := nhashBal.AddAmount(delegated)
+		acct.nhashBalance = app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
+		acct.toVest = acct.nhashBalance.AddAmount(acct.delegatedAmt)
 
-		if toVest.Amount.LT(minAmt) {
+		if acct.toVest.Amount.LT(minAmt) {
 			return false, nil
 		}
 
-		baseAcct, ok := acctI.(*authtypes.BaseAccount)
+		var ok bool
+		acct.baseAcct, ok = acctI.(*authtypes.BaseAccount)
 		if !ok {
 			// Only base accounts can be converted to vesting accounts.
 			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", fmt.Sprintf("account has type %T", acctI))
@@ -348,13 +357,22 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 			return false, nil
 		}
 
-		rv = append(rv, &acctToConvert{
-			addr:         addr,
-			baseAcct:     baseAcct,
-			nhashBalance: nhashBal,
-			delegatedAmt: delegated,
-			toVest:       toVest,
-		})
+		acct.onHold, err = app.HoldKeeper.GetHoldCoin(ctx, addr, nhashDenom) // TODO[yellow]: Delete this.
+		if err != nil {
+			ctx.Logger().Error("Could not get amount of nhash on hold.", "error", err)
+		}
+
+		gp, err := app.GroupKeeper.GroupPolicyInfo(ctx, &group.QueryGroupPolicyInfoRequest{Address: addr.String()})
+		switch {
+		case err == nil:
+			acct.groupPolicy = gp.Info
+		case errors.Is(err, sdkerrors.ErrNotFound):
+			// Not a group account. Nothing to do.
+		default:
+			ctx.Logger().Error("Could not check for group policy info.", "error", err)
+		}
+
+		rv = append(rv, acct)
 
 		return false, nil
 	})
@@ -578,10 +596,11 @@ func addCommas(amt string) string {
 // Part of the yellow upgrade.
 func dumpAccountsToFile[S ~[]E, E canBeJSONEntry](ctx sdk.Context, baseName string, converted S) {
 	filename := fmt.Sprintf("./%s_%d_%s.json", baseName, ctx.BlockHeight(), ctx.BlockTime().Format("2006-01-02_03-04-05"))
-	ctx.Logger().Info(fmt.Sprintf("Writing accounts to %q.", filename))
+	// This uses .Error to make it easier to find in the logs.
+	ctx.Logger().Error(fmt.Sprintf("Writing accounts to %q (not an error)", filename))
 	file, err := os.Create(filename)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Error creating file: %q: %w", filename, err))
+		ctx.Logger().Error(fmt.Sprintf("Error creating file: %q: %v", filename, err))
 		return
 	}
 
@@ -604,7 +623,8 @@ func dumpAccountsToFile[S ~[]E, E canBeJSONEntry](ctx sdk.Context, baseName stri
 			}
 			file = nil
 		}
-		ctx.Logger().Info(fmt.Sprintf("Done writing accounts to %q.", filename))
+		// This uses .Error to make it easier to find in the logs.
+		ctx.Logger().Error(fmt.Sprintf("Done writing accounts to %q (not an error).", filename))
 	}()
 
 	buf = bufio.NewWriterSize(file, 32768)
@@ -655,6 +675,11 @@ type acctJSONEntry struct {
 	Undelegated string `json:"undelegated"`
 	Delegated   string `json:"delegated"`
 	Vesting     string `json:"vesting"`
+	Sequence    string `json:"sequence"`
+	OnHold      string `json:"on_hold"`
+	PubKey      string `json:"key"`
+	Group       string `json:"group"`
+	Type        string `json:"type"`
 }
 
 // canBeJSONEntry is an interface for something that can become a acctJSONEntry.
@@ -664,23 +689,42 @@ type canBeJSONEntry interface {
 
 // AsAcctJSONEntry returns an *acctJSONEntry representing this acctToConvert; satisfies the canBeJSONEntry interface.
 func (a *acctToConvert) AsAcctJSONEntry() *acctJSONEntry {
-	return &acctJSONEntry{
+	rv := &acctJSONEntry{
 		Addr:        a.addr.String(),
 		Undelegated: a.nhashBalance.Amount.String(),
-		Delegated:   a.delegatedAmt.String(),
+		Delegated:   provutils.Ternary(a.delegatedAmt.IsZero(), "", a.delegatedAmt.String()),
 		Vesting:     a.toVest.Amount.String(),
+		PubKey:      provutils.Ternary(a.baseAcct.GetPubKey() == nil, "", "yes"),
 	}
+	if !a.onHold.IsZero() {
+		rv.OnHold = a.onHold.Amount.String()
+	}
+	if a.baseAcct.Sequence != 0 {
+		rv.Sequence = strconv.FormatUint(a.baseAcct.Sequence, 10)
+	}
+	if a.groupPolicy != nil {
+		rv.Group = strconv.FormatUint(a.groupPolicy.GroupId, 10) + "=" + a.groupPolicy.Metadata
+	}
+
+	switch {
+	case a.groupPolicy != nil:
+		rv.Type = "group"
+	case a.baseAcct.Sequence == 0 && a.baseAcct.GetPubKey() == nil:
+		rv.Type = "new"
+	default:
+		rv.Type = "standard"
+	}
+
+	return rv
 }
 
 // AsAcctJSONEntry returns an *acctJSONEntry representing this convertedAcct; satisfies the canBeJSONEntry interface.
 // Part of the yellow upgrade.
 func (a *convertedAcct) AsAcctJSONEntry() *acctJSONEntry {
-	return &acctJSONEntry{
-		Addr:        a.vestingAcct.Address,
-		Undelegated: a.nhashBalance.Amount.String(),
-		Delegated:   cleanNhashCoinsString(a.vestingAcct.DelegatedVesting),
-		Vesting:     cleanNhashCoinsString(a.vestingAcct.OriginalVesting),
-	}
+	rv := a.acctToConvert.AsAcctJSONEntry()
+	rv.Delegated = cleanNhashCoinsString(a.vestingAcct.DelegatedVesting)
+	rv.Vesting = cleanNhashCoinsString(a.vestingAcct.OriginalVesting)
+	return rv
 }
 
 // cleanNhashCoinsString removes the "nhash" suffix from a string of the provided coins.
