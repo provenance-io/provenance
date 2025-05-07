@@ -213,7 +213,7 @@ func validateEntryAmounts(le *ledger.LedgerEntry) error {
 	}
 
 	if !le.TotalAmt.Equal(totalApplied) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must equal sum of abs(applied amounts)")
+		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must equal sum of abs(applied amounts)", le.CorrelationId)
 	}
 
 	return nil
