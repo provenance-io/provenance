@@ -1,8 +1,12 @@
 package app
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +20,7 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -275,6 +280,7 @@ func convertAcctsToVesting(ctx sdk.Context, app *App) {
 
 	accts := getAcctsToConvertToVesting(ctx, app)
 	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to convert.", len(accts)))
+	dumpAccountsToFile(ctx, "accounts_to_convert", accts)
 
 	converter := newAcctConverter(ctx, app)
 	for _, acct := range accts {
@@ -282,6 +288,7 @@ func convertAcctsToVesting(ctx sdk.Context, app *App) {
 		_ = converter.convert(ctx, acct)
 	}
 
+	dumpAccountsToFile(ctx, "accounts_converted", converter.converted)
 	converter.logStats(ctx)
 	ctx.Logger().Info("Done converting designated accounts to vesting accounts.")
 }
@@ -523,13 +530,13 @@ func (c *acctConverter) cancelExchangeHolds(ctx sdk.Context, addr sdk.AccAddress
 // Part of the yellow upgrade.
 func (c *acctConverter) logStats(ctx sdk.Context) {
 	logger := ctx.Logger()
-	logger.Info(fmt.Sprintf("Accounts converted: %d", c.accountsConverted))
+	logger.Info(fmt.Sprintf("Accounts converted: %s", addCommas(strconv.Itoa(c.accountsConverted))))
 	if c.accountsAttempted != c.accountsConverted {
-		logger.Info(fmt.Sprintf("  Accounts skipped: %d", c.accountsAttempted-c.accountsConverted))
+		logger.Info(fmt.Sprintf("  Accounts skipped: %s", strconv.Itoa(c.accountsAttempted-c.accountsConverted)))
 	}
-	logger.Info("Undelegated amount converted to vesting accounts: %21s hash", toHashString(c.undelegatedVesting))
-	logger.Info("  Delegated amount converted to vesting accounts: %21s hash", toHashString(c.delegatedVesting))
-	logger.Info("      Total amount converted to vesting accounts: %21s hash", toHashString(c.undelegatedVesting.Add(c.delegatedVesting)))
+	logger.Info("Undelegated amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting))
+	logger.Info("  Delegated amount converted to vesting accounts: %25s hash", toHashString(c.delegatedVesting))
+	logger.Info("      Total amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting.Add(c.delegatedVesting)))
 }
 
 // toHashString returns a string of the provided nhash amount as a hash amount. Essentially, it multiplies the amount
@@ -543,5 +550,144 @@ func toHashString(amt sdkmath.Int) string {
 	if len(amtStr) == 9 {
 		return "0." + amtStr
 	}
-	return amtStr[:len(amtStr)-9] + "." + amtStr[len(amtStr)-9:]
+	return addCommas(amtStr[:len(amtStr)-9]) + "." + amtStr[len(amtStr)-9:]
+}
+
+// addCommas will add commas to the provided string (assuming it's a big number).
+// Part of the yellow upgrade.
+func addCommas(amt string) string {
+	if len(amt) <= 3 || strings.ContainsAny(amt, ",.") {
+		return amt
+	}
+
+	lenAmt := len(amt)
+	rv := make([]rune, 0, lenAmt+(lenAmt-1)/3)
+	for i, digit := range amt {
+		if i > 0 && (lenAmt-i)%3 == 0 {
+			rv = append(rv, ',')
+		}
+		rv = append(rv, digit)
+	}
+	return string(rv)
+}
+
+// TODO[yellow]: Delete the dumpAccountsToFile and acctJSONEntry stuff.
+
+// dumpConvertedToFile will write a file containing info about all the converted accounts.
+// Part of the yellow upgrade.
+func dumpAccountsToFile[S ~[]E, E canBeJSONEntry](ctx sdk.Context, baseName string, converted S) {
+	filename := fmt.Sprintf("./%s_%d_%s.json", baseName, ctx.BlockHeight(), ctx.BlockTime().Format("2006-01-02_03-04-05"))
+	ctx.Logger().Info(fmt.Sprintf("Writing accounts to %q.", filename))
+	file, err := os.Create(filename)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Error creating file: %q: %w", filename, err))
+		return
+	}
+
+	var buf *bufio.Writer
+	defer func() {
+		if buf != nil && buf.Buffered() > 0 {
+			ctx.Logger().Debug(fmt.Sprintf("Flushing final buffer with %d bytes.", buf.Buffered()))
+			if err = buf.Flush(); err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Error flushing final buffer %q: %v.", filename, err))
+			}
+		}
+		buf = nil
+
+		if file != nil {
+			if err = file.Sync(); err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Error syncing file %q: %v.", filename, err))
+			}
+			if err = file.Close(); err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Error closing file %q: %v.", filename, err))
+			}
+			file = nil
+		}
+		ctx.Logger().Info(fmt.Sprintf("Done writing accounts to %q.", filename))
+	}()
+
+	buf = bufio.NewWriterSize(file, 32768)
+	ctx.Logger().Debug(fmt.Sprintf("Buffer size: %d", buf.Size()))
+
+	for i, acct := range converted {
+		entry := acct.AsAcctJSONEntry()
+		logger := ctx.Logger().With("addr", entry.Addr, "i", i)
+		data, err := json.Marshal(entry)
+		if err != nil {
+			logger.Error("Could not marshal JSON for entry.", "error", err)
+			continue
+		}
+
+		lead := provutils.Ternary(i == 0, "[\n  ", ",\n  ")
+		_, err = buf.WriteString(lead)
+		if err != nil {
+			logger.Error("Could not write line lead to buffer.", "line_lead", lead, "error", err)
+			return
+		}
+
+		if buf.Available() < len(data) {
+			logger.Debug(fmt.Sprintf("Flushing buffer with %d bytes.", buf.Buffered()))
+			if err = buf.Flush(); err != nil {
+				ctx.Logger().Error("Could not flush buffer.", "error", err)
+				return
+			}
+		}
+
+		_, err = buf.Write(data)
+		if err != nil {
+			logger.Error("Could not write entry to buffer.", "error", err)
+			return
+		}
+	}
+
+	_, err = buf.WriteString("\n]\n")
+	if err != nil {
+		ctx.Logger().Error("Could not write ending.", "error", err)
+		return
+	}
+}
+
+// acctJSONEntry contains the info we want in the json file.
+// Part of the yellow upgrade.
+type acctJSONEntry struct {
+	Addr        string `json:"addr"`
+	Undelegated string `json:"undelegated"`
+	Delegated   string `json:"delegated"`
+	Vesting     string `json:"vesting"`
+}
+
+// canBeJSONEntry is an interface for something that can become a acctJSONEntry.
+type canBeJSONEntry interface {
+	AsAcctJSONEntry() *acctJSONEntry
+}
+
+// AsAcctJSONEntry returns an *acctJSONEntry representing this acctToConvert; satisfies the canBeJSONEntry interface.
+func (a *acctToConvert) AsAcctJSONEntry() *acctJSONEntry {
+	return &acctJSONEntry{
+		Addr:        a.addr.String(),
+		Undelegated: a.nhashBalance.Amount.String(),
+		Delegated:   a.delegatedAmt.String(),
+		Vesting:     a.toVest.Amount.String(),
+	}
+}
+
+// AsAcctJSONEntry returns an *acctJSONEntry representing this convertedAcct; satisfies the canBeJSONEntry interface.
+// Part of the yellow upgrade.
+func (a *convertedAcct) AsAcctJSONEntry() *acctJSONEntry {
+	return &acctJSONEntry{
+		Addr:        a.vestingAcct.Address,
+		Undelegated: a.nhashBalance.Amount.String(),
+		Delegated:   cleanNhashCoinsString(a.vestingAcct.DelegatedVesting),
+		Vesting:     cleanNhashCoinsString(a.vestingAcct.OriginalVesting),
+	}
+}
+
+// cleanNhashCoinsString removes the "nhash" suffix from a string of the provided coins.
+// Part of the yellow upgrade.
+func cleanNhashCoinsString(coins sdk.Coins) string {
+	rv := coins.String()
+	if len(rv) == 0 || strings.Contains(rv, ",") {
+		return rv
+	}
+	return strings.TrimSuffix(rv, nhashDenom)
 }
