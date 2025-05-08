@@ -109,6 +109,17 @@ func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.Ac
 		return fmt.Errorf("registry already exists")
 	}
 
+	// Verify that an NFT exists for the given key and that the authority owns the NFT
+	hasNFT := k.HasNFT(ctx, &key.AssetClassId, &key.NftId)
+	if !hasNFT {
+		return fmt.Errorf("NFT does not exist")
+	}
+
+	nftOwner := k.GetNFTOwner(ctx, &key.AssetClassId, &key.NftId)
+	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
+		return fmt.Errorf("authority does not own the NFT")
+	}
+
 	k.Registry.Set(ctx, *keyStr, registry.RegistryEntry{
 		Key:   key,
 		Roles: roles,
