@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
 
@@ -17,23 +16,10 @@ type BankKeeper interface {
 	HasSupply(ctx context.Context, denom string) bool
 }
 
-type MetaDataKeeper interface {
-	GetScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) (spec types.ScopeSpecification, found bool)
-	GetScope(ctx sdk.Context, id types.MetadataAddress) (types.Scope, bool)
-}
-
-type NFTKeeper interface {
-	// GetOwner returns the owner of an NFT
-	GetOwner(ctx context.Context, classID, nftID string) sdk.AccAddress
-
-	// HasNFT checks if an NFT exists
-	HasNFT(ctx context.Context, classID, id string) bool
-
-	// HasClass checks if an NFT class exists
-	HasClass(ctx context.Context, classID string) bool
-}
-
 type RegistryKeeper interface {
 	HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error)
 	GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error)
+	AssetClassExists(ctx sdk.Context, assetClassId *string) bool
+	HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool
+	GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.AccAddress
 }

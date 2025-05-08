@@ -28,7 +28,7 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 		return err
 	}
 
-	hasAssetClass := k.BaseViewKeeper.AssetClassExists(ctx, &l.AssetClassId)
+	hasAssetClass := k.BaseViewKeeper.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
 		return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id")
 	}
@@ -165,12 +165,12 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 	}
 
 	// Validate that the NFT exists
-	if !k.HasNFT(ctx, &l.Key.AssetClassId, &l.Key.NftId) {
+	if !k.BaseViewKeeper.RegistryKeeper.HasNFT(ctx, &l.Key.AssetClassId, &l.Key.NftId) {
 		return NewLedgerCodedError(ErrCodeNotFound, "nft")
 	}
 
 	// Validate that the authority has ownership of the NFT
-	nftOwner := k.GetNFTOwner(ctx, &l.Key.AssetClassId, &l.Key.NftId)
+	nftOwner := k.BaseViewKeeper.RegistryKeeper.GetNFTOwner(ctx, &l.Key.AssetClassId, &l.Key.NftId)
 	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
 		return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
 	}

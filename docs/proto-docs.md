@@ -293,6 +293,8 @@
     - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
     - [LedgerKey](#provenance-ledger-v1-LedgerKey)
+    - [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries)
+    - [Ledgers](#provenance-ledger-v1-Ledgers)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
     - [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest)
@@ -5013,6 +5015,37 @@ LedgerEntry
 | ----- | ---- | ----- | ----------- |
 | `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
 | `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerToEntries"></a>
+
+### LedgerToEntries
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  |  |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-Ledgers"></a>
+
+### Ledgers
+Used for conversion....
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated |  |
 
 
 

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -24,6 +25,12 @@ type RegistryKeeper interface {
 	HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error)
 	GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error)
 
+	// As the registry it is important to have some basic nft information to share as it is a central point for
+	// other modules to reference.
+	AssetClassExists(ctx sdk.Context, assetClassId *string) bool
+	HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool
+	GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.AccAddress
+
 	InitGenesis(ctx sdk.Context, state *registry.GenesisState)
 	ExportGenesis(ctx sdk.Context) *registry.GenesisState
 }
@@ -37,6 +44,7 @@ type BaseRegistryKeeper struct {
 	Registry collections.Map[string, registry.RegistryEntry]
 
 	NFTKeeper
+	MetaDataKeeper
 }
 
 const (
@@ -46,7 +54,7 @@ const (
 )
 
 // NewKeeper returns a new registry Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, nftKeeper NFTKeeper) RegistryKeeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, nftKeeper NFTKeeper, metaDataKeeper MetaDataKeeper) RegistryKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
 	rk := BaseRegistryKeeper{
@@ -61,7 +69,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 			codec.CollValue[registry.RegistryEntry](cdc),
 		),
 
-		NFTKeeper: nftKeeper,
+		NFTKeeper:      nftKeeper,
+		MetaDataKeeper: metaDataKeeper,
 	}
 
 	// Build and set the schema
@@ -211,14 +220,21 @@ func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, 
 	return slices.Contains(registryEntry.Roles[role].Addresses, address), nil
 }
 
+// GetRegistry returns a registry entry for a given key. If the registry entry is not found, it returns nil, nil.
 func (k BaseRegistryKeeper) GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error) {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
+
 		return nil, err
 	}
 
 	registryEntry, err := k.Registry.Get(ctx, *keyStr)
 	if err != nil {
+		// Eat the not found error as it is expected, and return nil.
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 
