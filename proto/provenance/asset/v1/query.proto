@@ -36,4 +36,6 @@ message QueryGetClass {
   string id = 1;
 }
 
-message QueryListAssets {}
+message QueryListAssets {
+  string address = 1;
+}
