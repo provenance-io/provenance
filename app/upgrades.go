@@ -19,9 +19,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/provenance-io/provenance/internal/provutils"
@@ -287,12 +290,9 @@ func convertAcctsToVesting(ctx sdk.Context, app *App) {
 	ctx.Logger().Debug(fmt.Sprintf("Identified %d accounts to ignore.", len(toIgnore)))
 
 	converter := newAcctConverter(ctx, app, toIgnore)
-	for i, acct := range toConvert {
+	for _, acct := range toConvert {
 		// If there's an error, it's logged, but we want to keep moving, so we don't care about it here.
 		_ = converter.convert(ctx, acct)
-		if i != 0 && i%10_000 == 0 {
-			ctx.Logger().Info(fmt.Sprintf("Progress: Converted %d of %d accounts.", i+1, len(toConvert)))
-		}
 	}
 
 	converter.logStats(ctx)
@@ -325,11 +325,15 @@ type acctInfo struct {
 	// vestingAcct is only populated upon conversion.
 	newAcct *vesting.ContinuousVestingAccount
 
+	reason string
+
 	// These two pieces are just informational (for analysis).
 	onHold      sdk.Coin
 	groupPolicy *group.GroupPolicyInfo
 }
 
+// newAcctInfo creates a new acctInfo starting with the provided address and account.
+// Part of the yellow upgrade.
 func newAcctInfo(addr sdk.AccAddress, acctI sdk.AccountI) *acctInfo {
 	return &acctInfo{
 		addr:      addr,
@@ -354,7 +358,12 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 	startTime := addMonths(blockTime, int(monthsToStart))
 	endTime := addMonths(blockTime, int(monthsToEnd))
 
+	ibcAccts := identifyIBCAccounts(ctx, app)
+
 	err := app.AccountKeeper.Accounts.Walk(ctx, nil, func(addr sdk.AccAddress, acctI sdk.AccountI) (stop bool, err error) {
+		addrStr := addr.String()
+		logger := ctx.Logger().With("account", addrStr)
+
 		acct := newAcctInfo(addr, acctI)
 		acct.startTime = startTime
 		acct.endTime = endTime
@@ -362,7 +371,8 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 		acct.balance = app.BankKeeper.GetBalance(ctx, addr, nhashDenom).Amount
 		acct.delegated, err = app.StakingKeeper.GetDelegatorBonded(ctx, addr)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("could not look up delegated amount: %v", err))
+			acct.reason = fmt.Sprintf("error: could not look up delegated amount: %v", err)
+			logger.Error(acct.reason)
 			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
@@ -380,14 +390,33 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 		acct.baseAcct, ok = acctI.(*authtypes.BaseAccount)
 		if !ok {
 			// Only base accounts can be converted to vesting accounts.
-			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", fmt.Sprintf("account has type %T", acctI))
+			acct.reason = fmt.Sprintf("account has type %T", acctI)
+			logger.Debug("Skipping account.", "reason", acct.reason)
+			toIgnore = append(toIgnore, acct)
+			return false, nil
+		}
+
+		if ibcAccts[addrStr] {
+			// Don't do anything to IBC accounts because it might break that stuff.
+			acct.reason = "account is an IBC-related account"
+			logger.Debug("Skipping account.", "reason", acct.reason)
 			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
 
 		if app.WasmKeeper.HasContractInfo(ctx, addr) {
 			// Don't do anything to wasm accounts because it might break the contract.
-			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", "account is a smart contract")
+			acct.reason = "account is a smart contract"
+			logger.Debug("Skipping account.", "reason", acct.reason)
+			toIgnore = append(toIgnore, acct)
+			return false, nil
+		}
+
+		app.ICAHostKeeper.GetAllInterchainAccounts(ctx)
+		if app.Ics20WasmHooks.ContractKeeper.HasContractInfo(ctx, addr) {
+			// Don't do anything to interchain wasm accounts because it might break the contract.
+			acct.reason = "account is an ICS smart contract"
+			logger.Debug("Skipping account.", "reason", acct.reason)
 			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
@@ -395,21 +424,22 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 		// Get a few more pieces of info that are useful for analysis. TODO[yellow]: Delete this.
 		acct.onHold, err = app.HoldKeeper.GetHoldCoin(ctx, addr, nhashDenom)
 		if err != nil {
-			ctx.Logger().Error("Could not get amount of nhash on hold.", "error", err)
+			logger.Error("Could not get amount of nhash on hold.", "error", err)
 		}
 
-		gp, err := app.GroupKeeper.GroupPolicyInfo(ctx, &group.QueryGroupPolicyInfoRequest{Address: addr.String()})
+		gp, err := app.GroupKeeper.GroupPolicyInfo(ctx, &group.QueryGroupPolicyInfoRequest{Address: addrStr})
 		switch {
 		case err == nil:
 			acct.groupPolicy = gp.Info
 		case errors.Is(err, sdkerrors.ErrNotFound):
 			// Not a group account. Nothing to do.
 		default:
-			ctx.Logger().Error("Could not get group policy info.", "error", err)
+			logger.Error("Could not get group policy info.", "error", err)
 		}
 
 		if !acct.toVest.IsPositive() {
-			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", "account does not own enough hash", "nhash", acct.total.String())
+			acct.reason = "account does not own enough hash"
+			logger.Debug("Skipping account.", "reason", acct.reason, "nhash", acct.total.String())
 			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
@@ -439,6 +469,86 @@ func addMonths(start time.Time, months int) int64 {
 	}
 	newMonth += time.Month(months)
 	return time.Date(newYear, newMonth, newDay+1, 0, 0, 0, 0, start.Location()).Unix()
+}
+
+// identifyIBCAccounts looks up and returns all accounts that might be related to IBC. The keys are bech32 address strings.
+// Part of the yellow upgrade.
+func identifyIBCAccounts(ctx sdk.Context, app *App) map[string]bool {
+	rv := make(map[string]bool)
+	count := 0
+	for _, icaAcct := range app.ICAHostKeeper.GetAllInterchainAccounts(ctx) {
+		rv[icaAcct.AccountAddress] = true
+		count++
+		ctx.Logger().Debug(fmt.Sprintf("ICA host account: %q.", icaAcct.AccountAddress))
+	}
+	ctx.Logger().Debug(fmt.Sprintf("Found %d active ICA host accounts.", count))
+
+	count = 0
+	for _, channel := range app.ICAHostKeeper.GetAllActiveChannels(ctx) {
+		addr := ibctransfertypes.GetEscrowAddress(channel.PortId, channel.ChannelId)
+		addrStr := addr.String()
+		rv[addrStr] = true
+		count++
+		ctx.Logger().Debug(fmt.Sprintf("Active IBC Escrow Account: %q.", addrStr))
+	}
+	ctx.Logger().Debug(fmt.Sprintf("Found %d active IBC escrow accounts.", count))
+
+	chanReq := &channeltypes.QueryChannelsRequest{
+		Pagination: &query.PageRequest{Limit: 18_446_744_073_709_551_615}, // Max uint64.
+	}
+	chanResp, err := app.IBCKeeper.Channels(ctx, chanReq)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Error getting info on all IBC channels: %v", err))
+	} else {
+		count = 0
+		for _, channel := range chanResp.Channels {
+			addr := ibctransfertypes.GetEscrowAddress(channel.PortId, channel.ChannelId)
+			addrStr := addr.String()
+			rv[addrStr] = true
+			count++
+			ctx.Logger().Debug(fmt.Sprintf("IBC escrow Account: %q.", addrStr))
+		}
+		ctx.Logger().Debug(fmt.Sprintf("Found %d IBC escrow accounts.", count))
+
+		count = 0
+		for _, channel := range chanResp.Channels {
+			addr := ibctransfertypes.GetEscrowAddress(channel.Counterparty.PortId, channel.Counterparty.ChannelId)
+			addrStr := addr.String()
+			rv[addrStr] = true
+			count++
+			ctx.Logger().Debug(fmt.Sprintf("IBC counterparty escrow Account: %q.", addrStr))
+		}
+		ctx.Logger().Debug(fmt.Sprintf("Found %d IBC counterparty escrow accounts.", count))
+
+		count = 0
+		for _, channel := range chanResp.Channels {
+			for _, connectionID := range channel.ConnectionHops {
+				addrStr, found := app.ICAHostKeeper.GetInterchainAccountAddress(ctx, connectionID, channel.PortId)
+				if found {
+					rv[addrStr] = true
+					count++
+					ctx.Logger().Debug(fmt.Sprintf("ICA account: %q.", addrStr))
+				}
+			}
+		}
+		ctx.Logger().Debug(fmt.Sprintf("Found %d ICA accounts.", count))
+
+		count = 0
+		for _, channel := range chanResp.Channels {
+			for _, connectionID := range channel.ConnectionHops {
+				addrStr, found := app.ICAHostKeeper.GetInterchainAccountAddress(ctx, connectionID, channel.Counterparty.PortId)
+				if found {
+					rv[addrStr] = true
+					count++
+					ctx.Logger().Debug(fmt.Sprintf("ICA counterparty account: %q.", addrStr))
+				}
+			}
+		}
+		ctx.Logger().Debug(fmt.Sprintf("Found %d ICA counterparty accounts.", count))
+	}
+
+	ctx.Logger().Debug(fmt.Sprintf("Identified %d IBC-related accounts.", len(rv)))
+	return rv
 }
 
 // acctConverter is a helper struct used to facilitate the conversion of accounts to vesting accounts.
@@ -484,13 +594,18 @@ func newAcctConverter(ctx sdk.Context, app *App, ignored []*acctInfo) *acctConve
 	})
 
 	for _, acct := range ignored {
-		rv.recordNotConverted(acct)
+		rv.recordSkipped(acct)
 	}
+	// recordSkipped adds the entries to .skipped, but we only want these in the ignored list (set above).
+	rv.skipped = nil
 
 	return rv
 }
 
+// recordConverted updates stats with an account that has been converted.
+// Part of the yellow upgrade.
 func (c *acctConverter) recordConverted(acct *acctInfo) {
+	c.converted = append(c.converted, acct)
 	c.accountsConverted++
 	c.totalBalances = c.totalBalances.Add(acct.balance)
 	c.totalVesting = c.totalVesting.Add(acct.toVest)
@@ -499,7 +614,10 @@ func (c *acctConverter) recordConverted(acct *acctInfo) {
 	c.totalDelFree = c.totalDelFree.Add(acct.delFree)
 }
 
-func (c *acctConverter) recordNotConverted(acct *acctInfo) {
+// recordSkipped updates stats with an account that is not being converted.
+// Part of the yellow upgrade.
+func (c *acctConverter) recordSkipped(acct *acctInfo) {
+	c.skipped = append(c.skipped, acct)
 	c.totalBalances = c.totalBalances.Add(acct.balance)
 	c.totalDelegated = c.totalDelegated.Add(acct.delegated)
 	c.totalDelFree = c.totalDelFree.Add(acct.delegated)
@@ -512,11 +630,10 @@ func (c *acctConverter) convert(sdkCtx sdk.Context, acct *acctInfo) (err error) 
 	defer func() {
 		if err != nil {
 			logger.Error("Skipping account.", "reason", err)
-			c.skipped = append(c.skipped, acct)
-			c.recordNotConverted(acct)
+			acct.reason = err.Error()
+			c.recordSkipped(acct)
 		} else {
 			logger.Debug("Account converted.", "count", c.accountsConverted)
-			c.converted = append(c.converted, acct)
 			c.recordConverted(acct)
 		}
 	}()
@@ -743,9 +860,9 @@ func dumpAccountsToFile(ctx sdk.Context, baseName string, converted []*acctInfo)
 // Part of the yellow upgrade.
 type acctJSONEntry struct {
 	Addr        string `json:"addr"`
+	Total       string `json:"total"`
 	Undelegated string `json:"undelegated"`
 	Delegated   string `json:"delegated"`
-	Total       string `json:"total"`
 	ToKeep      string `json:"to_keep"`
 	ToVest      string `json:"to_vest"`
 	DelVest     string `json:"del_vest"`
@@ -757,6 +874,8 @@ type acctJSONEntry struct {
 	PubKey   string `json:"key"`
 	Group    string `json:"group"`
 	Type     string `json:"type"`
+
+	Reason string `json:"reason,omitempty"`
 }
 
 // AsAcctJSONEntry returns an *acctJSONEntry representing this acctInfo; satisfies the canBeJSONEntry interface.
@@ -770,6 +889,7 @@ func (a *acctInfo) AsAcctJSONEntry() *acctJSONEntry {
 		ToVest:      provutils.Ternary(a.toVest.IsZero(), "", a.toVest.String()),
 		DelVest:     provutils.Ternary(a.delVest.IsZero(), "", a.delVest.String()),
 		DelFree:     provutils.Ternary(a.delFree.IsZero(), "", a.delFree.String()),
+		Reason:      a.reason,
 
 		OnHold: provutils.Ternary(a.onHold.IsZero(), "", a.onHold.Amount.String()),
 	}
