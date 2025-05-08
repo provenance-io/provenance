@@ -280,67 +280,100 @@ const nhashDenom = "nhash"
 // convertAcctsToVesting will convert the provided accounts to vesting accounts.
 // Part of the yellow upgrade.
 func convertAcctsToVesting(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Converting designated accounts to vesting accounts.")
+	ctx.Logger().Info("Converting accounts to vesting accounts.")
 
-	accts := getAcctsToConvertToVesting(ctx, app)
-	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to convert.", len(accts)))
-	dumpAccountsToFile(ctx, "accounts_to_convert", accts)
+	toConvert, toIgnore := getAcctsToConvertToVesting(ctx, app)
+	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to convert.", len(toConvert)))
+	ctx.Logger().Debug(fmt.Sprintf("Identified %d accounts to ignore.", len(toIgnore)))
 
-	converter := newAcctConverter(ctx, app)
-	for _, acct := range accts {
+	converter := newAcctConverter(ctx, app, toIgnore)
+	for i, acct := range toConvert {
 		// If there's an error, it's logged, but we want to keep moving, so we don't care about it here.
 		_ = converter.convert(ctx, acct)
+		if i != 0 && i%10_000 == 0 {
+			ctx.Logger().Info(fmt.Sprintf("Progress: Converted %d of %d accounts.", i+1, len(toConvert)))
+		}
 	}
 
-	// dumpAccountsToFile(ctx, "accounts_converted", converter.converted)
 	converter.logStats(ctx)
-	ctx.Logger().Info("Done converting designated accounts to vesting accounts.")
+
+	dumpAccountsToFile(ctx, "accounts_converted", converter.converted)
+	dumpAccountsToFile(ctx, "accounts_ignored", converter.ignored)
+	if len(converter.skipped) > 0 {
+		dumpAccountsToFile(ctx, "accounts_skipped", converter.skipped)
+	}
+
+	ctx.Logger().Info("Done converting accounts to vesting accounts.")
 }
 
-// acctToConvert contains several pieces of information needed while converting accounts to vesting accounts.
+// acctInfo contains several pieces of information needed while converting accounts to vesting accounts.
 // Part of the yellow upgrade.
-type acctToConvert struct {
-	addr         sdk.AccAddress
-	baseAcct     *authtypes.BaseAccount
-	nhashBalance sdk.Coin
-	delegatedAmt sdkmath.Int
-	toVest       sdk.Coin
-	onHold       sdk.Coin
-	groupPolicy  *group.GroupPolicyInfo
+type acctInfo struct {
+	addr      sdk.AccAddress
+	acctI     sdk.AccountI
+	baseAcct  *authtypes.BaseAccount
+	balance   sdkmath.Int
+	delegated sdkmath.Int
+	total     sdkmath.Int
+	toVest    sdkmath.Int
+	toKeep    sdkmath.Int
+	delVest   sdkmath.Int
+	delFree   sdkmath.Int
+	startTime int64
+	endTime   int64
+
+	// vestingAcct is only populated upon conversion.
+	newAcct *vesting.ContinuousVestingAccount
+
+	// These two pieces are just informational (for analysis).
+	onHold      sdk.Coin
+	groupPolicy *group.GroupPolicyInfo
 }
 
-// convertedAcct contains info on what the account looked like before and after the conversion.
-// Part of the yellow upgrade.
-type convertedAcct struct {
-	*acctToConvert
-	vestingAcct *vesting.ContinuousVestingAccount
-}
-
-// newConvertedAcct creates a convertedAcct from the old and new ones.
-// Part of the yellow upgrade.
-func newConvertedAcct(orig *acctToConvert, vest *vesting.ContinuousVestingAccount) *convertedAcct {
-	return &convertedAcct{acctToConvert: orig, vestingAcct: vest}
+func newAcctInfo(addr sdk.AccAddress, acctI sdk.AccountI) *acctInfo {
+	return &acctInfo{
+		addr:      addr,
+		acctI:     acctI,
+		balance:   sdkmath.ZeroInt(),
+		delegated: sdkmath.ZeroInt(),
+		total:     sdkmath.ZeroInt(),
+		toVest:    sdkmath.ZeroInt(),
+		toKeep:    sdkmath.ZeroInt(),
+		delVest:   sdkmath.ZeroInt(),
+		delFree:   sdkmath.ZeroInt(),
+		onHold:    sdk.NewInt64Coin(nhashDenom, 0),
+	}
 }
 
 // getAcctsToConvertToVestingOld returns info on each of the accounts that should be converted to a vesting account.
 // Part of the yellow upgrade.
-func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
-	minAmt := sdkmath.NewInt(125_000_000_000_000_000) // = 125 million hash.
-	var rv []*acctToConvert
-	err := app.AccountKeeper.Accounts.Walk(ctx, nil, func(addr sdk.AccAddress, acctI sdk.AccountI) (stop bool, err error) {
-		acct := &acctToConvert{addr: addr}
+func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore []*acctInfo) {
+	blockTime := ctx.BlockTime().UTC()
+	monthsToStart := int64(3)
+	monthsToEnd := int64(48)
+	startTime := addMonths(blockTime, int(monthsToStart))
+	endTime := addMonths(blockTime, int(monthsToEnd))
 
-		acct.delegatedAmt, err = app.StakingKeeper.GetDelegatorBonded(ctx, addr)
+	err := app.AccountKeeper.Accounts.Walk(ctx, nil, func(addr sdk.AccAddress, acctI sdk.AccountI) (stop bool, err error) {
+		acct := newAcctInfo(addr, acctI)
+		acct.startTime = startTime
+		acct.endTime = endTime
+
+		acct.balance = app.BankKeeper.GetBalance(ctx, addr, nhashDenom).Amount
+		acct.delegated, err = app.StakingKeeper.GetDelegatorBonded(ctx, addr)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("could not look up delegated amount: %v", err))
+			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
 
-		acct.nhashBalance = app.BankKeeper.GetBalance(ctx, addr, nhashDenom)
-		acct.toVest = acct.nhashBalance.AddAmount(acct.delegatedAmt)
-
-		if acct.toVest.Amount.LT(minAmt) {
-			return false, nil
+		acct.total = acct.balance.Add(acct.delegated)
+		acct.toVest = acct.total.MulRaw(monthsToEnd - monthsToStart).QuoRaw(monthsToEnd)
+		acct.toKeep = acct.total.Sub(acct.toVest)
+		acct.delVest = acct.delegated
+		if acct.delegated.GT(acct.toVest) {
+			acct.delVest = acct.toVest
+			acct.delFree = acct.delegated.Sub(acct.toVest)
 		}
 
 		var ok bool
@@ -348,16 +381,19 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 		if !ok {
 			// Only base accounts can be converted to vesting accounts.
 			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", fmt.Sprintf("account has type %T", acctI))
+			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
 
 		if app.WasmKeeper.HasContractInfo(ctx, addr) {
 			// Don't do anything to wasm accounts because it might break the contract.
 			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", "account is a smart contract")
+			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
 
-		acct.onHold, err = app.HoldKeeper.GetHoldCoin(ctx, addr, nhashDenom) // TODO[yellow]: Delete this.
+		// Get a few more pieces of info that are useful for analysis. TODO[yellow]: Delete this.
+		acct.onHold, err = app.HoldKeeper.GetHoldCoin(ctx, addr, nhashDenom)
 		if err != nil {
 			ctx.Logger().Error("Could not get amount of nhash on hold.", "error", err)
 		}
@@ -369,20 +405,40 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 		case errors.Is(err, sdkerrors.ErrNotFound):
 			// Not a group account. Nothing to do.
 		default:
-			ctx.Logger().Error("Could not check for group policy info.", "error", err)
+			ctx.Logger().Error("Could not get group policy info.", "error", err)
 		}
 
-		rv = append(rv, acct)
+		if !acct.toVest.IsPositive() {
+			ctx.Logger().Debug("Skipping account.", "account", addr.String(), "reason", "account does not own enough hash", "nhash", acct.total.String())
+			toIgnore = append(toIgnore, acct)
+			return false, nil
+		}
+
+		toConvert = append(toConvert, acct)
 
 		return false, nil
 	})
 
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("error walking accounts: %v", err))
-		return nil
+		return nil, nil
 	}
 
-	return rv
+	return toConvert, toIgnore
+}
+
+// addMonths will return an epoch that is the given months after the start time.
+// Part of the yellow upgrade.
+func addMonths(start time.Time, months int) int64 {
+	newDay := start.Day()
+	newMonth := start.Month()
+	newYear := start.Year()
+	if months > 12 {
+		newYear += months / 12
+		months %= 12
+	}
+	newMonth += time.Month(months)
+	return time.Date(newYear, newMonth, newDay+1, 0, 0, 0, 0, start.Location()).Unix()
 }
 
 // acctConverter is a helper struct used to facilitate the conversion of accounts to vesting accounts.
@@ -390,52 +446,78 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) []*acctToConvert {
 type acctConverter struct {
 	app *App
 
-	blockTime time.Time
-	startTime int64
-	endTime   int64
 	marketIDs []uint32
 	authority string
 
-	accountsAttempted  int
-	accountsConverted  int
-	undelegatedVesting sdkmath.Int
-	delegatedVesting   sdkmath.Int
-	totalVesting       sdkmath.Int
+	ignored   []*acctInfo
+	converted []*acctInfo
+	skipped   []*acctInfo
 
-	converted []*convertedAcct
+	accountsAttempted int
+	accountsConverted int
+
+	totalBalances  sdkmath.Int
+	totalVesting   sdkmath.Int
+	totalDelegated sdkmath.Int
+	totalDelVest   sdkmath.Int
+	totalDelFree   sdkmath.Int
 }
 
 // newAcctConverter creates a new acctConverter and looks up all needed info.
 // Part of the yellow upgrade.
-func newAcctConverter(ctx sdk.Context, app *App) *acctConverter {
+func newAcctConverter(ctx sdk.Context, app *App, ignored []*acctInfo) *acctConverter {
 	rv := &acctConverter{
-		app:                app,
-		blockTime:          ctx.BlockTime().UTC(),
-		authority:          app.ExchangeKeeper.GetAuthority(),
-		undelegatedVesting: sdkmath.ZeroInt(),
-		delegatedVesting:   sdkmath.ZeroInt(),
-		totalVesting:       sdkmath.ZeroInt(),
+		app:       app,
+		authority: app.ExchangeKeeper.GetAuthority(),
+		ignored:   ignored,
+
+		totalBalances:  sdkmath.ZeroInt(),
+		totalVesting:   sdkmath.ZeroInt(),
+		totalDelegated: sdkmath.ZeroInt(),
+		totalDelVest:   sdkmath.ZeroInt(),
+		totalDelFree:   sdkmath.ZeroInt(),
 	}
-	rv.startTime = rv.blockTime.Unix()
-	rv.endTime = addMonths(rv.blockTime, 48)
 
 	app.ExchangeKeeper.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
 		rv.marketIDs = append(rv.marketIDs, marketID)
 		return false
 	})
 
+	for _, acct := range ignored {
+		rv.recordNotConverted(acct)
+	}
+
 	return rv
+}
+
+func (c *acctConverter) recordConverted(acct *acctInfo) {
+	c.accountsConverted++
+	c.totalBalances = c.totalBalances.Add(acct.balance)
+	c.totalVesting = c.totalVesting.Add(acct.toVest)
+	c.totalDelegated = c.totalDelegated.Add(acct.delegated)
+	c.totalDelVest = c.totalDelVest.Add(acct.delVest)
+	c.totalDelFree = c.totalDelFree.Add(acct.delFree)
+}
+
+func (c *acctConverter) recordNotConverted(acct *acctInfo) {
+	c.totalBalances = c.totalBalances.Add(acct.balance)
+	c.totalDelegated = c.totalDelegated.Add(acct.delegated)
+	c.totalDelFree = c.totalDelFree.Add(acct.delegated)
 }
 
 // convert will convert the provided account to a vesting account.
 // Part of the yellow upgrade.
-func (c *acctConverter) convert(sdkCtx sdk.Context, acct *acctToConvert) (err error) {
+func (c *acctConverter) convert(sdkCtx sdk.Context, acct *acctInfo) (err error) {
 	logger := sdkCtx.Logger().With("account", acct.addr.String())
 	defer func() {
 		if err != nil {
 			logger.Error("Skipping account.", "reason", err)
+			c.skipped = append(c.skipped, acct)
+			c.recordNotConverted(acct)
 		} else {
 			logger.Debug("Account converted.", "count", c.accountsConverted)
+			c.converted = append(c.converted, acct)
+			c.recordConverted(acct)
 		}
 	}()
 
@@ -452,44 +534,26 @@ func (c *acctConverter) convert(sdkCtx sdk.Context, acct *acctToConvert) (err er
 		return fmt.Errorf("account has %s on hold", lockedHash)
 	}
 
-	if !acct.toVest.IsPositive() || acct.nhashBalance.IsNegative() || acct.delegatedAmt.IsNegative() {
+	if !acct.total.IsPositive() || acct.balance.IsNegative() || acct.delegated.IsNegative() {
 		return fmt.Errorf("account has invalid nhash amount %s = %s (balance) + %snhash (delegated)",
-			acct.toVest, acct.nhashBalance, acct.delegatedAmt)
+			acct.total, acct.balance, acct.delegated)
 	}
 
-	newAcct, err := vesting.NewContinuousVestingAccount(acct.baseAcct, sdk.Coins{acct.toVest}, c.startTime, c.endTime)
+	origVest := sdk.Coins{sdk.NewCoin(nhashDenom, acct.total)}
+	newAcct, err := vesting.NewContinuousVestingAccount(acct.baseAcct, origVest, acct.startTime, acct.endTime)
 	if err != nil {
 		return fmt.Errorf("could not create new continuous vesting account: %w", err)
 	}
 
-	if acct.delegatedAmt.IsPositive() {
-		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(nhashDenom, acct.delegatedAmt))
+	if acct.delegated.IsPositive() {
+		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(nhashDenom, acct.delegated))
 	}
 
 	c.app.AccountKeeper.SetAccount(ctx, newAcct)
 	writeCache()
-
-	c.accountsConverted++
-	c.undelegatedVesting = c.undelegatedVesting.Add(acct.nhashBalance.Amount)
-	c.delegatedVesting = c.delegatedVesting.Add(acct.delegatedAmt)
-	c.totalVesting = c.totalVesting.Add(acct.toVest.Amount)
-	c.converted = append(c.converted, newConvertedAcct(acct, newAcct))
+	acct.newAcct = newAcct
 
 	return nil
-}
-
-// addMonths will return an epoch that is the given months after the start time.
-// Part of the yellow upgrade.
-func addMonths(start time.Time, months int) int64 {
-	newDay := start.Day()
-	newMonth := start.Month()
-	newYear := start.Year()
-	if months > 12 {
-		newYear += months / 12
-		months %= 12
-	}
-	newMonth += time.Month(months)
-	return time.Date(newYear, newMonth, newDay+1, 0, 0, 0, 0, start.Location()).Unix()
 }
 
 // cancelExchangeHolds cancels everything in the exchange module that has a hold on some nhash for the given address.
@@ -553,9 +617,16 @@ func (c *acctConverter) logStats(ctx sdk.Context) {
 	if c.accountsAttempted != c.accountsConverted {
 		logger.Info(fmt.Sprintf("  Accounts skipped: %s", strconv.Itoa(c.accountsAttempted-c.accountsConverted)))
 	}
-	logger.Info(fmt.Sprintf("Undelegated amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting)))
-	logger.Info(fmt.Sprintf("  Delegated amount converted to vesting accounts: %25s hash", toHashString(c.delegatedVesting)))
-	logger.Info(fmt.Sprintf("      Total amount converted to vesting accounts: %25s hash", toHashString(c.undelegatedVesting.Add(c.delegatedVesting))))
+	notVesting := c.totalBalances.Sub(c.totalVesting)
+	logger.Info(fmt.Sprintf("Total balances --------------------> %25s hash", toHashString(c.totalBalances)))
+	logger.Info(fmt.Sprintf("Total vesting  --------------------> %25s hash", toHashString(c.totalVesting)))
+	logger.Info(fmt.Sprintf("Total not vesting  ----------------> %25s hash", toHashString(notVesting)))
+	logger.Info(fmt.Sprintf("Total delegated  ------------------> %25s hash", toHashString(c.totalDelegated)))
+	logger.Info(fmt.Sprintf("Total not delegated  --------------> %25s hash", toHashString(c.totalBalances.Sub(c.totalDelegated))))
+	logger.Info(fmt.Sprintf("Total delegated vesting  ----------> %25s hash", toHashString(c.totalDelVest)))
+	logger.Info(fmt.Sprintf("Total delegated not vesting  ------> %25s hash", toHashString(c.totalDelFree)))
+	logger.Info(fmt.Sprintf("Total not delegated vesting  ------> %25s hash", toHashString(c.totalVesting.Sub(c.totalDelVest))))
+	logger.Info(fmt.Sprintf("Total not delegated not vesting  --> %25s hash", toHashString(notVesting.Sub(c.totalDelFree))))
 }
 
 // toHashString returns a string of the provided nhash amount as a hash amount. Essentially, it multiplies the amount
@@ -594,7 +665,7 @@ func addCommas(amt string) string {
 
 // dumpConvertedToFile will write a file containing info about all the converted accounts.
 // Part of the yellow upgrade.
-func dumpAccountsToFile[S ~[]E, E canBeJSONEntry](ctx sdk.Context, baseName string, converted S) {
+func dumpAccountsToFile(ctx sdk.Context, baseName string, converted []*acctInfo) {
 	filename := fmt.Sprintf("./%s_%d_%s.json", baseName, ctx.BlockHeight(), ctx.BlockTime().Format("2006-01-02_03-04-05"))
 	// This uses .Error to make it easier to find in the logs.
 	ctx.Logger().Error(fmt.Sprintf("Writing accounts to %q (not an error)", filename))
@@ -674,33 +745,38 @@ type acctJSONEntry struct {
 	Addr        string `json:"addr"`
 	Undelegated string `json:"undelegated"`
 	Delegated   string `json:"delegated"`
-	Vesting     string `json:"vesting"`
-	Sequence    string `json:"sequence"`
-	OnHold      string `json:"on_hold"`
-	PubKey      string `json:"key"`
-	Group       string `json:"group"`
-	Type        string `json:"type"`
+	Total       string `json:"total"`
+	ToKeep      string `json:"to_keep"`
+	ToVest      string `json:"to_vest"`
+	DelVest     string `json:"del_vest"`
+	DelFree     string `json:"del_free"`
+
+	// These are just extra pieces of info that might be useful for analysis.
+	Sequence string `json:"sequence"`
+	OnHold   string `json:"on_hold"`
+	PubKey   string `json:"key"`
+	Group    string `json:"group"`
+	Type     string `json:"type"`
 }
 
-// canBeJSONEntry is an interface for something that can become a acctJSONEntry.
-type canBeJSONEntry interface {
-	AsAcctJSONEntry() *acctJSONEntry
-}
-
-// AsAcctJSONEntry returns an *acctJSONEntry representing this acctToConvert; satisfies the canBeJSONEntry interface.
-func (a *acctToConvert) AsAcctJSONEntry() *acctJSONEntry {
+// AsAcctJSONEntry returns an *acctJSONEntry representing this acctInfo; satisfies the canBeJSONEntry interface.
+func (a *acctInfo) AsAcctJSONEntry() *acctJSONEntry {
 	rv := &acctJSONEntry{
 		Addr:        a.addr.String(),
-		Undelegated: a.nhashBalance.Amount.String(),
-		Delegated:   provutils.Ternary(a.delegatedAmt.IsZero(), "", a.delegatedAmt.String()),
-		Vesting:     a.toVest.Amount.String(),
-		PubKey:      provutils.Ternary(a.baseAcct.GetPubKey() == nil, "", "yes"),
+		Undelegated: a.balance.String(),
+		Delegated:   provutils.Ternary(a.delegated.IsZero(), "", a.delegated.String()),
+		Total:       provutils.Ternary(a.total.IsZero(), "", a.total.String()),
+		ToKeep:      provutils.Ternary(a.toKeep.IsZero(), "", a.toKeep.String()),
+		ToVest:      provutils.Ternary(a.toVest.IsZero(), "", a.toVest.String()),
+		DelVest:     provutils.Ternary(a.delVest.IsZero(), "", a.delVest.String()),
+		DelFree:     provutils.Ternary(a.delFree.IsZero(), "", a.delFree.String()),
+
+		OnHold: provutils.Ternary(a.onHold.IsZero(), "", a.onHold.Amount.String()),
 	}
-	if !a.onHold.IsZero() {
-		rv.OnHold = a.onHold.Amount.String()
-	}
-	if a.baseAcct.Sequence != 0 {
+
+	if a.baseAcct != nil {
 		rv.Sequence = strconv.FormatUint(a.baseAcct.Sequence, 10)
+		rv.PubKey = provutils.Ternary(a.baseAcct.GetPubKey() == nil, "", "yes")
 	}
 	if a.groupPolicy != nil {
 		rv.Group = strconv.FormatUint(a.groupPolicy.GroupId, 10) + "=" + a.groupPolicy.Metadata
@@ -709,6 +785,8 @@ func (a *acctToConvert) AsAcctJSONEntry() *acctJSONEntry {
 	switch {
 	case a.groupPolicy != nil:
 		rv.Type = "group"
+	case a.baseAcct == nil:
+		rv.Type = "unknown"
 	case a.baseAcct.Sequence == 0 && a.baseAcct.GetPubKey() == nil:
 		rv.Type = "new"
 	default:
@@ -716,23 +794,4 @@ func (a *acctToConvert) AsAcctJSONEntry() *acctJSONEntry {
 	}
 
 	return rv
-}
-
-// AsAcctJSONEntry returns an *acctJSONEntry representing this convertedAcct; satisfies the canBeJSONEntry interface.
-// Part of the yellow upgrade.
-func (a *convertedAcct) AsAcctJSONEntry() *acctJSONEntry {
-	rv := a.acctToConvert.AsAcctJSONEntry()
-	rv.Delegated = cleanNhashCoinsString(a.vestingAcct.DelegatedVesting)
-	rv.Vesting = cleanNhashCoinsString(a.vestingAcct.OriginalVesting)
-	return rv
-}
-
-// cleanNhashCoinsString removes the "nhash" suffix from a string of the provided coins.
-// Part of the yellow upgrade.
-func cleanNhashCoinsString(coins sdk.Coins) string {
-	rv := coins.String()
-	if len(rv) == 0 || strings.Contains(rv, ",") {
-		return rv
-	}
-	return strings.TrimSuffix(rv, nhashDenom)
 }
