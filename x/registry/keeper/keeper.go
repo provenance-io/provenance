@@ -130,6 +130,12 @@ func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddr
 		return fmt.Errorf("registry not found")
 	}
 
+	// Determine if the authority owns the NFT
+	nftOwner := k.GetNFTOwner(ctx, &key.AssetClassId, &key.NftId)
+	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
+		return fmt.Errorf("authority does not own the NFT")
+	}
+
 	registryEntry, err := k.Registry.Get(ctx, *keyStr)
 	if err != nil {
 		return err
@@ -167,6 +173,12 @@ func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAdd
 	}
 	if !has {
 		return fmt.Errorf("registry not found")
+	}
+
+	// Determine if the authority owns the NFT
+	nftOwner := k.GetNFTOwner(ctx, &key.AssetClassId, &key.NftId)
+	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
+		return fmt.Errorf("authority does not own the NFT")
 	}
 
 	registryEntry, err := k.Registry.Get(ctx, *keyStr)
