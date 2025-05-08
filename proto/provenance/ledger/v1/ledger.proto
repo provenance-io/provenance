@@ -180,6 +180,6 @@ message Ledgers {
   repeated LedgerToEntries ledger_to_entries = 1;
 }
 message LedgerToEntries {
-  string nft_id = 1;
+  string               nft_id  = 1;
   repeated LedgerEntry entries = 2;
 }

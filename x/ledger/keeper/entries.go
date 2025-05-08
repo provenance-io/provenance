@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
+	"github.com/provenance-io/provenance/x/registry"
 )
 
 var _ EntriesKeeper = (*BaseEntriesKeeper)(nil)
@@ -18,16 +19,11 @@ type EntriesKeeper interface {
 
 type BaseEntriesKeeper struct {
 	BaseViewKeeper
+	RegistryKeeper
 }
 
 // SetValue stores a value with a given key.
 func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error {
-	// Validate the key
-	err := ValidateLedgerKeyBasic(ledgerKey)
-	if err != nil {
-		return err
-	}
-
 	// Need to resolve the ledger class for validation purposes
 	ledger, err := k.GetLedger(ctx, ledgerKey)
 	if err != nil {
@@ -37,18 +33,40 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
-	// TODO validate against the registry that the authority address is the servicer for this NFT.
-	// If there isn't a registry entry we'll verify against the owner of the nftId.
-
-	// Validate that the NFT exists
-	if !k.HasNFT(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId) {
-		return NewLedgerCodedError(ErrCodeNotFound, "nft")
+	// Create a registry key for lookups.
+	rk := registry.RegistryKey{
+		AssetClassId: ledgerKey.AssetClassId,
+		NftId:        ledgerKey.NftId,
 	}
 
-	// Validate that the authority has ownership of the NFT
-	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
-	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
+	// Get the registry entry for the NFT to determine if the authority has the servicer role.
+	registryEntry, err := k.BaseViewKeeper.RegistryKeeper.GetRegistry(ctx, &rk)
+	if err != nil {
+		return err
+	}
+
+	// If there isn't a registry entry we'll verify against the owner of the nftId.
+	if registryEntry == nil {
+		// Check if the authority has ownership of the NFT
+		nftOwner := k.BaseViewKeeper.RegistryKeeper.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
+		if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
+			return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
+		}
+	} else {
+		// Check if the authority has the servicer role for this NFT
+		hasRole, err := k.BaseViewKeeper.RegistryKeeper.HasRole(ctx, &rk, registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(), authorityAddr.String())
+		if err != nil {
+			return err
+		}
+		if !hasRole {
+			return NewLedgerCodedError(ErrCodeUnauthorized, "servicer")
+		}
+	}
+
+	// Validate the key
+	err = ValidateLedgerKeyBasic(ledgerKey)
+	if err != nil {
+		return err
 	}
 
 	// Get all existing entries for this NFT

@@ -39,8 +39,8 @@ const (
 )
 
 // NewKeeper returns a new mymodule Keeper.
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper BankKeeper, nftKeeper NFTKeeper, metaDataKeeper MetaDataKeeper, registryKeeper RegistryKeeper) BaseKeeper {
-	viewKeeper := NewBaseViewKeeper(cdc, storeKey, storeService, metaDataKeeper, nftKeeper, registryKeeper)
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper BankKeeper, registryKeeper RegistryKeeper) BaseKeeper {
+	viewKeeper := NewBaseViewKeeper(cdc, storeKey, storeService, registryKeeper)
 
 	return BaseKeeper{
 		BaseViewKeeper: viewKeeper,

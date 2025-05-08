@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"sort"
-	"strings"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -13,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
-	metadataTypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
@@ -45,13 +43,10 @@ type BaseViewKeeper struct {
 	LedgerClassStatusTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassStatusType]
 	LedgerClassBucketTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassBucketType]
 
-	MetaDataKeeper MetaDataKeeper
-	NFTKeeper      NFTKeeper
 	RegistryKeeper RegistryKeeper
 }
 
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService,
-	metaDataKeeper MetaDataKeeper, nftKeeper NFTKeeper, registryKeeper RegistryKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, registryKeeper RegistryKeeper) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
 	lk := BaseViewKeeper{
@@ -110,8 +105,6 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 			codec.CollValue[ledger.LedgerClassBucketType](cdc),
 		),
 
-		MetaDataKeeper: metaDataKeeper,
-		NFTKeeper:      nftKeeper,
 		RegistryKeeper: registryKeeper,
 	}
 	// Build and set the schema
@@ -404,69 +397,4 @@ func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerCla
 		bucketTypes = append(bucketTypes, &bucketType)
 	}
 	return bucketTypes, nil
-}
-
-func (k BaseViewKeeper) HasNFT(ctx context.Context, assetClassId, nftId *string) bool {
-	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
-	if isMetadataScope {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		_, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataAddress)
-		return found
-	} else {
-		return k.NFTKeeper.HasNFT(ctx, *assetClassId, *nftId)
-	}
-}
-
-func (k BaseViewKeeper) AssetClassExists(ctx context.Context, assetClassId *string) bool {
-	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
-	if isMetadataScope {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		_, found := k.MetaDataKeeper.GetScopeSpecification(sdkCtx, metadataAddress)
-		return found
-	} else {
-		return k.NFTKeeper.HasClass(ctx, *assetClassId)
-	}
-}
-
-func metadataScopeID(assetClassId string) (metadataTypes.MetadataAddress, bool) {
-	// Do a bech32 decode if the prefix is "scope1"
-	if strings.HasPrefix(assetClassId, "scope1") || strings.HasPrefix(assetClassId, "scopespec1") {
-		metadataAddress, err := metadataTypes.MetadataAddressFromBech32(assetClassId)
-		if err != nil {
-			return nil, false
-		}
-		return metadataAddress, true
-	}
-	return nil, false
-}
-
-func (k BaseViewKeeper) GetNFTOwner(ctx context.Context, assetClassId, nftId *string) sdk.AccAddress {
-	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
-	if isMetadataScope {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-		scope, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataAddress)
-		if !found {
-			sdkCtx.Logger().Error("scope not found", "metadata_address", metadataAddress)
-			return nil
-		}
-
-		for _, owner := range scope.Owners {
-			if owner.Role == metadataTypes.PartyType_PARTY_TYPE_OWNER {
-				sdkCtx.Logger().Info("scope found", "metadata_address", metadataAddress, "owner", owner.Address)
-				accAddr, err := sdk.AccAddressFromBech32(owner.Address)
-				if err != nil {
-					sdkCtx.Logger().Error("invalid owner address", "metadata_address", metadataAddress, "owner", owner.Address)
-					return nil
-				}
-				return accAddr
-			}
-			sdkCtx.Logger().Info("scope found", "metadata_address", metadataAddress, "owner", owner.Address, "role", owner.Role)
-		}
-
-		sdkCtx.Logger().Error("scope found but no owner", "metadata_address", metadataAddress)
-		return nil
-	} else {
-		return k.NFTKeeper.GetOwner(ctx, *assetClassId, *nftId)
-	}
 }
