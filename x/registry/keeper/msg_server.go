@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
 
@@ -17,7 +18,18 @@ func NewMsgServer(keeper RegistryKeeper) registry.MsgServer {
 }
 
 func (k msgServer) RegisterNFT(ctx context.Context, msg *registry.MsgRegisterNFT) (*registry.MsgRegisterNFTResponse, error) {
-	return nil, nil
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	authority, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.keeper.CreateRegistry(sdkCtx, authority, msg.Key, msg.Roles)
+	if err != nil {
+		return nil, err
+	}
+
+	return &registry.MsgRegisterNFTResponse{}, nil
 }
 
 func (k msgServer) GrantRole(ctx context.Context, msg *registry.MsgGrantRole) (*registry.MsgGrantRoleResponse, error) {

@@ -32,7 +32,7 @@ func CmdTx() *cobra.Command {
 // CmdRegisterNFT returns the command to register a new NFT
 func CmdRegisterNFT() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "register-nft [key] [roles]",
+		Use:   "register-nft [asset_class_id] [nft_id]",
 		Short: "Register a new NFT with roles",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -41,11 +41,17 @@ func CmdRegisterNFT() *cobra.Command {
 				return err
 			}
 
+			// Parse key from args
+			key := registry.RegistryKey{
+				AssetClassId: args[0],
+				NftId:        args[1],
+			}
+
 			// TODO: Parse key and roles from args
 			msg := registry.MsgRegisterNFT{
 				Authority: clientCtx.GetFromAddress().String(),
-				Key:       nil,                                 // Need to parse key from args[0]
-				Roles:     map[string]registry.RoleAddresses{}, // Need to parse roles from args[1]
+				Key:       &key,
+				Roles:     map[string]registry.RoleAddresses{},
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
