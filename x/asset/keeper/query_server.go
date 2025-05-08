@@ -22,10 +22,10 @@ func NewQueryServerImpl(keeper Keeper) types.QueryServer {
 func (q queryServer) ListAssets(ctx context.Context, req *types.QueryListAssets) (*types.QueryListAssetsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// Get all NFTs owned by the asset module
-	moduleAddr := q.GetModuleAddress()
-	if moduleAddr == nil {
-		return nil, fmt.Errorf("asset module account not found")
+	// Convert the address string to an sdk.AccAddress
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, fmt.Errorf("invalid address: %w", err)
 	}
 
 	// Get all NFT classes
@@ -37,10 +37,10 @@ func (q queryServer) ListAssets(ctx context.Context, req *types.QueryListAssets)
 		// Get all NFTs in this class
 		nfts := q.nftKeeper.GetNFTsOfClass(sdkCtx, class.Id)
 
-		// Filter NFTs owned by the module
+		// Filter NFTs owned by the specified address
 		for _, nft := range nfts {
 			owner := q.nftKeeper.GetOwner(sdkCtx, class.Id, nft.Id)
-			if owner.Equals(moduleAddr) {
+			if owner.Equals(addr) {
 				// Convert NFT to Asset
 				asset := &types.Asset{
 					ClassId: nft.ClassId,

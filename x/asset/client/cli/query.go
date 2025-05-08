@@ -30,8 +30,9 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdListAssets returns the command for listing all assets
 func GetCmdListAssets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-assets",
-		Short: "List all assets",
+		Use:   "list-assets [address]",
+		Short: "List all assets owned by an address",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -39,7 +40,9 @@ func GetCmdListAssets() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.ListAssets(cmd.Context(), &types.QueryListAssets{})
+			res, err := queryClient.ListAssets(cmd.Context(), &types.QueryListAssets{
+				Address: args[0],
+			})
 			if err != nil {
 				return err
 			}
