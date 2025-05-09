@@ -43,7 +43,7 @@ func GetCompositeKey(msgType string, recipient string) string {
 	return fmt.Sprintf("%s%s%s", msgType, CompositeKeyDelimiter, recipient)
 }
 
-// SplitCompositKey splits the composite key into msgType and recipient, if recipient is empty then it is for the fee module
+// SplitCompositeKey splits the composite key into msgType and recipient, if recipient is empty then it is for the fee module
 func SplitCompositeKey(key string) (msgType, recipient string) {
 	msgAccountPair := strings.Split(key, CompositeKeyDelimiter)
 	addressKey := ""

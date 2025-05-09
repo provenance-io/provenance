@@ -14,7 +14,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// QueryAddress returns the address of the module's oracle
+// OracleAddress returns the address of the module's oracle
 func (k Keeper) OracleAddress(goCtx context.Context, _ *types.QueryOracleAddressRequest) (*types.QueryOracleAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	oracle, _ := k.GetOracle(ctx)
