@@ -80,7 +80,7 @@ jobs:
           path: build/*.zip
 
   build_linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs:
       - build_init
     name: Build Linux

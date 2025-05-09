@@ -144,7 +144,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	s.Require().NoError(err)
 	_, err = server.Activate(s.ctx, markertypes.NewMsgActivateRequest(hotdogDenom, s.user1Addr))
 	s.Require().NoError(err)
-	_, err = server.Mint(s.ctx, markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 1000)))
+	_, err = server.Mint(s.ctx, markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 1000), s.user2Addr))
 	s.Require().NoError(err)
 	_, err = server.Withdraw(s.ctx, markertypes.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 10))))
 	s.Require().NoError(err)

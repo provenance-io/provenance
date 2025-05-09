@@ -270,6 +270,17 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	if len(msg.Recipient) > 0 {
+		recipient, err := sdk.AccAddressFromBech32(msg.Recipient)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient: %s", msg.Recipient)
+		}
+		if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
+			ctx.Logger().Error("unable to withdraw coins", "err", err)
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
+	}
+
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, types.EventTelemetryKeyMint},
