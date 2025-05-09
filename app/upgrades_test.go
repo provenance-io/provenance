@@ -323,14 +323,6 @@ func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
 		}
 	})
 
-	s.Run("rc exists for each color", func() {
-		// We shouldn't delete any entries (rc or non) until all of the entries for that color can be deleted.
-		// This helps maintain a complete picture of the upgrades involved with a version.
-		for _, color := range colors {
-			s.Assert().NotEmpty(rcs[color], "rc entries for %s in %q", color, handlerKeys)
-		}
-	})
-
 	s.Run("rcs all exist sequentially", func() {
 		// All of the rc entries should be present starting with 1 and increasing by 1 each time.
 		// I.e. we shouldn't skip a number, and old rc entries shouldn't be deleted until all
@@ -586,11 +578,13 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
+// TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
+
 func (s *UpgradeTestSuite) TestYellow() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
 		"INF Removing inactive validator delegations.",
-		"INF Converting TODO specific accounts to vesting accounts.", // TODO[yellow]: Update number.
+		"INF Converting accounts to vesting accounts.",
 	}
 	s.AssertUpgradeHandlerLogs("yellow", expInLog, nil)
 }

@@ -192,6 +192,7 @@ message MsgMintRequest {
 
   cosmos.base.v1beta1.Coin amount        = 1 [(gogoproto.nullable) = false];
   string                   administrator = 2;
+  string                   recipient = 3;    // recipient is the optional address to receive the newly minted funds.
 }
 // MsgMintResponse defines the Msg/Mint response type
 message MsgMintResponse {}

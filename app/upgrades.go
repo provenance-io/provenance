@@ -308,7 +308,7 @@ type acctInfo struct {
 	startTime int64
 	endTime   int64
 
-	// vestingAcct is only populated upon conversion.
+	// newAcct is only populated upon conversion.
 	newAcct *vesting.ContinuousVestingAccount
 
 	reason string
@@ -341,6 +341,13 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 
 	ibcAccts := identifyIBCAccounts(ctx, app)
 
+	// ignoreAcct will set the reason field, log that we're ignoring the account, and add it to the toIgnore slice.
+	ignoreAcct := func(acct *acctInfo, logFunc func(msg string, keyVals ...any), reasonFmt string, reasonArgs ...interface{}) {
+		acct.reason = fmt.Sprintf(reasonFmt, reasonArgs...)
+		logFunc("Ignoring account.", "reason", acct.reason)
+		toIgnore = append(toIgnore, acct)
+	}
+
 	err := app.AccountKeeper.Accounts.Walk(ctx, nil, func(addr sdk.AccAddress, acctI sdk.AccountI) (stop bool, err error) {
 		addrStr := addr.String()
 		logger := ctx.Logger().With("account", addrStr)
@@ -352,9 +359,7 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 		acct.balance = app.BankKeeper.GetBalance(ctx, addr, nhashDenom).Amount
 		acct.delegated, err = app.StakingKeeper.GetDelegatorBonded(ctx, addr)
 		if err != nil {
-			acct.reason = fmt.Sprintf("error: could not look up delegated amount: %v", err)
-			logger.Error(acct.reason)
-			toIgnore = append(toIgnore, acct)
+			ignoreAcct(acct, logger.Error, "error: could not look up delegated amount: %v", err)
 			return false, nil
 		}
 
@@ -371,9 +376,13 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 		acct.baseAcct, ok = acctI.(*authtypes.BaseAccount)
 		if !ok {
 			// Only base accounts can be converted to vesting accounts.
-			acct.reason = fmt.Sprintf("account has type %T", acctI)
-			logger.Debug("Skipping account.", "reason", acct.reason)
-			toIgnore = append(toIgnore, acct)
+			ignoreAcct(acct, logger.Debug, "account has type %T", acctI)
+			return false, nil
+		}
+
+		if !acct.toVest.IsPositive() {
+			// Only convert the account if it's got hash to lock up.
+			ignoreAcct(acct, logger.With("nhash", acct.total.String()).Debug, "account does not own enough hash")
 			return false, nil
 		}
 
@@ -386,25 +395,19 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 
 		if ibcAccts[addrStr] {
 			// Don't do anything to IBC accounts because it might break that stuff.
-			acct.reason = "account is an IBC-related account"
-			logger.Debug("Skipping account.", "reason", acct.reason)
-			toIgnore = append(toIgnore, acct)
+			ignoreAcct(acct, logger.Debug, "account is an IBC-related account")
 			return false, nil
 		}
 
 		if app.WasmKeeper.HasContractInfo(ctx, addr) {
 			// Don't do anything to wasm accounts because it might break the contract.
-			acct.reason = "account is a smart contract"
-			logger.Debug("Skipping account.", "reason", acct.reason)
-			toIgnore = append(toIgnore, acct)
+			ignoreAcct(acct, logger.Debug, "account is a smart contract")
 			return false, nil
 		}
 
 		if app.Ics20WasmHooks.ContractKeeper.HasContractInfo(ctx, addr) {
 			// Don't do anything to interchain wasm accounts because it might break the contract.
-			acct.reason = "account is an ICS smart contract"
-			logger.Debug("Skipping account.", "reason", acct.reason)
-			toIgnore = append(toIgnore, acct)
+			ignoreAcct(acct, logger.Debug, "account is an ICS smart contract")
 			return false, nil
 		}
 
@@ -423,15 +426,7 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 // addMonths will return an epoch that is the given months after the start time.
 // Part of the yellow upgrade.
 func addMonths(start time.Time, months int) int64 {
-	newDay := start.Day()
-	newMonth := start.Month()
-	newYear := start.Year()
-	if months > 12 {
-		newYear += months / 12
-		months %= 12
-	}
-	newMonth += time.Month(months)
-	return time.Date(newYear, newMonth, newDay+1, 0, 0, 0, 0, start.Location()).Unix()
+	return start.AddDate(0, months, 0).Unix()
 }
 
 // identifyIBCAccounts looks up and returns all accounts that might be related to IBC. The keys are bech32 address strings.
@@ -614,19 +609,17 @@ func (c *acctConverter) convert(sdkCtx sdk.Context, acct *acctInfo) (err error) 
 		return fmt.Errorf("account has %s on hold", lockedHash)
 	}
 
-	if !acct.total.IsPositive() || acct.balance.IsNegative() || acct.delegated.IsNegative() {
-		return fmt.Errorf("account has invalid nhash amount %s = %s (balance) + %snhash (delegated)",
-			acct.total, acct.balance, acct.delegated)
-	}
-
-	origVest := sdk.Coins{sdk.NewCoin(nhashDenom, acct.total)}
+	origVest := sdk.Coins{sdk.NewCoin(nhashDenom, acct.toVest)}
 	newAcct, err := vesting.NewContinuousVestingAccount(acct.baseAcct, origVest, acct.startTime, acct.endTime)
 	if err != nil {
 		return fmt.Errorf("could not create new continuous vesting account: %w", err)
 	}
 
-	if acct.delegated.IsPositive() {
-		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(nhashDenom, acct.delegated))
+	if acct.delVest.IsPositive() {
+		newAcct.BaseVestingAccount.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(nhashDenom, acct.delVest))
+	}
+	if acct.delFree.IsPositive() {
+		newAcct.BaseVestingAccount.DelegatedFree = sdk.NewCoins(sdk.NewCoin(nhashDenom, acct.delFree))
 	}
 
 	c.app.AccountKeeper.SetAccount(ctx, newAcct)
@@ -648,7 +641,7 @@ func (c *acctConverter) cancelExchangeHolds(ctx sdk.Context, addr sdk.AccAddress
 		}
 		err := c.app.ExchangeKeeper.ReleaseCommitment(ctx, marketID, addr, sdk.Coins{nhashCoin}, "yellow upgrade")
 		if err != nil {
-			return fmt.Errorf("error releasing commitment of %s to market %d", nhashCoin, marketID)
+			return fmt.Errorf("error releasing commitment of %s to market %d: %w", nhashCoin, marketID, err)
 		}
 	}
 
