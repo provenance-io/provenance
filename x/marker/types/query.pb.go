@@ -1018,6 +1018,7 @@ func (m *QueryNetAssetValuesResponse) GetNetAssetValues() []NetAssetValue {
 	return nil
 }
 
+// QueryMarkerFeeGrantsRequest is the request type for the Query/MarkerFeeGrants RPC method.
 type QueryMarkerFeeGrantsRequest struct {
 	// address or denom for the marker
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1072,6 +1073,7 @@ func (m *QueryMarkerFeeGrantsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
+// QueryMarkerFeeGrantsResponse is the response type for the Query/MarkerFeeGrants RPC method.
 type QueryMarkerFeeGrantsResponse struct {
 	// List of marker fee grants.
 	Grants []*feegrant.Grant `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants,omitempty"`

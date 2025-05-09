@@ -262,9 +262,6 @@ func paginateGrants(ctx sdk.Context, feegrantKeeper types.FeeGrantKeeper, marker
 		if pageReq.Limit > 0 {
 			limit = pageReq.Limit
 		}
-		if pageReq.Offset < 0 || pageReq.Limit < 0 {
-			return nil, nil, status.Errorf(codes.Internal, "invalid pagination parameter: offset and limit must be non-negative")
-		}
 	}
 
 	var grants []*feegrant.Grant
@@ -278,11 +275,11 @@ func paginateGrants(ctx sdk.Context, feegrantKeeper types.FeeGrantKeeper, marker
 		}
 		if granterAddr.Equals(markerAddr) {
 			total++
-			if current >= start && len(grants) < int(limit) {
+			if current >= start && uint64(len(grants)) < limit {
 				grants = append(grants, &grant)
 			}
 			current++
-			if len(grants) >= int(limit) {
+			if uint64(len(grants)) >= limit {
 				return true
 			}
 		}

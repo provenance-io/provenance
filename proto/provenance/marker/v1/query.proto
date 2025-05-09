@@ -206,14 +206,14 @@ message QueryNetAssetValuesResponse {
   // net asset values for marker denom
   repeated NetAssetValue net_asset_values = 1 [(gogoproto.nullable) = false];
 }
-
+// QueryMarkerFeeGrantsRequest is the request type for the Query/MarkerFeeGrants RPC method.
 message QueryMarkerFeeGrantsRequest {
   // address or denom for the marker
   string id = 1;
   // pagination defines the pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
-
+// QueryMarkerFeeGrantsResponse is the response type for the Query/MarkerFeeGrants RPC method.
 message QueryMarkerFeeGrantsResponse {
   // List of marker fee grants.
   repeated cosmos.feegrant.v1beta1.Grant grants = 1;

@@ -8300,7 +8300,7 @@ QueryHoldingResponse is the response type for the Query/MarkerHolders method.
 <a name="provenance-marker-v1-QueryMarkerFeeGrantsRequest"></a>
 
 ### QueryMarkerFeeGrantsRequest
-
+QueryMarkerFeeGrantsRequest is the request type for the Query/MarkerFeeGrants RPC method.
 
 
 | Field | Type | Label | Description |
@@ -8316,7 +8316,7 @@ QueryHoldingResponse is the response type for the Query/MarkerHolders method.
 <a name="provenance-marker-v1-QueryMarkerFeeGrantsResponse"></a>
 
 ### QueryMarkerFeeGrantsResponse
-
+QueryMarkerFeeGrantsResponse is the response type for the Query/MarkerFeeGrants RPC method.
 
 
 | Field | Type | Label | Description |

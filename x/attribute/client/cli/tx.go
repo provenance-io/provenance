@@ -339,7 +339,7 @@ func NewUpdateParamsCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid max value length: %w", err)
 			}
-			maxValueLength32 := uint32(maxValueLength) //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+			maxValueLength32 := uint32(maxValueLength)
 			msg := types.NewMsgUpdateParamsRequest(authority, maxValueLength32)
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
