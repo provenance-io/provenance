@@ -6,7 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 
+	"encoding/json"
+	"fmt"
+
 	"github.com/provenance-io/provenance/x/asset/types"
+	"github.com/provenance-io/provenance/x/ledger"
 )
 
 // GetTxCmd returns the transaction commands for the asset module
@@ -30,9 +34,9 @@ func GetTxCmd() *cobra.Command {
 // GetCmdAddAsset returns the command for adding an asset
 func GetCmdAddAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-asset [class-id] [id] [uri] [uri-hash] [data]",
+		Use:   "add-asset [class-id] [id] [uri] [uri-hash] [data] [entry-types] [status-types]",
 		Short: "Add a new asset",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -47,8 +51,22 @@ func GetCmdAddAsset() *cobra.Command {
 				Data:    args[4],
 			}
 
+			// Parse entry types JSON array
+			var entryTypes []*ledger.LedgerClassEntryType
+			if err := json.Unmarshal([]byte(args[5]), &entryTypes); err != nil {
+				return fmt.Errorf("invalid entry-types JSON array: %w", err)
+			}
+
+			// Parse status types JSON array
+			var statusTypes []*ledger.LedgerClassStatusType
+			if err := json.Unmarshal([]byte(args[6]), &statusTypes); err != nil {
+				return fmt.Errorf("invalid status-types JSON array: %w", err)
+			}
+
 			msg := &types.MsgAddAsset{
-				Asset: asset,
+				Asset:       asset,
+				EntryTypes:  entryTypes,
+				StatusTypes: statusTypes,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
