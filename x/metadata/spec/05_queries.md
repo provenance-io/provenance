@@ -216,7 +216,7 @@ The `address` should be a bech32 address string.
 ---
 ## ValueOwnership
 
-The `ValueOwnership` query gets gets the ids of scopes that list an address as the value owner.
+The `ValueOwnership` query gets the ids of scopes that list an address as the value owner.
 
 This query is paginated.
 

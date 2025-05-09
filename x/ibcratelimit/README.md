@@ -210,7 +210,7 @@ The contract also supports quotas on a custom channel called "any" that is check
 transfer channel or the "any" channel have a quota that has been filled, the transaction will be rate limited.
 
 #### Notes on Denom
-We always use the the denom as represented on Osmosis. For native assets that is the local denom, and for non-native
+We always use the denom as represented on Osmosis. For native assets that is the local denom, and for non-native
 assets it's the "ibc" prefix and the sha256 hash of the denom trace (`ibc/...`).
 
 ##### Sends
