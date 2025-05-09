@@ -639,7 +639,7 @@ func (c *acctConverter) cancelExchangeHolds(ctx sdk.Context, addr sdk.AccAddress
 		}
 		err := c.app.ExchangeKeeper.ReleaseCommitment(ctx, marketID, addr, sdk.Coins{nhashCoin}, "yellow upgrade")
 		if err != nil {
-			return fmt.Errorf("error releasing commitment of %s to market %d", nhashCoin, marketID)
+			return fmt.Errorf("error releasing commitment of %s to market %d: %w", nhashCoin, marketID, err)
 		}
 	}
 
