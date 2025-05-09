@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/feegrant"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -203,6 +204,34 @@ func (k Keeper) NetAssetValues(c context.Context, req *types.QueryNetAssetValues
 	return &types.QueryNetAssetValuesResponse{NetAssetValues: navs}, nil
 }
 
+// MarkerFeeGrants returns a list of all feegrants for given marker.
+func (k Keeper) MarkerFeeGrants(c context.Context, req *types.QueryMarkerFeeGrantsRequest) (*types.QueryMarkerFeeGrantsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	markerAddr := marker.GetAddress()
+	if marker.GetStatus() != types.StatusActive {
+		return nil, status.Errorf(codes.Internal, "marker %s is not active: %v", markerAddr.String(), err)
+	}
+
+	grants, pageRes, err := paginateGrants(ctx, k.feegrantKeeper, markerAddr, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryMarkerFeeGrantsResponse{
+		Grants:     grants,
+		Pagination: pageRes,
+	}, nil
+}
+
 // accountForDenomOrAddress attempts to first get a marker by account address and then by denom.
 func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (types.MarkerAccountI, error) {
 	var addrErr, err error
@@ -219,4 +248,51 @@ func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (ty
 		return nil, types.ErrMarkerNotFound.Wrap("invalid denom or address")
 	}
 	return account, nil
+}
+
+// paginateGrants pagination fee grants issued by the marker using IterateAllFeeAllowances.
+func paginateGrants(ctx sdk.Context, feegrantKeeper types.FeeGrantKeeper, markerAddr sdk.AccAddress, pageReq *query.PageRequest) ([]*feegrant.Grant, *query.PageResponse, error) {
+	// validate pagination
+	start := uint64(0)
+	limit := uint64(100)
+	if pageReq != nil {
+		if pageReq.Offset > 0 {
+			start = pageReq.Offset
+		}
+		if pageReq.Limit > 0 {
+			limit = pageReq.Limit
+		}
+	}
+
+	var grants []*feegrant.Grant
+	current := uint64(0)
+	total := uint64(0)
+
+	err := feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+		granterAddr, err := sdk.AccAddressFromBech32(grant.Granter)
+		if err != nil {
+			return false
+		}
+		if granterAddr.Equals(markerAddr) {
+			total++
+			if current >= start && uint64(len(grants)) < limit {
+				grants = append(grants, &grant)
+			}
+			current++
+			if uint64(len(grants)) >= limit {
+				return true
+			}
+		}
+		return false
+	})
+
+	if err != nil {
+		return nil, nil, status.Errorf(codes.Internal, "failed to iterate fee grants : %s", err.Error())
+	}
+
+	pageRes := &query.PageResponse{
+		Total: total,
+	}
+
+	return grants, pageRes, nil
 }
