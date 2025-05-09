@@ -4812,6 +4812,10 @@ func (s *TestSuite) TestKeeper_CanReleaseCommitmentsForMarket() {
 	s.runPermTest(exchange.Permission_cancel, s.k.CanReleaseCommitmentsForMarket, "CanReleaseCommitmentsForMarket")
 }
 
+func (s *TestSuite) TestKeeper_CanTransferCommitmentsForMarket() {
+	s.runPermTest(exchange.Permission_cancel, s.k.CanTransferCommitmentsForMarket, "CanTransferCommitmentsForMarket")
+}
+
 func (s *TestSuite) TestKeeper_CanWithdrawMarketFunds() {
 	s.runPermTest(exchange.Permission_withdraw, s.k.CanWithdrawMarketFunds, "CanWithdrawMarketFunds")
 }
