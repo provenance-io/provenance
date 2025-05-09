@@ -485,7 +485,7 @@ func ModifyOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
-// WriteScopeSpecificationCmd creates a command for adding scope specificiation
+// WriteScopeSpecificationCmd creates a command for adding scope specification
 func WriteScopeSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "write-scope-specification [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name, optional] [description, optional] [website-url, optional] [icon-url, optional]",
