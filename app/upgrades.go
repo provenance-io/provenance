@@ -1,12 +1,8 @@
 package app
 
 import (
-	"bufio"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,17 +13,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
-	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -296,13 +289,6 @@ func convertAcctsToVesting(ctx sdk.Context, app *App) {
 	}
 
 	converter.logStats(ctx)
-
-	dumpAccountsToFile(ctx, "accounts_converted", converter.converted)
-	dumpAccountsToFile(ctx, "accounts_ignored", converter.ignored)
-	if len(converter.skipped) > 0 {
-		dumpAccountsToFile(ctx, "accounts_skipped", converter.skipped)
-	}
-
 	ctx.Logger().Info("Done converting accounts to vesting accounts.")
 }
 
@@ -326,10 +312,6 @@ type acctInfo struct {
 	newAcct *vesting.ContinuousVestingAccount
 
 	reason string
-
-	// These two pieces are just informational (for analysis).
-	onHold      sdk.Coin
-	groupPolicy *group.GroupPolicyInfo
 }
 
 // newAcctInfo creates a new acctInfo starting with the provided address and account.
@@ -345,7 +327,6 @@ func newAcctInfo(addr sdk.AccAddress, acctI sdk.AccountI) *acctInfo {
 		toKeep:    sdkmath.ZeroInt(),
 		delVest:   sdkmath.ZeroInt(),
 		delFree:   sdkmath.ZeroInt(),
-		onHold:    sdk.NewInt64Coin(nhashDenom, 0),
 	}
 }
 
@@ -421,22 +402,6 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 			return false, nil
 		}
 
-		// Get a few more pieces of info that are useful for analysis. TODO[yellow]: Delete this.
-		acct.onHold, err = app.HoldKeeper.GetHoldCoin(ctx, addr, nhashDenom)
-		if err != nil {
-			logger.Error("Could not get amount of nhash on hold.", "error", err)
-		}
-
-		gp, err := app.GroupKeeper.GroupPolicyInfo(ctx, &group.QueryGroupPolicyInfoRequest{Address: addrStr})
-		switch {
-		case err == nil:
-			acct.groupPolicy = gp.Info
-		case errors.Is(err, sdkerrors.ErrNotFound):
-			// Not a group account. Nothing to do.
-		default:
-			logger.Error("Could not get group policy info.", "error", err)
-		}
-
 		if !acct.toVest.IsPositive() {
 			acct.reason = "account does not own enough hash"
 			logger.Debug("Skipping account.", "reason", acct.reason, "nhash", acct.total.String())
@@ -445,7 +410,6 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 		}
 
 		toConvert = append(toConvert, acct)
-
 		return false, nil
 	})
 
@@ -776,142 +740,4 @@ func addCommas(amt string) string {
 		rv = append(rv, digit)
 	}
 	return string(rv)
-}
-
-// TODO[yellow]: Delete the dumpAccountsToFile and acctJSONEntry stuff.
-
-// dumpConvertedToFile will write a file containing info about all the converted accounts.
-// Part of the yellow upgrade.
-func dumpAccountsToFile(ctx sdk.Context, baseName string, converted []*acctInfo) {
-	filename := fmt.Sprintf("./%s_%d_%s.json", baseName, ctx.BlockHeight(), ctx.BlockTime().Format("2006-01-02_03-04-05"))
-	// This uses .Error to make it easier to find in the logs.
-	ctx.Logger().Error(fmt.Sprintf("Writing accounts to %q (not an error)", filename))
-	file, err := os.Create(filename)
-	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Error creating file: %q: %v", filename, err))
-		return
-	}
-
-	var buf *bufio.Writer
-	defer func() {
-		if buf != nil && buf.Buffered() > 0 {
-			ctx.Logger().Debug(fmt.Sprintf("Flushing final buffer with %d bytes.", buf.Buffered()))
-			if err = buf.Flush(); err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Error flushing final buffer %q: %v.", filename, err))
-			}
-		}
-		buf = nil
-
-		if file != nil {
-			if err = file.Sync(); err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Error syncing file %q: %v.", filename, err))
-			}
-			if err = file.Close(); err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Error closing file %q: %v.", filename, err))
-			}
-			file = nil
-		}
-		// This uses .Error to make it easier to find in the logs.
-		ctx.Logger().Error(fmt.Sprintf("Done writing accounts to %q (not an error).", filename))
-	}()
-
-	buf = bufio.NewWriterSize(file, 32768)
-	ctx.Logger().Debug(fmt.Sprintf("Buffer size: %d", buf.Size()))
-
-	for i, acct := range converted {
-		entry := acct.AsAcctJSONEntry()
-		logger := ctx.Logger().With("addr", entry.Addr, "i", i)
-		data, err := json.Marshal(entry)
-		if err != nil {
-			logger.Error("Could not marshal JSON for entry.", "error", err)
-			continue
-		}
-
-		lead := provutils.Ternary(i == 0, "[\n  ", ",\n  ")
-		_, err = buf.WriteString(lead)
-		if err != nil {
-			logger.Error("Could not write line lead to buffer.", "line_lead", lead, "error", err)
-			return
-		}
-
-		if buf.Available() < len(data) {
-			logger.Debug(fmt.Sprintf("Flushing buffer with %d bytes.", buf.Buffered()))
-			if err = buf.Flush(); err != nil {
-				ctx.Logger().Error("Could not flush buffer.", "error", err)
-				return
-			}
-		}
-
-		_, err = buf.Write(data)
-		if err != nil {
-			logger.Error("Could not write entry to buffer.", "error", err)
-			return
-		}
-	}
-
-	_, err = buf.WriteString("\n]\n")
-	if err != nil {
-		ctx.Logger().Error("Could not write ending.", "error", err)
-		return
-	}
-}
-
-// acctJSONEntry contains the info we want in the json file.
-// Part of the yellow upgrade.
-type acctJSONEntry struct {
-	Addr        string `json:"addr"`
-	Total       string `json:"total"`
-	Undelegated string `json:"undelegated"`
-	Delegated   string `json:"delegated"`
-	ToKeep      string `json:"to_keep"`
-	ToVest      string `json:"to_vest"`
-	DelVest     string `json:"del_vest"`
-	DelFree     string `json:"del_free"`
-
-	// These are just extra pieces of info that might be useful for analysis.
-	Sequence string `json:"sequence"`
-	OnHold   string `json:"on_hold"`
-	PubKey   string `json:"key"`
-	Group    string `json:"group"`
-	Type     string `json:"type"`
-
-	Reason string `json:"reason,omitempty"`
-}
-
-// AsAcctJSONEntry returns an *acctJSONEntry representing this acctInfo; satisfies the canBeJSONEntry interface.
-func (a *acctInfo) AsAcctJSONEntry() *acctJSONEntry {
-	rv := &acctJSONEntry{
-		Addr:        a.addr.String(),
-		Undelegated: a.balance.String(),
-		Delegated:   provutils.Ternary(a.delegated.IsZero(), "", a.delegated.String()),
-		Total:       provutils.Ternary(a.total.IsZero(), "", a.total.String()),
-		ToKeep:      provutils.Ternary(a.toKeep.IsZero(), "", a.toKeep.String()),
-		ToVest:      provutils.Ternary(a.toVest.IsZero(), "", a.toVest.String()),
-		DelVest:     provutils.Ternary(a.delVest.IsZero(), "", a.delVest.String()),
-		DelFree:     provutils.Ternary(a.delFree.IsZero(), "", a.delFree.String()),
-		Reason:      a.reason,
-
-		OnHold: provutils.Ternary(a.onHold.IsZero(), "", a.onHold.Amount.String()),
-	}
-
-	if a.baseAcct != nil {
-		rv.Sequence = strconv.FormatUint(a.baseAcct.Sequence, 10)
-		rv.PubKey = provutils.Ternary(a.baseAcct.GetPubKey() == nil, "", "yes")
-	}
-	if a.groupPolicy != nil {
-		rv.Group = strconv.FormatUint(a.groupPolicy.GroupId, 10) + "=" + a.groupPolicy.Metadata
-	}
-
-	switch {
-	case a.groupPolicy != nil:
-		rv.Type = "group"
-	case a.baseAcct == nil:
-		rv.Type = "unknown"
-	case a.baseAcct.Sequence == 0 && a.baseAcct.GetPubKey() == nil:
-		rv.Type = "new"
-	default:
-		rv.Type = "standard"
-	}
-
-	return rv
 }
