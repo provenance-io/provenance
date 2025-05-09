@@ -92,16 +92,25 @@ func (msg MsgDeleteRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
-func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest {
-	return &MsgMintRequest{
+func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin, recipient sdk.AccAddress) *MsgMintRequest {
+	msg := &MsgMintRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
 	}
+	if !recipient.Empty() {
+		msg.Recipient = recipient.String()
+	}
+	return msg
 }
 
 func (msg MsgMintRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
+	}
+	if msg.Recipient != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", msg.Recipient)
+		}
 	}
 	return msg.Amount.Validate()
 }
