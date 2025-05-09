@@ -84,7 +84,6 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 
 	// If there's data, add it to the token
 	if msg.Asset.Data != "" {
-
 		// Validate the data against the Class schema if it exists
 		// otherwise it's an invalid Class id
 		class, ok := m.nftKeeper.GetClass(ctx, msg.Asset.ClassId)
@@ -137,29 +136,27 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 	err = m.ledgerKeeper.CreateLedgerClass(ctx, owner, ledgerClass)
 	if err != nil {
 		// If the error is not that the class already exists, return the error
-		return nil,fmt.Errorf("failed to create ledger class: %w", err)
+		return nil, fmt.Errorf("failed to create ledger class: %w", err)
 	}
 
-	// Add default entry type if it doesn't exist
-	entryType := ledger.LedgerClassEntryType{
-		Id:          1,
-		Code:        "DEFAULT",
-		Description: "Default entry type for asset ledger",
-	}
-	err = m.ledgerKeeper.AddClassEntryType(ctx, owner, ledgerClassId, entryType)
-	if err != nil && !strings.Contains(err.Error(), "already exists") {
-		return nil, fmt.Errorf("failed to add ledger class entry type: %w", err)
+	// Add provided entry types, or default if none provided
+	if len(msg.EntryTypes) > 0 {
+		for _, entryType := range msg.EntryTypes {
+			err = m.ledgerKeeper.AddClassEntryType(ctx, owner, ledgerClassId, *entryType)
+			if err != nil && !strings.Contains(err.Error(), "already exists") {
+				return nil, fmt.Errorf("failed to add ledger class entry type: %w", err)
+			}
+		}
 	}
 
-	// Add default status type if it doesn't exist
-	statusType := ledger.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active status for asset ledger",
-	}
-	err = m.ledgerKeeper.AddClassStatusType(ctx, owner, ledgerClassId, statusType)
-	if err != nil && !strings.Contains(err.Error(), "already exists") {
-		return nil, fmt.Errorf("failed to add ledger class status type: %w", err)
+	// Add provided status types, or default if none provided
+	if len(msg.StatusTypes) > 0 {
+		for _, statusType := range msg.StatusTypes {
+			err = m.ledgerKeeper.AddClassStatusType(ctx, owner, ledgerClassId, *statusType)
+			if err != nil && !strings.Contains(err.Error(), "already exists") {
+				return nil, fmt.Errorf("failed to add ledger class status type: %w", err)
+			}
+		}
 	}
 
 	// Create a ledger for this asset
