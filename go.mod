@@ -2,7 +2,7 @@ module github.com/provenance-io/provenance
 
 go 1.23.1
 
-toolchain go1.23.5
+toolchain go1.24.1
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -45,7 +45,7 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/text v0.23.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 	sigs.k8s.io/yaml v1.4.0
 )
