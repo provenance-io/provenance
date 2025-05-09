@@ -602,12 +602,7 @@ func (c *acctConverter) convert(sdkCtx sdk.Context, acct *acctInfo) (err error) 
 		return fmt.Errorf("account has %s on hold", lockedHash)
 	}
 
-	if !acct.total.IsPositive() || acct.balance.IsNegative() || acct.delegated.IsNegative() {
-		return fmt.Errorf("account has invalid nhash amount %s = %s (balance) + %snhash (delegated)",
-			acct.total, acct.balance, acct.delegated)
-	}
-
-	origVest := sdk.Coins{sdk.NewCoin(nhashDenom, acct.total)}
+	origVest := sdk.Coins{sdk.NewCoin(nhashDenom, acct.toVest)}
 	newAcct, err := vesting.NewContinuousVestingAccount(acct.baseAcct, origVest, acct.startTime, acct.endTime)
 	if err != nil {
 		return fmt.Errorf("could not create new continuous vesting account: %w", err)
