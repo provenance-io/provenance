@@ -255,6 +255,7 @@ func init() {
 	setWhitelistedQuery("/provenance.marker.v1.Query/DenomMetadata", &markertypes.QueryDenomMetadataResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/AccountData", &markertypes.QueryAccountDataResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/NetAssetValues", &markertypes.QueryNetAssetValuesResponse{})
+	setWhitelistedQuery("/provenance.marker.v1.Query/markerfeegrants", &markertypes.QueryMarkerFeeGrantsResponse{})
 
 	// metadata
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Params", &metadatatypes.QueryParamsResponse{})

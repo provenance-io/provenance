@@ -33,6 +33,7 @@ func GetQueryCmd() *cobra.Command {
 		MarkerSupplyCmd(),
 		AccountDataCmd(),
 		NetAssetValuesCmd(),
+		MarkerFeeGrantsCmd(),
 	)
 	return queryCmd
 }
@@ -331,6 +332,46 @@ func NetAssetValuesCmd() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// MarkerFeeGrantsCmd is the CLI command for listing all marker module registrations.
+func MarkerFeeGrantsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "marker-fee-grants [address|denom]",
+		Aliases: []string{"mfg", "mfgs"},
+		Short:   "List all marker fee grants for given address|denom on the Provenance Blockchain",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query marker holding nhash`, version.AppName)),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			id := strings.ToLower(strings.TrimSpace(args[0]))
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			var response *types.QueryMarkerFeeGrantsResponse
+			if response, err = queryClient.MarkerFeeGrants(
+				context.Background(),
+				&types.QueryMarkerFeeGrantsRequest{
+					Id:         id,
+					Pagination: pageReq,
+				},
+			); err != nil {
+				fmt.Printf("failed to query marker fee grants for \"%s\": %v\n", id, err)
+				return nil
+			}
+			return clientCtx.PrintProto(response)
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, "markers")
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

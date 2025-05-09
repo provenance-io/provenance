@@ -559,6 +559,8 @@
     - [QueryEscrowResponse](#provenance-marker-v1-QueryEscrowResponse)
     - [QueryHoldingRequest](#provenance-marker-v1-QueryHoldingRequest)
     - [QueryHoldingResponse](#provenance-marker-v1-QueryHoldingResponse)
+    - [QueryMarkerFeeGrantsRequest](#provenance-marker-v1-QueryMarkerFeeGrantsRequest)
+    - [QueryMarkerFeeGrantsResponse](#provenance-marker-v1-QueryMarkerFeeGrantsResponse)
     - [QueryMarkerRequest](#provenance-marker-v1-QueryMarkerRequest)
     - [QueryMarkerResponse](#provenance-marker-v1-QueryMarkerResponse)
     - [QueryNetAssetValuesRequest](#provenance-marker-v1-QueryNetAssetValuesRequest)
@@ -8295,6 +8297,38 @@ QueryHoldingResponse is the response type for the Query/MarkerHolders method.
 
 
 
+<a name="provenance-marker-v1-QueryMarkerFeeGrantsRequest"></a>
+
+### QueryMarkerFeeGrantsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | address or denom for the marker |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines the pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-QueryMarkerFeeGrantsResponse"></a>
+
+### QueryMarkerFeeGrantsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grants` | [cosmos.feegrant.v1beta1.Grant](#cosmos-feegrant-v1beta1-Grant) | repeated | List of marker fee grants. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
 <a name="provenance-marker-v1-QueryMarkerRequest"></a>
 
 ### QueryMarkerRequest
@@ -8433,6 +8467,7 @@ Query defines the gRPC querier service for marker module.
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance-marker-v1-QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance-marker-v1-QueryDenomMetadataResponse) | query for access records on an account |
 | `AccountData` | [QueryAccountDataRequest](#provenance-marker-v1-QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance-marker-v1-QueryAccountDataResponse) | query for account data associated with a denom |
 | `NetAssetValues` | [QueryNetAssetValuesRequest](#provenance-marker-v1-QueryNetAssetValuesRequest) | [QueryNetAssetValuesResponse](#provenance-marker-v1-QueryNetAssetValuesResponse) | NetAssetValues returns net asset values for marker |
+| `MarkerFeeGrants` | [QueryMarkerFeeGrantsRequest](#provenance-marker-v1-QueryMarkerFeeGrantsRequest) | [QueryMarkerFeeGrantsResponse](#provenance-marker-v1-QueryMarkerFeeGrantsResponse) | MarkerFeeGrants returns list of all fee grants issued by a marker |
 
  <!-- end services -->
 

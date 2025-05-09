@@ -54,6 +54,7 @@ type BankKeeper interface {
 // FeeGrantKeeper defines the fee-grant functionality needed by the marker module.
 type FeeGrantKeeper interface {
 	GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error
+	IterateAllFeeAllowances(ctx context.Context, cb func(grant feegrant.Grant) bool) error
 }
 
 // Note: There is no IBCKeeper interface in here.

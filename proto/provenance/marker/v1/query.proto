@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/feegrant/v1beta1/feegrant.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos_proto/cosmos.proto";
@@ -66,6 +67,11 @@ service Query {
   // NetAssetValues returns net asset values for marker
   rpc NetAssetValues(QueryNetAssetValuesRequest) returns (QueryNetAssetValuesResponse) {
     option (google.api.http).get = "/provenance/marker/v1/netassetvalues/{id}";
+  }
+
+  // MarkerFeeGrants returns list of all fee grants issued by a marker
+  rpc MarkerFeeGrants(QueryMarkerFeeGrantsRequest) returns (QueryMarkerFeeGrantsResponse) {
+    option (google.api.http).get = "/provenance/marker/v1/markerfeegrants/{id}";
   }
 }
 
@@ -199,4 +205,18 @@ message QueryNetAssetValuesRequest {
 message QueryNetAssetValuesResponse {
   // net asset values for marker denom
   repeated NetAssetValue net_asset_values = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryMarkerFeeGrantsRequest {
+  // address or denom for the marker
+  string id = 1;
+  // pagination defines the pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryMarkerFeeGrantsResponse {
+  // List of marker fee grants.
+  repeated cosmos.feegrant.v1beta1.Grant grants = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

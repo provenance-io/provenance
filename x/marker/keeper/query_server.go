@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/feegrant"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -203,6 +204,46 @@ func (k Keeper) NetAssetValues(c context.Context, req *types.QueryNetAssetValues
 	return &types.QueryNetAssetValuesResponse{NetAssetValues: navs}, nil
 }
 
+// MarkerFeeGrants returns a list of all grants for given marker.
+func (k Keeper) MarkerFeeGrants(c context.Context, req *types.QueryMarkerFeeGrantsRequest) (*types.QueryMarkerFeeGrantsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	markerAddr := marker.GetAddress()
+	if marker.GetStatus() != types.StatusActive {
+		return nil, status.Errorf(codes.Internal, "marker %s is not active: %v", markerAddr.String(), err)
+	}
+
+	var grants []*feegrant.Grant
+	k.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+		granterAddr, err := sdk.AccAddressFromBech32(grant.Granter)
+		if err != nil {
+			return false
+		}
+		if granterAddr.Equals(markerAddr) {
+			grants = append(grants, &grant)
+		}
+		return false
+	})
+
+	pageRes, paginatedGrants, err := paginateGrants(req.Pagination, grants)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryMarkerFeeGrantsResponse{
+		Grants:     paginatedGrants,
+		Pagination: pageRes,
+	}, nil
+}
+
 // accountForDenomOrAddress attempts to first get a marker by account address and then by denom.
 func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (types.MarkerAccountI, error) {
 	var addrErr, err error
@@ -219,4 +260,27 @@ func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (ty
 		return nil, types.ErrMarkerNotFound.Wrap("invalid denom or address")
 	}
 	return account, nil
+}
+
+// paginateGrants applies pagination to a list of fee grants and return paginatied results.
+func paginateGrants(pageReq *query.PageRequest, grants []*feegrant.Grant) (*query.PageResponse, []*feegrant.Grant, error) {
+	total := len(grants)
+	start := 0
+	limit := 100
+	if pageReq != nil {
+		if pageReq.Limit > 0 {
+			limit = int(pageReq.Limit)
+		}
+		if pageReq.Offset > 0 {
+			start = int(pageReq.Offset)
+		}
+	}
+	if start >= total {
+		return &query.PageResponse{Total: uint64(total)}, []*feegrant.Grant{}, nil
+	}
+	end := start + limit
+	if end > total {
+		end = total
+	}
+	return &query.PageResponse{Total: uint64(total)}, grants[start:end], nil
 }

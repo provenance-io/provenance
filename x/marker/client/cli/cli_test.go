@@ -572,6 +572,12 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			args:           []string{"testcoin"},
 			expectedOutput: "net_asset_values:\n- price:\n    amount: \"100\"\n    denom: usd\n  updated_block_height: \"0\"\n  volume: \"100\"",
 		},
+		{
+			name:           "valid marker denom with grants",
+			cmd:            markercli.MarkerFeeGrantsCmd(),
+			args:           []string{"testcoin", fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
+			expectedOutput: `{"grants":[],"pagination":{"next_key":null,"total":"0"}}`,
+		},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
