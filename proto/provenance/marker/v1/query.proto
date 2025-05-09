@@ -69,7 +69,7 @@ service Query {
     option (google.api.http).get = "/provenance/marker/v1/netassetvalues/{id}";
   }
 
-  // MarkerFeeGrants returns list of all fee grants issued by a marker
+  // query a list of all feegrants for a given marker
   rpc MarkerFeeGrants(QueryMarkerFeeGrantsRequest) returns (QueryMarkerFeeGrantsResponse) {
     option (google.api.http).get = "/provenance/marker/v1/markerfeegrants/{id}";
   }

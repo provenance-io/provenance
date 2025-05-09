@@ -7212,7 +7212,7 @@ MsgMintRequest defines the Msg/Mint request type
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  | recipient is the optional address of the account to receive the newly minted funds. |
+| `recipient` | [string](#string) |  | recipient is the optional address to receive the newly minted funds. |
 
 
 
@@ -8467,7 +8467,7 @@ Query defines the gRPC querier service for marker module.
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance-marker-v1-QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance-marker-v1-QueryDenomMetadataResponse) | query for access records on an account |
 | `AccountData` | [QueryAccountDataRequest](#provenance-marker-v1-QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance-marker-v1-QueryAccountDataResponse) | query for account data associated with a denom |
 | `NetAssetValues` | [QueryNetAssetValuesRequest](#provenance-marker-v1-QueryNetAssetValuesRequest) | [QueryNetAssetValuesResponse](#provenance-marker-v1-QueryNetAssetValuesResponse) | NetAssetValues returns net asset values for marker |
-| `MarkerFeeGrants` | [QueryMarkerFeeGrantsRequest](#provenance-marker-v1-QueryMarkerFeeGrantsRequest) | [QueryMarkerFeeGrantsResponse](#provenance-marker-v1-QueryMarkerFeeGrantsResponse) | MarkerFeeGrants returns list of all fee grants issued by a marker |
+| `MarkerFeeGrants` | [QueryMarkerFeeGrantsRequest](#provenance-marker-v1-QueryMarkerFeeGrantsRequest) | [QueryMarkerFeeGrantsResponse](#provenance-marker-v1-QueryMarkerFeeGrantsResponse) | query a list of all feegrants for a given marker |
 
  <!-- end services -->
 

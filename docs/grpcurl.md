@@ -251,7 +251,7 @@ service Query {
   rpc Supply ( .provenance.marker.v1.QuerySupplyRequest ) returns ( .provenance.marker.v1.QuerySupplyResponse ) {
     option (.google.api.http) = { get:"/provenance/marker/v1/supply/{id}"  };
   }
-  // query a list of all grants for given marker
+  // query a list of all grants for a given marker
   rpc MarkerFeeGrants ( .provenance.marker.v1.QueryMarkerFeeGrantsRequest ) returns ( .provenance.marker.v1.QueryMarkerFeeGrantsResponse ) {
     option (.google.api.http) = { get:"/provenance/marker/v1/markerfeegrants/{id}" };
   }

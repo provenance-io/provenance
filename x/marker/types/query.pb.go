@@ -1269,7 +1269,7 @@ type QueryClient interface {
 	AccountData(ctx context.Context, in *QueryAccountDataRequest, opts ...grpc.CallOption) (*QueryAccountDataResponse, error)
 	// NetAssetValues returns net asset values for marker
 	NetAssetValues(ctx context.Context, in *QueryNetAssetValuesRequest, opts ...grpc.CallOption) (*QueryNetAssetValuesResponse, error)
-	// MarkerFeeGrants returns list of all fee grants issued by a marker
+	// query a list of all feegrants for a given marker
 	MarkerFeeGrants(ctx context.Context, in *QueryMarkerFeeGrantsRequest, opts ...grpc.CallOption) (*QueryMarkerFeeGrantsResponse, error)
 }
 
@@ -1402,7 +1402,7 @@ type QueryServer interface {
 	AccountData(context.Context, *QueryAccountDataRequest) (*QueryAccountDataResponse, error)
 	// NetAssetValues returns net asset values for marker
 	NetAssetValues(context.Context, *QueryNetAssetValuesRequest) (*QueryNetAssetValuesResponse, error)
-	// MarkerFeeGrants returns list of all fee grants issued by a marker
+	// query a list of all feegrants for a given marker
 	MarkerFeeGrants(context.Context, *QueryMarkerFeeGrantsRequest) (*QueryMarkerFeeGrantsResponse, error)
 }
 
