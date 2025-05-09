@@ -377,6 +377,13 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 			return false, nil
 		}
 
+		if !acct.toVest.IsPositive() {
+			acct.reason = "account does not own enough hash"
+			logger.Debug("Skipping account.", "reason", acct.reason, "nhash", acct.total.String())
+			toIgnore = append(toIgnore, acct)
+			return false, nil
+		}
+
 		if ibcAccts[addrStr] {
 			// Don't do anything to IBC accounts because it might break that stuff.
 			acct.reason = "account is an IBC-related account"
@@ -393,18 +400,10 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 			return false, nil
 		}
 
-		app.ICAHostKeeper.GetAllInterchainAccounts(ctx)
 		if app.Ics20WasmHooks.ContractKeeper.HasContractInfo(ctx, addr) {
 			// Don't do anything to interchain wasm accounts because it might break the contract.
 			acct.reason = "account is an ICS smart contract"
 			logger.Debug("Skipping account.", "reason", acct.reason)
-			toIgnore = append(toIgnore, acct)
-			return false, nil
-		}
-
-		if !acct.toVest.IsPositive() {
-			acct.reason = "account does not own enough hash"
-			logger.Debug("Skipping account.", "reason", acct.reason, "nhash", acct.total.String())
 			toIgnore = append(toIgnore, acct)
 			return false, nil
 		}
