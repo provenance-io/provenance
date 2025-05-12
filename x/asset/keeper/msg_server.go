@@ -9,7 +9,8 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/asset/types"
-	"github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger"
+	registry "github.com/provenance-io/provenance/x/registry"
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -195,6 +196,17 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 	err = m.ledgerKeeper.CreateLedger(ctx, owner, ledgerObj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ledger: %w", err)
+	}
+
+	// Create a default registry for the asset
+	registryKey := &registry.RegistryKey{
+		AssetClassId: msg.Asset.ClassId,
+		NftId:        msg.Asset.Id,
+	}
+
+	err = m.registryKeeper.CreateDefaultRegistry(ctx, owner, registryKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create default registry: %w", err)
 	}
 
 	m.Logger(ctx).Info("Created new asset as NFT",
