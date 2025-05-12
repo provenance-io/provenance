@@ -146,7 +146,6 @@ Event Type: `provenance.exchange.v1.EventCommitmentReleased`
 | amount        | The funds committed (`Coins` string).                       |
 | tag           | The `event_tag` provided in the msg.                        |
 
-
 ## EventMarketWithdraw
 
 Any time a market's funds are withdrawn, an `EventMarketWithdraw` is emitted.
