@@ -147,6 +147,16 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 				return nil, fmt.Errorf("failed to add ledger class entry type: %w", err)
 			}
 		}
+	} else {
+		entryType := ledger.LedgerClassEntryType{
+			Id:          1,
+			Code:        "DEFAULT",
+			Description: "Default entry type for asset ledger",
+		}
+		err = m.ledgerKeeper.AddClassEntryType(ctx, owner, ledgerClassId, entryType)
+		if err != nil && !strings.Contains(err.Error(), "already exists") {
+			return nil, fmt.Errorf("failed to add ledger class entry type: %w", err)
+		}
 	}
 
 	// Add provided status types, or default if none provided
@@ -156,6 +166,16 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 			if err != nil && !strings.Contains(err.Error(), "already exists") {
 				return nil, fmt.Errorf("failed to add ledger class status type: %w", err)
 			}
+		}
+	} else {
+		statusType := ledger.LedgerClassStatusType{
+			Id:          1,
+			Code:        "ACTIVE",
+			Description: "Active status for asset ledger",
+		}
+		err = m.ledgerKeeper.AddClassStatusType(ctx, owner, ledgerClassId, statusType)
+		if err != nil && !strings.Contains(err.Error(), "already exists") {
+			return nil, fmt.Errorf("failed to add ledger class status type: %w", err)
 		}
 	}
 
