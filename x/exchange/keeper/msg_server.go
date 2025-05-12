@@ -139,17 +139,17 @@ func (k MsgServer) MarketReleaseCommitments(goCtx context.Context, msg *exchange
 	return &exchange.MsgMarketReleaseCommitmentsResponse{}, nil
 }
 
-// MarketTransferCommitments is a market endpoint transfer funds from one market to another market back to the account owner(s).
-func (k MsgServer) MarketTransferCommitments(goCtx context.Context, msg *exchange.MsgMarketTransferCommitmentsRequest) (*exchange.MsgMarketTransferCommitmentsResponse, error) {
+// MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another.
+func (k MsgServer) MarketTransferCommitment(goCtx context.Context, msg *exchange.MsgMarketTransferCommitmentRequest) (*exchange.MsgMarketTransferCommitmentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.CanTransferCommitmentsForMarket(ctx, msg.CurrentMarketId, msg.Admin) {
+	if !k.CanTransferCommitmentForMarket(ctx, msg.CurrentMarketId, msg.Admin) {
 		return nil, permError("transfer commitments for", msg.Admin, msg.CurrentMarketId)
 	}
 	err := k.TransferCommitments(ctx, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	return &exchange.MsgMarketTransferCommitmentsResponse{}, nil
+	return &exchange.MsgMarketTransferCommitmentResponse{}, nil
 }
 
 // MarketSetOrderExternalID updates an order's external id field.

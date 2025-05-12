@@ -3639,18 +3639,18 @@ func (s *TestSuite) TestMsgServer_MarketReleaseCommitments() {
 }
 
 func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
-	testDef := msgServerTestDef[exchange.MsgMarketTransferCommitmentsRequest, exchange.MsgMarketTransferCommitmentsResponse, []expBalances]{
-		endpointName: "MarketTransferCommitments",
-		endpoint:     keeper.NewMsgServer(s.k).MarketTransferCommitments,
-		expResp:      &exchange.MsgMarketTransferCommitmentsResponse{},
-		followup: func(_ *exchange.MsgMarketTransferCommitmentsRequest, expBals []expBalances) {
+	testDef := msgServerTestDef[exchange.MsgMarketTransferCommitmentRequest, exchange.MsgMarketTransferCommitmentResponse, []expBalances]{
+		endpointName: "MarketTransferCommitment",
+		endpoint:     keeper.NewMsgServer(s.k).MarketTransferCommitment,
+		expResp:      &exchange.MsgMarketTransferCommitmentResponse{},
+		followup: func(_ *exchange.MsgMarketTransferCommitmentRequest, expBals []expBalances) {
 			for _, eb := range expBals {
 				s.checkBalances(eb)
 			}
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketTransferCommitmentsRequest, []expBalances]{
+	tests := []msgServerTestCase[exchange.MsgMarketTransferCommitmentRequest, []expBalances]{
 		{
 			name: "admin does not have permission to transfer",
 			setup: func() {
@@ -3661,7 +3661,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				s.requireFundAccount(s.addr2, "100apple")
 				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("50apple"), CurrentMarketId: 1, NewMarketId: 2,
 			},
 			expInErr: []string{invReqErr,
@@ -3672,29 +3672,6 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 					expBal:   s.coins("100apple"),
 					expHold:  s.coins("50apple"),
 					expSpend: s.coins("50apple"),
-				},
-			},
-		},
-		{
-			name: "current market does not accept commitments",
-			setup: func() {
-				s.requireCreateMarketUnmocked(exchange.Market{
-					MarketId:     1,
-					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
-				})
-				s.requireFundAccount(s.addr2, "100apple")
-				s.requireSetCommitmentAmount(1, s.addr2, "100apple")
-			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
-				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("100apple"), CurrentMarketId: 1, NewMarketId: 2,
-			},
-			expInErr: []string{invReqErr, "market 1 is not accepting commitments"},
-			fArgs: []expBalances{
-				{
-					addr:     s.addr2,
-					expBal:   s.coins("100apple"),
-					expHold:  s.coins("100apple"),
-					expSpend: s.coins("100apple"),
 				},
 			},
 		},
@@ -3713,7 +3690,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("40apple"), CurrentMarketId: 1, NewMarketId: 2,
 			},
 			expInErr: []string{invReqErr, "market 2 does not exist"},
@@ -3741,7 +3718,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("40apple"), CurrentMarketId: 1, NewMarketId: 5,
 			},
 			expInErr: []string{invReqErr, "market 5 is not accepting commitments"},
@@ -3770,7 +3747,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("50apple"), CurrentMarketId: 1, NewMarketId: 5,
 			},
 			expInErr: []string{invReqErr, fmt.Sprintf(
@@ -3801,7 +3778,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 				s.requireSetCommitmentAmount(1, s.addr2, "40apple")
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-30)}}, CurrentMarketId: 1, NewMarketId: 5,
 			},
 			expInErr: []string{invReqErr, fmt.Sprintf("cannot transfer negative commitment amount %q for %s in market %d", "-30apple", s.addr2, 1)},
@@ -3831,7 +3808,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("100cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "partial transfer with same denom",
 			},
 			expEvents: sdk.Events{
@@ -3863,7 +3840,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("500cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "full transfer with same denom",
 			},
 			expEvents: sdk.Events{
@@ -3895,7 +3872,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("10cherry,29apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "fund transferred from current market to new market",
 			},
 			expEvents: sdk.Events{
@@ -3927,7 +3904,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("500cherry,100apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "fund transferred from current market to new market",
 			},
 			expEvents: sdk.Events{
@@ -3959,7 +3936,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 				})
 
 			},
-			msg: exchange.MsgMarketTransferCommitmentsRequest{
+			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.k.GetAuthority(), Account: s.addr2.String(), Amount: s.coins("500cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "authadmin",
 			},
 			expEvents: sdk.Events{

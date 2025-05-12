@@ -15,7 +15,7 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
     - [MarketSettle](#marketsettle)
     - [MarketCommitmentSettle](#marketcommitmentsettle)
     - [MarketReleaseCommitments](#marketreleasecommitments)
-    - [MarketTransferCommitments](#markettransfercommitments)
+    - [MarketTransferCommitment](#markettransfercommitment)
     - [MarketSetOrderExternalID](#marketsetorderexternalid)
     - [MarketWithdraw](#marketwithdraw)
     - [MarketUpdateDetails](#marketupdatedetails)
@@ -300,9 +300,9 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L317-L318
 
 
-### MarketTransferCommitments
+### MarketTransferCommitment
 
-A market can transfer funds from one market to another using the `MarketTransferCommitments` endpoint.
+A market can transfer funds from one market to another using the `MarketTransferCommitment` endpoint.
 The `admin` must have the `PERMISSION_CANCEL` permission in the market (or be the `authority`).
 
 It is expected to fail if:
@@ -311,11 +311,11 @@ It is expected to fail if:
 * The `admin` does not have `PERMISSION_CANCEL` in the market, and is not the `authority`.
 * One or more of the amounts is more than what is currently committed by the associated `account`.
 
-#### MsgMarketTransferCommitmentsRequest
+#### MsgMarketTransferCommitmentRequest
 
 +++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L324-L344
 
-#### MsgMarketTransferCommitmentsResponse
+#### MsgMarketTransferCommitmentResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/tx.proto#L346-L347
 

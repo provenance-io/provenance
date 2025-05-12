@@ -1030,27 +1030,15 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 		name            string
 		setup           func()
 		holdKeeper      *MockHoldKeeper
-		req             *exchange.MsgMarketTransferCommitmentsRequest
+		req             *exchange.MsgMarketTransferCommitmentRequest
 		expErr          string
 		expEvents       sdk.Events
 		expRelHoldCalls []*ReleaseHoldArgs
 		expAmount       sdk.Coins
 	}{
 		{
-			name: "current market does not exist",
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
-				Admin:           s.addr1.String(),
-				Account:         s.addr2.String(),
-				Amount:          s.coins("100apple"),
-				CurrentMarketId: 3,
-				NewMarketId:     5,
-				EventTag:        "current market does not exist",
-			},
-			expErr: "current market 3 is invalid: market 3 does not exist",
-		},
-		{
 			name: "invalid account",
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         "",
 				Amount:          s.coins("100apple"),
@@ -1062,7 +1050,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 		},
 		{
 			name: "invalid amount",
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          nil,
@@ -1070,11 +1058,11 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 				NewMarketId:     5,
 				EventTag:        "invalid amount",
 			},
-			expErr: "account " + s.addr2.String() + " does not have any funds committed to market 3",
+			expErr: "cannot transfer zero for " + s.addr2.String() + " in market 3",
 		},
 		{
 			name: "negative amount",
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:       s.addr1.String(),
 				Account:     s.addr2.String(),
 				Amount:      sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-3)}},
@@ -1084,30 +1072,13 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 			expErr: fmt.Sprintf("cannot transfer negative commitment amount \"-3apple\" for %s in market 0", s.addr2.String()),
 		},
 		{
-			name: "current market is not accepting commitments",
-			setup: func() {
-				s.requireCreateMarket(exchange.Market{MarketId: 3})
-				store := s.getStore()
-				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
-			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
-				Admin:           s.addr1.String(),
-				Account:         s.addr2.String(),
-				Amount:          s.coins("5apple"),
-				CurrentMarketId: 3,
-				NewMarketId:     5,
-				EventTag:        "current market is not accepting commitments",
-			},
-			expErr: "current market 3 is invalid: market 3 is not accepting commitments",
-		},
-		{
 			name: "new market does not exist",
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{MarketId: 3, AcceptingCommitments: true})
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
 			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          s.coins("5apple"),
@@ -1125,7 +1096,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
 			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          s.coins("5apple"),
@@ -1144,7 +1115,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
 			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          s.coins("20apple"),
@@ -1163,7 +1134,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
 			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          s.coins("5apple,1cheery"),
@@ -1182,7 +1153,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
 			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          s.coins("5apple"),
@@ -1209,7 +1180,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple"))
 			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          s.coins("10apple"),
@@ -1236,7 +1207,7 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("10apple,20cherry"))
 			},
-			req: &exchange.MsgMarketTransferCommitmentsRequest{
+			req: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           s.addr1.String(),
 				Account:         s.addr2.String(),
 				Amount:          s.coins("10apple,20cherry"),

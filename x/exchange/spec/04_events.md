@@ -155,7 +155,7 @@ When funds are transferred from one market to another, an `EventCommitmentTransf
 Event Type: `provenance.exchange.v1.EventCommitmentTransferred`
 
 | Attribute Key     | Attribute Value                                                          |
-|---------------    |--------------------------------------------------------------------------|
+|-------------------|--------------------------------------------------------------------------|
 | account           | The bech32 address of the account that committed the funds.              |
 | amount            | The funds committed (`Coins` string).                                    |
 | current_market_id | The ID of the market from which the funds are being transferred.         | 

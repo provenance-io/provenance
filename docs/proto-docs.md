@@ -125,8 +125,8 @@
     - [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse)
-    - [MsgMarketTransferCommitmentsRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentsRequest)
-    - [MsgMarketTransferCommitmentsResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentsResponse)
+    - [MsgMarketTransferCommitmentRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentRequest)
+    - [MsgMarketTransferCommitmentResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentResponse)
     - [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsRequest)
     - [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsResponse)
     - [MsgMarketUpdateAcceptingOrdersRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingOrdersRequest)
@@ -2403,17 +2403,17 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 
 
-<a name="provenance-exchange-v1-MsgMarketTransferCommitmentsRequest"></a>
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentRequest"></a>
 
-### MsgMarketTransferCommitmentsRequest
-MsgMarketTransferCommitmentsRequest is a request message for the MarketTransferCommitments endpoint.
+### MsgMarketTransferCommitmentRequest
+MsgMarketTransferCommitmentRequest is a request message for the MarketTransferCommitment endpoint.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this transfer. |
 | `account` | [string](#string) |  | account is the Bech32 address string of the account receiving the transferred funds. |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-coin) | repeated | amount to transfer. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | amount to transfer. |
 | `current_market_id` | [uint32](#uint32) |  | current_market_id is the numerical identifier of the market where the funds are currently committed and are being released from. |
 | `new_market_id` | [uint32](#uint32) |  | new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement. |
 | `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
@@ -2423,10 +2423,10 @@ MsgMarketTransferCommitmentsRequest is a request message for the MarketTransferC
 
 
 
-<a name="provenance-exchange-v1-MsgMarketTransferCommitmentsResponse"></a>
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentResponse"></a>
 
-### MsgMarketTransferCommitmentsResponse
-MsgMarketTransferCommitmentsResponse is a response message for the MarketTransferCommitments endpoint.
+### MsgMarketTransferCommitmentResponse
+MsgMarketTransferCommitmentResponse is a response message for the MarketTransferCommitment endpoint.
 
 
 
@@ -2726,7 +2726,7 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketSettle` | [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. |
 | `MarketCommitmentSettle` | [MsgMarketCommitmentSettleRequest](#provenance-exchange-v1-MsgMarketCommitmentSettleRequest) | [MsgMarketCommitmentSettleResponse](#provenance-exchange-v1-MsgMarketCommitmentSettleResponse) | MarketCommitmentSettle is a market endpoint to transfer committed funds. |
 | `MarketReleaseCommitments` | [MsgMarketReleaseCommitmentsRequest](#provenance-exchange-v1-MsgMarketReleaseCommitmentsRequest) | [MsgMarketReleaseCommitmentsResponse](#provenance-exchange-v1-MsgMarketReleaseCommitmentsResponse) | MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s). |
-| `MarketTransferCommitments` | [MsgMarketTransferCommitmentsRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentsRequest) | [MsgMarketTransferCommitmentsResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentsResponse) | MarketTransferCommitments is a market endpoint to transfer committed funds from one market to another. |
+| `MarketTransferCommitment` | [MsgMarketTransferCommitmentRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentRequest) | [MsgMarketTransferCommitmentResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentResponse) | MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another. |
 | `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance-exchange-v1-MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance-exchange-v1-MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance-exchange-v1-MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance-exchange-v1-MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance-exchange-v1-MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. |
@@ -4283,7 +4283,7 @@ Query is the service for exchange module's query endpoints.
 | `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance-exchange-v1-QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance-exchange-v1-QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. |
 | `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance-exchange-v1-QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance-exchange-v1-QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. |
 | `GetCommitment` | [QueryGetCommitmentRequest](#provenance-exchange-v1-QueryGetCommitmentRequest) | [QueryGetCommitmentResponse](#provenance-exchange-v1-QueryGetCommitmentResponse) | GetCommitment gets the funds in an account that are committed to the market. |
-| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. Optionally, you can filter the results by a specific asset denomination using the `asset` query parameter. |
+| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. Optionally, you can filter the results for a specific denomination using the `denom` query parameter. |
 | `GetMarketCommitments` | [QueryGetMarketCommitmentsRequest](#provenance-exchange-v1-QueryGetMarketCommitmentsRequest) | [QueryGetMarketCommitmentsResponse](#provenance-exchange-v1-QueryGetMarketCommitmentsResponse) | GetMarketCommitments gets all the funds committed to a market from any account. |
 | `GetAllCommitments` | [QueryGetAllCommitmentsRequest](#provenance-exchange-v1-QueryGetAllCommitmentsRequest) | [QueryGetAllCommitmentsResponse](#provenance-exchange-v1-QueryGetAllCommitmentsResponse) | GetAllCommitments gets all fund committed to any market from any account. |
 | `GetMarket` | [QueryGetMarketRequest](#provenance-exchange-v1-QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance-exchange-v1-QueryGetMarketResponse) | GetMarket returns all the information and details about a market. |
@@ -7264,7 +7264,7 @@ MsgMintRequest defines the Msg/Mint request type
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  | recipient is the optional address of the account to receive the newly minted funds. |
+| `recipient` | [string](#string) |  | recipient is the optional address to receive the newly minted funds. |
 
 
 

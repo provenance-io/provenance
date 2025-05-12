@@ -24,7 +24,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgMarketSettleRequest)(nil),
 	(*MsgMarketCommitmentSettleRequest)(nil),
 	(*MsgMarketReleaseCommitmentsRequest)(nil),
-	(*MsgMarketTransferCommitmentsRequest)(nil),
+	(*MsgMarketTransferCommitmentRequest)(nil),
 	(*MsgMarketSetOrderExternalIDRequest)(nil),
 	(*MsgMarketWithdrawRequest)(nil),
 	(*MsgMarketUpdateDetailsRequest)(nil),
@@ -363,7 +363,7 @@ func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-func (m MsgMarketTransferCommitmentsRequest) ValidateBasic() error {
+func (m MsgMarketTransferCommitmentRequest) ValidateBasic() error {
 	var errs []error
 
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {

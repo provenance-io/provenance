@@ -417,8 +417,8 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	return nil
 }
 
-// TransferCommitments transfers committed funds from one market to another.
-func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentsRequest) error {
+// TransferCommitment transfers committed funds from one market to another.
+func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentRequest) error {
 	account, err := sdk.AccAddressFromBech32(req.Account)
 	if err != nil {
 		return fmt.Errorf("invalid account %q: %w", account, err)
@@ -462,35 +462,23 @@ func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.Ms
 func (k Keeper) validateTransferCommitments(
 	ctx sdk.Context,
 	store storetypes.KVStore,
-	req *exchange.MsgMarketTransferCommitmentsRequest,
+	req *exchange.MsgMarketTransferCommitmentRequest,
 	account sdk.AccAddress,
 ) error {
-	// Blocked address check
-	if k.bankKeeper.BlockedAddr(account) {
-		return fmt.Errorf("%s is not allowed to receive funds", account)
-	}
-	// Zero amount
 	if req.Amount.IsZero() {
-		return fmt.Errorf("account %s does not have any funds committed to market %d", account, req.CurrentMarketId)
+		return fmt.Errorf("cannot transfer zero for %s in market %d", account, req.CurrentMarketId)
 	}
-
 	// Negative amount
 	if req.Amount.IsAnyNegative() {
 		return fmt.Errorf("cannot transfer negative commitment amount %q for %s in market %d", req.Amount, req.Account, req.CurrentMarketId)
 	}
 
 	// Market validity
-	if err := validateMarketIsAcceptingCommitments(store, req.CurrentMarketId); err != nil {
-		return fmt.Errorf("current market %d is invalid: %w", req.CurrentMarketId, err)
-	}
 	if err := validateMarketIsAcceptingCommitments(store, req.NewMarketId); err != nil {
 		return fmt.Errorf("new market %d is invalid: %w", req.NewMarketId, err)
 	}
 
 	// User permission
-	if err := k.validateUserCanCreateCommitment(ctx, req.CurrentMarketId, account); err != nil {
-		return fmt.Errorf("account %s does not have permission to create commitments in market %d: %w", account, req.CurrentMarketId, err)
-	}
 	if err := k.validateUserCanCreateCommitment(ctx, req.NewMarketId, account); err != nil {
 		return fmt.Errorf("account %s does not have permission to create commitments in market %d: %w", account, req.NewMarketId, err)
 	}

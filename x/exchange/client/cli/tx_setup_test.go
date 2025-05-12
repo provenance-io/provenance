@@ -886,7 +886,7 @@ func TestMakeMsgMarketReleaseCommitments(t *testing.T) {
 func TestSetupCmdTxMarketTransferCommitments(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxMarketTransferCommitments",
-		setup: cli.SetupCmdTxMarketTransferCommitments,
+		setup: cli.SetupCmdTxMarketTransferCommitment,
 		expFlags: []string{
 			cli.FlagAdmin, cli.FlagAuthority,
 			cli.FlagAccount, cli.FlagAmount, cli.FlagCurrentMarket, cli.FlagNewMarket,
@@ -915,43 +915,43 @@ func TestSetupCmdTxMarketTransferCommitments(t *testing.T) {
 }
 
 func TestMakeMsgMarketTransferCommitments(t *testing.T) {
-	td := txMakerTestDef[*exchange.MsgMarketTransferCommitmentsRequest]{
+	td := txMakerTestDef[*exchange.MsgMarketTransferCommitmentRequest]{
 		makerName: "MakeMsgMarketTransferCommitments",
-		maker:     cli.MakeMsgMarketTransferCommitments,
-		setup:     cli.SetupCmdTxMarketTransferCommitments,
+		maker:     cli.MakeMsgMarketTransferCommitment,
+		setup:     cli.SetupCmdTxMarketTransferCommitment,
 	}
 
-	tests := []txMakerTestCase[*exchange.MsgMarketTransferCommitmentsRequest]{
+	tests := []txMakerTestCase[*exchange.MsgMarketTransferCommitmentRequest]{
 		{
 			name:   "nothing",
-			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{},
+			expMsg: &exchange.MsgMarketTransferCommitmentRequest{},
 			expErr: "no <admin> provided",
 		},
 		{
 			name:      "admin from from",
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
-			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+			expMsg: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin: sdk.AccAddress("FromAddress_________").String(),
 			},
 		},
 		{
 			name:  "admin from flag",
 			flags: []string{"--admin", "forest"},
-			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+			expMsg: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin: "forest",
 			},
 		},
 		{
 			name:  "authority",
 			flags: []string{"--authority"},
-			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+			expMsg: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin: cli.AuthorityAddr.String(),
 			},
 		},
 		{
 			name:  "some errors",
 			flags: []string{"--account", "annie", "--amount", "bill", "--current-market", "5", "--new-market", "0"},
-			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+			expMsg: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin: "", Account: "annie", Amount: nil, CurrentMarketId: 5, NewMarketId: 0},
 			expErr: joinErrs(
 				"no <admin> provided",
@@ -962,7 +962,7 @@ func TestMakeMsgMarketTransferCommitments(t *testing.T) {
 			name:      "all fields",
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags:     []string{"--account", "samantha", "--amount", "52plum", "--current-market", "2", "--new-market", "4"},
-			expMsg: &exchange.MsgMarketTransferCommitmentsRequest{
+			expMsg: &exchange.MsgMarketTransferCommitmentRequest{
 				Admin:           sdk.AccAddress("FromAddress_________").String(),
 				Account:         "samantha",
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("plum", 52)),

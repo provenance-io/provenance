@@ -645,37 +645,37 @@ func (s *CmdTestSuite) TestCmdTxMarketTransferCommitments() {
 	tests := []txCmdTestCase{
 		{
 			name: "no current market id",
-			args: []string{"market-transfer-commitments", "--from", s.addr1.String(), "--account", s.addr3.String(),
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
 				"--amount", "10peach", "--new-market", "3"},
 			expInErr: []string{"required flag(s) \"current-market\" not set"},
 		},
 		{
 			name: "no new market id",
-			args: []string{"market-transfer-commitments", "--from", s.addr1.String(), "--account", s.addr3.String(),
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
 				"--amount", "10peach", "--current-market", "3"},
 			expInErr: []string{"required flag(s) \"new-market\" not set"},
 		},
 		{
 			name: "no account",
-			args: []string{"market-transfer-commitments", "--from", s.addr1.String(),
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(),
 				"--amount", "10peach", "--current-market", "3", "--new-market", "4"},
 			expInErr: []string{"required flag(s) \"account\" not set"},
 		},
 		{
 			name: "no amount",
-			args: []string{"market-transfer-commitments", "--from", s.addr1.String(), "--account", s.addr3.String(),
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
 				"--current-market", "3", "--new-market", "4"},
 			expInErr: []string{"required flag(s) \"amount\" not set"},
 		},
 		{
 			name: "invalid amount",
-			args: []string{"market-transfer-commitments", "--from", s.addr1.String(), "--account", s.addr3.String(),
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
 				"--amount", "nil", "--current-market", "3", "--new-market", "4"},
 			expInErr: []string{`error parsing --amount as coins: invalid coin expression: "nil"`},
 		},
 		{
 			name: "same market id",
-			args: []string{"market-transfer-commitments", "--from", s.addr1.String(), "--account", s.addr3.String(),
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
 				"--amount", "10peach", "--current-market", "4", "--new-market", "4"},
 			expInErr: []string{`invalid new market id: cannot be the same as current market id`},
 		},

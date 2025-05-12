@@ -40,7 +40,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgMarketSettleRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketCommitmentSettleRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketReleaseCommitmentsRequest{Admin: signer} },
-		func(signer string) sdk.Msg { return &MsgMarketTransferCommitmentsRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketTransferCommitmentRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketSetOrderExternalIDRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketWithdrawRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketUpdateDetailsRequest{Admin: signer} },
@@ -1340,19 +1340,19 @@ func TestMsgMarketReleaseCommitmentsRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
+func TestMsgMarketTransferCommitmentRequest_ValidateBasic(t *testing.T) {
 	toAccAddr := func(str string) string {
 		return sdk.AccAddress(str + strings.Repeat("_", 20-len(str))).String()
 	}
 
 	tests := []struct {
 		name   string
-		msg    MsgMarketTransferCommitmentsRequest
+		msg    MsgMarketTransferCommitmentRequest
 		expErr []string
 	}{
 		{
 			name: "valid message",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         toAccAddr("to_new_market"),
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1364,7 +1364,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 
 		{
 			name: "no admin",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           "",
 				Account:         toAccAddr("to_new_market"),
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1376,7 +1376,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad admin",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           "badbadadmin",
 				Account:         toAccAddr("to_new_market"),
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1387,7 +1387,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "current market zero",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         toAccAddr("to_new_market"),
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1398,7 +1398,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "new market is zero",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         toAccAddr("to_new_market"),
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1409,7 +1409,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "same current_market and new_market id",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         toAccAddr("to_new_market"),
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1420,7 +1420,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty account",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         "",
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1431,7 +1431,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid account",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         "invalid_address",
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
@@ -1442,7 +1442,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "amount is zero",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         "invalid_address",
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 0)),
@@ -1453,7 +1453,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad event tag",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           toAccAddr("admin"),
 				Account:         "invalid_address",
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 0)),
@@ -1465,7 +1465,7 @@ func TestMsgMarketTransferCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "multiple errors",
-			msg: MsgMarketTransferCommitmentsRequest{
+			msg: MsgMarketTransferCommitmentRequest{
 				Admin:           "",
 				Account:         "invalid_address",
 				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 0)),

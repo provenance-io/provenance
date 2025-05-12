@@ -398,8 +398,8 @@ func MakeMsgMarketReleaseCommitments(clientCtx client.Context, flagSet *pflag.Fl
 	return msg, errors.Join(errs...)
 }
 
-// SetupCmdTxMarketTransferCommitments adds all the flags needed for MakeMsgMarketTransferCommitments.
-func SetupCmdTxMarketTransferCommitments(cmd *cobra.Command) {
+// SetupCmdTxMarketTransferCommitment adds all the flags needed for MakeMsgMarketTransferCommitment.
+func SetupCmdTxMarketTransferCommitment(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
 	cmd.Flags().String(FlagAccount, "", "The account that will receive the funds (required)")
 	cmd.Flags().String(FlagAmount, "", "The amount to withdraw (required)")
@@ -422,10 +422,10 @@ func SetupCmdTxMarketTransferCommitments(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketTransferCommitments reads all the SetupCmdTxMarketTransferCommitments flags and creates the desired Msg.
+// MakeMsgMarketTransferCommitment reads all the SetupCmdTxMarketTransferCommitment flags and creates the desired Msg.
 // Satisfies the msgMaker type.
-func MakeMsgMarketTransferCommitments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketTransferCommitmentsRequest, error) {
-	msg := &exchange.MsgMarketTransferCommitmentsRequest{}
+func MakeMsgMarketTransferCommitment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketTransferCommitmentRequest, error) {
+	msg := &exchange.MsgMarketTransferCommitmentRequest{}
 
 	errs := make([]error, 6)
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
