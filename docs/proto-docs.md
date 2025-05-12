@@ -4786,7 +4786,8 @@ MsgUpdateBalancesRequest
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `authority` | [string](#string) |  |  |
 | `correlation_id` | [string](#string) |  |  |
-| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated |  |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update |
 
 
 
@@ -6853,6 +6854,11 @@ Asset defines the asset.
 
 ### QueryListAssets
 
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
 
 
 
