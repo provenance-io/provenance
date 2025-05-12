@@ -440,11 +440,11 @@ func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTran
 	}
 	// subtract requested amount and store the new balance for the current market
 	setCommitmentAmount(store, req.CurrentMarketId, sdk.AccAddress(req.Account), newAmt)
+	k.emitEvent(ctx, exchange.NewEventCommitmentReleased(req.Account, req.CurrentMarketId, req.Amount, req.EventTag))
 
 	// update the commitment to new market for given account
 	addCommitmentAmount(store, req.NewMarketId, account, req.Amount)
-
-	k.emitEvent(ctx, exchange.NewEventCommitmentTransferred(req.Account, req.Amount, req.CurrentMarketId, req.NewMarketId, req.EventTag))
+	k.emitEvent(ctx, exchange.NewEventFundsCommitted(req.Account, req.NewMarketId, req.Amount, req.EventTag))
 	return nil
 }
 

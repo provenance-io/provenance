@@ -196,11 +196,6 @@ func (s *TestSuite) eventCommitmentReleased(addr sdk.AccAddress, marketID uint32
 	return s.untypeEvent(exchange.NewEventCommitmentReleased(addr.String(), marketID, s.coins(amount), eventTag))
 }
 
-// eventCommitmentTransferred creates a new event emitted when a commitment is transferred.
-func (s *TestSuite) eventCommitmentTransferred(addr sdk.AccAddress, amount string, currentMarketID, newMarketID uint32, eventTag string) sdk.Event {
-	return s.untypeEvent(exchange.NewEventCommitmentTransferred(addr.String(), s.coins(amount), currentMarketID, newMarketID, eventTag))
-}
-
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
@@ -3811,8 +3806,19 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("100cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "partial transfer with same denom",
 			},
-			expEvents: sdk.Events{
-				s.eventCommitmentTransferred(s.addr2, "100cherry", 1, 2, "partial transfer with same denom"),
+			expEvents: []sdk.Event{
+				s.eventCommitmentReleased(
+					s.addr2,
+					1,
+					s.coins("100cherry").String(),
+					"partial transfer with same denom",
+				),
+				s.eventFundsCommitted(
+					s.addr2,
+					2,
+					s.coins("100cherry").String(),
+					"partial transfer with same denom",
+				),
 			},
 			fArgs: []expBalances{
 				{
@@ -3843,8 +3849,19 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("500cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "full transfer with same denom",
 			},
-			expEvents: sdk.Events{
-				s.eventCommitmentTransferred(s.addr2, "500cherry", 1, 2, "full transfer with same denom"),
+			expEvents: []sdk.Event{
+				s.eventCommitmentReleased(
+					s.addr2,
+					1,
+					s.coins("500cherry").String(),
+					"full transfer with same denom",
+				),
+				s.eventFundsCommitted(
+					s.addr2,
+					2,
+					s.coins("500cherry").String(),
+					"full transfer with same denom",
+				),
 			},
 			fArgs: []expBalances{
 				{
@@ -3873,10 +3890,21 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 
 			},
 			msg: exchange.MsgMarketTransferCommitmentRequest{
-				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("10cherry,29apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "fund transferred from current market to new market",
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("10cherry,29apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "partial transfer with multiple denom",
 			},
-			expEvents: sdk.Events{
-				s.eventCommitmentTransferred(s.addr2, "10cherry,29apple", 1, 2, "fund transferred from current market to new market"),
+			expEvents: []sdk.Event{
+				s.eventCommitmentReleased(
+					s.addr2,
+					1,
+					s.coins("10cherry,29apple").String(),
+					"partial transfer with multiple denom",
+				),
+				s.eventFundsCommitted(
+					s.addr2,
+					2,
+					s.coins("10cherry,29apple").String(),
+					"partial transfer with multiple denom",
+				),
 			},
 			fArgs: []expBalances{
 				{
@@ -3905,10 +3933,21 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 
 			},
 			msg: exchange.MsgMarketTransferCommitmentRequest{
-				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("500cherry,100apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "fund transferred from current market to new market",
+				Admin: s.addr1.String(), Account: s.addr2.String(), Amount: s.coins("500cherry,100apple"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "full transfer with multiple denom",
 			},
-			expEvents: sdk.Events{
-				s.eventCommitmentTransferred(s.addr2, "500cherry,100apple", 1, 2, "fund transferred from current market to new market"),
+			expEvents: []sdk.Event{
+				s.eventCommitmentReleased(
+					s.addr2,
+					1,
+					s.coins("500cherry,100apple").String(),
+					"full transfer with multiple denom",
+				),
+				s.eventFundsCommitted(
+					s.addr2,
+					2,
+					s.coins("500cherry,100apple").String(),
+					"full transfer with multiple denom",
+				),
 			},
 			fArgs: []expBalances{
 				{
@@ -3939,8 +3978,19 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 			msg: exchange.MsgMarketTransferCommitmentRequest{
 				Admin: s.k.GetAuthority(), Account: s.addr2.String(), Amount: s.coins("500cherry"), CurrentMarketId: 1, NewMarketId: 2, EventTag: "authadmin",
 			},
-			expEvents: sdk.Events{
-				s.eventCommitmentTransferred(s.addr2, "500cherry", 1, 2, "authadmin"),
+			expEvents: []sdk.Event{
+				s.eventCommitmentReleased(
+					s.addr2,
+					1,
+					s.coins("500cherry").String(),
+					"authadmin",
+				),
+				s.eventFundsCommitted(
+					s.addr2,
+					2,
+					s.coins("500cherry").String(),
+					"authadmin",
+				),
 			},
 			fArgs: []expBalances{
 				{

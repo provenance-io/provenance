@@ -1163,11 +1163,16 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 			},
 			expAmount: s.coins("5apple"),
 			expEvents: []sdk.Event{
-				s.untypeEvent(exchange.NewEventCommitmentTransferred(
+				s.untypeEvent(exchange.NewEventCommitmentReleased(
 					s.addr2.String(),
-					s.coins("5apple"),
 					3,
+					s.coins("5apple"),
+					"partially transfer committed denom",
+				)),
+				s.untypeEvent(exchange.NewEventFundsCommitted(
+					s.addr2.String(),
 					5,
+					s.coins("5apple"),
 					"partially transfer committed denom",
 				)),
 			},
@@ -1190,11 +1195,16 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 			},
 			expAmount: s.coins("10apple"),
 			expEvents: []sdk.Event{
-				s.untypeEvent(exchange.NewEventCommitmentTransferred(
+				s.untypeEvent(exchange.NewEventCommitmentReleased(
 					s.addr2.String(),
-					s.coins("10apple"),
 					3,
+					s.coins("10apple"),
+					"full transfer committed denom",
+				)),
+				s.untypeEvent(exchange.NewEventFundsCommitted(
+					s.addr2.String(),
 					5,
+					s.coins("10apple"),
 					"full transfer committed denom",
 				)),
 			},
@@ -1217,11 +1227,16 @@ func (s *TestSuite) TestKeeper_TransferCommitments() {
 			},
 			expAmount: s.coins("10apple,20cherry"),
 			expEvents: []sdk.Event{
-				s.untypeEvent(exchange.NewEventCommitmentTransferred(
+				s.untypeEvent(exchange.NewEventCommitmentReleased(
 					s.addr2.String(),
-					s.coins("10apple,20cherry"),
 					3,
+					s.coins("10apple,20cherry"),
+					"full transfer committed multiple denom",
+				)),
+				s.untypeEvent(exchange.NewEventFundsCommitted(
+					s.addr2.String(),
 					5,
+					s.coins("10apple,20cherry"),
 					"full transfer committed multiple denom",
 				)),
 			},

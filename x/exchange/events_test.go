@@ -417,26 +417,6 @@ func TestNewEventCommitmentReleased(t *testing.T) {
 	assertEverythingSet(t, event, "EventCommitmentReleased")
 }
 
-func TestNewEventCommitmentTransferred(t *testing.T) {
-	account := sdk.AccAddress("account_____________").String()
-	currentMarketID := uint32(4444)
-	newMarketID := uint32(4445)
-	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
-	tag := "i-have-been-transferred"
-
-	var event *EventCommitmentTransferred
-	testFunc := func() {
-		event = NewEventCommitmentTransferred(account, amount, currentMarketID, newMarketID, tag)
-	}
-	require.NotPanics(t, testFunc, "NewEventCommitmentReleased(%q, %d, %q, %q, %q)", account, amount, currentMarketID, newMarketID, tag)
-	assert.Equal(t, account, event.Account, "Account")
-	assert.Equal(t, currentMarketID, event.CurrentMarketId, "CurrentMarketId")
-	assert.Equal(t, newMarketID, event.NewMarketId, "newMarketId")
-	assert.Equal(t, amount.String(), event.Amount, "Amount")
-	assert.Equal(t, tag, event.Tag, "Tag")
-	assertEverythingSet(t, event, "EventCommitmentTransferred")
-}
-
 func TestNewEventMarketWithdraw(t *testing.T) {
 	marketID := uint32(55)
 	amountWithdrawn := sdk.NewCoins(sdk.NewInt64Coin("mine", 188382), sdk.NewInt64Coin("yours", 3))

@@ -11,7 +11,6 @@ The exchange module emits several events for various actions.
   - [EventOrderExternalIDUpdated](#eventorderexternalidupdated)
   - [EventFundsCommitted](#eventfundscommitted)
   - [EventCommitmentReleased](#eventcommitmentreleased)
-  - [EventCommitmentTransferred](#eventcommitmenttransferred)
   - [EventMarketWithdraw](#eventmarketwithdraw)
   - [EventMarketDetailsUpdated](#eventmarketdetailsupdated)
   - [EventMarketOrdersEnabled](#eventmarketordersenabled)
@@ -146,22 +145,6 @@ Event Type: `provenance.exchange.v1.EventCommitmentReleased`
 | market_id     | The id of the market that funds were committed to.          |
 | amount        | The funds committed (`Coins` string).                       |
 | tag           | The `event_tag` provided in the msg.                        |
-
-
-## EventCommitmentTransferred
-
-When funds are transferred from one market to another, an `EventCommitmentTransferred` is emitted.
-
-Event Type: `provenance.exchange.v1.EventCommitmentTransferred`
-
-| Attribute Key     | Attribute Value                                                          |
-|-------------------|--------------------------------------------------------------------------|
-| account           | The bech32 address of the account that committed the funds.              |
-| amount            | The funds committed (`Coins` string).                                    |
-| current_market_id | The ID of the market from which the funds are being transferred.         | 
-| new_market_id     | The ID of the market to which the funds are being committed/transferred  |                     |
-| tag               | The `event_tag` provided in the msg.                                     |
-
 
 ## EventMarketWithdraw
 

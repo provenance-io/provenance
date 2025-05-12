@@ -152,7 +152,6 @@
   
 - [provenance/exchange/v1/events.proto](#provenance_exchange_v1_events-proto)
     - [EventCommitmentReleased](#provenance-exchange-v1-EventCommitmentReleased)
-    - [EventCommitmentTransferred](#provenance-exchange-v1-EventCommitmentTransferred)
     - [EventFundsCommitted](#provenance-exchange-v1-EventFundsCommitted)
     - [EventMarketCommitmentsDisabled](#provenance-exchange-v1-EventMarketCommitmentsDisabled)
     - [EventMarketCommitmentsEnabled](#provenance-exchange-v1-EventMarketCommitmentsEnabled)
@@ -2771,25 +2770,6 @@ EventCommitmentReleased is an event emitted when funds are released from their c
 | `account` | [string](#string) |  | account is the bech32 address string of the account. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `amount` | [string](#string) |  | amount is the coins string of the funds that were released from commitment. |
-| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
-
-
-
-
-
-
-<a name="provenance-exchange-v1-EventCommitmentTransferred"></a>
-
-### EventCommitmentTransferred
-EventCommitmentTransferred is an event emitted when funds are transferd from one market to another.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `current_market_id` | [uint32](#uint32) |  | current_market_id is the numerical identifier of the market. |
-| `new_market_id` | [uint32](#uint32) |  | new_market_id is the numerical identifier of the market. |
-| `amount` | [string](#string) |  | amount is the coins amount string of funds transfer from the market account. |
-| `account` | [string](#string) |  | account that received the funds. |
 | `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
 
 
