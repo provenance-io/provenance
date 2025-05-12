@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/provenance-io/provenance/x/registry"
+	"github.com/provenance-io/provenance/x/registry/keeper"
 	"github.com/spf13/cobra"
 )
 
@@ -42,9 +43,13 @@ func GetCmdQueryRegistry() *cobra.Command {
 
 			queryClient := registry.NewQueryClient(clientCtx)
 
-			// TODO: Parse key from args[0]
+			key, err := keeper.StringToRegistryKey(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid registry key: %w", err)
+			}
+
 			res, err := queryClient.GetRegistry(context.Background(), &registry.QueryGetRegistryRequest{
-				Key: nil, // Need to parse key from args[0]
+				Key: key,
 			})
 			if err != nil {
 				return err
