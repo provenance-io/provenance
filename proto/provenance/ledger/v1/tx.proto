@@ -81,7 +81,11 @@ message MsgUpdateBalancesRequest {
 
   string correlation_id = 3;
 
-  repeated BucketBalance bucket_balances = 4;
+  // The applied amounts to be updated
+  repeated LedgerBucketAmount applied_amounts = 4;
+
+  // The bucket balances to update
+  repeated BucketBalance bucket_balances = 5;
 }
 
 // MsgUpdateBalancesResponse

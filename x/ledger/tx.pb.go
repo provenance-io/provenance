@@ -218,10 +218,13 @@ var xxx_messageInfo_MsgAppendResponse proto.InternalMessageInfo
 
 // MsgUpdateBalancesRequest
 type MsgUpdateBalancesRequest struct {
-	Key            *LedgerKey       `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Authority      string           `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
-	CorrelationId  string           `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
-	BucketBalances []*BucketBalance `protobuf:"bytes,4,rep,name=bucket_balances,json=bucketBalances,proto3" json:"bucket_balances,omitempty"`
+	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Authority     string     `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	CorrelationId string     `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	// The applied amounts to be updated
+	AppliedAmounts []*LedgerBucketAmount `protobuf:"bytes,4,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"applied_amounts,omitempty"`
+	// The bucket balances to update
+	BucketBalances []*BucketBalance `protobuf:"bytes,5,rep,name=bucket_balances,json=bucketBalances,proto3" json:"bucket_balances,omitempty"`
 }
 
 func (m *MsgUpdateBalancesRequest) Reset()         { *m = MsgUpdateBalancesRequest{} }
@@ -276,6 +279,13 @@ func (m *MsgUpdateBalancesRequest) GetCorrelationId() string {
 		return m.CorrelationId
 	}
 	return ""
+}
+
+func (m *MsgUpdateBalancesRequest) GetAppliedAmounts() []*LedgerBucketAmount {
+	if m != nil {
+		return m.AppliedAmounts
+	}
+	return nil
 }
 
 func (m *MsgUpdateBalancesRequest) GetBucketBalances() []*BucketBalance {
@@ -1814,6 +1824,20 @@ func (m *MsgUpdateBalancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 				i = encodeVarintTx(dAtA, i, uint64(size))
 			}
 			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.AppliedAmounts) > 0 {
+		for iNdEx := len(m.AppliedAmounts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AppliedAmounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
 			dAtA[i] = 0x22
 		}
 	}
@@ -2528,6 +2552,12 @@ func (m *MsgUpdateBalancesRequest) Size() (n int) {
 	l = len(m.CorrelationId)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.AppliedAmounts) > 0 {
+		for _, e := range m.AppliedAmounts {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	if len(m.BucketBalances) > 0 {
 		for _, e := range m.BucketBalances {
@@ -3289,6 +3319,40 @@ func (m *MsgUpdateBalancesRequest) Unmarshal(dAtA []byte) error {
 			m.CorrelationId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppliedAmounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AppliedAmounts = append(m.AppliedAmounts, &LedgerBucketAmount{})
+			if err := m.AppliedAmounts[len(m.AppliedAmounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BucketBalances", wireType)
 			}

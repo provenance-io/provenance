@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"sort"
 
 	"cosmossdk.io/collections"
@@ -14,7 +15,7 @@ var _ EntriesKeeper = (*BaseEntriesKeeper)(nil)
 
 type EntriesKeeper interface {
 	AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error
-	UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance) error
+	UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error
 }
 
 type BaseEntriesKeeper struct {
@@ -86,8 +87,8 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		}
 
 		// Validate amounts
-		if err := validateEntryAmounts(le); err != nil {
-			return err
+		if err := validateEntryAmounts(le.TotalAmt, le.AppliedAmounts); err != nil {
+			return fmt.Errorf("correlation id %s: %w", le.CorrelationId, err)
 		}
 
 		// Validate that the LedgerClassEntryType exists
@@ -108,7 +109,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 	return nil
 }
 
-func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance) error {
+func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error {
 	// Validate the key
 	err := ValidateLedgerKeyBasic(ledgerKey)
 	if err != nil {
@@ -125,6 +126,11 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 		return NewLedgerCodedError(ErrCodeNotFound, "entry")
 	}
 
+	// Validate the applied amounts
+	if err := validateEntryAmounts(existingEntry.TotalAmt, appliedAmounts); err != nil {
+		return fmt.Errorf("applied amounts for correlation id %s: %w", correlationId, err)
+	}
+
 	// Validate the bucket balances
 	for _, bb := range bucketBalances {
 		if err := ValidateBucketBalance(bb); err != nil {
@@ -132,6 +138,10 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 		}
 	}
 
+	// Update the entry with the new applied amounts
+	existingEntry.AppliedAmounts = appliedAmounts
+
+	// Update the entry with the new bucket balances
 	existingEntry.BalanceAmounts = bucketBalances
 
 	ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
@@ -223,15 +233,15 @@ func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
 }
 
 // validateEntryAmounts checks if the amounts are valid
-func validateEntryAmounts(le *ledger.LedgerEntry) error {
+func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*ledger.LedgerBucketAmount) error {
 	// Check if total amount matches sum of applied amounts
 	totalApplied := math.NewInt(0)
-	for _, applied := range le.AppliedAmounts {
+	for _, applied := range appliedAmounts {
 		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
 	}
 
-	if !le.TotalAmt.Equal(totalApplied) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must equal sum of abs(applied amounts)", le.CorrelationId)
+	if !totalAmt.Equal(totalApplied) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must equal sum of abs(applied amounts)")
 	}
 
 	return nil
