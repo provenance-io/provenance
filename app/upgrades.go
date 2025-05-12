@@ -330,14 +330,17 @@ func newAcctInfo(addr sdk.AccAddress, acctI sdk.AccountI) *acctInfo {
 	}
 }
 
+const (
+	monthsToStart = 1
+	monthsToEnd   = 48
+)
+
 // getAcctsToConvertToVestingOld returns info on each of the accounts that should be converted to a vesting account.
 // Part of the yellow upgrade.
 func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore []*acctInfo) {
 	blockTime := ctx.BlockTime().UTC()
-	monthsToStart := int64(3)
-	monthsToEnd := int64(48)
-	startTime := addMonths(blockTime, int(monthsToStart))
-	endTime := addMonths(blockTime, int(monthsToEnd))
+	startTime := addMonths(blockTime, monthsToStart)
+	endTime := addMonths(blockTime, monthsToEnd)
 
 	ibcAccts := identifyIBCAccounts(ctx, app)
 
