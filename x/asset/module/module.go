@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/spf13/cobra"
@@ -35,18 +34,14 @@ type AppModuleBasic struct {
 type AppModule struct {
 	AppModuleBasic
 	keeper        assetkeeper.Keeper
-	accountKeeper authkeeper.AccountKeeper
-	nftKeeper     types.NFTKeeper
 	router        baseapp.MessageRouter
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper assetkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, nftKeeper types.NFTKeeper, router baseapp.MessageRouter) AppModule {
+func NewAppModule(cdc codec.Codec, keeper assetkeeper.Keeper, router baseapp.MessageRouter) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		nftKeeper:      nftKeeper,
 		router:         router,
 	}
 }
