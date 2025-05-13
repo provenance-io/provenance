@@ -20,7 +20,7 @@ type Keeper struct {
 	router         baseapp.MessageRouter
 	ledgerKeeper   ledgerkeeper.BaseKeeper
 	registryKeeper types.BaseRegistryKeeper
-	markerKeeper   markerkeeper.MarkerKeeperI
+	markerKeeper   markerkeeper.Keeper
 }
 
 // NewKeeper creates a new asset Keeper instance
@@ -31,7 +31,7 @@ func NewKeeper(
 	router baseapp.MessageRouter,
 	ledgerKeeper ledgerkeeper.BaseKeeper,
 	registryKeeper types.BaseRegistryKeeper,
-	markerKeeper markerkeeper.MarkerKeeperI,
+	markerKeeper markerkeeper.Keeper,
 ) Keeper {
 	if nftKeeper == nil {
 		panic("nft keeper is required for asset module")
