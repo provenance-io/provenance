@@ -13,6 +13,8 @@ service Msg {
   rpc AddAsset(MsgAddAsset) returns (MsgAddAssetResponse);
 
   rpc AddAssetClass(MsgAddAssetClass) returns (MsgAddAssetClassResponse);
+
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 }
 
 message MsgAddAsset {
@@ -34,3 +36,12 @@ message MsgAddAssetClass {
 }
 
 message MsgAddAssetClassResponse {}
+
+message MsgCreatePool {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  string    pool_id = 1;
+  string    from_address = 2;
+}
+
+message MsgCreatePoolResponse {}
