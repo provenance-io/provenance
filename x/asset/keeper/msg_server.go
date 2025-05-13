@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	nft "cosmossdk.io/x/nft"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/asset/types"
 	ledger "github.com/provenance-io/provenance/x/ledger"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	registry "github.com/provenance-io/provenance/x/registry"
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -215,4 +218,54 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 		"owner", owner.String())
 
 	return &types.MsgAddAssetResponse{}, nil
+}
+
+// CreatePool creates a new pool marker
+func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Get the from address
+	fromAddr, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, fmt.Errorf("invalid from address: %w", err)
+	}
+
+	// Create a new marker account
+	markerAddr := markertypes.MustGetMarkerAddress(msg.PoolId)
+	marker := markertypes.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(markerAddr),
+		sdk.NewCoin(msg.PoolId, sdkmath.NewInt(1)),
+		fromAddr,
+		[]markertypes.AccessGrant{
+			{
+				Address: fromAddr.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Withdraw,
+				},
+			},
+		},
+		markertypes.StatusProposed,
+		markertypes.MarkerType_Coin,
+		true,       // Supply fixed
+		false,      // Allow governance control
+		false,      // Don't allow forced transfer
+		[]string{}, // No required attributes
+	)
+
+	// Add the marker account by setting it
+	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add marker account: %w", err)
+	}
+
+	// Withdraw the coins from the marker to the from address
+	err = m.Keeper.markerKeeper.WithdrawCoins(ctx, fromAddr, fromAddr, msg.PoolId, sdk.NewCoins(sdk.NewCoin(msg.PoolId, sdkmath.NewInt(1))))
+	if err != nil {
+		return nil, fmt.Errorf("failed to withdraw coins: %w", err)
+	}
+
+	// Log the creation of the new pool marker
+	ctx.Logger().Info("Created new pool marker", "pool_id", msg.PoolId, "from_address", msg.FromAddress)
+
+	return &types.MsgCreatePoolResponse{}, nil
 }
