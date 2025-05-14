@@ -236,7 +236,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCreateParticipation) (*types.MsgCreateParticipationResponse, error) {
 
 	// Create the marker
-	err := m.createMarker(goCtx, sdk.NewCoin(msg.PoolId, sdkmath.NewIntFromUint64(msg.Amount)), msg.FromAddress)
+	err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create participation marker: %w", err)
 	}

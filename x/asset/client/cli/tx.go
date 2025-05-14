@@ -3,8 +3,8 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -146,21 +146,20 @@ func GetCmdCreateParticipation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-participation [pool-id] [amount]",
 		Short: "Create a new participation marker",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			amount, err := strconv.ParseUint(args[1], 10, 64)
+			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid amount: %w", err)
+				return fmt.Errorf("invalid coin %s", args[0])
 			}
 
 			msg := &types.MsgCreateParticipation{
-				PoolId:      args[0],
-				Amount:      amount,
+				Denom:       coin,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
