@@ -222,23 +222,35 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 
 // CreatePool creates a new pool marker
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
+
+	// Create the marker
+	err := m.createMarker(goCtx, sdk.NewCoin(msg.PoolId, sdkmath.NewInt(1)), msg.FromAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create marker: %w", err)
+	}
+
+	return &types.MsgCreatePoolResponse{}, nil
+}
+
+// CreatePool creates a new pool marker
+func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Get the from address
-	fromAddr, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid from address: %w", err)
+		return fmt.Errorf("invalid from address: %w", err)
 	}
 
 	// Create a new marker account
-	markerAddr := markertypes.MustGetMarkerAddress(msg.PoolId)
+	markerAddr := markertypes.MustGetMarkerAddress(denom.Denom)
 	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markerAddr),
-		sdk.NewCoin(msg.PoolId, sdkmath.NewInt(1)),
-		fromAddr,
+		denom,
+		fromAcc,
 		[]markertypes.AccessGrant{
 			{
-				Address: fromAddr.String(),
+				Address: fromAcc.String(),
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Withdraw,
 				},
@@ -255,17 +267,11 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	// Add the marker account by setting it
 	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add marker account: %w", err)
-	}
-
-	// Withdraw the coins from the marker to the from address
-	err = m.Keeper.markerKeeper.WithdrawCoins(ctx, fromAddr, fromAddr, msg.PoolId, sdk.NewCoins(sdk.NewCoin(msg.PoolId, sdkmath.NewInt(1))))
-	if err != nil {
-		return nil, fmt.Errorf("failed to withdraw coins: %w", err)
+		return fmt.Errorf("failed to add marker account: %w", err)
 	}
 
 	// Log the creation of the new pool marker
-	ctx.Logger().Info("Created new pool marker", "pool_id", msg.PoolId, "from_address", msg.FromAddress)
+	ctx.Logger().Info("Created new pool marker", "pool_id", denom.Denom)
 
-	return &types.MsgCreatePoolResponse{}, nil
+	return nil
 }
