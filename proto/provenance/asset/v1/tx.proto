@@ -3,8 +3,10 @@ package provenance.asset.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
-import "provenance/asset/v1/asset.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
+import "provenance/asset/v1/asset.proto";
 import "provenance/ledger/v1/ledger.proto";
 
 service Msg {
@@ -51,8 +53,7 @@ message MsgCreatePoolResponse {}
 message MsgCreateParticipation {
   option (cosmos.msg.v1.signer) = "from_address";
 
-  string    pool_id = 1;
-  uint64    amount = 2;
+  cosmos.base.v1beta1.Coin denom = 1 [(gogoproto.nullable) = false];
   string    from_address = 3;
 }
 
