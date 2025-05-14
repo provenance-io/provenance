@@ -1,13 +1,14 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
-
-	"encoding/json"
-	"fmt"
 
 	"github.com/provenance-io/provenance/x/asset/types"
 	"github.com/provenance-io/provenance/x/ledger"
@@ -27,6 +28,7 @@ func GetTxCmd() *cobra.Command {
 		GetCmdAddAsset(),
 		GetCmdAddAssetClass(),
 		GetCmdCreatePool(),
+		GetCmdCreateParticipation(),
 	)
 
 	return txCmd
@@ -138,3 +140,35 @@ func GetCmdCreatePool() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
+
+// GetCmdCreateParticipation returns the command for creating a new participation
+func GetCmdCreateParticipation() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-participation [pool-id] [amount]",
+		Short: "Create a new participation marker",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			amount, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid amount: %w", err)
+			}
+
+			msg := &types.MsgCreateParticipation{
+				PoolId:      args[0],
+				Amount:      amount,
+				FromAddress: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
