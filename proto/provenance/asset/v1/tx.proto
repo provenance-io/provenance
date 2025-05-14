@@ -45,3 +45,13 @@ message MsgCreatePool {
 }
 
 message MsgCreatePoolResponse {}
+
+message MsgCreateParticipation {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  string    pool_id = 1;
+  uint64    amount = 2;
+  string    from_address = 3;
+}
+
+message MsgCreateParticipationResponse {}
