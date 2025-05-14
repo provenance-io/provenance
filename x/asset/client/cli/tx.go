@@ -26,6 +26,7 @@ func GetTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetCmdAddAsset(),
 		GetCmdAddAssetClass(),
+		GetCmdCreatePool(),
 	)
 
 	return txCmd
@@ -102,6 +103,31 @@ func GetCmdAddAssetClass() *cobra.Command {
 
 			msg := &types.MsgAddAssetClass{
 				AssetClass:  assetClass,
+				FromAddress: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdCreatePool returns the command for creating a new pool
+func GetCmdCreatePool() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-pool [pool-id]",
+		Short: "Create a new pool marker",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgCreatePool{
+				PoolId:      args[0],
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
