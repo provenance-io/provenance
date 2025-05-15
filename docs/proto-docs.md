@@ -4827,7 +4827,8 @@ MsgUpdateBalancesRequest
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `authority` | [string](#string) |  |  |
 | `correlation_id` | [string](#string) |  |  |
-| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated |  |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update |
 
 
 
@@ -6710,6 +6711,8 @@ GenesisState defines the attribute module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset` | [Asset](#provenance-asset-v1-Asset) |  |  |
+| `entry_types` | [provenance.ledger.v1.LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) | repeated |  |
+| `status_types` | [provenance.ledger.v1.LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated |  |
 | `from_address` | [string](#string) |  |  |
 
 

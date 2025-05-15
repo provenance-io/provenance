@@ -5,6 +5,7 @@ option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
 import "provenance/asset/v1/asset.proto";
 import "cosmos/msg/v1/msg.proto";
+import "provenance/ledger/v1/ledger.proto";
 
 service Msg {
   option (cosmos.msg.v1.service) = true;
@@ -17,8 +18,10 @@ service Msg {
 message MsgAddAsset {
   option (cosmos.msg.v1.signer) = "from_address";
 
-  Asset  asset        = 1;
-  string from_address = 2;
+  Asset    asset                                                   = 1;
+  repeated provenance.ledger.v1.LedgerClassEntryType entry_types   = 2;
+  repeated provenance.ledger.v1.LedgerClassStatusType status_types = 3;
+  string                                              from_address = 4;
 }
 
 message MsgAddAssetResponse {}
