@@ -16,6 +16,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgAddAssetClass)(nil),
 	(*MsgCreatePool)(nil),
 	(*MsgCreateParticipation)(nil),
+	(*MsgCreateSecuritization)(nil),
 }
 
 // ValidateBasic implements Msg
