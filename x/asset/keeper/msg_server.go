@@ -253,6 +253,14 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
 	}
 
+	// Create the tranches
+	for _, tranche := range msg.Tranches {
+		err := m.createMarker(goCtx, *tranche, msg.FromAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create tranche marker: %w", err)
+		}
+	}
+
 	return &types.MsgCreateSecuritizationResponse{}, nil
 }
 
@@ -299,3 +307,4 @@ func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr 
 
 	return nil
 }
+
