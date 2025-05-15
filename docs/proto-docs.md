@@ -274,9 +274,12 @@
     - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
     - [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest)
     - [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse)
-    - [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest)
-    - [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse)
-    - [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest)
+    - [MsgFundAssetRequest](#provenance-ledger-v1-MsgFundAssetRequest)
+    - [MsgFundAssetResponse](#provenance-ledger-v1-MsgFundAssetResponse)
+    - [MsgTransferFundsRequest](#provenance-ledger-v1-MsgTransferFundsRequest)
+    - [MsgTransferFundsResponse](#provenance-ledger-v1-MsgTransferFundsResponse)
+    - [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest)
+    - [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse)
     - [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest)
     - [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse)
   
@@ -4732,10 +4735,38 @@ MsgDestroyResponse represents the response from destroying a ledger
 
 
 
-<a name="provenance-ledger-v1-MsgProcessFundTransfersRequest"></a>
+<a name="provenance-ledger-v1-MsgFundAssetRequest"></a>
 
-### MsgProcessFundTransfersRequest
-MsgProcessFundTransfersRequest represents a request to process multiple fund transfers
+### MsgFundAssetRequest
+MsgFundAssetRequest represents a request to fund an asset
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
+| `authority` | [string](#string) |  |  |
+| `transfers` | [FundTransfer](#provenance-ledger-v1-FundTransfer) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgFundAssetResponse"></a>
+
+### MsgFundAssetResponse
+MsgFundAssetResponse represents the response from funding an asset
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgTransferFundsRequest"></a>
+
+### MsgTransferFundsRequest
+MsgTransferFundsRequest represents a request to transfer funds
 
 
 | Field | Type | Label | Description |
@@ -4748,20 +4779,20 @@ MsgProcessFundTransfersRequest represents a request to process multiple fund tra
 
 
 
-<a name="provenance-ledger-v1-MsgProcessFundTransfersResponse"></a>
+<a name="provenance-ledger-v1-MsgTransferFundsResponse"></a>
 
-### MsgProcessFundTransfersResponse
-MsgProcessFundTransfersResponse represents the response from processing fund transfers
-
-
+### MsgTransferFundsResponse
+MsgTransferFundsResponse represents the response from transferring funds
 
 
 
 
-<a name="provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest"></a>
 
-### MsgProcessFundTransfersWithSettlementRequest
-MsgProcessFundTransfersWithSettlementRequest represents a request to process fund transfers with settlement
+
+<a name="provenance-ledger-v1-MsgTransferFundsWithSettlementRequest"></a>
+
+### MsgTransferFundsWithSettlementRequest
+MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement
 instructions
 
 
@@ -4769,6 +4800,16 @@ instructions
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  |  |
 | `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgTransferFundsWithSettlementResponse"></a>
+
+### MsgTransferFundsWithSettlementResponse
+MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement
 
 
 
@@ -4819,8 +4860,9 @@ Msg defines the attribute module Msg service.
 | `CreateTx` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
 | `AppendTx` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
 | `UpdateBalancesTx` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied |
-| `ProcessFundTransfersTx` | [MsgProcessFundTransfersRequest](#provenance-ledger-v1-MsgProcessFundTransfersRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers (payments and disbursements) |
-| `ProcessFundTransfersWithSettlementTx` | [MsgProcessFundTransfersWithSettlementRequest](#provenance-ledger-v1-MsgProcessFundTransfersWithSettlementRequest) | [MsgProcessFundTransfersResponse](#provenance-ledger-v1-MsgProcessFundTransfersResponse) | Process multiple fund transfers with manual settlement instructions |
+| `FundAssetTx` | [MsgFundAssetRequest](#provenance-ledger-v1-MsgFundAssetRequest) | [MsgFundAssetResponse](#provenance-ledger-v1-MsgFundAssetResponse) | Fund an Asset |
+| `TransferFundsTx` | [MsgTransferFundsRequest](#provenance-ledger-v1-MsgTransferFundsRequest) | [MsgTransferFundsResponse](#provenance-ledger-v1-MsgTransferFundsResponse) | Process multiple fund transfers (payments and disbursements) |
+| `TransferFundsWithSettlementTx` | [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest) | [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse) | Process multiple fund transfers with manual settlement instructions |
 | `DestroyTx` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
 | `CreateLedgerClassTx` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | Create a new ledger class |
 | `AddLedgerClassStatusTypeTx` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | Add a status type to a ledger class |
@@ -6853,6 +6895,11 @@ Asset defines the asset.
 
 ### QueryListAssets
 
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
 
 
 
