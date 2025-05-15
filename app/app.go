@@ -608,7 +608,7 @@ func New(
 	app.LedgerKeeper = ledgerkeeper.NewKeeper(appCodec, keys[ledger.StoreKey], runtime.NewKVStoreService(keys[ledger.StoreKey]), app.BankKeeper, app.RegistryKeeper)
 
 	app.AssetKeeper = assetkeeper.NewKeeper(
-		appCodec, keys[assettypes.StoreKey], app.NFTKeeper, app.BaseApp.MsgServiceRouter(), app.LedgerKeeper,
+		appCodec, keys[assettypes.StoreKey], app.NFTKeeper, app.BaseApp.MsgServiceRouter(), app.LedgerKeeper, app.RegistryKeeper,
 	)
 
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
@@ -764,7 +764,7 @@ func New(
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
-		assetmodule.NewAppModule(appCodec, app.AssetKeeper, app.AccountKeeper, app.NFTKeeper, app.BaseApp.MsgServiceRouter()),
+		assetmodule.NewAppModule(appCodec, app.AssetKeeper, app.BaseApp.MsgServiceRouter()),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
