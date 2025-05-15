@@ -19,6 +19,8 @@ service Msg {
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
   rpc CreateParticipation(MsgCreateParticipation) returns (MsgCreateParticipationResponse);
+
+  rpc CreateSecuritization(MsgCreateSecuritization) returns (MsgCreateSecuritizationResponse);
 }
 
 message MsgAddAsset {
@@ -58,3 +60,13 @@ message MsgCreateParticipation {
 }
 
 message MsgCreateParticipationResponse {}
+
+message MsgCreateSecuritization {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  string  id = 1;
+  repeated cosmos.base.v1beta1.Coin tranches = 2;
+  string    from_address = 3;
+}
+
+message MsgCreateSecuritizationResponse {}
