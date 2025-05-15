@@ -3,11 +3,12 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/asset/types"
@@ -29,6 +30,7 @@ func GetTxCmd() *cobra.Command {
 		GetCmdAddAssetClass(),
 		GetCmdCreatePool(),
 		GetCmdCreateParticipation(),
+		GetCmdCreateSecuritization(),
 	)
 
 	return txCmd
@@ -171,3 +173,40 @@ func GetCmdCreateParticipation() *cobra.Command {
 	return cmd
 }
 
+// GetCmdCreateSecuritization returns the command for creating a new securitization
+func GetCmdCreateSecuritization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-securitization [id] [tranches]",
+		Short: "Create a new securitization marker and tranches",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Parse the comma-separated list of coins
+			trancheStrings := strings.Split(args[1], ",")
+			var tranches []*sdk.Coin
+
+			for _, trancheStr := range trancheStrings {
+				coin, err := sdk.ParseCoinNormalized(strings.TrimSpace(trancheStr))
+				if err != nil {
+					return fmt.Errorf("invalid coin %s: %w", trancheStr, err)
+				}
+				tranches = append(tranches, &coin)
+			}
+
+			msg := &types.MsgCreateSecuritization{
+				Id:          args[0],
+				Tranches:    tranches,
+				FromAddress: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
