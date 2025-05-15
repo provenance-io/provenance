@@ -244,6 +244,18 @@ func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCrea
 	return &types.MsgCreateParticipationResponse{}, nil
 }
 
+// CreateSecuritization creates a new securitization marker and tranches
+func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCreateSecuritization) (*types.MsgCreateSecuritizationResponse, error) {
+
+	// Create the marker
+	err := m.createMarker(goCtx, sdk.NewCoin(msg.Id, sdkmath.NewInt(1)), msg.FromAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
+	}
+
+	return &types.MsgCreateSecuritizationResponse{}, nil
+}
+
 // CreatePool creates a new pool marker
 func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
