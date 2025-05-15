@@ -85,49 +85,50 @@ func (s *TestSuite) ConfigureTest() {
 	s.nftKeeper.Mint(s.ctx, s.validNFT, s.addr1)
 
 	s.validLedgerClass = ledger.LedgerClass{
-		LedgerClassId: "test-ledger-class-id",
-		AssetClassId:  s.validNFTClass.Id,
-		Denom:         s.bondDenom,
+		LedgerClassId:     "test-ledger-class-id",
+		AssetClassId:      s.validNFTClass.Id,
+		MaintainerAddress: s.addr1.String(),
+		Denom:             s.bondDenom,
 	}
-	s.keeper.CreateLedgerClass(s.ctx, s.validLedgerClass)
+	s.keeper.CreateLedgerClass(s.ctx, s.addr1, s.validLedgerClass)
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	s.keeper.AddClassEntryType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          1,
 		Code:        "SCHEDULED_PAYMENT",
 		Description: "Scheduled Payment",
 	})
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	s.keeper.AddClassEntryType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          2,
 		Code:        "DISBURSEMENT",
 		Description: "Disbursement",
 	})
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	s.keeper.AddClassEntryType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          3,
 		Code:        "ORIGINATION_FEE",
 		Description: "Origination Fee",
 	})
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	s.keeper.AddClassBucketType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          1,
 		Code:        "PRINCIPAL",
 		Description: "Principal",
 	})
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	s.keeper.AddClassBucketType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          2,
 		Code:        "INTEREST",
 		Description: "Interest",
 	})
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	s.keeper.AddClassBucketType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          3,
 		Code:        "ESCROW",
 		Description: "Escrow",
 	})
 
-	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	s.keeper.AddClassStatusType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          1,
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
@@ -149,18 +150,20 @@ func (s *TestSuite) TestCreateLedgerClass() {
 		{
 			name: "valid ledger class should already exist",
 			ledgerClass: ledger.LedgerClass{
-				LedgerClassId: s.validLedgerClass.LedgerClassId,
-				AssetClassId:  s.validLedgerClass.AssetClassId,
-				Denom:         s.bondDenom,
+				LedgerClassId:     s.validLedgerClass.LedgerClassId,
+				AssetClassId:      s.validLedgerClass.AssetClassId,
+				MaintainerAddress: s.addr1.String(),
+				Denom:             s.bondDenom,
 			},
 			expErr: []string{"already exists"},
 		},
 		{
 			name: "invalid asset class id",
 			ledgerClass: ledger.LedgerClass{
-				LedgerClassId: s.validLedgerClass.LedgerClassId,
-				AssetClassId:  "non-existent-class-id",
-				Denom:         s.bondDenom,
+				LedgerClassId:     s.validLedgerClass.LedgerClassId,
+				AssetClassId:      "non-existent-class-id",
+				MaintainerAddress: s.addr1.String(),
+				Denom:             s.bondDenom,
 			},
 			expErr: []string{"asset_class_id"},
 		},
@@ -168,7 +171,7 @@ func (s *TestSuite) TestCreateLedgerClass() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.CreateLedgerClass(s.ctx, tc.ledgerClass)
+			err := s.keeper.CreateLedgerClass(s.ctx, s.addr1, tc.ledgerClass)
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "CreateLedgerClass error")
 			} else {
@@ -716,21 +719,21 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 
 	// Add entries in a specific order to test sequence number adjustment
 	// First add entry with sequence 2
-	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{entries[1]})
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{entries[1]})
 	s.Require().NoError(err, "AppendEntry error for sequence 2")
 	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(2), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Then add entry with sequence 1
-	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{entries[0]})
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{entries[0]})
 	s.Require().NoError(err, "AppendEntry error for sequence 1")
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Finally add entry with sequence 3
-	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{entries[2]})
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{entries[2]})
 	s.Require().NoError(err, "AppendEntry error for sequence 3")
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
@@ -766,7 +769,7 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 		CorrelationId: "test-correlation-id-4",
 	}
 
-	err = s.keeper.AppendEntries(s.ctx, s.addr2, l.Key, []*ledger.LedgerEntry{&newEntry})
+	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&newEntry})
 	s.Require().NoError(err, "AppendEntry error for new entry with sequence 2")
 
 	// Get all entries again and verify updated sequence numbers
@@ -890,10 +893,10 @@ func (s *TestSuite) TestGetBalances() {
 					AppliedAmt:   math.NewInt(1000),
 				},
 			},
-			BucketBalances: map[int32]*ledger.BucketBalance{
-				1: {
+			BalanceAmounts: []*ledger.BucketBalance{
+				{
 					BucketTypeId: 1,
-					Balance:      math.NewInt(1000),
+					BalanceAmt:   math.NewInt(1000),
 				},
 			},
 			CorrelationId: "test-correlation-id-1",
@@ -912,10 +915,10 @@ func (s *TestSuite) TestGetBalances() {
 					AppliedAmt:   math.NewInt(10),
 				},
 			},
-			BucketBalances: map[int32]*ledger.BucketBalance{
-				1: {
+			BalanceAmounts: []*ledger.BucketBalance{
+				{
 					BucketTypeId: 1,
-					Balance:      math.NewInt(10),
+					BalanceAmt:   math.NewInt(10),
 				},
 			},
 			CorrelationId: "test-correlation-id-2",
@@ -945,18 +948,18 @@ func (s *TestSuite) TestGetBalances() {
 					AppliedAmt:   math.NewInt(100),
 				},
 			},
-			BucketBalances: map[int32]*ledger.BucketBalance{
-				1: {
+			BalanceAmounts: []*ledger.BucketBalance{
+				{
 					BucketTypeId: 1,
-					Balance:      math.NewInt(910),
+					BalanceAmt:   math.NewInt(910),
 				},
-				2: {
+				{
 					BucketTypeId: 2,
-					Balance:      math.NewInt(-300),
+					BalanceAmt:   math.NewInt(-300),
 				},
-				3: {
+				{
 					BucketTypeId: 3,
-					Balance:      math.NewInt(100),
+					BalanceAmt:   math.NewInt(100),
 				},
 			},
 			CorrelationId: "test-correlation-id-3",
@@ -978,9 +981,9 @@ func (s *TestSuite) TestGetBalances() {
 	s.Require().NoError(err, "GetBalances error")
 	s.Require().Equal(3, len(balances.BucketBalances), "number of bucket balances")
 
-	s.Require().Equal(math.NewInt(910), balances.BucketBalances[0].Balance)
-	s.Require().Equal(math.NewInt(-300), balances.BucketBalances[1].Balance)
-	s.Require().Equal(math.NewInt(100), balances.BucketBalances[2].Balance)
+	s.Require().Equal(math.NewInt(910), balances.BucketBalances[0].BalanceAmt)
+	s.Require().Equal(math.NewInt(-300), balances.BucketBalances[1].BalanceAmt)
+	s.Require().Equal(math.NewInt(100), balances.BucketBalances[2].BalanceAmt)
 }
 
 func (s *TestSuite) TestBech32() {
