@@ -23,12 +23,15 @@ service Msg {
   // Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied
   rpc UpdateBalancesTx(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
 
+  // Fund an Asset
+  rpc FundAssetTx(MsgFundAssetRequest) returns (MsgFundAssetResponse);
+
   // Process multiple fund transfers (payments and disbursements)
-  rpc ProcessFundTransfersTx(MsgProcessFundTransfersRequest) returns (MsgProcessFundTransfersResponse);
+  rpc TransferFundsTx(MsgTransferFundsRequest) returns (MsgTransferFundsResponse);
 
   // Process multiple fund transfers with manual settlement instructions
-  rpc ProcessFundTransfersWithSettlementTx(MsgProcessFundTransfersWithSettlementRequest)
-      returns (MsgProcessFundTransfersResponse);
+  rpc TransferFundsWithSettlementTx(MsgTransferFundsWithSettlementRequest)
+      returns (MsgTransferFundsWithSettlementResponse);
 
   // Destroy a ledger by NFT address
   rpc DestroyTx(MsgDestroyRequest) returns (MsgDestroyResponse);
@@ -84,25 +87,41 @@ message MsgUpdateBalancesRequest {
 // MsgUpdateBalancesResponse
 message MsgUpdateBalancesResponse {}
 
-// MsgProcessFundTransfersRequest represents a request to process multiple fund transfers
-message MsgProcessFundTransfersRequest {
+// MsgFundAssetRequest represents a request to fund an asset
+message MsgFundAssetRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey             key       = 1;
+  repeated LedgerEntry  entries   = 2;
+  string                authority = 3;
+  repeated FundTransfer transfers = 4;
+}
+
+// MsgFundAssetResponse represents the response from funding an asset
+message MsgFundAssetResponse {}
+
+// MsgTransferFundsRequest represents a request to transfer funds
+message MsgTransferFundsRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   string                authority = 1;
   repeated FundTransfer transfers = 2;
 }
 
-// MsgProcessFundTransfersResponse represents the response from processing fund transfers
-message MsgProcessFundTransfersResponse {}
+// MsgTransferFundsResponse represents the response from transferring funds
+message MsgTransferFundsResponse {}
 
-// MsgProcessFundTransfersWithSettlementRequest represents a request to process fund transfers with settlement
+// MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement
 // instructions
-message MsgProcessFundTransfersWithSettlementRequest {
+message MsgTransferFundsWithSettlementRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   string                              authority = 1;
   repeated FundTransferWithSettlement transfers = 2;
 }
+
+// MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement
+message MsgTransferFundsWithSettlementResponse {}
 
 // MsgDestroyRequest represents a request to destroy a ledger
 message MsgDestroyRequest {

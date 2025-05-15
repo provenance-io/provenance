@@ -69,7 +69,11 @@ func (k *MsgServer) CreateTx(goCtx context.Context, req *ledger.MsgCreateRequest
 	return &resp, nil
 }
 
-func (k *MsgServer) ProcessFundTransfersTx(goCtx context.Context, req *ledger.MsgProcessFundTransfersRequest) (*ledger.MsgProcessFundTransfersResponse, error) {
+func (k *MsgServer) FundAssetTx(goCtx context.Context, req *ledger.MsgFundAssetRequest) (*ledger.MsgFundAssetResponse, error) {
+	return nil, nil
+}
+
+func (k *MsgServer) TransferFundsTx(goCtx context.Context, req *ledger.MsgTransferFundsRequest) (*ledger.MsgTransferFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	for _, ft := range req.Transfers {
@@ -79,11 +83,11 @@ func (k *MsgServer) ProcessFundTransfersTx(goCtx context.Context, req *ledger.Ms
 		}
 	}
 
-	resp := ledger.MsgProcessFundTransfersResponse{}
+	resp := ledger.MsgTransferFundsResponse{}
 	return &resp, nil
 }
 
-func (k *MsgServer) ProcessFundTransfersWithSettlementTx(goCtx context.Context, req *ledger.MsgProcessFundTransfersWithSettlementRequest) (*ledger.MsgProcessFundTransfersResponse, error) {
+func (k *MsgServer) TransferFundsWithSettlementTx(goCtx context.Context, req *ledger.MsgTransferFundsWithSettlementRequest) (*ledger.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	for _, ft := range req.Transfers {
@@ -93,7 +97,7 @@ func (k *MsgServer) ProcessFundTransfersWithSettlementTx(goCtx context.Context, 
 		}
 	}
 
-	resp := ledger.MsgProcessFundTransfersResponse{}
+	resp := ledger.MsgTransferFundsWithSettlementResponse{}
 	return &resp, nil
 }
 
