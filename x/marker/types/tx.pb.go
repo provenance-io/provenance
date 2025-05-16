@@ -3639,7 +3639,7 @@ type MsgClient interface {
 	SetDenomMetadataProposal(ctx context.Context, in *MsgSetDenomMetadataProposalRequest, opts ...grpc.CallOption) (*MsgSetDenomMetadataProposalResponse, error)
 	// UpdateParams is a governance proposal endpoint for updating the marker module's params.
 	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// RevokeGrantAllowance revokes any fee allowance of granter's account that has been granted to the grantee.
+	// RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee.
 	RevokeGrantAllowance(ctx context.Context, in *MsgRevokeGrantAllowanceRequest, opts ...grpc.CallOption) (*MsgRevokeGrantAllowanceResponse, error)
 }
 
@@ -3972,7 +3972,7 @@ type MsgServer interface {
 	SetDenomMetadataProposal(context.Context, *MsgSetDenomMetadataProposalRequest) (*MsgSetDenomMetadataProposalResponse, error)
 	// UpdateParams is a governance proposal endpoint for updating the marker module's params.
 	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
-	// RevokeGrantAllowance revokes any fee allowance of granter's account that has been granted to the grantee.
+	// RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee.
 	RevokeGrantAllowance(context.Context, *MsgRevokeGrantAllowanceRequest) (*MsgRevokeGrantAllowanceResponse, error)
 }
 

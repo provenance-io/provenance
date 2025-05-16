@@ -80,7 +80,7 @@ service Msg {
   rpc SetDenomMetadataProposal(MsgSetDenomMetadataProposalRequest) returns (MsgSetDenomMetadataProposalResponse);
   // UpdateParams is a governance proposal endpoint for updating the marker module's params.
   rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
-  // RevokeGrantAllowance revokes any fee allowance of granter's account that has been granted to the grantee.
+  // RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee.
   rpc RevokeGrantAllowance(MsgRevokeGrantAllowanceRequest) returns (MsgRevokeGrantAllowanceResponse);
 }
 

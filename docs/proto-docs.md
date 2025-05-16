@@ -7683,7 +7683,7 @@ Msg defines the Marker Msg service.
 | `WithdrawEscrowProposal` | [MsgWithdrawEscrowProposalRequest](#provenance-marker-v1-MsgWithdrawEscrowProposalRequest) | [MsgWithdrawEscrowProposalResponse](#provenance-marker-v1-MsgWithdrawEscrowProposalResponse) | WithdrawEscrowProposal is a governance proposal to withdraw escrow coins from a marker |
 | `SetDenomMetadataProposal` | [MsgSetDenomMetadataProposalRequest](#provenance-marker-v1-MsgSetDenomMetadataProposalRequest) | [MsgSetDenomMetadataProposalResponse](#provenance-marker-v1-MsgSetDenomMetadataProposalResponse) | SetDenomMetadataProposal is a governance proposal to set marker metadata |
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-marker-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-marker-v1-MsgUpdateParamsResponse) | UpdateParams is a governance proposal endpoint for updating the marker module's params. |
-| `RevokeGrantAllowance` | [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest) | [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse) | RevokeGrantAllowance revokes any fee allowance of granter's account that has been granted to the grantee. |
+| `RevokeGrantAllowance` | [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest) | [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse) | RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee. |
 
  <!-- end services -->
 

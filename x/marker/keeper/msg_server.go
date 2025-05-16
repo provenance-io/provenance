@@ -8,14 +8,15 @@ import (
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/x/feegrant"
 	feegranttypes "cosmossdk.io/x/feegrant/keeper"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -862,7 +863,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-// RevokeGrantAllowance revokes a fee allowance granted by a marker to a grantee.
+// RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee.
 func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRevokeGrantAllowanceRequest) (*types.MsgRevokeGrantAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
@@ -887,7 +888,7 @@ func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRev
 	if err = m.ValidateAddressHasAccess(admin, types.Access_Admin); err != nil {
 		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
-	//verify the grant exists
+	// verify the grant exists
 	_, err = k.feegrantKeeper.GetAllowance(ctx, markerAddr, grantee)
 	if err != nil {
 		return nil, sdkerrors.ErrNotFound.Wrapf("no fee grant from %s to %s found", markerAddr, grantee)
