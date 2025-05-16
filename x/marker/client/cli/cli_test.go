@@ -2723,39 +2723,12 @@ func (s *IntegrationTestSuite) TestRevokeFeegrant() {
 		}
 		resp := testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 		s.Require().Equal(uint32(0), resp.Code, "Feegrant creation should succeed")
-		height, err := s.testnet.LatestHeight()
-		s.Require().NoError(err, "getting latest height failed")
-		s.T().Logf("Block height after feegrant creation: %d", height)
-		_, err = testutil.WaitForHeight(s.testnet, height+3)
-		s.Require().NoError(err, "waiting for next block height failed")
-	})
-	// Wait for the feegrant to be processed
-	s.Run("Wait for next block", func() {
-		if setupOK {
-			// Fetch the current block height before waiting for the next block
-			initialHeight, err := s.testnet.LatestHeight()
-			s.Require().NoError(err, "getting initial height failed")
-			s.T().Logf("Initial block height: %d", initialHeight)
-
-			// Wait for the next block
-			err = s.testnet.WaitForNextBlock()
-			s.Require().NoError(err, "Failed waiting for block confirmation")
-
-			// Fetch the new block height after waiting
-			finalHeight, err := s.testnet.LatestHeight()
-			s.Require().NoError(err, "getting final height after waiting for next block failed")
-			s.T().Logf("Block height after waiting for next block: %d", finalHeight)
-		}
 	})
 	// Step 2: Revoke the feegrant
 	s.Run("Revoke the feegrant", func() {
 		if !setupOK {
 			s.T().Skip("Skipping due to setup failure.")
 		}
-		initialHeight, err := s.testnet.LatestHeight()
-		s.Require().NoError(err, "getting initial height failed")
-		s.T().Logf("Revoke block height: %d", initialHeight)
-
 		cmd := markercli.GetCmdRevokeFeeGrant()
 		args := []string{
 			"revokegrantcoin",
