@@ -396,10 +396,7 @@ func SimulateGovMsgUnsanction(args *WeightedOpsArgs) simtypes.Operation {
 
 		// Unsanction 1/4 of the sanctioned addresses but at least 4.
 		// If there are fewer than 4 sanctioned addresses, unsanction them all.
-		count := len(sanctionedAddrs) / 4
-		if count < 4 {
-			count = 4
-		}
+		count := max(len(sanctionedAddrs)/4, 4)
 		if count > len(sanctionedAddrs) {
 			count = len(sanctionedAddrs)
 		} else {
@@ -488,10 +485,7 @@ func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation
 
 		// Unsanction 1/4 of the sanctioned addresses but at least 4.
 		// If there are fewer than 4 sanctioned addresses, unsanction them all.
-		count := len(sanctionedAddrs) / 4
-		if count < 4 {
-			count = 4
-		}
+		count := max(len(sanctionedAddrs)/4, 4)
 		if count > len(sanctionedAddrs) {
 			count = len(sanctionedAddrs)
 		} else {

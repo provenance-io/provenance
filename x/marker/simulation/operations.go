@@ -325,10 +325,7 @@ func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.
 		// 1 in 10 chance that the value stays "".
 		// 9 in 10 chance that it will be between 1 and MaxValueLen characters.
 		if r.Intn(10) != 0 {
-			maxLen := args.AttrK.GetMaxValueLength(ctx)
-			if maxLen > 500 {
-				maxLen = 500
-			}
+			maxLen := min(args.AttrK.GetMaxValueLength(ctx), 500)
 			strLen := r.Intn(int(maxLen)) + 1
 			msg.Value = simtypes.RandStringOfLength(r, strLen)
 		}

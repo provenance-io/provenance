@@ -70,10 +70,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 				panic(err)
 			}
 			// Extra guard here in case volume is null or invalid
-			volume := nav.GetVolume()
-			if volume < 1 {
-				volume = 1
-			}
+			volume := max(nav.GetVolume(), 1)
 			err = k.SetNetAssetValue(ctx, address, types.NewNetAssetValue(nav.Price, volume), types.ModuleName)
 			if err != nil {
 				panic(err)
