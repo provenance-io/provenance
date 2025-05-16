@@ -20,6 +20,7 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/SetDenomMetadata](#msgsetdenommetadata)
   - [Msg/AddFinalizeActivateMarker](#msgaddfinalizeactivatemarker)
   - [Msg/GrantAllowance](#msggrantallowance)
+  - [Msg/RevokeGrantAllowance](#msgrevokegrantallowance)
   - [Msg/SupplyIncreaseProposal](#msgsupplyincreaseproposal)
   - [Msg/UpdateRequiredAttributes](#msgupdaterequiredattributes)
   - [Msg/UpdateSendDenyList](#msgupdatesenddenylist)
@@ -324,6 +325,21 @@ This service message is expected to fail if:
 
 - Any field is empty.
 - The allowance is invalid
+- The given denom value is invalid or does not match an existing marker on the system
+- The administrator or grantee are invalid addresses
+- The administrator does not have `ADMIN` access on the marker.
+
+## Msg/RevokeGrantAllowance
+
+RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee.
+
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/marker/v1/tx.proto#L487-L495
+
++++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/marker/v1/tx.proto#L497-L498
+
+This service message is expected to fail if:
+
+- Any field is empty.
 - The given denom value is invalid or does not match an existing marker on the system
 - The administrator or grantee are invalid addresses
 - The administrator does not have `ADMIN` access on the marker.
