@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -79,7 +81,7 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
-			convertAcctsToVesting(ctx, app)
+			convertAcctsToVesting(ctx, app, mainnetAcctFilter)
 			return vm, nil
 		},
 	},
@@ -295,7 +297,8 @@ var (
 const nhashDenom = "nhash"
 
 // acctFilter is a function for adjusting the toConvert and toIgnore lists.
-type acctFilter func(ctx sdk.Context, _ *App, toConvert, toIgnore []*acctInfo) (newToConvert, newToIgnore []*acctInfo)
+// Part of the yellow upgrade.
+type acctFilter func(ctx sdk.Context, app *App, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo)
 
 // convertAcctsToVesting will convert the provided accounts to vesting accounts.
 // Part of the yellow upgrade.
@@ -369,6 +372,34 @@ func newAcctInfo(addr sdk.AccAddress, acctI sdk.AccountI) *acctInfo {
 	}
 }
 
+// UpdateWithToVest will update toVest to the amount provided, then update toKeep, delVest, and delFree accordingly.
+// This assumes that the total and delegated amounts have already been set.
+func (a *acctInfo) UpdateWithToVest(toVest sdkmath.Int) {
+	a.toVest = toVest
+	a.toKeep = a.total.Sub(toVest)
+	a.SetDelVestFree()
+}
+
+// UpdateWithToKeep will update toKeep to the amount provided, then update toVest, delVest, and delFree accordingly.
+// This assumes that the total and delegated amounts have already been set.
+func (a *acctInfo) UpdateWithToKeep(toKeep sdkmath.Int) {
+	a.toKeep = toKeep
+	a.toVest = a.total.Sub(toKeep)
+	a.SetDelVestFree()
+}
+
+// SetDelVestFree will set the delVest and delFree values based on current delegated and toVest amounts.
+// This should be called whenever delegated and/or toVest are set or changed.
+func (a *acctInfo) SetDelVestFree() {
+	if a.delegated.GT(a.toVest) {
+		a.delVest = a.toVest
+		a.delFree = a.delegated.Sub(a.toVest)
+	} else {
+		a.delVest = a.delegated
+		a.delFree = sdkmath.ZeroInt()
+	}
+}
+
 const (
 	monthsToStart = 1
 	monthsToEnd   = 48
@@ -406,13 +437,7 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 		}
 
 		acct.total = acct.balance.Add(acct.delegated)
-		acct.toVest = acct.total.MulRaw(monthsToEnd - monthsToStart).QuoRaw(monthsToEnd)
-		acct.toKeep = acct.total.Sub(acct.toVest)
-		acct.delVest = acct.delegated
-		if acct.delegated.GT(acct.toVest) {
-			acct.delVest = acct.toVest
-			acct.delFree = acct.delegated.Sub(acct.toVest)
-		}
+		acct.UpdateWithToVest(acct.total.MulRaw(monthsToEnd - monthsToStart).QuoRaw(monthsToEnd))
 
 		// Get a few more pieces of info that are useful for analysis. TODO[yellow]: Delete this.
 		acct.onHold, err = app.HoldKeeper.GetHoldCoin(ctx, addr, nhashDenom)
@@ -477,9 +502,9 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 }
 
 // testnetAcctFilter will keep only a specific set of accounts, moving the rest into toIgnore.
-func testnetAcctFilter(ctx sdk.Context, _ *App, toConvert, toIgnore []*acctInfo) (newToConvert, newToIgnore []*acctInfo) {
-	ctx.Logger().Debug(fmt.Sprintf("Applying testnet account filter on %d accounts to convert and %d to ignore.", len(toConvert), len(toIgnore)))
-	newToIgnore = toIgnore
+func testnetAcctFilter(ctx sdk.Context, _ *App, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo) {
+	ctx.Logger().Debug(fmt.Sprintf("Applying testnet account filter, starting with %d accounts to convert and %d to ignore.", len(toConvertOrig), len(toIgnoreOrig)))
+	toIgnoreNew = toIgnoreOrig
 	// For testnet, these are the ONLY addresses we want converted.
 	addrs := []string{
 		"tp1dj2n5y47ayq2t84pay8cyy65zh6e5u5j0djnj7",
@@ -497,15 +522,15 @@ func testnetAcctFilter(ctx sdk.Context, _ *App, toConvert, toIgnore []*acctInfo)
 		keepAddr[addr] = true
 	}
 
-	newToConvert = make([]*acctInfo, 0, len(addrs))
-	for _, acct := range toConvert {
+	toConvertNew = make([]*acctInfo, 0, len(addrs))
+	for _, acct := range toConvertOrig {
 		if !keepAddr[acct.baseAcct.Address] {
 			acct.reason = "not in pre-determined list"
 			ctx.Logger().Debug("Ignoring account.", "account", acct.baseAcct.Address, "reason", acct.reason)
-			newToIgnore = append(newToIgnore, acct)
+			toIgnoreNew = append(toIgnoreNew, acct)
 			continue
 		}
-		newToConvert = append(newToConvert, acct)
+		toConvertNew = append(toConvertNew, acct)
 		keepAddr[acct.baseAcct.Address] = false
 	}
 
@@ -516,7 +541,64 @@ func testnetAcctFilter(ctx sdk.Context, _ *App, toConvert, toIgnore []*acctInfo)
 		}
 	}
 
-	return newToConvert, newToIgnore
+	return toConvertNew, toIgnoreNew
+}
+
+// mainnetAcctFilter will update some of the toConvert entries, and move others
+// to toIgnore based on some predetermined account and amount details for mainnet.
+func mainnetAcctFilter(ctx sdk.Context, app *App, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo) {
+	ctx.Logger().Debug(fmt.Sprintf("Applying mainnet account filter, starting with %d accounts to convert and %d to ignore.", len(toConvertOrig), len(toIgnoreOrig)))
+	toIgnoreNew = toIgnoreOrig
+	toConvertNew = make([]*acctInfo, 0, len(toConvertOrig))
+	minUnlockedAmts := getMainnetPredeterminedUnlocked()
+	seen := make(map[string]bool)
+
+	for _, acct := range toConvertOrig {
+		seen[acct.baseAcct.Address] = true
+		minUnlockedAmt, haveMin := minUnlockedAmts[acct.baseAcct.Address]
+		if !haveMin {
+			// If we don't have anything specific for this account, convert it as previously determined.
+			toConvertNew = append(toConvertNew, acct)
+			continue
+		}
+
+		if acct.toKeep.GTE(minUnlockedAmt) {
+			// If the amount to keep is already more than its minimum, we don't need to adjust anything.
+			toConvertNew = append(toConvertNew, acct)
+			continue
+		}
+
+		if acct.total.LTE(minUnlockedAmt) {
+			// If the account's total is less than its minimum, there's nothing to lock up and we can ignore this account.
+			acct.reason = fmt.Sprintf("account total is less than predetermined min unlocked amount %q", minUnlockedAmt)
+			ctx.Logger().Debug("Ignoring account.", "account", acct.baseAcct.Address, "reason", acct.reason)
+			toIgnoreNew = append(toIgnoreNew, acct)
+			continue
+		}
+
+		acct.UpdateWithToKeep(minUnlockedAmt)
+		toConvertNew = append(toConvertNew, acct)
+		continue
+	}
+
+	// Double check that we saw all the pre-determined accounts.
+	// Realistically, this is more for testing before the upgrade than anything,
+	// but it's probably good to still log the info when we do the real thing.
+	for _, addr := range slices.Sorted(maps.Keys(minUnlockedAmts)) {
+		if !seen[addr] {
+			ctx.Logger().Info("Predetermined account not fund.", "account", addr)
+		}
+	}
+
+	return toConvertNew, toIgnoreNew
+}
+
+// Matt will give me a list of addresses, and the amount they should have available.
+// getMainnetPredeterminedUnlocked returns a map of bech32 address strings to the amount that they should have unlocked.
+func getMainnetPredeterminedUnlocked() map[string]sdkmath.Int {
+	rv := make(map[string]sdkmath.Int)
+	// TODO[yellow]: Define and parse the mainnet account info.
+	return rv
 }
 
 // addMonths will return an epoch that is the given months after the start time.
