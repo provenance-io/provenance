@@ -321,15 +321,18 @@ func MakeQueryGetCommitment(_ client.Context, flagSet *pflag.FlagSet, _ []string
 // SetupCmdQueryGetAccountCommitments adds all the flags needed for MakeQueryGetAccountCommitments.
 func SetupCmdQueryGetAccountCommitments(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAccount, "", "The account's address")
+	cmd.Flags().String(FlagDenom, "", "Optional denom to filter commitments")
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<account>|--%s <account>}", FlagAccount),
+		fmt.Sprintf("[--%s <denom>]", FlagDenom),
 	)
 	AddUseDetails(cmd,
 		"An <account> is required as either an arg or flag, but not both.",
 	)
 	AddQueryExample(cmd, ExampleAddr)
 	AddQueryExample(cmd, "--"+FlagAccount, ExampleAddr)
+	AddQueryExample(cmd, "--"+FlagAccount, ExampleAddr, "--"+FlagDenom, "nhash")
 
 	cmd.Args = cobra.MaximumNArgs(1)
 }
@@ -339,10 +342,10 @@ func SetupCmdQueryGetAccountCommitments(cmd *cobra.Command) {
 func MakeQueryGetAccountCommitments(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetAccountCommitmentsRequest, error) {
 	rv := &exchange.QueryGetAccountCommitmentsRequest{}
 
-	var err error
-	rv.Account, err = ReadStringFlagOrArg(flagSet, args, FlagAccount, "account")
-
-	return rv, err
+	errs := make([]error, 2)
+	rv.Account, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagAccount, "account")
+	rv.Denom, errs[1] = flagSet.GetString(FlagDenom)
+	return rv, errors.Join(errs...)
 }
 
 // SetupCmdQueryGetMarketCommitments adds all the flags needed for MakeQueryGetMarketCommitments.

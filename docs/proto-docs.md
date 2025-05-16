@@ -3529,6 +3529,7 @@ QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitm
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `account` | [string](#string) |  | account is the bech32 address string of the account with the commitments. |
+| `denom` | [string](#string) |  | denom is an optional denom that, if provided, limits the results to just that denom. |
 
 
 
@@ -4229,7 +4230,7 @@ Query is the service for exchange module's query endpoints.
 | `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance-exchange-v1-QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance-exchange-v1-QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. |
 | `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance-exchange-v1-QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance-exchange-v1-QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. |
 | `GetCommitment` | [QueryGetCommitmentRequest](#provenance-exchange-v1-QueryGetCommitmentRequest) | [QueryGetCommitmentResponse](#provenance-exchange-v1-QueryGetCommitmentResponse) | GetCommitment gets the funds in an account that are committed to the market. |
-| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. |
+| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. Optionally, you can filter the results by a specific asset denomination using the `asset` query parameter. |
 | `GetMarketCommitments` | [QueryGetMarketCommitmentsRequest](#provenance-exchange-v1-QueryGetMarketCommitmentsRequest) | [QueryGetMarketCommitmentsResponse](#provenance-exchange-v1-QueryGetMarketCommitmentsResponse) | GetMarketCommitments gets all the funds committed to a market from any account. |
 | `GetAllCommitments` | [QueryGetAllCommitmentsRequest](#provenance-exchange-v1-QueryGetAllCommitmentsRequest) | [QueryGetAllCommitmentsResponse](#provenance-exchange-v1-QueryGetAllCommitmentsResponse) | GetAllCommitments gets all fund committed to any market from any account. |
 | `GetMarket` | [QueryGetMarketRequest](#provenance-exchange-v1-QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance-exchange-v1-QueryGetMarketResponse) | GetMarket returns all the information and details about a market. |
