@@ -169,10 +169,7 @@ func SimulateMsgSetAccountData(simState module.SimulationState, k keeper.Keeper,
 		// 9 in 10 chance that it will be between 1 and MaxValueLen characters.
 		value := ""
 		if r.Intn(10) != 0 {
-			maxLen := k.GetMaxValueLength(ctx)
-			if maxLen > 500 {
-				maxLen = 500
-			}
+			maxLen := min(k.GetMaxValueLength(ctx), 500)
 			strLen := r.Intn(int(maxLen)) + 1
 			value = simtypes.RandStringOfLength(r, strLen)
 		}
