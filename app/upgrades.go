@@ -55,6 +55,20 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
+	"yellow-rc1": { // Upgrade for v1.23.0-rc1.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			convertAcctsToVesting(ctx, app, testnetAcctFilter)
+			return vm, nil
+		},
+	},
 	"yellow": { // Upgrade for v1.23.0.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -280,12 +294,18 @@ var (
 // Part of the yellow upgrade.
 const nhashDenom = "nhash"
 
+// acctFilter is a function for adjusting the toConvert and toIgnore lists.
+type acctFilter func(ctx sdk.Context, _ *App, toConvert, toIgnore []*acctInfo) (newToConvert, newToIgnore []*acctInfo)
+
 // convertAcctsToVesting will convert the provided accounts to vesting accounts.
 // Part of the yellow upgrade.
-func convertAcctsToVesting(ctx sdk.Context, app *App) {
+func convertAcctsToVesting(ctx sdk.Context, app *App, filters ...acctFilter) {
 	ctx.Logger().Info("Converting accounts to vesting accounts.")
 
 	toConvert, toIgnore := getAcctsToConvertToVesting(ctx, app)
+	for _, filter := range filters {
+		toConvert, toIgnore = filter(ctx, app, toConvert, toIgnore)
+	}
 	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to convert.", len(toConvert)))
 	ctx.Logger().Debug(fmt.Sprintf("Identified %d accounts to ignore.", len(toIgnore)))
 
@@ -354,7 +374,7 @@ const (
 	monthsToEnd   = 48
 )
 
-// getAcctsToConvertToVestingOld returns info on each of the accounts that should be converted to a vesting account.
+// getAcctsToConvertToVesting returns info on each of the accounts that should be converted to a vesting account.
 // Part of the yellow upgrade.
 func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore []*acctInfo) {
 	blockTime := ctx.BlockTime().UTC()
@@ -454,6 +474,49 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 	}
 
 	return toConvert, toIgnore
+}
+
+// testnetAcctFilter will keep only a specific set of accounts, moving the rest into toIgnore.
+func testnetAcctFilter(ctx sdk.Context, _ *App, toConvert, toIgnore []*acctInfo) (newToConvert, newToIgnore []*acctInfo) {
+	ctx.Logger().Debug(fmt.Sprintf("Applying testnet account filter on %d accounts to convert and %d to ignore.", len(toConvert), len(toIgnore)))
+	newToIgnore = toIgnore
+	// For testnet, these are the ONLY addresses we want converted.
+	addrs := []string{
+		"tp1dj2n5y47ayq2t84pay8cyy65zh6e5u5j0djnj7",
+		"tp1ed4plgqd6sqt3p4pgul8xgx9fpcr68v3dj6a4c",
+		"tp124x5hh3qm2pfjae2vc4wwteshtdc5uskfwwzmx",
+		"tp14u42k8ufwnddpw3ku03ucs8yf07rrn70f3gjkd",
+		"tp1kzcmgmx0qmc37tcpxj32ftakfs2upm49xngh7m",
+		"tp1m63zkd9r67upj7r97hapdqw3004nu4ynuwm9na",
+		"tp1u3mnfkq7f9aysplnwaph8uz02ekuae2yaelc6ah4xuz5cfpuek4smq7nah",
+		"tp1edr4hdx3yt5399w0c9qfraagpeypsc8y7l4jkx",
+		"tp1gglj32dhranr5a2kn4pzw9zd2v6y7f2lxeanf3",
+	}
+	keepAddr := make(map[string]bool)
+	for _, addr := range addrs {
+		keepAddr[addr] = true
+	}
+
+	newToConvert = make([]*acctInfo, 0, len(addrs))
+	for _, acct := range toConvert {
+		if !keepAddr[acct.baseAcct.Address] {
+			acct.reason = "not in pre-determined list"
+			ctx.Logger().Debug("Ignoring account.", "account", acct.baseAcct.Address, "reason", acct.reason)
+			newToIgnore = append(newToIgnore, acct)
+			continue
+		}
+		newToConvert = append(newToConvert, acct)
+		keepAddr[acct.baseAcct.Address] = false
+	}
+
+	// Log errors for any addrs that we didn't find.
+	for _, addr := range addrs {
+		if keepAddr[addr] {
+			ctx.Logger().Error("Account (from pre-determined list) not found.", "account", addr)
+		}
+	}
+
+	return newToConvert, newToIgnore
 }
 
 // addMonths will return an epoch that is the given months after the start time.

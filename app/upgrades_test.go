@@ -580,10 +580,21 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 // TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
 
+func (s *UpgradeTestSuite) TestYellowRC1() {
+	expInLog := []string{
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Converting accounts to vesting accounts.",
+	}
+	s.AssertUpgradeHandlerLogs("yellow-rc1", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestYellow() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
 		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
 		"INF Converting accounts to vesting accounts.",
 	}
 	s.AssertUpgradeHandlerLogs("yellow", expInLog, nil)
