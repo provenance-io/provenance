@@ -2909,7 +2909,7 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
-// MsgRevokeFeeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
+// MsgRevokeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
 type MsgRevokeGrantAllowanceRequest struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
@@ -2971,7 +2971,7 @@ func (m *MsgRevokeGrantAllowanceRequest) GetGrantee() string {
 	return ""
 }
 
-// MsgRevokeFeeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
+// MsgRevokeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
 type MsgRevokeGrantAllowanceResponse struct {
 }
 

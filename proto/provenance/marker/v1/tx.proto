@@ -483,7 +483,7 @@ message MsgUpdateParamsRequest {
 // MsgUpdateParamsResponse is a response message for the UpdateParams endpoint.
 message MsgUpdateParamsResponse {}
 
-// MsgRevokeFeeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
+// MsgRevokeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
 message MsgRevokeGrantAllowanceRequest {
   option (cosmos.msg.v1.signer) = "administrator";
 
@@ -494,5 +494,5 @@ message MsgRevokeGrantAllowanceRequest {
   string grantee = 3;
 }
 
-// MsgRevokeFeeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
+// MsgRevokeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
 message MsgRevokeGrantAllowanceResponse {}

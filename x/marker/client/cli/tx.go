@@ -848,13 +848,8 @@ func GetCmdRevokeFeeGrant() *cobra.Command {
 		Short: "Revoke allowance issued by a admin",
 		Long: strings.TrimSpace(`Revoke a previously granted fee allowance from an admin. Note, the'--from' flag is
 				ignored as it is implied from [administrator].`),
-		Example: fmt.Sprintf(`$ %s tx marker revoke-feegrant markerdenom pb1edlyu... pb1psh7r... --%s=false --%s=false --%s=attr.one,*.attr.two,... --from=mykey`,
-			FlagType,
-			FlagSupplyFixed,
-			FlagAllowGovernanceControl,
-			FlagRequiredAttributes,
-		),
-		Args: cobra.ExactArgs(3),
+		Example: fmt.Sprintf(`$ %s tx marker revoke-feegrant markerdenom pb1edlyu... pb1psh7r... --from=mykey`, version.AppName),
+		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			denom := args[0]
 			err := cmd.Flags().Set(flags.FlagFrom, args[1])
@@ -1475,7 +1470,7 @@ func GetCmdSetDenomMetadataProposal() *cobra.Command {
 					},
 					{
 						Denom:    display,
-						Exponent: uint32(exponent), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+						Exponent: uint32(exponent),
 					},
 				},
 				Base:    denom,

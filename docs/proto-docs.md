@@ -7260,7 +7260,7 @@ MsgRemoveAdministratorProposalResponse defines the Msg/RemoveAdministratorPropos
 <a name="provenance-marker-v1-MsgRevokeGrantAllowanceRequest"></a>
 
 ### MsgRevokeGrantAllowanceRequest
-MsgRevokeFeeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
+MsgRevokeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
 
 
 | Field | Type | Label | Description |
@@ -7277,7 +7277,7 @@ MsgRevokeFeeGrantAllowanceRequest is a request message for the RevokeFeeGrantAll
 <a name="provenance-marker-v1-MsgRevokeGrantAllowanceResponse"></a>
 
 ### MsgRevokeGrantAllowanceResponse
-MsgRevokeFeeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
+MsgRevokeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
 
 
 

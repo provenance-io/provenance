@@ -906,5 +906,5 @@ func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRev
 		return nil, err
 	}
 
-	return &types.MsgRevokeGrantAllowanceResponse{}, err
+	return &types.MsgRevokeGrantAllowanceResponse{}, nil
 }
