@@ -213,7 +213,7 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 
 	logger := k.Logger(ctx)
 	logger.Info("changed marker status", "marker", denom, "stats", status.String())
-
+    
 	return nil
 }
 

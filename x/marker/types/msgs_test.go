@@ -38,6 +38,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgIbcTransferRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgSetDenomMetadataRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgGrantAllowanceRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgRevokeGrantAllowanceRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgAddFinalizeActivateMarkerRequest{FromAddress: signer} },
 		func(signer string) sdk.Msg { return &MsgSupplyIncreaseProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgSupplyDecreaseProposalRequest{Authority: signer} },
@@ -125,6 +126,60 @@ func TestMsgGrantAllowance(t *testing.T) {
 			require.Equal(t, tc.allowance, allowance)
 
 			err = msg.UnpackInterfaces(cdc)
+			require.NoError(t, err)
+		} else {
+			require.Error(t, err)
+		}
+	}
+}
+
+func TestMsgRevokGrantAllowance(t *testing.T) {
+	addr, _ := sdk.AccAddressFromBech32("cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr")
+	addr2, _ := sdk.AccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
+	cases := map[string]struct {
+		denom         string
+		grantee       sdk.AccAddress
+		administrator sdk.AccAddress
+		valid         bool
+	}{
+		"valid": {
+			denom:         "testcoin",
+			grantee:       addr,
+			administrator: addr2,
+			valid:         true,
+		},
+		"no grantee": {
+			administrator: addr2,
+			denom:         "testcoin",
+			grantee:       sdk.AccAddress{},
+			valid:         false,
+		},
+		"no administrator": {
+			administrator: sdk.AccAddress{},
+			denom:         "testcoin",
+			grantee:       addr,
+			valid:         false,
+		},
+		"no denom": {
+			administrator: sdk.AccAddress{},
+			denom:         "",
+			grantee:       addr,
+			valid:         false,
+		},
+		"grantee == administrator": {
+			denom:         "testcoin",
+			grantee:       addr,
+			administrator: addr,
+			valid:         true,
+		},
+	}
+
+	for _, tc := range cases {
+		msg, err := NewMsgRevokeGrantAllowance(tc.denom, tc.administrator, tc.grantee)
+		require.NoError(t, err)
+		err = msg.ValidateBasic()
+
+		if tc.valid {
 			require.NoError(t, err)
 		} else {
 			require.Error(t, err)

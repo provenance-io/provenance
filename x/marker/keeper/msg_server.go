@@ -9,12 +9,13 @@ import (
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
+	"cosmossdk.io/x/feegrant"
+	feegranttypes "cosmossdk.io/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -53,6 +54,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 		return nil, err
 	}
 	err = k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), grantee, allowance)
+
 	return &types.MsgGrantAllowanceResponse{}, err
 }
 
@@ -858,4 +860,50 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// RevokeGrantAllowance revokes a fee allowance granted by a marker to a grantee.
+func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRevokeGrantAllowanceRequest) (*types.MsgRevokeGrantAllowanceResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if m.GetStatus() != types.StatusActive {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker %s is not active", msg.Denom)
+	}
+	markerAddr := m.GetAddress()
+
+	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err = m.ValidateAddressHasAccess(admin, types.Access_Admin); err != nil {
+		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
+	}
+	//verify the grant exists
+	_, err = k.feegrantKeeper.GetAllowance(ctx, markerAddr, grantee)
+	if err != nil {
+		return nil, sdkerrors.ErrNotFound.Wrapf("no fee grant from %s to %s found", markerAddr, grantee)
+	}
+
+	server := feegranttypes.NewMsgServerImpl(k.feegrantKeeper)
+
+	revokMsg := &feegrant.MsgRevokeAllowance{
+		Granter: markerAddr.String(),
+		Grantee: grantee.String(),
+	}
+
+	_, err = server.RevokeAllowance(ctx, revokMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRevokeGrantAllowanceResponse{}, err
 }

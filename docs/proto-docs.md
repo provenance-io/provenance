@@ -489,6 +489,8 @@
     - [MsgMintResponse](#provenance-marker-v1-MsgMintResponse)
     - [MsgRemoveAdministratorProposalRequest](#provenance-marker-v1-MsgRemoveAdministratorProposalRequest)
     - [MsgRemoveAdministratorProposalResponse](#provenance-marker-v1-MsgRemoveAdministratorProposalResponse)
+    - [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest)
+    - [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse)
     - [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest)
     - [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse)
     - [MsgSetAdministratorProposalRequest](#provenance-marker-v1-MsgSetAdministratorProposalRequest)
@@ -4230,7 +4232,7 @@ Query is the service for exchange module's query endpoints.
 | `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance-exchange-v1-QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance-exchange-v1-QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. |
 | `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance-exchange-v1-QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance-exchange-v1-QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. |
 | `GetCommitment` | [QueryGetCommitmentRequest](#provenance-exchange-v1-QueryGetCommitmentRequest) | [QueryGetCommitmentResponse](#provenance-exchange-v1-QueryGetCommitmentResponse) | GetCommitment gets the funds in an account that are committed to the market. |
-| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. Optionally, you can filter the results by a specific asset denomination using the `asset` query parameter. |
+| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. Optionally, you can filter the results for a specific denomination using the `denom` query parameter. |
 | `GetMarketCommitments` | [QueryGetMarketCommitmentsRequest](#provenance-exchange-v1-QueryGetMarketCommitmentsRequest) | [QueryGetMarketCommitmentsResponse](#provenance-exchange-v1-QueryGetMarketCommitmentsResponse) | GetMarketCommitments gets all the funds committed to a market from any account. |
 | `GetAllCommitments` | [QueryGetAllCommitmentsRequest](#provenance-exchange-v1-QueryGetAllCommitmentsRequest) | [QueryGetAllCommitmentsResponse](#provenance-exchange-v1-QueryGetAllCommitmentsResponse) | GetAllCommitments gets all fund committed to any market from any account. |
 | `GetMarket` | [QueryGetMarketRequest](#provenance-exchange-v1-QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance-exchange-v1-QueryGetMarketResponse) | GetMarket returns all the information and details about a market. |
@@ -7211,7 +7213,7 @@ MsgMintRequest defines the Msg/Mint request type
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  | recipient is the optional address of the account to receive the newly minted funds. |
+| `recipient` | [string](#string) |  | recipient is the optional address to receive the newly minted funds. |
 
 
 
@@ -7249,6 +7251,33 @@ MsgRemoveAdministratorProposalRequest defines the Msg/RemoveAdministratorProposa
 
 ### MsgRemoveAdministratorProposalResponse
 MsgRemoveAdministratorProposalResponse defines the Msg/RemoveAdministratorProposal response type
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgRevokeGrantAllowanceRequest"></a>
+
+### MsgRevokeGrantAllowanceRequest
+MsgRevokeFeeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  | address of the grantee whose allowance is being revoked. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgRevokeGrantAllowanceResponse"></a>
+
+### MsgRevokeGrantAllowanceResponse
+MsgRevokeFeeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
 
 
 
@@ -7654,6 +7683,7 @@ Msg defines the Marker Msg service.
 | `WithdrawEscrowProposal` | [MsgWithdrawEscrowProposalRequest](#provenance-marker-v1-MsgWithdrawEscrowProposalRequest) | [MsgWithdrawEscrowProposalResponse](#provenance-marker-v1-MsgWithdrawEscrowProposalResponse) | WithdrawEscrowProposal is a governance proposal to withdraw escrow coins from a marker |
 | `SetDenomMetadataProposal` | [MsgSetDenomMetadataProposalRequest](#provenance-marker-v1-MsgSetDenomMetadataProposalRequest) | [MsgSetDenomMetadataProposalResponse](#provenance-marker-v1-MsgSetDenomMetadataProposalResponse) | SetDenomMetadataProposal is a governance proposal to set marker metadata |
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-marker-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-marker-v1-MsgUpdateParamsResponse) | UpdateParams is a governance proposal endpoint for updating the marker module's params. |
+| `RevokeGrantAllowance` | [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest) | [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse) | RevokeGrantAllowance revokes any fee allowance of granter's account that has been granted to the grantee. |
 
  <!-- end services -->
 

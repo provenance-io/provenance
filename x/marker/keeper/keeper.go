@@ -7,13 +7,12 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -53,7 +52,7 @@ type Keeper struct {
 	bankKeeper types.BankKeeper
 
 	// To pass through grant creation for callers with admin access on a marker.
-	feegrantKeeper types.FeeGrantKeeper
+	feegrantKeeper feegrantkeeper.Keeper
 
 	// To access attributes for addresses
 	attrKeeper types.AttrKeeper
@@ -100,7 +99,7 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	authzKeeper types.AuthzKeeper,
-	feegrantKeeper types.FeeGrantKeeper,
+	feegrantKeeper feegrantkeeper.Keeper,
 	attrKeeper types.AttrKeeper,
 	nameKeeper types.NameKeeper,
 	ibcTransferServer types.IbcTransferMsgServer,

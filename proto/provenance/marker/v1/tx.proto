@@ -80,6 +80,8 @@ service Msg {
   rpc SetDenomMetadataProposal(MsgSetDenomMetadataProposalRequest) returns (MsgSetDenomMetadataProposalResponse);
   // UpdateParams is a governance proposal endpoint for updating the marker module's params.
   rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
+  // RevokeGrantAllowance revokes any fee allowance of granter's account that has been granted to the grantee.
+  rpc RevokeGrantAllowance(MsgRevokeGrantAllowanceRequest) returns (MsgRevokeGrantAllowanceResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -192,7 +194,7 @@ message MsgMintRequest {
 
   cosmos.base.v1beta1.Coin amount        = 1 [(gogoproto.nullable) = false];
   string                   administrator = 2;
-  string                   recipient = 3;    // recipient is the optional address to receive the newly minted funds.
+  string                   recipient     = 3; // recipient is the optional address to receive the newly minted funds.
 }
 // MsgMintResponse defines the Msg/Mint response type
 message MsgMintResponse {}
@@ -480,3 +482,17 @@ message MsgUpdateParamsRequest {
 
 // MsgUpdateParamsResponse is a response message for the UpdateParams endpoint.
 message MsgUpdateParamsResponse {}
+
+// MsgRevokeFeeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
+message MsgRevokeGrantAllowanceRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
+  string denom         = 1;
+  string administrator = 2;
+
+  // address of the grantee whose allowance is being revoked.
+  string grantee = 3;
+}
+
+// MsgRevokeFeeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
+message MsgRevokeGrantAllowanceResponse {}
