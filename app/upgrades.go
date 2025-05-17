@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -16,12 +15,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
@@ -339,10 +336,6 @@ type acctInfo struct {
 	newAcct *vesting.ContinuousVestingAccount
 
 	reason string
-
-	// These two pieces are just informational (for analysis).
-	onHold      sdk.Coin
-	groupPolicy *group.GroupPolicyInfo
 }
 
 // newAcctInfo creates a new acctInfo starting with the provided address and account.
@@ -358,7 +351,6 @@ func newAcctInfo(addr sdk.AccAddress, acctI sdk.AccountI) *acctInfo {
 		toKeep:    sdkmath.ZeroInt(),
 		delVest:   sdkmath.ZeroInt(),
 		delFree:   sdkmath.ZeroInt(),
-		onHold:    sdk.NewInt64Coin(nhashDenom, 0),
 	}
 }
 
@@ -428,23 +420,6 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 
 		acct.total = acct.balance.Add(acct.delegated)
 		acct.UpdateWithToVest(acct.total.MulRaw(monthsToEnd - monthsToStart).QuoRaw(monthsToEnd))
-
-		// Get a few more pieces of info that are useful for analysis. TODO[yellow]: Delete this.
-		acct.onHold, err = app.HoldKeeper.GetHoldCoin(ctx, addr, nhashDenom)
-		if err != nil {
-			logger.Error("Could not get amount of nhash on hold.", "error", err)
-		}
-
-		gp, err := app.GroupKeeper.GroupPolicyInfo(ctx, &group.QueryGroupPolicyInfoRequest{Address: addrStr})
-		switch {
-		case err == nil:
-			acct.groupPolicy = gp.Info
-		case errors.Is(err, sdkerrors.ErrNotFound):
-			// Not a group account. Nothing to do.
-		default:
-			logger.Error("Could not get group policy info.", "error", err)
-		}
-		// End of getting extra (unneeded) info.
 
 		var ok bool
 		acct.baseAcct, ok = acctI.(*authtypes.BaseAccount)
