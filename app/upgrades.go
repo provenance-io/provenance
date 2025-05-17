@@ -294,7 +294,7 @@ const nhashDenom = "nhash"
 
 // acctFilter is a function for adjusting the toConvert and toIgnore lists.
 // Part of the yellow upgrade.
-type acctFilter func(ctx sdk.Context, app *App, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo)
+type acctFilter func(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo)
 
 // convertAcctsToVesting will convert the provided accounts to vesting accounts.
 // Part of the yellow upgrade.
@@ -303,7 +303,7 @@ func convertAcctsToVesting(ctx sdk.Context, app *App, filters ...acctFilter) {
 
 	toConvert, toIgnore := getAcctsToConvertToVesting(ctx, app)
 	for _, filter := range filters {
-		toConvert, toIgnore = filter(ctx, app, toConvert, toIgnore)
+		toConvert, toIgnore = filter(ctx, toConvert, toIgnore)
 	}
 	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to convert.", len(toConvert)))
 	ctx.Logger().Debug(fmt.Sprintf("Identified %d accounts to ignore.", len(toIgnore)))
@@ -492,7 +492,7 @@ func getAcctsToConvertToVesting(ctx sdk.Context, app *App) (toConvert, toIgnore 
 }
 
 // testnetAcctFilter will keep only a specific set of accounts, moving the rest into toIgnore.
-func testnetAcctFilter(ctx sdk.Context, _ *App, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo) {
+func testnetAcctFilter(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo) {
 	ctx.Logger().Debug(fmt.Sprintf("Applying testnet account filter, starting with %d accounts to convert and %d to ignore.", len(toConvertOrig), len(toIgnoreOrig)))
 	toIgnoreNew = toIgnoreOrig
 	// For testnet, these are the ONLY addresses we want converted.
@@ -536,7 +536,7 @@ func testnetAcctFilter(ctx sdk.Context, _ *App, toConvertOrig, toIgnoreOrig []*a
 
 // mainnetAcctFilter will update some of the toConvert entries, and move others
 // to toIgnore based on some predetermined account and amount details for mainnet.
-func mainnetAcctFilter(ctx sdk.Context, app *App, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo) {
+func mainnetAcctFilter(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo) (toConvertNew, toIgnoreNew []*acctInfo) {
 	ctx.Logger().Debug(fmt.Sprintf("Applying mainnet account filter, starting with %d accounts to convert and %d to ignore.", len(toConvertOrig), len(toIgnoreOrig)))
 	toIgnoreNew = toIgnoreOrig
 	toConvertNew = make([]*acctInfo, 0, len(toConvertOrig))
