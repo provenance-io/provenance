@@ -518,6 +518,13 @@ func mainnetAcctFilter(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo)
 	minUnlockedAmts := getMainnetPredeterminedUnlocked()
 	seen := make(map[string]bool)
 
+	// ignoreAcct will set the reason field, log that we're ignoring the account, and add it to the toIgnore slice.
+	ignoreAcct := func(acct *acctInfo, logFunc func(msg string, keyVals ...any), reasonFmt string, reasonArgs ...interface{}) {
+		acct.reason = fmt.Sprintf(reasonFmt, reasonArgs...)
+		logFunc("Ignoring account.", "reason", acct.reason)
+		toIgnoreNew = append(toIgnoreNew, acct)
+	}
+
 	for _, acct := range toConvertOrig {
 		seen[acct.baseAcct.Address] = true
 		minUnlockedAmt, haveMin := minUnlockedAmts[acct.baseAcct.Address]
@@ -527,21 +534,22 @@ func mainnetAcctFilter(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo)
 			continue
 		}
 
-		if acct.toKeep.GTE(minUnlockedAmt) {
-			// If the amount to keep is already more than its minimum, we don't need to adjust anything.
-			toConvertNew = append(toConvertNew, acct)
-			continue
-		}
-
 		if acct.total.LTE(minUnlockedAmt) {
 			// If the account's total is less than its minimum, there's nothing to lock up and we can ignore this account.
-			acct.reason = fmt.Sprintf("account total is less than predetermined min unlocked amount %q", minUnlockedAmt)
-			ctx.Logger().Debug("Ignoring account.", "account", acct.baseAcct.Address, "reason", acct.reason)
-			toIgnoreNew = append(toIgnoreNew, acct)
+			ignoreAcct(acct, ctx.Logger().Debug, "account total is less than predetermined min unlocked amount %q", minUnlockedAmt)
 			continue
 		}
 
-		acct.UpdateWithToKeep(minUnlockedAmt)
+		totalVesting := acct.total.Sub(minUnlockedAmt)
+		acct.UpdateWithToVest(totalVesting.MulRaw(monthsToEnd - monthsToStart).QuoRaw(monthsToEnd))
+
+		if !acct.toVest.IsPositive() {
+			// Only convert the account if it's got hash to lock up.
+			logger := ctx.Logger().With("acct.total", acct.total.String(), "min_for_acct", minUnlockedAmt.String(), "acct.to_vest", acct.toVest.String())
+			ignoreAcct(acct, logger.Debug, "account does not own enough hash after adjustment for min unlocked amount %q", minUnlockedAmt)
+			continue
+		}
+
 		toConvertNew = append(toConvertNew, acct)
 		continue
 	}
