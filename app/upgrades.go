@@ -518,6 +518,17 @@ func mainnetAcctFilter(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo)
 	minUnlockedAmts := getMainnetPredeterminedUnlocked()
 	seen := make(map[string]bool)
 
+	// The spreadsheet has the entries in hash with 2 decimals.
+	// So if the amount to vest is less than 5,000,000, it shows up in the spreadsheet as just "0.00" (or "0").
+	// That 5,000,000 is in nhash, so it'd be 0.005 hash. As of writing this, there are 9 accounts in the list
+	// that would end up having less than 5,000,000 nhash locked up, with a total of 25,034,377 nhash.
+	// Locking up that amount is kind of pointless, so we just leave the account alone if it has less than that,
+	// but this limit only applies to accounts in the pre-determined list.
+	toVestMin, ok := sdkmath.NewIntFromString("5000000")
+	if !ok {
+		panic("could not create sdkmath.Int for 5,000,000")
+	}
+
 	// ignoreAcct will set the reason field, log that we're ignoring the account, and add it to the toIgnore slice.
 	ignoreAcct := func(acct *acctInfo, logFunc func(msg string, keyVals ...any), reasonFmt string, reasonArgs ...interface{}) {
 		acct.reason = fmt.Sprintf(reasonFmt, reasonArgs...)
@@ -543,8 +554,8 @@ func mainnetAcctFilter(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo)
 		totalVesting := acct.total.Sub(minUnlockedAmt)
 		acct.UpdateWithToVest(totalVesting.MulRaw(monthsToEnd - monthsToStart).QuoRaw(monthsToEnd))
 
-		if !acct.toVest.IsPositive() {
-			// Only convert the account if it's got hash to lock up.
+		if toVestMin.GT(acct.toVest) {
+			// Only convert this account if it's got enough hash to lock up.
 			logger := ctx.Logger().With("acct.total", acct.total.String(), "min_for_acct", minUnlockedAmt.String(), "acct.to_vest", acct.toVest.String())
 			ignoreAcct(acct, logger.Debug, "account does not own enough hash after adjustment for min unlocked amount %q", minUnlockedAmt)
 			continue
