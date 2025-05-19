@@ -1,1 +1,1 @@
-Provenance Blockchain version `v1.23.0` contains the `yellow` upgrade that will lock most hash up in vesting accounts. The hash will vest continuously over 4 year starting in 3 months. The first three months worth of hash will not be locked, and will remain available for use.
+Provenance Blockchain version `v1.23.0` contains the `yellow` upgrade that will lock most hash up in vesting accounts.
