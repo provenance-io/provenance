@@ -60,7 +60,7 @@ func GetConfigCmd() *cobra.Command {
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			l, err := queryClient.ConfigQuery(context.Background(), &req)
+			l, err := queryClient.LedgerQuery(context.Background(), &req)
 			if err != nil {
 				return err
 			}
@@ -108,7 +108,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					},
 				}
 
-				config, err := queryClient.ConfigQuery(context.Background(), &req)
+				config, err := queryClient.LedgerQuery(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -237,7 +237,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			res, err := queryClient.GetBalancesAsOfQuery(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
+			res, err := queryClient.BalancesAsOfQuery(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassId,
 					NftId:        nftId,
