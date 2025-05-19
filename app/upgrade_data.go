@@ -3853,10 +3853,10 @@ func getMainnetPredeterminedUnlocked() map[string]sdkmath.Int {
 // E.g. "1" => "1000000000", "57.3" = 57300000000
 func hashToNhash(hashAmt string) string {
 	parts := strings.SplitN(hashAmt, ".", 2)
-	if len(parts) < 1 {
+	if len(parts) == 1 {
 		return parts[0] + nanoZeros
 	}
-	if len(parts) > len(nanoZeros) {
+	if len(parts[1]) > len(nanoZeros) {
 		panic(fmt.Errorf("invalid hash amount %q: has more than %d digits after the decimal", hashAmt, len(nanoZeros)))
 	}
 	return parts[0] + parts[1] + nanoZeros[len(parts[1]):]

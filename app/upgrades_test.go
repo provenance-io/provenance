@@ -14,7 +14,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -639,5 +638,31 @@ func (s *UpgradeTestSuite) TestGetMainnetPredeterminedUnlocked() {
 		if s.Assert().True(have, "no entry found for address %q", check.addr) {
 			s.Assert().Equal(check.amt, amt.String(), "amount for address %q", check.addr)
 		}
+	}
+}
+
+func (s *UpgradeTestSuite) TestHashToNhash() {
+	tests := []struct {
+		hashAmt  string
+		nhashAmt string
+	}{
+		{hashAmt: "1", nhashAmt: "1000000000"},
+		{hashAmt: "1.0", nhashAmt: "1000000000"},
+		{hashAmt: "1.00", nhashAmt: "1000000000"},
+		{hashAmt: "1.000", nhashAmt: "1000000000"},
+		{hashAmt: "57.3", nhashAmt: "57300000000"},
+		{hashAmt: "685930.00", nhashAmt: "685930000000000"},
+		{hashAmt: "1235137.52", nhashAmt: "1235137520000000"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.hashAmt, func() {
+			var act string
+			testFunc := func() {
+				act = hashToNhash(tc.hashAmt)
+			}
+			s.Require().NotPanics(testFunc, "hashToNhash(%q)", tc.hashAmt)
+			s.Assert().Equal(tc.nhashAmt, act, "hashToNhash(%q) result", tc.hashAmt)
+		})
 	}
 }
