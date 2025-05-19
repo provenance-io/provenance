@@ -20,7 +20,7 @@ func NewLedgerQueryServer(k ViewKeeper) LedgerQueryServer {
 	}
 }
 
-func (qs LedgerQueryServer) ConfigQuery(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
+func (qs LedgerQueryServer) LedgerQuery(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	l, err := qs.k.GetLedger(ctx, req.Key)
@@ -62,7 +62,7 @@ func (qs LedgerQueryServer) EntriesQuery(goCtx context.Context, req *ledger.Quer
 }
 
 // GetBalancesAsOf returns the balances for a specific NFT as of a given date
-func (qs LedgerQueryServer) GetBalancesAsOfQuery(ctx context.Context, req *ledger.QueryBalancesAsOfRequest) (*ledger.QueryBalancesAsOfResponse, error) {
+func (qs LedgerQueryServer) BalancesAsOfQuery(ctx context.Context, req *ledger.QueryBalancesAsOfRequest) (*ledger.QueryBalancesAsOfResponse, error) {
 	if req == nil {
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
 	}
@@ -92,7 +92,7 @@ func (qs LedgerQueryServer) GetBalancesAsOfQuery(ctx context.Context, req *ledge
 }
 
 // GetLedgerEntry returns a specific ledger entry for an NFT
-func (qs LedgerQueryServer) GetLedgerEntryQuery(ctx context.Context, req *ledger.QueryLedgerEntryRequest) (*ledger.QueryLedgerEntryResponse, error) {
+func (qs LedgerQueryServer) LedgerEntryQuery(ctx context.Context, req *ledger.QueryLedgerEntryRequest) (*ledger.QueryLedgerEntryResponse, error) {
 	if req == nil {
 		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
 	}

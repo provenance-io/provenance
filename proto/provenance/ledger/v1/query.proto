@@ -31,7 +31,7 @@ service Query {
   }
 
   // Params queries params of the ledger module.
-  rpc ConfigQuery(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
+  rpc LedgerQuery(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
 
@@ -40,13 +40,13 @@ service Query {
   }
 
   // GetLedgerEntry returns a specific ledger entry for an NFT
-  rpc GetLedgerEntryQuery(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
+  rpc LedgerEntryQuery(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/entry/{correlation_id}";
   }
 
   // GetBalancesAsOf returns the balances for a specific NFT as of a given date
-  rpc GetBalancesAsOfQuery(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
+  rpc BalancesAsOfQuery(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/balances/{as_of_date}";
   }
