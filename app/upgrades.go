@@ -551,19 +551,11 @@ func mainnetAcctFilter(ctx sdk.Context, toConvertOrig, toIgnoreOrig []*acctInfo)
 	// but it's probably good to still log the info when we do the real thing.
 	for _, addr := range slices.Sorted(maps.Keys(minUnlockedAmts)) {
 		if !seen[addr] {
-			ctx.Logger().Info("Predetermined account not fund.", "account", addr)
+			ctx.Logger().Info("Predetermined account not found.", "account", addr)
 		}
 	}
 
 	return toConvertNew, toIgnoreNew
-}
-
-// Matt will give me a list of addresses, and the amount they should have available.
-// getMainnetPredeterminedUnlocked returns a map of bech32 address strings to the amount that they should have unlocked.
-func getMainnetPredeterminedUnlocked() map[string]sdkmath.Int {
-	rv := make(map[string]sdkmath.Int)
-	// TODO[yellow]: Define and parse the mainnet account info.
-	return rv
 }
 
 // addMonths will return an epoch that is the given months after the start time.
