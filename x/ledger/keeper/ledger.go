@@ -180,6 +180,18 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger")
 	}
 
+	// Get the ledger class and verify that the asset class id matches
+	ledgerClass, err := k.GetLedgerClass(ctx, l.LedgerClassId)
+	if err != nil {
+		return err
+	}
+	if ledgerClass == nil {
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
+	}
+	if ledgerClass.AssetClassId != l.Key.AssetClassId {
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class", "ledger class asset class id doesn't match nft asset class id")
+	}
+
 	// Validate that the LedgerClass exists
 	hasLedgerClass, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
 	if err != nil {
