@@ -425,6 +425,12 @@
     - [MsgAddAssetClass](#provenance-asset-v1-MsgAddAssetClass)
     - [MsgAddAssetClassResponse](#provenance-asset-v1-MsgAddAssetClassResponse)
     - [MsgAddAssetResponse](#provenance-asset-v1-MsgAddAssetResponse)
+    - [MsgCreateParticipation](#provenance-asset-v1-MsgCreateParticipation)
+    - [MsgCreateParticipationResponse](#provenance-asset-v1-MsgCreateParticipationResponse)
+    - [MsgCreatePool](#provenance-asset-v1-MsgCreatePool)
+    - [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse)
+    - [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization)
+    - [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse)
   
     - [Msg](#provenance-asset-v1-Msg)
   
@@ -4963,9 +4969,6 @@ assist in verifying the types that are associated with particular ledger entries
 | `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
 | `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in |
 | `maintainer_address` | [string](#string) |  | Address of the maintainer for the ledger class |
-| `entry_types` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) | repeated | List of entry types for this ledger class |
-| `status_types` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated | List of status types for this ledger class |
-| `bucket_types` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) | repeated | List of bucket types for this ledger class |
 
 
 
@@ -6755,6 +6758,85 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+
+<a name="provenance-asset-v1-MsgCreateParticipation"></a>
+
+### MsgCreateParticipation
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateParticipationResponse"></a>
+
+### MsgCreateParticipationResponse
+
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreatePool"></a>
+
+### MsgCreatePool
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool_id` | [string](#string) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreatePoolResponse"></a>
+
+### MsgCreatePoolResponse
+
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateSecuritization"></a>
+
+### MsgCreateSecuritization
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `tranches` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateSecuritizationResponse"></a>
+
+### MsgCreateSecuritizationResponse
+
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6771,6 +6853,9 @@ GenesisState defines the attribute module's genesis state.
 | ----------- | ------------ | ------------- | ------------|
 | `AddAsset` | [MsgAddAsset](#provenance-asset-v1-MsgAddAsset) | [MsgAddAssetResponse](#provenance-asset-v1-MsgAddAssetResponse) |  |
 | `AddAssetClass` | [MsgAddAssetClass](#provenance-asset-v1-MsgAddAssetClass) | [MsgAddAssetClassResponse](#provenance-asset-v1-MsgAddAssetClassResponse) |  |
+| `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) |  |
+| `CreateParticipation` | [MsgCreateParticipation](#provenance-asset-v1-MsgCreateParticipation) | [MsgCreateParticipationResponse](#provenance-asset-v1-MsgCreateParticipationResponse) |  |
+| `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) |  |
 
  <!-- end services -->
 

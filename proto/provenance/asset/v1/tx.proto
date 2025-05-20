@@ -46,8 +46,8 @@ message MsgAddAssetClassResponse {}
 message MsgCreatePool {
   option (cosmos.msg.v1.signer) = "from_address";
 
-  string    pool_id = 1;
-  string    from_address = 2;
+  string pool_id      = 1;
+  string from_address = 2;
 }
 
 message MsgCreatePoolResponse {}
@@ -55,8 +55,8 @@ message MsgCreatePoolResponse {}
 message MsgCreateParticipation {
   option (cosmos.msg.v1.signer) = "from_address";
 
-  cosmos.base.v1beta1.Coin denom = 1 [(gogoproto.nullable) = false];
-  string    from_address = 3;
+  cosmos.base.v1beta1.Coin denom        = 1 [(gogoproto.nullable) = false];
+  string                   from_address = 3;
 }
 
 message MsgCreateParticipationResponse {}
@@ -64,9 +64,9 @@ message MsgCreateParticipationResponse {}
 message MsgCreateSecuritization {
   option (cosmos.msg.v1.signer) = "from_address";
 
-  string  id = 1;
-  repeated cosmos.base.v1beta1.Coin tranches = 2;
-  string    from_address = 3;
+  string   id                                    = 1;
+  repeated cosmos.base.v1beta1.Coin tranches     = 2;
+  string                            from_address = 3;
 }
 
 message MsgCreateSecuritizationResponse {}
