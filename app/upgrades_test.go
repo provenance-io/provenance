@@ -624,7 +624,7 @@ func (s *UpgradeTestSuite) TestGetMainnetPredeterminedUnlocked() {
 		{addr: "pb13nu2h9edf70dsuwcn8p8v36ga58sjsdlkx3t55", amt: "67580000000"},
 		{addr: "pb1ln6j2f27qjw2auaexhsqtl6a0afldw5l9lrva4dyfxnv06ha3wks7vue3v", amt: "45861430000000000"},
 	}
-	expLen := 8264
+	expLen := 8267
 
 	var act map[string]sdkmath.Int
 	testFunc := func() {
