@@ -52,6 +52,12 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 		return NewLedgerCodedError(ErrCodeUnauthorized)
 	}
 
+	// Insert the ledger class
+	err = k.LedgerClasses.Set(ctx, l.LedgerClassId, l)
+	if err != nil {
+		return err
+	}
+
 	// Insert the ledger entry, bucket, and status types
 	for _, entryType := range l.EntryTypes {
 		err = k.AddClassEntryType(ctx, maintainerAddr, l.LedgerClassId, *entryType)
@@ -59,14 +65,12 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 			return err
 		}
 	}
-
 	for _, bucketType := range l.BucketTypes {
 		err = k.AddClassBucketType(ctx, maintainerAddr, l.LedgerClassId, *bucketType)
 		if err != nil {
 			return err
 		}
 	}
-
 	for _, statusType := range l.StatusTypes {
 		err = k.AddClassStatusType(ctx, maintainerAddr, l.LedgerClassId, *statusType)
 		if err != nil {
@@ -77,12 +81,6 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 	// l.BucketTypes = nil
 	// l.EntryTypes = nil
 	// l.StatusTypes = nil
-
-	// Insert the ledger class
-	err = k.LedgerClasses.Set(ctx, l.LedgerClassId, l)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
