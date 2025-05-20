@@ -97,7 +97,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 			return err
 		}
 		if !hasLedgerClassEntryType {
-			return NewLedgerCodedError(ErrCodeInvalidField, "entry_type_id")
+			return NewLedgerCodedError(ErrCodeInvalidField, "entry_type_id", "entry type doesn't exist")
 		}
 
 		err = k.saveEntry(ctx, ledgerKey, existingEntries, le)
@@ -241,7 +241,7 @@ func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*ledger.LedgerBuck
 	}
 
 	if !totalAmt.Equal(totalApplied) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must equal sum of abs(applied amounts)")
+		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "total amount must equal sum of abs(applied amounts)")
 	}
 
 	return nil

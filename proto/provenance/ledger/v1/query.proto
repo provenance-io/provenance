@@ -117,5 +117,5 @@ message QueryLedgerClassRequest {
 }
 
 message QueryLedgerClassResponse {
-  LedgerClass class = 1;
+  LedgerClass ledger_class = 1;
 }

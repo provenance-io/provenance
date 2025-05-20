@@ -5225,7 +5225,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  |  |
+| `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  |  |
 
 
 
