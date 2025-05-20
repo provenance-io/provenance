@@ -373,12 +373,12 @@ func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
-func NewMsgRevokeGrantAllowance(denom string, admin sdk.AccAddress, grantee sdk.AccAddress) (*MsgRevokeGrantAllowanceRequest, error) {
+func NewMsgRevokeGrantAllowance(denom string, admin sdk.AccAddress, grantee sdk.AccAddress) *MsgRevokeGrantAllowanceRequest {
 	return &MsgRevokeGrantAllowanceRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
 		Grantee:       grantee.String(),
-	}, nil
+	}
 }
 
 func (msg MsgRevokeGrantAllowanceRequest) ValidateBasic() error {

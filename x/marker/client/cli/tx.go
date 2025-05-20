@@ -867,10 +867,8 @@ func GetCmdRevokeFeeGrant() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg, err := types.NewMsgRevokeGrantAllowance(denom, administrator, grantee)
-			if err != nil {
-				return err
-			}
+			msg := types.NewMsgRevokeGrantAllowance(denom, administrator, grantee)
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -1470,7 +1468,7 @@ func GetCmdSetDenomMetadataProposal() *cobra.Command {
 					},
 					{
 						Denom:    display,
-						Exponent: uint32(exponent),
+						Exponent: uint32(exponent), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
 					},
 				},
 				Base:    denom,

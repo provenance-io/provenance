@@ -877,12 +877,12 @@ func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRev
 
 	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid administrator: %v", err)
 	}
 
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid grantee: %v", err)
 	}
 
 	if err = m.ValidateAddressHasAccess(admin, types.Access_Admin); err != nil {
@@ -891,7 +891,7 @@ func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRev
 	// verify the grant exists
 	_, err = k.feegrantKeeper.GetAllowance(ctx, markerAddr, grantee)
 	if err != nil {
-		return nil, sdkerrors.ErrNotFound.Wrapf("no fee grant from %s to %s found", markerAddr, grantee)
+		return nil, sdkerrors.ErrNotFound.Wrapf("no fee grant from %s marker (%s) to %s found", m.GetDenom(), markerAddr, grantee)
 	}
 
 	server := feegranttypes.NewMsgServerImpl(k.feegrantKeeper)

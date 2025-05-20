@@ -133,57 +133,74 @@ func TestMsgGrantAllowance(t *testing.T) {
 	}
 }
 
-func TestMsgRevokGrantAllowance(t *testing.T) {
+func TestMsgRevokeGrantAllowance(t *testing.T) {
 	addr, _ := sdk.AccAddressFromBech32("cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr")
 	addr2, _ := sdk.AccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
-	cases := map[string]struct {
+
+	testCases := []struct {
+		name          string
 		denom         string
 		grantee       sdk.AccAddress
 		administrator sdk.AccAddress
-		valid         bool
+		expErr        string
 	}{
-		"valid": {
+		{
+			name:          "valid",
 			denom:         "testcoin",
 			grantee:       addr,
 			administrator: addr2,
-			valid:         true,
+			expErr:        "",
 		},
-		"no grantee": {
-			administrator: addr2,
+		{
+			name:          "no grantee",
 			denom:         "testcoin",
 			grantee:       sdk.AccAddress{},
-			valid:         false,
+			administrator: addr2,
+			expErr:        "missing grantee address",
 		},
-		"no administrator": {
-			administrator: sdk.AccAddress{},
+		{
+			name:          "no administrator",
 			denom:         "testcoin",
 			grantee:       addr,
-			valid:         false,
-		},
-		"no denom": {
 			administrator: sdk.AccAddress{},
+			expErr:        "missing administrator address",
+		},
+		{
+			name:          "no denom",
 			denom:         "",
 			grantee:       addr,
-			valid:         false,
+			administrator: sdk.AccAddress{},
+			expErr:        "missing marker denom",
 		},
-		"grantee == administrator": {
+		{
+			name:          "grantee == administrator",
 			denom:         "testcoin",
 			grantee:       addr,
 			administrator: addr,
-			valid:         true,
+			expErr:        "",
 		},
 	}
 
-	for _, tc := range cases {
-		msg, err := NewMsgRevokeGrantAllowance(tc.denom, tc.administrator, tc.grantee)
-		require.NoError(t, err)
-		err = msg.ValidateBasic()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := NewMsgRevokeGrantAllowance(tc.denom, tc.administrator, tc.grantee)
 
-		if tc.valid {
-			require.NoError(t, err)
-		} else {
-			require.Error(t, err)
-		}
+			// Check constructor output
+			expected := &MsgRevokeGrantAllowanceRequest{
+				Denom:         tc.denom,
+				Administrator: tc.administrator.String(),
+				Grantee:       tc.grantee.String(),
+			}
+			require.Equal(t, expected, got, "NewMsgRevokeGrantAllowance constructor output mismatch")
+
+			err := got.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err, "ValidateBasic unexpected error in case: %s", tc.name)
+			} else {
+				require.Error(t, err, "ValidateBasic expected error in case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expErr, "ValidateBasic error mismatch in case: %s", tc.name)
+			}
+		})
 	}
 }
 
