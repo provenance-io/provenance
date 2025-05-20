@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/ledger"
 )
@@ -27,15 +26,6 @@ func EpochDaysToISO8601(days int32) string {
 
 func StrToDate(dateStr string) (time.Time, error) {
 	return time.Parse("2006-01-02", dateStr)
-}
-
-func getAddress(s *string) (sdk.AccAddress, error) {
-	addr, err := sdk.AccAddressFromBech32(*s)
-	if err != nil || addr == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "nft_id")
-	}
-
-	return addr, nil
 }
 
 // Returns true if the string is nil or empty(TrimSpace(*s))

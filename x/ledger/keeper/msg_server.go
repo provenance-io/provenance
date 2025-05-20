@@ -122,7 +122,7 @@ func (k *MsgServer) DestroyTx(goCtx context.Context, req *ledger.MsgDestroyReque
 func (k *MsgServer) CreateLedgerClassTx(goCtx context.Context, req *ledger.MsgCreateLedgerClassRequest) (*ledger.MsgCreateLedgerClassResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
@@ -143,7 +143,7 @@ func (k *MsgServer) AddLedgerClassStatusTypeTx(goCtx context.Context, req *ledge
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
@@ -164,7 +164,7 @@ func (k *MsgServer) AddLedgerClassEntryTypeTx(goCtx context.Context, req *ledger
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
@@ -185,7 +185,7 @@ func (k *MsgServer) AddLedgerClassBucketTypeTx(goCtx context.Context, req *ledge
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request")
+		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)

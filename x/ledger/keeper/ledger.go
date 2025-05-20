@@ -30,7 +30,7 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 
 	hasAssetClass := k.BaseViewKeeper.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
-		return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id")
+		return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id", "asset_class already exists")
 	}
 
 	has, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
@@ -43,13 +43,13 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 
 	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
 	if !k.HasSupply(ctx, l.Denom) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "denom")
+		return NewLedgerCodedError(ErrCodeInvalidField, "denom", "denom doesn't have a supply")
 	}
 
 	// Validate that the maintainer in the ledger class is the same as the maintainer address
 	// We force them to be the same for now so that a ledger class isn't locked out.
 	if l.MaintainerAddress != maintainerAddr.String() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "maintainer_address")
+		return NewLedgerCodedError(ErrCodeUnauthorized)
 	}
 
 	err = k.LedgerClasses.Set(ctx, l.LedgerClassId, l)
@@ -161,7 +161,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return err
 	}
 	if !hasLedgerClass {
-		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class")
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
 	}
 
 	// Validate that the NFT exists
@@ -181,7 +181,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return err
 	}
 	if !hasLedgerClassStatusType {
-		return NewLedgerCodedError(ErrCodeInvalidField, "status_type_id")
+		return NewLedgerCodedError(ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
 	}
 
 	// We omit the nftAddress out of the data we store intentionally as
@@ -213,7 +213,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 // DestroyLedger removes a ledger from the store by NFT address
 func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey) error {
 	if !k.HasLedger(ctx, key) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "ledger")
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger", "ledger doesn't exist")
 	}
 
 	keyStr, err := LedgerKeyToString(key)
