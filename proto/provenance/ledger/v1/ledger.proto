@@ -24,15 +24,6 @@ message LedgerClass {
 
   // Address of the maintainer for the ledger class
   string maintainer_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // List of entry types for this ledger class
-  repeated LedgerClassEntryType entry_types = 5;
-
-  // List of status types for this ledger class
-  repeated LedgerClassStatusType status_types = 6;
-
-  // List of bucket types for this ledger class
-  repeated LedgerClassBucketType bucket_types = 7;
 }
 
 // LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
