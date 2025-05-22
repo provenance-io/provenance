@@ -90,10 +90,10 @@ $PROV_CMD genesis add-marker "100000000000000000000$DENOM" \
     --access mint,burn,admin,withdraw,deposit \
     $arg_keyring \
     --activate
-$PROV_CMD genesis add-msg-fee /provenance.name.v1.MsgBindNameRequest "10000000000$DENOM"
-$PROV_CMD genesis add-msg-fee /provenance.marker.v1.MsgAddMarkerRequest "100000000000$DENOM"
-$PROV_CMD genesis add-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "10000000000$DENOM"
-$PROV_CMD genesis add-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000$DENOM"
+# $PROV_CMD genesis add-msg-fee /provenance.name.v1.MsgBindNameRequest "10000000000$DENOM"
+# $PROV_CMD genesis add-msg-fee /provenance.marker.v1.MsgAddMarkerRequest "100000000000$DENOM"
+# $PROV_CMD genesis add-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "10000000000$DENOM"
+# $PROV_CMD genesis add-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000$DENOM"
 $PROV_CMD genesis add-custom-floor "${MIN_FLOOR_PRICE}${DENOM}"
 $PROV_CMD genesis add-default-market --denom "$DENOM"
 $PROV_CMD genesis collect-gentxs

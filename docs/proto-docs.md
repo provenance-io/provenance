@@ -4,6 +4,9 @@
 
 ## Table of Contents
 
+- [cosmwasm/wasm/v1beta1/legacy.proto](#cosmwasm_wasm_v1beta1_legacy-proto)
+    - [MsgExecuteContract](#cosmwasm-wasm-v1beta1-MsgExecuteContract)
+  
 - [cosmos/quarantine/v1beta1/tx.proto](#cosmos_quarantine_v1beta1_tx-proto)
     - [MsgAccept](#cosmos-quarantine-v1beta1-MsgAccept)
     - [MsgAcceptResponse](#cosmos-quarantine-v1beta1-MsgAcceptResponse)
@@ -862,6 +865,40 @@
     - [GenesisState](#provenance-hold-v1-GenesisState)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="cosmwasm_wasm_v1beta1_legacy-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmwasm/wasm/v1beta1/legacy.proto
+
+
+
+<a name="cosmwasm-wasm-v1beta1-MsgExecuteContract"></a>
+
+### MsgExecuteContract
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `contract` | [string](#string) |  |  |
+| `msg` | [bytes](#bytes) |  |  |
+| `funds` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 
