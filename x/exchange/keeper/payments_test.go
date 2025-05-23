@@ -1802,6 +1802,169 @@ func (s *TestSuite) TestKeeper_IteratePayments() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_IteratePaymentsForSource() {
+	var payments []*exchange.Payment
+	stopAfter := func(count int) func(*exchange.Payment) bool {
+		return func(payment *exchange.Payment) bool {
+			payments = append(payments, payment)
+			return len(payments) >= count
+		}
+	}
+	getAll := func(payment *exchange.Payment) bool {
+		payments = append(payments, payment)
+		return false
+	}
+
+	addr1Payments := []*exchange.Payment{
+		s.newTestPayment(s.addr1, "2orange", s.addr2, "", "a"),
+	}
+	addr2Payments := []*exchange.Payment{
+		s.newTestPayment(s.addr2, "6banana", s.addr1, "", ""),
+		s.newTestPayment(s.addr2, "55cherry", s.addr4, "3plum", "moo"),
+	}
+	addr3Payments := []*exchange.Payment{
+		s.newTestPayment(s.addr3, "", s.addr1, "3tomato", "p"),
+		s.newTestPayment(s.addr3, "55tangerine", s.addr2, "", "q"),
+		s.newTestPayment(s.addr3, "1starfruit", s.addr2, "4tomato", "r"),
+	}
+	addr4Payments := []*exchange.Payment{
+		s.newTestPayment(s.addr4, "", s.addr3, "6pear", "a"),
+		s.newTestPayment(s.addr4, "77peach", s.addr2, "", "p"),
+		s.newTestPayment(s.addr4, "3apple", s.addr1, "7grape", "z"),
+	}
+
+	standardsetup := func() {
+		s.requireSetPaymentsInStore(addr1Payments...)
+		s.requireSetPaymentsInStore(addr2Payments...)
+		s.requireSetPaymentsInStore(addr3Payments...)
+		s.requireSetPaymentsInStore(addr4Payments...)
+		// Create an empty entry and invalid entry that, when sorted, aren't last.
+		// The callback should not be called for these entries.
+		// So stopAfter(3) should still return the three good entries.
+		keyEmpty := keeper.MakeKeyPayment(s.addr4, "o")
+		keyBad := keeper.MakeKeyPayment(s.addr4, "v")
+		store := s.getStore()
+		store.Set(keyEmpty, []byte{})
+		store.Set(keyBad, []byte{'x'})
+	}
+	standardsetup()
+
+	tests := []struct {
+		name   string
+		source sdk.AccAddress
+		cb     func(payment *exchange.Payment) bool
+		exp    []*exchange.Payment
+	}{
+		{
+			name:   "nil source",
+			source: nil,
+			cb:     getAll,
+			exp:    nil,
+		},
+		{
+			name:   "empty source",
+			source: sdk.AccAddress{},
+			cb:     getAll,
+			exp:    nil,
+		},
+		{
+			name:   "no entries",
+			source: sdk.AccAddress("not_gonna_find_anything"),
+			cb:     getAll,
+			exp:    nil,
+		},
+		{
+			name:   "one entry, get all",
+			source: s.addr1,
+			cb:     getAll,
+			exp:    addr1Payments,
+		},
+		{
+			name:   "one entry, get one",
+			source: s.addr1,
+			cb:     stopAfter(1),
+			exp:    addr1Payments[0:1],
+		},
+		{
+			name:   "two entries, get all",
+			source: s.addr2,
+			cb:     getAll,
+			exp:    addr2Payments,
+		},
+		{
+			name:   "two entries, get one",
+			source: s.addr2,
+			cb:     stopAfter(1),
+			exp:    addr2Payments[0:1],
+		},
+		{
+			name:   "two entries, get two",
+			source: s.addr2,
+			cb:     stopAfter(2),
+			exp:    addr2Payments[0:2],
+		},
+		{
+			name:   "three entries, get all",
+			source: s.addr3,
+			cb:     getAll,
+			exp:    addr3Payments,
+		},
+		{
+			name:   "three entries, get one",
+			source: s.addr3,
+			cb:     stopAfter(1),
+			exp:    addr3Payments[0:1],
+		},
+		{
+			name:   "three entries, get two",
+			source: s.addr3,
+			cb:     stopAfter(2),
+			exp:    addr3Payments[0:2],
+		},
+		{
+			name:   "three entries, get three",
+			source: s.addr3,
+			cb:     stopAfter(3),
+			exp:    addr3Payments[0:3],
+		},
+		{
+			name:   "three entries plus two bad, get all",
+			source: s.addr4,
+			cb:     getAll,
+			exp:    addr4Payments,
+		},
+		{
+			name:   "three entries plus two bad, get one",
+			source: s.addr4,
+			cb:     stopAfter(1),
+			exp:    addr4Payments[0:1],
+		},
+		{
+			name:   "three entries plus two bad, get two",
+			source: s.addr4,
+			cb:     stopAfter(2),
+			exp:    addr4Payments[0:2],
+		},
+		{
+			name:   "three entries plus two bad, get three",
+			source: s.addr4,
+			cb:     stopAfter(3),
+			exp:    addr4Payments[0:3],
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			payments = nil
+			testFunc := func() {
+				s.k.IteratePaymentsForSource(s.ctx, tc.source, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IteratePaymentsForSource")
+			s.assertEqualPayments(tc.exp, payments, "IteratePaymentsForSource payments")
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_CalculatePaymentFees() {
 	tests := []struct {
 		name     string

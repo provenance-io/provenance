@@ -18,7 +18,7 @@ For more information on the many TradFi institutions and Fintechs leveraging the
 [![Go Report][goreport-badge]][goreport-url]
 [![Code Coverage][cover-badge]][cover-report]
 [![LOC][loc-badge]][loc-report]
-![Lint Status][lint-badge]
+[![Lint Status][lint-badge]][lint-url]
 
 [license-badge]: https://img.shields.io/github/license/provenance-io/provenance.svg
 [license-url]: https://github.com/provenance-io/provenance/blob/main/LICENSE
@@ -31,6 +31,7 @@ For more information on the many TradFi institutions and Fintechs leveraging the
 [loc-badge]: https://tokei.rs/b1/github/provenance-io/provenance
 [loc-report]: https://github.com/provenance-io/provenance
 [lint-badge]: https://github.com/provenance-io/provenance/workflows/Lint/badge.svg
+[lint-url]: https://github.com/provenance-io/provenance/actions/workflows/lint.yml
 [provenance]: https://provenance.io/
 [cosmos]: https://cosmos.network/
 

@@ -38,6 +38,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgIbcTransferRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgSetDenomMetadataRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgGrantAllowanceRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgRevokeGrantAllowanceRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgAddFinalizeActivateMarkerRequest{FromAddress: signer} },
 		func(signer string) sdk.Msg { return &MsgSupplyIncreaseProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgSupplyDecreaseProposalRequest{Authority: signer} },
@@ -129,6 +130,77 @@ func TestMsgGrantAllowance(t *testing.T) {
 		} else {
 			require.Error(t, err)
 		}
+	}
+}
+
+func TestMsgRevokeGrantAllowance(t *testing.T) {
+	addr, _ := sdk.AccAddressFromBech32("cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr")
+	addr2, _ := sdk.AccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
+
+	testCases := []struct {
+		name          string
+		denom         string
+		grantee       sdk.AccAddress
+		administrator sdk.AccAddress
+		expErr        string
+	}{
+		{
+			name:          "valid",
+			denom:         "testcoin",
+			grantee:       addr,
+			administrator: addr2,
+			expErr:        "",
+		},
+		{
+			name:          "no grantee",
+			denom:         "testcoin",
+			grantee:       sdk.AccAddress{},
+			administrator: addr2,
+			expErr:        "missing grantee address",
+		},
+		{
+			name:          "no administrator",
+			denom:         "testcoin",
+			grantee:       addr,
+			administrator: sdk.AccAddress{},
+			expErr:        "missing administrator address",
+		},
+		{
+			name:          "no denom",
+			denom:         "",
+			grantee:       addr,
+			administrator: sdk.AccAddress{},
+			expErr:        "missing marker denom",
+		},
+		{
+			name:          "grantee == administrator",
+			denom:         "testcoin",
+			grantee:       addr,
+			administrator: addr,
+			expErr:        "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := NewMsgRevokeGrantAllowance(tc.denom, tc.administrator, tc.grantee)
+
+			// Check constructor output
+			expected := &MsgRevokeGrantAllowanceRequest{
+				Denom:         tc.denom,
+				Administrator: tc.administrator.String(),
+				Grantee:       tc.grantee.String(),
+			}
+			require.Equal(t, expected, got, "NewMsgRevokeGrantAllowance constructor output mismatch")
+
+			err := got.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err, "ValidateBasic unexpected error in case: %s", tc.name)
+			} else {
+				require.Error(t, err, "ValidateBasic expected error in case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expErr, "ValidateBasic error mismatch in case: %s", tc.name)
+			}
+		})
 	}
 }
 
