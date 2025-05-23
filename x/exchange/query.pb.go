@@ -2749,7 +2749,7 @@ type QueryClient interface {
 	// GetCommitment gets the funds in an account that are committed to the market.
 	GetCommitment(ctx context.Context, in *QueryGetCommitmentRequest, opts ...grpc.CallOption) (*QueryGetCommitmentResponse, error)
 	// GetAccountCommitments gets all the funds in an account that are committed to any market.
-	// Optionally, you can filter the results by a specific asset denomination using the `asset` query parameter.
+	// Optionally, you can filter the results for a specific denomination using the `denom` query parameter.
 	GetAccountCommitments(ctx context.Context, in *QueryGetAccountCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetAccountCommitmentsResponse, error)
 	// GetMarketCommitments gets all the funds committed to a market from any account.
 	GetMarketCommitments(ctx context.Context, in *QueryGetMarketCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetMarketCommitmentsResponse, error)
@@ -3015,7 +3015,7 @@ type QueryServer interface {
 	// GetCommitment gets the funds in an account that are committed to the market.
 	GetCommitment(context.Context, *QueryGetCommitmentRequest) (*QueryGetCommitmentResponse, error)
 	// GetAccountCommitments gets all the funds in an account that are committed to any market.
-	// Optionally, you can filter the results by a specific asset denomination using the `asset` query parameter.
+	// Optionally, you can filter the results for a specific denomination using the `denom` query parameter.
 	GetAccountCommitments(context.Context, *QueryGetAccountCommitmentsRequest) (*QueryGetAccountCommitmentsResponse, error)
 	// GetMarketCommitments gets all the funds committed to a market from any account.
 	GetMarketCommitments(context.Context, *QueryGetMarketCommitmentsRequest) (*QueryGetMarketCommitmentsResponse, error)
