@@ -9,7 +9,7 @@ are evaluated to ensure configured supply level matches actual supply levels.
 - For markers that have a configured supply exceeding the amount in circulation the difference is minted and placed
   within the marker account.
 - For markers that have a configured supply less than the amount in circulation, an attempt to burn sufficient coin
-  to balance the circulation against the the supply will be performed.  If the marker does not hold enough coin to
+  to balance the circulation against the supply will be performed.  If the marker does not hold enough coin to
   perform this action an invariant constraint violation is thrown and the chain will halt.
 
 ## Destroyed Markers

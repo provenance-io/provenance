@@ -68,7 +68,7 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, defaultGas*5)),
 	})
 	s.Require().NoError(err, "grant allowance 2 to 3")
-
+	app.FeeGrantKeeper.RemoveExpiredAllowances(ctx, 2)
 	// grant low fee allowance (20stake), to check the tx requesting more than allowed.
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 20)),
