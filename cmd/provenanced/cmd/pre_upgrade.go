@@ -23,7 +23,7 @@ var (
 // starting a node after an upgrade. Anyone not using cosmovisor should manually
 // run this after swapping executables and before restarting the node.
 func GetPreUpgradeCmd() *cobra.Command {
-	// https://docs.cosmos.network/main/building-apps/app-upgrade#pre-upgrade-handling
+	// https://docs.cosmos.network/main/build/building-apps/app-upgrade#pre-upgrade-handling
 	// The exit code meanings are dictated by cosmovisor.
 	cmd := &cobra.Command{
 		Use:   "pre-upgrade", // cosmovisor requires it to be this.

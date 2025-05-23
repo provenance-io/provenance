@@ -126,6 +126,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			bal(markertypes.MustGetMarkerAddress("propcoin"), coin(1000, "propcoin")),
 			bal(markertypes.MustGetMarkerAddress("authzhotdog"), coin(800, "authzhotdog")),
 			bal(markertypes.MustGetMarkerAddress("grantcoin"), coin(5000, s.cfg.BondDenom)),
+			bal(markertypes.MustGetMarkerAddress("revokegrantcoin"), coin(5000, "revokegrantcoin")),
 		)
 
 		return bankGenState
@@ -241,6 +242,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				AllowGovernanceControl: true,
 				Supply:                 sdkmath.NewInt(0),
 				Denom:                  "grantcoin",
+				AllowForcedTransfer:    false,
+				AccessControl: []markertypes.AccessGrant{
+					*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{
+						markertypes.Access_Admin, markertypes.Access_Deposit, markertypes.Access_Withdraw,
+					}),
+				},
+			},
+			{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       markertypes.MustGetMarkerAddress("revokegrantcoin").String(),
+					AccountNumber: 170,
+					Sequence:      0,
+				},
+				Status:                 markertypes.StatusActive,
+				SupplyFixed:            false,
+				MarkerType:             markertypes.MarkerType_Coin,
+				AllowGovernanceControl: true,
+				Supply:                 sdkmath.NewInt(0),
+				Denom:                  "revokegrantcoin",
 				AllowForcedTransfer:    false,
 				AccessControl: []markertypes.AccessGrant{
 					*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{
@@ -697,30 +717,6 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"mint supply",
-			markercli.GetCmdMint(),
-			[]string{
-				"100hotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"burn supply",
-			markercli.GetCmdBurn(),
-			[]string{
-				"100hotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
 			"finalize",
 			markercli.GetCmdFinalize(),
 			[]string{
@@ -737,6 +733,45 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetCmdActivate(),
 			[]string{
 				"hotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"mint supply",
+			markercli.GetCmdMint(),
+			[]string{
+				"100hotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"mint supply with recipient",
+			markercli.GetCmdMint(),
+			[]string{
+				"50hotdog",
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"burn supply",
+			markercli.GetCmdBurn(),
+			[]string{
+				"100hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -2661,4 +2696,50 @@ func (s *IntegrationTestSuite) TestPayingWithFeegrant() {
 		}
 		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 	})
+}
+
+func (s *IntegrationTestSuite) TestRevokeFeegrant() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+	granter := s.accountAddresses[0].String() // marker admin
+	grantee := s.accountAddresses[2].String()
+
+	// Step 1: Setup - Create a feegrant
+	setupOK := s.Run("Create a feegrant to revoke", func() {
+		cmd := markercli.GetCmdFeeGrant()
+		args := []string{
+			"revokegrantcoin",
+			granter,
+			grantee,
+			fmt.Sprintf("--%s=%s", markercli.FlagSpendLimit, sdk.NewInt64Coin(s.cfg.BondDenom, 5000)),
+			fmt.Sprintf("--%s=%s", markercli.FlagExpiration, getFormattedExpiration(oneYear)),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		}
+		resp := testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+		s.Require().Equal(uint32(0), resp.Code, "Feegrant creation should succeed")
+	})
+	// Step 2: Revoke the feegrant
+	s.Run("Revoke the feegrant", func() {
+		if !setupOK {
+			s.T().Skip("Skipping due to setup failure.")
+		}
+		cmd := markercli.GetCmdRevokeFeeGrant()
+		args := []string{
+			"revokegrantcoin",
+			granter,
+			grantee,
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		}
+		resp := testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+		s.Require().Equal(uint32(0), resp.Code, "Feegrant revoke should succeed")
+	})
+
 }

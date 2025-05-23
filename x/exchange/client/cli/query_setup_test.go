@@ -793,6 +793,7 @@ func TestSetupCmdQueryGetAccountCommitments(t *testing.T) {
 		expExamples: []string{
 			exampleStart + " " + cli.ExampleAddr,
 			exampleStart + " --account " + cli.ExampleAddr,
+			exampleStart + " --account " + cli.ExampleAddr + " --denom nhash",
 		},
 	})
 }
@@ -830,6 +831,23 @@ func TestMakeQueryGetAccountCommitments(t *testing.T) {
 			args:   []string{"otheraddr"},
 			expReq: &exchange.QueryGetAccountCommitmentsRequest{},
 			expErr: "cannot provide <account> as both an arg (\"otheraddr\") and flag (--account \"someaddr\")",
+		},
+		{
+			name:  "account with denom flags",
+			flags: []string{"--account", "addr1", "--denom", "nhash"},
+			expReq: &exchange.QueryGetAccountCommitmentsRequest{
+				Account: "addr1",
+				Denom:   "nhash",
+			},
+		},
+		{
+			name:  "missing account",
+			flags: []string{"--denom", "nhash"},
+			expReq: &exchange.QueryGetAccountCommitmentsRequest{
+				Account: "",
+				Denom:   "nhash",
+			},
+			expErr: "no <account> provided",
 		},
 	}
 

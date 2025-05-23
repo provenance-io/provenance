@@ -83,6 +83,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdGrantAuthorization(),
 		GetCmdRevokeAuthorization(),
 		GetCmdFeeGrant(),
+		GetCmdRevokeFeeGrant(),
 		GetIbcTransferTxCmd(),
 		GetCmdAddFinalizeActivateMarker(),
 		GetCmdUpdateRequiredAttributes(),
@@ -177,26 +178,32 @@ with the given supply amount and denomination provided in the coin argument
 // GetCmdMint implements the mint additional supply for marker command.
 func GetCmdMint() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "mint [coin]",
+		Use:     "mint <coin> [recipient]",
 		Aliases: []string{"m"},
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.RangeArgs(1, 2),
 		Short:   "Mint coins against the marker",
 		Long: strings.TrimSpace(`Mints coins of the marker's denomination and places them
 in the marker's account under escrow.  Caller must possess the mint permission and 
 marker must be in the active status.`),
-		Example: fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin --from mykey`, version.AppName),
+		Example: fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewMsgMintRequest(callerAddr, coin)
+			var recipient sdk.AccAddress
+			if len(args) > 1 {
+				recipient, err = sdk.AccAddressFromBech32(args[1])
+				if err != nil {
+					return sdkErrors.ErrInvalidAddress.Wrapf("invalid recipient %s", args[1])
+				}
+			}
+			msg := types.NewMsgMintRequest(callerAddr, coin, recipient)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -816,12 +823,10 @@ Examples:
 					return err
 				}
 			}
-
 			msg, err := types.NewMsgGrantAllowance(denom, administrator, grantee, allowance)
 			if err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -833,6 +838,42 @@ Examples:
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")
 	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
 
+	return cmd
+}
+
+// GetCmdRevokeFeeGrant returns a CLI command handler for revoking a MsgRevokeGrantAllowance transaction.
+func GetCmdRevokeFeeGrant() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "revoke-feegrant [denom] [administrator_key_or_address] [grantee]",
+		Short: "Revoke allowance issued by a admin",
+		Long: strings.TrimSpace(`Revoke a previously granted fee allowance from an admin. Note, the'--from' flag is
+				ignored as it is implied from [administrator].`),
+		Example: fmt.Sprintf(`$ %s tx marker revoke-feegrant markerdenom pb1edlyu... pb1psh7r... --from=mykey`, version.AppName),
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			denom := args[0]
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			administrator := clientCtx.GetFromAddress()
+			grantee, err := sdk.AccAddressFromBech32(args[2])
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgRevokeGrantAllowance(denom, administrator, grantee)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
