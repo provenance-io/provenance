@@ -83,6 +83,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdGrantAuthorization(),
 		GetCmdRevokeAuthorization(),
 		GetCmdFeeGrant(),
+		GetCmdRevokeFeeGrant(),
 		GetIbcTransferTxCmd(),
 		GetCmdAddFinalizeActivateMarker(),
 		GetCmdUpdateRequiredAttributes(),
@@ -822,12 +823,10 @@ Examples:
 					return err
 				}
 			}
-
 			msg, err := types.NewMsgGrantAllowance(denom, administrator, grantee, allowance)
 			if err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -839,6 +838,42 @@ Examples:
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")
 	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
 
+	return cmd
+}
+
+// GetCmdRevokeFeeGrant returns a CLI command handler for revoking a MsgRevokeGrantAllowance transaction.
+func GetCmdRevokeFeeGrant() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "revoke-feegrant [denom] [administrator_key_or_address] [grantee]",
+		Short: "Revoke allowance issued by a admin",
+		Long: strings.TrimSpace(`Revoke a previously granted fee allowance from an admin. Note, the'--from' flag is
+				ignored as it is implied from [administrator].`),
+		Example: fmt.Sprintf(`$ %s tx marker revoke-feegrant markerdenom pb1edlyu... pb1psh7r... --from=mykey`, version.AppName),
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			denom := args[0]
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			administrator := clientCtx.GetFromAddress()
+			grantee, err := sdk.AccAddressFromBech32(args[2])
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgRevokeGrantAllowance(denom, administrator, grantee)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
