@@ -242,18 +242,29 @@ func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.
 	if req == nil || len(req.Account) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
 	addr, err := sdk.AccAddressFromBech32(req.Account)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
 	}
-
+	if req.Denom != "" {
+		if err := sdk.ValidateDenom(req.Denom); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid denom %q: %v", req.Denom, err)
+		}
+	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := k.getStore(ctx)
 	resp := &exchange.QueryGetAccountCommitmentsResponse{}
+
 	k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
 		amount := getCommitmentAmount(store, marketID, addr)
 		if !amount.IsZero() {
+			if req.Denom != "" {
+				filterAsset := amount.AmountOf(req.Denom)
+				if filterAsset.IsZero() {
+					return false
+				}
+				amount = sdk.NewCoins(sdk.NewCoin(req.Denom, filterAsset))
+			}
 			resp.Commitments = append(resp.Commitments, &exchange.MarketAmount{MarketId: marketID, Amount: amount})
 		}
 		return false
