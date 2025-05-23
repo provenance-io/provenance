@@ -22,6 +22,13 @@ type WasmInterfaceRegistry struct {
 }
 
 // Resolve implements codectypes.InterfaceRegistry
-func (WasmInterfaceRegistry) Resolve(_ string) (proto.Message, error) {
+func (wir WasmInterfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
+	msg, err := wir.InterfaceRegistry.Resolve(typeURL)
+	if err == nil {
+		return msg, nil
+	}
+	if typeURL == "/cosmwasm.wasm.v1beta1.MsgExecuteContract" {
+		return &v1beta1.MsgExecuteContract{}, nil
+	}
 	return new(WasmAny), nil
 }

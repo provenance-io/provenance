@@ -4,7 +4,7 @@
 
 ## Table of Contents
 
-- [cosmwasm/wasm/v1beta1/legacy.proto](#cosmwasm_wasm_v1beta1_legacy-proto)
+- [cosmwasm/wasm/v1beta1/msg_execute_contract.proto](#cosmwasm_wasm_v1beta1_msg_execute_contract-proto)
     - [MsgExecuteContract](#cosmwasm-wasm-v1beta1-MsgExecuteContract)
   
 - [cosmos/quarantine/v1beta1/tx.proto](#cosmos_quarantine_v1beta1_tx-proto)
@@ -868,10 +868,10 @@
 
 
 
-<a name="cosmwasm_wasm_v1beta1_legacy-proto"></a>
+<a name="cosmwasm_wasm_v1beta1_msg_execute_contract-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmwasm/wasm/v1beta1/legacy.proto
+## cosmwasm/wasm/v1beta1/msg_execute_contract.proto
 
 
 
