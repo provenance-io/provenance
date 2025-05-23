@@ -10,6 +10,5 @@ message MsgExecuteContract {
   string   sender                         = 1;
   string   contract                       = 2;
   bytes    msg                            = 3;
-  repeated cosmos.base.v1beta1.Coin funds = 5 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin funds = 4 [(gogoproto.nullable) = false];
 }
-
