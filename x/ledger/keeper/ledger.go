@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
+	"github.com/provenance-io/provenance/x/registry"
 )
 
 var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
@@ -184,8 +185,23 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 
 	// Validate that the authority has ownership of the NFT
 	nftOwner := k.BaseViewKeeper.RegistryKeeper.GetNFTOwner(ctx, &l.Key.AssetClassId, &l.Key.NftId)
-	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
+	if nftOwner == nil && nftOwner.String() != authorityAddr.String() {
+		// If the nft owner is nil, then the authority must be a servicer to create the ledger
+		isServicer, err := k.BaseViewKeeper.RegistryKeeper.HasRole(ctx,
+			&registry.RegistryKey{
+				AssetClassId: l.Key.AssetClassId,
+				NftId:        l.Key.NftId,
+			},
+			authorityAddr.String(),
+			registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(),
+		)
+		if err != nil {
+			return err
+		}
+
+		if !isServicer {
+			return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
+		}
 	}
 
 	// Validate that the LedgerClassStatusType exists
