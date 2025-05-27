@@ -113,14 +113,14 @@ type FlatFeeGasMeter struct {
 
 var _ storetypes.GasMeter = (*FlatFeeGasMeter)(nil)
 
-func NewFlatFeeGasMeter(base storetypes.GasMeter, logger log.Logger, mk FlatFeesKeeper) *FlatFeeGasMeter {
+func NewFlatFeeGasMeter(base storetypes.GasMeter, logger log.Logger, ffk FlatFeesKeeper) *FlatFeeGasMeter {
 	return &FlatFeeGasMeter{
 		GasMeter:  base,
 		knownMsgs: make(map[string]int),
 		logger:    logger,
 		used:      make(map[string]storetypes.Gas),
 		counts:    make(map[string]uint64),
-		fk:        mk,
+		fk:        ffk,
 	}
 }
 
@@ -403,11 +403,11 @@ func ConsumeAdditionalFee(ctx sdk.Context, fee sdk.Coins) {
 // This is similar to "github.com/cosmos/cosmos-sdk/x/auth/ante".SetUpContextDecorator
 // except we set and check the gas limits a little differently.
 type ProvSetUpContextDecorator struct {
-	mk FlatFeesKeeper
+	ffk FlatFeesKeeper
 }
 
-func NewProvSetUpContextDecorator(mk FlatFeesKeeper) ProvSetUpContextDecorator {
-	return ProvSetUpContextDecorator{mk: mk}
+func NewProvSetUpContextDecorator(ffk FlatFeesKeeper) ProvSetUpContextDecorator {
+	return ProvSetUpContextDecorator{ffk: ffk}
 }
 
 func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -441,11 +441,11 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		}
 	}
 
-	// Set the gas meter with either the gas wanted or, if there's no gas wanted, use the tx gas limit.
+	// Set a generic gas meter in the context with the appropriate amount of gas.
 	// Note that SetGasMeter uses an infinite gas meter if simulating or at height 0 (init genesis).
 	newCtx = ante.SetGasMeter(simulate, ctx, gasWanted)
 	// Now wrap that gas meter in our flat-fee gas meter.
-	newCtx = ctx.WithGasMeter(NewFlatFeeGasMeter(newCtx.GasMeter(), newCtx.Logger(), d.mk))
+	newCtx = ctx.WithGasMeter(NewFlatFeeGasMeter(newCtx.GasMeter(), newCtx.Logger(), d.ffk))
 	// Note: We don't set the costs yet, because we want to check with the circuit breaker (another antehandler) first.
 
 	// Ensure that the requested gas does not exceed the configured block maximum.
