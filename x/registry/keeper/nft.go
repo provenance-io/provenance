@@ -46,18 +46,12 @@ func (k BaseRegistryKeeper) GetNFTOwner(ctx sdk.Context, assetClassId, nftId *st
 			return nil
 		}
 
-		for _, owner := range scope.Owners {
-			if owner.Role == metadataTypes.PartyType_PARTY_TYPE_OWNER {
-				sdkCtx.Logger().Info("scope found", "metadata_address", metadataAddress, "owner", owner.Address)
-				accAddr, err := sdk.AccAddressFromBech32(owner.Address)
-				if err != nil {
-					return nil
-				}
-				return accAddr
-			}
+		// Use the value owner address as the owner of the scope.
+		accAddr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
+		if err != nil {
+			return nil
 		}
-
-		return nil
+		return accAddr
 	} else {
 		return k.NFTKeeper.GetOwner(ctx, *assetClassId, *nftId)
 	}
