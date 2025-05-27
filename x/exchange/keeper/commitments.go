@@ -417,6 +417,37 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	return nil
 }
 
+// TransferCommitment transfers committed funds from one market to another.
+func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentRequest) error {
+	account, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return fmt.Errorf("invalid account %q: %w", account, err)
+	}
+
+	store := k.getStore(ctx)
+	if err := k.validateTransferCommitments(ctx, store, req, account); err != nil {
+		return err
+	}
+
+	currentAmount := getCommitmentAmount(store, req.CurrentMarketId, account)
+	if currentAmount.IsZero() {
+		return fmt.Errorf("account %s does not have any funds committed to market %d", account, req.CurrentMarketId)
+	}
+	newAmt, isNeg := currentAmount.SafeSub(req.Amount...)
+	if isNeg {
+		return fmt.Errorf("commitment amount to transfer %q is more than currently committed amount %q for %s in market %d",
+			req.Amount, currentAmount, account, req.CurrentMarketId)
+	}
+	// subtract requested amount and store the new balance for the current market
+	setCommitmentAmount(store, req.CurrentMarketId, sdk.AccAddress(req.Account), newAmt)
+	k.emitEvent(ctx, exchange.NewEventCommitmentReleased(req.Account, req.CurrentMarketId, req.Amount, req.EventTag))
+
+	// update the commitment to new market for given account
+	addCommitmentAmount(store, req.NewMarketId, account, req.Amount)
+	k.emitEvent(ctx, exchange.NewEventFundsCommitted(req.Account, req.NewMarketId, req.Amount, req.EventTag))
+	return nil
+}
+
 // consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.
 func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
 	calcResp, err := k.CalculateCommitmentSettlementFee(ctx, req)
@@ -424,5 +455,33 @@ func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.Ms
 		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
 	}
 	antewrapper.ConsumeAdditionalFee(ctx, calcResp.ExchangeFees)
+	return nil
+}
+
+// validateTransferCommitments which validate TransferCommitments message request.
+func (k Keeper) validateTransferCommitments(
+	ctx sdk.Context,
+	store storetypes.KVStore,
+	req *exchange.MsgMarketTransferCommitmentRequest,
+	account sdk.AccAddress,
+) error {
+	if req.Amount.IsZero() {
+		return fmt.Errorf("cannot transfer zero for %s in market %d", account, req.CurrentMarketId)
+	}
+	// Negative amount
+	if req.Amount.IsAnyNegative() {
+		return fmt.Errorf("cannot transfer negative commitment amount %q for %s in market %d", req.Amount, req.Account, req.CurrentMarketId)
+	}
+
+	// Market validity
+	if err := validateMarketIsAcceptingCommitments(store, req.NewMarketId); err != nil {
+		return fmt.Errorf("new market %d is invalid: %w", req.NewMarketId, err)
+	}
+
+	// User permission
+	if err := k.validateUserCanCreateCommitment(ctx, req.NewMarketId, account); err != nil {
+		return fmt.Errorf("account %s does not have permission to create commitments in market %d: %w", account, req.NewMarketId, err)
+	}
+
 	return nil
 }

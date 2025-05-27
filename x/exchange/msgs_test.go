@@ -39,6 +39,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgMarketSettleRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketCommitmentSettleRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketReleaseCommitmentsRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketTransferCommitmentRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketSetOrderExternalIDRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketWithdrawRequest{Admin: signer} },
 		func(signer string) sdk.Msg { return &MsgMarketUpdateDetailsRequest{Admin: signer} },
@@ -1326,6 +1327,157 @@ func TestMsgMarketReleaseCommitmentsRequest_ValidateBasic(t *testing.T) {
 				"invalid administrator \"\": " + emptyAddrErr,
 				"invalid market id: cannot be zero",
 				"nothing to release",
+				"invalid event tag \"abcdM...Mwxyz\" (length 101): exceeds max length 100",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgMarketTransferCommitmentRequest_ValidateBasic(t *testing.T) {
+	toAccAddr := func(str string) string {
+		return sdk.AccAddress(str + strings.Repeat("_", 20-len(str))).String()
+	}
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketTransferCommitmentRequest
+		expErr []string
+	}{
+		{
+			name: "valid message",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         toAccAddr("to_new_market"),
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 1,
+				NewMarketId:     2,
+				EventTag:        "test",
+			},
+		},
+
+		{
+			name: "no admin",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           "",
+				Account:         toAccAddr("to_new_market"),
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 1,
+				NewMarketId:     2,
+				EventTag:        "test",
+			},
+			expErr: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           "badbadadmin",
+				Account:         toAccAddr("to_new_market"),
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 1,
+				NewMarketId:     2,
+			},
+			expErr: []string{"invalid administrator \"badbadadmin\": " + bech32Err},
+		},
+		{
+			name: "current market zero",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         toAccAddr("to_new_market"),
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 0,
+				NewMarketId:     2,
+			},
+			expErr: []string{"invalid current market id: cannot be zero"},
+		},
+		{
+			name: "new market is zero",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         toAccAddr("to_new_market"),
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 1,
+				NewMarketId:     0,
+			},
+			expErr: []string{"invalid new market id: cannot be zero"},
+		},
+		{
+			name: "same current_market and new_market id",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         toAccAddr("to_new_market"),
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 1,
+				NewMarketId:     1,
+			},
+			expErr: []string{"invalid new market id: cannot be the same as current market id"},
+		},
+		{
+			name: "empty account",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         "",
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 1,
+				NewMarketId:     1,
+			},
+			expErr: []string{"empty address string is not allowed"},
+		},
+		{
+			name: "invalid account",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         "invalid_address",
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+				CurrentMarketId: 1,
+				NewMarketId:     1,
+			},
+			expErr: []string{"decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "amount is zero",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         "invalid_address",
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 0)),
+				CurrentMarketId: 1,
+				NewMarketId:     1,
+			},
+			expErr: []string{"cannot be zero"},
+		},
+		{
+			name: "bad event tag",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           toAccAddr("admin"),
+				Account:         "invalid_address",
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 0)),
+				CurrentMarketId: 1,
+				NewMarketId:     2,
+				EventTag:        "abcd" + strings.Repeat("M", 93) + "wxyz",
+			},
+			expErr: []string{"invalid event tag \"abcdM...Mwxyz\" (length 101): exceeds max length 100"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketTransferCommitmentRequest{
+				Admin:           "",
+				Account:         "invalid_address",
+				Amount:          sdk.NewCoins(sdk.NewInt64Coin("banana", 0)),
+				CurrentMarketId: 1,
+				NewMarketId:     4,
+				EventTag:        "abcd" + strings.Repeat("M", 93) + "wxyz",
+			},
+			expErr: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"empty address string is not allowed",
+				"invalid to address",
+				"decoding bech32 failed: invalid separator index",
+				"cannot be zero",
 				"invalid event tag \"abcdM...Mwxyz\" (length 101): exceeds max length 100",
 			},
 		},

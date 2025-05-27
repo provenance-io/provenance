@@ -32,6 +32,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgIbcTransferRequest)(nil),
 	(*MsgSetDenomMetadataRequest)(nil),
 	(*MsgGrantAllowanceRequest)(nil),
+	(*MsgRevokeGrantAllowanceRequest)(nil),
 	(*MsgAddFinalizeActivateMarkerRequest)(nil),
 	(*MsgSupplyIncreaseProposalRequest)(nil),
 	(*MsgSupplyDecreaseProposalRequest)(nil),
@@ -92,16 +93,25 @@ func (msg MsgDeleteRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
-func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest {
-	return &MsgMintRequest{
+func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin, recipient sdk.AccAddress) *MsgMintRequest {
+	msg := &MsgMintRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
 	}
+	if !recipient.Empty() {
+		msg.Recipient = recipient.String()
+	}
+	return msg
 }
 
 func (msg MsgMintRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
+	}
+	if msg.Recipient != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", msg.Recipient)
+		}
 	}
 	return msg.Amount.Validate()
 }
@@ -361,6 +371,28 @@ func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	}
 
 	return allowance.ValidateBasic()
+}
+
+func NewMsgRevokeGrantAllowance(denom string, admin sdk.AccAddress, grantee sdk.AccAddress) *MsgRevokeGrantAllowanceRequest {
+	return &MsgRevokeGrantAllowanceRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+		Grantee:       grantee.String(),
+	}
+}
+
+func (msg MsgRevokeGrantAllowanceRequest) ValidateBasic() error {
+	if msg.Denom == "" {
+		return sdkerrors.ErrInvalidRequest.Wrap("missing marker denom")
+	}
+	if msg.Administrator == "" {
+		return sdkerrors.ErrInvalidAddress.Wrap("missing administrator address")
+	}
+	if msg.Grantee == "" {
+		return sdkerrors.ErrInvalidAddress.Wrap("missing grantee address")
+	}
+
+	return nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces for this MsgGrantAllowanceRequest.

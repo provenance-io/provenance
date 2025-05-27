@@ -178,6 +178,7 @@ To find out how much an account has committed to a market, use the `GetCommitmen
 ## GetAccountCommitments
 
 To look up the amounts an account has committed to any market, use the `GetAccountCommitments` query.
+You can optionally filter the results for a specific denomination using the `denom` query parameter.
 
 ### QueryGetAccountCommitmentsRequest
 
