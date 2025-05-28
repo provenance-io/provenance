@@ -479,6 +479,8 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		newCtx.Logger().Debug("No consensus params. Skipping max block gas check.")
 	}
 
+	newCtx.Logger().Debug("Flat-Fee gas meter created and set in the context:\n" + newCtx.GasMeter().String())
+
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler
 	// AnteHandlers must have their own defer/recover in order for the BaseApp
 	// to know how much gas was used! This is because the GasMeter is created in
@@ -539,12 +541,14 @@ func (d FlatFeeSetupDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// Skip during init genesis too since those should be free (and there's no one to pay).
 	if !simulate && !IsInitGenesis(ctx) {
 		reqFee := gasMeter.GetRequiredFee()
-		ctx.Logger().Debug("Validating fee", "required", reqFee.String(), "provided", feeProvided.String())
+		ctx.Logger().Debug("Validating fee.", "required", reqFee.String(), "provided", feeProvided.String())
 		err = validateFeeAmount(reqFee, feeProvided)
 		if err != nil {
 			return ctx, err
 		}
 	}
+
+	ctx.Logger().Debug("Flat-Fee gas meter initialized:\n" + ctx.GasMeter().String())
 
 	return next(ctx, tx, simulate)
 }
@@ -600,7 +604,7 @@ func (d DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 // checkDeductUpFrontCost identifies the fee payer (possibly using a fee grant), makes sure they have enough
 // in their account to cover the entire fee that was provided, and collects the up-front cost from them.
 func (d DeductFeeDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx sdk.Tx, simulate bool) error {
-	ctx.Logger().Debug("Starting checkDeductUpFrontCost.")
+	ctx.Logger().Debug("Starting checkDeductUpFrontCost.", "simulate", simulate)
 	if addr := d.ak.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
 		return sdkerrors.ErrLogic.Wrapf("%s module account has not been set", authtypes.FeeCollectorName)
 	}
@@ -797,6 +801,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	if !newCharges.IsZero() && !simulate && !IsInitGenesis(ctx) {
 		// There were extra msg costs added since we set up the gas meter. Re-check that
 		// the full fee is enough to cover everything (now that we know what everything is).
+		ctx.Logger().Debug("Validating fee again due to added costs.", "required", reqFee.String(), "provided", feeProvided.String())
 		err = validateFeeAmount(reqFee, feeProvided)
 		if err != nil {
 			return ctx, err
@@ -810,7 +815,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	if !simulate && !IsInitGenesis(ctx) {
 		uncharged = feeProvided.Sub(upFrontCost...)
 		ctx.Logger().Debug("Uncharged amount calculated using fee provided.",
-			"fee provided", feeProvided, "up-front cost", upFrontCost.String(), "uncharged", uncharged.String())
+			"fee provided", feeProvided.String(), "up-front cost", upFrontCost.String(), "uncharged", uncharged.String())
 	} else {
 		// If simulating, pretend the reqFee is what was provided since there might not have been a fee provided.
 		uncharged = reqFee.Sub(upFrontCost...)
