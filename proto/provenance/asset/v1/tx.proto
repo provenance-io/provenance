@@ -46,8 +46,9 @@ message MsgAddAssetClassResponse {}
 message MsgCreatePool {
   option (cosmos.msg.v1.signer) = "from_address";
 
-  string pool_id      = 1;
-  string from_address = 2;
+  cosmos.base.v1beta1.Coin pool = 1;
+  repeated Nft nfts   = 2;
+  string from_address = 3;
 }
 
 message MsgCreatePoolResponse {}

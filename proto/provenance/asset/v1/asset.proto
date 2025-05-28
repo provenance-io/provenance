@@ -43,3 +43,8 @@ message Asset {
   // data is an app specific json data of the asset
   string data = 5;
 }
+
+message Nft {
+  string class_id = 1;
+  string id = 2;
+}
