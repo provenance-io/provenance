@@ -231,11 +231,26 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 
 	// Create the marker
-	err := m.createMarker(goCtx, sdk.NewCoin(msg.PoolId, sdkmath.NewInt(1)), msg.FromAddress)
+	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pool marker: %w", err)
 	}
 
+	// Get the nfts
+	for _, nft := range msg.Nfts {
+		// Get the owner of the nft and verify it matches the from address
+		owner := m.nftKeeper.GetOwner(goCtx, nft.ClassId, nft.Id)
+		if owner.String() != msg.FromAddress {
+			return nil, fmt.Errorf("nft class %s, id %s owner %s does not match from address %s", nft.ClassId, nft.Id, owner.String(), msg.FromAddress)
+		}
+
+		// Transfer the nft to the pool marker address
+		err = m.nftKeeper.Transfer(goCtx, nft.ClassId, nft.Id, marker.GetAddress())
+		if err != nil {
+			return nil, fmt.Errorf("failed to transfer nft: %w", err)
+		}
+	}
+	
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
@@ -243,7 +258,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCreateParticipation) (*types.MsgCreateParticipationResponse, error) {
 
 	// Create the marker
-	err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
+	_, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create participation marker: %w", err)
 	}
@@ -255,14 +270,14 @@ func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCrea
 func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCreateSecuritization) (*types.MsgCreateSecuritizationResponse, error) {
 
 	// Create the marker
-	err := m.createMarker(goCtx, sdk.NewCoin(msg.Id, sdkmath.NewInt(1)), msg.FromAddress)
+	_, err := m.createMarker(goCtx, sdk.NewCoin(msg.Id, sdkmath.NewInt(1)), msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
 	}
 
 	// Create the tranches
 	for _, tranche := range msg.Tranches {
-		err := m.createMarker(goCtx, *tranche, msg.FromAddress)
+		_, err := m.createMarker(goCtx, *tranche, msg.FromAddress)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create tranche marker: %w", err)
 		}
@@ -272,13 +287,13 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 }
 
 // CreatePool creates a new pool marker
-func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) error {
+func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Get the from address
 	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
 	if err != nil {
-		return fmt.Errorf("invalid from address: %w", err)
+		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid from address: %w", err)
 	}
 
 	// Create a new marker account
@@ -291,12 +306,16 @@ func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr 
 			{
 				Address: fromAcc.String(),
 				Permissions: markertypes.AccessList{
+					markertypes.Access_Admin,
+					markertypes.Access_Mint,
+					markertypes.Access_Burn,
 					markertypes.Access_Withdraw,
+					markertypes.Access_Transfer,
 				},
 			},
 		},
 		markertypes.StatusProposed,
-		markertypes.MarkerType_Coin,
+		markertypes.MarkerType_RestrictedCoin,
 		true,       // Supply fixed
 		false,      // Allow governance control
 		false,      // Don't allow forced transfer
@@ -306,12 +325,12 @@ func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr 
 	// Add the marker account by setting it
 	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
 	if err != nil {
-		return fmt.Errorf("failed to add marker account: %w", err)
+		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to add marker account: %w", err)
 	}
 
 	// Log the creation of the new pool marker
 	ctx.Logger().Info("Created new pool marker", "pool_id", denom.Denom)
 
-	return nil
+	return marker, nil
 }
 
