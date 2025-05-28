@@ -121,17 +121,43 @@ func GetCmdAddAssetClass() *cobra.Command {
 // GetCmdCreatePool returns the command for creating a new pool
 func GetCmdCreatePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool [pool-id]",
+		Use:   "create-pool [pool] [nfts]",
 		Short: "Create a new pool marker",
-		Args:  cobra.ExactArgs(1),
+		Long: `Create a new pool marker with the specified NFTs.
+The nfts argument should be a semicolon-separated list of asset entries, where each entry is a comma-separated class-id and asset-id.
+The entire nfts argument must be quoted to prevent shell interpretation of the semicolons.
+
+Example: 
+  provenanced tx asset create-pool 10pooltoken "asset_class1,asset_id1;asset_class2,asset_id2"
+  provenanced tx asset create-pool 10pooltoken 'asset_class1,asset_id1;asset_class2,asset_id2'`,
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			pool, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid pool %s", args[0])
+			}
+
+			var nfts []*types.Nft
+			nftEntries := strings.Split(args[1], ";")
+			for _, entry := range nftEntries {
+				parts := strings.Split(entry, ",")
+				if len(parts) != 2 {
+					return fmt.Errorf("invalid nft format: %s, expected class-id,asset-id", entry)
+				}
+				nfts = append(nfts, &types.Nft{
+					ClassId: strings.TrimSpace(parts[0]),
+					Id:      strings.TrimSpace(parts[1]),
+				})
+			}
+
 			msg := &types.MsgCreatePool{
-				PoolId:      args[0],
+				Pool:        &pool,
+				Nfts:        nfts,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
