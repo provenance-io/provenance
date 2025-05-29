@@ -78,7 +78,7 @@ message Ledger {
   // Next payment amount
   int64 next_pmt_amt = 5;
 
-  // Interest rate
+  // Interest rate (10000000 = 10.000000%) - 6 decimal places
   int32 interest_rate = 6;
 
   // Maturity date days since epoch
