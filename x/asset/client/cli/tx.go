@@ -202,17 +202,29 @@ func GetCmdCreateParticipation() *cobra.Command {
 // GetCmdCreateSecuritization returns the command for creating a new securitization
 func GetCmdCreateSecuritization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-securitization [id] [tranches]",
+		Use:   "create-securitization [id] [pools] [tranches]",
 		Short: "Create a new securitization marker and tranches",
-		Args:  cobra.ExactArgs(2),
+		Long: `Create a new securitization marker and tranches.
+The pools argument should be a comma-separated list of pool names.
+The tranches argument should be a comma-separated list of coins.
+
+Example:
+  provenanced tx asset create-securitization sec1 "pool1,pool2" "100tranche1,200tranche2"`,
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			// Parse the comma-separated list of pool names
+			pools := strings.Split(args[1], ",")
+			for i, pool := range pools {
+				pools[i] = strings.TrimSpace(pool)
+			}
+
 			// Parse the comma-separated list of coins
-			trancheStrings := strings.Split(args[1], ",")
+			trancheStrings := strings.Split(args[2], ",")
 			var tranches []*sdk.Coin
 
 			for _, trancheStr := range trancheStrings {
@@ -225,6 +237,7 @@ func GetCmdCreateSecuritization() *cobra.Command {
 
 			msg := &types.MsgCreateSecuritization{
 				Id:          args[0],
+				Pools:       pools,
 				Tranches:    tranches,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
