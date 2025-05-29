@@ -269,19 +269,47 @@ func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCrea
 // CreateSecuritization creates a new securitization marker and tranches
 func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCreateSecuritization) (*types.MsgCreateSecuritizationResponse, error) {
 
-	// Create the marker
-	_, err := m.createMarker(goCtx, sdk.NewCoin(msg.Id, sdkmath.NewInt(1)), msg.FromAddress)
+	// Create the custodian marker
+	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s", msg.Id), sdkmath.NewInt(0)), msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
 	}
 
 	// Create the tranches
 	for _, tranche := range msg.Tranches {
-		_, err := m.createMarker(goCtx, *tranche, msg.FromAddress)
+		_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s.tranche.%s", msg.Id, tranche.Denom), tranche.Amount), msg.FromAddress)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create tranche marker: %w", err)
 		}
 	}
+
+	// Reassign the pools permissions to the asset module account (prevent the pools from being transferred)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pool, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", msg.Id))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pool marker: %w", err)
+	}
+	
+	// Create a new access grant with the desired permissions
+	accessGrant := markertypes.NewAccessGrant(
+		m.GetModuleAddress(),
+		[]markertypes.Access{
+			markertypes.Access_Admin,
+			markertypes.Access_Mint,
+			markertypes.Access_Burn,
+			markertypes.Access_Withdraw,
+			markertypes.Access_Transfer,
+		},
+	)
+	
+	// Update the access list
+	err = pool.GrantAccess(accessGrant)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update pool marker access: %w", err)
+	}
+	
+	// Save the updated marker
+	m.markerKeeper.SetMarker(ctx, pool)
 
 	return &types.MsgCreateSecuritizationResponse{}, nil
 }
