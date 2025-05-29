@@ -39,7 +39,7 @@ tools-clean:
 	rm -f proto-tools-stamp tools-stamp
 
 # If you change this version, be sure to also change it in .github/workflows/lint.yml.
-GOLANGCI_LINT_VERSION = v1.60.2
+GOLANGCI_LINT_VERSION = v2.1.6
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT):
 	@$(MAKE) golangci-lint-update
