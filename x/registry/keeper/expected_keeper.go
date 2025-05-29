@@ -10,6 +10,7 @@ import (
 type MetaDataKeeper interface {
 	GetScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) (spec types.ScopeSpecification, found bool)
 	GetScope(ctx sdk.Context, id types.MetadataAddress) (types.Scope, bool)
+	GetScopeValueOwner(ctx sdk.Context, id types.MetadataAddress) (sdk.AccAddress, error)
 }
 
 type NFTKeeper interface {

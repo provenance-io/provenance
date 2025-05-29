@@ -41,13 +41,8 @@ func (k BaseRegistryKeeper) GetNFTOwner(ctx sdk.Context, assetClassId, nftId *st
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-		scope, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataAddress)
-		if !found {
-			return nil
-		}
-
 		// Use the value owner address as the owner of the scope.
-		accAddr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
+		accAddr, err := k.MetaDataKeeper.GetScopeValueOwner(sdkCtx, metadataAddress)
 		if err != nil {
 			return nil
 		}
