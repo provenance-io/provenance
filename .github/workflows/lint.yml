@@ -31,11 +31,11 @@ jobs:
         if: env.GIT_DIFF
         with:
           go-version-file: 'go.mod'
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v8
         if: env.GIT_DIFF
         with:
           # If you change this version, be sure to also change it in contrib/devtools/Makefile.
-          version: v1.60
+          version: v2.1.6
           args: --timeout 10m --out-${NO_FUTURE}format colored-line-number
           github-token: ${{ secrets.github_token }}
           verify: false
