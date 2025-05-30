@@ -270,7 +270,7 @@ func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCrea
 func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCreateSecuritization) (*types.MsgCreateSecuritizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Create the custodian marker
+	// Create the securitization marker
 	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s", msg.Id), sdkmath.NewInt(0)), msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
@@ -289,10 +289,10 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		pool, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", pool))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get pool marker: %w", err)
-		}	
+		}
 		
 		// Create a new access grant with the desired permissions
-		accessGrant := markertypes.NewAccessGrant(
+		moduleAccessGrant := markertypes.NewAccessGrant(
 			m.GetModuleAddress(),
 			[]markertypes.Access{
 				markertypes.Access_Admin,
@@ -303,8 +303,21 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 			},
 		)
 		
-		// Update the access list
-		err = pool.GrantAccess(accessGrant)
+		// Revoke all access from the pool marker
+		accessList := pool.GetAccessList()
+		for _, access := range accessList {
+			accessAcc, err := sdk.AccAddressFromBech32(access.Address)
+			if err != nil {
+				return nil, fmt.Errorf("invalid from pool marker access address: %w", err)
+			}
+			err = pool.RevokeAccess(accessAcc)
+			if err != nil {
+				return nil, fmt.Errorf("failed to revoke access: %w", err)
+			}
+		}
+
+		// Grant the module account access to the pool marker
+		err = pool.GrantAccess(moduleAccessGrant)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update pool marker access: %w", err)
 		}
