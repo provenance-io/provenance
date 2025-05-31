@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"math"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -430,33 +431,12 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		return newCtx, err
 	}
 
-	// Our app.Simulate returns the gas used amount equal to the amount of nhash required for the fee, and we tell
-	// folks to use gas-prices of 1nhash. This results in the client including the correct amount of fee, but means
-	// the client will send that amount as the gas wanted too. In such cases, we want to use the default.
-	// We also want to use the default if no gas wanted was provided.
-	// But if another amount of gas is wanted, we want to use that.
-	gasWanted := feeTx.GetGas()
-	switch {
-	case gasWanted == DefaultGasLimit: // Do nothing.
-		ctx.Logger().Debug("Using provided gas limit.", "gas wanted", gasWanted)
-	case gasWanted <= 0 || gasWanted > TxGasLimit:
-		// If no gas wanted was given, use the default.
-		// If gas wanted is strictly more than the Tx gas limit, assume it's from Simulate, and use the default.
-		// If it's equal to the TxGasLimit, we still want to use it as provided, though.
-		ctx.Logger().Debug("Gas limit out of bounds. Using default gas limit.", "original gas wanted", gasWanted, "actual gas wanted", DefaultGasLimit)
-		gasWanted = DefaultGasLimit
-	default:
-		fee := feeTx.GetFee()
-		if len(fee) == 1 && fee[0].Denom == pioconfig.GetProvConfig().FeeDenom && fee[0].Amount.Equal(sdkmath.NewIntFromUint64(gasWanted)) {
-			// The gas wanted is equal to the amount of nhash provided in the fee.
-			// Assume they simulated with gas-prices 1nhash, and switch to the default gas.
-			ctx.Logger().Debug("Gas limit equals fee amount. Using default gas limit.",
-				"original gas wanted", gasWanted,
-				"actual gas wanted", DefaultGasLimit,
-				"fee", fee.String(),
-			)
-			gasWanted = DefaultGasLimit
-		}
+	// Get the actual gas wanted for this tx (accounting for our custom simulation process).
+	gasWanted, err := GetGasWanted(ctx.Logger(), feeTx)
+	if err != nil {
+		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack during runTx.
+		newCtx = ante.SetGasMeter(simulate, ctx, 0)
+		return newCtx, err
 	}
 
 	// Set a generic gas meter in the context with the appropriate amount of gas.
@@ -464,16 +444,21 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	newCtx = ante.SetGasMeter(simulate, ctx, gasWanted)
 	// Now wrap that gas meter in our flat-fee gas meter.
 	newCtx = ctx.WithGasMeter(NewFlatFeeGasMeter(newCtx.GasMeter(), newCtx.Logger(), d.ffk))
-	// Note: We don't set the costs yet, because we want to check with the circuit breaker (another antehandler) first.
+	// Note: We don't set the costs yet, because we want to check a few more things before doing that work.
 
-	// Ensure that the requested gas does not exceed the configured block maximum.
-	// We skip this if there are no block consensus params because that indicates there shouldn't be any gas limits.
+	// Ensure that the requested gas does not exceed either the configured block maximum, or the tx maximum.
+	// If there's no block maximum defined, we can't do that check, and we interpret that as an indication
+	// that there shouldn't be a tx limit either.
 	if bp := ctx.ConsensusParams().Block; bp != nil {
 		maxBlockGas := bp.GetMaxGas()
 		newCtx.Logger().Debug("Consensus Params available. Checking max block gas.", "Block Params", bp, "maxBlockGas", maxBlockGas, "gas wanted", gasWanted)
-		// If there exists a maximum block gas limit, we must ensure that the tx does not exceed it.
-		if maxBlockGas > 0 && gasWanted > uint64(maxBlockGas) {
-			return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds block max gas %d", gasWanted, maxBlockGas)
+		if maxBlockGas > 0 {
+			if gasWanted > uint64(maxBlockGas) {
+				return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds block max gas %d", gasWanted, maxBlockGas)
+			}
+			if txGasLimitShouldApply(ctx.ChainID(), tx.GetMsgs()) && gasWanted > TxGasLimit {
+				return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds tx max gas %d", gasWanted, TxGasLimit)
+			}
 		}
 	} else {
 		newCtx.Logger().Debug("No consensus params. Skipping max block gas check.")
@@ -499,6 +484,109 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}()
 
 	return next(newCtx, tx, simulate)
+}
+
+// GetGasWanted returns the amount of gas that this Tx wants.
+// Our Simulate method returns the amount of fee as the gas wanted and we tell people to use gas-prices 1nhash.
+// That causes all the clients to provide that amount of fee as the gas wanted, though.
+// In order to stay compatible with all those clients/wallets, we handle that case here.
+//
+// E.g. Say a msg costs $0.50 and 1 hash costs $0.10. The msg will cost 5 hash or 5,000,000,000 nhash.
+// Our max block gas s 60,000,000, though (set in consensus params). So if we only relied on feeTx.GetGas(),
+// the tx wouldn't fit in a block (not to mention be more than the 4,000,000 tx gas limit).
+//
+// Also factoring into this is that, prior to flat fees, we told everyone to use gas-prices 1905nhash (or 19050nhash on testnet).
+// Anyone still using that will end up with a huge fee. So we return max uint64 and an error if that is detected.
+func GetGasWanted(logger log.Logger, feeTx sdk.FeeTx) (uint64, error) {
+	gasWanted := feeTx.GetGas()
+	logger = logger.With("method", "GetGasWanted", "gas_wanted", gasWanted)
+	if gasWanted == 0 {
+		// If no gas was provided, use the default instead.
+		// This allows users to skip the simulation and just provide the fee without worrying about gas.
+		// This could also happen during a free Tx that was simulated first.
+		logger.Debug("No gas limit provided. Using default.", "returning", DefaultGasLimit)
+		return DefaultGasLimit, nil
+	}
+
+	fee := feeTx.GetFee()
+	logger = logger.With("fee", fee.String())
+	hasNhash, feeNhash := fee.Find(pioconfig.GetProvConfig().FeeDenom)
+	if !hasNhash {
+		// If no nhash is in the fee, but gas was provided, they probably didn't simulate the tx,
+		// and instead set the values from previously known amounts. So use the gas they provided.
+		// Basically, we can't identify it as a special case, so we keep old behavior.
+		logger.Debug("No nhash in fee. Using provided gas limit.", "returning", gasWanted)
+		return gasWanted, nil
+	}
+
+	gasWantedInt := sdkmath.NewIntFromUint64(gasWanted)
+	if feeNhash.Amount.Equal(gasWantedInt) {
+		// The gas wanted is equal to the amount of nhash provided in the fee.
+		// Assume they simulated with --gas-prices 1nhash, and use the default gas.
+		logger.Debug("Gas limit equals fee amount. Using default gas limit.", "returning", DefaultGasLimit)
+		return DefaultGasLimit, nil
+	}
+
+	// Prior to flat-fees, we told everyone to use gas-prices of 1905nhash (or 19050nhash on testnet).
+	// If they're still using that, they're providing way too much as a fee and need to update their client settings.
+	// To prevent charging for what would be a pretty costly mistake, we return max uint in such cases.
+	// This gives users have a chance to update their clients without paying 1905 times what's needed.
+	if isOldGasPrices(feeNhash.Amount, gasWantedInt) {
+		// There's a very small chance that this catches a legitimate situation where the tx was not simulated,
+		// the user defined the gas and fee on their own, and the numbers worked out just wrong.
+		// They can get around this by bumping the gas by 1.
+		logger.Debug("Gas limit indicates old gas-prices value. Using max uint64.", "returning", math.MaxUint64)
+		return math.MaxUint64, fmt.Errorf("old gas-prices value detected; always use 1nhash")
+	}
+
+	// It's not a known special case, so keep old behavior.
+	logger.Debug("Using provided gas limit.", "returning", gasWanted)
+	return gasWanted, nil
+}
+
+var (
+	oldMainnetGasPricesAmt = sdkmath.NewInt(1905)
+	oldTestnetGasPricesAmt = sdkmath.NewInt(19050)
+)
+
+// isOldGasPrices returns true if the nhash and gas amounts indicate that a tx had one of our old gas prices.
+// Prior to flat-fees, we told everyone to use gas-prices of 1905nhash (or 19050nhash on testnet).
+func isOldGasPrices(nhash, gas sdkmath.Int) bool {
+	return nhash.Equal(gas.Mul(oldMainnetGasPricesAmt)) || nhash.Equal(gas.Mul(oldTestnetGasPricesAmt))
+}
+
+// txGasLimitShouldApply returns true iff the tx gas limit should be applied.
+func txGasLimitShouldApply(chainID string, msgs []sdk.Msg) bool {
+	// Skip the tx gas limit for unit tests and simulations; this way, we didn't have
+	// to update all the existing unit tests when we introduced this limit.
+	// Also, skip the limit for gov props so that they can be used for Txs that require a lot of gas.
+	// One of the primary reasons for the tx gas limit is to restrict WASM code submission.
+	// There's so much data in those that they always require more gas than the tx gas limit, but
+	// if submitted as part of a gov prop, it should be allowed.
+	return !isTestChainID(chainID) && !isOnlyGovProps(msgs)
+}
+
+// isOnlyGovProps returns true if there's at least one msg, and all msgs are a MsgSubmitProposal.
+func isOnlyGovProps(msgs []sdk.Msg) bool {
+	// If there are no messages, there are no gov messages, so return false.
+	if len(msgs) == 0 {
+		return false
+	}
+	for _, msg := range msgs {
+		if !isGovProp(msg) {
+			return false
+		}
+	}
+	return true
+}
+
+// isGovProp returns true if the provided message is a governance module MsgSubmitProposal.
+func isGovProp(msg sdk.Msg) bool {
+	t := sdk.MsgTypeURL(msg)
+	// Needs to return true for "/cosmos.gov.v1.MsgSubmitProposal" and "/cosmos.gov.v1beta1.MsgSubmitProposal".
+	// Since the types of messages are limited, there's only a limited set of possible msg-type URLs, so we're
+	// okay with a bit looser of a test here that allows for new versions to be added later, and still work.
+	return strings.HasPrefix(t, "/cosmos.gov.") && strings.HasSuffix(t, ".MsgSubmitProposal")
 }
 
 // FlatFeeSetupDecorator is an AnteHandler that calculates costs for the msgs, and ensures a sufficient fee is provided.
