@@ -151,7 +151,6 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	trigger := types.NewTrigger(1000, accounts[0].Address.String(), anyEvent, actions)
 	s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
 	s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
-	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
 
 	// execute operation
 	op := simulation.SimulateMsgDestroyTrigger(s.MakeTestSimState(), s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)

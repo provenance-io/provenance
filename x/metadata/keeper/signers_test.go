@@ -51,7 +51,7 @@ type AuthzTestSuite struct {
 }
 
 func (s *AuthzTestSuite) SetupTest() {
-	pioconfig.SetProvenanceConfig("atom", 0)
+	pioconfig.SetProvConfig("atom")
 	s.app = simapp.Setup(s.T())
 	ctx := s.FreshCtx()
 

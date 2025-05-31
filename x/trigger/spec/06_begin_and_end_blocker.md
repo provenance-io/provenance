@@ -15,17 +15,15 @@ The `BeginBlocker` abci call is invoked on the beginning of each block. `Trigger
 ## Trigger Execution
 
 The following steps are performed on each `BeginBlocker`:
-2. A `Trigger` is removed from the `Queue`.
-3. The `Gas Limit` for the `Trigger` is retrieved from the store.
-4. A `GasMeter` is created for the `Trigger`.
-5. An `Action` on the `Trigger` is ran updating and verifying gas usage against the `GasMeter`
-6. The events for the `Action` are emitted.
-7. Step 5 is repeated until no more `Actions` exist for the trigger.
-8. Step 1 is repeated until the `Queue` is empty or the `throttling limit` has been reached.
+1. A `Trigger` is removed from the `Queue`.
+2. An `Action` is run.
+3. The events for the `Action` are emitted.
+4. Step 2-3 are repeated until no more `Actions` exist for the trigger.
+5. Step 1-4 is repeated until the `Queue` is empty or the `throttling limit` has been reached.
 
 ### Note
 
-We have implemented a `throttling limit` within the module's `BeginBlocker`, effectively enforcing a maximum of 5 actions and a gas limit of 2,000,000 per `BeginBlock`.
+We have implemented a `throttling limit` within the module's `BeginBlocker`, effectively enforcing a maximum of 5 actions per `BeginBlock`.
 
 # End Blocker
 

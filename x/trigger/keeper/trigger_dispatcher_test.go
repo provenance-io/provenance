@@ -48,19 +48,15 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 		panic    string
 		existing []types.Trigger
 		queue    []types.QueuedTrigger
-		gas      []uint64
 		expected []types.Trigger
 		events   sdk.Events
-		blockGas uint64
 	}{
 		{
 			name:     "valid - no items in queue to run",
 			existing: []types.Trigger{},
 			queue:    []types.QueuedTrigger{},
-			gas:      []uint64{},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{},
-			blockGas: 0,
 		},
 		{
 			name:     "valid - one item in queue to run",
@@ -72,25 +68,8 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 					Trigger:     trigger1,
 				},
 			},
-			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true)},
-			blockGas: 2000000,
-		},
-		{
-			name:  "invalid - trigger with missing gas limit",
-			panic: "gas limit not found for trigger",
-			queue: []types.QueuedTrigger{
-				{
-					BlockHeight: uint64(s.ctx.BlockHeight()),
-					Time:        s.ctx.BlockTime(),
-					Trigger:     trigger1,
-				},
-			},
-			gas:      []uint64{},
-			expected: []types.Trigger{existing1},
-			events:   []sdk.Event{},
-			blockGas: 0,
 		},
 		{
 			name:     "valid - trigger with no action",
@@ -102,10 +81,8 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 					Trigger:     emptyTrigger,
 				},
 			},
-			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{executed(emptyTrigger.Id, emptyTrigger.Owner, true)},
-			blockGas: 2000000,
 		},
 		{
 			name:     "valid - trigger with multiple actions",
@@ -117,10 +94,8 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 					Trigger:     multiActionTrigger,
 				},
 			},
-			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{destroyed(existing1.Id), destroyed(existing2.Id), executed(multiActionTrigger.Id, multiActionTrigger.Owner, true)},
-			blockGas: 2000000,
 		},
 		{
 			name:     "valid - multiple triggers in queue",
@@ -137,30 +112,8 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{1000000, 1000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true), destroyed(existing2.Id), executed(trigger2.Id, trigger2.Owner, true)},
-			blockGas: 2000000,
-		},
-		{
-			name:     "valid - limit multiple triggers in queue by gas",
-			existing: []types.Trigger{existing1, existing2},
-			queue: []types.QueuedTrigger{
-				{
-					BlockHeight: uint64(s.ctx.BlockHeight()),
-					Time:        s.ctx.BlockTime(),
-					Trigger:     trigger1,
-				},
-				{
-					BlockHeight: uint64(s.ctx.BlockHeight()),
-					Time:        s.ctx.BlockTime(),
-					Trigger:     trigger2,
-				},
-			},
-			gas:      []uint64{2000000, 1000000},
-			expected: []types.Trigger{existing2},
-			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true)},
-			blockGas: 2000000,
 		},
 		{
 			name:     "valid - limit multiple triggers in queue",
@@ -197,7 +150,6 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{100000, 100000, 100000, 100000, 100000, 100000},
 			expected: []types.Trigger{existing2},
 			events: []sdk.Event{
 				destroyed(existing1.Id),
@@ -207,64 +159,6 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 				executed(trigger5.Id, trigger5.Owner, false),
 				executed(trigger6.Id, trigger6.Owner, false),
 			},
-			blockGas: 500000,
-		},
-		{
-			name:     "invalid - trigger with single action runs out of gas",
-			existing: []types.Trigger{existing1},
-			queue: []types.QueuedTrigger{
-				{
-					BlockHeight: uint64(s.ctx.BlockHeight()),
-					Time:        s.ctx.BlockTime(),
-					Trigger:     trigger1,
-				},
-			},
-			gas:      []uint64{1},
-			expected: []types.Trigger{existing1},
-			events: []sdk.Event{
-				executed(trigger1.Id, trigger1.Owner, false)},
-			blockGas: 1,
-		},
-		{
-			name:     "invalid - trigger with multiple actions runs out of gas",
-			existing: []types.Trigger{existing1, existing2},
-			queue: []types.QueuedTrigger{
-				{
-					BlockHeight: uint64(s.ctx.BlockHeight()),
-					Time:        s.ctx.BlockTime(),
-					Trigger:     multiActionTrigger,
-				},
-			},
-			gas:      []uint64{6000},
-			expected: []types.Trigger{existing1, existing2},
-			events: []sdk.Event{
-				executed(multiActionTrigger.Id, multiActionTrigger.Owner, false),
-			},
-			blockGas: 6000,
-		},
-		{
-			name:     "valid - multiple triggers in queue and one runs out of gas",
-			existing: []types.Trigger{existing1, existing2},
-			queue: []types.QueuedTrigger{
-				{
-					BlockHeight: uint64(s.ctx.BlockHeight()),
-					Time:        s.ctx.BlockTime(),
-					Trigger:     trigger1,
-				},
-				{
-					BlockHeight: uint64(s.ctx.BlockHeight()),
-					Time:        s.ctx.BlockTime(),
-					Trigger:     trigger2,
-				},
-			},
-			gas:      []uint64{1, 1000000},
-			expected: []types.Trigger{existing1},
-			events: []sdk.Event{
-				executed(trigger1.Id, trigger1.Owner, false),
-				destroyed(existing2.Id),
-				executed(trigger2.Id, trigger2.Owner, true),
-			},
-			blockGas: 1000001,
 		},
 	}
 
@@ -275,11 +169,8 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 			}
 
-			for i, item := range tc.queue {
+			for _, item := range tc.queue {
 				s.app.TriggerKeeper.Enqueue(s.ctx, item)
-				if len(tc.gas) > 0 {
-					s.app.TriggerKeeper.SetGasLimit(s.ctx, item.Trigger.Id, tc.gas[i])
-				}
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewGasMeter(60000000))
@@ -291,15 +182,12 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			} else {
 				s.app.TriggerKeeper.ProcessTriggers(s.ctx)
 
-				s.Equal(int(tc.blockGas), int(s.ctx.BlockGasMeter().GasConsumed()), "should consume the correct amount of block gas")
-
 				remaining, err := s.app.TriggerKeeper.GetAllTriggers(s.ctx)
 				s.NoError(err, "GetAllTriggers")
 				s.Equal(tc.expected, remaining, "should still have remaining triggers after deletion actions from ProcessTriggers")
 
 				for _, trigger := range remaining {
 					s.app.TriggerKeeper.UnregisterTrigger(s.ctx, trigger)
-					s.app.TriggerKeeper.RemoveGasLimit(s.ctx, trigger.Id)
 				}
 
 				events := s.ctx.EventManager().Events()

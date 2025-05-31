@@ -14,43 +14,31 @@ import (
 )
 
 const (
-	MaximumActions  uint64 = 5
-	MaximumQueueGas uint64 = 2000000
+	MaximumActions uint64 = 5
 )
 
 // ProcessTriggers Reads triggers from queues and attempts to run them.
 func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 	var actionsProcessed uint64
-	var gasConsumed uint64
 
 	for !k.QueueIsEmpty(ctx) && actionsProcessed < MaximumActions {
 		item := k.QueuePeek(ctx)
 		triggerID := item.GetTrigger().Id
-		gasLimit := k.GetGasLimit(ctx, triggerID)
-		k.Logger(ctx).Debug(fmt.Sprintf("Processing trigger %d with gas limit %d", triggerID, gasLimit))
+		k.Logger(ctx).Debug(fmt.Sprintf("Processing trigger %d", triggerID))
 
-		if gasLimit+gasConsumed > MaximumQueueGas {
-			k.Logger(ctx).Debug(fmt.Sprintf("Exceeded MaximumQueueGas %d/%d skipping...", gasLimit+gasConsumed, MaximumQueueGas))
-			return
-		}
 		actionsProcessed++
-		gasConsumed += gasLimit
 
 		k.Dequeue(ctx)
-		k.RemoveGasLimit(ctx, triggerID)
 
 		actions := item.GetTrigger().Actions
-		err := k.runActions(ctx, gasLimit, actions)
+		err := k.runActions(ctx, actions)
 		k.emitTriggerExecuted(ctx, item.GetTrigger(), err == nil)
 	}
 }
 
-// RunActions Runs all the actions and constrains them by gasLimit.
-func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*codectypes.Any) error {
-	cacheCtx, flush := ctx.CacheContext()
-	gasMeter := storetypes.NewGasMeter(gasLimit)
-	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
-	ctx.BlockGasMeter().ConsumeGas(gasLimit, "trigger run attempt")
+// RunActions Runs all the actions.
+func (k Keeper) runActions(ctx sdk.Context, actions []*codectypes.Any) error {
+	cacheCtx, writeCache := ctx.CacheContext()
 
 	msgs, err := sdktx.GetMsgs(actions, "RunActions")
 	if err != nil {
@@ -70,7 +58,7 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*codectyp
 		return err
 	}
 
-	flush()
+	writeCache()
 	for _, res := range results {
 		ctx.EventManager().EmitEvents(res.GetEvents())
 	}

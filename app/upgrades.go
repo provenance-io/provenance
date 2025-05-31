@@ -23,7 +23,10 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -75,6 +78,46 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			convertAcctsToVesting(ctx, app, mainnetAcctFilter)
+			return vm, nil
+		},
+	},
+	"zydeco-rc1": { // Upgrade for v1.24.0-rc1.
+		Added:   []string{flatfeestypes.StoreKey},
+		Deleted: []string{msgfeestypes.StoreKey},
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = setupFlatFees(ctx, app); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
+	"zydeco": { // Upgrade for v1.24.0.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = setupFlatFees(ctx, app); err != nil {
+				return nil, err
+			}
 			return vm, nil
 		},
 	},
@@ -886,4 +929,40 @@ func addCommas(amt string) string {
 		rv = append(rv, digit)
 	}
 	return string(rv)
+}
+
+// setupFlatFees defines the flatfees module params and msg costs.
+// Part of the zydeco upgrade.
+func setupFlatFees(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting up flat fees.")
+
+	feeDefCoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin(flatfeestypes.DefaultFeeDefinitionDenom, amount)
+	}
+
+	params := flatfeestypes.Params{ // TODO[fees]: Set these params with more accurate values.
+		DefaultCost: feeDefCoin(1),
+		ConversionFactor: flatfeestypes.ConversionFactor{
+			BaseAmount:      feeDefCoin(1),
+			ConvertedAmount: sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
+		},
+	}
+	err := app.FlatFeesKeeper.SetParams(ctx, params)
+	if err != nil {
+		return fmt.Errorf("could not set x/flatfees params: %w", err)
+	}
+
+	// TODO[fees]: Define all the non-default msg fees.
+	msgFees := []*flatfeestypes.MsgFee{
+		// flatfeestypes.NewMsgFee("url", feeDefCoin(2)),
+	}
+	for _, msgFee := range msgFees {
+		err = app.FlatFeesKeeper.SetMsgFee(ctx, *msgFee)
+		if err != nil {
+			return fmt.Errorf("could not set msg fee %s: %w", msgFee, err)
+		}
+	}
+
+	ctx.Logger().Info("Done setting up flat fees.")
+	return nil
 }
