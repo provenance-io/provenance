@@ -8,7 +8,6 @@ import (
 	nft "cosmossdk.io/x/nft"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/asset/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -279,37 +278,10 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Get the from address
-	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
+	marker, err := types.NewDefaultMarker(denom, fromAddr)
 	if err != nil {
-		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid from address: %w", err)
+		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to create marker: %w", err)
 	}
-
-	// Create a new marker account
-	markerAddr := markertypes.MustGetMarkerAddress(denom.Denom)
-	marker := markertypes.NewMarkerAccount(
-		authtypes.NewBaseAccountWithAddress(markerAddr),
-		denom,
-		fromAcc,
-		[]markertypes.AccessGrant{
-			{
-				Address: fromAcc.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Admin,
-					markertypes.Access_Mint,
-					markertypes.Access_Burn,
-					markertypes.Access_Withdraw,
-					markertypes.Access_Transfer,
-				},
-			},
-		},
-		markertypes.StatusProposed,
-		markertypes.MarkerType_RestrictedCoin,
-		true,       // Supply fixed
-		false,      // Allow governance control
-		false,      // Don't allow forced transfer
-		[]string{}, // No required attributes
-	)
 
 	// Add the marker account by setting it
 	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
