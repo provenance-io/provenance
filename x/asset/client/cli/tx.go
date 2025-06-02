@@ -39,9 +39,9 @@ func GetTxCmd() *cobra.Command {
 // GetCmdAddAsset returns the command for adding an asset
 func GetCmdAddAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-asset [class-id] [id] [uri] [uri-hash] [data] [entry-types] [status-types]",
+		Use:   "add-asset [class-id] [id] [uri] [uri-hash] [data]",
 		Short: "Add a new asset",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -56,22 +56,8 @@ func GetCmdAddAsset() *cobra.Command {
 				Data:    args[4],
 			}
 
-			// Parse entry types JSON array
-			var entryTypes []*ledger.LedgerClassEntryType
-			if err := json.Unmarshal([]byte(args[5]), &entryTypes); err != nil {
-				return fmt.Errorf("invalid entry-types JSON array: %w", err)
-			}
-
-			// Parse status types JSON array
-			var statusTypes []*ledger.LedgerClassStatusType
-			if err := json.Unmarshal([]byte(args[6]), &statusTypes); err != nil {
-				return fmt.Errorf("invalid status-types JSON array: %w", err)
-			}
-
 			msg := &types.MsgAddAsset{
 				Asset:       asset,
-				EntryTypes:  entryTypes,
-				StatusTypes: statusTypes,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
@@ -86,9 +72,9 @@ func GetCmdAddAsset() *cobra.Command {
 // GetCmdAddAssetClass returns the command for adding an asset class
 func GetCmdAddAssetClass() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-class [id] [name] [symbol] [description] [uri] [uri-hash] [data]",
+		Use:   "add-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [entry-types] [status-types]",
 		Short: "Add a new asset class",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -105,8 +91,22 @@ func GetCmdAddAssetClass() *cobra.Command {
 				Data:        args[6],
 			}
 
+			// Parse entry types JSON array
+			var entryTypes []*ledger.LedgerClassEntryType
+			if err := json.Unmarshal([]byte(args[7]), &entryTypes); err != nil {
+				return fmt.Errorf("invalid entry-types JSON array: %w", err)
+			}
+
+			// Parse status types JSON array
+			var statusTypes []*ledger.LedgerClassStatusType
+			if err := json.Unmarshal([]byte(args[8]), &statusTypes); err != nil {
+				return fmt.Errorf("invalid status-types JSON array: %w", err)
+			}
+
 			msg := &types.MsgAddAssetClass{
 				AssetClass:  assetClass,
+				EntryTypes:  entryTypes,
+				StatusTypes: statusTypes,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
