@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"maps"
 	"math"
-	"runtime/debug"
 	"slices"
 	"strings"
 
@@ -34,7 +33,11 @@ const (
 	AttributeKeyAdditionalFee = "additionalfee"
 	// AttributeKeyFeeOverage is the amount paid on top of the required amounts.
 	AttributeKeyFeeOverage = "fee_overage"
-	// AttributeKeyMinFeeCharged is
+	// AttributeKeyFeeTotal is the total amount paid in fees.
+	AttributeKeyFeeTotal = "total"
+
+	// AttributeKeyMinFeeCharged is also the up-front cost, but used in a different Tx event.
+	// If a transaction fails, this value is copied to the "fee" attribute in the SDK's standard fee event.
 	AttributeKeyMinFeeCharged = "min_fee_charged"
 
 	// nilStr is a string to use to indicate something is nil.
@@ -328,7 +331,6 @@ func (g *FlatFeeGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
 
 // GasConsumed reports the amount of gas consumed at Log.Info level and returns the base GasMeter's gas consumed.
 func (g *FlatFeeGasMeter) GasConsumed() storetypes.Gas {
-	g.logger.Debug("Stack trace:\n" + string(debug.Stack()))
 	g.logger.Info(g.DetailsString())
 	return g.GasMeter.GasConsumed()
 }
@@ -415,14 +417,7 @@ func NewProvSetUpContextDecorator(ffk FlatFeesKeeper) ProvSetUpContextDecorator 
 }
 
 func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	defer func() {
-		if err != nil {
-			ctx.Logger().Error("Error being returned from ProvSetUpContextDecorator.",
-				"error", err, "simulate", simulate, "IsCheckTx", ctx.IsCheckTx())
-		}
-	}()
-
-	ctx.Logger().Debug("Starting ProvSetUpContextDecorator.", "simulate", simulate, "IsCheckTx", ctx.IsCheckTx(), "IsInitGenesis", IsInitGenesis(ctx))
+	ctx.Logger().Debug("Starting ProvSetUpContextDecorator.AnteHandle.", "simulate", simulate, "IsCheckTx", ctx.IsCheckTx())
 
 	// All transactions must implement FeeTx.
 	feeTx, err := GetFeeTx(tx)
@@ -452,7 +447,6 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	// that there shouldn't be a tx limit either.
 	if bp := ctx.ConsensusParams().Block; bp != nil {
 		maxBlockGas := bp.GetMaxGas()
-		newCtx.Logger().Debug("Consensus Params available. Checking max block gas.", "Block Params", bp, "maxBlockGas", maxBlockGas, "gas wanted", gasWanted)
 		if maxBlockGas > 0 {
 			if gasWanted > uint64(maxBlockGas) {
 				return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds block max gas %d", gasWanted, maxBlockGas)
@@ -461,11 +455,7 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 				return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds tx max gas %d", gasWanted, TxGasLimit)
 			}
 		}
-	} else {
-		newCtx.Logger().Debug("No consensus params. Skipping max block gas check.")
 	}
-
-	newCtx.Logger().Debug("Flat-Fee gas meter created and set in the context:\n" + newCtx.GasMeter().String())
 
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler
 	// AnteHandlers must have their own defer/recover in order for the BaseApp
@@ -499,9 +489,9 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // Also factoring into this is that, prior to flat fees, we told everyone to use gas-prices 1905nhash (or 19050nhash on testnet).
 // Anyone still using that will end up with a huge fee. So we return max uint64 and an error if that is detected.
 func GetGasWanted(logger log.Logger, feeTx sdk.FeeTx) (uint64, error) {
-	gasWanted := feeTx.GetGas()
-	logger = logger.With("method", "GetGasWanted", "gas_wanted", gasWanted)
-	if gasWanted == 0 {
+	txGas := feeTx.GetGas()
+	logger = logger.With("method", "GetGasWanted", "feeTx.GetGas()", txGas)
+	if txGas == 0 {
 		// If no gas was provided, use the default instead.
 		// This allows users to skip the simulation and just provide the fee without worrying about gas.
 		// This could also happen during a free Tx that was simulated first.
@@ -510,18 +500,18 @@ func GetGasWanted(logger log.Logger, feeTx sdk.FeeTx) (uint64, error) {
 	}
 
 	fee := feeTx.GetFee()
-	logger = logger.With("fee", fee.String())
+	logger = logger.With("feeTx.GetFee()", fee.String())
 	hasNhash, feeNhash := fee.Find(pioconfig.GetProvConfig().FeeDenom)
 	if !hasNhash {
 		// If no nhash is in the fee, but gas was provided, they probably didn't simulate the tx,
 		// and instead set the values from previously known amounts. So use the gas they provided.
 		// Basically, we can't identify it as a special case, so we keep old behavior.
-		logger.Debug("No nhash in fee. Using provided gas limit.", "returning", gasWanted)
-		return gasWanted, nil
+		logger.Debug("No nhash in fee. Using provided gas limit.", "returning", txGas)
+		return txGas, nil
 	}
 
-	gasWantedInt := sdkmath.NewIntFromUint64(gasWanted)
-	if feeNhash.Amount.Equal(gasWantedInt) {
+	txGasInt := sdkmath.NewIntFromUint64(txGas)
+	if feeNhash.Amount.Equal(txGasInt) {
 		// The gas wanted is equal to the amount of nhash provided in the fee.
 		// Assume they simulated with --gas-prices 1nhash, and use the default gas.
 		logger.Debug("Gas limit equals fee amount. Using default gas limit.", "returning", DefaultGasLimit)
@@ -532,17 +522,17 @@ func GetGasWanted(logger log.Logger, feeTx sdk.FeeTx) (uint64, error) {
 	// If they're still using that, they're providing way too much as a fee and need to update their client settings.
 	// To prevent charging for what would be a pretty costly mistake, we return max uint in such cases.
 	// This gives users have a chance to update their clients without paying 1905 times what's needed.
-	if isOldGasPrices(feeNhash.Amount, gasWantedInt) {
-		// There's a very small chance that this catches a legitimate situation where the tx was not simulated,
-		// the user defined the gas and fee on their own, and the numbers worked out just wrong.
+	if isOldGasPrices(feeNhash.Amount, txGasInt) {
+		// There's a very small chance that this catches a legitimate situation where the tx was not simulated;
+		// e.g. the user defined the gas and fee on their own and the numbers worked out just wrong.
 		// They can get around this by bumping the gas by 1.
 		logger.Debug("Gas limit indicates old gas-prices value. Using max uint64.", "returning", uint64(math.MaxUint64))
 		return math.MaxUint64, fmt.Errorf("old gas-prices value detected; always use 1nhash")
 	}
 
 	// It's not a known special case, so keep old behavior.
-	logger.Debug("Using provided gas limit.", "returning", gasWanted)
-	return gasWanted, nil
+	logger.Debug("Using provided gas limit.", "returning", txGas)
+	return txGas, nil
 }
 
 var (
@@ -597,14 +587,7 @@ func NewFlatFeeSetupDecorator() FlatFeeSetupDecorator {
 	return FlatFeeSetupDecorator{}
 }
 
-func (d FlatFeeSetupDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	defer func() {
-		if err != nil {
-			ctx.Logger().Error("Error being returned from FlatFeeSetupDecorator.",
-				"error", err, "simulate", simulate, "IsCheckTx", ctx.IsCheckTx())
-		}
-	}()
-
+func (d FlatFeeSetupDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return ctx, err
@@ -630,14 +613,11 @@ func (d FlatFeeSetupDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// Skip during init genesis too since those should be free (and there's no one to pay).
 	if !simulate && !IsInitGenesis(ctx) {
 		reqFee := gasMeter.GetRequiredFee()
-		ctx.Logger().Debug("Validating fee.", "required", reqFee.String(), "provided", feeProvided.String())
 		err = validateFeeAmount(reqFee, feeProvided)
 		if err != nil {
 			return ctx, err
 		}
 	}
-
-	ctx.Logger().Debug("Flat-Fee gas meter initialized:\n" + ctx.GasMeter().String())
 
 	return next(ctx, tx, simulate)
 }
@@ -676,15 +656,8 @@ func NewDeductFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.Feegran
 	return DeductFeeDecorator{ak: ak, bk: bk, fk: fk}
 }
 
-func (d DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	defer func() {
-		if err != nil {
-			ctx.Logger().Error("Error being returned from DeductFeeDecorator.",
-				"error", err, "simulate", simulate, "IsCheckTx", ctx.IsCheckTx())
-		}
-	}()
-
-	if err = d.checkDeductUpFrontCost(ctx, tx, simulate); err != nil {
+func (d DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	if err := d.checkDeductUpFrontCost(ctx, tx, simulate); err != nil {
 		return ctx, err
 	}
 	return next(ctx, tx, simulate)
@@ -693,7 +666,6 @@ func (d DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 // checkDeductUpFrontCost identifies the fee payer (possibly using a fee grant), makes sure they have enough
 // in their account to cover the entire fee that was provided, and collects the up-front cost from them.
 func (d DeductFeeDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx sdk.Tx, simulate bool) error {
-	ctx.Logger().Debug("Starting checkDeductUpFrontCost.", "simulate", simulate)
 	if addr := d.ak.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
 		return sdkerrors.ErrLogic.Wrapf("%s module account has not been set", authtypes.FeeCollectorName)
 	}
@@ -730,8 +702,6 @@ func (d DeductFeeDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx sdk.Tx, s
 		// I feel like it will be really rare that a tx sends funds to the fee payer.
 		if err = validateHasBalance(ctx, d.bk, deductFeesFrom, fullFee); err != nil {
 			return err
-		} else {
-			ctx.Logger().Debug("Fee payer has enough in their account to pay.", "fee provided", fullFee.String())
 		}
 	}
 
@@ -853,14 +823,7 @@ func NewFlatFeePostHandler(bk BankKeeper, fk ante.FeegrantKeeper) FlatFeePostHan
 }
 
 // PostHandle collects the rest of the fees for a tx.
-func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success bool, next sdk.PostHandler) (newCtx sdk.Context, err error) {
-	defer func() {
-		if err != nil {
-			ctx.Logger().Error("Error being returned from FlatFeePostHandler.",
-				"error", err, "simulate", simulate, "IsCheckTx", ctx.IsCheckTx())
-		}
-	}()
-
+func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success bool, next sdk.PostHandler) (sdk.Context, error) {
 	// If it wasn't successful, there's nothing to do in here.
 	if !success {
 		ctx.Logger().Debug("Skipping FlatFeePostHandler because tx was not successful.")
@@ -890,7 +853,6 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	if !newCharges.IsZero() && !simulate && !IsInitGenesis(ctx) {
 		// There were extra msg costs added since we set up the gas meter. Re-check that
 		// the full fee is enough to cover everything (now that we know what everything is).
-		ctx.Logger().Debug("Validating fee again due to added costs.", "required", reqFee.String(), "provided", feeProvided.String())
 		err = validateFeeAmount(reqFee, feeProvided)
 		if err != nil {
 			return ctx, err
@@ -902,14 +864,15 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	upFrontCost := gasMeter.GetUpFrontCost()
 	var uncharged sdk.Coins
 	if !simulate && !IsInitGenesis(ctx) {
+		// If not simulating, we want to collect all of the provided fee (we know it's at least what's required).
 		uncharged = feeProvided.Sub(upFrontCost...)
-		ctx.Logger().Debug("Uncharged amount calculated using fee provided.",
-			"fee provided", feeProvided.String(), "up-front cost", upFrontCost.String(), "uncharged", uncharged.String())
+		ctx.Logger().Debug("On-success cost calculated using fee provided (and up-front cost).",
+			"fee provided", feeProvided.String(), "up-front cost", upFrontCost.String(), "on-success", uncharged.String())
 	} else {
 		// If simulating, pretend the reqFee is what was provided since there might not have been a fee provided.
 		uncharged = reqFee.Sub(upFrontCost...)
-		ctx.Logger().Debug("Uncharged amount calculated using required fee.",
-			"required fee", reqFee.String(), "up-front cost", upFrontCost.String(), "uncharged", uncharged.String())
+		ctx.Logger().Debug("On-success cost calculated using required fee (and up-front cost).",
+			"required fee", reqFee.String(), "up-front cost", upFrontCost.String(), "on-success", uncharged.String())
 	}
 	deductFeesFrom, usedFeeGrant, err := GetFeePayerUsingFeeGrant(ctx, h.fk, feeTx, uncharged, feeTx.GetMsgs())
 	if err != nil {
@@ -917,7 +880,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	}
 
 	// Skip checking that the deductFeesFrom account exists since we checked that earlier and it shouldn't change.
-	// We skip checking the balance because the bank module will do that for us during the transfer.
+	// We skip checking the balance again because the bank module will do that for us during the transfer.
 
 	// Pay whatever is left.
 	// When simulating, we don't care about the fees being paid.
@@ -930,9 +893,9 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 		if err = PayFee(ctx2, h.bk, deductFeesFrom, uncharged); err != nil {
 			return ctx, cerrs.Wrapf(err, "could not collect fee remainder %q upon success", uncharged.String())
 		}
-		ctx.Logger().Debug("Collected remaining amount.", "remaining cost", uncharged.String())
+		ctx.Logger().Debug("Collected on-success cost.", "on-success cost", uncharged.String())
 	} else {
-		ctx.Logger().Debug("Skipping collection of remaining cost.", "remaining cost", uncharged.String(), "simulate", simulate)
+		ctx.Logger().Debug("Skipping collection of on-success cost.", "on-success cost", uncharged.String(), "simulate", simulate)
 	}
 
 	var overage sdk.Coins
@@ -941,28 +904,26 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	}
 	onSuccessCost := reqFee.Sub(upFrontCost...)
 	ctx.EventManager().EmitEvent(CreateFeeEvent(deductFeesFrom, upFrontCost, onSuccessCost, overage))
-	ctx.Logger().Debug("Fee event created.",
-		sdk.AttributeKeyFeePayer, deductFeesFrom.String(),
-		AttributeKeyBaseFee, upFrontCost.String(),
-		AttributeKeyAdditionalFee, onSuccessCost.String(),
-		AttributeKeyFeeOverage, overage.String(),
-	)
 
 	return next(ctx, tx, simulate, success)
 }
 
 // CreateFeeEvent creates the event we emit containing tx fee information.
 func CreateFeeEvent(feePayer sdk.AccAddress, baseFee, additionalFee, overage sdk.Coins) sdk.Event {
+	total := baseFee
 	rv := sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFeePayer, feePayer.String()),
 		sdk.NewAttribute(AttributeKeyBaseFee, baseFee.String()),
 	)
 	if !additionalFee.IsZero() {
+		total = total.Add(additionalFee...)
 		rv = rv.AppendAttributes(sdk.NewAttribute(AttributeKeyAdditionalFee, additionalFee.String()))
 	}
 	if !overage.IsZero() {
+		total = total.Add(overage...)
 		rv = rv.AppendAttributes(sdk.NewAttribute(AttributeKeyFeeOverage, overage.String()))
 	}
+	rv = rv.AppendAttributes(sdk.NewAttribute(AttributeKeyFeeTotal, total.String()))
 	return rv
 }
 
