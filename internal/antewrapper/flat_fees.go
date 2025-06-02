@@ -23,6 +23,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/provutils"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 
@@ -50,6 +51,9 @@ const (
 	DefaultGasLimit uint64 = 500_000
 	// For reference, consensus params on mainnet and testnet have max block gas at 60,000,000
 )
+
+// lazyCzStr is an alias to provutils.NewLazyStringer(val) that needs fewer characters to type, and is typed to Coins.
+var lazyCzStr = provutils.NewLazyStringer[sdk.Coins]
 
 func init() {
 	cflags.DefaultGasLimit = DefaultGasLimit
@@ -361,7 +365,7 @@ func (g *FlatFeeGasMeter) adjustCostsForUnitTests(logger log.Logger, chainID str
 		// Probably a pretty simple unit test. Use what was provided, all charged up-front.
 		g.upFrontCost = feeProvided
 		g.onSuccessCost = nil
-		logger.Debug(fmt.Sprintf("adjustCostsForUnitTests: Using provided fee for test tx cost: %q.", feeProvided))
+		logger.Debug("adjustCostsForUnitTests: Using provided fee for test tx cost.", "fee_provided", lazyCzStr(feeProvided))
 	case isTestChainID(chainID):
 		// One of the more complex unit tests, possibly involving actually running a chain. No fee.
 		g.upFrontCost = nil
@@ -716,9 +720,9 @@ func (d DeductFeeDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx sdk.Tx, s
 		if err = PayFee(ctx2, d.bk, deductFeesFrom, upFrontCost); err != nil {
 			return cerrs.Wrapf(err, "could not collect up-front fee of %q", upFrontCost.String())
 		}
-		ctx.Logger().Debug("Up Front cost collected.", "up-front cost", upFrontCost.String())
+		ctx.Logger().Debug("Up Front cost collected.", "up-front cost", lazyCzStr(upFrontCost))
 	} else {
-		ctx.Logger().Debug("Skipping collection of up-front cost.", "up-front cost", upFrontCost.String(), "simulate", simulate)
+		ctx.Logger().Debug("Skipping collection of up-front cost.", "up-front cost", lazyCzStr(upFrontCost), "simulate", simulate)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -735,7 +739,7 @@ func (d DeductFeeDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx sdk.Tx, s
 	return nil
 }
 
-// validateHasBalance returns an error of the provided account does not have at least the required funds.
+// validateHasBalance returns an error if the provided account does not have at least the required funds.
 func validateHasBalance(ctx sdk.Context, bk BankKeeper, addr sdk.AccAddress, required sdk.Coins) error {
 	if required.IsZero() {
 		return nil
@@ -867,12 +871,12 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 		// If not simulating, we want to collect all of the provided fee (we know it's at least what's required).
 		uncharged = feeProvided.Sub(upFrontCost...)
 		ctx.Logger().Debug("On-success cost calculated using fee provided (and up-front cost).",
-			"fee provided", feeProvided.String(), "up-front cost", upFrontCost.String(), "on-success", uncharged.String())
+			"fee provided", lazyCzStr(feeProvided), "up-front cost", lazyCzStr(upFrontCost), "on-success", lazyCzStr(uncharged))
 	} else {
 		// If simulating, pretend the reqFee is what was provided since there might not have been a fee provided.
 		uncharged = reqFee.Sub(upFrontCost...)
 		ctx.Logger().Debug("On-success cost calculated using required fee (and up-front cost).",
-			"required fee", reqFee.String(), "up-front cost", upFrontCost.String(), "on-success", uncharged.String())
+			"required fee", lazyCzStr(reqFee), "up-front cost", lazyCzStr(upFrontCost), "on-success", lazyCzStr(uncharged))
 	}
 	deductFeesFrom, usedFeeGrant, err := GetFeePayerUsingFeeGrant(ctx, h.fk, feeTx, uncharged, feeTx.GetMsgs())
 	if err != nil {
@@ -891,11 +895,11 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 			ctx2 = internalsdk.WithFeeGrantInUse(ctx)
 		}
 		if err = PayFee(ctx2, h.bk, deductFeesFrom, uncharged); err != nil {
-			return ctx, cerrs.Wrapf(err, "could not collect fee remainder %q upon success", uncharged.String())
+			return ctx, cerrs.Wrapf(err, "could not collect remaining cost %q upon success", uncharged.String())
 		}
-		ctx.Logger().Debug("Collected on-success cost.", "on-success cost", uncharged.String())
+		ctx.Logger().Debug("Collected remaining cost.", "remaining cost", lazyCzStr(uncharged))
 	} else {
-		ctx.Logger().Debug("Skipping collection of on-success cost.", "on-success cost", uncharged.String(), "simulate", simulate)
+		ctx.Logger().Debug("Skipping collection of remaining cost.", "remaining cost", lazyCzStr(uncharged), "simulate", simulate)
 	}
 
 	var overage sdk.Coins
