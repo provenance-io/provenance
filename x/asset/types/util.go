@@ -9,7 +9,10 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // AnyToString extracts a string value from an Any type that contains a StringValue
@@ -76,4 +79,40 @@ func ValidateJSONSchema(schema map[string]interface{}, data []byte) error {
 	}
 
 	return nil
+}
+
+func NewDefaultMarker(denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
+	// Get the from address
+	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
+	if err != nil {
+		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid from address: %w", err)
+	}
+
+	// Create a new marker account
+	markerAddr := markertypes.MustGetMarkerAddress(denom.Denom)
+	marker := markertypes.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(markerAddr),
+		denom,
+		fromAcc,
+		[]markertypes.AccessGrant{
+			{
+				Address: fromAcc.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Admin,
+					markertypes.Access_Mint,
+					markertypes.Access_Burn,
+					markertypes.Access_Withdraw,
+					markertypes.Access_Transfer,
+				},
+			},
+		},
+		markertypes.StatusProposed,
+		markertypes.MarkerType_RestrictedCoin,
+		true,       // Supply fixed
+		false,      // Allow governance control
+		false,      // Don't allow forced transfer
+		[]string{}, // No required attributes
+	)
+
+	return marker, nil
 }
