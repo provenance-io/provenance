@@ -60,6 +60,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("attribute", s.user1Addr, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.attribute", s.user1Addr, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.empty", s.user1Addr, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.long", s.user1Addr, false))
 	nameData.Params.AllowUnrestrictedNames = false
 	nameData.Params.MaxNameLevels = 3
 	nameData.Params.MinSegmentLength = 3
@@ -539,10 +541,11 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		Value:         []byte("0123456789"),
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
+		ConcreteType:  "",
 	}
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
-	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"), nil)
+	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"), nil, "")
 	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
@@ -550,9 +553,9 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 
 	// Create multiple attributes for a address with same name, to test the delete counter
 	deleteCounterName := "deleted2"
-	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"), nil)
-	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"), nil)
-	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"), nil)
+	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"), nil, "")
+	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"), nil, "")
+	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"), nil, "")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, deleteCounterName, s.user1Addr, false), "name record should save successfully")
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr1, s.user1Addr), "should save successfully")
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr2, s.user1Addr), "should save successfully")
@@ -948,10 +951,11 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 		Value:         []byte("0123456789"),
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
+		ConcreteType:  "",
 	}
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
-	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"), nil)
+	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"), nil, "")
 	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
@@ -959,9 +963,9 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 
 	// Create multiple attributes for a address with same name, to test the delete counter
 	deleteCounterName := "deleted2"
-	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"), nil)
-	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"), nil)
-	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"), nil)
+	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"), nil, "")
+	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"), nil, "")
+	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"), nil, "")
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, deleteCounterName, s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr1, s.user1Addr), "should save successfully")
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr2, s.user1Addr), "should save successfully")
@@ -1050,31 +1054,31 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "four.expire.testing", s.user1Addr, false), "SetNameRecord four.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "five.expire.testing", s.user1Addr, false), "SetNameRecord five.expire.testing")
 
-	attr1 := types.NewAttribute("one.expire.testing", s.user1, types.AttributeType_String, []byte("test1"), nil)
+	attr1 := types.NewAttribute("one.expire.testing", s.user1, types.AttributeType_String, []byte("test1"), nil, "")
 	attr1.ExpirationDate = &past
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr1, s.user1Addr), "SetAttribute attr1")
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr1)), "store.Get attr1 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr1.Name, attr1.GetAddressBytes())), "store.Get attr1 AttributeNameAddrKeyPrefix")
 
-	attr2 := types.NewAttribute("two.expire.testing", s.user1, types.AttributeType_String, []byte("test2"), nil)
+	attr2 := types.NewAttribute("two.expire.testing", s.user1, types.AttributeType_String, []byte("test2"), nil, "")
 	attr2.ExpirationDate = &past
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr2, s.user1Addr), "SetAttribute attr2")
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr2)), "store.Get attr2 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes())), "store.Get attr2 AttributeNameAddrKeyPrefix")
 
-	attr3 := types.NewAttribute("three.expire.testing", s.user1, types.AttributeType_String, []byte("test3"), nil)
+	attr3 := types.NewAttribute("three.expire.testing", s.user1, types.AttributeType_String, []byte("test3"), nil, "")
 	attr3.ExpirationDate = &s.startBlockTime
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr3, s.user1Addr), "SetAttribute attr3")
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
 
-	attr4 := types.NewAttribute("four.expire.testing", s.user1, types.AttributeType_String, []byte("test4"), nil)
+	attr4 := types.NewAttribute("four.expire.testing", s.user1, types.AttributeType_String, []byte("test4"), nil, "")
 	attr4.ExpirationDate = &future
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr4, s.user1Addr), "SetAttribute attr4")
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr4)), "store.Get attr4 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
 
-	attr5 := types.NewAttribute("five.expire.testing", s.user1, types.AttributeType_String, []byte("test5"), nil)
+	attr5 := types.NewAttribute("five.expire.testing", s.user1, types.AttributeType_String, []byte("test5"), nil, "")
 	attr5.ExpirationDate = &future
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr5, s.user1Addr), "SetAttribute attr5")
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
@@ -1279,3 +1283,206 @@ func (s *KeeperTestSuite) TestSetAccountData() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
+	testCases := []struct {
+		name          string
+		attributeName string
+		attributeType types.AttributeType
+		ownerAddr     sdk.Address
+		value         []byte
+		concreteType  string
+		expectError   bool
+	}{
+		{
+			name:          "JSON attribute with concrete type",
+			attributeName: "example.attribute",
+			attributeType: types.AttributeType_JSON,
+			value:         []byte(`"123456"`),
+			concreteType:  "provenance.attributes.v1.TestJson",
+			ownerAddr:     s.user1Addr,
+			expectError:   false,
+		},
+		{
+			name:          "PROTO attribute with concrete type",
+			attributeName: "attribute",
+			attributeType: types.AttributeType_Proto,
+			ownerAddr:     s.user1Addr,
+			value:         []byte("2"), // Some proto encoded bytes
+			concreteType:  "provenance.attributes.v1.TestProto",
+			expectError:   false,
+		},
+		{
+			name:          "STRING attribute with concrete type",
+			attributeName: "example.attribute",
+			attributeType: types.AttributeType_String,
+			ownerAddr:     s.user1Addr,
+			value:         []byte("teststring"),
+			concreteType:  "provenance.attributes.v1.TestString",
+			expectError:   false,
+		},
+		{
+			name:          "Empty concrete type",
+			attributeName: "example.empty",
+			attributeType: types.AttributeType_JSON,
+			ownerAddr:     s.user1Addr,
+			value:         []byte("3"),
+			concreteType:  "",
+			expectError:   false,
+		},
+		// {
+		// 	name:          "Long type",
+		// 	attributeName: "example.long",
+		// 	attributeType: types.AttributeType_JSON,
+		// 	value:         []byte(`"123456"`),
+		// 	concreteType:  "provenance.attributes.v1.TestJson",
+		// 	expectError:   false,
+		// },
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+
+			defer func() {
+				if r := recover(); r != nil {
+					s.Fail(fmt.Sprintf("panic occurred: %v", r))
+				}
+			}()
+			attr := types.Attribute{
+				Name:          tc.attributeName,
+				AttributeType: tc.attributeType,
+				Value:         tc.value,
+				Address:       tc.ownerAddr.String(),
+				ConcreteType:  tc.concreteType,
+			}
+
+			err := s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
+			if tc.expectError {
+				s.Assert().Error(err)
+				return
+			}
+			s.Assert().NoError(err)
+			savedAttr, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr.String(), tc.attributeName)
+			if tc.expectError {
+				s.Assert().Error(err)
+				return
+			}
+			s.Assert().NoError(err)
+			s.Assert().Equal(tc.attributeName, savedAttr[0].Name)
+			s.Assert().Equal(tc.attributeType, savedAttr[0].AttributeType)
+			s.Assert().Equal(tc.value, savedAttr[0].Value)
+			s.Assert().Equal(s.user1Addr.String(), savedAttr[0].Address)
+			s.Assert().Equal(tc.concreteType, savedAttr[0].ConcreteType)
+
+		})
+	}
+}
+
+// func (s *KeeperTestSuite) TestUpdateAttributeConcreteType(t *testing.T) {
+
+// 	keeper := s.app.AttributeKeeper
+
+// 	addr := sdk.AccAddress([]byte("test_address_______"))
+
+// 	// Set initial attribute
+// 	initialAttr := types.Attribute{
+// 		Name:          "updateTest",
+// 		AttributeType: types.AttributeType_JSON,
+// 		Value:         []byte(`{"version":"1.0"}`),
+// 		Address:       addr.String(),
+// 		ConcreteType:  "/figure.provenance.attributes.v1.VersionOne",
+// 	}
+
+// 	err := keeper.SetAttribute(ctx, initialAttr)
+// 	require.NoError(t, err)
+
+// 	// Update just the concrete type
+// 	updatedAttr := types.Attribute{
+// 		Name:          "updateTest",
+// 		AttributeType: types.AttributeType_JSON,
+// 		Value:         []byte(`{"version":"1.0"}`),
+// 		Address:       addr.String(),
+// 		ConcreteType:  "/figure.provenance.attributes.v1.VersionTwo",
+// 	}
+
+// 	err = keeper.SetAttribute(ctx, updatedAttr)
+// 	require.NoError(t, err)
+
+// 	// Verify update
+// 	savedAttr, found := keeper.GetAttribute(ctx, addr, "updateTest")
+// 	require.True(t, found)
+// 	require.Equal(t, updatedAttr.Value, savedAttr.Value)
+// 	require.Equal(t, updatedAttr.ConcreteType, savedAttr.ConcreteType)
+
+// 	// Update value and remove concrete type
+// 	noTypeAttr := types.Attribute{
+// 		Name:          "updateTest",
+// 		AttributeType: types.AttributeType_JSON,
+// 		Value:         []byte(`{"version":"2.0"}`),
+// 		Address:       addr.String(),
+// 		ConcreteType:  "", // Empty concrete type
+// 	}
+
+// 	err = keeper.SetAttribute(ctx, noTypeAttr)
+// 	require.NoError(t, err)
+
+// 	// Verify update removed concrete type
+// 	savedAttr, found = keeper.GetAttribute(ctx, addr, "updateTest")
+// 	require.True(t, found)
+// 	require.Equal(t, noTypeAttr.Value, savedAttr.Value)
+// 	require.Empty(t, savedAttr.ConcreteType)
+// }
+
+// func TestValidateAttributeConcreteType(t *testing.T) {
+// 	testCases := []struct {
+// 		name         string
+// 		concreteType string
+// 		expectValid  bool
+// 	}{
+// 		{
+// 			name:         "Valid type URL",
+// 			concreteType: "/figure.provenance.attributes.v1.KnowYourCustomer",
+// 			expectValid:  true,
+// 		},
+// 		{
+// 			name:         "Empty concrete type",
+// 			concreteType: "",
+// 			expectValid:  true,
+// 		},
+// 		{
+// 			name:         "Maximum length",
+// 			concreteType: strings.Repeat("a", 200),
+// 			expectValid:  true,
+// 		},
+// 		{
+// 			name:         "Exceeds maximum length",
+// 			concreteType: strings.Repeat("a", 201),
+// 			expectValid:  false,
+// 		},
+// 		{
+// 			name:         "Valid characters",
+// 			concreteType: "/valid-type.with_special.chars-123/v1.Type",
+// 			expectValid:  true,
+// 		},
+// 	}
+
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			attr := types.Attribute{
+// 				Name:          "test",
+// 				AttributeType: types.AttributeType_JSON,
+// 				Value:         []byte(`{}`),
+// 				Address:       "cosmos1abcdefg",
+// 				ConcreteType:  tc.concreteType,
+// 			}
+
+// 			err := attr.Validate()
+// 			if tc.expectValid {
+// 				require.NoError(t, err)
+// 			} else {
+// 				require.Error(t, err)
+// 				require.Contains(t, err.Error(), "concrete_type")
+// 			}
+// 		})
+// 	}
+// }
