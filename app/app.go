@@ -351,6 +351,13 @@ func New(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
+	// We set the ABCI proposal handler here instead of using baseAppOptions because:
+	// 	1. We always want our custom TxSelector used, regardless of how app.New was called.
+	// 	2. I want to keep the standard mempool (currently no-op) defined in NewBaseApp.
+	abciPropHandler := baseapp.NewDefaultProposalHandler(bApp.Mempool(), bApp)
+	abciPropHandler.SetTxSelector(antewrapper.NewProvTxSelector())
+	bApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+	bApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
 
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
