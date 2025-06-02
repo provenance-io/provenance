@@ -140,10 +140,9 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 		NftId:        msg.Asset.Id,
 	}
 
-	ledgerClassId := fmt.Sprintf("ledgert_%s", msg.Asset.ClassId)
 	ledgerObj := ledger.Ledger{
 		Key:           ledgerKey,
-		LedgerClassId: ledgerClassId,
+		LedgerClassId: msg.Asset.ClassId,
 		StatusTypeId:  1, // Using 1 as the default status type
 	}
 
