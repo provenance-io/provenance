@@ -918,6 +918,8 @@ github.com/prometheus/procfs v0.3.0/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4O
 github.com/prometheus/procfs v0.6.0/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
 github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0learggepc=
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
+github.com/provenance-io/cosmos-sdk v0.50.13-pio-1-flat-fees-1 h1:HMMXGvJlOZbOPYPLpHfMEkhrJCugMCtA/c22UsTlxd8=
+github.com/provenance-io/cosmos-sdk v0.50.13-pio-1-flat-fees-1/go.mod h1:hrWEFMU1eoXqLJeE6VVESpJDQH67FS1nnMrQIjO2daw=
 github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1 h1:p+7pxHB0ukO2aow+M6uW9gHgeQl7YJyYGyMSKHZ5My8=
 github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1/go.mod h1:tObW9uxibh5Z22CtOaHVeTDotCSMyc/2B4MrYdaViBo=
 github.com/provenance-io/ibc-go/v8 v8.6.1-pio-1 h1:UxoldL0jEaRRPmyLEeac6TGdPY6GRlupw2yQr2xiYZU=
