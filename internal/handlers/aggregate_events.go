@@ -13,7 +13,6 @@ import (
 // anteEvents will be populated on failure and success
 // resultEvents will only be populated on success
 func AggregateEvents(anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event) {
-	// TODO[fees]: Ensure this is still doing what we want.
 	if len(resultEvents) == 0 { // tx failed...fix fee event to have the exact fee charged
 		var txFee string
 		var feeEventIndex, feeAttributeIndex int

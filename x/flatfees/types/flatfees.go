@@ -17,8 +17,8 @@ const (
 	// Due to the nature of these strings, its unlikely that there will be one that is much longer.
 	// To be on the safe side, I doubled that for this value.
 	MaxMsgTypeURLLen = 160
-	// DefaultFeeDefinitionDenom is the denomination that the msg fees will be defined in (before being converted) by default.
-	DefaultFeeDefinitionDenom = "usd" // TODO[fees]: Decide what this should actually be.
+	// DefaultFeeDefinitionDenom is the denomination that, by default, the flat fees will be defined in (before being converted).
+	DefaultFeeDefinitionDenom = "cusd"
 )
 
 // DefaultParams is the default parameter configuration for the flatfees module.
