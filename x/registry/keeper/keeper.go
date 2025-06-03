@@ -19,7 +19,7 @@ var _ RegistryKeeper = (*BaseRegistryKeeper)(nil)
 
 type RegistryKeeper interface {
 	CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey) error
-	CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles map[string]registry.RoleAddresses) error
+	CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles []registry.RolesEntry) error
 	GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
 	RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
 	HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error)
@@ -88,14 +88,20 @@ func (k BaseRegistryKeeper) CreateDefaultRegistry(ctx sdk.Context, authorityAddr
 	ownerAddrStr := authorityAddr.String()
 
 	// Set the default roles for originator and servicer.
-	roles := make(map[string]registry.RoleAddresses)
-	roles[registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String()] = registry.RoleAddresses{Addresses: []string{ownerAddrStr}}
-	roles[registry.RegistryRole_REGISTRY_ROLE_SERVICER.String()] = registry.RoleAddresses{Addresses: []string{ownerAddrStr}}
+	roles := make([]registry.RolesEntry, 2)
+	roles[0] = registry.RolesEntry{
+		Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+		Addresses: []string{ownerAddrStr},
+	}
+	roles[1] = registry.RolesEntry{
+		Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(),
+		Addresses: []string{ownerAddrStr},
+	}
 
 	return k.CreateRegistry(ctx, authorityAddr, key, roles)
 }
 
-func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles map[string]registry.RoleAddresses) error {
+func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles []registry.RolesEntry) error {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return err
@@ -157,15 +163,23 @@ func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddr
 	for i, a := range addr {
 		addrStr[i] = a.String()
 
-		// While we are here, check if the address is already in the role.
-		if slices.Contains(registryEntry.Roles[role].Addresses, a.String()) {
-			return fmt.Errorf("address already has role")
+		// Look through the registry to see if the address already has the role.
+		for _, roleEntry := range registryEntry.Roles {
+			if roleEntry.Role == role {
+				for _, roleAddr := range roleEntry.Addresses {
+					if roleAddr == a.String() {
+						return fmt.Errorf("address already has role")
+					}
+				}
+			}
 		}
 	}
 
-	addresses := registryEntry.Roles[role]
-	addresses.Addresses = append(addresses.Addresses, addrStr...)
-	registryEntry.Roles[role] = addresses
+	// Update the registry with the new role
+	registryEntry.Roles = append(registryEntry.Roles, registry.RolesEntry{
+		Role:      role,
+		Addresses: addrStr,
+	})
 
 	k.Registry.Set(ctx, *keyStr, registryEntry)
 
@@ -198,22 +212,39 @@ func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAdd
 	}
 
 	// Remove any address from the current slice that is in the addresses to revoke slice
-	addresses := registryEntry.Roles[role].Addresses
-	addresses = slices.DeleteFunc(addresses, func(s string) bool {
-		// Not really an optimial algo, but we're expecting there to mostly be on address to revoke at a time.
-		for _, a := range addr {
-			if a.String() == s {
-				return true
+	var updatedAddresses []string
+	for _, roleEntry := range registryEntry.Roles {
+		// Find the role entry that matches the role to revoke
+		if roleEntry.Role == role {
+			for _, roleAddr := range roleEntry.Addresses {
+				for _, addrToRevoke := range addr {
+					// If the address to revoke is the same as the role address, skip it
+					if roleAddr == addrToRevoke.String() {
+						continue
+					}
+
+					updatedAddresses = append(updatedAddresses, roleAddr)
+				}
 			}
+
+			break
+		}
+	}
+
+	// Delete the old permissioned addresses from the role entry
+	slices.DeleteFunc(registryEntry.Roles, func(s registry.RolesEntry) bool {
+		if s.Role == role {
+			return true
 		}
 
 		return false
 	})
 
-	// Update the registry with the new address grants
-	registryEntry.Roles[role] = registry.RoleAddresses{
-		Addresses: addresses,
-	}
+	// Add the new permissioned addresses to the role entry
+	registryEntry.Roles = append(registryEntry.Roles, registry.RolesEntry{
+		Role:      role,
+		Addresses: updatedAddresses,
+	})
 
 	// Save the updated registry entry
 	k.Registry.Set(ctx, *keyStr, registryEntry)
@@ -240,7 +271,18 @@ func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, 
 		return false, err
 	}
 
-	return slices.Contains(registryEntry.Roles[role].Addresses, address), nil
+	// Search to see if the address has the role
+	for _, roleEntry := range registryEntry.Roles {
+		if roleEntry.Role == role {
+			for _, roleAddr := range roleEntry.Addresses {
+				if roleAddr == address {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
 }
 
 // GetRegistry returns a registry entry for a given key. If the registry entry is not found, it returns nil, nil.

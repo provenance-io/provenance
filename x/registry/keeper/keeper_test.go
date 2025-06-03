@@ -75,8 +75,13 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := map[string]registry.RoleAddresses{
-		"admin": {
+	roles := []registry.RolesEntry{
+		{
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+			Addresses: []string{s.user1Addr.String()},
+		},
+		{
+			Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(),
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -96,8 +101,9 @@ func (s *KeeperTestSuite) TestGrantRole() {
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := map[string]registry.RoleAddresses{
-		"admin": {
+	roles := []registry.RolesEntry{
+		{
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -135,8 +141,9 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := map[string]registry.RoleAddresses{
-		"admin": {
+	roles := []registry.RolesEntry{
+		{
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
 			Addresses: []string{s.user1Addr.String(), s.user2Addr.String()},
 		},
 	}
@@ -169,8 +176,9 @@ func (s *KeeperTestSuite) TestHasRole() {
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := map[string]registry.RoleAddresses{
-		"admin": {
+	roles := []registry.RolesEntry{
+		{
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -180,12 +188,12 @@ func (s *KeeperTestSuite) TestHasRole() {
 	s.Require().NoError(err)
 
 	// Test has role
-	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, "admin", s.user1Addr.String())
+	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, "REGISTRY_ROLE_ORIGINATOR", s.user1Addr.String())
 	s.Require().NoError(err)
 	s.Require().True(hasRole)
 
 	// Test doesn't have role
-	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, key, "admin", s.user2Addr.String())
+	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, key, "REGISTRY_ROLE_ORIGINATOR", s.user2Addr.String())
 	s.Require().NoError(err)
 	s.Require().False(hasRole)
 
@@ -204,8 +212,9 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := map[string]registry.RoleAddresses{
-		"admin": {
+	roles := []registry.RolesEntry{
+		{
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -235,8 +244,9 @@ func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := map[string]registry.RoleAddresses{
-		"admin": {
+	roles := []registry.RolesEntry{
+		{
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
