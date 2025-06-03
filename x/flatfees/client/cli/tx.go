@@ -19,11 +19,6 @@ import (
 
 // Flag names and values
 const (
-	FlagMinFee    = "additional-fee"
-	FlagMsgType   = "msg-type"
-	FlagRecipient = "recipient"
-	FlagBips      = "bips"
-
 	FlagSet   = "set"
 	FlagUnset = "unset"
 )

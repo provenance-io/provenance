@@ -356,6 +356,52 @@ func TestMsgFee_Validate(t *testing.T) {
 	}
 }
 
+func TestValidateMsgTypeURL(t *testing.T) {
+	tests := []struct {
+		name       string
+		msgTypeURL string
+		expErr     string
+	}{
+		{
+			name:       "empty",
+			msgTypeURL: "",
+			expErr:     "msg type url cannot be empty",
+		},
+		{
+			name:       "one char",
+			msgTypeURL: "x",
+		},
+		{
+			name:       "80 chars",
+			msgTypeURL: "/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount",
+		},
+		{
+			name:       "max minus one",
+			msgTypeURL: "/" + strings.Repeat("v", MaxMsgTypeURLLen-2),
+		},
+		{
+			name:       "max",
+			msgTypeURL: "/" + strings.Repeat("d", MaxMsgTypeURLLen-1),
+		},
+		{
+			name:       "max plus one",
+			msgTypeURL: "/" + strings.Repeat("d", MaxMsgTypeURLLen),
+			expErr:     "msg type url \"/dddd...ddddd\" length (161) exceeds max length (160)",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateMsgTypeURL(tc.msgTypeURL)
+			}
+			require.NotPanics(t, testFunc, "ValidateMsgTypeURL(%q)", tc.msgTypeURL)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateMsgTypeURL(%q) error", tc.msgTypeURL)
+		})
+	}
+}
+
 func TestConversionFactor_Validate(t *testing.T) {
 	coin := func(amt int64, denom string) sdk.Coin {
 		return sdk.Coin{

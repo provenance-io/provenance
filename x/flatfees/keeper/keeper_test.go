@@ -398,216 +398,6 @@ func (s *KeeperTestSuite) TestKeeper_RemoveMsgFee() {
 	}
 }
 
-func (s *KeeperTestSuite) TestKeeper_ExpandMsgs() {
-	// asAnyWithCache wraps the provided msg in an Any such that it's properly cached for later retrieval.
-	asAnyWithCache := func(msg proto.Message) *codectypes.Any {
-		rv, err := codectypes.NewAnyWithValue(msg)
-		s.Require().NoError(err, "NewAnyWithValue(%T)", msg)
-		return rv
-	}
-	// asAnyNoCache wraps the provided msg in an Any such that it doesn't have a cached value.
-	asAnyNoCache := func(msg proto.Message) *codectypes.Any {
-		rv := &codectypes.Any{TypeUrl: sdk.MsgTypeURL(msg)}
-		if msg2, ok := msg.(protov2.Message); ok {
-			opts := protov2.MarshalOptions{Deterministic: true}
-			var err error
-			rv.Value, err = opts.Marshal(msg2)
-			s.Require().NoError(err, "protov2 Marshal(%T)", msg)
-		} else {
-			var err error
-			rv.Value, err = proto.Marshal(msg)
-			s.Require().NoError(err, "proto.Marshal(%T)", msg)
-		}
-		return rv
-	}
-	// anys is a shorthand way to create a slice of Any entries.
-	anys := func(vals ...*codectypes.Any) []*codectypes.Any {
-		return vals
-	}
-	// nestedProp creates a MsgSubmitProposal with nested MsgSubmitProposal to the provided depth.
-	// The bottom-most one will have the provided endMsgs.
-	// A depth of 1 means a MsgSubmitProposal with the provided endMsgs.
-	// A depth of 2 means a MsgSubmitProposal with a MsgSubmitProposal with the provided endMsgs.
-	// The Anys are packed properly (with the cached value).
-	var nestedProp func(depth int, endMsgs ...*codectypes.Any) *govv1.MsgSubmitProposal
-	nestedProp = func(depth int, endMsgs ...*codectypes.Any) *govv1.MsgSubmitProposal {
-		msg := &govv1.MsgSubmitProposal{}
-		if depth > 1 {
-			msg.Messages = []*codectypes.Any{asAnyWithCache(nestedProp(depth-1, endMsgs...))}
-		} else {
-			msg.Messages = endMsgs
-		}
-		return msg
-	}
-
-	tests := []struct {
-		name       string
-		unpackErrs []string
-		msgs       []sdk.Msg
-		expMsgs    []sdk.Msg
-		expErr     string
-	}{
-		{
-			name:    "nil",
-			msgs:    nil,
-			expMsgs: []sdk.Msg{},
-		},
-		{
-			name:    "empty",
-			msgs:    []sdk.Msg{},
-			expMsgs: []sdk.Msg{},
-		},
-		{
-			name:    "one msg: nothing to expand",
-			msgs:    []sdk.Msg{&govv1.MsgVote{}},
-			expMsgs: []sdk.Msg{&govv1.MsgVote{}},
-		},
-		{
-			name: "one msg: authz.MsgExec",
-			msgs: []sdk.Msg{&authztypes.MsgExec{
-				Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgVote{})),
-			}},
-			expMsgs: []sdk.Msg{&authztypes.MsgExec{}, &govv1.MsgVote{}, &govv1.MsgVote{}},
-		},
-		{
-			name: "one msg: govv1.MsgSubmitProposal",
-			msgs: []sdk.Msg{&govv1.MsgSubmitProposal{
-				Messages: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgVote{})),
-			}},
-			expMsgs: []sdk.Msg{&govv1.MsgSubmitProposal{}, &govv1.MsgVote{}, &govv1.MsgVote{}},
-		},
-		{
-			name: "one msg: triggertypes.MsgCreateTriggerRequest",
-			msgs: []sdk.Msg{&triggertypes.MsgCreateTriggerRequest{
-				Actions: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgDeposit{})),
-			}},
-			expMsgs: []sdk.Msg{&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgVote{}, &govv1.MsgDeposit{}},
-		},
-		{
-			name: "one msg: just under max depth",
-			msgs: []sdk.Msg{nestedProp(codectypes.MaxUnpackAnyRecursionDepth, asAnyWithCache(&govv1.MsgVote{}))},
-			expMsgs: []sdk.Msg{
-				&govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{},
-				&govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{},
-				&govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{},
-				&govv1.MsgSubmitProposal{}, &govv1.MsgVote{},
-			},
-		},
-		{
-			name:   "one msg: just over max depth",
-			msgs:   []sdk.Msg{nestedProp(codectypes.MaxUnpackAnyRecursionDepth+1, asAnyWithCache(&govv1.MsgVote{}))},
-			expErr: "could not expand sub-messages: max depth exceeded",
-		},
-		{
-			name: "one msg: expands: no cached value",
-			msgs: []sdk.Msg{&govv1.MsgSubmitProposal{
-				Messages: anys(asAnyNoCache(&govv1.MsgCancelProposal{}), asAnyWithCache(&govv1.MsgVote{})),
-			}},
-			expMsgs: []sdk.Msg{&govv1.MsgSubmitProposal{}, &govv1.MsgCancelProposal{}, &govv1.MsgVote{}},
-		},
-		// Missing test case: "one msg: expands: cached value not Msg".
-		// As of writing this, the sdk.Msg type is an alise for proto.Message.
-		// Since an any can only wrap a proto.Message, there's no way to put a non Msg in it.
-		{
-			name:       "one msg: expands: error unpacking",
-			unpackErrs: []string{"not a real error"},
-			msgs:       []sdk.Msg{&govv1.MsgSubmitProposal{Messages: anys(asAnyNoCache(&govv1.MsgVote{}))}},
-			expErr: "could not extract sub-messages from *v1.MsgSubmitProposal: " +
-				"could not unpack *types.Any with a \"/cosmos.gov.v1.MsgVote\": not a real error",
-		},
-		{
-			name:       "error from two deep",
-			unpackErrs: []string{"not a real error"},
-			msgs: []sdk.Msg{&govv1.MsgSubmitProposal{
-				Messages: anys(asAnyWithCache(&govv1.MsgSubmitProposal{Messages: anys(asAnyNoCache(&govv1.MsgVote{}))})),
-			}},
-			expErr: "could not extract sub-messages from *v1.MsgSubmitProposal: " +
-				"could not unpack *types.Any with a \"/cosmos.gov.v1.MsgVote\": not a real error",
-		},
-		{
-			name:    "two msgs: neither expand",
-			msgs:    []sdk.Msg{&govv1.MsgVote{}, &govv1.MsgDeposit{}},
-			expMsgs: []sdk.Msg{&govv1.MsgVote{}, &govv1.MsgDeposit{}},
-		},
-		{
-			name: "two msgs: normal, expand",
-			msgs: []sdk.Msg{
-				&govv1.MsgVote{},
-				&triggertypes.MsgCreateTriggerRequest{
-					Actions: anys(asAnyWithCache(&govv1.MsgUpdateParams{}), asAnyWithCache(&govv1.MsgDeposit{})),
-				},
-			},
-			expMsgs: []sdk.Msg{
-				&govv1.MsgVote{},
-				&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgUpdateParams{}, &govv1.MsgDeposit{},
-			},
-		},
-		{
-			name: "two msgs: expand, normal",
-			msgs: []sdk.Msg{
-				&authztypes.MsgExec{Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgVote{}))},
-				&govv1.MsgDeposit{},
-			},
-			expMsgs: []sdk.Msg{
-				&authztypes.MsgExec{},
-				&govv1.MsgVote{},
-				&govv1.MsgVote{},
-				&govv1.MsgDeposit{},
-			},
-		},
-		{
-			name: "three msgs: all expand",
-			msgs: []sdk.Msg{
-				&authztypes.MsgExec{Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgCancelProposal{}))},
-				&govv1.MsgSubmitProposal{Messages: anys(asAnyWithCache(&govv1.MsgVote{}))},
-				&triggertypes.MsgCreateTriggerRequest{
-					Actions: anys(asAnyWithCache(&govv1.MsgUpdateParams{}), asAnyWithCache(&govv1.MsgDeposit{})),
-				},
-			},
-			expMsgs: []sdk.Msg{
-				&authztypes.MsgExec{}, &govv1.MsgVote{}, &govv1.MsgCancelProposal{},
-				&govv1.MsgSubmitProposal{}, &govv1.MsgVote{},
-				&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgUpdateParams{}, &govv1.MsgDeposit{},
-			},
-		},
-		{
-			name: "five msgs: one expands",
-			msgs: []sdk.Msg{
-				&govv1.MsgVote{}, &govv1.MsgDeposit{}, &govv1.MsgUpdateParams{},
-				&govv1.MsgSubmitProposal{Messages: anys(asAnyWithCache(&govv1.MsgCancelProposal{}))},
-				&govv1.MsgExecLegacyContent{},
-			},
-			expMsgs: []sdk.Msg{
-				&govv1.MsgVote{}, &govv1.MsgDeposit{}, &govv1.MsgUpdateParams{},
-				&govv1.MsgSubmitProposal{}, &govv1.MsgCancelProposal{},
-				&govv1.MsgExecLegacyContent{},
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			kpr := s.kpr
-			if len(tc.unpackErrs) > 0 {
-				cdc := mocks.NewMockCodec(kpr.GetCodec()).WithUnpackAnyErrs(tc.unpackErrs...)
-				kpr = kpr.WithCodec(cdc)
-			}
-
-			var actMsgs []sdk.Msg
-			var err error
-			testFunc := func() {
-				actMsgs, err = kpr.ExpandMsgs(tc.msgs)
-			}
-			s.Require().NotPanics(testFunc, "ExpandMsgs(...)")
-			assertions.AssertErrorValue(s.T(), err, tc.expErr, "ExpandMsgs(...) error")
-			// All we really care about are the msg type urls, so let's just compare those.
-			expURLs := msgTypeURLs(tc.expMsgs)
-			actURLs := msgTypeURLs(actMsgs)
-			s.Assert().Equal(expURLs, actURLs, "ExpandMsgs(...) result")
-		})
-	}
-}
-
 func (s *KeeperTestSuite) TestKeeper_CalculateMsgCost() {
 	defCoin := func(amount int64) sdk.Coin {
 		return sdk.NewInt64Coin("banana", amount)
@@ -972,6 +762,216 @@ func (s *KeeperTestSuite) TestKeeper_CalculateMsgCost() {
 			assertions.AssertErrorValue(s.T(), err, tc.expErr, "CalculateMsgCost(...) error")
 			s.Assert().Equal(tc.expUpFront.String(), actUpFront.String(), "up-front cost")
 			s.Assert().Equal(tc.expOnSuccess.String(), actOnSuccess.String(), "on success cost")
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestKeeper_ExpandMsgs() {
+	// asAnyWithCache wraps the provided msg in an Any such that it's properly cached for later retrieval.
+	asAnyWithCache := func(msg proto.Message) *codectypes.Any {
+		rv, err := codectypes.NewAnyWithValue(msg)
+		s.Require().NoError(err, "NewAnyWithValue(%T)", msg)
+		return rv
+	}
+	// asAnyNoCache wraps the provided msg in an Any such that it doesn't have a cached value.
+	asAnyNoCache := func(msg proto.Message) *codectypes.Any {
+		rv := &codectypes.Any{TypeUrl: sdk.MsgTypeURL(msg)}
+		if msg2, ok := msg.(protov2.Message); ok {
+			opts := protov2.MarshalOptions{Deterministic: true}
+			var err error
+			rv.Value, err = opts.Marshal(msg2)
+			s.Require().NoError(err, "protov2 Marshal(%T)", msg)
+		} else {
+			var err error
+			rv.Value, err = proto.Marshal(msg)
+			s.Require().NoError(err, "proto.Marshal(%T)", msg)
+		}
+		return rv
+	}
+	// anys is a shorthand way to create a slice of Any entries.
+	anys := func(vals ...*codectypes.Any) []*codectypes.Any {
+		return vals
+	}
+	// nestedProp creates a MsgSubmitProposal with nested MsgSubmitProposal to the provided depth.
+	// The bottom-most one will have the provided endMsgs.
+	// A depth of 1 means a MsgSubmitProposal with the provided endMsgs.
+	// A depth of 2 means a MsgSubmitProposal with a MsgSubmitProposal with the provided endMsgs.
+	// The Anys are packed properly (with the cached value).
+	var nestedProp func(depth int, endMsgs ...*codectypes.Any) *govv1.MsgSubmitProposal
+	nestedProp = func(depth int, endMsgs ...*codectypes.Any) *govv1.MsgSubmitProposal {
+		msg := &govv1.MsgSubmitProposal{}
+		if depth > 1 {
+			msg.Messages = []*codectypes.Any{asAnyWithCache(nestedProp(depth-1, endMsgs...))}
+		} else {
+			msg.Messages = endMsgs
+		}
+		return msg
+	}
+
+	tests := []struct {
+		name       string
+		unpackErrs []string
+		msgs       []sdk.Msg
+		expMsgs    []sdk.Msg
+		expErr     string
+	}{
+		{
+			name:    "nil",
+			msgs:    nil,
+			expMsgs: []sdk.Msg{},
+		},
+		{
+			name:    "empty",
+			msgs:    []sdk.Msg{},
+			expMsgs: []sdk.Msg{},
+		},
+		{
+			name:    "one msg: nothing to expand",
+			msgs:    []sdk.Msg{&govv1.MsgVote{}},
+			expMsgs: []sdk.Msg{&govv1.MsgVote{}},
+		},
+		{
+			name: "one msg: authz.MsgExec",
+			msgs: []sdk.Msg{&authztypes.MsgExec{
+				Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgVote{})),
+			}},
+			expMsgs: []sdk.Msg{&authztypes.MsgExec{}, &govv1.MsgVote{}, &govv1.MsgVote{}},
+		},
+		{
+			name: "one msg: govv1.MsgSubmitProposal",
+			msgs: []sdk.Msg{&govv1.MsgSubmitProposal{
+				Messages: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgVote{})),
+			}},
+			expMsgs: []sdk.Msg{&govv1.MsgSubmitProposal{}, &govv1.MsgVote{}, &govv1.MsgVote{}},
+		},
+		{
+			name: "one msg: triggertypes.MsgCreateTriggerRequest",
+			msgs: []sdk.Msg{&triggertypes.MsgCreateTriggerRequest{
+				Actions: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgDeposit{})),
+			}},
+			expMsgs: []sdk.Msg{&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgVote{}, &govv1.MsgDeposit{}},
+		},
+		{
+			name: "one msg: just under max depth",
+			msgs: []sdk.Msg{nestedProp(codectypes.MaxUnpackAnyRecursionDepth, asAnyWithCache(&govv1.MsgVote{}))},
+			expMsgs: []sdk.Msg{
+				&govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{},
+				&govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{},
+				&govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{}, &govv1.MsgSubmitProposal{},
+				&govv1.MsgSubmitProposal{}, &govv1.MsgVote{},
+			},
+		},
+		{
+			name:   "one msg: just over max depth",
+			msgs:   []sdk.Msg{nestedProp(codectypes.MaxUnpackAnyRecursionDepth+1, asAnyWithCache(&govv1.MsgVote{}))},
+			expErr: "could not expand sub-messages: max depth exceeded",
+		},
+		{
+			name: "one msg: expands: no cached value",
+			msgs: []sdk.Msg{&govv1.MsgSubmitProposal{
+				Messages: anys(asAnyNoCache(&govv1.MsgCancelProposal{}), asAnyWithCache(&govv1.MsgVote{})),
+			}},
+			expMsgs: []sdk.Msg{&govv1.MsgSubmitProposal{}, &govv1.MsgCancelProposal{}, &govv1.MsgVote{}},
+		},
+		// Missing test case: "one msg: expands: cached value not Msg".
+		// As of writing this, the sdk.Msg type is an alise for proto.Message.
+		// Since an any can only wrap a proto.Message, there's no way to put a non Msg in it.
+		{
+			name:       "one msg: expands: error unpacking",
+			unpackErrs: []string{"not a real error"},
+			msgs:       []sdk.Msg{&govv1.MsgSubmitProposal{Messages: anys(asAnyNoCache(&govv1.MsgVote{}))}},
+			expErr: "could not extract sub-messages from *v1.MsgSubmitProposal: " +
+				"could not unpack *types.Any with a \"/cosmos.gov.v1.MsgVote\": not a real error",
+		},
+		{
+			name:       "error from two deep",
+			unpackErrs: []string{"not a real error"},
+			msgs: []sdk.Msg{&govv1.MsgSubmitProposal{
+				Messages: anys(asAnyWithCache(&govv1.MsgSubmitProposal{Messages: anys(asAnyNoCache(&govv1.MsgVote{}))})),
+			}},
+			expErr: "could not extract sub-messages from *v1.MsgSubmitProposal: " +
+				"could not unpack *types.Any with a \"/cosmos.gov.v1.MsgVote\": not a real error",
+		},
+		{
+			name:    "two msgs: neither expand",
+			msgs:    []sdk.Msg{&govv1.MsgVote{}, &govv1.MsgDeposit{}},
+			expMsgs: []sdk.Msg{&govv1.MsgVote{}, &govv1.MsgDeposit{}},
+		},
+		{
+			name: "two msgs: normal, expand",
+			msgs: []sdk.Msg{
+				&govv1.MsgVote{},
+				&triggertypes.MsgCreateTriggerRequest{
+					Actions: anys(asAnyWithCache(&govv1.MsgUpdateParams{}), asAnyWithCache(&govv1.MsgDeposit{})),
+				},
+			},
+			expMsgs: []sdk.Msg{
+				&govv1.MsgVote{},
+				&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgUpdateParams{}, &govv1.MsgDeposit{},
+			},
+		},
+		{
+			name: "two msgs: expand, normal",
+			msgs: []sdk.Msg{
+				&authztypes.MsgExec{Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgVote{}))},
+				&govv1.MsgDeposit{},
+			},
+			expMsgs: []sdk.Msg{
+				&authztypes.MsgExec{},
+				&govv1.MsgVote{},
+				&govv1.MsgVote{},
+				&govv1.MsgDeposit{},
+			},
+		},
+		{
+			name: "three msgs: all expand",
+			msgs: []sdk.Msg{
+				&authztypes.MsgExec{Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgCancelProposal{}))},
+				&govv1.MsgSubmitProposal{Messages: anys(asAnyWithCache(&govv1.MsgVote{}))},
+				&triggertypes.MsgCreateTriggerRequest{
+					Actions: anys(asAnyWithCache(&govv1.MsgUpdateParams{}), asAnyWithCache(&govv1.MsgDeposit{})),
+				},
+			},
+			expMsgs: []sdk.Msg{
+				&authztypes.MsgExec{}, &govv1.MsgVote{}, &govv1.MsgCancelProposal{},
+				&govv1.MsgSubmitProposal{}, &govv1.MsgVote{},
+				&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgUpdateParams{}, &govv1.MsgDeposit{},
+			},
+		},
+		{
+			name: "five msgs: one expands",
+			msgs: []sdk.Msg{
+				&govv1.MsgVote{}, &govv1.MsgDeposit{}, &govv1.MsgUpdateParams{},
+				&govv1.MsgSubmitProposal{Messages: anys(asAnyWithCache(&govv1.MsgCancelProposal{}))},
+				&govv1.MsgExecLegacyContent{},
+			},
+			expMsgs: []sdk.Msg{
+				&govv1.MsgVote{}, &govv1.MsgDeposit{}, &govv1.MsgUpdateParams{},
+				&govv1.MsgSubmitProposal{}, &govv1.MsgCancelProposal{},
+				&govv1.MsgExecLegacyContent{},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			kpr := s.kpr
+			if len(tc.unpackErrs) > 0 {
+				cdc := mocks.NewMockCodec(kpr.GetCodec()).WithUnpackAnyErrs(tc.unpackErrs...)
+				kpr = kpr.WithCodec(cdc)
+			}
+
+			var actMsgs []sdk.Msg
+			var err error
+			testFunc := func() {
+				actMsgs, err = kpr.ExpandMsgs(tc.msgs)
+			}
+			s.Require().NotPanics(testFunc, "ExpandMsgs(...)")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "ExpandMsgs(...) error")
+			// All we really care about are the msg type urls, so let's just compare those.
+			expURLs := msgTypeURLs(tc.expMsgs)
+			actURLs := msgTypeURLs(actMsgs)
+			s.Assert().Equal(expURLs, actURLs, "ExpandMsgs(...) result")
 		})
 	}
 }

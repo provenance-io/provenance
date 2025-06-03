@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -12,8 +13,11 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -590,6 +594,134 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		assert.Equal(t, "7600hotdog,401000stake", addr2AfterBalance, "addr2AfterBalance")
 		assert.Equal(t, "260hotdog", addr3AfterBalance, "addr3AfterBalance")
 	})
+}
+
+// MockFlatFeesKeeper is a mock flat-fees keeper for use in a flat-fee gas meter.
+type MockFlatFeesKeeper struct {
+	CalculateMsgCostArgs []string
+}
+
+func NewMockFlatFeesKeeper() *MockFlatFeesKeeper {
+	return &MockFlatFeesKeeper{}
+}
+
+func (k *MockFlatFeesKeeper) CalculateMsgCost(ctx sdk.Context, msgs ...sdk.Msg) (upFront sdk.Coins, onSuccess sdk.Coins, err error) {
+	for _, msg := range msgs {
+		k.CalculateMsgCostArgs = append(k.CalculateMsgCostArgs, sdk.MsgTypeURL(msg))
+	}
+	return sdk.Coins{sdk.NewInt64Coin("acoin", 5)}, sdk.Coins{sdk.NewInt64Coin("bcoin", 7)}, nil
+}
+
+func (k *MockFlatFeesKeeper) ExpandMsgs(msgs []sdk.Msg) ([]sdk.Msg, error) {
+	return msgs, nil
+}
+
+func TestHandlersConsumeMsgs(t *testing.T) {
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom) // Set denom as stake.
+	priv, _, addr1 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000))
+	app := piosimapp.SetupWithGenesisAccounts(t, "flatfee-testing",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
+	)
+	encCfg := app.GetEncodingConfig()
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "flatfee-testing"})
+	require.NoError(t, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
+
+	flatFeesParams := flatfeestypes.Params{
+		DefaultCost: sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(TestGasLimit)),
+		ConversionFactor: flatfeestypes.ConversionFactor{
+			BaseAmount:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			ConvertedAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+		},
+	}
+	require.NoError(t, app.FlatFeesKeeper.SetParams(ctx, flatFeesParams), "FlatFeesKeeper.SetParams(%s)", flatFeesParams)
+
+	// expectedExtraMsgsCost is the sum of the two coins returned from the mock CalculateMsgCost method.
+	expExtraMsgsCostStr := "5acoin,7bcoin"
+
+	// These are all the Msg types that are registered in the interface registry (as a Msg) but don't have a handler.
+	expNoHandlers := []string{
+		"/cosmwasm.wasm.v1.MsgIBCCloseChannel",
+		"/cosmwasm.wasm.v1.MsgIBCSend",
+		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount",
+		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTx",
+		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams",
+		"/provenance.metadata.v1.MsgP8eMemorializeContractRequest",
+		"/provenance.metadata.v1.MsgWriteP8eContractSpecRequest",
+		"/provenance.msgfees.v1.MsgAddMsgFeeProposalRequest",
+		"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest",
+		"/provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest",
+		"/provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest",
+		"/provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest",
+		"/provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest",
+		"/provenance.oracle.v1.QueryOracleRequest",
+		"/provenance.oracle.v1.QueryOracleResponse",
+	}
+	slices.Sort(expNoHandlers)
+	var actNoHandlers []string
+
+	allMsgTypeURLs := encCfg.InterfaceRegistry.ListImplementations("cosmos.base.v1beta1.Msg")
+	slices.Sort(allMsgTypeURLs)
+
+	for _, msgTypeURL := range allMsgTypeURLs {
+		t.Run(strings.TrimPrefix(msgTypeURL, "/"), func(t *testing.T) {
+			handler := app.MsgServiceRouter().HandlerByTypeURL(msgTypeURL)
+			// There's a few Msg types that don't have handlers (e.g. for removed endpoints).
+			// There's nothing in here to do for those, so just note and skip them.
+			if handler == nil {
+				actNoHandlers = append(actNoHandlers, msgTypeURL)
+				t.Skipf("No handler found for msgTypeURL %q", msgTypeURL)
+			}
+
+			// We're trying to test that there's a call to ConsumeMsg in the handler so that
+			// we know that any msgs not directly in a tx (e.g. executed by a WASM contract) are recorded
+			// That way, we can make sure they're paid for (in the post-handler).
+			// When ConsumeMsg is called with a new msg, it adds an entry to the private extraMsgs field.
+			// We can't get at that directly, but we can call .Finalize(), which will call the flat-fees
+			// keeper's CalculateMsgCost method with each entry of extraMsgs. Further, after .Finalize(),
+			// there should be an extra msgs cost in the gas meter too.
+
+			ffk := NewMockFlatFeesKeeper()
+			gm := antewrapper.NewFlatFeeGasMeter(storetypes.NewInfiniteGasMeter(), log.NewNopLogger(), ffk)
+			ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "flatfee-testing"}).WithGasMeter(gm)
+
+			msg, err := encCfg.InterfaceRegistry.Resolve(msgTypeURL)
+			require.NoError(t, err, "InterfaceRegistry.Resolve(%q)", msgTypeURL)
+
+			// We don't actually care about the responses from the handler, just that it has been invoked.
+			// The msg is a zero-value anyway, so this would probably have an error, and possibly panic.
+			// But the call to ConsumeMsg should happen before anything has a chance to break in there.
+			_, _ = safeRunHandler(handler, ctx, msg)
+
+			// ConsumeMsg should also add an entry to the private msgTypeURLs field. The MsgCountsString result
+			// is based on just the content of that field, so we can use that to check here too.
+			msgCountsSt := gm.MsgCountsString()
+			assert.Equal(t, msgTypeURL, msgCountsSt, "gm.MsgCountsString()")
+
+			err = gm.Finalize(ctx)
+			require.NoError(t, err, "gm.Finalize()")
+
+			extraMsgCost := gm.GetExtraMsgsCost()
+			assert.Equal(t, expExtraMsgsCostStr, extraMsgCost.String(), "gm.GetExtraMsgsCost()")
+			assert.Equal(t, []string{msgTypeURL}, ffk.CalculateMsgCostArgs, "args provided to CalculateMsgCost")
+		})
+	}
+
+	t.Run("msgTypeURLs without handlers", func(t *testing.T) {
+		assert.Equal(t, expNoHandlers, actNoHandlers, "msgTypeURLs without a handler")
+	})
+}
+
+// safeRunHandler runs the provided handler with the provided ctx and msg and converts panics to an error.
+func safeRunHandler(handler baseapp.MsgServiceHandler, ctx sdk.Context, msg sdk.Msg) (res *sdk.Result, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic (recovered): %v", r)
+		}
+	}()
+	return handler(ctx, msg)
 }
 
 func signAndGenTx(
