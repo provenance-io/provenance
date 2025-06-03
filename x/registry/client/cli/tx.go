@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -65,21 +67,32 @@ func CmdRegisterNFT() *cobra.Command {
 // CmdGrantRole returns the command to grant a role
 func CmdGrantRole() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant-role [key] [role] [addresses]",
+		Use:   "grant-role [asset_class_id] [nft_id] [role] [addresses]",
 		Short: "Grant a role to addresses",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			key := registry.RegistryKey{
+				AssetClassId: args[0],
+				NftId:        args[1],
+			}
+
+			// convert arg[2] to a registry.RegistryRole enum value
+			role, ok := registry.RegistryRole_value[args[2]]
+			if !ok {
+				return fmt.Errorf("invalid role: %s", args[2])
+			}
+
 			// TODO: Parse key, role and addresses from args
 			msg := registry.MsgGrantRole{
 				Authority: clientCtx.GetFromAddress().String(),
-				Key:       nil, // Need to parse key from args[0]
-				Role:      0,   // Need to parse role from args[1]
-				Addresses: nil, // Need to parse addresses from args[2]
+				Key:       &key,
+				Role:      registry.RegistryRole(role),
+				Addresses: args[3:],
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
@@ -93,21 +106,32 @@ func CmdGrantRole() *cobra.Command {
 // CmdRevokeRole returns the command to revoke a role
 func CmdRevokeRole() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke-role [key] [role] [addresses]",
+		Use:   "revoke-role [asset_class_id] [nft_id] [role] [addresses]",
 		Short: "Revoke a role from addresses",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			key := registry.RegistryKey{
+				AssetClassId: args[0],
+				NftId:        args[1],
+			}
+
+			// convert arg[2] to a registry.RegistryRole enum value
+			role, ok := registry.RegistryRole_value[args[2]]
+			if !ok {
+				return fmt.Errorf("invalid role: %s", args[2])
+			}
+
 			// TODO: Parse key, role and addresses from args
 			msg := registry.MsgRevokeRole{
 				Authority: clientCtx.GetFromAddress().String(),
-				Key:       nil, // Need to parse key from args[0]
-				Role:      0,   // Need to parse role from args[1]
-				Addresses: nil, // Need to parse addresses from args[2]
+				Key:       &key,
+				Role:      registry.RegistryRole(role),
+				Addresses: args[3:],
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
@@ -121,19 +145,24 @@ func CmdRevokeRole() *cobra.Command {
 // CmdUnregisterNFT returns the command to unregister an NFT
 func CmdUnregisterNFT() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unregister-nft [key]",
+		Use:   "unregister-nft [asset_class_id] [nft_id]",
 		Short: "Unregister an NFT",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			key := registry.RegistryKey{
+				AssetClassId: args[0],
+				NftId:        args[1],
+			}
+
 			// TODO: Parse key from args
 			msg := registry.MsgUnregisterNFT{
 				Authority: clientCtx.GetFromAddress().String(),
-				Key:       nil, // Need to parse key from args[0]
+				Key:       &key,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
