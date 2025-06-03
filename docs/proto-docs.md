@@ -521,7 +521,6 @@
     - [MsgGrantRole](#provenance-registry-v1-MsgGrantRole)
     - [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse)
     - [MsgRegisterNFT](#provenance-registry-v1-MsgRegisterNFT)
-    - [MsgRegisterNFT.RolesEntry](#provenance-registry-v1-MsgRegisterNFT-RolesEntry)
     - [MsgRegisterNFTResponse](#provenance-registry-v1-MsgRegisterNFTResponse)
     - [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole)
     - [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse)
@@ -541,9 +540,8 @@
 - [provenance/registry/v1/registry.proto](#provenance_registry_v1_registry-proto)
     - [GenesisState](#provenance-registry-v1-GenesisState)
     - [RegistryEntry](#provenance-registry-v1-RegistryEntry)
-    - [RegistryEntry.RolesEntry](#provenance-registry-v1-RegistryEntry-RolesEntry)
     - [RegistryKey](#provenance-registry-v1-RegistryKey)
-    - [RoleAddresses](#provenance-registry-v1-RoleAddresses)
+    - [RolesEntry](#provenance-registry-v1-RolesEntry)
   
     - [RegistryRole](#provenance-registry-v1-RegistryRole)
   
@@ -4931,7 +4929,7 @@ Ledger
 | `status_type_id` | [int32](#int32) |  | Status of the ledger |
 | `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
 | `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
-| `interest_rate` | [int32](#int32) |  | Interest rate |
+| `interest_rate` | [int32](#int32) |  | Interest rate (10000000 = 10.000000%) - 6 decimal places |
 | `maturity_date` | [int32](#int32) |  | Maturity date days since epoch |
 
 
@@ -7924,23 +7922,7 @@ MsgRegisterNFT represents a message to register a new NFT
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | authority is the address that is authorized to register addresses |
 | `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to register |
-| `roles` | [MsgRegisterNFT.RolesEntry](#provenance-registry-v1-MsgRegisterNFT-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
-
-
-
-
-
-
-<a name="provenance-registry-v1-MsgRegisterNFT-RolesEntry"></a>
-
-### MsgRegisterNFT.RolesEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [RoleAddresses](#provenance-registry-v1-RoleAddresses) |  |  |
+| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role |
 
 
 
@@ -8153,23 +8135,7 @@ RegistryEntry represents a single entry in the registry, mapping a blockchain ad
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | Key ties the registry entry to an asset class and nft id |
-| `roles` | [RegistryEntry.RolesEntry](#provenance-registry-v1-RegistryEntry-RolesEntry) | repeated | roles is a map of role names to lists of addresses that can perform that role |
-
-
-
-
-
-
-<a name="provenance-registry-v1-RegistryEntry-RolesEntry"></a>
-
-### RegistryEntry.RolesEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [RoleAddresses](#provenance-registry-v1-RoleAddresses) |  |  |
+| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role |
 
 
 
@@ -8192,14 +8158,15 @@ RegistryEntry represents a single entry in the registry, mapping a blockchain ad
 
 
 
-<a name="provenance-registry-v1-RoleAddresses"></a>
+<a name="provenance-registry-v1-RolesEntry"></a>
 
-### RoleAddresses
-RoleAddresses contains a list of addresses that can perform a specific role
+### RolesEntry
+
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `role` | [string](#string) |  |  |
 | `addresses` | [string](#string) | repeated | addresses is the list of blockchain addresses that can perform this role |
 
 
