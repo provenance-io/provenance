@@ -37,6 +37,8 @@ message MsgAddAttributeRequest {
   string owner = 5;
   // Time that an attribute will expire.
   google.protobuf.Timestamp expiration_date = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+  // Concrete_type defines the specific type of data for PROTO or JSON attribute.
+  string concrete_type = 7; // Optional. Max 200 characters.
 }
 ```
 
@@ -76,6 +78,8 @@ message MsgUpdateAttributeRequest {
   string account = 6;
   // The address that the name must resolve to.
   string owner = 7;
+  // Concrete_type defines the specific type of data for PROTO or JSON attribute.
+  string concrete_type = 8; // Optional. Max 200 characters.
 }
 ```
 

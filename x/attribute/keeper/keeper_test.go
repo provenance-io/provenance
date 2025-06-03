@@ -61,7 +61,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("attribute", s.user1Addr, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.attribute", s.user1Addr, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.empty", s.user1Addr, false))
-	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.long", s.user1Addr, false))
 	nameData.Params.AllowUnrestrictedNames = false
 	nameData.Params.MaxNameLevels = 3
 	nameData.Params.MinSegmentLength = 3
@@ -211,7 +210,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 }
 
 func (s *KeeperTestSuite) TestUpdateAttribute() {
-
 	attr := types.Attribute{
 		Name:          "example.attribute",
 		Value:         []byte("my-value"),
@@ -219,7 +217,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 		Address:       s.user1,
 	}
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
-
 	cases := []struct {
 		name       string
 		origAttr   types.Attribute
@@ -1295,7 +1292,7 @@ func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
 		expectError   bool
 	}{
 		{
-			name:          "JSON attribute with concrete type",
+			name:          "should successfully JSON attribute with concrete type",
 			attributeName: "example.attribute",
 			attributeType: types.AttributeType_JSON,
 			value:         []byte(`"123456"`),
@@ -1304,7 +1301,7 @@ func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
 			expectError:   false,
 		},
 		{
-			name:          "PROTO attribute with concrete type",
+			name:          "should successfully PROTO attribute with concrete type",
 			attributeName: "attribute",
 			attributeType: types.AttributeType_Proto,
 			ownerAddr:     s.user1Addr,
@@ -1313,7 +1310,7 @@ func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
 			expectError:   false,
 		},
 		{
-			name:          "STRING attribute with concrete type",
+			name:          "should successfully STRING attribute with concrete type",
 			attributeName: "example.attribute",
 			attributeType: types.AttributeType_String,
 			ownerAddr:     s.user1Addr,
@@ -1322,7 +1319,7 @@ func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
 			expectError:   false,
 		},
 		{
-			name:          "Empty concrete type",
+			name:          "should successfully Empty concrete type",
 			attributeName: "example.empty",
 			attributeType: types.AttributeType_JSON,
 			ownerAddr:     s.user1Addr,
@@ -1330,14 +1327,6 @@ func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
 			concreteType:  "",
 			expectError:   false,
 		},
-		// {
-		// 	name:          "Long type",
-		// 	attributeName: "example.long",
-		// 	attributeType: types.AttributeType_JSON,
-		// 	value:         []byte(`"123456"`),
-		// 	concreteType:  "provenance.attributes.v1.TestJson",
-		// 	expectError:   false,
-		// },
 	}
 
 	for _, tc := range testCases {
@@ -1378,111 +1367,98 @@ func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
 	}
 }
 
-// func (s *KeeperTestSuite) TestUpdateAttributeConcreteType(t *testing.T) {
+func (s *KeeperTestSuite) TestUpdateAttributeConcreteType() {
+	// Set initial attribute
+	initialAttr := types.Attribute{
+		Name:          "example.attribute",
+		AttributeType: types.AttributeType_JSON,
+		Value:         []byte(`{"ver":1}`),
+		Address:       s.user1,
+		ConcreteType:  "/provenance.attributes.v1.VersionOne",
+	}
 
-// 	keeper := s.app.AttributeKeeper
+	err := s.app.AttributeKeeper.SetAttribute(s.ctx, initialAttr, s.user1Addr)
+	s.Assert().NoError(err)
 
-// 	addr := sdk.AccAddress([]byte("test_address_______"))
+	// Update just the concrete type
+	updatedAttr := types.Attribute{
+		Name:          "example.attribute",
+		AttributeType: types.AttributeType_JSON,
+		Value:         []byte(`{"ver":1}`),
+		Address:       s.user1,
+		ConcreteType:  "/provenance.attributes.v1.VersionTwo",
+	}
 
-// 	// Set initial attribute
-// 	initialAttr := types.Attribute{
-// 		Name:          "updateTest",
-// 		AttributeType: types.AttributeType_JSON,
-// 		Value:         []byte(`{"version":"1.0"}`),
-// 		Address:       addr.String(),
-// 		ConcreteType:  "/figure.provenance.attributes.v1.VersionOne",
-// 	}
+	err = s.app.AttributeKeeper.SetAttribute(s.ctx, updatedAttr, s.user1Addr)
+	s.Assert().NoError(err)
 
-// 	err := keeper.SetAttribute(ctx, initialAttr)
-// 	require.NoError(t, err)
+	// Verify update
+	savedAttr, _ := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, updatedAttr.Name)
+	s.Assert().Equal(updatedAttr.Value, savedAttr[0].Value)
+	s.Assert().Equal(updatedAttr.ConcreteType, savedAttr[0].ConcreteType)
 
-// 	// Update just the concrete type
-// 	updatedAttr := types.Attribute{
-// 		Name:          "updateTest",
-// 		AttributeType: types.AttributeType_JSON,
-// 		Value:         []byte(`{"version":"1.0"}`),
-// 		Address:       addr.String(),
-// 		ConcreteType:  "/figure.provenance.attributes.v1.VersionTwo",
-// 	}
+	// Update value and remove concrete type
+	noTypeAttr := types.Attribute{
+		Name:          "example.attribute",
+		AttributeType: types.AttributeType_JSON,
+		Value:         []byte(`{"ver":1}`),
+		Address:       s.user1,
+		ConcreteType:  "",
+	}
 
-// 	err = keeper.SetAttribute(ctx, updatedAttr)
-// 	require.NoError(t, err)
+	err = s.app.AttributeKeeper.SetAttribute(s.ctx, noTypeAttr, s.user1Addr)
+	s.Assert().NoError(err)
 
-// 	// Verify update
-// 	savedAttr, found := keeper.GetAttribute(ctx, addr, "updateTest")
-// 	require.True(t, found)
-// 	require.Equal(t, updatedAttr.Value, savedAttr.Value)
-// 	require.Equal(t, updatedAttr.ConcreteType, savedAttr.ConcreteType)
+	// Verify update removed concrete type
+	savedAttr, _ = s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, noTypeAttr.Name)
+	s.Assert().Equal(noTypeAttr.Value, savedAttr[0].Value)
 
-// 	// Update value and remove concrete type
-// 	noTypeAttr := types.Attribute{
-// 		Name:          "updateTest",
-// 		AttributeType: types.AttributeType_JSON,
-// 		Value:         []byte(`{"version":"2.0"}`),
-// 		Address:       addr.String(),
-// 		ConcreteType:  "", // Empty concrete type
-// 	}
+}
 
-// 	err = keeper.SetAttribute(ctx, noTypeAttr)
-// 	require.NoError(t, err)
+func (s *KeeperTestSuite) TestValidateAttributeConcreteType() {
+	testCases := []struct {
+		name         string
+		concreteType string
+		expectValid  bool
+	}{
+		{
+			name:         "Valid type URL",
+			concreteType: "provenance.attributes.v1.KnowYourCustomer",
+			expectValid:  true,
+		},
+		{
+			name:         "Empty concrete type",
+			concreteType: "",
+			expectValid:  true,
+		},
+		{
+			name:         "Maximum length",
+			concreteType: strings.Repeat("a", 200),
+			expectValid:  true,
+		},
+		{
+			name:         "Exceeds maximum length",
+			concreteType: strings.Repeat("a", 201),
+			expectValid:  false,
+		},
+	}
 
-// 	// Verify update removed concrete type
-// 	savedAttr, found = keeper.GetAttribute(ctx, addr, "updateTest")
-// 	require.True(t, found)
-// 	require.Equal(t, noTypeAttr.Value, savedAttr.Value)
-// 	require.Empty(t, savedAttr.ConcreteType)
-// }
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			attr := types.Attribute{
+				Name:          "test",
+				AttributeType: types.AttributeType_JSON,
+				Value:         []byte(`{}`),
+				Address:       s.user1,
+				ConcreteType:  tc.concreteType,
+			}
 
-// func TestValidateAttributeConcreteType(t *testing.T) {
-// 	testCases := []struct {
-// 		name         string
-// 		concreteType string
-// 		expectValid  bool
-// 	}{
-// 		{
-// 			name:         "Valid type URL",
-// 			concreteType: "/figure.provenance.attributes.v1.KnowYourCustomer",
-// 			expectValid:  true,
-// 		},
-// 		{
-// 			name:         "Empty concrete type",
-// 			concreteType: "",
-// 			expectValid:  true,
-// 		},
-// 		{
-// 			name:         "Maximum length",
-// 			concreteType: strings.Repeat("a", 200),
-// 			expectValid:  true,
-// 		},
-// 		{
-// 			name:         "Exceeds maximum length",
-// 			concreteType: strings.Repeat("a", 201),
-// 			expectValid:  false,
-// 		},
-// 		{
-// 			name:         "Valid characters",
-// 			concreteType: "/valid-type.with_special.chars-123/v1.Type",
-// 			expectValid:  true,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			attr := types.Attribute{
-// 				Name:          "test",
-// 				AttributeType: types.AttributeType_JSON,
-// 				Value:         []byte(`{}`),
-// 				Address:       "cosmos1abcdefg",
-// 				ConcreteType:  tc.concreteType,
-// 			}
-
-// 			err := attr.Validate()
-// 			if tc.expectValid {
-// 				require.NoError(t, err)
-// 			} else {
-// 				require.Error(t, err)
-// 				require.Contains(t, err.Error(), "concrete_type")
-// 			}
-// 		})
-// 	}
-// }
+			err := attr.ValidateBasic()
+			if tc.expectValid {
+				s.Assert().NoError(err)
+			} else {
+				s.Assert().Error(err)
+			}
+		})
+	}
+}
