@@ -697,6 +697,43 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			respType:     &sdk.TxResponse{},
 			expectedCode: 1,
 		},
+		{
+			name: "set attribute, with valid expiration & concrete_type",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value with expiration",
+				"2050-01-15T00:00:00Z",
+				"--concrete-type=provenance.attributes.v1.TestString",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "set attribute, with concrete_type",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value with expiration",
+				"--concrete-type=provenance.attributes.v1.TestString",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
 	}
 
 	for _, tc := range testCases {
