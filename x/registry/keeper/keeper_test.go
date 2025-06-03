@@ -4,16 +4,18 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/x/nft"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/registry"
+	"github.com/provenance-io/provenance/x/registry/keeper"
 )
 
 type KeeperTestSuite struct {
@@ -29,6 +31,11 @@ type KeeperTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
+
+	nftKeeper nftkeeper.Keeper
+
+	validNFTClass nft.Class
+	validNFT      nft.NFT
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -37,6 +44,8 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
+	s.nftKeeper = s.app.NFTKeeper
+
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
@@ -46,12 +55,25 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
+
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+
+	s.validNFTClass = nft.Class{
+		Id: "test-nft-class-id",
+	}
+	s.nftKeeper.SaveClass(s.ctx, s.validNFTClass)
+
+	s.validNFT = nft.NFT{
+		ClassId: s.validNFTClass.Id,
+		Id:      "test-nft-id",
+	}
+	s.nftKeeper.Mint(s.ctx, s.validNFT, s.user1Addr)
 }
 
 func (s *KeeperTestSuite) TestCreateRegistry() {
 	key := &registry.RegistryKey{
-		AssetClassId: "asset1",
-		NftId:        "nft1",
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.validNFT.Id,
 	}
 	roles := map[string]registry.RoleAddresses{
 		"admin": {
@@ -71,8 +93,8 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 
 func (s *KeeperTestSuite) TestGrantRole() {
 	key := &registry.RegistryKey{
-		AssetClassId: "asset1",
-		NftId:        "nft1",
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.validNFT.Id,
 	}
 	roles := map[string]registry.RoleAddresses{
 		"admin": {
@@ -110,8 +132,8 @@ func (s *KeeperTestSuite) TestGrantRole() {
 
 func (s *KeeperTestSuite) TestRevokeRole() {
 	key := &registry.RegistryKey{
-		AssetClassId: "asset1",
-		NftId:        "nft1",
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.validNFT.Id,
 	}
 	roles := map[string]registry.RoleAddresses{
 		"admin": {
@@ -144,8 +166,8 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 
 func (s *KeeperTestSuite) TestHasRole() {
 	key := &registry.RegistryKey{
-		AssetClassId: "asset1",
-		NftId:        "nft1",
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.validNFT.Id,
 	}
 	roles := map[string]registry.RoleAddresses{
 		"admin": {
@@ -179,8 +201,8 @@ func (s *KeeperTestSuite) TestHasRole() {
 
 func (s *KeeperTestSuite) TestGetRegistry() {
 	key := &registry.RegistryKey{
-		AssetClassId: "asset1",
-		NftId:        "nft1",
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.validNFT.Id,
 	}
 	roles := map[string]registry.RoleAddresses{
 		"admin": {
@@ -203,6 +225,44 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
-	_, err = s.app.RegistryKeeper.GetRegistry(s.ctx, nonExistentKey)
+	entry, err = s.app.RegistryKeeper.GetRegistry(s.ctx, nonExistentKey)
+	s.Require().NoError(err)
+	s.Require().Nil(entry)
+}
+
+func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
+	key := &registry.RegistryKey{
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.validNFT.Id,
+	}
+	roles := map[string]registry.RoleAddresses{
+		"admin": {
+			Addresses: []string{s.user1Addr.String()},
+		},
+	}
+
+	// Create msg
+	msg := &registry.MsgRegisterNFT{
+		Authority: s.user1Addr.String(),
+		Key:       key,
+		Roles:     roles,
+	}
+
+	// Create msg server
+	msgServer := keeper.NewMsgServer(s.app.RegistryKeeper)
+
+	// Test successful registration
+	_, err := msgServer.RegisterNFT(s.ctx, msg)
+	s.Require().NoError(err)
+
+	// Verify registry was created
+	entry, err := s.app.RegistryKeeper.GetRegistry(s.ctx, key)
+	s.Require().NoError(err)
+	s.Require().Equal(key, entry.Key)
+	s.Require().Equal(roles, entry.Roles)
+
+	// Test duplicate registration
+	_, err = msgServer.RegisterNFT(s.ctx, msg)
 	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "registry already exists")
 }
