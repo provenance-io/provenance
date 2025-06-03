@@ -38,6 +38,7 @@ jobs:
           version: v2.1.6
           args: --timeout 10m --output.text.path=stdout --output.text.colors=true
           github-token: ${{ secrets.github_token }}
+          only-new-issues: true
           verify: false
       - name: No Now Usage
         if: env.GIT_DIFF
