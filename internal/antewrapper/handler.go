@@ -65,24 +65,3 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	return sdk.ChainAnteDecorators(decorators...), nil
 }
-
-// GetFeeTx coverts the provided Tx to a FeeTx if possible.
-func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return nil, sdkerrors.ErrTxDecode.Wrapf("Tx must be a FeeTx: %T", tx)
-	}
-	return feeTx, nil
-}
-
-// IsInitGenesis returns true if the context indicates we're in InitGenesis.
-func IsInitGenesis(ctx sdk.Context) bool {
-	// Note: This isn't fully accurate since you can initialize a chain at a height other than zero.
-	// But it should be good enough for our stuff. Ideally we'd want something specifically set in
-	// the context during InitGenesis to check, but that'd probably involve some SDK work.
-	return ctx.BlockHeight() <= 0
-}
-
-const (
-	SimAppChainID = "simapp-unit-testing"
-)

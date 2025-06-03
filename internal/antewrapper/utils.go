@@ -39,6 +39,8 @@ const (
 	// nilStr is a string to use to indicate something is nil.
 	nilStr = "<nil>"
 
+	SimAppChainID = "simapp-unit-testing"
+
 	// TxGasLimit is the maximum amount of gas we allow in a single Tx.
 	TxGasLimit uint64 = 4_000_000
 	// DefaultGasLimit is the default gas to give a tx.
@@ -258,4 +260,21 @@ func msgTypeURLs(msgs []sdk.Msg) []string {
 		rv[i] = sdk.MsgTypeURL(msg)
 	}
 	return rv
+}
+
+// GetFeeTx coverts the provided Tx to a FeeTx if possible.
+func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, sdkerrors.ErrTxDecode.Wrapf("Tx must be a FeeTx: %T", tx)
+	}
+	return feeTx, nil
+}
+
+// IsInitGenesis returns true if the context indicates we're in InitGenesis.
+func IsInitGenesis(ctx sdk.Context) bool {
+	// Note: This isn't fully accurate since you can initialize a chain at a height other than zero.
+	// But it should be good enough for our stuff. Ideally we'd want something specifically set in
+	// the context during InitGenesis to check, but that'd probably involve some SDK work.
+	return ctx.BlockHeight() <= 0
 }
