@@ -156,7 +156,7 @@ func txGasLimitShouldApply(chainID string, msgs []sdk.Msg) bool {
 
 // isTestChainID returns true if the chain id is one of the special ones used for unit tests.
 func isTestChainID(chainID string) bool {
-	return chainID == SimAppChainID || chainID == pioconfig.SimAppChainID || strings.HasPrefix(chainID, "testchain")
+	return len(chainID) == 0 || chainID == SimAppChainID || chainID == pioconfig.SimAppChainID || strings.HasPrefix(chainID, "testchain")
 }
 
 // isOnlyGovProps returns true if there's at least one msg, and all msgs are a MsgSubmitProposal.
