@@ -88,13 +88,9 @@ func (k BaseRegistryKeeper) CreateDefaultRegistry(ctx sdk.Context, authorityAddr
 	ownerAddrStr := authorityAddr.String()
 
 	// Set the default roles for originator and servicer.
-	roles := make([]registry.RolesEntry, 2)
+	roles := make([]registry.RolesEntry, 1)
 	roles[0] = registry.RolesEntry{
 		Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
-		Addresses: []string{ownerAddrStr},
-	}
-	roles[1] = registry.RolesEntry{
-		Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(),
 		Addresses: []string{ownerAddrStr},
 	}
 
