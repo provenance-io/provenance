@@ -183,10 +183,9 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return NewLedgerCodedError(ErrCodeNotFound, "nft")
 	}
 
-	// Validate that the authority has ownership of the NFT
-	nftOwner := k.BaseViewKeeper.RegistryKeeper.GetNFTOwner(ctx, &l.Key.AssetClassId, &l.Key.NftId)
-	if nftOwner == nil && nftOwner.String() != authorityAddr.String() {
-		// If the nft owner is nil, then the authority must be a servicer to create the ledger
+	notOwnerErr := assertOwner(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), l.Key)
+	if notOwnerErr != nil {
+		// If the authority isn't the nft owner, then the authority must be a servicer to create the ledger
 		isServicer, err := k.BaseViewKeeper.RegistryKeeper.HasRole(ctx,
 			&registry.RegistryKey{
 				AssetClassId: l.Key.AssetClassId,
@@ -200,7 +199,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		}
 
 		if !isServicer {
-			return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
+			return notOwnerErr
 		}
 	}
 

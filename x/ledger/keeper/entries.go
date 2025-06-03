@@ -46,21 +46,37 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		return err
 	}
 
-	// If there isn't a registry entry we'll verify against the owner of the nftId.
 	if registryEntry == nil {
-		// Check if the authority has ownership of the NFT
-		nftOwner := k.BaseViewKeeper.RegistryKeeper.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
-		if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
-			return NewLedgerCodedError(ErrCodeUnauthorized, "nft owner", nftOwner.String())
-		}
-	} else {
-		// Check if the authority has the servicer role for this NFT
-		hasRole, err := k.BaseViewKeeper.RegistryKeeper.HasRole(ctx, &rk, registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(), authorityAddr.String())
+		err = assertOwner(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), ledgerKey)
 		if err != nil {
 			return err
 		}
-		if !hasRole {
-			return NewLedgerCodedError(ErrCodeUnauthorized, "servicer")
+	} else {
+		// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
+		// so that only the assigned servicer can append entries.
+		var servicerRegistered bool = false
+		for _, role := range registryEntry.Roles {
+			if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER.String() {
+				// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
+				servicerRegistered = true
+				for _, address := range role.Addresses {
+					// Check if the authority is the servicer
+					if address == authorityAddr.String() {
+						// Servicer is identified, no need to check any other roles
+						break
+					}
+				}
+
+				// Since there isn't a registered servicer, we'll check if the authority is the owner
+				if !servicerRegistered {
+					err = assertOwner(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), ledgerKey)
+					if err != nil {
+						return err
+					}
+				} else {
+					return NewLedgerCodedError(ErrCodeUnauthorized, "registered servicer")
+				}
+			}
 		}
 	}
 
