@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/provenance-io/provenance/x/ledger"
 )
@@ -89,4 +90,14 @@ func StringToLedgerKey(s string) (*ledger.LedgerKey, error) {
 		AssetClassId: parts[0],
 		NftId:        parts[1],
 	}, nil
+}
+
+func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledgerKey *ledger.LedgerKey) error {
+	// Check if the authority has ownership of the NFT
+	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
+	if nftOwner == nil || nftOwner.String() != authorityAddr {
+		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the nft owner")
+	}
+
+	return nil
 }
