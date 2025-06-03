@@ -78,8 +78,9 @@ func (s *MsgServerTestSuite) TestRegisterNFTGRPC() {
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
-		Roles: map[string]registry.RoleAddresses{
-			servicerRole: {
+		Roles: []registry.RolesEntry{
+			{
+				Role:      servicerRole,
 				Addresses: []string{s.user1Addr.String()},
 			},
 		},
@@ -98,8 +99,6 @@ func (s *MsgServerTestSuite) TestRegisterNFTGRPC() {
 	s.Require().Equal(s.validNFTClass.Id, registry.Key.AssetClassId)
 	s.Require().Equal(s.validNFT.Id, registry.Key.NftId)
 
-	s.Require().Equal("", msg.String())
-
-	servicerRoleAddress := registry.Roles[servicerRole].Addresses[0]
+	servicerRoleAddress := registry.Roles[0].Addresses[0]
 	s.Require().Equal(s.user1Addr.String(), servicerRoleAddress)
 }

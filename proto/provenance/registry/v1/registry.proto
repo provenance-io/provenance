@@ -1,7 +1,9 @@
 syntax = "proto3";
 package provenance.registry.v1;
 
-option go_package = "github.com/provenance-io/provenance/x/registry";
+option go_package          = "github.com/provenance-io/provenance/x/registry";
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
@@ -39,14 +41,15 @@ message RegistryEntry {
   // Key ties the registry entry to an asset class and nft id
   RegistryKey key = 1;
 
-  // roles is a map of role names to lists of addresses that can perform that role
-  map<string, RoleAddresses> roles = 2 [(gogoproto.nullable) = false];
+  // roles is a list of roles and addresses that can perform that role
+  repeated RolesEntry roles = 2 [(gogoproto.nullable) = false];
 }
 
-// RoleAddresses contains a list of addresses that can perform a specific role
-message RoleAddresses {
+message RolesEntry {
+  string role = 1;
+
   // addresses is the list of blockchain addresses that can perform this role
-  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // GenesisState defines the registry module's genesis state

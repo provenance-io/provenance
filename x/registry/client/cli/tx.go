@@ -51,7 +51,7 @@ func CmdRegisterNFT() *cobra.Command {
 			msg := registry.MsgRegisterNFT{
 				Authority: clientCtx.GetFromAddress().String(),
 				Key:       &key,
-				Roles:     map[string]registry.RoleAddresses{},
+				Roles:     []registry.RolesEntry{},
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)

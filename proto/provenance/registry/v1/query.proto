@@ -1,7 +1,9 @@
 syntax = "proto3";
 package provenance.registry.v1;
 
-option go_package = "github.com/provenance-io/provenance/x/registry";
+option go_package          = "github.com/provenance-io/provenance/x/registry";
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
 import "provenance/registry/v1/registry.proto";
