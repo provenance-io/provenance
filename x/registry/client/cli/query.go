@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/provenance-io/provenance/x/registry"
-	"github.com/provenance-io/provenance/x/registry/keeper"
 	"github.com/spf13/cobra"
 )
 
@@ -32,24 +31,24 @@ func CmdQuery() *cobra.Command {
 // GetCmdQueryRegistry returns the command for querying a registry entry
 func GetCmdQueryRegistry() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "registry [key]",
+		Use:   "registry [asset_class_id] [nft_id]",
 		Short: "Query a registry entry by key",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			queryClient := registry.NewQueryClient(clientCtx)
-
-			key, err := keeper.StringToRegistryKey(args[0])
-			if err != nil {
-				return fmt.Errorf("invalid registry key: %w", err)
+			key := registry.RegistryKey{
+				AssetClassId: args[0],
+				NftId:        args[1],
 			}
 
+			queryClient := registry.NewQueryClient(clientCtx)
+
 			res, err := queryClient.GetRegistry(context.Background(), &registry.QueryGetRegistryRequest{
-				Key: key,
+				Key: &key,
 			})
 			if err != nil {
 				return err
@@ -67,22 +66,33 @@ func GetCmdQueryRegistry() *cobra.Command {
 // GetCmdQueryHasRole returns the command for querying if an address has a role
 func GetCmdQueryHasRole() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "has-role [key] [address] [role]",
+		Use:   "has-role [asset_class_id] [nft_id] [role] [address]",
 		Short: "Query if an address has a role for a given key",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			key := registry.RegistryKey{
+				AssetClassId: args[0],
+				NftId:        args[1],
+			}
+
+			// convert arg[2] to a registry.RegistryRole enum value
+			role, ok := registry.RegistryRole_value[args[2]]
+			if !ok {
+				return fmt.Errorf("invalid role: %s", args[2])
+			}
+
 			queryClient := registry.NewQueryClient(clientCtx)
 
 			// TODO: Parse key and role from args
 			res, err := queryClient.HasRole(context.Background(), &registry.QueryHasRoleRequest{
-				Key:     nil, // Need to parse key from args[0]
-				Address: args[1],
-				Role:    0, // Need to parse role from args[2]
+				Key:     &key,
+				Role:    registry.RegistryRole(role),
+				Address: args[3],
 			})
 			if err != nil {
 				return err
