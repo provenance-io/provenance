@@ -17,7 +17,7 @@ type BankKeeper interface {
 }
 
 type RegistryKeeper interface {
-	HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error)
+	HasRole(ctx sdk.Context, key *registry.RegistryKey, role registry.RegistryRole, address string) (bool, error)
 	GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error)
 	AssetClassExists(ctx sdk.Context, assetClassId *string) bool
 	HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool

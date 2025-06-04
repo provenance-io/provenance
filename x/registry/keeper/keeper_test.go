@@ -77,11 +77,11 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 	}
 	roles := []registry.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(),
+			Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestGrantRole() {
 	}
 	roles := []registry.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -113,11 +113,11 @@ func (s *KeeperTestSuite) TestGrantRole() {
 	s.Require().NoError(err)
 
 	// Test successful role grant
-	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, key, "admin", []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.user2Addr})
 	s.Require().NoError(err)
 
 	// Verify role was granted
-	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, "admin", s.user2Addr.String())
+	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, s.user2Addr.String())
 	s.Require().NoError(err)
 	s.Require().True(hasRole)
 
@@ -126,12 +126,12 @@ func (s *KeeperTestSuite) TestGrantRole() {
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
-	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, nonExistentKey, "admin", []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, nonExistentKey, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.user2Addr})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "registry not found")
 
 	// Test granting to address that already has role
-	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, key, "admin", []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.user2Addr})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "address already has role")
 }
@@ -143,7 +143,7 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 	}
 	roles := []registry.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String(), s.user2Addr.String()},
 		},
 	}
@@ -153,11 +153,11 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 	s.Require().NoError(err)
 
 	// Test successful role revocation
-	err = s.app.RegistryKeeper.RevokeRole(s.ctx, s.user1Addr, key, "admin", []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.RevokeRole(s.ctx, s.user1Addr, key, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, []*sdk.AccAddress{&s.user2Addr})
 	s.Require().NoError(err)
 
 	// Verify role was revoked
-	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, "admin", s.user2Addr.String())
+	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user2Addr.String())
 	s.Require().NoError(err)
 	s.Require().False(hasRole)
 
@@ -166,7 +166,7 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
-	err = s.app.RegistryKeeper.RevokeRole(s.ctx, s.user1Addr, nonExistentKey, "admin", []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.RevokeRole(s.ctx, s.user1Addr, nonExistentKey, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, []*sdk.AccAddress{&s.user2Addr})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "registry not found")
 }
@@ -178,7 +178,7 @@ func (s *KeeperTestSuite) TestHasRole() {
 	}
 	roles := []registry.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -188,12 +188,12 @@ func (s *KeeperTestSuite) TestHasRole() {
 	s.Require().NoError(err)
 
 	// Test has role
-	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, "REGISTRY_ROLE_ORIGINATOR", s.user1Addr.String())
+	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user1Addr.String())
 	s.Require().NoError(err)
 	s.Require().True(hasRole)
 
 	// Test doesn't have role
-	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, key, "REGISTRY_ROLE_ORIGINATOR", s.user2Addr.String())
+	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, s.user2Addr.String())
 	s.Require().NoError(err)
 	s.Require().False(hasRole)
 
@@ -202,9 +202,9 @@ func (s *KeeperTestSuite) TestHasRole() {
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
-	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, nonExistentKey, "admin", s.user1Addr.String())
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "registry not found")
+	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, nonExistentKey, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user1Addr.String())
+	s.Require().NoError(err)
+	s.Require().False(hasRole)
 }
 
 func (s *KeeperTestSuite) TestGetRegistry() {
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 	}
 	roles := []registry.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
 	}
 	roles := []registry.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}

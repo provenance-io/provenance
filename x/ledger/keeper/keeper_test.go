@@ -13,21 +13,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
+	"github.com/provenance-io/provenance/x/registry"
 )
 
 type TestSuite struct {
 	suite.Suite
 
-	app        *app.App
-	ctx        sdk.Context
-	keeper     keeper.BaseKeeper
-	bankKeeper bankkeeper.Keeper
-	nftKeeper  nftkeeper.Keeper
+	app            *app.App
+	ctx            sdk.Context
+	keeper         keeper.BaseKeeper
+	bankKeeper     bankkeeper.Keeper
+	nftKeeper      nftkeeper.Keeper
+	registryKeeper registrykeeper.RegistryKeeper
 
 	bondDenom  string
 	initBal    sdk.Coins
@@ -50,6 +53,7 @@ func (s *TestSuite) SetupTest() {
 	s.keeper = s.app.LedgerKeeper
 	s.bankKeeper = s.app.BankKeeper
 	s.nftKeeper = s.app.NFTKeeper
+	s.registryKeeper = s.app.RegistryKeeper
 
 	var err error
 	s.bondDenom, err = s.app.StakingKeeper.BondDenom(s.ctx)
@@ -138,6 +142,93 @@ func (s *TestSuite) ConfigureTest() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
+}
+
+func (s *TestSuite) TestNonExistentDenom() {
+	// Mint a new nft.
+	nft := nft.NFT{
+		ClassId: s.validNFTClass.Id,
+		Id:      "test-nft-id-2",
+	}
+	s.nftKeeper.Mint(s.ctx, nft, s.addr1)
+
+	// Attempt to attach a denom that doesn't exist.
+	ledgerClass := ledger.LedgerClass{
+		LedgerClassId:     "test-ledger-class-id-2",
+		AssetClassId:      s.validNFTClass.Id,
+		MaintainerAddress: s.addr1.String(),
+		Denom:             "non-existent-denom",
+	}
+	err := s.keeper.CreateLedgerClass(s.ctx, s.addr1, ledgerClass)
+	s.Require().Error(err, "CreateLedgerClass error")
+	s.Require().Contains(err.Error(), "denom doesn't have a supply", "CreateLedgerClass error")
+}
+
+func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
+	err := s.keeper.AddClassEntryType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+		Id:          1,
+		Code:        "SCHEDULED_PAYMENT",
+		Description: "Scheduled Payment",
+	})
+	s.Require().Error(err, "AddClassEntryType error")
+	s.Require().Contains(err.Error(), keeper.ErrCodeUnauthorized, "AddClassEntryType error")
+
+	err = s.keeper.AddClassBucketType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+		Id:          1,
+		Code:        "PRINCIPAL",
+		Description: "Principal",
+	})
+	s.Require().Error(err, "AddClassBucketType error")
+	s.Require().Contains(err.Error(), keeper.ErrCodeUnauthorized, "AddClassBucketType error")
+
+	err = s.keeper.AddClassStatusType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+		Id:          1,
+		Code:        "IN_REPAYMENT",
+		Description: "In Repayment",
+	})
+	s.Require().Error(err, "AddClassStatusType error")
+	s.Require().Contains(err.Error(), keeper.ErrCodeUnauthorized, "AddClassStatusType error")
+}
+
+// Test to ensure only the registered servicer or owner can create a ledger.
+func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
+	ledger := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+
+	err := s.keeper.CreateLedger(s.ctx, s.addr2, ledger)
+	s.Require().Error(err, "CreateLedger error")
+	s.Require().Contains(err.Error(), "unauthorized", "CreateLedger error")
+
+	registryKey := &registry.RegistryKey{
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        s.validNFT.Id,
+	}
+
+	// Create a no role registry entry for the nft
+	err = s.registryKeeper.CreateRegistry(s.ctx, s.addr1, registryKey, []registry.RolesEntry{})
+	s.Require().NoError(err, "CreateRegistry error")
+
+	err = s.keeper.CreateLedger(s.ctx, s.addr2, ledger)
+	s.Require().Error(err, "CreateLedger error")
+
+	// Grant a role of servicer to the s.addr2 so that it can create the ledger
+	err = s.registryKeeper.GrantRole(s.ctx, s.addr1, registryKey, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.addr2})
+	s.Require().NoError(err, "GrantRole error")
+
+	// Verify that the registry granted the role to the s.addr2
+	hasRole, err := s.registryKeeper.HasRole(s.ctx, registryKey, registry.RegistryRole_REGISTRY_ROLE_SERVICER, s.addr2.String())
+	s.Require().NoError(err, "HasRole error")
+	s.Require().True(hasRole, "HasRole error")
+
+	// Verify that the s.addr2 can create the ledger as the servicer
+	err = s.keeper.CreateLedger(s.ctx, s.addr2, ledger)
+	s.Require().NoError(err, "CreateLedger error")
 }
 
 func (s *TestSuite) TestCreateLedgerClass() {

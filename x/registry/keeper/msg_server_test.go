@@ -70,7 +70,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 }
 
 func (s *MsgServerTestSuite) TestRegisterNFTGRPC() {
-	servicerRole := registry.RegistryRole_REGISTRY_ROLE_SERVICER.String()
+	servicerRole := registry.RegistryRole_REGISTRY_ROLE_SERVICER
 
 	msg := &registry.MsgRegisterNFT{
 		Authority: s.user1Addr.String(),

@@ -49,7 +49,7 @@ func (k msgServer) GrantRole(ctx context.Context, msg *registry.MsgGrantRole) (*
 		addresses[i] = &addr
 	}
 
-	err = k.keeper.GrantRole(sdkCtx, authority, msg.Key, msg.Role.String(), addresses)
+	err = k.keeper.GrantRole(sdkCtx, authority, msg.Key, msg.Role, addresses)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *registry.MsgRevokeRole) 
 		addresses[i] = &addr
 	}
 
-	err = k.keeper.RevokeRole(sdkCtx, authority, msg.Key, msg.Role.String(), addresses)
+	err = k.keeper.RevokeRole(sdkCtx, authority, msg.Key, msg.Role, addresses)
 	if err != nil {
 		return nil, err
 	}
