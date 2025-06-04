@@ -1,8 +1,8 @@
+version: 2
 run:
   tests: false
 #   # timeout for analysis, e.g. 30s, 5m, default is 1m
 #   timeout: 5m
-
 linters:
   disable-all: true
   enable:
@@ -17,16 +17,12 @@ linters:
     - errorlint
     - errname
 #    - forcetypeassert
-    - gci
     - goconst
     - gocritic
-    - gofmt
-    - goimports
     - goheader
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - importas
     - ineffassign
@@ -39,15 +35,19 @@ linters:
     - promlinter
     - revive
     - staticcheck
-    - stylecheck
-    - tenv
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
     - whitespace
-
+    # - stylecheck
+    # - tenv
+    # - gosimple
+formatters:
+  enable:
+    - gofmt
+    - goimports
+    - gci
 issues:
   exclude-rules:
     - text: "Use of weak random number generator"
