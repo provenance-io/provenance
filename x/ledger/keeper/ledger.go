@@ -191,8 +191,8 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 				AssetClassId: l.Key.AssetClassId,
 				NftId:        l.Key.NftId,
 			},
+			registry.RegistryRole_REGISTRY_ROLE_SERVICER,
 			authorityAddr.String(),
-			registry.RegistryRole_REGISTRY_ROLE_SERVICER.String(),
 		)
 		if err != nil {
 			return err

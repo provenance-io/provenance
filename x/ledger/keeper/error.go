@@ -17,7 +17,7 @@ var ValidationMessages = map[string]string{
 	ErrCodeInvalidField:  "provided field(%s) value is invalid; %s",
 	ErrCodeMissingField:  "required field(%s) is missing or empty",
 	ErrCodeAlreadyExists: "%s already exists",
-	ErrCodeUnauthorized:  "unauthorized access",
+	ErrCodeUnauthorized:  "unauthorized access (%s)",
 	ErrCodeNotFound:      "%s not found",
 }
 

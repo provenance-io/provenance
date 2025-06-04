@@ -46,7 +46,7 @@ message RegistryEntry {
 }
 
 message RolesEntry {
-  string role = 1;
+  RegistryRole role = 1;
 
   // addresses is the list of blockchain addresses that can perform this role
   repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

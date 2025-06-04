@@ -56,7 +56,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		// so that only the assigned servicer can append entries.
 		var servicerRegistered bool = false
 		for _, role := range registryEntry.Roles {
-			if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER.String() {
+			if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
 				// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
 				servicerRegistered = true
 				for _, address := range role.Addresses {

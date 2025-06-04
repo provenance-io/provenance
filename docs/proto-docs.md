@@ -6828,6 +6828,8 @@ GenesisState defines the attribute module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  |  |
+| `entry_types` | [provenance.ledger.v1.LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) | repeated |  |
+| `status_types` | [provenance.ledger.v1.LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated |  |
 | `from_address` | [string](#string) |  |  |
 
 
@@ -8452,7 +8454,7 @@ RegistryEntry represents a single entry in the registry, mapping a blockchain ad
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `role` | [string](#string) |  |  |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  |  |
 | `addresses` | [string](#string) | repeated | addresses is the list of blockchain addresses that can perform this role |
 
 

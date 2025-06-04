@@ -33,7 +33,7 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *registry.QueryGetReg
 func (qs QueryServer) HasRole(ctx context.Context, req *registry.QueryHasRoleRequest) (*registry.QueryHasRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	hasRole, err := qs.keeper.HasRole(sdkCtx, req.Key, req.Role.String(), req.Address)
+	hasRole, err := qs.keeper.HasRole(sdkCtx, req.Key, req.Role, req.Address)
 	if err != nil {
 		return nil, err
 	}

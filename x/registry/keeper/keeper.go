@@ -20,9 +20,9 @@ var _ RegistryKeeper = (*BaseRegistryKeeper)(nil)
 type RegistryKeeper interface {
 	CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey) error
 	CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles []registry.RolesEntry) error
-	GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
-	RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error
-	HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error)
+	GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error
+	RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error
+	HasRole(ctx sdk.Context, key *registry.RegistryKey, role registry.RegistryRole, address string) (bool, error)
 	GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error)
 
 	// As the registry it is important to have some basic nft information to share as it is a central point for
@@ -90,7 +90,7 @@ func (k BaseRegistryKeeper) CreateDefaultRegistry(ctx sdk.Context, authorityAddr
 	// Set the default roles for originator and servicer.
 	roles := make([]registry.RolesEntry, 1)
 	roles[0] = registry.RolesEntry{
-		Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR.String(),
+		Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 		Addresses: []string{ownerAddrStr},
 	}
 
@@ -129,7 +129,12 @@ func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.Ac
 	return nil
 }
 
-func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error {
+func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error {
+	registryRole := registry.RegistryRole(role)
+	if registryRole == registry.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+		return fmt.Errorf("invalid role")
+	}
+
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return err
@@ -154,35 +159,57 @@ func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddr
 		return err
 	}
 
+	// Return all the addresses that have the role.
+	getRoleAddresses := func(role registry.RegistryRole) []string {
+		for _, roleEntry := range registryEntry.Roles {
+			if roleEntry.Role == role {
+				return roleEntry.Addresses
+			}
+		}
+
+		return []string{}
+	}
+	authorized := getRoleAddresses(role)
+
+	// Determine if any of the new grants are already authorized, and if so error out.
+	for _, a := range addr {
+		if slices.Contains(authorized, a.String()) {
+			return fmt.Errorf("address already has role")
+		}
+	}
+
 	// Convert the incoming addresses to strings
 	addrStr := make([]string, len(addr))
 	for i, a := range addr {
 		addrStr[i] = a.String()
-
-		// Look through the registry to see if the address already has the role.
-		for _, roleEntry := range registryEntry.Roles {
-			if roleEntry.Role == role {
-				for _, roleAddr := range roleEntry.Addresses {
-					if roleAddr == a.String() {
-						return fmt.Errorf("address already has role")
-					}
-				}
-			}
-		}
 	}
 
-	// Update the registry with the new role
-	registryEntry.Roles = append(registryEntry.Roles, registry.RolesEntry{
-		Role:      role,
-		Addresses: addrStr,
+	// Append new addresses to the authorized slice
+	authorized = append(authorized, addrStr...)
+
+	// Remove the old role entry from the registry
+	updatedRoles := slices.DeleteFunc(registryEntry.Roles, func(s registry.RolesEntry) bool {
+		return s.Role == role
 	})
 
+	// Add the new authorized addresses to the role entry
+	updatedRoles = append(updatedRoles, registry.RolesEntry{
+		Role:      role,
+		Addresses: authorized,
+	})
+
+	// Update the registry with the new role entries
+	registryEntry.Roles = updatedRoles
 	k.Registry.Set(ctx, *keyStr, registryEntry)
 
 	return nil
 }
 
-func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role string, addr []*sdk.AccAddress) error {
+func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error {
+	if role == registry.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+		return fmt.Errorf("invalid role")
+	}
+
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return err
@@ -248,7 +275,7 @@ func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAdd
 	return nil
 }
 
-func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, role string, address string) (bool, error) {
+func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, role registry.RegistryRole, address string) (bool, error) {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return false, err
@@ -259,7 +286,7 @@ func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, 
 		return false, err
 	}
 	if !has {
-		return false, fmt.Errorf("registry not found")
+		return false, nil
 	}
 
 	registryEntry, err := k.Registry.Get(ctx, *keyStr)
