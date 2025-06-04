@@ -30,7 +30,7 @@ func (d FlatFeeSetupDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, fmt.Errorf("could not calculate msg costs: %w", err)
 	}
 	feeProvided := feeTx.GetFee()
-	gasMeter.adjustCostsForUnitTests(ctx.Logger(), ctx.ChainID(), feeProvided)
+	gasMeter.adjustCostsForUnitTests(ctx.ChainID(), feeProvided)
 
 	// Make sure the fee provided is enough. There's a chance that costs/fees are added during the execution
 	// of the tx, so we'll check this again later. We check it here too, though, in order to skip processing

@@ -295,20 +295,20 @@ func (g *FlatFeeGasMeter) ConsumeAddedFee(fee sdk.Coins) {
 // adjustCostsForUnitTests will the chain id. If it indicates that we're running in a unit test,
 // it will adjust the required costs accordingly. This exists so that we didn't have to redo a
 // lot of unit tests when we switched to flat fees.
-func (g *FlatFeeGasMeter) adjustCostsForUnitTests(logger log.Logger, chainID string, feeProvided sdk.Coins) {
+func (g *FlatFeeGasMeter) adjustCostsForUnitTests(chainID string, feeProvided sdk.Coins) {
 	switch {
 	case len(chainID) == 0:
 		// Probably a pretty simple unit test. Use what was provided, all charged up-front.
 		g.upFrontCost = feeProvided
 		g.onSuccessCost = nil
-		logger.Debug("adjustCostsForUnitTests: Using provided fee for test tx cost.", "fee_provided", lazyCzStr(feeProvided))
+		g.logger.Debug("adjustCostsForUnitTests: Using provided fee for test tx cost.", "fee_provided", lazyCzStr(feeProvided))
 	case isTestChainID(chainID):
 		// One of the more complex unit tests, possibly involving actually running a chain. No fee.
 		g.upFrontCost = nil
 		g.onSuccessCost = nil
-		logger.Debug("adjustCostsForUnitTests: Using zero for test tx cost.")
+		g.logger.Debug("adjustCostsForUnitTests: Using zero for test tx cost.")
 	default:
-		logger.Debug("adjustCostsForUnitTests: Not a unit test. Not adjusting tx cost.")
+		g.logger.Debug("adjustCostsForUnitTests: Not a unit test. Not adjusting tx cost.")
 	}
 }
 
