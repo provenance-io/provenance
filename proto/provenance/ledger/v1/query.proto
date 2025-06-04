@@ -80,6 +80,8 @@ message QueryLedgerEntryResponse {
 // QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
 message QueryBalancesAsOfRequest {
   LedgerKey key        = 1;
+
+  // Format: YYYY-MM-DD
   string    as_of_date = 2;
 }
 
