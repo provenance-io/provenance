@@ -44,14 +44,14 @@ func NewTxCmd() *cobra.Command {
 // NewAddAccountAttributeCmd creates a command for adding an account attributes.
 func NewAddAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add <name> <address> <type> <value> [expire-time] [concrete_type]",
+		Use:     "add <name> <address> <type> <value> [expire-time]",
 		Aliases: []string{"a"},
 		Short:   "Add an account attribute to the provenance blockchain",
 		Long: fmt.Sprintf(`Note: the attribute name must have already been created through the name module.  
 Refer to %s tx name bind --help for more information on how to do this.`, version.AppName),
 		Args: cobra.RangeArgs(4, 6),
 		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"
-		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z,provenance.attributes.v1.TestJSON`, version.AppName, version.AppName),
+		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z,"--concrete-type=provenance.attributes.v1.TestJSON"`, version.AppName, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -108,11 +108,11 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 // NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
 func NewUpdateAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value> [concrete_type]",
+		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value>",
 		Aliases: []string{"u"},
 		Short:   "Update an account attribute on the provenance blockchain",
-		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100`, version.AppName),
-		Args:    cobra.RangeArgs(6, 7),
+		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100,"--concrete-type=provenance.attributes.v1.TestJSON"`, version.AppName),
+		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

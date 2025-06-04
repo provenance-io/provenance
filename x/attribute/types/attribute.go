@@ -19,7 +19,7 @@ import (
 )
 
 // NewAttribute creates a new instance of an Attribute
-func NewAttribute(name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time, concrete_type string) Attribute {
+func NewAttribute(name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time, concreteType string) Attribute {
 	// Ensure string type values are trimmed.
 	if attrType != AttributeType_Bytes && attrType != AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))
@@ -31,7 +31,7 @@ func NewAttribute(name string, address string, attrType AttributeType, value []b
 		AttributeType:  attrType,
 		Value:          value,
 		ExpirationDate: expirationDate,
-		ConcreteType:   concrete_type,
+		ConcreteType:   concreteType,
 	}
 }
 
