@@ -530,7 +530,6 @@ func TestParamChangeInGovProp(t *testing.T) {
 }
 
 func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
-	// Setup app
 	opts := SetupOptions{
 		Logger:  log.NewTestLogger(t),
 		DB:      dbm.NewMemDB(),
@@ -551,11 +550,7 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 		Contract: "pbsmos1def...",
 		Msg:      []byte(`{"do_something":{}}`),
 	}
-
-	// Wrap in Any
 	msgAny, _ := codectypes.NewAnyWithValue(oldMsg)
-
-	// Create proposal with the message
 	prop := govtypesv1.Proposal{
 		Id:               123,
 		Messages:         []*codectypes.Any{msgAny},
@@ -571,15 +566,9 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 		Summary:          "The prop summary",
 		Proposer:         sdk.AccAddress("proposer____________").String(),
 	}
-
-	// Save it to keeper
 	app.GovKeeper.SetProposal(ctx, *&prop)
-
-	// Load it back out
 	stored, _ := app.GovKeeper.Proposals.Get(ctx, 1)
 	require.NotNil(t, stored)
-
-	// Decode messages
 	for _, msg := range stored.Messages {
 		var unpacked sdk.Msg
 		err := cdc.UnpackAny(msg, &unpacked)

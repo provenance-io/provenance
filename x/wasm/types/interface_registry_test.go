@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 
 	wasmv1 "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -136,13 +135,14 @@ func Test_Decode_v1beta1_MsgFromGenesis(t *testing.T) {
 		Id:       1,
 		Messages: []*types.Any{msgAny},
 	}
-	// This mimics what happens when the node starts and loads proposals from genesis
+
 	bz, err := cdc.Marshal(genesisProposal)
 	require.NoError(t, err)
+
 	var loaded govtypes.Proposal
-	fmt.Printf("marshalled value %s", bz)
 	err = cdc.Unmarshal(bz, &loaded)
 	require.NoError(t, err)
+
 	for _, msg := range loaded.Messages {
 		var unpacked sdk.Msg
 		err := cdc.UnpackAny(msg, &unpacked)
