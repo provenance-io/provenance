@@ -1040,8 +1040,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
-		},
-		{
+		}, {
 			name: "add new attribute for updating",
 			cmd:  cli.NewAddAccountAttributeCmd(),
 			args: []string{
@@ -1058,7 +1057,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
-
 		{
 			name: "successful update of  with concrete_type",
 			cmd:  cli.NewUpdateAccountAttributeCmd(),
