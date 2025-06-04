@@ -30,4 +30,6 @@ type NFTKeeper interface {
 	Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error
 	// GetNFT returns an NFT by class and ID
 	GetNFT(ctx context.Context, classID, nftID string) (nft.NFT, bool)
+	// Transfer transfers an NFT from one account to another
+	Transfer(ctx context.Context, classID, nftID string, receiver sdk.AccAddress) error
 }

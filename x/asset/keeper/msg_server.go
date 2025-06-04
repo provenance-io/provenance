@@ -231,11 +231,26 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 
 	// Create the marker
-	err := m.createMarker(goCtx, sdk.NewCoin(msg.PoolId, sdkmath.NewInt(1)), msg.FromAddress)
+	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pool marker: %w", err)
 	}
 
+	// Get the nfts
+	for _, nft := range msg.Nfts {
+		// Get the owner of the nft and verify it matches the from address
+		owner := m.nftKeeper.GetOwner(goCtx, nft.ClassId, nft.Id)
+		if owner.String() != msg.FromAddress {
+			return nil, fmt.Errorf("nft class %s, id %s owner %s does not match from address %s", nft.ClassId, nft.Id, owner.String(), msg.FromAddress)
+		}
+
+		// Transfer the nft to the pool marker address
+		err = m.nftKeeper.Transfer(goCtx, nft.ClassId, nft.Id, marker.GetAddress())
+		if err != nil {
+			return nil, fmt.Errorf("failed to transfer nft: %w", err)
+		}
+	}
+	
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
@@ -243,7 +258,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCreateParticipation) (*types.MsgCreateParticipationResponse, error) {
 
 	// Create the marker
-	err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
+	_, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create participation marker: %w", err)
 	}
@@ -253,32 +268,75 @@ func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCrea
 
 // CreateSecuritization creates a new securitization marker and tranches
 func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCreateSecuritization) (*types.MsgCreateSecuritizationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Create the marker
-	err := m.createMarker(goCtx, sdk.NewCoin(msg.Id, sdkmath.NewInt(1)), msg.FromAddress)
+	// Create the securitization marker
+	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s", msg.Id), sdkmath.NewInt(0)), msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
 	}
 
 	// Create the tranches
 	for _, tranche := range msg.Tranches {
-		err := m.createMarker(goCtx, *tranche, msg.FromAddress)
+		_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s.tranche.%s", msg.Id, tranche.Denom), tranche.Amount), msg.FromAddress)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create tranche marker: %w", err)
 		}
+	}
+
+	// Reassign the pools permissions to the asset module account (prevent the pools from being transferred)
+	for _, pool := range msg.Pools {
+		pool, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", pool))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get pool marker: %w", err)
+		}
+		
+		// Create a new access grant with the desired permissions
+		moduleAccessGrant := markertypes.NewAccessGrant(
+			m.GetModuleAddress(),
+			[]markertypes.Access{
+				markertypes.Access_Admin,
+				markertypes.Access_Mint,
+				markertypes.Access_Burn,
+				markertypes.Access_Withdraw,
+				markertypes.Access_Transfer,
+			},
+		)
+		
+		// Revoke all access from the pool marker
+		accessList := pool.GetAccessList()
+		for _, access := range accessList {
+			accessAcc, err := sdk.AccAddressFromBech32(access.Address)
+			if err != nil {
+				return nil, fmt.Errorf("invalid from pool marker access address: %w", err)
+			}
+			err = pool.RevokeAccess(accessAcc)
+			if err != nil {
+				return nil, fmt.Errorf("failed to revoke access: %w", err)
+			}
+		}
+
+		// Grant the module account access to the pool marker
+		err = pool.GrantAccess(moduleAccessGrant)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update pool marker access: %w", err)
+		}
+		
+		// Save the updated marker
+		m.markerKeeper.SetMarker(ctx, pool)
 	}
 
 	return &types.MsgCreateSecuritizationResponse{}, nil
 }
 
 // CreatePool creates a new pool marker
-func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) error {
+func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Get the from address
 	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
 	if err != nil {
-		return fmt.Errorf("invalid from address: %w", err)
+		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid from address: %w", err)
 	}
 
 	// Create a new marker account
@@ -291,12 +349,16 @@ func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr 
 			{
 				Address: fromAcc.String(),
 				Permissions: markertypes.AccessList{
+					markertypes.Access_Admin,
+					markertypes.Access_Mint,
+					markertypes.Access_Burn,
 					markertypes.Access_Withdraw,
+					markertypes.Access_Transfer,
 				},
 			},
 		},
 		markertypes.StatusProposed,
-		markertypes.MarkerType_Coin,
+		markertypes.MarkerType_RestrictedCoin,
 		true,       // Supply fixed
 		false,      // Allow governance control
 		false,      // Don't allow forced transfer
@@ -306,12 +368,12 @@ func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr 
 	// Add the marker account by setting it
 	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
 	if err != nil {
-		return fmt.Errorf("failed to add marker account: %w", err)
+		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to add marker account: %w", err)
 	}
 
 	// Log the creation of the new pool marker
 	ctx.Logger().Info("Created new pool marker", "pool_id", denom.Denom)
 
-	return nil
+	return marker, nil
 }
 
