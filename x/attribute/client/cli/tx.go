@@ -144,13 +144,6 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error encoding value %s to type %s : %w", updateValArg, updateAttributeType.String(), err)
 			}
-			var concreteType string
-			if len(args) == 7 {
-				concreteType = strings.TrimSpace(args[6])
-				if len(concreteType) > 200 {
-					return fmt.Errorf("concrete_type must be 200 characters or fewer")
-				}
-			}
 
 			msg := types.NewMsgUpdateAttributeRequest(
 				account,
@@ -161,13 +154,17 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 				origAttributeType,
 				updateAttributeType,
 			)
+			concreteType, _ := cmd.Flags().GetString("concrete-type")
+			if len(concreteType) > 200 {
+				return fmt.Errorf("concrete-type length must be less than or equal to 200 characters")
+			}
 			if concreteType != "" {
 				msg.ConcreteType = concreteType
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
+	cmd.Flags().String(`concrete-type`, "", "Optional concrete type (max 200 characters)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

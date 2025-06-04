@@ -1041,6 +1041,44 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
+		{
+			name: "add new attribute for updating",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"updatetest.attribute",
+				s.account2Addr.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+
+		{
+			name: "successful update of  with concrete_type",
+			cmd:  cli.NewUpdateAccountAttributeCmd(),
+			args: []string{
+				"updatetest.attribute",
+				s.account2Addr.String(),
+				"string",
+				"test value",
+				"int",
+				"10",
+				"--concrete-type=provenance.attributes.v1.TestString",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
 	}
 
 	for _, tc := range testCases {
