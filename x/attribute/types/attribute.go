@@ -19,7 +19,7 @@ import (
 )
 
 // NewAttribute creates a new instance of an Attribute
-func NewAttribute(name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time) Attribute {
+func NewAttribute(name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time, concreteType string) Attribute {
 	// Ensure string type values are trimmed.
 	if attrType != AttributeType_Bytes && attrType != AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))
@@ -31,6 +31,7 @@ func NewAttribute(name string, address string, attrType AttributeType, value []b
 		AttributeType:  attrType,
 		Value:          value,
 		ExpirationDate: expirationDate,
+		ConcreteType:   concreteType,
 	}
 }
 
@@ -65,6 +66,9 @@ func (a Attribute) ValidateBasic() error {
 	}
 	if !isValidValueForType(a.AttributeType, a.Value) {
 		return fmt.Errorf("invalid attribute value for assigned type: %s", a.AttributeType)
+	}
+	if len(a.ConcreteType) > 200 {
+		return fmt.Errorf("concrete_type exceeds maximum length of 200 characters")
 	}
 	return nil
 }
