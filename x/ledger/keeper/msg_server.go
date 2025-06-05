@@ -43,7 +43,7 @@ func (k *MsgServer) UpdateBalancesTx(goCtx context.Context, req *ledger.MsgUpdat
 		return nil, err
 	}
 
-	err = k.UpdateEntryBalances(ctx, authorityAddr, req.Key, req.CorrelationId, req.BucketBalances, req.AppliedAmounts)
+	err = k.UpdateEntryBalances(ctx, authorityAddr, req.Key, req.CorrelationId, req.BalanceAmounts, req.AppliedAmounts)
 	if err != nil {
 		return nil, err
 	}

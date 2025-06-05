@@ -151,7 +151,7 @@ message MsgUpdateBalancesRequest {
   repeated LedgerBucketAmount applied_amounts = 4;
 
   // The bucket balances to update
-  repeated BucketBalance bucket_balances = 5;
+  repeated BucketBalance balance_amounts = 5;
 }
 
 // MsgUpdateBalancesResponse

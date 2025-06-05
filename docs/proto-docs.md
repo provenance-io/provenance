@@ -305,7 +305,6 @@
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
     - [LedgerKey](#provenance-ledger-v1-LedgerKey)
     - [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries)
-    - [LedgerUpdate](#provenance-ledger-v1-LedgerUpdate)
     - [Ledgers](#provenance-ledger-v1-Ledgers)
   
     - [DayCountConvention](#provenance-ledger-v1-DayCountConvention)
@@ -4846,7 +4845,7 @@ MsgUpdateBalancesRequest
 | `authority` | [string](#string) |  |  |
 | `correlation_id` | [string](#string) |  |  |
 | `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated |
-| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update |
 
 
 
@@ -5208,28 +5207,6 @@ LedgerEntry
 | ----- | ---- | ----- | ----------- |
 | `nft_id` | [string](#string) |  |  |
 | `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-LedgerUpdate"></a>
-
-### LedgerUpdate
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `status_type_id` | [int32](#int32) |  | Status of the ledger |
-| `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
-| `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
-| `interest_rate` | [int32](#int32) |  | Interest rate (10000000 = 10.000000%) - 6 decimal places |
-| `maturity_date` | [int32](#int32) |  | Maturity date days since epoch |
-| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | Day count convention for interest |
-| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | Interest accrual method for interest |
-| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | Payment frequency |
 
 
 
