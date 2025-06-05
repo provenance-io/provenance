@@ -118,6 +118,430 @@ func (m *MsgCreateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateResponse proto.InternalMessageInfo
 
+// MsgUpdateStatusRequest
+type MsgUpdateStatusRequest struct {
+	Key          *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Authority    string     `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	StatusTypeId int32      `protobuf:"varint,3,opt,name=status_type_id,json=statusTypeId,proto3" json:"status_type_id,omitempty"`
+}
+
+func (m *MsgUpdateStatusRequest) Reset()         { *m = MsgUpdateStatusRequest{} }
+func (m *MsgUpdateStatusRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateStatusRequest) ProtoMessage()    {}
+func (*MsgUpdateStatusRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{2}
+}
+func (m *MsgUpdateStatusRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateStatusRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateStatusRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateStatusRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateStatusRequest.Merge(m, src)
+}
+func (m *MsgUpdateStatusRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateStatusRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateStatusRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateStatusRequest proto.InternalMessageInfo
+
+func (m *MsgUpdateStatusRequest) GetKey() *LedgerKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *MsgUpdateStatusRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateStatusRequest) GetStatusTypeId() int32 {
+	if m != nil {
+		return m.StatusTypeId
+	}
+	return 0
+}
+
+// MsgUpdateStatusResponse
+type MsgUpdateStatusResponse struct {
+}
+
+func (m *MsgUpdateStatusResponse) Reset()         { *m = MsgUpdateStatusResponse{} }
+func (m *MsgUpdateStatusResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateStatusResponse) ProtoMessage()    {}
+func (*MsgUpdateStatusResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{3}
+}
+func (m *MsgUpdateStatusResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateStatusResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateStatusResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateStatusResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateStatusResponse.Merge(m, src)
+}
+func (m *MsgUpdateStatusResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateStatusResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateStatusResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateStatusResponse proto.InternalMessageInfo
+
+// MsgUpdateInterestRateRequest
+type MsgUpdateInterestRateRequest struct {
+	Key                        *LedgerKey            `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Authority                  string                `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	InterestRate               int32                 `protobuf:"varint,3,opt,name=interest_rate,json=interestRate,proto3" json:"interest_rate,omitempty"`
+	InterestDayCountConvention DayCountConvention    `protobuf:"varint,4,opt,name=interest_day_count_convention,json=interestDayCountConvention,proto3,enum=provenance.ledger.v1.DayCountConvention" json:"interest_day_count_convention,omitempty"`
+	InterestAccrualMethod      InterestAccrualMethod `protobuf:"varint,5,opt,name=interest_accrual_method,json=interestAccrualMethod,proto3,enum=provenance.ledger.v1.InterestAccrualMethod" json:"interest_accrual_method,omitempty"`
+}
+
+func (m *MsgUpdateInterestRateRequest) Reset()         { *m = MsgUpdateInterestRateRequest{} }
+func (m *MsgUpdateInterestRateRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateInterestRateRequest) ProtoMessage()    {}
+func (*MsgUpdateInterestRateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{4}
+}
+func (m *MsgUpdateInterestRateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateInterestRateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateInterestRateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateInterestRateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateInterestRateRequest.Merge(m, src)
+}
+func (m *MsgUpdateInterestRateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateInterestRateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateInterestRateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateInterestRateRequest proto.InternalMessageInfo
+
+func (m *MsgUpdateInterestRateRequest) GetKey() *LedgerKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *MsgUpdateInterestRateRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateInterestRateRequest) GetInterestRate() int32 {
+	if m != nil {
+		return m.InterestRate
+	}
+	return 0
+}
+
+func (m *MsgUpdateInterestRateRequest) GetInterestDayCountConvention() DayCountConvention {
+	if m != nil {
+		return m.InterestDayCountConvention
+	}
+	return DayCountConvention_LEDGER_DAY_COUNT_UNSPECIFIED
+}
+
+func (m *MsgUpdateInterestRateRequest) GetInterestAccrualMethod() InterestAccrualMethod {
+	if m != nil {
+		return m.InterestAccrualMethod
+	}
+	return InterestAccrualMethod_LEDGER_ACCRUAL_UNSPECIFIED
+}
+
+// MsgUpdateInterestRateResponse
+type MsgUpdateInterestRateResponse struct {
+}
+
+func (m *MsgUpdateInterestRateResponse) Reset()         { *m = MsgUpdateInterestRateResponse{} }
+func (m *MsgUpdateInterestRateResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateInterestRateResponse) ProtoMessage()    {}
+func (*MsgUpdateInterestRateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{5}
+}
+func (m *MsgUpdateInterestRateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateInterestRateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateInterestRateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateInterestRateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateInterestRateResponse.Merge(m, src)
+}
+func (m *MsgUpdateInterestRateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateInterestRateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateInterestRateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateInterestRateResponse proto.InternalMessageInfo
+
+// MsgUpdatePaymentRequest
+type MsgUpdatePaymentRequest struct {
+	Key              *LedgerKey       `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Authority        string           `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	NextPmtAmt       int64            `protobuf:"varint,3,opt,name=next_pmt_amt,json=nextPmtAmt,proto3" json:"next_pmt_amt,omitempty"`
+	NextPmtDate      int32            `protobuf:"varint,4,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"next_pmt_date,omitempty"`
+	PaymentFrequency PaymentFrequency `protobuf:"varint,5,opt,name=payment_frequency,json=paymentFrequency,proto3,enum=provenance.ledger.v1.PaymentFrequency" json:"payment_frequency,omitempty"`
+}
+
+func (m *MsgUpdatePaymentRequest) Reset()         { *m = MsgUpdatePaymentRequest{} }
+func (m *MsgUpdatePaymentRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdatePaymentRequest) ProtoMessage()    {}
+func (*MsgUpdatePaymentRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{6}
+}
+func (m *MsgUpdatePaymentRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdatePaymentRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdatePaymentRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdatePaymentRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdatePaymentRequest.Merge(m, src)
+}
+func (m *MsgUpdatePaymentRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdatePaymentRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdatePaymentRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdatePaymentRequest proto.InternalMessageInfo
+
+func (m *MsgUpdatePaymentRequest) GetKey() *LedgerKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *MsgUpdatePaymentRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdatePaymentRequest) GetNextPmtAmt() int64 {
+	if m != nil {
+		return m.NextPmtAmt
+	}
+	return 0
+}
+
+func (m *MsgUpdatePaymentRequest) GetNextPmtDate() int32 {
+	if m != nil {
+		return m.NextPmtDate
+	}
+	return 0
+}
+
+func (m *MsgUpdatePaymentRequest) GetPaymentFrequency() PaymentFrequency {
+	if m != nil {
+		return m.PaymentFrequency
+	}
+	return PaymentFrequency_LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED
+}
+
+// MsgUpdatePaymentResponse
+type MsgUpdatePaymentResponse struct {
+}
+
+func (m *MsgUpdatePaymentResponse) Reset()         { *m = MsgUpdatePaymentResponse{} }
+func (m *MsgUpdatePaymentResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdatePaymentResponse) ProtoMessage()    {}
+func (*MsgUpdatePaymentResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{7}
+}
+func (m *MsgUpdatePaymentResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdatePaymentResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdatePaymentResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdatePaymentResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdatePaymentResponse.Merge(m, src)
+}
+func (m *MsgUpdatePaymentResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdatePaymentResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdatePaymentResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdatePaymentResponse proto.InternalMessageInfo
+
+// MsgUpdateMaturityDateRequest
+type MsgUpdateMaturityDateRequest struct {
+	Key          *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Authority    string     `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	MaturityDate int32      `protobuf:"varint,3,opt,name=maturity_date,json=maturityDate,proto3" json:"maturity_date,omitempty"`
+}
+
+func (m *MsgUpdateMaturityDateRequest) Reset()         { *m = MsgUpdateMaturityDateRequest{} }
+func (m *MsgUpdateMaturityDateRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMaturityDateRequest) ProtoMessage()    {}
+func (*MsgUpdateMaturityDateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{8}
+}
+func (m *MsgUpdateMaturityDateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMaturityDateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMaturityDateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMaturityDateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMaturityDateRequest.Merge(m, src)
+}
+func (m *MsgUpdateMaturityDateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMaturityDateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMaturityDateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMaturityDateRequest proto.InternalMessageInfo
+
+func (m *MsgUpdateMaturityDateRequest) GetKey() *LedgerKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *MsgUpdateMaturityDateRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateMaturityDateRequest) GetMaturityDate() int32 {
+	if m != nil {
+		return m.MaturityDate
+	}
+	return 0
+}
+
+// MsgUpdateMaturityDateResponse
+type MsgUpdateMaturityDateResponse struct {
+}
+
+func (m *MsgUpdateMaturityDateResponse) Reset()         { *m = MsgUpdateMaturityDateResponse{} }
+func (m *MsgUpdateMaturityDateResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMaturityDateResponse) ProtoMessage()    {}
+func (*MsgUpdateMaturityDateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3c124d2e9569f84d, []int{9}
+}
+func (m *MsgUpdateMaturityDateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMaturityDateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMaturityDateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMaturityDateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMaturityDateResponse.Merge(m, src)
+}
+func (m *MsgUpdateMaturityDateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMaturityDateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMaturityDateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMaturityDateResponse proto.InternalMessageInfo
+
 // MsgAppendRequest
 type MsgAppendRequest struct {
 	Key       *LedgerKey     `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -129,7 +553,7 @@ func (m *MsgAppendRequest) Reset()         { *m = MsgAppendRequest{} }
 func (m *MsgAppendRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAppendRequest) ProtoMessage()    {}
 func (*MsgAppendRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{2}
+	return fileDescriptor_3c124d2e9569f84d, []int{10}
 }
 func (m *MsgAppendRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -187,7 +611,7 @@ func (m *MsgAppendResponse) Reset()         { *m = MsgAppendResponse{} }
 func (m *MsgAppendResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAppendResponse) ProtoMessage()    {}
 func (*MsgAppendResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{3}
+	return fileDescriptor_3c124d2e9569f84d, []int{11}
 }
 func (m *MsgAppendResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -231,7 +655,7 @@ func (m *MsgUpdateBalancesRequest) Reset()         { *m = MsgUpdateBalancesReque
 func (m *MsgUpdateBalancesRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateBalancesRequest) ProtoMessage()    {}
 func (*MsgUpdateBalancesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{4}
+	return fileDescriptor_3c124d2e9569f84d, []int{12}
 }
 func (m *MsgUpdateBalancesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -303,7 +727,7 @@ func (m *MsgUpdateBalancesResponse) Reset()         { *m = MsgUpdateBalancesResp
 func (m *MsgUpdateBalancesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateBalancesResponse) ProtoMessage()    {}
 func (*MsgUpdateBalancesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{5}
+	return fileDescriptor_3c124d2e9569f84d, []int{13}
 }
 func (m *MsgUpdateBalancesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -344,7 +768,7 @@ func (m *MsgFundAssetRequest) Reset()         { *m = MsgFundAssetRequest{} }
 func (m *MsgFundAssetRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgFundAssetRequest) ProtoMessage()    {}
 func (*MsgFundAssetRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{6}
+	return fileDescriptor_3c124d2e9569f84d, []int{14}
 }
 func (m *MsgFundAssetRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -409,7 +833,7 @@ func (m *MsgFundAssetResponse) Reset()         { *m = MsgFundAssetResponse{} }
 func (m *MsgFundAssetResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgFundAssetResponse) ProtoMessage()    {}
 func (*MsgFundAssetResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{7}
+	return fileDescriptor_3c124d2e9569f84d, []int{15}
 }
 func (m *MsgFundAssetResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -448,7 +872,7 @@ func (m *MsgTransferFundsRequest) Reset()         { *m = MsgTransferFundsRequest
 func (m *MsgTransferFundsRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgTransferFundsRequest) ProtoMessage()    {}
 func (*MsgTransferFundsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{8}
+	return fileDescriptor_3c124d2e9569f84d, []int{16}
 }
 func (m *MsgTransferFundsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -499,7 +923,7 @@ func (m *MsgTransferFundsResponse) Reset()         { *m = MsgTransferFundsRespon
 func (m *MsgTransferFundsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgTransferFundsResponse) ProtoMessage()    {}
 func (*MsgTransferFundsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{9}
+	return fileDescriptor_3c124d2e9569f84d, []int{17}
 }
 func (m *MsgTransferFundsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -539,7 +963,7 @@ func (m *MsgTransferFundsWithSettlementRequest) Reset()         { *m = MsgTransf
 func (m *MsgTransferFundsWithSettlementRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgTransferFundsWithSettlementRequest) ProtoMessage()    {}
 func (*MsgTransferFundsWithSettlementRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{10}
+	return fileDescriptor_3c124d2e9569f84d, []int{18}
 }
 func (m *MsgTransferFundsWithSettlementRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -592,7 +1016,7 @@ func (m *MsgTransferFundsWithSettlementResponse) Reset() {
 func (m *MsgTransferFundsWithSettlementResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgTransferFundsWithSettlementResponse) ProtoMessage()    {}
 func (*MsgTransferFundsWithSettlementResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{11}
+	return fileDescriptor_3c124d2e9569f84d, []int{19}
 }
 func (m *MsgTransferFundsWithSettlementResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -631,7 +1055,7 @@ func (m *MsgDestroyRequest) Reset()         { *m = MsgDestroyRequest{} }
 func (m *MsgDestroyRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgDestroyRequest) ProtoMessage()    {}
 func (*MsgDestroyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{12}
+	return fileDescriptor_3c124d2e9569f84d, []int{20}
 }
 func (m *MsgDestroyRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -682,7 +1106,7 @@ func (m *MsgDestroyResponse) Reset()         { *m = MsgDestroyResponse{} }
 func (m *MsgDestroyResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDestroyResponse) ProtoMessage()    {}
 func (*MsgDestroyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{13}
+	return fileDescriptor_3c124d2e9569f84d, []int{21}
 }
 func (m *MsgDestroyResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -721,7 +1145,7 @@ func (m *MsgCreateLedgerClassRequest) Reset()         { *m = MsgCreateLedgerClas
 func (m *MsgCreateLedgerClassRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateLedgerClassRequest) ProtoMessage()    {}
 func (*MsgCreateLedgerClassRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{14}
+	return fileDescriptor_3c124d2e9569f84d, []int{22}
 }
 func (m *MsgCreateLedgerClassRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -772,7 +1196,7 @@ func (m *MsgCreateLedgerClassResponse) Reset()         { *m = MsgCreateLedgerCla
 func (m *MsgCreateLedgerClassResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateLedgerClassResponse) ProtoMessage()    {}
 func (*MsgCreateLedgerClassResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{15}
+	return fileDescriptor_3c124d2e9569f84d, []int{23}
 }
 func (m *MsgCreateLedgerClassResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -812,7 +1236,7 @@ func (m *MsgAddLedgerClassStatusTypeRequest) Reset()         { *m = MsgAddLedger
 func (m *MsgAddLedgerClassStatusTypeRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAddLedgerClassStatusTypeRequest) ProtoMessage()    {}
 func (*MsgAddLedgerClassStatusTypeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{16}
+	return fileDescriptor_3c124d2e9569f84d, []int{24}
 }
 func (m *MsgAddLedgerClassStatusTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -870,7 +1294,7 @@ func (m *MsgAddLedgerClassStatusTypeResponse) Reset()         { *m = MsgAddLedge
 func (m *MsgAddLedgerClassStatusTypeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddLedgerClassStatusTypeResponse) ProtoMessage()    {}
 func (*MsgAddLedgerClassStatusTypeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{17}
+	return fileDescriptor_3c124d2e9569f84d, []int{25}
 }
 func (m *MsgAddLedgerClassStatusTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -910,7 +1334,7 @@ func (m *MsgAddLedgerClassEntryTypeRequest) Reset()         { *m = MsgAddLedgerC
 func (m *MsgAddLedgerClassEntryTypeRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAddLedgerClassEntryTypeRequest) ProtoMessage()    {}
 func (*MsgAddLedgerClassEntryTypeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{18}
+	return fileDescriptor_3c124d2e9569f84d, []int{26}
 }
 func (m *MsgAddLedgerClassEntryTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -968,7 +1392,7 @@ func (m *MsgAddLedgerClassEntryTypeResponse) Reset()         { *m = MsgAddLedger
 func (m *MsgAddLedgerClassEntryTypeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddLedgerClassEntryTypeResponse) ProtoMessage()    {}
 func (*MsgAddLedgerClassEntryTypeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{19}
+	return fileDescriptor_3c124d2e9569f84d, []int{27}
 }
 func (m *MsgAddLedgerClassEntryTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1008,7 +1432,7 @@ func (m *MsgAddLedgerClassBucketTypeRequest) Reset()         { *m = MsgAddLedger
 func (m *MsgAddLedgerClassBucketTypeRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAddLedgerClassBucketTypeRequest) ProtoMessage()    {}
 func (*MsgAddLedgerClassBucketTypeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{20}
+	return fileDescriptor_3c124d2e9569f84d, []int{28}
 }
 func (m *MsgAddLedgerClassBucketTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1066,7 +1490,7 @@ func (m *MsgAddLedgerClassBucketTypeResponse) Reset()         { *m = MsgAddLedge
 func (m *MsgAddLedgerClassBucketTypeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddLedgerClassBucketTypeResponse) ProtoMessage()    {}
 func (*MsgAddLedgerClassBucketTypeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3c124d2e9569f84d, []int{21}
+	return fileDescriptor_3c124d2e9569f84d, []int{29}
 }
 func (m *MsgAddLedgerClassBucketTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1098,6 +1522,14 @@ var xxx_messageInfo_MsgAddLedgerClassBucketTypeResponse proto.InternalMessageInf
 func init() {
 	proto.RegisterType((*MsgCreateRequest)(nil), "provenance.ledger.v1.MsgCreateRequest")
 	proto.RegisterType((*MsgCreateResponse)(nil), "provenance.ledger.v1.MsgCreateResponse")
+	proto.RegisterType((*MsgUpdateStatusRequest)(nil), "provenance.ledger.v1.MsgUpdateStatusRequest")
+	proto.RegisterType((*MsgUpdateStatusResponse)(nil), "provenance.ledger.v1.MsgUpdateStatusResponse")
+	proto.RegisterType((*MsgUpdateInterestRateRequest)(nil), "provenance.ledger.v1.MsgUpdateInterestRateRequest")
+	proto.RegisterType((*MsgUpdateInterestRateResponse)(nil), "provenance.ledger.v1.MsgUpdateInterestRateResponse")
+	proto.RegisterType((*MsgUpdatePaymentRequest)(nil), "provenance.ledger.v1.MsgUpdatePaymentRequest")
+	proto.RegisterType((*MsgUpdatePaymentResponse)(nil), "provenance.ledger.v1.MsgUpdatePaymentResponse")
+	proto.RegisterType((*MsgUpdateMaturityDateRequest)(nil), "provenance.ledger.v1.MsgUpdateMaturityDateRequest")
+	proto.RegisterType((*MsgUpdateMaturityDateResponse)(nil), "provenance.ledger.v1.MsgUpdateMaturityDateResponse")
 	proto.RegisterType((*MsgAppendRequest)(nil), "provenance.ledger.v1.MsgAppendRequest")
 	proto.RegisterType((*MsgAppendResponse)(nil), "provenance.ledger.v1.MsgAppendResponse")
 	proto.RegisterType((*MsgUpdateBalancesRequest)(nil), "provenance.ledger.v1.MsgUpdateBalancesRequest")
@@ -1123,69 +1555,91 @@ func init() {
 func init() { proto.RegisterFile("provenance/ledger/v1/tx.proto", fileDescriptor_3c124d2e9569f84d) }
 
 var fileDescriptor_3c124d2e9569f84d = []byte{
-	// 985 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xce, 0x24, 0xb4, 0xe0, 0x67, 0x9a, 0x94, 0x49, 0x44, 0xdc, 0x6d, 0x6a, 0x12, 0x97, 0x04,
-	0x13, 0xda, 0x35, 0x31, 0x48, 0x14, 0xca, 0x81, 0xa4, 0x05, 0x29, 0x22, 0x46, 0xb0, 0x5d, 0x84,
-	0x04, 0x12, 0xd6, 0xda, 0x3b, 0x6c, 0x56, 0xb5, 0x77, 0x97, 0x9d, 0xb1, 0xb5, 0x2b, 0x71, 0x40,
-	0xdc, 0xb8, 0x20, 0x7a, 0xe5, 0xce, 0x3d, 0xff, 0x03, 0x48, 0xf4, 0xd8, 0x23, 0x47, 0x94, 0x1c,
-	0xfa, 0x17, 0x70, 0x47, 0xbb, 0x3b, 0xde, 0x1f, 0xde, 0x1f, 0x5e, 0x9b, 0x22, 0x71, 0x9b, 0xd9,
-	0xf9, 0xde, 0x7b, 0xdf, 0xf7, 0xe6, 0xf9, 0xbd, 0x31, 0xdc, 0xb0, 0x6c, 0x73, 0x4c, 0x0c, 0xc5,
-	0xe8, 0x93, 0xd6, 0x80, 0xa8, 0x1a, 0xb1, 0x5b, 0xe3, 0x83, 0x16, 0x73, 0x44, 0xcb, 0x36, 0x99,
-	0x89, 0x37, 0xa2, 0x63, 0x31, 0x38, 0x16, 0xc7, 0x07, 0xc2, 0x66, 0xdf, 0xa4, 0x43, 0x93, 0xb6,
-	0x86, 0x54, 0xf3, 0xd0, 0x43, 0xaa, 0x05, 0x70, 0x61, 0x27, 0xd3, 0x1b, 0x37, 0x0c, 0x20, 0xb7,
-	0x0a, 0x20, 0x5d, 0x4a, 0x18, 0x1b, 0x90, 0x21, 0x31, 0x58, 0x80, 0x6e, 0x8c, 0xe1, 0x6a, 0x87,
-	0x6a, 0xf7, 0x6c, 0xa2, 0x30, 0x22, 0x91, 0x6f, 0x47, 0x84, 0x32, 0xfc, 0x36, 0x5c, 0x0e, 0xe0,
-	0x35, 0xb4, 0x8d, 0x9a, 0xd5, 0xf6, 0x96, 0x98, 0x45, 0x52, 0x3c, 0xf1, 0x57, 0x12, 0xc7, 0xe2,
-	0x2d, 0xa8, 0x28, 0x23, 0x76, 0x6a, 0xda, 0x3a, 0x73, 0x6b, 0xcb, 0xdb, 0xa8, 0x59, 0x91, 0xa2,
-	0x0f, 0xef, 0xad, 0xfe, 0xf0, 0xf4, 0x6c, 0x3f, 0xda, 0x37, 0xd6, 0xe1, 0xa5, 0x58, 0x5c, 0x6a,
-	0x99, 0x06, 0x25, 0x8d, 0x33, 0xe4, 0xb3, 0x39, 0xb4, 0x2c, 0x62, 0xa8, 0x13, 0x36, 0x07, 0xb0,
-	0xf2, 0x90, 0xb8, 0x9c, 0xca, 0x2b, 0x45, 0x54, 0x3e, 0x26, 0xae, 0xe4, 0x61, 0xf1, 0x5d, 0x78,
-	0x9e, 0x18, 0xcc, 0xd6, 0x09, 0xad, 0x2d, 0x6f, 0xaf, 0x34, 0xab, 0xed, 0x9d, 0x22, 0xb3, 0x0f,
-	0x0d, 0x66, 0xbb, 0xd2, 0xc4, 0x22, 0xa9, 0x63, 0xa5, 0x9c, 0x8e, 0x09, 0x63, 0xae, 0xe3, 0xb7,
-	0x65, 0xa8, 0x75, 0xa8, 0xf6, 0xb9, 0xa5, 0x2a, 0x8c, 0x1c, 0x29, 0x03, 0x2f, 0x2c, 0xfd, 0x17,
-	0x7a, 0x0a, 0x53, 0x8b, 0x77, 0x61, 0xb5, 0x6f, 0xda, 0x36, 0x19, 0x28, 0x4c, 0x37, 0x8d, 0xae,
-	0xae, 0x72, 0xd6, 0x57, 0x62, 0x5f, 0x8f, 0x55, 0xfc, 0x19, 0xac, 0x29, 0x96, 0x35, 0xd0, 0x89,
-	0xda, 0x55, 0x86, 0xe6, 0xc8, 0x60, 0xb4, 0xf6, 0x9c, 0x9f, 0x9c, 0x66, 0x11, 0x87, 0xa3, 0x51,
-	0xff, 0x21, 0x61, 0x87, 0xbe, 0x81, 0xb4, 0xca, 0x1d, 0x04, 0x5b, 0x8a, 0x4f, 0x60, 0xad, 0xe7,
-	0x9f, 0x77, 0x7b, 0x5c, 0x64, 0xed, 0x92, 0xef, 0xf2, 0x66, 0xb6, 0xcb, 0xc0, 0x19, 0x4f, 0x88,
-	0xb4, 0xda, 0x8b, 0x6f, 0x69, 0x2a, 0xb5, 0xd7, 0xe1, 0x5a, 0x46, 0x12, 0x79, 0x8a, 0xff, 0x46,
-	0xb0, 0xde, 0xa1, 0xda, 0x47, 0x23, 0x43, 0x3d, 0xa4, 0x94, 0xb0, 0xff, 0x65, 0xb5, 0xe0, 0x0f,
-	0xa0, 0xc2, 0x6c, 0xc5, 0xa0, 0xdf, 0x10, 0x7b, 0x92, 0xed, 0x46, 0xb6, 0x73, 0x4f, 0x88, 0xcc,
-	0xa1, 0x52, 0x64, 0x94, 0x4a, 0xca, 0xcb, 0xb0, 0x91, 0x94, 0xcd, 0xf3, 0xf1, 0x23, 0x82, 0xcd,
-	0x0e, 0xd5, 0x26, 0x2e, 0x3c, 0x40, 0x58, 0x71, 0x09, 0x8e, 0xa8, 0x90, 0xe3, 0xf2, 0xb3, 0xe0,
-	0x28, 0xf8, 0xd5, 0x3f, 0x45, 0x85, 0xf3, 0xfc, 0x15, 0xc1, 0xee, 0xf4, 0xe1, 0x17, 0x3a, 0x3b,
-	0x7d, 0x10, 0x36, 0xa6, 0x72, 0xac, 0x3f, 0x49, 0xb3, 0x7e, 0x73, 0x36, 0xeb, 0xa9, 0x48, 0x05,
-	0x1a, 0x9a, 0xb0, 0x37, 0x8b, 0x26, 0x57, 0xc4, 0xfc, 0x0e, 0x70, 0x9f, 0x50, 0x66, 0x9b, 0xee,
-	0x7f, 0xf5, 0x23, 0x4f, 0xf1, 0xdb, 0x00, 0x1c, 0x8f, 0xca, 0xb9, 0x3c, 0x42, 0x70, 0x3d, 0x6c,
-	0xab, 0x81, 0xff, 0x7b, 0x03, 0x85, 0x86, 0x95, 0x70, 0x1f, 0x5e, 0xe4, 0x83, 0xa0, 0xef, 0x7d,
-	0xe6, 0xfc, 0x0a, 0xeb, 0x3d, 0xb0, 0xaf, 0x0e, 0xa2, 0xcd, 0x9c, 0x4c, 0xeb, 0xb0, 0x95, 0x4d,
-	0x89, 0x73, 0x7e, 0x8c, 0xa0, 0xe1, 0xb5, 0x50, 0x55, 0x8d, 0x9d, 0x3e, 0x60, 0x0a, 0x1b, 0x51,
-	0xd9, 0xb5, 0xc2, 0xa1, 0xb4, 0x07, 0x6b, 0x71, 0xea, 0x5e, 0x9b, 0x0b, 0x8a, 0xe2, 0x4a, 0x8c,
-	0xda, 0xb1, 0x8a, 0x4f, 0xa0, 0x4a, 0x7d, 0xe3, 0x2e, 0x73, 0x2d, 0xe2, 0xd3, 0xab, 0xb6, 0xdf,
-	0x98, 0xa9, 0x30, 0x16, 0x10, 0x68, 0xb8, 0x9e, 0x73, 0x18, 0xec, 0xc2, 0xcd, 0x42, 0x25, 0x5c,
-	0xf1, 0xef, 0x08, 0x76, 0x52, 0x38, 0xbf, 0xaf, 0x2c, 0x22, 0xf8, 0x18, 0xc0, 0x6b, 0x46, 0x6e,
-	0x5c, 0xef, 0xfe, 0x4c, 0xbd, 0x51, 0xb8, 0x0a, 0x99, 0x2c, 0xe7, 0x54, 0xfb, 0x6a, 0xc6, 0xbd,
-	0xc5, 0x54, 0x14, 0x5d, 0x6f, 0x30, 0x08, 0x16, 0xbc, 0x5e, 0x3e, 0x72, 0xe6, 0xba, 0xde, 0x58,
-	0x40, 0xe8, 0x85, 0xeb, 0x67, 0x70, 0xbd, 0x71, 0x25, 0x81, 0xe2, 0xf6, 0x1f, 0x00, 0x2b, 0x1d,
-	0xaa, 0xe1, 0xaf, 0xe0, 0x85, 0xa0, 0xea, 0x65, 0x07, 0xef, 0x65, 0x33, 0x9c, 0x7e, 0x7a, 0x09,
-	0xaf, 0xcd, 0xc4, 0x05, 0x41, 0x3c, 0xe7, 0xc1, 0xa3, 0xa3, 0xd0, 0x79, 0xe2, 0x25, 0x55, 0xe0,
-	0x3c, 0xf9, 0x7e, 0xc1, 0x14, 0xae, 0x26, 0xc7, 0xae, 0xec, 0x60, 0x31, 0xd7, 0x38, 0xf3, 0x99,
-	0x23, 0xb4, 0x4a, 0xe3, 0x79, 0x50, 0x15, 0xaa, 0xe1, 0x58, 0x93, 0x1d, 0xfc, 0x7a, 0xae, 0xfd,
-	0xf4, 0xcc, 0x17, 0xf6, 0xcb, 0x40, 0x79, 0x14, 0x0b, 0xd6, 0x12, 0x4d, 0x5d, 0x76, 0xf0, 0xed,
-	0x5c, 0xf3, 0xac, 0x69, 0x2a, 0x88, 0x65, 0xe1, 0x3c, 0xe2, 0x2f, 0x08, 0x6e, 0x14, 0xcc, 0x11,
-	0xd9, 0xc1, 0x77, 0xcb, 0x79, 0xcc, 0x1c, 0x93, 0xc2, 0xfb, 0x8b, 0x19, 0x73, 0x72, 0x5f, 0x43,
-	0x85, 0xcf, 0x10, 0xd9, 0xc1, 0xf9, 0xf5, 0x91, 0x9c, 0x6e, 0x42, 0x73, 0x36, 0x90, 0xfb, 0xff,
-	0x0e, 0xd6, 0x53, 0x9d, 0x5f, 0x76, 0xf0, 0xc1, 0x8c, 0x32, 0x4f, 0x8f, 0x2e, 0xa1, 0x3d, 0x8f,
-	0x09, 0x8f, 0xfe, 0x08, 0x81, 0x90, 0xd7, 0x8d, 0x65, 0x07, 0xdf, 0xc9, 0xff, 0x3d, 0x14, 0x0f,
-	0x23, 0xe1, 0xdd, 0x05, 0x2c, 0x39, 0xa7, 0x9f, 0x10, 0x5c, 0xcb, 0xe9, 0x99, 0xb2, 0x83, 0xdf,
-	0x29, 0xe9, 0x78, 0x7a, 0x5a, 0x08, 0x77, 0xe6, 0x37, 0xcc, 0x4d, 0x52, 0xd4, 0xd3, 0xe6, 0x48,
-	0x52, 0xaa, 0xa5, 0x97, 0x4e, 0x52, 0xba, 0x85, 0x0a, 0x97, 0xbe, 0x7f, 0x7a, 0xb6, 0x8f, 0x8e,
-	0x94, 0xc7, 0xe7, 0x75, 0xf4, 0xe4, 0xbc, 0x8e, 0xfe, 0x3a, 0xaf, 0xa3, 0x9f, 0x2f, 0xea, 0x4b,
-	0x4f, 0x2e, 0xea, 0x4b, 0x7f, 0x5e, 0xd4, 0x97, 0x60, 0x53, 0x37, 0x33, 0xbd, 0x7f, 0x8a, 0xbe,
-	0xbc, 0xa5, 0xe9, 0xec, 0x74, 0xd4, 0x13, 0xfb, 0xe6, 0xb0, 0x15, 0x41, 0x6e, 0xeb, 0x66, 0x6c,
-	0xd7, 0x72, 0xf8, 0x1f, 0xe2, 0xde, 0x65, 0xff, 0x6f, 0xf0, 0x5b, 0xff, 0x04, 0x00, 0x00, 0xff,
-	0xff, 0x01, 0xc2, 0x6d, 0x27, 0xa7, 0x0f, 0x00, 0x00,
+	// 1329 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcd, 0x8f, 0xdb, 0xc4,
+	0x1b, 0xae, 0x93, 0x6e, 0x7f, 0xbf, 0xbc, 0xe9, 0x66, 0xdb, 0xe9, 0xd2, 0x4d, 0xdd, 0x6e, 0x9a,
+	0xa6, 0x1f, 0x84, 0xa5, 0x4d, 0xd8, 0x14, 0x89, 0x42, 0x39, 0xb0, 0x1f, 0x54, 0x5a, 0xb1, 0x41,
+	0x8b, 0xd7, 0x08, 0x09, 0x24, 0x2c, 0xc7, 0x9e, 0x66, 0xad, 0x8d, 0x3f, 0xf0, 0x4c, 0x56, 0xb6,
+	0x84, 0x04, 0xe2, 0xc6, 0x05, 0xd1, 0x03, 0x17, 0x2e, 0x5c, 0xe0, 0xc2, 0x69, 0xff, 0x07, 0x38,
+	0xf4, 0xd8, 0x23, 0x47, 0xb4, 0x7b, 0xe8, 0x5f, 0x00, 0x67, 0x64, 0x7b, 0xec, 0x38, 0xb1, 0xe3,
+	0x24, 0xcb, 0xae, 0xc4, 0x2d, 0x9e, 0x79, 0x3f, 0x9e, 0xe7, 0x7d, 0x5f, 0xcf, 0x3c, 0x0e, 0x2c,
+	0x5b, 0xb6, 0x79, 0x80, 0x0d, 0xd9, 0x50, 0x70, 0xb3, 0x87, 0xd5, 0x2e, 0xb6, 0x9b, 0x07, 0xab,
+	0x4d, 0xea, 0x34, 0x2c, 0xdb, 0xa4, 0x26, 0x5a, 0x1c, 0x6c, 0x37, 0x82, 0xed, 0xc6, 0xc1, 0x2a,
+	0xbf, 0xa4, 0x98, 0x44, 0x37, 0x49, 0x53, 0x27, 0x5d, 0xcf, 0x5a, 0x27, 0xdd, 0xc0, 0x9c, 0xbf,
+	0x95, 0x1a, 0x8d, 0x39, 0x06, 0x26, 0xf7, 0x33, 0x4c, 0x24, 0x82, 0x29, 0xed, 0x61, 0x1d, 0x1b,
+	0x34, 0xb0, 0xae, 0x1d, 0xc0, 0xa5, 0x36, 0xe9, 0x6e, 0xd8, 0x58, 0xa6, 0x58, 0xc0, 0x5f, 0xf4,
+	0x31, 0xa1, 0xe8, 0x4d, 0xb8, 0x10, 0x98, 0x97, 0xb9, 0x2a, 0x57, 0x2f, 0xb6, 0x6e, 0x34, 0xd2,
+	0x40, 0x36, 0xb6, 0xfd, 0x5f, 0x02, 0xb3, 0x45, 0x37, 0xa0, 0x20, 0xf7, 0xe9, 0x9e, 0x69, 0x6b,
+	0xd4, 0x2d, 0xe7, 0xaa, 0x5c, 0xbd, 0x20, 0x0c, 0x16, 0xde, 0x29, 0x7d, 0xf3, 0xf2, 0x70, 0x65,
+	0xf0, 0x5c, 0xbb, 0x02, 0x97, 0x63, 0x79, 0x89, 0x65, 0x1a, 0x04, 0xd7, 0x7e, 0xe2, 0xe0, 0x6a,
+	0x9b, 0x74, 0x3f, 0xb6, 0x54, 0x99, 0xe2, 0x5d, 0x2a, 0xd3, 0x3e, 0x09, 0x31, 0xad, 0x42, 0x7e,
+	0x1f, 0xbb, 0x0c, 0xd0, 0xcd, 0x2c, 0x40, 0x1f, 0x60, 0x57, 0xf0, 0x6c, 0xb3, 0x01, 0xa1, 0x3b,
+	0x50, 0x22, 0x7e, 0x06, 0x89, 0xba, 0x16, 0x96, 0x34, 0xb5, 0x9c, 0xaf, 0x72, 0xf5, 0x39, 0xe1,
+	0x62, 0xb0, 0x2a, 0xba, 0x16, 0xde, 0x52, 0x13, 0xb0, 0xaf, 0xc1, 0x52, 0x02, 0x20, 0x03, 0xff,
+	0x77, 0x0e, 0x6e, 0x44, 0x7b, 0x5b, 0x06, 0xc5, 0x36, 0x26, 0x54, 0x88, 0x95, 0xf5, 0xd4, 0x29,
+	0xdc, 0x86, 0x79, 0x8d, 0xe5, 0x91, 0x6c, 0x99, 0xe2, 0x90, 0x81, 0x16, 0x4b, 0x8e, 0xf6, 0x61,
+	0x39, 0x32, 0x52, 0x65, 0x57, 0x52, 0xcc, 0xbe, 0x41, 0x25, 0xc5, 0x34, 0x0e, 0xb0, 0x41, 0x35,
+	0xd3, 0x28, 0x9f, 0xaf, 0x72, 0xf5, 0x52, 0xab, 0x9e, 0x8e, 0x67, 0x53, 0x76, 0x37, 0x3c, 0x87,
+	0x8d, 0xc8, 0x5e, 0xe0, 0xc3, 0x70, 0xc9, 0x3d, 0xa4, 0xc0, 0x52, 0x94, 0x4c, 0x56, 0x14, 0xbb,
+	0x2f, 0xf7, 0x24, 0x1d, 0xd3, 0x3d, 0x53, 0x2d, 0xcf, 0xf9, 0x69, 0x5e, 0x4f, 0x4f, 0x13, 0x96,
+	0x6b, 0x2d, 0xf0, 0x69, 0xfb, 0x2e, 0xc2, 0x2b, 0x5a, 0xda, 0x72, 0xa2, 0x27, 0x37, 0x61, 0x79,
+	0x4c, 0xdd, 0x59, 0x67, 0x7e, 0xc8, 0xc5, 0xba, 0xb6, 0x23, 0xbb, 0xde, 0xf8, 0x9f, 0x59, 0x53,
+	0xaa, 0x70, 0xd1, 0xc0, 0x0e, 0x95, 0x2c, 0x9d, 0x4a, 0xb2, 0x4e, 0xfd, 0x9e, 0xe4, 0x05, 0xf0,
+	0xd6, 0x76, 0x74, 0xba, 0xa6, 0x53, 0x54, 0x83, 0xf9, 0xc8, 0xc2, 0x43, 0xe4, 0x77, 0x60, 0x4e,
+	0x28, 0x32, 0x93, 0x4d, 0xaf, 0x6b, 0xbb, 0x70, 0xd9, 0x0a, 0x80, 0x4a, 0x4f, 0x6d, 0x0f, 0xaa,
+	0xa1, 0xb8, 0xac, 0x84, 0xf7, 0xd2, 0x41, 0x32, 0x5e, 0x4f, 0x42, 0x6b, 0xe1, 0x92, 0x35, 0xb2,
+	0x92, 0x28, 0x1c, 0x0f, 0xe5, 0x64, 0x59, 0x58, 0xcd, 0x7e, 0xe6, 0x62, 0xd3, 0xdc, 0x96, 0x69,
+	0xdf, 0xf3, 0xd8, 0x3c, 0xe3, 0x69, 0xd6, 0x59, 0x9e, 0xa0, 0x2c, 0x6c, 0x9a, 0xf5, 0x58, 0xf2,
+	0xcc, 0xde, 0x0f, 0xa3, 0x64, 0x3c, 0x0e, 0x39, 0xff, 0x80, 0x5b, 0xb3, 0x2c, 0x6c, 0xa8, 0xff,
+	0x02, 0xfb, 0x63, 0xf8, 0x1f, 0x36, 0xa8, 0xad, 0x61, 0x52, 0xce, 0x55, 0xf3, 0xf5, 0x62, 0xeb,
+	0x56, 0x96, 0xdb, 0xfb, 0x06, 0xb5, 0x5d, 0x21, 0xf4, 0x18, 0x26, 0x9e, 0x9f, 0xee, 0x68, 0x0c,
+	0x11, 0x33, 0x1e, 0xbf, 0xe5, 0x62, 0xcd, 0x5a, 0x97, 0x7b, 0x5e, 0xda, 0xb3, 0x3b, 0x1c, 0xef,
+	0x42, 0x49, 0x31, 0x6d, 0x1b, 0xf7, 0x64, 0xef, 0xb5, 0x0e, 0x0f, 0xc7, 0x82, 0x30, 0x1f, 0x5b,
+	0xdd, 0x52, 0xd1, 0x47, 0xb0, 0x20, 0x5b, 0x56, 0x4f, 0xc3, 0xaa, 0x24, 0xeb, 0xde, 0x51, 0x40,
+	0xca, 0xe7, 0xfd, 0xe2, 0xd4, 0xb3, 0x30, 0xac, 0xf7, 0x95, 0x7d, 0x4c, 0xd7, 0x7c, 0x07, 0xa1,
+	0xc4, 0x02, 0x04, 0x8f, 0x04, 0x6d, 0xc3, 0x42, 0xc7, 0xdf, 0x97, 0x3a, 0x8c, 0x64, 0x79, 0xce,
+	0x0f, 0x79, 0x3b, 0x3d, 0x64, 0x10, 0x8c, 0x15, 0x44, 0x28, 0x75, 0xe2, 0x8f, 0x24, 0x51, 0xda,
+	0xeb, 0x70, 0x2d, 0xa5, 0x88, 0xac, 0xc4, 0x7f, 0x71, 0x70, 0xa5, 0x4d, 0xba, 0x4f, 0xfa, 0x86,
+	0xba, 0x46, 0x08, 0xa6, 0xff, 0xc9, 0x69, 0x41, 0xef, 0x41, 0x81, 0xda, 0xb2, 0x41, 0x9e, 0x62,
+	0x3b, 0xac, 0x76, 0x2d, 0x3d, 0xb8, 0x47, 0x44, 0x64, 0xa6, 0xc2, 0xc0, 0x29, 0x51, 0x94, 0xab,
+	0xb0, 0x38, 0x4c, 0x9b, 0xd5, 0xe3, 0x5b, 0xce, 0x3f, 0x36, 0xc3, 0x10, 0x9e, 0x41, 0x34, 0x71,
+	0x43, 0x18, 0xb9, 0x4c, 0x8c, 0xb9, 0xd3, 0xc0, 0x18, 0x1c, 0x55, 0x23, 0x50, 0x18, 0xce, 0x5f,
+	0x38, 0xb8, 0x3b, 0xba, 0xf9, 0x89, 0x46, 0xf7, 0x76, 0x23, 0xad, 0x33, 0x1d, 0xea, 0x0f, 0x93,
+	0xa8, 0xdf, 0x98, 0x8c, 0x7a, 0x24, 0x53, 0x06, 0x87, 0x3a, 0xdc, 0x9b, 0x04, 0x93, 0x31, 0xa2,
+	0xfe, 0x09, 0xb0, 0x89, 0x09, 0xb5, 0x4d, 0xf7, 0xac, 0x5e, 0xf2, 0x04, 0xbe, 0x45, 0x40, 0xf1,
+	0xac, 0x0c, 0xcb, 0x33, 0x0e, 0xae, 0x47, 0x4a, 0x2d, 0x88, 0xbf, 0xd1, 0x93, 0x49, 0x34, 0x09,
+	0x9b, 0x70, 0x91, 0x69, 0x4b, 0xc5, 0x5b, 0x66, 0xf8, 0x32, 0xe7, 0x3d, 0xf0, 0x2f, 0xf6, 0x06,
+	0x0f, 0x33, 0x22, 0xad, 0xf8, 0x77, 0x53, 0x0a, 0x24, 0x86, 0xf9, 0x39, 0x07, 0x35, 0xef, 0x08,
+	0x55, 0xd5, 0xd8, 0xee, 0x6e, 0xa4, 0xeb, 0x42, 0xe8, 0xf7, 0x60, 0x21, 0x0e, 0xdd, 0x3b, 0xe6,
+	0x82, 0xa1, 0x98, 0x8f, 0x41, 0xdb, 0x52, 0xd1, 0x36, 0x14, 0x63, 0x52, 0xd1, 0x87, 0x57, 0x1c,
+	0xa7, 0x64, 0xd2, 0x13, 0xc2, 0x40, 0x54, 0xce, 0x78, 0x19, 0xdc, 0x85, 0xdb, 0x99, 0x4c, 0x18,
+	0xe3, 0xdf, 0x39, 0xb8, 0x95, 0xb0, 0xf3, 0xcf, 0x95, 0x93, 0x10, 0xde, 0x02, 0xf0, 0x0e, 0x23,
+	0x37, 0xce, 0x77, 0x65, 0x22, 0xdf, 0x41, 0xba, 0x02, 0x0e, 0x7f, 0xce, 0xc8, 0xf6, 0x4e, 0x4a,
+	0xdf, 0x62, 0x2c, 0xb2, 0xda, 0x1b, 0x5c, 0x04, 0x27, 0x6c, 0x2f, 0xbb, 0x72, 0x66, 0x6a, 0x6f,
+	0x2c, 0x21, 0x74, 0xa2, 0xdf, 0xa7, 0xd0, 0xde, 0x38, 0x93, 0x80, 0x71, 0xeb, 0xd7, 0x12, 0xe4,
+	0xdb, 0xa4, 0x8b, 0x3e, 0x83, 0xff, 0x07, 0x53, 0x2f, 0x3a, 0x68, 0x8c, 0x0e, 0x1c, 0xfd, 0x9a,
+	0xe3, 0x5f, 0x9d, 0x68, 0x17, 0x24, 0x41, 0x3a, 0x94, 0xe2, 0x1f, 0x36, 0xa2, 0x83, 0xee, 0x8f,
+	0x75, 0x4d, 0xf9, 0x44, 0xe3, 0x1f, 0x4c, 0x69, 0xcd, 0xd2, 0x7d, 0x05, 0x8b, 0x49, 0xcd, 0x2e,
+	0x3a, 0xa8, 0x35, 0x21, 0x4c, 0xca, 0xa7, 0x15, 0xff, 0x70, 0x26, 0x1f, 0x06, 0xc0, 0x82, 0x85,
+	0x21, 0xed, 0x2b, 0x3a, 0x68, 0x12, 0x85, 0xe1, 0x8f, 0x07, 0xbe, 0x31, 0xad, 0xf9, 0x28, 0xe5,
+	0xb8, 0x54, 0x9d, 0x82, 0x72, 0x8a, 0xfe, 0x9e, 0x48, 0x39, 0x4d, 0x0d, 0x7b, 0xf3, 0x13, 0xe8,
+	0xca, 0xcc, 0xf9, 0x19, 0x12, 0xcb, 0x19, 0xf3, 0x33, 0x2c, 0x51, 0x11, 0x81, 0x4b, 0xc3, 0xca,
+	0x4a, 0x74, 0xd0, 0xa4, 0x0a, 0x8d, 0x28, 0x59, 0xbe, 0x39, 0xb5, 0x3d, 0x4b, 0xaa, 0x42, 0x31,
+	0x52, 0x2e, 0xa2, 0x83, 0x5e, 0x1b, 0xeb, 0x3f, 0x2a, 0xeb, 0xf8, 0x95, 0x69, 0x4c, 0x07, 0xa3,
+	0x32, 0x74, 0x6f, 0x67, 0x8e, 0x4a, 0x9a, 0x60, 0xca, 0x18, 0x95, 0x54, 0x51, 0x83, 0x7e, 0xe4,
+	0x60, 0x39, 0x43, 0x2a, 0x88, 0x0e, 0x7a, 0x3c, 0x5d, 0xc4, 0x54, 0x25, 0xc4, 0xbf, 0x7b, 0x32,
+	0x67, 0x06, 0xee, 0x73, 0x28, 0x30, 0x99, 0x20, 0x3a, 0x68, 0xfc, 0x7c, 0x0c, 0x0b, 0x18, 0xbe,
+	0x3e, 0xd9, 0x90, 0xc5, 0xff, 0x12, 0xae, 0x24, 0x2e, 0x77, 0xd1, 0x41, 0xab, 0x13, 0x4e, 0xb2,
+	0xa4, 0x3a, 0xe1, 0x5b, 0xb3, 0xb8, 0xb0, 0xec, 0xcf, 0x38, 0xe0, 0xc7, 0x5d, 0xb8, 0xa2, 0x83,
+	0x1e, 0x8d, 0x7f, 0x1f, 0xb2, 0xf5, 0x06, 0xff, 0xf6, 0x09, 0x3c, 0x19, 0xa6, 0xef, 0x38, 0xb8,
+	0x36, 0xe6, 0x5a, 0x14, 0x1d, 0xf4, 0xd6, 0x94, 0x81, 0x47, 0x05, 0x01, 0xff, 0x68, 0x76, 0xc7,
+	0xb1, 0x45, 0x1a, 0x5c, 0x5b, 0x33, 0x14, 0x29, 0x71, 0x6b, 0x4f, 0x5d, 0xa4, 0xe4, 0x2d, 0xc9,
+	0xcf, 0x7d, 0xfd, 0xf2, 0x70, 0x85, 0x5b, 0x97, 0x9f, 0x1f, 0x55, 0xb8, 0x17, 0x47, 0x15, 0xee,
+	0xcf, 0xa3, 0x0a, 0xf7, 0xfd, 0x71, 0xe5, 0xdc, 0x8b, 0xe3, 0xca, 0xb9, 0x3f, 0x8e, 0x2b, 0xe7,
+	0x60, 0x49, 0x33, 0x53, 0xa3, 0xef, 0x70, 0x9f, 0xde, 0xef, 0x6a, 0x74, 0xaf, 0xdf, 0x69, 0x28,
+	0xa6, 0xde, 0x1c, 0x98, 0x3c, 0xd0, 0xcc, 0xd8, 0x53, 0xd3, 0x61, 0x7f, 0xa3, 0x76, 0x2e, 0xf8,
+	0x7f, 0x9e, 0x3e, 0xfc, 0x27, 0x00, 0x00, 0xff, 0xff, 0x94, 0xb0, 0x39, 0x35, 0xdd, 0x15, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1202,6 +1656,14 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// Create a new NFT ledger
 	CreateTx(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error)
+	// Update Status
+	UpdateStatusTx(ctx context.Context, in *MsgUpdateStatusRequest, opts ...grpc.CallOption) (*MsgUpdateStatusResponse, error)
+	// Update Interest Rate
+	UpdateInterestRateTx(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
+	// Update Payment Amount, Next Payment Date, and Payment Frequency
+	UpdatePaymentTx(ctx context.Context, in *MsgUpdatePaymentRequest, opts ...grpc.CallOption) (*MsgUpdatePaymentResponse, error)
+	// Update Maturity Date
+	UpdateMaturityDateTx(ctx context.Context, in *MsgUpdateMaturityDateRequest, opts ...grpc.CallOption) (*MsgUpdateMaturityDateResponse, error)
 	// Append a ledger entry
 	AppendTx(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error)
 	// Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied
@@ -1235,6 +1697,42 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 func (c *msgClient) CreateTx(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error) {
 	out := new(MsgCreateResponse)
 	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/CreateTx", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateStatusTx(ctx context.Context, in *MsgUpdateStatusRequest, opts ...grpc.CallOption) (*MsgUpdateStatusResponse, error) {
+	out := new(MsgUpdateStatusResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateStatusTx", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateInterestRateTx(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error) {
+	out := new(MsgUpdateInterestRateResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateInterestRateTx", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdatePaymentTx(ctx context.Context, in *MsgUpdatePaymentRequest, opts ...grpc.CallOption) (*MsgUpdatePaymentResponse, error) {
+	out := new(MsgUpdatePaymentResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdatePaymentTx", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMaturityDateTx(ctx context.Context, in *MsgUpdateMaturityDateRequest, opts ...grpc.CallOption) (*MsgUpdateMaturityDateResponse, error) {
+	out := new(MsgUpdateMaturityDateResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateMaturityDateTx", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1335,6 +1833,14 @@ func (c *msgClient) AddLedgerClassBucketTypeTx(ctx context.Context, in *MsgAddLe
 type MsgServer interface {
 	// Create a new NFT ledger
 	CreateTx(context.Context, *MsgCreateRequest) (*MsgCreateResponse, error)
+	// Update Status
+	UpdateStatusTx(context.Context, *MsgUpdateStatusRequest) (*MsgUpdateStatusResponse, error)
+	// Update Interest Rate
+	UpdateInterestRateTx(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
+	// Update Payment Amount, Next Payment Date, and Payment Frequency
+	UpdatePaymentTx(context.Context, *MsgUpdatePaymentRequest) (*MsgUpdatePaymentResponse, error)
+	// Update Maturity Date
+	UpdateMaturityDateTx(context.Context, *MsgUpdateMaturityDateRequest) (*MsgUpdateMaturityDateResponse, error)
 	// Append a ledger entry
 	AppendTx(context.Context, *MsgAppendRequest) (*MsgAppendResponse, error)
 	// Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied
@@ -1363,6 +1869,18 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) CreateTx(ctx context.Context, req *MsgCreateRequest) (*MsgCreateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTx not implemented")
+}
+func (*UnimplementedMsgServer) UpdateStatusTx(ctx context.Context, req *MsgUpdateStatusRequest) (*MsgUpdateStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateStatusTx not implemented")
+}
+func (*UnimplementedMsgServer) UpdateInterestRateTx(ctx context.Context, req *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateInterestRateTx not implemented")
+}
+func (*UnimplementedMsgServer) UpdatePaymentTx(ctx context.Context, req *MsgUpdatePaymentRequest) (*MsgUpdatePaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePaymentTx not implemented")
+}
+func (*UnimplementedMsgServer) UpdateMaturityDateTx(ctx context.Context, req *MsgUpdateMaturityDateRequest) (*MsgUpdateMaturityDateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaturityDateTx not implemented")
 }
 func (*UnimplementedMsgServer) AppendTx(ctx context.Context, req *MsgAppendRequest) (*MsgAppendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AppendTx not implemented")
@@ -1413,6 +1931,78 @@ func _Msg_CreateTx_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateTx(ctx, req.(*MsgCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateStatusTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateStatusTx(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Msg/UpdateStatusTx",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateStatusTx(ctx, req.(*MsgUpdateStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateInterestRateTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateInterestRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateInterestRateTx(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Msg/UpdateInterestRateTx",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateInterestRateTx(ctx, req.(*MsgUpdateInterestRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdatePaymentTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdatePaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdatePaymentTx(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Msg/UpdatePaymentTx",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdatePaymentTx(ctx, req.(*MsgUpdatePaymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMaturityDateTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMaturityDateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMaturityDateTx(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Msg/UpdateMaturityDateTx",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMaturityDateTx(ctx, req.(*MsgUpdateMaturityDateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1607,6 +2197,22 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateTx_Handler,
 		},
 		{
+			MethodName: "UpdateStatusTx",
+			Handler:    _Msg_UpdateStatusTx_Handler,
+		},
+		{
+			MethodName: "UpdateInterestRateTx",
+			Handler:    _Msg_UpdateInterestRateTx_Handler,
+		},
+		{
+			MethodName: "UpdatePaymentTx",
+			Handler:    _Msg_UpdatePaymentTx_Handler,
+		},
+		{
+			MethodName: "UpdateMaturityDateTx",
+			Handler:    _Msg_UpdateMaturityDateTx_Handler,
+		},
+		{
 			MethodName: "AppendTx",
 			Handler:    _Msg_AppendTx_Handler,
 		},
@@ -1709,6 +2315,306 @@ func (m *MsgCreateResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgCreateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateStatusRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateStatusRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateStatusRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.StatusTypeId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.StatusTypeId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateStatusResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateStatusResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateStatusResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateInterestRateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateInterestRateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateInterestRateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.InterestAccrualMethod != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.InterestAccrualMethod))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.InterestDayCountConvention != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.InterestDayCountConvention))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.InterestRate != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.InterestRate))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateInterestRateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateInterestRateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateInterestRateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdatePaymentRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdatePaymentRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdatePaymentRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PaymentFrequency != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PaymentFrequency))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.NextPmtDate != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.NextPmtDate))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.NextPmtAmt != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.NextPmtAmt))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdatePaymentResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdatePaymentResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdatePaymentResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMaturityDateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMaturityDateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMaturityDateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaturityDate != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.MaturityDate))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMaturityDateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMaturityDateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMaturityDateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2505,6 +3411,134 @@ func (m *MsgCreateResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgUpdateStatusRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.StatusTypeId != 0 {
+		n += 1 + sovTx(uint64(m.StatusTypeId))
+	}
+	return n
+}
+
+func (m *MsgUpdateStatusResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateInterestRateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.InterestRate != 0 {
+		n += 1 + sovTx(uint64(m.InterestRate))
+	}
+	if m.InterestDayCountConvention != 0 {
+		n += 1 + sovTx(uint64(m.InterestDayCountConvention))
+	}
+	if m.InterestAccrualMethod != 0 {
+		n += 1 + sovTx(uint64(m.InterestAccrualMethod))
+	}
+	return n
+}
+
+func (m *MsgUpdateInterestRateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdatePaymentRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.NextPmtAmt != 0 {
+		n += 1 + sovTx(uint64(m.NextPmtAmt))
+	}
+	if m.NextPmtDate != 0 {
+		n += 1 + sovTx(uint64(m.NextPmtDate))
+	}
+	if m.PaymentFrequency != 0 {
+		n += 1 + sovTx(uint64(m.PaymentFrequency))
+	}
+	return n
+}
+
+func (m *MsgUpdatePaymentResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateMaturityDateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.MaturityDate != 0 {
+		n += 1 + sovTx(uint64(m.MaturityDate))
+	}
+	return n
+}
+
+func (m *MsgUpdateMaturityDateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgAppendRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2966,6 +4000,830 @@ func (m *MsgCreateResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCreateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateStatusRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateStatusRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateStatusRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &LedgerKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StatusTypeId", wireType)
+			}
+			m.StatusTypeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StatusTypeId |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateStatusResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateStatusResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateStatusResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateInterestRateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateInterestRateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateInterestRateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &LedgerKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterestRate", wireType)
+			}
+			m.InterestRate = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InterestRate |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterestDayCountConvention", wireType)
+			}
+			m.InterestDayCountConvention = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InterestDayCountConvention |= DayCountConvention(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterestAccrualMethod", wireType)
+			}
+			m.InterestAccrualMethod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InterestAccrualMethod |= InterestAccrualMethod(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateInterestRateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateInterestRateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateInterestRateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdatePaymentRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdatePaymentRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdatePaymentRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &LedgerKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NextPmtAmt", wireType)
+			}
+			m.NextPmtAmt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NextPmtAmt |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NextPmtDate", wireType)
+			}
+			m.NextPmtDate = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NextPmtDate |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PaymentFrequency", wireType)
+			}
+			m.PaymentFrequency = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PaymentFrequency |= PaymentFrequency(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdatePaymentResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdatePaymentResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdatePaymentResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMaturityDateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMaturityDateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMaturityDateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &LedgerKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaturityDate", wireType)
+			}
+			m.MaturityDate = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaturityDate |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMaturityDateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMaturityDateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMaturityDateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

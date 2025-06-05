@@ -17,6 +17,18 @@ service Msg {
   // Create a new NFT ledger
   rpc CreateTx(MsgCreateRequest) returns (MsgCreateResponse);
 
+  // Update Status
+  rpc UpdateStatusTx(MsgUpdateStatusRequest) returns (MsgUpdateStatusResponse);
+
+  // Update Interest Rate
+  rpc UpdateInterestRateTx(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
+
+  // Update Payment Amount, Next Payment Date, and Payment Frequency
+  rpc UpdatePaymentTx(MsgUpdatePaymentRequest) returns (MsgUpdatePaymentResponse);
+
+  // Update Maturity Date
+  rpc UpdateMaturityDateTx(MsgUpdateMaturityDateRequest) returns (MsgUpdateMaturityDateResponse);
+
   // Append a ledger entry
   rpc AppendTx(MsgAppendRequest) returns (MsgAppendResponse);
 
@@ -59,6 +71,60 @@ message MsgCreateRequest {
 
 // MsgCreateResponse
 message MsgCreateResponse {}
+
+// MsgUpdateStatusRequest
+message MsgUpdateStatusRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key       = 1;
+  string    authority = 2;
+
+  int32 status_type_id = 3;
+}
+
+// MsgUpdateStatusResponse
+message MsgUpdateStatusResponse {}
+
+// MsgUpdateInterestRateRequest
+message MsgUpdateInterestRateRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey             key                           = 1;
+  string                authority                     = 2;
+  int32                 interest_rate                 = 3;
+  DayCountConvention    interest_day_count_convention = 4;
+  InterestAccrualMethod interest_accrual_method       = 5;
+}
+
+// MsgUpdateInterestRateResponse
+message MsgUpdateInterestRateResponse {}
+
+// MsgUpdatePaymentRequest
+message MsgUpdatePaymentRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key       = 1;
+  string    authority = 2;
+
+  int64            next_pmt_amt      = 3;
+  int32            next_pmt_date     = 4;
+  PaymentFrequency payment_frequency = 5;
+}
+
+// MsgUpdatePaymentResponse
+message MsgUpdatePaymentResponse {}
+
+// MsgUpdateMaturityDateRequest
+message MsgUpdateMaturityDateRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key           = 1;
+  string    authority     = 2;
+  int32     maturity_date = 3;
+}
+
+// MsgUpdateMaturityDateResponse
+message MsgUpdateMaturityDateResponse {}
 
 // MsgAppendRequest
 message MsgAppendRequest {

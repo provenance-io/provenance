@@ -282,6 +282,14 @@
     - [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse)
     - [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest)
     - [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse)
+    - [MsgUpdateInterestRateRequest](#provenance-ledger-v1-MsgUpdateInterestRateRequest)
+    - [MsgUpdateInterestRateResponse](#provenance-ledger-v1-MsgUpdateInterestRateResponse)
+    - [MsgUpdateMaturityDateRequest](#provenance-ledger-v1-MsgUpdateMaturityDateRequest)
+    - [MsgUpdateMaturityDateResponse](#provenance-ledger-v1-MsgUpdateMaturityDateResponse)
+    - [MsgUpdatePaymentRequest](#provenance-ledger-v1-MsgUpdatePaymentRequest)
+    - [MsgUpdatePaymentResponse](#provenance-ledger-v1-MsgUpdatePaymentResponse)
+    - [MsgUpdateStatusRequest](#provenance-ledger-v1-MsgUpdateStatusRequest)
+    - [MsgUpdateStatusResponse](#provenance-ledger-v1-MsgUpdateStatusResponse)
   
     - [Msg](#provenance-ledger-v1-Msg)
   
@@ -297,7 +305,12 @@
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
     - [LedgerKey](#provenance-ledger-v1-LedgerKey)
     - [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries)
+    - [LedgerUpdate](#provenance-ledger-v1-LedgerUpdate)
     - [Ledgers](#provenance-ledger-v1-Ledgers)
+  
+    - [DayCountConvention](#provenance-ledger-v1-DayCountConvention)
+    - [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod)
+    - [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
     - [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest)
@@ -437,6 +450,7 @@
 - [provenance/asset/v1/asset.proto](#provenance_asset_v1_asset-proto)
     - [Asset](#provenance-asset-v1-Asset)
     - [AssetClass](#provenance-asset-v1-AssetClass)
+    - [Nft](#provenance-asset-v1-Nft)
   
 - [provenance/asset/v1/query.proto](#provenance_asset_v1_query-proto)
     - [QueryGetClass](#provenance-asset-v1-QueryGetClass)
@@ -4848,6 +4862,118 @@ MsgUpdateBalancesResponse
 
 
 
+
+<a name="provenance-ledger-v1-MsgUpdateInterestRateRequest"></a>
+
+### MsgUpdateInterestRateRequest
+MsgUpdateInterestRateRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `authority` | [string](#string) |  |  |
+| `interest_rate` | [int32](#int32) |  |  |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  |  |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateInterestRateResponse"></a>
+
+### MsgUpdateInterestRateResponse
+MsgUpdateInterestRateResponse
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateMaturityDateRequest"></a>
+
+### MsgUpdateMaturityDateRequest
+MsgUpdateMaturityDateRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `authority` | [string](#string) |  |  |
+| `maturity_date` | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateMaturityDateResponse"></a>
+
+### MsgUpdateMaturityDateResponse
+MsgUpdateMaturityDateResponse
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdatePaymentRequest"></a>
+
+### MsgUpdatePaymentRequest
+MsgUpdatePaymentRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `authority` | [string](#string) |  |  |
+| `next_pmt_amt` | [int64](#int64) |  |  |
+| `next_pmt_date` | [int32](#int32) |  |  |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdatePaymentResponse"></a>
+
+### MsgUpdatePaymentResponse
+MsgUpdatePaymentResponse
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateStatusRequest"></a>
+
+### MsgUpdateStatusRequest
+MsgUpdateStatusRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `authority` | [string](#string) |  |  |
+| `status_type_id` | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateStatusResponse"></a>
+
+### MsgUpdateStatusResponse
+MsgUpdateStatusResponse
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4863,6 +4989,10 @@ Msg defines the attribute module Msg service.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | `CreateTx` | [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest) | [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse) | Create a new NFT ledger |
+| `UpdateStatusTx` | [MsgUpdateStatusRequest](#provenance-ledger-v1-MsgUpdateStatusRequest) | [MsgUpdateStatusResponse](#provenance-ledger-v1-MsgUpdateStatusResponse) | Update Status |
+| `UpdateInterestRateTx` | [MsgUpdateInterestRateRequest](#provenance-ledger-v1-MsgUpdateInterestRateRequest) | [MsgUpdateInterestRateResponse](#provenance-ledger-v1-MsgUpdateInterestRateResponse) | Update Interest Rate |
+| `UpdatePaymentTx` | [MsgUpdatePaymentRequest](#provenance-ledger-v1-MsgUpdatePaymentRequest) | [MsgUpdatePaymentResponse](#provenance-ledger-v1-MsgUpdatePaymentResponse) | Update Payment Amount, Next Payment Date, and Payment Frequency |
+| `UpdateMaturityDateTx` | [MsgUpdateMaturityDateRequest](#provenance-ledger-v1-MsgUpdateMaturityDateRequest) | [MsgUpdateMaturityDateResponse](#provenance-ledger-v1-MsgUpdateMaturityDateResponse) | Update Maturity Date |
 | `AppendTx` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
 | `UpdateBalancesTx` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied |
 | `FundAssetTx` | [MsgFundAssetRequest](#provenance-ledger-v1-MsgFundAssetRequest) | [MsgFundAssetResponse](#provenance-ledger-v1-MsgFundAssetResponse) | Fund an Asset |
@@ -4931,6 +5061,9 @@ Ledger
 | `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
 | `interest_rate` | [int32](#int32) |  | Interest rate (10000000 = 10.000000%) - 6 decimal places |
 | `maturity_date` | [int32](#int32) |  | Maturity date days since epoch |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | Day count convention for interest |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | Interest accrual method for interest |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | Payment frequency |
 
 
 
@@ -5081,6 +5214,28 @@ LedgerEntry
 
 
 
+<a name="provenance-ledger-v1-LedgerUpdate"></a>
+
+### LedgerUpdate
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `status_type_id` | [int32](#int32) |  | Status of the ledger |
+| `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
+| `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
+| `interest_rate` | [int32](#int32) |  | Interest rate (10000000 = 10.000000%) - 6 decimal places |
+| `maturity_date` | [int32](#int32) |  | Maturity date days since epoch |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | Day count convention for interest |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | Interest accrual method for interest |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | Payment frequency |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-Ledgers"></a>
 
 ### Ledgers
@@ -5096,6 +5251,57 @@ Used for conversion....
 
 
  <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-DayCountConvention"></a>
+
+### DayCountConvention
+Day Count Conventions used in interest calculations
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `LEDGER_DAY_COUNT_UNSPECIFIED` | `0` | Unspecified day count convention. |
+| `LEDGER_DAY_COUNT_ACTUAL_365` | `1` | Actual/365: Uses the actual number of days in the period with a fixed denominator of 365 (or sometimes 365.25 to adjust for leap years). |
+| `LEDGER_DAY_COUNT_ACTUAL_360` | `2` | Actual/360: Uses the actual number of days in the period but divides by 360. |
+| `LEDGER_DAY_COUNT_THIRTY_360` | `3` | 30/360: Assumes each month has 30 days and the year has 360 days. |
+| `LEDGER_DAY_COUNT_ACTUAL_ACTUAL` | `4` | Actual/Actual: Uses the actual number of days in the period and the actual days in the year (365 or 366, depending on the year). |
+| `LEDGER_DAY_COUNT_DAYS_365` | `5` | 365/365: Always uses 365 days in the denominator regardless of leap years. |
+| `LEDGER_DAY_COUNT_DAYS_360` | `6` | 360/360: Always uses 360 days in both the numerator and denominator. |
+
+
+
+<a name="provenance-ledger-v1-InterestAccrualMethod"></a>
+
+### InterestAccrualMethod
+Interest Accrual Methods describing how interest is calculated over time
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `LEDGER_ACCRUAL_UNSPECIFIED` | `0` | Unspecified interest accrual method. |
+| `LEDGER_ACCRUAL_SIMPLE_INTEREST` | `1` | Simple Interest: Calculated only on the principal amount. |
+| `LEDGER_ACCRUAL_COMPOUND_INTEREST` | `2` | Compound Interest: Calculated on both the principal and on previously accumulated interest. |
+| `LEDGER_ACCRUAL_DAILY_COMPOUNDING` | `3` | Daily Compounding: Interest is compounded on a daily basis. |
+| `LEDGER_ACCRUAL_MONTHLY_COMPOUNDING` | `4` | Monthly Compounding: Interest is compounded each month. |
+| `LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING` | `5` | Quarterly Compounding: Interest is compounded every quarter. |
+| `LEDGER_ACCRUAL_ANNUAL_COMPOUNDING` | `6` | Annually Compounding: Interest is compounded once per year. |
+| `LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING` | `7` | Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously. |
+
+
+
+<a name="provenance-ledger-v1-PaymentFrequency"></a>
+
+### PaymentFrequency
+Payment frequencies for loan repayments
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency. |
+| `LEDGER_PAYMENT_FREQUENCY_DAILY` | `1` | Daily payments. |
+| `LEDGER_PAYMENT_FREQUENCY_WEEKLY` | `2` | Weekly or biweekly payments. |
+| `LEDGER_PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
+| `LEDGER_PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
+| `LEDGER_PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
+
 
  <!-- end enums -->
 
@@ -5121,7 +5327,7 @@ QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC m
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `as_of_date` | [string](#string) |  |  |
+| `as_of_date` | [string](#string) |  | Format: YYYY-MM-DD |
 
 
 
@@ -6791,7 +6997,8 @@ GenesisState defines the attribute module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `pool_id` | [string](#string) |  |  |
+| `pool` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
+| `nfts` | [Nft](#provenance-asset-v1-Nft) | repeated |  |
 | `from_address` | [string](#string) |  |  |
 
 
@@ -6818,6 +7025,7 @@ GenesisState defines the attribute module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [string](#string) |  |  |
+| `pools` | [string](#string) | repeated |  |
 | `tranches` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
 | `from_address` | [string](#string) |  |  |
 
@@ -6900,6 +7108,22 @@ Asset defines the asset.
 | `uri` | [string](#string) |  | uri for the class metadata stored off chain. It can define schema for Class and asset `Data` attributes |
 | `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri |
 | `data` | [string](#string) |  | data is the app specific json schema of the asset class |
+
+
+
+
+
+
+<a name="provenance-asset-v1-Nft"></a>
+
+### Nft
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
 
 
 
