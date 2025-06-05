@@ -86,7 +86,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 	return nil
 }
 
-func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error {
+func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, balanceAmounts []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error {
 	// Validate the key
 	err := ValidateLedgerKeyBasic(ledgerKey)
 	if err != nil {
@@ -116,7 +116,7 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 	}
 
 	// Validate the bucket balances
-	for _, bb := range bucketBalances {
+	for _, bb := range balanceAmounts {
 		if err := ValidateBucketBalance(bb); err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 	existingEntry.AppliedAmounts = appliedAmounts
 
 	// Update the entry with the new bucket balances
-	existingEntry.BalanceAmounts = bucketBalances
+	existingEntry.BalanceAmounts = balanceAmounts
 
 	ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
 	if err != nil {

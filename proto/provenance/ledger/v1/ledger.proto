@@ -94,33 +94,6 @@ message Ledger {
   PaymentFrequency payment_frequency = 10;
 }
 
-message LedgerUpdate {
-
-  // Status of the ledger
-  int32 status_type_id = 3;
-
-  // Next payment date days since epoch
-  int32 next_pmt_date = 4;
-
-  // Next payment amount
-  int64 next_pmt_amt = 5;
-
-  // Interest rate (10000000 = 10.000000%) - 6 decimal places
-  int32 interest_rate = 6;
-
-  // Maturity date days since epoch
-  int32 maturity_date = 7;
-
-  // Day count convention for interest
-  DayCountConvention interest_day_count_convention = 8;
-
-  // Interest accrual method for interest
-  InterestAccrualMethod interest_accrual_method = 9;
-
-  // Payment frequency
-  PaymentFrequency payment_frequency = 10;
-}
-
 // LedgerClassBucketType represents a bucket type for a ledger class
 message LedgerClassBucketType {
   // Unique ID for the bucket type (eg. 1, 2, 3, etc.)
