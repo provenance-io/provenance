@@ -236,6 +236,42 @@ func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.
 		return err
 	}
 
+	// Get the ledger
+	ledger, err := k.GetLedger(ctx, lk)
+	if err != nil {
+		return err
+	}
+	if ledger == nil {
+		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
+	// Validate that the status type id exists
+	hasLedgerClassStatusType, err := k.LedgerClassStatusTypes.Has(ctx, collections.Join(ledger.LedgerClassId, statusTypeId))
+	if err != nil {
+		return err
+	}
+	if !hasLedgerClassStatusType {
+		return NewLedgerCodedError(ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
+	}
+
+	// Update the ledger status
+	ledger.StatusTypeId = statusTypeId
+
+	// Validate ledger basic fields
+	if err := ValidateLedgerBasic(ledger); err != nil {
+		return err
+	}
+
+	keyStr, err := LedgerKeyToString(ledger.Key)
+	if err != nil {
+		return err
+	}
+
+	// Store the ledger
+	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	if err != nil {
+		return err
+	}
 	return fmt.Errorf("not implemented")
 }
 
@@ -247,7 +283,37 @@ func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAdd
 		return err
 	}
 
-	return fmt.Errorf("not implemented")
+	// Get the ledger
+	ledger, err := k.GetLedger(ctx, lk)
+	if err != nil {
+		return err
+	}
+	if ledger == nil {
+		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
+	// Update the ledger interest rate
+	ledger.InterestRate = interestRate
+	ledger.InterestDayCountConvention = interestDayCountConvention
+	ledger.InterestAccrualMethod = interestAccrualMethod
+
+	// Validate ledger basic fields
+	if err := ValidateLedgerBasic(ledger); err != nil {
+		return err
+	}
+
+	keyStr, err := LedgerKeyToString(ledger.Key)
+	if err != nil {
+		return err
+	}
+
+	// Store the ledger
+	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency ledger.PaymentFrequency) error {
@@ -258,7 +324,37 @@ func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk
 		return err
 	}
 
-	return fmt.Errorf("not implemented")
+	// Get the ledger
+	ledger, err := k.GetLedger(ctx, lk)
+	if err != nil {
+		return err
+	}
+	if ledger == nil {
+		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
+	// Update the ledger payment
+	ledger.NextPmtAmt = nextPmtAmt
+	ledger.NextPmtDate = nextPmtDate
+	ledger.PaymentFrequency = paymentFrequency
+
+	// Validate ledger basic fields
+	if err := ValidateLedgerBasic(ledger); err != nil {
+		return err
+	}
+
+	keyStr, err := LedgerKeyToString(ledger.Key)
+	if err != nil {
+		return err
+	}
+
+	// Store the ledger
+	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, maturityDate int32) error {
@@ -269,7 +365,35 @@ func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAdd
 		return err
 	}
 
-	return fmt.Errorf("not implemented")
+	// Get the ledger
+	ledger, err := k.GetLedger(ctx, lk)
+	if err != nil {
+		return err
+	}
+	if ledger == nil {
+		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+	}
+
+	// Update the ledger maturity date
+	ledger.MaturityDate = maturityDate
+
+	// Validate ledger basic fields
+	if err := ValidateLedgerBasic(ledger); err != nil {
+		return err
+	}
+
+	keyStr, err := LedgerKeyToString(ledger.Key)
+	if err != nil {
+		return err
+	}
+
+	// Store the ledger
+	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
