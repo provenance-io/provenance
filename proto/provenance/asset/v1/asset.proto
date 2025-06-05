@@ -46,5 +46,5 @@ message Asset {
 
 message Nft {
   string class_id = 1;
-  string id = 2;
+  string id       = 2;
 }

@@ -83,6 +83,42 @@ message Ledger {
 
   // Maturity date days since epoch
   int32 maturity_date = 7;
+
+  // Day count convention for interest
+  DayCountConvention interest_day_count_convention = 8;
+
+  // Interest accrual method for interest
+  InterestAccrualMethod interest_accrual_method = 9;
+
+  // Payment frequency
+  PaymentFrequency payment_frequency = 10;
+}
+
+message LedgerUpdate {
+
+  // Status of the ledger
+  int32 status_type_id = 3;
+
+  // Next payment date days since epoch
+  int32 next_pmt_date = 4;
+
+  // Next payment amount
+  int64 next_pmt_amt = 5;
+
+  // Interest rate (10000000 = 10.000000%) - 6 decimal places
+  int32 interest_rate = 6;
+
+  // Maturity date days since epoch
+  int32 maturity_date = 7;
+
+  // Day count convention for interest
+  DayCountConvention interest_day_count_convention = 8;
+
+  // Interest accrual method for interest
+  InterestAccrualMethod interest_accrual_method = 9;
+
+  // Payment frequency
+  PaymentFrequency payment_frequency = 10;
 }
 
 // LedgerClassBucketType represents a bucket type for a ledger class
@@ -173,4 +209,78 @@ message Ledgers {
 message LedgerToEntries {
   string               nft_id  = 1;
   repeated LedgerEntry entries = 2;
+}
+
+// Day Count Conventions used in interest calculations
+enum DayCountConvention {
+  // Unspecified day count convention.
+  LEDGER_DAY_COUNT_UNSPECIFIED = 0;
+
+  // Actual/365: Uses the actual number of days in the period with a fixed denominator of 365
+  // (or sometimes 365.25 to adjust for leap years).
+  LEDGER_DAY_COUNT_ACTUAL_365 = 1;
+
+  // Actual/360: Uses the actual number of days in the period but divides by 360.
+  LEDGER_DAY_COUNT_ACTUAL_360 = 2;
+
+  // 30/360: Assumes each month has 30 days and the year has 360 days.
+  LEDGER_DAY_COUNT_THIRTY_360 = 3;
+
+  // Actual/Actual: Uses the actual number of days in the period and the actual days in the year
+  // (365 or 366, depending on the year).
+  LEDGER_DAY_COUNT_ACTUAL_ACTUAL = 4;
+
+  // 365/365: Always uses 365 days in the denominator regardless of leap years.
+  LEDGER_DAY_COUNT_DAYS_365 = 5;
+
+  // 360/360: Always uses 360 days in both the numerator and denominator.
+  LEDGER_DAY_COUNT_DAYS_360 = 6;
+}
+
+// Interest Accrual Methods describing how interest is calculated over time
+enum InterestAccrualMethod {
+  // Unspecified interest accrual method.
+  LEDGER_ACCRUAL_UNSPECIFIED = 0;
+
+  // Simple Interest: Calculated only on the principal amount.
+  LEDGER_ACCRUAL_SIMPLE_INTEREST = 1;
+
+  // Compound Interest: Calculated on both the principal and on previously accumulated interest.
+  LEDGER_ACCRUAL_COMPOUND_INTEREST = 2;
+
+  // Daily Compounding: Interest is compounded on a daily basis.
+  LEDGER_ACCRUAL_DAILY_COMPOUNDING = 3;
+
+  // Monthly Compounding: Interest is compounded each month.
+  LEDGER_ACCRUAL_MONTHLY_COMPOUNDING = 4;
+
+  // Quarterly Compounding: Interest is compounded every quarter.
+  LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING = 5;
+
+  // Annually Compounding: Interest is compounded once per year.
+  LEDGER_ACCRUAL_ANNUAL_COMPOUNDING = 6;
+
+  // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
+  LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING = 7;
+}
+
+// Payment frequencies for loan repayments
+enum PaymentFrequency {
+  // Unspecified payment frequency.
+  LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED = 0;
+
+  // Daily payments.
+  LEDGER_PAYMENT_FREQUENCY_DAILY = 1;
+
+  // Weekly or biweekly payments.
+  LEDGER_PAYMENT_FREQUENCY_WEEKLY = 2;
+
+  // Monthly payments (most common for consumer loans and mortgages).
+  LEDGER_PAYMENT_FREQUENCY_MONTHLY = 3;
+
+  // Quarterly payments.
+  LEDGER_PAYMENT_FREQUENCY_QUARTERLY = 4;
+
+  // Annual payments.
+  LEDGER_PAYMENT_FREQUENCY_ANNUALLY = 5;
 }

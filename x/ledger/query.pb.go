@@ -302,8 +302,9 @@ func (m *QueryLedgerEntryResponse) GetEntry() *LedgerEntry {
 
 // QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
 type QueryBalancesAsOfRequest struct {
-	Key      *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	AsOfDate string     `protobuf:"bytes,2,opt,name=as_of_date,json=asOfDate,proto3" json:"as_of_date,omitempty"`
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// Format: YYYY-MM-DD
+	AsOfDate string `protobuf:"bytes,2,opt,name=as_of_date,json=asOfDate,proto3" json:"as_of_date,omitempty"`
 }
 
 func (m *QueryBalancesAsOfRequest) Reset()         { *m = QueryBalancesAsOfRequest{} }

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger"
@@ -16,6 +18,11 @@ type ConfigKeeper interface {
 	AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassBucketType) error
 
 	CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l ledger.Ledger) error
+
+	UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, statusTypeId int32) error
+	UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, interestRate int32, interestDayCountConvention ledger.DayCountConvention, interestAccrualMethod ledger.InterestAccrualMethod) error
+	UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency ledger.PaymentFrequency) error
+	UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, maturityDate int32) error
 	DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey) error
 }
 
@@ -232,6 +239,22 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 	}
 
 	return nil
+}
+
+func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, statusTypeId int32) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, interestRate int32, interestDayCountConvention ledger.DayCountConvention, interestAccrualMethod ledger.InterestAccrualMethod) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency ledger.PaymentFrequency) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, maturityDate int32) error {
+	return fmt.Errorf("not implemented")
 }
 
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {

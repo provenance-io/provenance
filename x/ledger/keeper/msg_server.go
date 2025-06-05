@@ -69,6 +69,74 @@ func (k *MsgServer) CreateTx(goCtx context.Context, req *ledger.MsgCreateRequest
 	return &resp, nil
 }
 
+func (k *MsgServer) UpdateStatusTx(goCtx context.Context, req *ledger.MsgUpdateStatusRequest) (*ledger.MsgUpdateStatusResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.UpdateLedgerStatus(ctx, authorityAddr, req.Key, req.StatusTypeId)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.MsgUpdateStatusResponse{}
+	return &resp, nil
+}
+
+func (k *MsgServer) UpdateInterestRateTx(goCtx context.Context, req *ledger.MsgUpdateInterestRateRequest) (*ledger.MsgUpdateInterestRateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.UpdateLedgerInterestRate(ctx, authorityAddr, req.Key, req.InterestRate, req.InterestDayCountConvention, req.InterestAccrualMethod)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.MsgUpdateInterestRateResponse{}
+	return &resp, nil
+}
+
+func (k *MsgServer) UpdatePaymentTx(goCtx context.Context, req *ledger.MsgUpdatePaymentRequest) (*ledger.MsgUpdatePaymentResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.UpdateLedgerPayment(ctx, authorityAddr, req.Key, req.NextPmtAmt, req.NextPmtDate, req.PaymentFrequency)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.MsgUpdatePaymentResponse{}
+	return &resp, nil
+}
+
+func (k *MsgServer) UpdateMaturityDateTx(goCtx context.Context, req *ledger.MsgUpdateMaturityDateRequest) (*ledger.MsgUpdateMaturityDateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.UpdateLedgerMaturityDate(ctx, authorityAddr, req.Key, req.MaturityDate)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.MsgUpdateMaturityDateResponse{}
+	return &resp, nil
+}
+
 func (k *MsgServer) FundAssetTx(goCtx context.Context, req *ledger.MsgFundAssetRequest) (*ledger.MsgFundAssetResponse, error) {
 	return nil, nil
 }
