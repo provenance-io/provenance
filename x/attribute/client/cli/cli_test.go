@@ -1067,7 +1067,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"test value",
 				"int",
 				"10",
-				"--concrete-type=provenance.attributes.v1.TestString",
+				"provenance.attributes.v1.TestString",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
