@@ -93,6 +93,17 @@ func StringToLedgerKey(s string) (*ledger.LedgerKey, error) {
 	}, nil
 }
 
+func RequireAuthority(ctx sdk.Context, rk RegistryKeeper, addr string, key *registry.RegistryKey) error {
+	has, err := assertAuthority(ctx, rk, addr, key)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
+	}
+	return nil
+}
+
 func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledgerKey *ledger.LedgerKey) error {
 	// Check if the authority has ownership of the NFT
 	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)

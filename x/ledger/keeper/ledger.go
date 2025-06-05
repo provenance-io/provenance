@@ -159,16 +159,11 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return err
 	}
 
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: l.Key.AssetClassId,
 		NftId:        l.Key.NftId,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
-	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 
 	// Do not allow creating a duplicate ledger
@@ -234,64 +229,44 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 }
 
 func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, statusTypeId int32) error {
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
-	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 
 	return fmt.Errorf("not implemented")
 }
 
 func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, interestRate int32, interestDayCountConvention ledger.DayCountConvention, interestAccrualMethod ledger.InterestAccrualMethod) error {
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
-	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 
 	return fmt.Errorf("not implemented")
 }
 
 func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency ledger.PaymentFrequency) error {
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
-	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 
 	return fmt.Errorf("not implemented")
 }
 
 func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, maturityDate int32) error {
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
-	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 
 	return fmt.Errorf("not implemented")
@@ -302,24 +277,19 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 }
 
 // DestroyLedger removes a ledger from the store by NFT address
-func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey) error {
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: key.AssetClassId,
-		NftId:        key.NftId,
-	})
-	if err != nil {
+func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey) error {
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+		AssetClassId: lk.AssetClassId,
+		NftId:        lk.NftId,
+	}); err != nil {
 		return err
 	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
-	}
 
-	if !k.HasLedger(ctx, key) {
+	if !k.HasLedger(ctx, lk) {
 		return NewLedgerCodedError(ErrCodeInvalidField, "ledger", "ledger doesn't exist")
 	}
 
-	keyStr, err := LedgerKeyToString(key)
+	keyStr, err := LedgerKeyToString(lk)
 	if err != nil {
 		return err
 	}

@@ -40,16 +40,11 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: ledgerKey.AssetClassId,
 		NftId:        ledgerKey.NftId,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
-	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 
 	// Get all existing entries for this NFT
@@ -92,21 +87,16 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 }
 
 func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error {
-	// Assert that the authority is the owner or servicer of the NFT.
-	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: ledgerKey.AssetClassId,
-		NftId:        ledgerKey.NftId,
-	})
+	// Validate the key
+	err := ValidateLedgerKeyBasic(ledgerKey)
 	if err != nil {
 		return err
 	}
-	if !hasAuthority {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
-	}
 
-	// Validate the key
-	err = ValidateLedgerKeyBasic(ledgerKey)
-	if err != nil {
+	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+		AssetClassId: ledgerKey.AssetClassId,
+		NftId:        ledgerKey.NftId,
+	}); err != nil {
 		return err
 	}
 
