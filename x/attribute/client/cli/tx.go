@@ -160,7 +160,6 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 				if len(concreteType) > 200 {
 					return fmt.Errorf("concrete-type length must be less than or equal to 200 characters")
 				}
-
 			}
 			if concreteType != "" {
 				msg.ConcreteType = concreteType
@@ -169,7 +168,6 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
