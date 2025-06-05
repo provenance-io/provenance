@@ -18,10 +18,10 @@ import (
 type DeductUpFrontCostDecorator struct {
 	ak ante.AccountKeeper
 	bk BankKeeper
-	fk ante.FeegrantKeeper
+	fk FeegrantKeeper
 }
 
-func NewDeductUpFrontCostDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper) DeductUpFrontCostDecorator {
+func NewDeductUpFrontCostDecorator(ak ante.AccountKeeper, bk BankKeeper, fk FeegrantKeeper) DeductUpFrontCostDecorator {
 	return DeductUpFrontCostDecorator{ak: ak, bk: bk, fk: fk}
 }
 
@@ -50,7 +50,7 @@ func (d DeductUpFrontCostDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx s
 	}
 
 	upFrontCost := gasMeter.GetUpFrontCost()
-	deductFeesFrom, usedFeeGrant, err := GetFeePayerUsingFeeGrant(ctx, d.fk, feeTx, upFrontCost, feeTx.GetMsgs())
+	deductFeesFrom, usedFeeGrant, err := getFeePayerUsingFeeGrant(ctx, d.fk, feeTx, upFrontCost, feeTx.GetMsgs())
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (d DeductUpFrontCostDecorator) checkDeductUpFrontCost(ctx sdk.Context, tx s
 	// Pay the up-front cost.
 	// When simulating, we don't care about the fees being paid.
 	// During InitGenesis, there's no fees to pay (and no one to pay them).
-	if !simulate && !IsInitGenesis(ctx) && !upFrontCost.IsZero() {
+	if !simulate && !isInitGenesis(ctx) && !upFrontCost.IsZero() {
 		ctx2 := ctx
 		if usedFeeGrant {
 			ctx2 = internalsdk.WithFeeGrantInUse(ctx)

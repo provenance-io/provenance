@@ -4,9 +4,7 @@ import (
 	"fmt"
 
 	cerrs "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
@@ -16,12 +14,12 @@ import (
 // The up-front cost is collected by the DeductUpFrontCostDecorator.
 type FlatFeePostHandler struct {
 	bk BankKeeper
-	fk ante.FeegrantKeeper
+	fk FeegrantKeeper
 }
 
 var _ sdk.PostDecorator = (*FlatFeePostHandler)(nil)
 
-func NewFlatFeePostHandler(bk BankKeeper, fk ante.FeegrantKeeper) FlatFeePostHandler {
+func NewFlatFeePostHandler(bk BankKeeper, fk FeegrantKeeper) FlatFeePostHandler {
 	return FlatFeePostHandler{bk: bk, fk: fk}
 }
 
@@ -53,7 +51,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	extraMsgsCost := gasMeter.GetExtraMsgsCost()
 	addedFees := gasMeter.GetAddedFees()
 	newCharges := addedFees.Add(extraMsgsCost...)
-	if !newCharges.IsZero() && !simulate && !IsInitGenesis(ctx) {
+	if !newCharges.IsZero() && !simulate && !isInitGenesis(ctx) {
 		// There were extra msg costs added since we set up the gas meter. Re-check that
 		// the full fee is enough to cover everything (now that we know what everything is).
 		err = validateFeeAmount(reqFee, feeProvided)
@@ -66,7 +64,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	// We've already collected the up-front cost, though, so we take that out of the full fee and collect what's left.
 	upFrontCost := gasMeter.GetUpFrontCost()
 	var uncharged sdk.Coins
-	if !simulate && !IsInitGenesis(ctx) {
+	if !simulate && !isInitGenesis(ctx) {
 		// If not simulating, we want to collect all of the provided fee (we know it's at least what's required).
 		uncharged = feeProvided.Sub(upFrontCost...)
 		ctx.Logger().Debug("On-success cost calculated using fee provided (and up-front cost).",
@@ -77,7 +75,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 		ctx.Logger().Debug("On-success cost calculated using required fee (and up-front cost).",
 			"required fee", lazyCzStr(reqFee), "up-front cost", lazyCzStr(upFrontCost), "on-success", lazyCzStr(uncharged))
 	}
-	deductFeesFrom, usedFeeGrant, err := GetFeePayerUsingFeeGrant(ctx, h.fk, feeTx, uncharged, feeTx.GetMsgs())
+	deductFeesFrom, usedFeeGrant, err := getFeePayerUsingFeeGrant(ctx, h.fk, feeTx, uncharged, feeTx.GetMsgs())
 	if err != nil {
 		return ctx, err
 	}
@@ -88,7 +86,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	// Pay whatever is left.
 	// When simulating, we don't care about the fees being paid.
 	// During InitGenesis, there's no fees to pay (and no one to pay them).
-	if !simulate && !IsInitGenesis(ctx) && !uncharged.IsZero() {
+	if !simulate && !isInitGenesis(ctx) && !uncharged.IsZero() {
 		ctx2 := ctx
 		if usedFeeGrant {
 			ctx2 = internalsdk.WithFeeGrantInUse(ctx)
@@ -102,7 +100,7 @@ func (h FlatFeePostHandler) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, suc
 	}
 
 	var overage sdk.Coins
-	if !simulate && !IsInitGenesis(ctx) {
+	if !simulate && !isInitGenesis(ctx) {
 		overage = feeProvided.Sub(reqFee...)
 	}
 	onSuccessCost := reqFee.Sub(upFrontCost...)

@@ -37,7 +37,7 @@ func (d FlatFeeSetupDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// the tx msgs if we know now that there isn't enough fee for what's been provided.
 	// Skip if simulating since the fee is probably what they're trying to find out.
 	// Skip during init genesis too since those should be free (and there's no one to pay).
-	if !simulate && !IsInitGenesis(ctx) {
+	if !simulate && !isInitGenesis(ctx) {
 		reqFee := gasMeter.GetRequiredFee()
 		err = validateFeeAmount(reqFee, feeProvided)
 		if err != nil {

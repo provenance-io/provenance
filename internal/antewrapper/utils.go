@@ -3,19 +3,17 @@ package antewrapper
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"math"
 	"strings"
 
 	cerrs "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/feegrant"
 
 	cflags "github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -65,7 +63,6 @@ type (
 
 	// FeegrantKeeper defines the expected feegrant keeper.
 	FeegrantKeeper interface {
-		GetAllowance(ctx context.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error)
 		UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
 	}
 
@@ -126,7 +123,7 @@ func GetGasWanted(logger log.Logger, feeTx sdk.FeeTx) (uint64, error) {
 		// e.g. the user defined the gas and fee on their own and the numbers worked out just wrong.
 		// They can get around this by bumping the gas by 1.
 		logger.Debug("Gas limit indicates old gas-prices value. Using max uint64.", "returning", uint64(math.MaxUint64))
-		return math.MaxUint64, fmt.Errorf("old gas-prices value detected; always use 1nhash")
+		return math.MaxUint64, errors.New("old gas-prices value detected; always use 1nhash")
 	}
 
 	// It's not a known special case, so keep old behavior.
@@ -199,16 +196,22 @@ func validateFeeAmount(required sdk.Coins, provided sdk.Coins) error {
 		return sdkerrors.ErrInsufficientFee.Wrapf("fee provided %q is invalid: %v", provided, err)
 	}
 
-	_, hasNeg := provided.SafeSub(required...)
+	diff, hasNeg := provided.SafeSub(required...)
 	if hasNeg {
-		return sdkerrors.ErrInsufficientFee.Wrapf("fee required: %q, fee provided: %q", required, provided)
+		short := make(sdk.Coins, 0, len(diff))
+		for _, coin := range diff {
+			if coin.IsNegative() {
+				short = append(short, sdk.NewCoin(coin.Denom, coin.Amount.Neg()))
+			}
+		}
+		return sdkerrors.ErrInsufficientFee.Wrapf("fee required: %q, fee provided: %q, short by %q", required, provided, short)
 	}
 	return nil
 }
 
-// GetFeePayerUsingFeeGrant identifies the fee payer, updating the applicable feegrant if appropriate.
+// getFeePayerUsingFeeGrant identifies the fee payer, updating the applicable feegrant if appropriate.
 // Returns the address responsible for paying the fees, and whether a feegrant was used.
-func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper ante.FeegrantKeeper, feeTx sdk.FeeTx, amount sdk.Coins, msgs []sdk.Msg) (sdk.AccAddress, bool, error) {
+func getFeePayerUsingFeeGrant(ctx sdk.Context, fk FeegrantKeeper, feeTx sdk.FeeTx, amount sdk.Coins, msgs []sdk.Msg) (sdk.AccAddress, bool, error) {
 	feePayer := sdk.AccAddress(feeTx.FeePayer())
 	feeGranter := sdk.AccAddress(feeTx.FeeGranter())
 	deductFeesFrom := feePayer
@@ -217,11 +220,8 @@ func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper ante.FeegrantKeepe
 	// if feegranter set deduct base fee from feegranter account.
 	// this works with only when feegrant enabled.
 	if feeGranter != nil && !bytes.Equal(feeGranter, feePayer) {
-		if feegrantKeeper == nil {
-			return nil, false, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		}
 		if !amount.IsZero() {
-			err := feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, amount, msgs)
+			err := fk.UseGrantedFees(ctx, feeGranter, feePayer, amount, msgs)
 			if err != nil {
 				return nil, false, cerrs.Wrapf(err, "failed to use fee grant: granter: %s, grantee: %s, fee: %q, msgs: %q",
 					feeGranter, feePayer, amount, msgTypeURLs(msgs))
@@ -245,7 +245,7 @@ func PayFee(ctx sdk.Context, bankKeeper BankKeeper, addr sdk.AccAddress, fee sdk
 
 	err := bankKeeper.SendCoinsFromAccountToModule(ctx, addr, authtypes.FeeCollectorName, fee)
 	if err != nil {
-		return sdkerrors.ErrInsufficientFunds.Wrapf("%v: account: %s:", err, addr)
+		return sdkerrors.ErrInsufficientFunds.Wrapf("%v: account: %s", err, addr)
 	}
 	return nil
 }
@@ -271,8 +271,8 @@ func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 	return feeTx, nil
 }
 
-// IsInitGenesis returns true if the context indicates we're in InitGenesis.
-func IsInitGenesis(ctx sdk.Context) bool {
+// isInitGenesis returns true if the context indicates we're in InitGenesis.
+func isInitGenesis(ctx sdk.Context) bool {
 	// Note: This isn't fully accurate since you can initialize a chain at a height other than zero.
 	// But it should be good enough for our stuff. Ideally we'd want something specifically set in
 	// the context during InitGenesis to check, but that'd probably involve some SDK work.
