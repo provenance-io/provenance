@@ -51,7 +51,7 @@ func NewAddAccountAttributeCmd() *cobra.Command {
 Refer to %s tx name bind --help for more information on how to do this.`, version.AppName),
 		Args: cobra.RangeArgs(4, 6),
 		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"
-		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z,"--concrete-type=provenance.attributes.v1.TestJSON"`, version.AppName, version.AppName),
+		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z --concrete-type=provenance.attributes.v1.TestJSON`, version.AppName, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -108,11 +108,11 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 // NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
 func NewUpdateAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value>",
+		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value> [concrete-type]",
 		Aliases: []string{"u"},
 		Short:   "Update an account attribute on the provenance blockchain",
-		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100,"--concrete-type=provenance.attributes.v1.TestJSON"`, version.AppName),
-		Args:    cobra.ExactArgs(6),
+		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100 provenance.attributes.v1.TestJSON`, version.AppName),
+		Args:    cobra.RangeArgs(6, 7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -154,9 +154,13 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 				origAttributeType,
 				updateAttributeType,
 			)
-			concreteType, _ := cmd.Flags().GetString("concrete-type")
-			if len(concreteType) > 200 {
-				return fmt.Errorf("concrete-type length must be less than or equal to 200 characters")
+			var concreteType string
+			if len(args) == 7 {
+				concreteType = strings.TrimSpace(args[6])
+				if len(concreteType) > 200 {
+					return fmt.Errorf("concrete-type length must be less than or equal to 200 characters")
+				}
+
 			}
 			if concreteType != "" {
 				msg.ConcreteType = concreteType
@@ -164,7 +168,6 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(`concrete-type`, "", "Optional concrete type (max 200 characters)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
