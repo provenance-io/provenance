@@ -25,6 +25,12 @@ type BaseEntriesKeeper struct {
 
 // SetValue stores a value with a given key.
 func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error {
+	// Validate the key
+	err := ValidateLedgerKeyBasic(ledgerKey)
+	if err != nil {
+		return err
+	}
+
 	// Need to resolve the ledger class for validation purposes
 	ledger, err := k.GetLedger(ctx, ledgerKey)
 	if err != nil {
@@ -34,56 +40,16 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
-	// Create a registry key for lookups.
-	rk := registry.RegistryKey{
+	// Assert that the authority is the owner or servicer of the NFT.
+	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: ledgerKey.AssetClassId,
 		NftId:        ledgerKey.NftId,
-	}
-
-	// Get the registry entry for the NFT to determine if the authority has the servicer role.
-	registryEntry, err := k.BaseViewKeeper.RegistryKeeper.GetRegistry(ctx, &rk)
+	})
 	if err != nil {
 		return err
 	}
-
-	if registryEntry == nil {
-		err = assertOwner(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), ledgerKey)
-		if err != nil {
-			return err
-		}
-	} else {
-		// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
-		// so that only the assigned servicer can append entries.
-		var servicerRegistered bool = false
-		for _, role := range registryEntry.Roles {
-			if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
-				// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
-				servicerRegistered = true
-				for _, address := range role.Addresses {
-					// Check if the authority is the servicer
-					if address == authorityAddr.String() {
-						// Servicer is identified, no need to check any other roles
-						break
-					}
-				}
-
-				// Since there isn't a registered servicer, we'll check if the authority is the owner
-				if !servicerRegistered {
-					err = assertOwner(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), ledgerKey)
-					if err != nil {
-						return err
-					}
-				} else {
-					return NewLedgerCodedError(ErrCodeUnauthorized, "registered servicer")
-				}
-			}
-		}
-	}
-
-	// Validate the key
-	err = ValidateLedgerKeyBasic(ledgerKey)
-	if err != nil {
-		return err
+	if !hasAuthority {
+		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 
 	// Get all existing entries for this NFT
@@ -126,8 +92,20 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 }
 
 func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error {
+	// Assert that the authority is the owner or servicer of the NFT.
+	hasAuthority, err := assertAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+		AssetClassId: ledgerKey.AssetClassId,
+		NftId:        ledgerKey.NftId,
+	})
+	if err != nil {
+		return err
+	}
+	if !hasAuthority {
+		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
+	}
+
 	// Validate the key
-	err := ValidateLedgerKeyBasic(ledgerKey)
+	err = ValidateLedgerKeyBasic(ledgerKey)
 	if err != nil {
 		return err
 	}

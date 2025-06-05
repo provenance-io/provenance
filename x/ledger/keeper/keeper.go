@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/provenance-io/provenance/x/ledger"
+	"github.com/provenance-io/provenance/x/registry"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -100,4 +101,56 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledger
 	}
 
 	return nil
+}
+
+// Assert that the authority address is either the registered servicer, or the owner of the NFT if there is no registered servicer.
+func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk *registry.RegistryKey) (bool, error) {
+	// Get the registry entry for the NFT to determine if the authority has the servicer role.
+	registryEntry, err := k.GetRegistry(ctx, rk)
+	if err != nil {
+		return false, err
+	}
+
+	lk := &ledger.LedgerKey{
+		AssetClassId: rk.AssetClassId,
+		NftId:        rk.NftId,
+	}
+
+	if registryEntry == nil {
+		err = assertOwner(ctx, k, authorityAddr, lk)
+		if err != nil {
+			return false, err
+		}
+
+		return true, nil
+	} else {
+		// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
+		// so that only the assigned servicer can append entries.
+		var servicerRegistered bool = false
+		for _, role := range registryEntry.Roles {
+			if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
+				// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
+				servicerRegistered = true
+				for _, address := range role.Addresses {
+					// Check if the authority is the servicer
+					if address == authorityAddr {
+						return true, nil
+					}
+				}
+
+				// Since there isn't a registered servicer, we'll check if the authority is the owner
+				if !servicerRegistered {
+					err = assertOwner(ctx, k, authorityAddr, lk)
+					if err != nil {
+						return false, err
+					}
+				} else {
+					return false, NewLedgerCodedError(ErrCodeUnauthorized, "registered servicer")
+				}
+			}
+		}
+	}
+
+	// Default to false if the authority is not the owner or servicer
+	return false, nil
 }
