@@ -86,6 +86,8 @@ func UpdateConfig(cmd *cobra.Command) error {
 		clientCfg.BroadcastMode = "sync"
 	}
 
+	// TODO[fees]: Update the gas-prices config.
+
 	return SafeSaveConfigs(cmd, appCfg, cmtCfg, clientCfg, true)
 }
 
