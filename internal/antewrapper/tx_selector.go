@@ -55,7 +55,7 @@ func (ts *provTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, m
 	var txGasLimit uint64
 	if memTx != nil {
 		// This little chunk is the only thing changed from the defaultTxSelector.
-		if feeTx, err := GetFeeTx(memTx); err != nil {
+		if feeTx, err := GetFeeTx(memTx); err == nil {
 			txGasLimit, _ = GetGasWanted(sdk.UnwrapSDKContext(ctx).Logger(), feeTx)
 		}
 	}
