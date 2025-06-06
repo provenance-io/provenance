@@ -133,6 +133,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 			handler = func(goCtx context.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
 				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Applying no-op upgrade to %q", plan.Name))
+				ctx.EventManager().EmitEvent(sdk.NewEvent("upgrade", sdk.NewAttribute("name", plan.Name)))
 				return versionMap, nil
 			}
 		} else {
@@ -140,6 +141,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 			handler = func(goCtx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
+				ctx.EventManager().EmitEvent(sdk.NewEvent("upgrade", sdk.NewAttribute("name", plan.Name)))
 				newVM, err := ref.Handler(ctx, app, vm)
 				if err != nil {
 					ctx.Logger().Error(fmt.Sprintf("Failed to upgrade to %q", plan.Name), "error", err)
@@ -149,6 +151,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 				return newVM, err
 			}
 		}
+
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
 	}
 }
