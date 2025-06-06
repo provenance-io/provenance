@@ -44,8 +44,8 @@ type FlatFeeGasMeter struct {
 	// extraMsgs is a list of msgs that have been consumed, but weren't in the knownMsgs map.
 	extraMsgs []sdk.Msg
 
-	// fk is the x/flatfees keeper.
-	fk FlatFeesKeeper
+	// ffk is the x/flatfees keeper.
+	ffk FlatFeesKeeper
 
 	// logger is a context logger to use to output gas info.
 	logger log.Logger
@@ -66,44 +66,49 @@ func NewFlatFeeGasMeter(base storetypes.GasMeter, logger log.Logger, ffk FlatFee
 		logger:    logger,
 		used:      make(map[string]storetypes.Gas),
 		counts:    make(map[string]uint64),
-		fk:        ffk,
+		ffk:       ffk,
 	}
 }
 
 // SetCosts identifies the costs for the provided msgs and updates this FlatFeeGasMeter accordingly.
 func (g *FlatFeeGasMeter) SetCosts(ctx sdk.Context, msgs []sdk.Msg) error {
-	var err error
-	msgs, err = g.fk.ExpandMsgs(msgs)
-	if err != nil {
-		return err
-	}
-
-	g.upFrontCost, g.onSuccessCost, err = g.fk.CalculateMsgCost(ctx, msgs...)
-	if err != nil {
-		return err
-	}
-	g.msgTypeURLs = msgTypeURLs(msgs)
-
-	// Make sure we're starting with an empty knownMsgs map since everything else is fresh too.
-	if len(g.knownMsgs) > 0 {
+	// Make sure we're starting fresh.
+	g.upFrontCost, g.onSuccessCost = nil, nil
+	g.extraMsgsCost, g.addedFees = nil, nil
+	if g.knownMsgs == nil || len(g.knownMsgs) > 0 {
 		g.knownMsgs = make(map[string]int)
 	}
+	g.extraMsgs, g.msgTypeURLs = nil, nil
+	// We don't reset .used or .counts because those have info related to the
+	// underlying gas meter. Since that's not changing, we leave them alone here.
+
+	var err error
+	msgs, err = g.ffk.ExpandMsgs(msgs)
+	if err != nil {
+		return err
+	}
+
+	g.upFrontCost, g.onSuccessCost, err = g.ffk.CalculateMsgCost(ctx, msgs...)
+	if err != nil {
+		return err
+	}
+
+	g.msgTypeURLs = msgTypeURLs(msgs)
 	for _, url := range g.msgTypeURLs {
 		g.knownMsgs[url]++
 	}
-	g.extraMsgs = nil
-	g.addedFees = nil
 
 	return nil
 }
 
 // Finalize calculates the cost for any extra msgs and sets extraMsgsCost.
 func (g *FlatFeeGasMeter) Finalize(ctx sdk.Context) error {
+	g.extraMsgsCost = nil
 	if len(g.extraMsgs) == 0 {
 		return nil
 	}
 
-	upFront, onSuccess, err := g.fk.CalculateMsgCost(ctx, g.extraMsgs...)
+	upFront, onSuccess, err := g.ffk.CalculateMsgCost(ctx, g.extraMsgs...)
 	if err != nil {
 		return err
 	}
