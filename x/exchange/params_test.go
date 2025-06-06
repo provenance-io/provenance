@@ -22,9 +22,7 @@ func TestMaxSplit(t *testing.T) {
 }
 
 func TestDefaultParams(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
-
-	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+	feeDenom := pioconfig.GetProvConfig().FeeDenom
 	expCreate := fmt.Sprintf("%d%s", DefaultFeeCreatePaymentFlatAmount, feeDenom)
 	expAccept := fmt.Sprintf("%d%s", DefaultFeeAcceptPaymentFlatAmount, feeDenom)
 
@@ -40,8 +38,6 @@ func TestDefaultParams(t *testing.T) {
 }
 
 func TestParams_Validate(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
-
 	tests := []struct {
 		name   string
 		params Params

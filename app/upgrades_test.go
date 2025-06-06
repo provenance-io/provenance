@@ -586,8 +586,6 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
-// TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
-
 func (s *UpgradeTestSuite) TestYellowRC1() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
@@ -607,6 +605,30 @@ func (s *UpgradeTestSuite) TestYellow() {
 	}
 	s.AssertUpgradeHandlerLogs("yellow", expInLog, nil)
 }
+
+func (s *UpgradeTestSuite) TestZydecoRC1() {
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Setting up flat fees.",
+	}
+	s.AssertUpgradeHandlerLogs("zydeco-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestZydeco() {
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Setting up flat fees.",
+	}
+	s.AssertUpgradeHandlerLogs("zydeco", expInLog, nil)
+}
+
+// TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
 
 func (s *UpgradeTestSuite) TestGetMainnetPredeterminedUnlocked() {
 	spotChecks := []struct {

@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
@@ -64,7 +63,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.acc2NameCount = 50
 
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 
 	cfg := testutil.DefaultTestNetworkConfig()
