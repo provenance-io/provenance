@@ -584,6 +584,7 @@
   
 - [provenance/marker/v1/authz.proto](#provenance_marker_v1_authz-proto)
     - [MarkerTransferAuthorization](#provenance-marker-v1-MarkerTransferAuthorization)
+    - [MultiAuthorization](#provenance-marker-v1-MultiAuthorization)
   
 - [provenance/marker/v1/genesis.proto](#provenance_marker_v1_genesis-proto)
     - [DenySendAddress](#provenance-marker-v1-DenySendAddress)
@@ -8615,6 +8616,23 @@ a marker transfer on behalf of the granter's account.
 | ----- | ---- | ----- | ----------- |
 | `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | transfer_limit is the total amount the grantee can transfer |
 | `allow_list` | [string](#string) | repeated | allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the granter. If omitted, any recipient is allowed. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MultiAuthorization"></a>
+
+### MultiAuthorization
+MultiAuthorization lets you combine several authorizations.
+All sub-authorizations must accept the message for it to be allowed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | The message type this authorization is for. |
+| `sub_authorizations` | [google.protobuf.Any](#google-protobuf-Any) | repeated | A list of sub-authorizations that must all accept the message. sub_authorizations: a list of authorizations (minimum 2, maximum 10). |
 
 
 
