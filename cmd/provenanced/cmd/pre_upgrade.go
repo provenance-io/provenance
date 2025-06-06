@@ -12,6 +12,7 @@ import (
 
 	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 var (
@@ -86,7 +87,11 @@ func UpdateConfig(cmd *cobra.Command) error {
 		clientCfg.BroadcastMode = "sync"
 	}
 
-	// TODO[fees]: Update the gas-prices config.
+	piocfg := pioconfig.GetProvConfig()
+	if appCfg.MinGasPrices != piocfg.ProvMinGasPrices {
+		cmd.Printf("Updating the minimum-gas-prices config value to %q (from %q, to accommodate flat fees).\n", piocfg.ProvMinGasPrices, appCfg.MinGasPrices)
+		appCfg.MinGasPrices = piocfg.ProvMinGasPrices
+	}
 
 	return SafeSaveConfigs(cmd, appCfg, cmtCfg, clientCfg, true)
 }

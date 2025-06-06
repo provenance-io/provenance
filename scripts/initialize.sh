@@ -93,7 +93,6 @@ $PROV_CMD genesis add-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "1
 $PROV_CMD genesis add-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000usd"
 $PROV_CMD genesis add-default-market --denom "$DENOM"
 $PROV_CMD genesis collect-gentxs
-$PROV_CMD config set minimum-gas-prices "1$DENOM"
 set +ex
 
 [ -n "$VERBOSE" ] && printf '\nProvenance Blockchain initialized at: %s\n' "$PIO_HOME"

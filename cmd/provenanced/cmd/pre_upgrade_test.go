@@ -272,6 +272,8 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	successMsg := "pre-upgrade successful"
 	updatingBlocksyncMsg := "Updating the broadcast_mode config value to \"sync\" (from \"block\", which is no longer an option)."
+	updatingMinGasPricesMsgStart := "Updating the minimum-gas-prices config value to \"0nhash\""
+	updatingMinGasPricesMsg := updatingMinGasPricesMsgStart + " (from \"1905nhash\", to accommodate flat fees)."
 
 	tests := []struct {
 		name         string
@@ -484,6 +486,64 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expInStdout:  []string{successMsg},
 			expAppCfg:    appCfgD,
 			expCmtCfg:    cmtCfgT,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "packed config min-gas-prices changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "1905nhash"
+				home, success := newHomePacked(t, "packed_min-gas-prices", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{updatingMinGasPricesMsg, successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "packed config min-gas-prices not changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "0nhash"
+				home, success := newHomePacked(t, "packed_min-gas-prices-ok", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expNot:       []string{updatingMinGasPricesMsgStart},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "unpacked config min-gas-prices changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "1905nhash"
+				home, success := newHome(t, "unpacked_min-gas-prices", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{updatingMinGasPricesMsg, successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "unpacked config min-gas-prices not changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "0nhash"
+				home, success := newHome(t, "unpacked_min-gas-prices-ok", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expNot:       []string{updatingMinGasPricesMsgStart},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 	}
