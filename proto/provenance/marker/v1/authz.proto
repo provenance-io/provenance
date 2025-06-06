@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/any.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/marker/types";
 option java_package        = "io.provenance.marker.v1";
@@ -26,4 +27,17 @@ message MarkerTransferAuthorization {
   // allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the
   // granter. If omitted, any recipient is allowed.
   repeated string allow_list = 2;
+}
+
+// MultiAuthorization lets you combine several authorizations.
+// All sub-authorizations must accept the message for it to be allowed.
+message MultiAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  // The message type this authorization is for.
+  string msg_type_url = 1;
+
+  // A list of sub-authorizations that must all accept the message.
+  // sub_authorizations: a list of authorizations (minimum 2, maximum 10).
+  repeated google.protobuf.Any sub_authorizations = 2 [(cosmos_proto.accepts_interface) = "Authorization"];
 }
