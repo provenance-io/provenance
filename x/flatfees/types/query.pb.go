@@ -332,8 +332,9 @@ func (m *QueryMsgFeeResponse) GetMsgFee() *MsgFee {
 type QueryCalculateTxFeesRequest struct {
 	// tx_bytes is the transaction to simulate.
 	TxBytes []byte `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
-	// gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation.
-	// This only affects the returned gas (since the fee is flat).
+	// gas_adjustment is a multiplier applied to the gas used while simulating the tx.
+	// This only affects the estimated gas (since the fee is flat).
+	// The default is 1.0. Valid range is 0.0 (exclusive) to 10.0 (inclusive).
 	GasAdjustment float32 `protobuf:"fixed32,2,opt,name=gas_adjustment,json=gasAdjustment,proto3" json:"gas_adjustment,omitempty"`
 }
 
