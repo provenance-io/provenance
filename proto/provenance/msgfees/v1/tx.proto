@@ -1,16 +1,15 @@
 syntax = "proto3";
 package provenance.msgfees.v1;
 
+option go_package          = "github.com/provenance-io/provenance/x/msgfees/types";
+option java_package        = "io.provenance.msgfees.v1";
+option java_multiple_files = true;
+
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
-
-option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
-
-option java_package        = "io.provenance.msgfees.v1";
-option java_multiple_files = true;
 
 // MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 // Deprecated: This message is no longer usable. It is only still included for

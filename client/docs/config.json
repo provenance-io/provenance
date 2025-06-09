@@ -144,6 +144,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/provenance/msgfees/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Fees"
+        ]
+      },
+    },
+    {
       "url": "./tmp-swagger-gen/provenance/flatfees/v1/tx.swagger.json",
       "tags": {
         "add": [

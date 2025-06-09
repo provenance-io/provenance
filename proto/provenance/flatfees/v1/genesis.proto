@@ -1,12 +1,12 @@
 syntax = "proto3";
 package provenance.flatfees.v1;
 
-import "gogoproto/gogo.proto";
-import "provenance/flatfees/v1/flatfees.proto";
-
 option go_package          = "github.com/provenance-io/provenance/x/flatfees/types";
 option java_package        = "io.provenance.flatfees.v1";
 option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/flatfees/v1/flatfees.proto";
 
 // GenesisState contains a set of the flat fees module, persisted from the store.
 message GenesisState {
