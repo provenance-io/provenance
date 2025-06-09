@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/provenance-io/provenance/x/flatfees/types"
 )
@@ -28,7 +29,7 @@ func NewQueryCmd() *cobra.Command {
 		NewCmdGetParams(),
 		NewCmdGetAllMsgFees(),
 		NewCmdGetMsgFee(),
-		// TODO[fees]: NewCmdCalculateTxFees(),
+		NewCmdCalculateTxFees(),
 	)
 	return queryCmd
 }
@@ -148,5 +149,58 @@ func NewCmdGetMsgFee() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	AddFlagDoNotConvert(cmd)
+	return cmd
+}
+
+func NewCmdCalculateTxFees() *cobra.Command {
+	// This cmd is named to match this module's query, but as the alias "simulate" because
+	// that's what the command is called under the tx sub-command.
+	cmd := &cobra.Command{
+		Use:     "calculate-tx-fees [msg_tx_json_file]",
+		Aliases: []string{"simulate", "calculate-fees", "sim", "calc"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Simulate a Tx and return total fees and estimated gas.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return fmt.Errorf("error reading tx flags: %w", err)
+			}
+			queryCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return fmt.Errorf("error reading query flags: %w", err)
+			}
+
+			gasAdj, err := cmd.Flags().GetFloat64(flags.FlagGasAdjustment)
+			if err != nil {
+				return fmt.Errorf("error reading --%s flag: %w", flags.FlagGasAdjustment, err)
+			}
+
+			// We've read all the command stuff. Any errors now, aren't usage problems.
+			cmd.SilenceUsage = true
+
+			theTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			if err != nil {
+				return fmt.Errorf("error reading tx from file %q: %w", args[0], err)
+			}
+
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(theTx)
+			if err != nil {
+				return fmt.Errorf("error decoding tx bytes: %w", err)
+			}
+
+			queryClient := types.NewQueryClient(queryCtx)
+			resp, err := queryClient.CalculateTxFees(
+				context.Background(),
+				&types.QueryCalculateTxFeesRequest{TxBytes: txBytes, GasAdjustment: float32(gasAdj)},
+			)
+			if err != nil {
+				return fmt.Errorf("error calculating fees: %w", err)
+			}
+			return queryCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
