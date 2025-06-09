@@ -29,10 +29,11 @@ service Query {
 message CalculateTxFeesRequest {
   // tx_bytes is the transaction to simulate.
   bytes tx_bytes = 1;
-  // default_base_denom is used to set the denom used for gas fees
-  // if not set it will default to nhash.
+  // default_base_denom used to be the denom used for gas fees.
+  // Deprecated: This field is now ignored. The fees will be in the appropriate denomination(s) automatically.
   string default_base_denom = 2;
-  // gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation
+  // gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation.
+  // This only affects the returned gas (since the fee is flat).
   float gas_adjustment = 3;
 }
 

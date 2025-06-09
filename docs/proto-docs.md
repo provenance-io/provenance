@@ -5793,8 +5793,8 @@ This query endpoint will be removed in a future release.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
-| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
-| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
+| `default_base_denom` | [string](#string) |  | default_base_denom used to be the denom used for gas fees. Deprecated: This field is now ignored. The fees will be in the appropriate denomination(s) automatically. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation. This only affects the returned gas (since the fee is flat). |
 
 
 
