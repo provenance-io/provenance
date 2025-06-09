@@ -360,6 +360,12 @@
     - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest)
     - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse)
   
+- [provenance/msgfees/v1/query.proto](#provenance_msgfees_v1_query-proto)
+    - [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest)
+    - [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse)
+  
+    - [Query](#provenance-msgfees-v1-Query)
+  
 - [provenance/msgfees/v1/proposals.proto](#provenance_msgfees_v1_proposals-proto)
     - [AddMsgFeeProposal](#provenance-msgfees-v1-AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance-msgfees-v1-RemoveMsgFeeProposal)
@@ -383,6 +389,8 @@
 - [provenance/flatfees/v1/query.proto](#provenance_flatfees_v1_query-proto)
     - [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest)
     - [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse)
+    - [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest)
+    - [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse)
     - [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest)
     - [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse)
     - [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest)
@@ -5767,6 +5775,70 @@ MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProp
 
 
 
+<a name="provenance_msgfees_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/query.proto
+
+
+
+<a name="provenance-msgfees-v1-CalculateTxFeesRequest"></a>
+
+### CalculateTxFeesRequest
+CalculateTxFeesRequest is the request type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
+| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
+
+
+
+
+
+
+<a name="provenance-msgfees-v1-CalculateTxFeesResponse"></a>
+
+### CalculateTxFeesResponse
+CalculateTxFeesResponse is the response type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees Deprecated: This field will always be empty |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg fees + gas fee) note: the gas fee is calculated with the floor gas price module param. |
+| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-msgfees-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for msgfees module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module. This query endpoint will be removed in a future release. |
+
+ <!-- end services -->
+
+
+
 <a name="provenance_msgfees_v1_proposals-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6072,6 +6144,38 @@ QueryAllMsgFeesResponse is the response type for the AllMsgFees query.
 
 
 
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesRequest"></a>
+
+### QueryCalculateTxFeesRequest
+QueryCalculateTxFeesRequest is the request type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation. This only affects the returned gas (since the fee is flat). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesResponse"></a>
+
+### QueryCalculateTxFeesResponse
+QueryCalculateTxFeesResponse is the response type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees is the amount of fees needed for the Tx. |
+| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the Tx. |
+
+
+
+
+
+
 <a name="provenance-flatfees-v1-QueryMsgFeeRequest"></a>
 
 ### QueryMsgFeeRequest
@@ -6144,6 +6248,7 @@ Query defines the gRPC querier service for marker module.
 | `Params` | [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse) | Params queries the parameters for x/flatfees. |
 | `AllMsgFees` | [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse) | AllMsgFees returns info on all msg types that have a customized msg fee. |
 | `MsgFee` | [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest) | [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse) | MsgFee will return information about what it will cost to execute a given msg type. If the provided msg type does not have a specific fee defined, the default is returned. |
+| `CalculateTxFees` | [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest) | [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and fees. |
 
  <!-- end services -->
 
