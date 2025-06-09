@@ -30,7 +30,9 @@ service Query {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/bucket_types";
   }
 
-  // Params queries params of the ledger module.
+  /*****************************************************************
+    Ledger Queries
+  *****************************************************************/
   rpc LedgerQuery(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
