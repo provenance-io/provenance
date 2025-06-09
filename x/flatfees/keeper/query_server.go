@@ -98,3 +98,8 @@ func (k queryServer) MsgFee(ctx context.Context, req *types.QueryMsgFeeRequest) 
 
 	return &types.QueryMsgFeeResponse{MsgFee: msgFee}, nil
 }
+
+// CalculateTxFees simulates executing a transaction for estimating gas usage and fees.
+func (k queryServer) CalculateTxFees(ctx context.Context, req *types.QueryCalculateTxFeesRequest) (*types.QueryCalculateTxFeesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "not yet implemented")
+}
