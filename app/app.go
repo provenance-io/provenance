@@ -488,7 +488,7 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, govAuthority)
 
 	app.FlatFeesKeeper = flatfeeskeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName,
+		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName, app.BaseApp.SimulateProv,
 	)
 
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks

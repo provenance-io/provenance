@@ -30,12 +30,15 @@ type Keeper struct {
 	Schema  collections.Schema
 	params  collections.Item[types.Params]
 	msgFees collections.Map[string, types.MsgFee]
+
+	simulate types.BaseAppSimulateFunc
 }
 
 func NewKeeper(
 	cdc codec.Codec,
 	storeService storetypes.KVStoreService,
 	feeCollectorName string,
+	simulateFn types.BaseAppSimulateFunc,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	rv := Keeper{
@@ -46,6 +49,8 @@ func NewKeeper(
 		authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		msgFees:   collections.NewMap(sb, types.MsgFeeKeyPrefix, "msg_fees", collections.StringKey, codec.CollValue[types.MsgFee](cdc)),
 		params:    collections.NewItem(sb, types.ParamsKeyPrefix, "params", codec.CollValue[types.Params](cdc)),
+
+		simulate: simulateFn,
 	}
 
 	var err error

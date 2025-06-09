@@ -13,3 +13,6 @@ type AccountKeeper interface {
 	SetAccount(context.Context, sdk.AccountI)
 	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 }
+
+// BaseAppSimulateFunc is the SimulateProv method on the baseapp, used to simulate a tx for gas and costs.
+type BaseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)

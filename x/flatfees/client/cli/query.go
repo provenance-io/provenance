@@ -28,6 +28,7 @@ func NewQueryCmd() *cobra.Command {
 		NewCmdGetParams(),
 		NewCmdGetAllMsgFees(),
 		NewCmdGetMsgFee(),
+		// TODO[fees]: NewCmdCalculateTxFees(),
 	)
 	return queryCmd
 }

@@ -2,13 +2,16 @@ package keeper
 
 import (
 	"context"
+	"math/big"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/flatfees/types"
 )
 
@@ -100,6 +103,40 @@ func (k queryServer) MsgFee(ctx context.Context, req *types.QueryMsgFeeRequest) 
 }
 
 // CalculateTxFees simulates executing a transaction for estimating gas usage and fees.
-func (k queryServer) CalculateTxFees(ctx context.Context, req *types.QueryCalculateTxFeesRequest) (*types.QueryCalculateTxFeesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not yet implemented")
+func (k queryServer) CalculateTxFees(_ context.Context, req *types.QueryCalculateTxFeesRequest) (*types.QueryCalculateTxFeesResponse, error) {
+	if req.GasAdjustment > 10.0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("gas adjustment cannot be larger than 10.0")
+	}
+	if req.GasAdjustment < 0.0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("gas adjustment cannot be less than 0.0")
+	}
+	// If it's effectively 0, change it to the default.
+	if req.GasAdjustment < 0.0001 {
+		req.GasAdjustment = 1.0
+	}
+
+	gasInfo, _, txCtx, err := k.simulate(req.TxBytes)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	gasMeter, err := antewrapper.GetFlatFeeGasMeter(txCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Golang's floating point math is deterministic only in that "The same floating-point operations,
+	// run on the same hardware, always produce the same result." I couldn't find anything asserting
+	// that the same code will produce the same result on two different sets of hardware, though.
+	// Thankfully, the math/big library is designed to be deterministic. So we use that here (in order
+	// to be deterministic) even though the values would fit in normal types just fine .
+	// SetUint64 will set the precision to 64 bits, which is enough for us here.
+	// GasUsed should have a range of 5 to 7 digits, so the result should be 5 to 8 digits.
+	// Some rare cases might have significantly more gas, but if this gets larger than a uint64, the
+	// Uint64() method just returns max uint64, which is acceptable behavior.
+	gas := new(big.Float).SetUint64(gasInfo.GasUsed)
+	adj := new(big.Float).SetFloat64(float64(req.GasAdjustment))
+	gas.Mul(gas, adj)
+	est, _ := gas.Uint64() // The ignored value is "Accuracy" (i.e. Above, Below, Exact) which we don't care about.
+	return &types.QueryCalculateTxFeesResponse{TotalFees: gasMeter.GetRequiredFee(), EstimatedGas: est}, nil
 }
