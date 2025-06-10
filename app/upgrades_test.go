@@ -591,26 +591,6 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 // TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
 
-func (s *UpgradeTestSuite) TestYellowRC1() {
-	expInLog := []string{
-		"INF Pruning expired consensus states for IBC.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Converting accounts to vesting accounts.",
-	}
-	s.AssertUpgradeHandlerLogs("yellow-rc1", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestYellow() {
-	expInLog := []string{
-		"INF Pruning expired consensus states for IBC.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Converting accounts to vesting accounts.",
-	}
-	s.AssertUpgradeHandlerLogs("yellow", expInLog, nil)
-}
-
 func (s *UpgradeTestSuite) TestZomp() {
 	expInLog := []string{
 		"INF Unlocking select vesting accounts.",
@@ -622,66 +602,6 @@ func (s *UpgradeTestSuite) TestZomp() {
 		"INF Converting accounts to vesting accounts.",
 	}
 	s.AssertUpgradeHandlerLogs("zomp", expInLog, expNotInLog)
-}
-
-func (s *UpgradeTestSuite) TestGetMainnetPredeterminedUnlocked() {
-	spotChecks := []struct {
-		addr string
-		amt  string
-	}{
-		{addr: "pb1zhnugds4qnem0j7apkf8uvlnksw4dus3rpx0hd2hmceqzn4pw5vqumwmyv", amt: "100000000000000"}, // 100,000 hash.
-		{addr: "pb15sccn0vjanjw7kxax8ed3e2t0mxt7u4nvjv5x0m48d492facwnqqrdftl3", amt: "100000000000000"}, // 100,000 hash.
-		{addr: "pb1rf5lshl9mq0y0vzl5ga3xu7z55elrm5uatytp4", amt: "100000000000000"},                     // 100,000 hash.
-		{addr: "pb1yn245ka9y30npklupzwyy6jzxjsrws6anr5xs8", amt: "100000000000000"},                     // 100,000 hash.
-		{addr: "pb10xwzgmdc40909pa9sz3t6vmxfg52yzpzmd9hx6", amt: "100000000000000"},                     // 100,000 hash.
-		{addr: "pb12erz6dfdmwf0v77nhwnzymh2anv758t89uf7da", amt: "100000000000000"},                     // 100,000 hash.
-		{addr: "pb10y6w3jdcr3xckxzhneuj0ndczttvqcd0py9l4v", amt: "817562410000000"},
-		{addr: "pb1ppf9252k6uerfldnezy2hgrqqldcp5thqvvlvz", amt: "721000000000000"},
-		{addr: "pb13nu2h9edf70dsuwcn8p8v36ga58sjsdlkx3t55", amt: "67580000000"},
-		{addr: "pb1ln6j2f27qjw2auaexhsqtl6a0afldw5l9lrva4dyfxnv06ha3wks7vue3v", amt: "45861430000000000"},
-	}
-	expLen := 8267
-
-	var act map[string]sdkmath.Int
-	testFunc := func() {
-		act = getMainnetPredeterminedUnlocked()
-	}
-	s.Require().NotPanics(testFunc, "getMainnetPredeterminedUnlocked")
-	s.Require().NotEmpty(act, "getMainnetPredeterminedUnlocked result")
-
-	s.Assert().Equal(expLen, len(act), "number of entries in getMainnetPredeterminedUnlocked result")
-	for _, check := range spotChecks {
-		amt, have := act[check.addr]
-		if s.Assert().True(have, "no entry found for address %q", check.addr) {
-			s.Assert().Equal(check.amt, amt.String(), "amount for address %q", check.addr)
-		}
-	}
-}
-
-func (s *UpgradeTestSuite) TestHashToNhash() {
-	tests := []struct {
-		hashAmt  string
-		nhashAmt string
-	}{
-		{hashAmt: "1", nhashAmt: "1000000000"},
-		{hashAmt: "1.0", nhashAmt: "1000000000"},
-		{hashAmt: "1.00", nhashAmt: "1000000000"},
-		{hashAmt: "1.000", nhashAmt: "1000000000"},
-		{hashAmt: "57.3", nhashAmt: "57300000000"},
-		{hashAmt: "685930.00", nhashAmt: "685930000000000"},
-		{hashAmt: "1235137.52", nhashAmt: "1235137520000000"},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.hashAmt, func() {
-			var act string
-			testFunc := func() {
-				act = hashToNhash(tc.hashAmt)
-			}
-			s.Require().NotPanics(testFunc, "hashToNhash(%q)", tc.hashAmt)
-			s.Assert().Equal(tc.nhashAmt, act, "hashToNhash(%q) result", tc.hashAmt)
-		})
-	}
 }
 
 func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
