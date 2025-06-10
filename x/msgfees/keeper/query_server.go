@@ -12,7 +12,7 @@ type queryServer struct {
 }
 
 func NewQueryServer(ffq types.FlatFeesQuerier) types.QueryServer {
-	return &queryServer{ffq}
+	return &queryServer{ffq: ffq}
 }
 
 // CalculateTxFees simulates executing a transaction for estimating gas usage and fees.
