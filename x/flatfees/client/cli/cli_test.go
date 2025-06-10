@@ -3,6 +3,10 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,15 +17,20 @@ import (
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	sdkmath "cosmossdk.io/math"
+	upgradecli "cosmossdk.io/x/upgrade/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -30,6 +39,7 @@ import (
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/x/flatfees/client/cli"
 	"github.com/provenance-io/provenance/x/flatfees/types"
+	quarantinecli "github.com/provenance-io/provenance/x/quarantine/client/cli"
 )
 
 type CLITestSuite struct {
@@ -72,7 +82,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.TimeoutCommit = 500 * time.Millisecond
 	s.cfg.NumValidators = 1
-	s.generateAccountsWithKeyrings(1)
+	s.generateAccountsWithKeyrings(4)
 
 	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankGenState *banktypes.GenesisState) *banktypes.GenesisState {
 		var genBalances []banktypes.Balance
@@ -98,7 +108,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	testutil.MutateGenesisState(s.T(), &s.cfg, types.ModuleName, &types.GenesisState{}, func(flatfeeGen *types.GenesisState) *types.GenesisState {
 		flatfeeGen.Params = types.Params{
-			DefaultCost: sdk.NewInt64Coin("banana", 2),
+			DefaultCost: sdk.NewInt64Coin("banana", 10), // 10 banana * 1 stake / 2 banana = 5 stake (default cost).
 			ConversionFactor: types.ConversionFactor{
 				BaseAmount:      sdk.NewInt64Coin("banana", 2),
 				ConvertedAmount: sdk.NewInt64Coin(s.cfg.BondDenom, 1),
@@ -106,8 +116,11 @@ func (s *CLITestSuite) SetupSuite() {
 		}
 		// Note that these are sorted alphabetically here to match the state store.
 		flatfeeGen.MsgFees = append(flatfeeGen.MsgFees,
+			// MsgSend should remain using the default cost since some tests rely on that being how it's set up.
 			// Only the gov prop msg is fee, still gotta pay for the Msgs in it, though.
 			types.NewMsgFee("/cosmos.gov.v1.MsgSubmitProposal"),
+			// Also make a software upgrade free.
+			types.NewMsgFee("/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade"),
 			types.NewMsgFee("/cosmos.group.v1.MsgCreateGroup", sdk.NewInt64Coin("banana", 3)),
 			types.NewMsgFee("/cosmos.group.v1.MsgCreateGroupPolicy", sdk.NewInt64Coin("banana", 4)),
 			types.NewMsgFee("/cosmos.group.v1.MsgCreateGroupWithPolicy", sdk.NewInt64Coin("banana", 5)),
@@ -122,7 +135,15 @@ func (s *CLITestSuite) SetupSuite() {
 			types.NewMsgFee("/cosmos.group.v1.MsgUpdateGroupPolicyMetadata", sdk.NewInt64Coin("banana", 14)),
 			types.NewMsgFee("/cosmos.group.v1.MsgVote", sdk.NewInt64Coin("banana", 15)),
 			types.NewMsgFee("/cosmos.group.v1.MsgWithdrawProposal", sdk.NewInt64Coin("banana", 16)),
+			// Define an expensive one, and a cheaper one.
+			types.NewMsgFee("/cosmos.quarantine.v1beta1.MsgOptIn", sdk.NewInt64Coin("banana", 500)),
+			types.NewMsgFee("/cosmos.quarantine.v1beta1.MsgOptOut", sdk.NewInt64Coin("banana", 1)),
 		)
+		// Sort them by MsgTypeURL so that they're in the same order as they will be in state,
+		// which makes it easier to identify pagination next keys.
+		slices.SortFunc(flatfeeGen.MsgFees, func(a, b *types.MsgFee) int {
+			return strings.Compare(a.MsgTypeUrl, b.MsgTypeUrl)
+		})
 		s.genState = *flatfeeGen
 		return flatfeeGen
 	})
@@ -198,17 +219,31 @@ type subCommand struct {
 }
 
 // assertBaseCmd checks that the provided cmd has the correct name and aliases and the provided subCmds.
-func (s *CLITestSuite) assertBaseCmd(cmd *cobra.Command, subCmds []subCommand) bool {
+func (s *CLITestSuite) assertBaseCmd(cmdMaker func() *cobra.Command, subCmds []subCommand) bool {
 	s.T().Helper()
-	ok := s.Run("base command", func() {
+	var cmd *cobra.Command
+	ok := s.Run("make the cmd", func() {
+		testFunc := func() {
+			cmd = cmdMaker()
+		}
+		s.Require().NotPanics(testFunc)
+	})
+
+	ok = s.Run("base command", func() {
+		if cmd == nil {
+			s.T().Skipf("command maker failed")
+		}
 		s.Assert().Equal("flatfees", cmd.Name(), "cmd.Name()")
 		s.Assert().Equal("flatfees", cmd.Use, "cmd.Use")
 		s.Assert().ElementsMatch([]string{"fees", "ff"}, cmd.Aliases, "cmd.Aliases")
 		s.Assert().Equal(len(subCmds), len(cmd.Commands()), "len(cmd.Commands())")
-	})
+	}) && ok
 
 	for _, tc := range subCmds {
 		ok = s.Run(fmt.Sprintf("sub-command %s", tc.name), func() {
+			if cmd == nil {
+				s.T().Skipf("command maker failed")
+			}
 			var subCmd *cobra.Command
 			for _, subCmd = range cmd.Commands() {
 				if subCmd.Name() == tc.name {
@@ -232,13 +267,87 @@ func reversed[S ~[]E, E any](s S) S {
 	return rv
 }
 
+// generateAndSignTx will call the provided txCmd to generate the tx, then it's signed.
+// Returns the path to the signed tx file.
+// The --yes (FlagSkipConfirmation) and --generate-only (FlagGenerateOnly) flags are added if not already
+// present in args. Also, if the args don't have a --from flag, --from s.accountAddresses[0] is added.
+func (s *CLITestSuite) generateAndSignTx(tmpDir string, baseFilename string, txCmd *cobra.Command, args ...string) string {
+	unsignedTxFilename, from := s.generateUnsignedTx(tmpDir, baseFilename, txCmd, args...)
+	return s.signTx(unsignedTxFilename, from)
+}
+
+// generateUnsignedTx will call the provided txCmd to generate a tx.
+// The --yes (FlagSkipConfirmation) and --generate-only (FlagGenerateOnly) flags are added if not already
+// present in args. Also, if the args don't have a --from flag, --from s.accountAddresses[0] is added.
+// Returns the path to the unsigned tx file and the --from value.
+func (s *CLITestSuite) generateUnsignedTx(tmpDir string, baseFilename string, txCmd *cobra.Command, args ...string) (unsignedTxFilename string, from string) {
+	var haveSkipConf, haveGenOnly bool
+	for i, arg := range args {
+		switch {
+		case arg == flags.FlagSkipConfirmation || strings.HasPrefix(arg, flags.FlagSkipConfirmation+"="):
+			haveSkipConf = true
+		case arg == flags.FlagGenerateOnly || strings.HasPrefix(arg, flags.FlagGenerateOnly+"="):
+			haveGenOnly = true
+		case arg == flags.FlagFrom && i+1 < len(args):
+			from = args[i+1]
+		case strings.HasPrefix(arg, flags.FlagFrom+"="):
+			from = strings.TrimPrefix(arg, flags.FlagFrom+"=")
+		}
+	}
+
+	if !haveSkipConf {
+		args = append(args, "--"+flags.FlagSkipConfirmation)
+	}
+	if !haveGenOnly {
+		args = append(args, "--"+flags.FlagGenerateOnly)
+	}
+	if len(from) == 0 {
+		from = s.accountAddresses[0].String()
+		args = append(args, "--"+flags.FlagFrom, from)
+	}
+
+	// Generate the unsigned Tx.
+	clientCtx := s.testnet.Validators[0].ClientCtx
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, txCmd, args)
+	s.Require().NoError(err, "ExecTestCLICmd(%s, %q)", txCmd.Name(), args)
+	unsignedTxBz := out.Bytes()
+
+	// Save the unsigned Tx.
+	unsignedTxFilename = filepath.Join(tmpDir, fmt.Sprintf("%s.unsigned.json", baseFilename))
+	err = os.WriteFile(unsignedTxFilename, unsignedTxBz, 0o666)
+	s.Require().NoError(err, "WriteFile(%q, ...): unsigned tx json", unsignedTxFilename)
+
+	return unsignedTxFilename, from
+}
+
+// signTx signs a tx using the provided from account. Returns the path to the signed tx file.
+func (s *CLITestSuite) signTx(unsignedTxFilename, from string) string {
+	// Generate the signed Tx.
+	clientCtx := s.testnet.Validators[0].ClientCtx
+	signCmd := authcli.GetSignCommand()
+	signArgs := []string{
+		unsignedTxFilename,
+		"--chain-id", clientCtx.ChainID,
+		"--" + flags.FlagFrom, from,
+	}
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, signCmd, signArgs)
+	s.Require().NoError(err, "Signing tx using ExecTestCLICmd(%s, %q)", signCmd.Name(), signArgs)
+	signedTxBz := out.Bytes()
+
+	// Save the signed Tx.
+	signedTxFilename := unsignedTxFilename + ".signed"
+	err = os.WriteFile(signedTxFilename, signedTxBz, 0o666)
+	s.Require().NoError(err, "WriteFile(%q, ...): signed tx", signedTxFilename)
+	return signedTxFilename
+}
+
 func (s *CLITestSuite) TestNewTxCmd() {
 	// These tests are only for making sure the sub commands are all added and named/aliased as expected.
 	subCmds := []subCommand{
 		{name: "update", aliases: []string{"costs"}},
 		{name: "params"},
 	}
-	s.assertBaseCmd(cli.NewTxCmd(), subCmds)
+	s.assertBaseCmd(cli.NewTxCmd, subCmds)
 }
 
 func (s *CLITestSuite) TestNewCmdUpdateParams() {
@@ -293,7 +402,7 @@ func (s *CLITestSuite) TestNewCmdUpdateParams() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5)).String()),
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
@@ -391,7 +500,7 @@ func (s *CLITestSuite) TestNewCmdUpdateMsgFees() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5)).String()),
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
@@ -406,8 +515,9 @@ func (s *CLITestSuite) TestNewQueryCmd() {
 		{name: "params"},
 		{name: "list", aliases: []string{"ls", "l", "all"}},
 		{name: "get", aliases: []string{"msgfee", "fee"}},
+		{name: "calculate-tx-fees", aliases: []string{"simulate", "calculate-fees", "sim", "calc"}},
 	}
-	s.assertBaseCmd(cli.NewQueryCmd(), subCmds)
+	s.assertBaseCmd(cli.NewQueryCmd, subCmds)
 }
 
 func (s *CLITestSuite) TestNewCmdGetParams() {
@@ -607,6 +717,92 @@ func (s *CLITestSuite) TestNewCmdGetMsgFee() {
 		s.Run(tc.Name, func() {
 			if tc.Cmd == nil {
 				tc.Cmd = cli.NewCmdGetMsgFee()
+			}
+			tc.Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *CLITestSuite) TestNewCmdCalculateTxFees() {
+	tmpDir := s.T().TempDir()
+	addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
+
+	bankSendTx := s.generateAndSignTx(tmpDir, "send", bankcli.NewSendTxCmd(addrCdc),
+		s.accountAddresses[0].String(), s.accountAddresses[1].String(), fmt.Sprintf("%d%s", 3, s.cfg.BondDenom),
+	)
+
+	upgradePropTx := s.generateAndSignTx(tmpDir, "upgrade", upgradecli.NewCmdSubmitUpgradeProposal(addrCdc),
+		"pink",
+		"--"+upgradecli.FlagUpgradeHeight, "5000000",
+		"--"+upgradecli.FlagNoValidate,
+		"--"+govcli.FlagTitle, "The Pink Upgrade",
+		"--"+govcli.FlagSummary, "The Pink Upgrade for a new version.",
+	)
+
+	optInTx := s.generateAndSignTx(tmpDir, "quar-opt-in", quarantinecli.TxOptInCmd(), s.accountAddresses[0].String())
+	optOutTx := s.generateAndSignTx(tmpDir, "quar-opt-out", quarantinecli.TxOptOutCmd(), s.accountAddresses[0].String())
+
+	tests := []testcli.QueryExecutor{
+		{
+			Name: "default cost, no multiplier, default output",
+			Args: []string{bankSendTx},
+			// This gas estimate keeps changing between 83359 and 83362.
+			// It probably has something to do with whether any of the tx tests have run and updated some state.
+			// We don't care about the actual number, though, just that it's not zero.
+			// So we'll just check that the field starts with 83.
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"83`},
+		},
+		{
+			Name:     "default cost, no multiplier, json output",
+			Args:     []string{bankSendTx, "--output", "json"},
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"83`},
+		},
+		{
+			Name:     "default cost, no multiplier, text output",
+			Args:     []string{bankSendTx, "--output", "text"},
+			ExpInOut: []string{"total_fees:\n- amount: \"5\"\n  denom: stake\n", "estimated_gas: \"83"},
+		},
+		{
+			Name:     "default cost, 1.5 multiplier",
+			Args:     []string{bankSendTx, "--gas-adjustment", "1.7", "--output", "json"}, // 83,3xx * 1.7 = 14y,yyy
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"14`},
+		},
+		{
+			Name:     "default cost, 5.3 multiplier",
+			Args:     []string{bankSendTx, "--gas-adjustment", "5.3", "--output", "json"}, // 83,3xx * 5.3 = 44y,yyy.
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"44`},
+		},
+		{
+			Name: "free msg",
+			Args: []string{upgradePropTx, "--output", "json"},
+			// This gas estimate keeps changing between 127267 and 127585.
+			// With this test, I want to make sure that gas is still being estimated, even if the fee is zero.
+			// But I don't care what the estimate actually is, so I'm just going to make sure it starts with a 1.
+			ExpInOut: []string{`"total_fees":[]`, `"estimated_gas":"1`},
+		},
+		{
+			Name:     "larger cost: quarantine opt in",
+			Args:     []string{optInTx, "--output", "json"}, // 500 banana * 1 stake / 2 banana = 250 stake
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"250"}]`},
+		},
+		{
+			Name:        "make sure the previous quarantine opt in wasn't actually applied",
+			Cmd:         quarantinecli.QueryIsQuarantinedCmd(),
+			Args:        []string{s.accountAddresses[0].String(), "--output", "text"},
+			ExpInOut:    []string{"is_quarantined: false"},
+			ExpNotInOut: []string{"is_quarantined: true"},
+		},
+		{
+			Name:     "cheaper cost",
+			Args:     []string{optOutTx, "--output", "json"}, // 1 banana * 1 stake / 2 banana = 0.5 stake => 1 stake
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"1"}]`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.Name, func() {
+			if tc.Cmd == nil {
+				tc.Cmd = cli.NewCmdCalculateTxFees()
 			}
 			tc.Execute(s.T(), s.testnet)
 		})

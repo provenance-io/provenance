@@ -200,7 +200,17 @@ func NewCmdCalculateTxFees() *cobra.Command {
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	// We also want the contents of AddQueryFlagsToCmd applied, but it has a couple in common with AddTxFlagsToCmd.
+	// That makes the second one panic due to duplicate flag. Since AddQueryFlagsToCmd is smaller, we manually apply
+	// what's in there, but not in AddTxFlagsToCmd. In both: FlagNode, FlagOutput.
+	cmd.Flags().String(flags.FlagGRPC, "", "the gRPC endpoint to use for this chain")
+	cmd.Flags().Bool(flags.FlagGRPCInsecure, false, "allow gRPC over insecure channels, if not the server must use TLS")
+	cmd.Flags().Int64(flags.FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
+	// We're fine without marking FlagChainID as required.
+
+	// Also, AddQueryFlagsToCmd sets the default FlagOutput to text, but AddTxFlagsToCmd defaults to json.
+	// So this query defaults to json.
+
 	return cmd
 }
