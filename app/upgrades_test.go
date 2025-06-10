@@ -14,13 +14,16 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 
@@ -608,6 +611,19 @@ func (s *UpgradeTestSuite) TestYellow() {
 	s.AssertUpgradeHandlerLogs("yellow", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestZomp() {
+	expInLog := []string{
+		"INF Unlocking select vesting accounts.",
+	}
+	expNotInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Converting accounts to vesting accounts.",
+	}
+	s.AssertUpgradeHandlerLogs("zomp", expInLog, expNotInLog)
+}
+
 func (s *UpgradeTestSuite) TestGetMainnetPredeterminedUnlocked() {
 	spotChecks := []struct {
 		addr string
@@ -664,6 +680,123 @@ func (s *UpgradeTestSuite) TestHashToNhash() {
 			}
 			s.Require().NotPanics(testFunc, "hashToNhash(%q)", tc.hashAmt)
 			s.Assert().Equal(tc.nhashAmt, act, "hashToNhash(%q) result", tc.hashAmt)
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
+	var addrs []sdk.AccAddress
+	newAddr := func() sdk.AccAddress {
+		addr := sdk.AccAddress(fmt.Sprintf("addrs[%d]____________", len(addrs))[:20])
+		addrs = append(addrs, addr)
+		return addr
+	}
+	type expectedAcct struct {
+		name string
+		addr sdk.AccAddress
+		orig sdk.AccountI
+		exp  sdk.AccountI
+	}
+	var expectedAccts []expectedAcct
+	expect := func(name string, addr sdk.AccAddress, orig, exp sdk.AccountI) {
+		expectedAccts = append(expectedAccts, expectedAcct{name: name, addr: addr, orig: orig, exp: exp})
+	}
+	saveAcct := func(acct sdk.AccountI) {
+		acct = s.app.AccountKeeper.NewAccount(s.ctx, acct)
+		s.app.AccountKeeper.SetAccount(s.ctx, acct)
+	}
+
+	baseAddr := newAddr()
+	baseAcct := authtypes.NewBaseAccountWithAddress(baseAddr)
+	baseAcct.Sequence = 5
+	saveAcct(baseAcct)
+	expect("base", baseAddr, baseAcct, baseAcct)
+
+	vestContAddr := newAddr()
+	vestContAcct, err := vesting.NewContinuousVestingAccount(
+		authtypes.NewBaseAccountWithAddress(vestContAddr),
+		sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+		s.ctx.BlockTime().Add(10*time.Second).Unix(),
+		s.ctx.BlockTime().Add(100*time.Hour).Unix(),
+	)
+	s.Require().NoError(err, "NewContinuousVestingAccount")
+	vestContAcct.Sequence = 3
+	saveAcct(vestContAcct)
+	expect("continuous", vestContAddr, vestContAcct, vestContAcct.BaseAccount)
+
+	vestDelAddr := newAddr()
+	vestDelAcct, err := vesting.NewDelayedVestingAccount(
+		authtypes.NewBaseAccountWithAddress(vestDelAddr),
+		sdk.NewCoins(sdk.NewInt64Coin("pear", 27)),
+		s.ctx.BlockTime().Add(50*time.Minute).Unix(),
+	)
+	s.Require().NoError(err, "NewDelayedVestingAccount")
+	vestDelAcct.Sequence = 12
+	saveAcct(vestDelAcct)
+	expect("delayed", vestDelAddr, vestDelAcct, vestDelAcct.BaseAccount)
+
+	vestPerAddr := newAddr()
+	vestPerAcct, err := vesting.NewPeriodicVestingAccount(
+		authtypes.NewBaseAccountWithAddress(vestPerAddr),
+		sdk.NewCoins(sdk.NewInt64Coin("peach", 15)),
+		s.ctx.BlockTime().Add(50*time.Minute).Unix(),
+		vesting.Periods{
+			{Length: 20 * 60, Amount: sdk.NewCoins(sdk.NewInt64Coin("peach", 5))},
+			{Length: 30 * 60, Amount: sdk.NewCoins(sdk.NewInt64Coin("peach", 10))},
+		},
+	)
+	s.Require().NoError(err, "NewPeriodicVestingAccount")
+	vestPerAcct.Sequence = 6
+	saveAcct(vestPerAcct)
+	expect("periodic", vestPerAddr, vestPerAcct, vestPerAcct.BaseAccount)
+
+	permLockAddr := newAddr()
+	permLockAcct, err := vesting.NewPermanentLockedAccount(
+		authtypes.NewBaseAccountWithAddress(permLockAddr),
+		sdk.NewCoins(sdk.NewInt64Coin("banana", 99)),
+	)
+	s.Require().NoError(err, "NewPermanentLockedAccount")
+	permLockAcct.Sequence = 19
+	saveAcct(permLockAcct)
+	expect("permanent locked", permLockAddr, permLockAcct, permLockAcct.BaseAccount)
+
+	modAddr := s.app.AccountKeeper.GetModuleAddress("marker")
+	modAcct := s.app.AccountKeeper.GetModuleAccount(s.ctx, "marker")
+	addrs = append(addrs, modAddr)
+	expect("module", modAddr, modAcct, modAcct)
+
+	unknownAddr := newAddr()
+	expect("unknown", unknownAddr, nil, nil)
+
+	expLogLines := []string{
+		"INF Unlocking select vesting accounts.",
+		"INF Identified 7 accounts to unlock.",
+		"INF [1/7]: Cannot unlock account " + baseAddr.String() + ": not a vesting account: *types.BaseAccount.",
+		"DBG [2/7]: Unlocked account: " + vestContAddr.String() + ".",
+		"DBG [3/7]: Unlocked account: " + vestDelAddr.String() + ".",
+		"DBG [4/7]: Unlocked account: " + vestPerAddr.String() + ".",
+		"DBG [5/7]: Unlocked account: " + permLockAddr.String() + ".",
+		"INF [6/7]: Cannot unlock account " + modAddr.String() + ": not a vesting account: *types.ModuleAccount.",
+		"INF [7/7]: Cannot unlock account " + unknownAddr.String() + ": account not found.",
+		"INF Done unlocking select vesting accounts.",
+		"",
+	}
+
+	var buffer bytes.Buffer
+	logger := internal.NewBufferedDebugLogger(&buffer)
+	ctx := s.ctx.WithLogger(logger)
+	testFunc := func() {
+		unlockVestingAccounts(ctx, s.app, addrs)
+	}
+	s.Require().NotPanics(testFunc, "unlockVestingAccounts")
+	actLog := buffer.String()
+	actLogLines := strings.Split(actLog, "\n")
+	s.Assert().Equal(expLogLines, actLogLines, "Logged messages.")
+
+	for _, tc := range expectedAccts {
+		s.Run(tc.name, func() {
+			acctI := s.app.AccountKeeper.GetAccount(ctx, tc.addr)
+			s.Assert().Equal(tc.exp, acctI, "GetAccount result")
 		})
 	}
 }
