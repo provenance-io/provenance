@@ -4,6 +4,9 @@ The `x/flatfees` module only has `Msg` endpoints for governance proposals.
 
 ---
 <!-- TOC -->
+  - [Governance Proposals](#governance-proposals)
+    - [UpdateParams](#updateparams)
+    - [UpdateMsgFees](#updatemsgfees)
 
 
 ## Governance Proposals
@@ -13,21 +16,21 @@ There are a couple endpoints available as governance proposals that manage the F
 
 ### UpdateParams
 
-The flatfees module params are updated via governance proposal with a `MsgUpdateParamsResponse`.
+The flatfees module params are updated via governance proposal with a `MsgUpdateParamsRequest`.
 
 It is expected to fail if:
 * The provided `authority` is not the governance module's account.
 * The provided params are invalid.
 
+#### MsgUpdateParamsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L24-L33
+
+See also: [Params](06_params.md#params).
+
 #### MsgUpdateParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L25-L34
-
-TODO: See also params.
-
-#### MsgUpdateMsgFeesResponse
-
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L36-L37
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L35-L36
 
 
 ### UpdateMsgFees
@@ -46,11 +49,12 @@ It is expected to fail if:
 
 #### MsgUpdateMsgFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L39-L51
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L38-L50
 
-TODO: See also MsgFee.
+#### MsgFee
+
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/flatfees.proto#L22-L35
 
 #### MsgUpdateMsgFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L53-L4
-
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L52-L53

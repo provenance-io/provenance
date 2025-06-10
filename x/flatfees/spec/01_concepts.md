@@ -4,3 +4,6 @@ The `x/flatfees` module, in conjunction with a custom antehandler and `app.Simul
 
 ---
 <!-- TOC -->
+
+
+TODO[fees]: Finish writing spec docs.
