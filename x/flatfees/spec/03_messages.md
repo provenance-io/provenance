@@ -6,6 +6,7 @@ The `x/flatfees` module only has `Msg` endpoints for governance proposals.
 <!-- TOC -->
   - [Governance Proposals](#governance-proposals)
     - [UpdateParams](#updateparams)
+    - [UpdateConversionFactor](#updateconversionfactor)
     - [UpdateMsgFees](#updatemsgfees)
 
 
@@ -24,13 +25,30 @@ It is expected to fail if:
 
 #### MsgUpdateParamsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L24-L33
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L27-L36
 
 See also: [Params](06_params.md#params).
 
 #### MsgUpdateParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L35-L36
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L38-L39
+
+
+### UpdateConversionFactor
+
+The conversion factor (part of Params) can be updated on its own using a governance proposal with a `MsgUpdateConversionFactorRequest`.
+
+It is expected to fail if:
+* The provided `authority` is not the governance module's account.
+* The provided conversion factor is invalid.
+
+#### MsgUpdateConversionFactorRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L41-L50
+
+#### MsgUpdateConversionFactorResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L52-L53
 
 
 ### UpdateMsgFees
@@ -49,12 +67,12 @@ It is expected to fail if:
 
 #### MsgUpdateMsgFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L38-L50
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L55-L67
 
 #### MsgFee
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/flatfees.proto#L22-L35
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/flatfees.proto#L38-L53
 
 #### MsgUpdateMsgFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L52-L53
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L69-L70

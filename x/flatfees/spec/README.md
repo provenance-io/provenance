@@ -3,6 +3,7 @@
 ## Overview
 
 The FlatFees module manages the costs needed to execute Msgs.
+This module, in combination with a custom gas meter, antehandler, message handler, and post handler allows Provenance Blockchain to charge fees based on message type instead of gas.
 
 ## Contents
 

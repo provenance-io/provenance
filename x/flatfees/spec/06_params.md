@@ -4,7 +4,7 @@ The flatfees module params define the default cost and the conversion factor use
 
 Costs, including the default, should be defined using a stable coin denom.
 The conversion factor dictates an equivalent amount of fee coin (converted amount) and stable coin (base amount).
-The `conversion_factor.base_amount` should have the same denom as the `default_cost`.
+The `conversion_factor.definition_amount` should have the same denom as the `default_cost`.
 The `conversion_factor.converted_amount` should have the fee denom.
 
 This setup allows us to define the costs in, e.g. `cusd`, and charge them in `nhash`.
@@ -20,4 +20,4 @@ The current params can be looked up using the [Params](05_queries.md#params) que
 
 ## ConversionFactor
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/flatfees.proto#L37-L45
++++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/flatfees.proto#L22-L36
