@@ -55,14 +55,6 @@ func NewAppModule(cdc codec.Codec, k keeper.RegistryKeeper) AppModule {
 	}
 }
 
-// RegisterInvariants registers the invariants of the module.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
-
-// QuerierRoute returns the module's querier route name.
-func (am AppModule) QuerierRoute() string {
-	return registry.ModuleName
-}
-
 // InitGenesis initializes the genesis state.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	ctx.Logger().Info("Genesising Registry Module")
