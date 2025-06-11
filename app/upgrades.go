@@ -42,14 +42,7 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"zomp": { // Upgrade for v1.24.0
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			unlockVestingAccounts(ctx, app, getMainnetUnlocks())
-			return vm, nil
-		},
-	},
-	"zomp-rc1": {}, // Upgrade for v1.24.0-rc1
-	"zydeco-rc1": { // Upgrade for v1.25.0-rc1.
+	"amaranth-rc1": { // Upgrade for v1.25.0-rc1.
 		Added:   []string{flatfeestypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -70,7 +63,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"zydeco": { // Upgrade for v1.25.0.
+	"amaranth": { // Upgrade for v1.25.0.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {

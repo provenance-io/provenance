@@ -591,41 +591,6 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 // TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
 
-func (s *UpgradeTestSuite) TestZydecoRC1() {
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Pruning expired consensus states for IBC.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Setting up flat fees.",
-	}
-	s.AssertUpgradeHandlerLogs("zydeco-rc1", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestZydeco() {
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Pruning expired consensus states for IBC.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Setting up flat fees.",
-	}
-	s.AssertUpgradeHandlerLogs("zydeco", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestZomp() {
-	expInLog := []string{
-		"INF Unlocking select vesting accounts.",
-	}
-	expNotInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Converting accounts to vesting accounts.",
-	}
-	s.AssertUpgradeHandlerLogs("zomp", expInLog, expNotInLog)
-}
-
 func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	var addrs []sdk.AccAddress
 	newAddr := func() sdk.AccAddress {
@@ -741,4 +706,26 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 			s.Assert().Equal(tc.exp, acctI, "GetAccount result")
 		})
 	}
+}
+
+func (s *UpgradeTestSuite) TestAmaranthRC1() {
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Setting up flat fees.",
+	}
+	s.AssertUpgradeHandlerLogs("amaranth-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestAmaranth() {
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Setting up flat fees.",
+	}
+	s.AssertUpgradeHandlerLogs("amaranth", expInLog, nil)
 }
