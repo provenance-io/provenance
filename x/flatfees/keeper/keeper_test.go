@@ -437,8 +437,8 @@ func (s *KeeperTestSuite) TestKeeper_CalculateMsgCost() {
 	params := types.Params{
 		DefaultCost: defCoin(10),
 		ConversionFactor: types.ConversionFactor{
-			BaseAmount:      defCoin(2),
-			ConvertedAmount: feeCoin(5),
+			DefinitionAmount: defCoin(2),
+			ConvertedAmount:  feeCoin(5),
 		},
 		// converted default cost = 10banana * 5cherry / 2banana = 25cherry.
 	}
@@ -1028,8 +1028,8 @@ func (s *KeeperTestSuite) TestKeeper_SetParams() {
 			params: types.Params{
 				DefaultCost: defaultParams.DefaultCost,
 				ConversionFactor: types.ConversionFactor{
-					BaseAmount:      sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
-					ConvertedAmount: sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
+					DefinitionAmount: sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
+					ConvertedAmount:  sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
 				},
 			},
 		},
@@ -1077,22 +1077,22 @@ func (s *KeeperTestSuite) TestKeeper_SetConversionFactor() {
 		{
 			name: "identity",
 			cf: types.ConversionFactor{
-				BaseAmount:      sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
-				ConvertedAmount: sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
+				DefinitionAmount: sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
+				ConvertedAmount:  sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
 			},
 		},
 		{
 			name: "larger base",
 			cf: types.ConversionFactor{
-				BaseAmount:      sdk.NewInt64Coin(defaultParams.ConversionFactor.BaseAmount.Denom, 987),
-				ConvertedAmount: sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 259),
+				DefinitionAmount: sdk.NewInt64Coin(defaultParams.ConversionFactor.DefinitionAmount.Denom, 987),
+				ConvertedAmount:  sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 259),
 			},
 		},
 		{
 			name: "smaller base",
 			cf: types.ConversionFactor{
-				BaseAmount:      sdk.NewInt64Coin(defaultParams.ConversionFactor.BaseAmount.Denom, 168),
-				ConvertedAmount: sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 563),
+				DefinitionAmount: sdk.NewInt64Coin(defaultParams.ConversionFactor.DefinitionAmount.Denom, 168),
+				ConvertedAmount:  sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 563),
 			},
 		},
 	}

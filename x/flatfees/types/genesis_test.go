@@ -54,8 +54,8 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params: Params{
 					DefaultCost: coin(100, "banana"),
 					ConversionFactor: ConversionFactor{
-						BaseAmount:      coin(10, "apple"),
-						ConvertedAmount: coin(10, "banana"),
+						DefinitionAmount: coin(10, "apple"),
+						ConvertedAmount:  coin(10, "banana"),
 					},
 				},
 			},
@@ -86,8 +86,8 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params: Params{
 					DefaultCost: coin(100, "banana"),
 					ConversionFactor: ConversionFactor{
-						BaseAmount:      coin(10, "apple"),
-						ConvertedAmount: coin(10, "banana"),
+						DefinitionAmount: coin(10, "apple"),
+						ConvertedAmount:  coin(10, "banana"),
 					},
 				},
 				MsgFees: []*MsgFee{
@@ -143,8 +143,8 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 		Params: Params{
 			DefaultCost: sdk.NewInt64Coin("apple", 500),
 			ConversionFactor: ConversionFactor{
-				BaseAmount:      sdk.NewInt64Coin("apple", 25),
-				ConvertedAmount: sdk.NewInt64Coin("banana", 3),
+				DefinitionAmount: sdk.NewInt64Coin("apple", 25),
+				ConvertedAmount:  sdk.NewInt64Coin("banana", 3),
 			},
 		},
 		MsgFees: []*MsgFee{

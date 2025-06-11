@@ -110,8 +110,8 @@ func (s *CLITestSuite) SetupSuite() {
 		flatfeeGen.Params = types.Params{
 			DefaultCost: sdk.NewInt64Coin("banana", 10), // 10 banana * 1 stake / 2 banana = 5 stake (default cost).
 			ConversionFactor: types.ConversionFactor{
-				BaseAmount:      sdk.NewInt64Coin("banana", 2),
-				ConvertedAmount: sdk.NewInt64Coin(s.cfg.BondDenom, 1),
+				DefinitionAmount: sdk.NewInt64Coin("banana", 2),
+				ConvertedAmount:  sdk.NewInt64Coin(s.cfg.BondDenom, 1),
 			},
 		}
 		// Note that these are sorted alphabetically here to match the state store.

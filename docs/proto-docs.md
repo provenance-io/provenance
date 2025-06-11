@@ -6080,13 +6080,15 @@ Msg defines the flatfees Msg service.
 <a name="provenance-flatfees-v1-ConversionFactor"></a>
 
 ### ConversionFactor
-ConversionFactor associates the values of two coins with different denoms.
+ConversionFactor equates the values of two coins in different denominations.
+It is used to determine how much of the fee denomination is due.
+actual cost = defined cost * converted_amount / definition_amount (truncated to an integer).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `base_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | base_amount is an amount in the base denom that is equal to the converted_amount. |
-| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denom equal to the base_amount. |
+| `definition_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount. This cannot have an amount of zero. If this has the same denomination as the converted_amount, then the amounts must also be equal. |
+| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denomination equal to the definition_amount. If this is zero, all msgs will be free. If this has the same denomination as the definition_amount, then the amounts must also be equal. |
 
 
 
@@ -6102,7 +6104,7 @@ MsgFee defines the cost to use a specific message type.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
-| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. |
+| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. It should have the same denomination as the default cost and as the conversion factor's definition_amount. Any other denomination will be charged as defined. |
 
 
 
@@ -6118,7 +6120,7 @@ Params defines the set of params for the flatfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. |
-| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denom. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. |
 
 
 

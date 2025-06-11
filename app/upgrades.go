@@ -387,8 +387,8 @@ func setupFlatFees(ctx sdk.Context, app *App) error {
 	params := flatfeestypes.Params{ // TODO[fees]: Set these params with more accurate values.
 		DefaultCost: feeDefCoin(1),
 		ConversionFactor: flatfeestypes.ConversionFactor{
-			BaseAmount:      feeDefCoin(1),
-			ConvertedAmount: sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
+			DefinitionAmount: feeDefCoin(1),
+			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
 		},
 	}
 	err := app.FlatFeesKeeper.SetParams(ctx, params)

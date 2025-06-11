@@ -66,8 +66,8 @@ func TestMsgUpdateParamsRequest_ValidateBasic(t *testing.T) {
 				Params: Params{
 					DefaultCost: sdk.NewInt64Coin("plum", 100),
 					ConversionFactor: ConversionFactor{
-						BaseAmount:      sdk.NewInt64Coin("plum", 1),
-						ConvertedAmount: sdk.NewInt64Coin("acorn", 17),
+						DefinitionAmount: sdk.NewInt64Coin("plum", 1),
+						ConvertedAmount:  sdk.NewInt64Coin("acorn", 17),
 					},
 				},
 			},
@@ -105,7 +105,7 @@ func TestMsgUpdateConversionFactorRequest_ValidateBasic(t *testing.T) {
 		return sdk.Coin{Denom: denom, Amount: amt}
 	}
 	cf := func(base, converted string) ConversionFactor {
-		return ConversionFactor{BaseAmount: coin(base), ConvertedAmount: coin(converted)}
+		return ConversionFactor{DefinitionAmount: coin(base), ConvertedAmount: coin(converted)}
 	}
 
 	tests := []struct {

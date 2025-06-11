@@ -234,8 +234,8 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 				Params: types.Params{
 					DefaultCost: sdk.NewInt64Coin("pink", 3_000),
 					ConversionFactor: types.ConversionFactor{
-						BaseAmount:      sdk.NewInt64Coin("pink", 3),
-						ConvertedAmount: sdk.NewInt64Coin("orange", 1),
+						DefinitionAmount: sdk.NewInt64Coin("pink", 3),
+						ConvertedAmount:  sdk.NewInt64Coin("orange", 1),
 					},
 				},
 			},
@@ -295,8 +295,8 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: "whatever",
 				ConversionFactor: types.ConversionFactor{
-					BaseAmount:      sdk.NewInt64Coin("green", 4),
-					ConvertedAmount: sdk.NewInt64Coin("orange", 16),
+					DefinitionAmount: sdk.NewInt64Coin("green", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 16),
 				},
 			},
 			expErr: "that is a naughty authority",
@@ -307,8 +307,8 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("whatever____________").String(),
 				ConversionFactor: types.ConversionFactor{
-					BaseAmount:      sdk.NewInt64Coin("green", 4),
-					ConvertedAmount: sdk.NewInt64Coin("orange", 16),
+					DefinitionAmount: sdk.NewInt64Coin("green", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 16),
 				},
 			},
 			expErr:  "rpc error: code = InvalidArgument desc = notgonnaconvert",
@@ -319,8 +319,8 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("some_address________").String(),
 				ConversionFactor: types.ConversionFactor{
-					BaseAmount:      sdk.NewInt64Coin("pink", 4),
-					ConvertedAmount: sdk.NewInt64Coin("fuchsia", 16),
+					DefinitionAmount: sdk.NewInt64Coin("pink", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("fuchsia", 16),
 				},
 			},
 			expCall: true,

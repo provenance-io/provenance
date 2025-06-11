@@ -168,8 +168,8 @@ func TestFailedTx(tt *testing.T) {
 	flatFeesParams := flatfeestypes.Params{
 		DefaultCost: sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(TestGasLimit)),
 		ConversionFactor: flatfeestypes.ConversionFactor{
-			BaseAmount:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
-			ConvertedAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			DefinitionAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			ConvertedAmount:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
 		},
 	}
 	require.NoError(tt, app.FlatFeesKeeper.SetParams(ctx, flatFeesParams), "FlatFeesKeeper.SetParams(%s)", flatFeesParams)
@@ -288,8 +288,8 @@ func TestMsgService(tt *testing.T) {
 	flatFeesParams := flatfeestypes.Params{
 		DefaultCost: sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(TestGasLimit)),
 		ConversionFactor: flatfeestypes.ConversionFactor{
-			BaseAmount:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
-			ConvertedAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			DefinitionAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			ConvertedAmount:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
 		},
 	}
 	require.NoError(tt, app.FlatFeesKeeper.SetParams(ctx, flatFeesParams), "FlatFeesKeeper.SetParams(%s)", flatFeesParams)
@@ -454,8 +454,8 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	flatFeesParams := flatfeestypes.Params{
 		DefaultCost: sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(TestGasLimit)),
 		ConversionFactor: flatfeestypes.ConversionFactor{
-			BaseAmount:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
-			ConvertedAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			DefinitionAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			ConvertedAmount:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
 		},
 	}
 	require.NoError(tt, app.FlatFeesKeeper.SetParams(ctx, flatFeesParams), "FlatFeesKeeper.SetParams(%s)", flatFeesParams)
@@ -632,8 +632,8 @@ func TestHandlersConsumeMsgs(t *testing.T) {
 	flatFeesParams := flatfeestypes.Params{
 		DefaultCost: sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(TestGasLimit)),
 		ConversionFactor: flatfeestypes.ConversionFactor{
-			BaseAmount:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
-			ConvertedAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			DefinitionAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
+			ConvertedAmount:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
 		},
 	}
 	require.NoError(t, app.FlatFeesKeeper.SetParams(ctx, flatFeesParams), "FlatFeesKeeper.SetParams(%s)", flatFeesParams)

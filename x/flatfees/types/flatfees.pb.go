@@ -30,7 +30,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Params struct {
 	// default_cost is the amount a msg costs when there is no specific msg-fee defined for it.
 	DefaultCost types.Coin `protobuf:"bytes,1,opt,name=default_cost,json=defaultCost,proto3" json:"default_cost"`
-	// conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denom.
+	// conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination.
 	ConversionFactor ConversionFactor `protobuf:"bytes,3,opt,name=conversion_factor,json=conversionFactor,proto3" json:"conversion_factor"`
 }
 
@@ -81,18 +81,80 @@ func (m *Params) GetConversionFactor() ConversionFactor {
 	return ConversionFactor{}
 }
 
+// ConversionFactor equates the values of two coins in different denominations.
+// It is used to determine how much of the fee denomination is due.
+// actual cost = defined cost * converted_amount / definition_amount (truncated to an integer).
+type ConversionFactor struct {
+	// definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount.
+	// This cannot have an amount of zero.
+	// If this has the same denomination as the converted_amount, then the amounts must also be equal.
+	DefinitionAmount types.Coin `protobuf:"bytes,1,opt,name=definition_amount,json=definitionAmount,proto3" json:"definition_amount"`
+	// converted_amount is an amount in the fee denomination equal to the definition_amount.
+	// If this is zero, all msgs will be free.
+	// If this has the same denomination as the definition_amount, then the amounts must also be equal.
+	ConvertedAmount types.Coin `protobuf:"bytes,2,opt,name=converted_amount,json=convertedAmount,proto3" json:"converted_amount"`
+}
+
+func (m *ConversionFactor) Reset()      { *m = ConversionFactor{} }
+func (*ConversionFactor) ProtoMessage() {}
+func (*ConversionFactor) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5f072ef45f916c39, []int{1}
+}
+func (m *ConversionFactor) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ConversionFactor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ConversionFactor.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ConversionFactor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConversionFactor.Merge(m, src)
+}
+func (m *ConversionFactor) XXX_Size() int {
+	return m.Size()
+}
+func (m *ConversionFactor) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConversionFactor.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConversionFactor proto.InternalMessageInfo
+
+func (m *ConversionFactor) GetDefinitionAmount() types.Coin {
+	if m != nil {
+		return m.DefinitionAmount
+	}
+	return types.Coin{}
+}
+
+func (m *ConversionFactor) GetConvertedAmount() types.Coin {
+	if m != nil {
+		return m.ConvertedAmount
+	}
+	return types.Coin{}
+}
+
 // MsgFee defines the cost to use a specific message type.
 type MsgFee struct {
 	// msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend".
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// cost is the Tx fee required for this msg_type_url.
+	// It should have the same denomination as the default cost and as the conversion factor's definition_amount.
+	// Any other denomination will be charged as defined.
 	Cost github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=cost,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"cost"`
 }
 
 func (m *MsgFee) Reset()      { *m = MsgFee{} }
 func (*MsgFee) ProtoMessage() {}
 func (*MsgFee) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5f072ef45f916c39, []int{1}
+	return fileDescriptor_5f072ef45f916c39, []int{2}
 }
 func (m *MsgFee) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -135,64 +197,10 @@ func (m *MsgFee) GetCost() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
-// ConversionFactor associates the values of two coins with different denoms.
-type ConversionFactor struct {
-	// base_amount is an amount in the base denom that is equal to the converted_amount.
-	BaseAmount types.Coin `protobuf:"bytes,1,opt,name=base_amount,json=baseAmount,proto3" json:"base_amount"`
-	// converted_amount is an amount in the fee denom equal to the base_amount.
-	ConvertedAmount types.Coin `protobuf:"bytes,2,opt,name=converted_amount,json=convertedAmount,proto3" json:"converted_amount"`
-}
-
-func (m *ConversionFactor) Reset()      { *m = ConversionFactor{} }
-func (*ConversionFactor) ProtoMessage() {}
-func (*ConversionFactor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5f072ef45f916c39, []int{2}
-}
-func (m *ConversionFactor) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ConversionFactor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ConversionFactor.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ConversionFactor) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConversionFactor.Merge(m, src)
-}
-func (m *ConversionFactor) XXX_Size() int {
-	return m.Size()
-}
-func (m *ConversionFactor) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConversionFactor.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConversionFactor proto.InternalMessageInfo
-
-func (m *ConversionFactor) GetBaseAmount() types.Coin {
-	if m != nil {
-		return m.BaseAmount
-	}
-	return types.Coin{}
-}
-
-func (m *ConversionFactor) GetConvertedAmount() types.Coin {
-	if m != nil {
-		return m.ConvertedAmount
-	}
-	return types.Coin{}
-}
-
 func init() {
 	proto.RegisterType((*Params)(nil), "provenance.flatfees.v1.Params")
-	proto.RegisterType((*MsgFee)(nil), "provenance.flatfees.v1.MsgFee")
 	proto.RegisterType((*ConversionFactor)(nil), "provenance.flatfees.v1.ConversionFactor")
+	proto.RegisterType((*MsgFee)(nil), "provenance.flatfees.v1.MsgFee")
 }
 
 func init() {
@@ -200,35 +208,35 @@ func init() {
 }
 
 var fileDescriptor_5f072ef45f916c39 = []byte{
-	// 446 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x41, 0x6b, 0xd4, 0x40,
-	0x14, 0xc7, 0x33, 0xed, 0xb2, 0xe0, 0xec, 0x82, 0x6d, 0x10, 0x69, 0x7b, 0xc8, 0x2e, 0x05, 0x61,
-	0x29, 0x74, 0x86, 0xa8, 0xa7, 0x9e, 0x74, 0x17, 0xf6, 0x20, 0x08, 0x65, 0xd1, 0x8b, 0x1e, 0xc2,
-	0x64, 0x76, 0x12, 0x43, 0x93, 0x79, 0x21, 0x33, 0x09, 0xee, 0xb7, 0xf0, 0x28, 0x9e, 0x3c, 0xa9,
-	0x78, 0xb1, 0x1f, 0xa3, 0xc7, 0x1e, 0x3d, 0xa9, 0xec, 0x1e, 0xea, 0xc7, 0x90, 0x99, 0xc4, 0x6c,
-	0x29, 0x5a, 0xf6, 0x92, 0xbc, 0xcc, 0x7b, 0xff, 0xdf, 0x7b, 0xef, 0x9f, 0xc1, 0x0f, 0xf2, 0x02,
-	0x2a, 0x21, 0x99, 0xe4, 0x82, 0x46, 0x29, 0xd3, 0x91, 0x10, 0x8a, 0x56, 0x7e, 0x1b, 0x93, 0xbc,
-	0x00, 0x0d, 0xee, 0xfd, 0x75, 0x19, 0x69, 0x53, 0x95, 0x7f, 0xb0, 0xcb, 0xb2, 0x44, 0x02, 0xb5,
-	0xcf, 0xba, 0xf4, 0xe0, 0x5e, 0x0c, 0x31, 0xd8, 0x90, 0x9a, 0xa8, 0x39, 0xf5, 0x38, 0xa8, 0x0c,
-	0x14, 0x0d, 0x99, 0x12, 0xb4, 0xf2, 0x43, 0xa1, 0x99, 0x4f, 0x39, 0x24, 0xb2, 0xce, 0x1f, 0x7e,
-	0x43, 0xb8, 0x7b, 0xca, 0x0a, 0x96, 0x29, 0x77, 0x8c, 0xfb, 0x73, 0x11, 0xb1, 0x32, 0xd5, 0x01,
-	0x07, 0xa5, 0xf7, 0xd0, 0x10, 0x8d, 0x7a, 0x0f, 0xf7, 0x49, 0x4d, 0x20, 0x86, 0x40, 0x1a, 0x02,
-	0x99, 0x40, 0x22, 0xc7, 0x9d, 0x8b, 0x1f, 0x03, 0x67, 0xd6, 0x6b, 0x44, 0x13, 0x50, 0xda, 0x7d,
-	0x8d, 0x77, 0x39, 0xc8, 0x4a, 0x14, 0x2a, 0x01, 0x19, 0x44, 0x8c, 0x6b, 0x28, 0xf6, 0xb6, 0x2d,
-	0x68, 0x44, 0xfe, 0xbd, 0x0b, 0x99, 0xb4, 0x82, 0xa9, 0xad, 0x6f, 0xb8, 0x3b, 0xfc, 0xc6, 0xf9,
-	0x49, 0xe7, 0xf7, 0xc7, 0x81, 0x73, 0xf8, 0x19, 0xe1, 0xee, 0x73, 0x15, 0x4f, 0x85, 0x70, 0x87,
-	0xb8, 0x9f, 0xa9, 0x38, 0xd0, 0x8b, 0x5c, 0x04, 0x65, 0x91, 0xda, 0x89, 0xef, 0xcc, 0x70, 0xa6,
-	0xe2, 0x17, 0x8b, 0x5c, 0xbc, 0x2c, 0x52, 0xb7, 0xc4, 0x1d, 0xbb, 0xcb, 0xd6, 0x70, 0xfb, 0xf6,
-	0x5d, 0xa6, 0xa6, 0xe7, 0xd7, 0x9f, 0x83, 0x51, 0x9c, 0xe8, 0x37, 0x65, 0x48, 0x38, 0x64, 0xb4,
-	0xb1, 0xae, 0x7e, 0x1d, 0xab, 0xf9, 0x19, 0x35, 0x9d, 0x94, 0x15, 0xa8, 0x0f, 0x57, 0xe7, 0x47,
-	0xfd, 0x54, 0xc4, 0x8c, 0x2f, 0x02, 0xe3, 0xa7, 0xfa, 0x72, 0x75, 0x7e, 0x84, 0x66, 0xb6, 0xdd,
-	0x49, 0xe7, 0xbd, 0x99, 0xf4, 0x13, 0xc2, 0x3b, 0x37, 0x97, 0x73, 0x9f, 0xe0, 0x9e, 0xe9, 0x1e,
-	0xb0, 0x0c, 0x4a, 0xb9, 0xb1, 0xc9, 0xd8, 0x24, 0x9e, 0x5a, 0x89, 0xfb, 0x0c, 0x37, 0xd6, 0x68,
-	0x31, 0xff, 0x8b, 0xd9, 0xda, 0x0c, 0x73, 0xb7, 0x15, 0xd6, 0xac, 0x7a, 0xd0, 0xf1, 0xd9, 0xc5,
-	0xd2, 0x43, 0x97, 0x4b, 0x0f, 0xfd, 0x5a, 0x7a, 0xe8, 0xdd, 0xca, 0x73, 0x2e, 0x57, 0x9e, 0xf3,
-	0x7d, 0xe5, 0x39, 0x78, 0x3f, 0x81, 0xff, 0xfc, 0xb6, 0x53, 0xf4, 0xea, 0xf1, 0x35, 0xaf, 0xd6,
-	0x45, 0xc7, 0x09, 0x5c, 0xfb, 0xa2, 0x6f, 0xd7, 0xd7, 0xdb, 0xba, 0x17, 0x76, 0xed, 0xc5, 0x7b,
-	0xf4, 0x27, 0x00, 0x00, 0xff, 0xff, 0xdc, 0x18, 0xd7, 0xf9, 0x02, 0x03, 0x00, 0x00,
+	// 447 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0x4f, 0x6b, 0xd4, 0x40,
+	0x14, 0xcf, 0xb4, 0xcb, 0x82, 0xd3, 0x05, 0x77, 0x83, 0x48, 0xdb, 0x43, 0x76, 0x29, 0x08, 0x4b,
+	0xa1, 0x33, 0xac, 0x7a, 0xea, 0xcd, 0x5d, 0xd8, 0x83, 0x28, 0x94, 0x45, 0x2f, 0x7a, 0x08, 0xb3,
+	0x93, 0x49, 0x1c, 0x9a, 0xcc, 0x0b, 0x99, 0x49, 0x70, 0xbf, 0x85, 0x47, 0xf1, 0xe4, 0x4d, 0xf1,
+	0x62, 0xf1, 0x53, 0xf4, 0xd8, 0xa3, 0x27, 0x95, 0xdd, 0x43, 0xfd, 0x18, 0x92, 0x49, 0x4c, 0x4a,
+	0xd1, 0xd2, 0x4b, 0xf2, 0x66, 0xe6, 0xf7, 0xef, 0xf1, 0x1e, 0x7e, 0x90, 0x66, 0x50, 0x08, 0xc5,
+	0x14, 0x17, 0x34, 0x8c, 0x99, 0x09, 0x85, 0xd0, 0xb4, 0x98, 0x34, 0x35, 0x49, 0x33, 0x30, 0xe0,
+	0xde, 0x6f, 0x61, 0xa4, 0x79, 0x2a, 0x26, 0xfb, 0x03, 0x96, 0x48, 0x05, 0xd4, 0x7e, 0x2b, 0xe8,
+	0xfe, 0xbd, 0x08, 0x22, 0xb0, 0x25, 0x2d, 0xab, 0xfa, 0xd6, 0xe3, 0xa0, 0x13, 0xd0, 0x74, 0xc9,
+	0xb4, 0xa0, 0xc5, 0x64, 0x29, 0x0c, 0x9b, 0x50, 0x0e, 0x52, 0x55, 0xef, 0x07, 0x5f, 0x11, 0xee,
+	0x9e, 0xb0, 0x8c, 0x25, 0xda, 0x9d, 0xe2, 0x5e, 0x20, 0x42, 0x96, 0xc7, 0xc6, 0xe7, 0xa0, 0xcd,
+	0x2e, 0x1a, 0xa1, 0xf1, 0xce, 0xc3, 0x3d, 0x52, 0x29, 0x90, 0x52, 0x81, 0xd4, 0x0a, 0x64, 0x06,
+	0x52, 0x4d, 0x3b, 0xe7, 0x3f, 0x86, 0xce, 0x62, 0xa7, 0x26, 0xcd, 0x40, 0x1b, 0xf7, 0x35, 0x1e,
+	0x70, 0x50, 0x85, 0xc8, 0xb4, 0x04, 0xe5, 0x87, 0x8c, 0x1b, 0xc8, 0x76, 0xb7, 0xad, 0xd0, 0x98,
+	0xfc, 0xbb, 0x17, 0x32, 0x6b, 0x08, 0x73, 0x8b, 0xaf, 0x75, 0xfb, 0xfc, 0xda, 0xfd, 0x71, 0xe7,
+	0xf7, 0xc7, 0xa1, 0x73, 0xf0, 0x0d, 0xe1, 0xfe, 0x75, 0x8a, 0xfb, 0x0c, 0x0f, 0x02, 0x11, 0x4a,
+	0x25, 0x4d, 0xe9, 0xcb, 0x12, 0xc8, 0xd5, 0xad, 0x1b, 0xe8, 0xb7, 0xcc, 0x27, 0x96, 0xe8, 0x3e,
+	0xc5, 0xb5, 0xb9, 0x11, 0xc1, 0x5f, 0xb1, 0xad, 0xdb, 0x89, 0xdd, 0x6d, 0x88, 0x95, 0xd6, 0x71,
+	0xe7, 0x7d, 0x19, 0xfa, 0x13, 0xc2, 0xdd, 0xe7, 0x3a, 0x9a, 0x0b, 0xe1, 0x8e, 0x70, 0x2f, 0xd1,
+	0x91, 0x6f, 0x56, 0xa9, 0xf0, 0xf3, 0x2c, 0xb6, 0x29, 0xef, 0x2c, 0x70, 0xa2, 0xa3, 0x17, 0xab,
+	0x54, 0xbc, 0xcc, 0x62, 0x37, 0xc7, 0x1d, 0x3b, 0x80, 0xad, 0xd1, 0xf6, 0xcd, 0x96, 0xf3, 0xd2,
+	0xf2, 0xcb, 0xcf, 0xe1, 0x38, 0x92, 0xe6, 0x4d, 0xbe, 0x24, 0x1c, 0x12, 0x5a, 0xcf, 0xbb, 0xfa,
+	0x1d, 0xe9, 0xe0, 0x94, 0x96, 0x4e, 0xda, 0x12, 0xf4, 0x87, 0xcb, 0xb3, 0xc3, 0x5e, 0x2c, 0x22,
+	0xc6, 0x57, 0x7e, 0xb9, 0x04, 0xfa, 0xf3, 0xe5, 0xd9, 0x21, 0x5a, 0x58, 0xbb, 0x2a, 0xe9, 0xf4,
+	0xf4, 0x7c, 0xed, 0xa1, 0x8b, 0xb5, 0x87, 0x7e, 0xad, 0x3d, 0xf4, 0x6e, 0xe3, 0x39, 0x17, 0x1b,
+	0xcf, 0xf9, 0xbe, 0xf1, 0x1c, 0xbc, 0x27, 0xe1, 0x3f, 0x23, 0x3c, 0x41, 0xaf, 0x1e, 0x5f, 0x89,
+	0xd0, 0x82, 0x8e, 0x24, 0x5c, 0x39, 0xd1, 0xb7, 0xed, 0xaa, 0xdb, 0x50, 0xcb, 0xae, 0x5d, 0xc2,
+	0x47, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x4c, 0xe5, 0xea, 0x3d, 0x0e, 0x03, 0x00, 0x00,
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {
@@ -263,6 +271,49 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	dAtA[i] = 0x1a
 	{
 		size, err := m.DefaultCost.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintFlatfees(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *ConversionFactor) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ConversionFactor) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ConversionFactor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ConvertedAmount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintFlatfees(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.DefinitionAmount.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -318,49 +369,6 @@ func (m *MsgFee) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ConversionFactor) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ConversionFactor) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ConversionFactor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.ConvertedAmount.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintFlatfees(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size, err := m.BaseAmount.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintFlatfees(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintFlatfees(dAtA []byte, offset int, v uint64) int {
 	offset -= sovFlatfees(v)
 	base := offset
@@ -385,6 +393,19 @@ func (m *Params) Size() (n int) {
 	return n
 }
 
+func (m *ConversionFactor) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.DefinitionAmount.Size()
+	n += 1 + l + sovFlatfees(uint64(l))
+	l = m.ConvertedAmount.Size()
+	n += 1 + l + sovFlatfees(uint64(l))
+	return n
+}
+
 func (m *MsgFee) Size() (n int) {
 	if m == nil {
 		return 0
@@ -401,19 +422,6 @@ func (m *MsgFee) Size() (n int) {
 			n += 1 + l + sovFlatfees(uint64(l))
 		}
 	}
-	return n
-}
-
-func (m *ConversionFactor) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.BaseAmount.Size()
-	n += 1 + l + sovFlatfees(uint64(l))
-	l = m.ConvertedAmount.Size()
-	n += 1 + l + sovFlatfees(uint64(l))
 	return n
 }
 
@@ -539,6 +547,122 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *ConversionFactor) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFlatfees
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConversionFactor: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConversionFactor: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefinitionAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFlatfees
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFlatfees
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthFlatfees
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DefinitionAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConvertedAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFlatfees
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFlatfees
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthFlatfees
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ConvertedAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFlatfees(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthFlatfees
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgFee) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -631,122 +755,6 @@ func (m *MsgFee) Unmarshal(dAtA []byte) error {
 			}
 			m.Cost = append(m.Cost, types.Coin{})
 			if err := m.Cost[len(m.Cost)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipFlatfees(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthFlatfees
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ConversionFactor) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowFlatfees
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ConversionFactor: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ConversionFactor: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BaseAmount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowFlatfees
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthFlatfees
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthFlatfees
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.BaseAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConvertedAmount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowFlatfees
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthFlatfees
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthFlatfees
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ConvertedAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

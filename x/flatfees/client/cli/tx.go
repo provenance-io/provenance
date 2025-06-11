@@ -63,7 +63,7 @@ func ParseConversionFactor(arg string) (types.ConversionFactor, error) {
 	var err error
 	rv := types.ConversionFactor{}
 
-	rv.BaseAmount, err = sdk.ParseCoinNormalized(parts[0])
+	rv.DefinitionAmount, err = sdk.ParseCoinNormalized(parts[0])
 	if err != nil {
 		return types.ConversionFactor{}, fmt.Errorf("invalid conversion factor %q: invalid base amount %q: %w", arg, parts[0], err)
 	}

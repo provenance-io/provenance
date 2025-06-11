@@ -54,8 +54,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 				Params: types.Params{
 					DefaultCost: sdk.NewInt64Coin("apple", 14),
 					ConversionFactor: types.ConversionFactor{
-						BaseAmount:      sdk.NewInt64Coin("apple", 7),
-						ConvertedAmount: sdk.NewInt64Coin("orange", 3),
+						DefinitionAmount: sdk.NewInt64Coin("apple", 7),
+						ConvertedAmount:  sdk.NewInt64Coin("orange", 3),
 					},
 				},
 				MsgFees: []*types.MsgFee{

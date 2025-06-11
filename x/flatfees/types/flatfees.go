@@ -26,8 +26,8 @@ func DefaultParams() Params {
 	return Params{
 		DefaultCost: sdk.NewInt64Coin(DefaultFeeDefinitionDenom, 1),
 		ConversionFactor: ConversionFactor{
-			BaseAmount:      sdk.NewInt64Coin(DefaultFeeDefinitionDenom, 1),
-			ConvertedAmount: sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
+			DefinitionAmount: sdk.NewInt64Coin(DefaultFeeDefinitionDenom, 1),
+			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
 		},
 	}
 }
@@ -39,9 +39,9 @@ func (p Params) Validate() error {
 	if err := p.ConversionFactor.Validate(); err != nil {
 		return fmt.Errorf("invalid conversion factor: %w", err)
 	}
-	if p.DefaultCost.Denom != p.ConversionFactor.BaseAmount.Denom {
+	if p.DefaultCost.Denom != p.ConversionFactor.DefinitionAmount.Denom {
 		return fmt.Errorf("default cost denom %q does not equal conversion factor base amount denom %q",
-			p.DefaultCost.Denom, p.ConversionFactor.BaseAmount.Denom)
+			p.DefaultCost.Denom, p.ConversionFactor.DefinitionAmount.Denom)
 	}
 	return nil
 }
@@ -109,11 +109,11 @@ func ValidateMsgTypeURL(msgTypeURL string) error {
 }
 
 func (c ConversionFactor) Validate() error {
-	if err := c.BaseAmount.Validate(); err != nil {
-		return fmt.Errorf("invalid base amount %q: %w", c.BaseAmount, err)
+	if err := c.DefinitionAmount.Validate(); err != nil {
+		return fmt.Errorf("invalid base amount %q: %w", c.DefinitionAmount, err)
 	}
-	if c.BaseAmount.IsZero() {
-		return fmt.Errorf("invalid base amount %q: cannot be zero", c.BaseAmount)
+	if c.DefinitionAmount.IsZero() {
+		return fmt.Errorf("invalid base amount %q: cannot be zero", c.DefinitionAmount)
 	}
 
 	if err := c.ConvertedAmount.Validate(); err != nil {
@@ -123,35 +123,35 @@ func (c ConversionFactor) Validate() error {
 		return fmt.Errorf("invalid converted amount %q: cannot be zero", c.ConvertedAmount)
 	}
 
-	if c.BaseAmount.Denom == c.ConvertedAmount.Denom && !c.BaseAmount.Amount.Equal(c.ConvertedAmount.Amount) {
+	if c.DefinitionAmount.Denom == c.ConvertedAmount.Denom && !c.DefinitionAmount.Amount.Equal(c.ConvertedAmount.Amount) {
 		return fmt.Errorf("base amount %q and converted amount %q cannot have different amounts when the denoms are the same",
-			c.BaseAmount, c.ConvertedAmount)
+			c.DefinitionAmount, c.ConvertedAmount)
 	}
 	return nil
 }
 
 func (c ConversionFactor) String() string {
-	return fmt.Sprintf("*%s/%s", c.BaseAmount, c.ConvertedAmount)
+	return fmt.Sprintf("*%s/%s", c.DefinitionAmount, c.ConvertedAmount)
 }
 
 // ConvertCoin converts the provided coin into the equivalent amount in this conversion factor's converted denom.
-// If the provided coin doesn't have the same denom as the BaseAmount, the provided coin is returned unchanged.
-// Otherwise, this is essentially ceil(toConvert * ConvertedAmount / BaseAmount).
+// If the provided coin doesn't have the same denom as the DefinitionAmount, the provided coin is returned unchanged.
+// Otherwise, this is essentially ceil(toConvert * ConvertedAmount / DefinitionAmount).
 // See also: ConvertMsgFee.
 func (c ConversionFactor) ConvertCoin(toConvert sdk.Coin) sdk.Coin {
 	// If the toConvert isn't in the convertable denom, just return it back.
 	// If the conversion factor is 1-1 with the same denom, there's nothing to convert.
-	if toConvert.Denom != c.BaseAmount.Denom || c.BaseAmount.Equal(c.ConvertedAmount) {
+	if toConvert.Denom != c.DefinitionAmount.Denom || c.DefinitionAmount.Equal(c.ConvertedAmount) {
 		return toConvert
 	}
 	// If the conversion factor is 1-1 with different denoms, we can use the base amount with the converted denom.
-	if c.BaseAmount.Amount.Equal(c.ConvertedAmount.Amount) {
+	if c.DefinitionAmount.Amount.Equal(c.ConvertedAmount.Amount) {
 		return sdk.NewCoin(c.ConvertedAmount.Denom, toConvert.Amount)
 	}
 
 	// Gotta do it the math way.
 	top := toConvert.Amount.Mul(c.ConvertedAmount.Amount)
-	bot := c.BaseAmount.Amount
+	bot := c.DefinitionAmount.Amount
 	amt := top.Quo(bot)
 	if r := top.Mod(bot); !r.IsZero() {
 		amt = amt.AddRaw(1)

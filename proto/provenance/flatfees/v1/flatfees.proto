@@ -15,8 +15,24 @@ message Params {
 
   // default_cost is the amount a msg costs when there is no specific msg-fee defined for it.
   cosmos.base.v1beta1.Coin default_cost = 1 [(gogoproto.nullable) = false];
-  // conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denom.
+  // conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination.
   ConversionFactor conversion_factor = 3 [(gogoproto.nullable) = false];
+}
+
+// ConversionFactor equates the values of two coins in different denominations.
+// It is used to determine how much of the fee denomination is due.
+// actual cost = defined cost * converted_amount / definition_amount (truncated to an integer).
+message ConversionFactor {
+  option (gogoproto.goproto_stringer) = false;
+
+  // definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount.
+  // This cannot have an amount of zero.
+  // If this has the same denomination as the converted_amount, then the amounts must also be equal.
+  cosmos.base.v1beta1.Coin definition_amount = 1 [(gogoproto.nullable) = false];
+  // converted_amount is an amount in the fee denomination equal to the definition_amount.
+  // If this is zero, all msgs will be free.
+  // If this has the same denomination as the definition_amount, then the amounts must also be equal.
+  cosmos.base.v1beta1.Coin converted_amount = 2 [(gogoproto.nullable) = false];
 }
 
 // MsgFee defines the cost to use a specific message type.
@@ -26,20 +42,12 @@ message MsgFee {
   // msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend".
   string msg_type_url = 1;
   // cost is the Tx fee required for this msg_type_url.
+  // It should have the same denomination as the default cost and as the conversion factor's definition_amount.
+  // Any other denomination will be charged as defined.
   repeated cosmos.base.v1beta1.Coin cost = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (amino.dont_omitempty)   = true,
     (amino.encoding)         = "legacy_coins"
   ];
-}
-
-// ConversionFactor associates the values of two coins with different denoms.
-message ConversionFactor {
-  option (gogoproto.goproto_stringer) = false;
-
-  // base_amount is an amount in the base denom that is equal to the converted_amount.
-  cosmos.base.v1beta1.Coin base_amount = 1 [(gogoproto.nullable) = false];
-  // converted_amount is an amount in the fee denom equal to the base_amount.
-  cosmos.base.v1beta1.Coin converted_amount = 2 [(gogoproto.nullable) = false];
 }

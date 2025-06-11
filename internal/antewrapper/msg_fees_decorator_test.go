@@ -124,8 +124,8 @@ func setUpApp(s *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string, add
 	err := s.app.FlatFeesKeeper.SetParams(s.ctx, flatfeestypes.Params{
 		DefaultCost: sdk.NewInt64Coin(additionalFeeCoinDenom, 0),
 		ConversionFactor: flatfeestypes.ConversionFactor{
-			BaseAmount:      sdk.NewInt64Coin(additionalFeeCoinDenom, 1),
-			ConvertedAmount: sdk.NewInt64Coin(additionalFeeCoinDenom, 1),
+			DefinitionAmount: sdk.NewInt64Coin(additionalFeeCoinDenom, 1),
+			ConvertedAmount:  sdk.NewInt64Coin(additionalFeeCoinDenom, 1),
 		},
 	})
 

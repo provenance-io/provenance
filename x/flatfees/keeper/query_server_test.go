@@ -153,8 +153,8 @@ func (s *QueryServerTestSuite) TestParams() {
 			params: &types.Params{
 				DefaultCost: sdk.NewInt64Coin("banana", 10),
 				ConversionFactor: types.ConversionFactor{
-					BaseAmount:      sdk.NewInt64Coin("apple", 44),
-					ConvertedAmount: sdk.NewInt64Coin("orange", 78),
+					DefinitionAmount: sdk.NewInt64Coin("apple", 44),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 78),
 				},
 			},
 		},
@@ -163,8 +163,8 @@ func (s *QueryServerTestSuite) TestParams() {
 			params: &types.Params{
 				DefaultCost: sdk.NewInt64Coin("banana", 10),
 				ConversionFactor: types.ConversionFactor{
-					BaseAmount:      sdk.NewInt64Coin("banana", 1),
-					ConvertedAmount: sdk.NewInt64Coin("banana", 1),
+					DefinitionAmount: sdk.NewInt64Coin("banana", 1),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 1),
 				},
 			},
 		},

@@ -30,7 +30,7 @@ func TestDefaultParams(t *testing.T) {
 	assert.NoError(t, err, "params.Validate()")
 
 	assert.Equal(t, "1"+DefaultFeeDefinitionDenom, params.DefaultCost.String(), "DefaultCost")
-	assert.Equal(t, "1"+DefaultFeeDefinitionDenom, params.ConversionFactor.BaseAmount.String(), "ConversionFactor.BaseAmount")
+	assert.Equal(t, "1"+DefaultFeeDefinitionDenom, params.ConversionFactor.DefinitionAmount.String(), "ConversionFactor.DefinitionAmount")
 	assert.Equal(t, "1pineapple", params.ConversionFactor.ConvertedAmount.String(), "ConversionFactor.ConvertedAmount")
 }
 
@@ -57,8 +57,8 @@ func TestParams_Validate(t *testing.T) {
 			params: Params{
 				DefaultCost: coin(10, "x"),
 				ConversionFactor: ConversionFactor{
-					BaseAmount:      coin(100, "banana"),
-					ConvertedAmount: coin(500, "apple"),
+					DefinitionAmount: coin(100, "banana"),
+					ConvertedAmount:  coin(500, "apple"),
 				},
 			},
 			expErr: "invalid default cost \"10x\": invalid denom: x",
@@ -68,8 +68,8 @@ func TestParams_Validate(t *testing.T) {
 			params: Params{
 				DefaultCost: coin(10, "banana"),
 				ConversionFactor: ConversionFactor{
-					BaseAmount:      coin(10, "banana"),
-					ConvertedAmount: coin(5, "x"),
+					DefinitionAmount: coin(10, "banana"),
+					ConvertedAmount:  coin(5, "x"),
 				},
 			},
 			expErr: "invalid conversion factor: invalid converted amount \"5x\": invalid denom: x",
@@ -79,8 +79,8 @@ func TestParams_Validate(t *testing.T) {
 			params: Params{
 				DefaultCost: coin(10, "banana"),
 				ConversionFactor: ConversionFactor{
-					BaseAmount:      coin(7, "apple"),
-					ConvertedAmount: coin(3, "banana"),
+					DefinitionAmount: coin(7, "apple"),
+					ConvertedAmount:  coin(3, "banana"),
 				},
 			},
 			expErr: "default cost denom \"banana\" does not equal conversion factor base amount denom \"apple\"",
@@ -90,8 +90,8 @@ func TestParams_Validate(t *testing.T) {
 			params: Params{
 				DefaultCost: coin(52, "banana"),
 				ConversionFactor: ConversionFactor{
-					BaseAmount:      coin(13, "banana"),
-					ConvertedAmount: coin(27, "apple"),
+					DefinitionAmount: coin(13, "banana"),
+					ConvertedAmount:  coin(27, "apple"),
 				},
 			},
 			expErr: "",
@@ -423,64 +423,64 @@ func TestConversionFactor_Validate(t *testing.T) {
 		{
 			name: "invalid base amount",
 			cf: ConversionFactor{
-				BaseAmount:      coin(3, "x"),
-				ConvertedAmount: coin(10, "banana"),
+				DefinitionAmount: coin(3, "x"),
+				ConvertedAmount:  coin(10, "banana"),
 			},
 			expErr: "invalid base amount \"3x\": invalid denom: x",
 		},
 		{
 			name: "zero base amount",
 			cf: ConversionFactor{
-				BaseAmount:      coin(0, "apple"),
-				ConvertedAmount: coin(10, "banana"),
+				DefinitionAmount: coin(0, "apple"),
+				ConvertedAmount:  coin(10, "banana"),
 			},
 			expErr: "invalid base amount \"0apple\": cannot be zero",
 		},
 		{
 			name: "invalid converted amount",
 			cf: ConversionFactor{
-				BaseAmount:      coin(10, "banana"),
-				ConvertedAmount: coin(4, "x"),
+				DefinitionAmount: coin(10, "banana"),
+				ConvertedAmount:  coin(4, "x"),
 			},
 			expErr: "invalid converted amount \"4x\": invalid denom: x",
 		},
 		{
 			name: "zero converted amount",
 			cf: ConversionFactor{
-				BaseAmount:      coin(10, "apple"),
-				ConvertedAmount: coin(0, "banana"),
+				DefinitionAmount: coin(10, "apple"),
+				ConvertedAmount:  coin(0, "banana"),
 			},
 			expErr: "invalid converted amount \"0banana\": cannot be zero",
 		},
 		{
 			name: "same denoms, diff amounts",
 			cf: ConversionFactor{
-				BaseAmount:      coin(10, "banana"),
-				ConvertedAmount: coin(11, "banana"),
+				DefinitionAmount: coin(10, "banana"),
+				ConvertedAmount:  coin(11, "banana"),
 			},
 			expErr: "base amount \"10banana\" and converted amount \"11banana\" cannot have different amounts when the denoms are the same",
 		},
 		{
 			name: "same denoms and amounts",
 			cf: ConversionFactor{
-				BaseAmount:      coin(14, "banana"),
-				ConvertedAmount: coin(14, "banana"),
+				DefinitionAmount: coin(14, "banana"),
+				ConvertedAmount:  coin(14, "banana"),
 			},
 			expErr: "",
 		},
 		{
 			name: "diff denoms, same amounts",
 			cf: ConversionFactor{
-				BaseAmount:      coin(14, "banana"),
-				ConvertedAmount: coin(14, "apple"),
+				DefinitionAmount: coin(14, "banana"),
+				ConvertedAmount:  coin(14, "apple"),
 			},
 			expErr: "",
 		},
 		{
 			name: "diff denoms and amounts",
 			cf: ConversionFactor{
-				BaseAmount:      coin(17, "banana"),
-				ConvertedAmount: coin(23, "apple"),
+				DefinitionAmount: coin(17, "banana"),
+				ConvertedAmount:  coin(23, "apple"),
 			},
 			expErr: "",
 		},
@@ -523,22 +523,22 @@ func TestConversionFactor_String(t *testing.T) {
 		},
 		{
 			name: "non-nil base, nil converted amount",
-			cf:   ConversionFactor{BaseAmount: coin(10, "banana")},
+			cf:   ConversionFactor{DefinitionAmount: coin(10, "banana")},
 			exp:  "*10banana/<nil>",
 		},
 		{
 			name: "equal amounts",
 			cf: ConversionFactor{
-				BaseAmount:      coin(10, "banana"),
-				ConvertedAmount: coin(10, "banana"),
+				DefinitionAmount: coin(10, "banana"),
+				ConvertedAmount:  coin(10, "banana"),
 			},
 			exp: "*10banana/10banana",
 		},
 		{
 			name: "diff amounts",
 			cf: ConversionFactor{
-				BaseAmount:      coin(13, "apple"),
-				ConvertedAmount: coin(29, "pear"),
+				DefinitionAmount: coin(13, "apple"),
+				ConvertedAmount:  coin(29, "pear"),
 			},
 			exp: "*13apple/29pear",
 		},
@@ -565,8 +565,8 @@ func TestConversionFactor_ConvertCoin(t *testing.T) {
 	}
 	newCF := func(baseAmt int64, baseDenom string, convAmt int64, convDenom string) ConversionFactor {
 		return ConversionFactor{
-			BaseAmount:      coin(baseAmt, baseDenom),
-			ConvertedAmount: coin(convAmt, convDenom),
+			DefinitionAmount: coin(baseAmt, baseDenom),
+			ConvertedAmount:  coin(convAmt, convDenom),
 		}
 	}
 
@@ -638,8 +638,8 @@ func TestConversionFactor_ConvertCoins(t *testing.T) {
 	}
 	newCF := func(baseAmt int64, baseDenom string, convAmt int64, convDenom string) ConversionFactor {
 		return ConversionFactor{
-			BaseAmount:      coin(baseAmt, baseDenom),
-			ConvertedAmount: coin(convAmt, convDenom),
+			DefinitionAmount: coin(baseAmt, baseDenom),
+			ConvertedAmount:  coin(convAmt, convDenom),
 		}
 	}
 
@@ -729,8 +729,8 @@ func TestConversionFactor_ConvertMsgFee(t *testing.T) {
 	}
 	newCF := func(baseAmt int64, baseDenom string, convAmt int64, convDenom string) ConversionFactor {
 		return ConversionFactor{
-			BaseAmount:      coin(baseAmt, baseDenom),
-			ConvertedAmount: coin(convAmt, convDenom),
+			DefinitionAmount: coin(baseAmt, baseDenom),
+			ConvertedAmount:  coin(convAmt, convDenom),
 		}
 	}
 
