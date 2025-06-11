@@ -4,6 +4,4 @@ const (
 	ModuleName = "ledger"
 
 	StoreKey = ModuleName
-
-	RouterKey = ModuleName
 )
