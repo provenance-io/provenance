@@ -18,6 +18,7 @@ type MsgKeeper interface {
 	SetParams(ctx sdk.Context, params types.Params) error
 	SetMsgFee(ctx sdk.Context, msgFee types.MsgFee) error
 	RemoveMsgFee(ctx sdk.Context, msgType string) error
+	SetConversionFactor(ctx sdk.Context, conversionFactor types.ConversionFactor) error
 }
 
 type msgServer struct {
@@ -43,6 +44,20 @@ func (m msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params.
+func (m msgServer) UpdateConversionFactor(goCtx context.Context, req *types.MsgUpdateConversionFactorRequest) (*types.MsgUpdateConversionFactorResponse, error) {
+	if err := m.ValidateAuthority(req.Authority); err != nil {
+		return nil, err
+	}
+
+	err := m.SetConversionFactor(sdk.UnwrapSDKContext(goCtx), req.ConversionFactor)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return &types.MsgUpdateConversionFactorResponse{}, nil
 }
 
 // UpdateMsgFees is a governance endpoint for updating fees for specific msgs.

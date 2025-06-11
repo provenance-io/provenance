@@ -257,3 +257,10 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	}
 	return nil
 }
+
+// SetConversionFactor stores/udpdates the conversion factor in the x/flatfees parameters.
+func (k Keeper) SetConversionFactor(ctx sdk.Context, conversionFactor types.ConversionFactor) error {
+	params := k.GetParams(ctx)
+	params.ConversionFactor = conversionFactor
+	return k.SetParams(ctx, params)
+}

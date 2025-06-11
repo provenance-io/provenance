@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"unicode"
 
 	"github.com/stretchr/testify/require"
 
@@ -19,6 +20,7 @@ import (
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
 		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateConversionFactorRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateMsgFeesRequest{Authority: signer} },
 	}
 
@@ -81,6 +83,78 @@ func TestMsgUpdateParamsRequest_ValidateBasic(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "MsgUpdateParamsRequest.ValidateBasic()")
 			assertions.AssertErrorValue(t, err, tc.expErr, "MsgUpdateParamsRequest.ValidateBasic() error")
+		})
+	}
+}
+
+func TestMsgUpdateConversionFactorRequest_ValidateBasic(t *testing.T) {
+	authority := sdk.AccAddress("authority___________").String() // Not the actual authority.
+	coin := func(str string) sdk.Coin {
+		var amtStr, denom string
+		for i, c := range str {
+			if !unicode.IsDigit(c) && !(i == 0 && c == '-') {
+				amtStr = str[:i]
+				denom = str[i:]
+				break
+			}
+		}
+		require.NotEmpty(t, amtStr, "The amount extracted from %q", str)
+		require.NotEmpty(t, denom, "The denom extracted from %q", str)
+		amt, ok := sdkmath.NewIntFromString(amtStr)
+		require.True(t, ok, "sdkmath.NewIntFromString(%q), the amount from %q", amtStr, str)
+		return sdk.Coin{Denom: denom, Amount: amt}
+	}
+	cf := func(base, converted string) ConversionFactor {
+		return ConversionFactor{BaseAmount: coin(base), ConvertedAmount: coin(converted)}
+	}
+
+	tests := []struct {
+		name   string
+		msg    MsgUpdateConversionFactorRequest
+		expErr string
+	}{
+		{
+			name: "all good",
+			msg: MsgUpdateConversionFactorRequest{
+				Authority:        authority,
+				ConversionFactor: cf("4orange", "8apple"),
+			},
+			expErr: "",
+		},
+		{
+			name: "empty authority",
+			msg: MsgUpdateConversionFactorRequest{
+				Authority:        "",
+				ConversionFactor: cf("12banana", "3grape"),
+			},
+			expErr: "invalid authority: empty address string is not allowed",
+		},
+		{
+			name: "invalid authority",
+			msg: MsgUpdateConversionFactorRequest{
+				Authority:        "nopenope",
+				ConversionFactor: cf("12banana", "3grape"),
+			},
+			expErr: "invalid authority: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "invalid conversion factor",
+			msg: MsgUpdateConversionFactorRequest{
+				Authority:        authority,
+				ConversionFactor: cf("-3apple", "4peach"),
+			},
+			expErr: "invalid conversion factor: invalid base amount \"-3apple\": negative coin amount: -3",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.msg.ValidateBasic()
+			}
+			require.NotPanics(t, testFunc, "MsgUpdateConversionFactorRequest.ValidateBasic()")
+			assertions.AssertErrorValue(t, err, tc.expErr, "MsgUpdateConversionFactorRequest.ValidateBasic() error")
 		})
 	}
 }

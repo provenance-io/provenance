@@ -85,6 +85,28 @@ func assertEqualParams(t testing.TB, expected, actual types.Params, msgAndArgs .
 	return assert.Equalf(t, expected, actual, msg, args...)
 }
 
+// assertEqualConversionFactors asserts that two slices of ConversionFactor are equal, returning true iff equal.
+func assertEqualConversionFactors(t testing.TB, expected, actual []types.ConversionFactor, msgAndArgs ...interface{}) bool {
+	t.Helper()
+	msg, args := splitMsgAndArgs(t, "ConversionFactors", msgAndArgs)
+	expStrs := sliceToString(expected)
+	actStrs := sliceToString(actual)
+	if !assert.Equalf(t, expStrs, actStrs, msg+" (as strings)", args...) {
+		return false
+	}
+	return assert.Equalf(t, expected, actual, msg, args...)
+}
+
+// assertEqualConversionFactor asserts that two ConversionFactor structs are equal, returning true iff equal.
+func assertEqualConversionFactor(t testing.TB, expected, actual types.ConversionFactor, msgAndArgs ...interface{}) bool {
+	t.Helper()
+	msg, args := splitMsgAndArgs(t, "ConversionFactor", msgAndArgs)
+	if !assert.Equalf(t, expected.String(), actual.String(), msg+" (as strings)", args...) {
+		return false
+	}
+	return assert.Equalf(t, expected, actual, msg, args...)
+}
+
 // sliceToString returns a slice with each of the provided vals converted to a string.
 func sliceToString[S ~[]E, E fmt.Stringer](vals S) []string {
 	if vals == nil {
@@ -1036,6 +1058,65 @@ func (s *KeeperTestSuite) TestKeeper_SetParams() {
 			}
 			s.Require().NotPanics(testGet, "GetParams()")
 			assertEqualParams(s.T(), tc.params, act)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestKeeper_SetConversionFactor() {
+	defaultParams := types.DefaultParams()
+	tests := []struct {
+		name   string
+		cf     types.ConversionFactor
+		expErr string
+	}{
+		{
+			name:   "default",
+			cf:     defaultParams.ConversionFactor,
+			expErr: "",
+		},
+		{
+			name: "identity",
+			cf: types.ConversionFactor{
+				BaseAmount:      sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
+				ConvertedAmount: sdk.NewInt64Coin(defaultParams.DefaultCost.Denom, 1),
+			},
+		},
+		{
+			name: "larger base",
+			cf: types.ConversionFactor{
+				BaseAmount:      sdk.NewInt64Coin(defaultParams.ConversionFactor.BaseAmount.Denom, 987),
+				ConvertedAmount: sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 259),
+			},
+		},
+		{
+			name: "smaller base",
+			cf: types.ConversionFactor{
+				BaseAmount:      sdk.NewInt64Coin(defaultParams.ConversionFactor.BaseAmount.Denom, 168),
+				ConvertedAmount: sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 563),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var err error
+			testFunc := func() {
+				err = s.kpr.SetConversionFactor(s.ctx, tc.cf)
+			}
+			s.Require().NotPanics(testFunc, "SetConversionFactor(...)")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "SetConversionFactor(...) error")
+
+			if len(tc.expErr) > 0 || err != nil {
+				return
+			}
+
+			var params types.Params
+			testGet := func() {
+				params = s.kpr.GetParams(s.ctx)
+			}
+			s.Require().NotPanics(testGet, "GetParams()")
+			act := params.ConversionFactor
+			assertEqualConversionFactor(s.T(), tc.cf, act)
 		})
 	}
 }

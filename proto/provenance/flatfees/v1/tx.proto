@@ -17,6 +17,9 @@ service Msg {
   // UpdateParams is a governance endpoint for updating the x/flatfees params.
   rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
 
+  // UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params.
+  rpc UpdateConversionFactor(MsgUpdateConversionFactorRequest) returns (MsgUpdateConversionFactorResponse);
+
   // UpdateMsgFees is a governance endpoint for updating fees for specific msgs.
   rpc UpdateMsgFees(MsgUpdateMsgFeesRequest) returns (MsgUpdateMsgFeesResponse);
 }
@@ -34,6 +37,20 @@ message MsgUpdateParamsRequest {
 
 // MsgUpdateParamsResponse is the response for the UpdateParams governance endpoint.
 message MsgUpdateParamsResponse {}
+
+// MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor governance endpoint.
+message MsgUpdateConversionFactorRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // conversion_factor is the new conversion factor that should be used.
+  ConversionFactor conversion_factor = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateConversionFactorResponse is the response for the UpdateConversionFactor governance endpoint.
+message MsgUpdateConversionFactorResponse {}
 
 // MsgUpdateMsgFeesRequest is the request for the UpdateMsgFees governance endpoint.
 message MsgUpdateMsgFeesRequest {

@@ -9,6 +9,7 @@ import (
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParamsRequest)(nil),
+	(*MsgUpdateConversionFactorRequest)(nil),
 	(*MsgUpdateMsgFeesRequest)(nil),
 }
 
@@ -18,6 +19,16 @@ func (m MsgUpdateParamsRequest) ValidateBasic() error {
 	}
 	if err := m.Params.Validate(); err != nil {
 		return fmt.Errorf("invalid params: %w", err)
+	}
+	return nil
+}
+
+func (m MsgUpdateConversionFactorRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority: %w", err)
+	}
+	if err := m.ConversionFactor.Validate(); err != nil {
+		return fmt.Errorf("invalid conversion factor: %w", err)
 	}
 	return nil
 }

@@ -374,6 +374,8 @@
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
   
 - [provenance/flatfees/v1/tx.proto](#provenance_flatfees_v1_tx-proto)
+    - [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest)
+    - [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse)
     - [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest)
     - [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse)
     - [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest)
@@ -5968,6 +5970,32 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 
 
 
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorRequest"></a>
+
+### MsgUpdateConversionFactorRequest
+MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the new conversion factor that should be used. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorResponse"></a>
+
+### MsgUpdateConversionFactorResponse
+MsgUpdateConversionFactorResponse is the response for the UpdateConversionFactor governance endpoint.
+
+
+
+
+
+
 <a name="provenance-flatfees-v1-MsgUpdateMsgFeesRequest"></a>
 
 ### MsgUpdateMsgFeesRequest
@@ -6035,6 +6063,7 @@ Msg defines the flatfees Msg service.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse) | UpdateParams is a governance endpoint for updating the x/flatfees params. |
+| `UpdateConversionFactor` | [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest) | [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse) | UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params. |
 | `UpdateMsgFees` | [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest) | [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse) | UpdateMsgFees is a governance endpoint for updating fees for specific msgs. |
 
  <!-- end services -->

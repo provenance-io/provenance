@@ -50,7 +50,13 @@ type MockKeeper struct {
 	RemoveMsgFeeErrs []string
 	RemoveMsgFeeExp  []string
 	RemoveMsgFeeArgs []string
+
+	SetConversionFactorErrs []string
+	SetConversionFactorExp  []types.ConversionFactor
+	SetConversionFactorArgs []types.ConversionFactor
 }
+
+var _ keeper.MsgKeeper = (*MockKeeper)(nil)
 
 // NewMockKeeper creates a new (flatfees) MockKeeper for use in the msg-server tests.
 func NewMockKeeper() *MockKeeper {
@@ -85,6 +91,13 @@ func (k *MockKeeper) WithRemoveMsgFeeErrs(errs ...string) *MockKeeper {
 	return k
 }
 
+// WithSetConversionFactorErrs adds the provided errs to be returned from SetConversionFactor.
+// An empty string indicates no error. This method both updates the receiver and returns it.
+func (k *MockKeeper) WithSetConversionFactorErrs(errs ...string) *MockKeeper {
+	k.SetConversionFactorErrs = append(k.SetConversionFactorErrs, errs...)
+	return k
+}
+
 // WithExpValidateAuthority adds the provided authorities to the list of expected calls to ValidateAuthority.
 // This method both updates the receiver and returns it.
 func (k *MockKeeper) WithExpValidateAuthority(authorities ...string) *MockKeeper {
@@ -110,6 +123,13 @@ func (k *MockKeeper) WithExpSetMsgFee(msgFees ...*types.MsgFee) *MockKeeper {
 // This method both updates the receiver and returns it.
 func (k *MockKeeper) WithExpRemoveMsgFee(msgTypeURLs ...string) *MockKeeper {
 	k.RemoveMsgFeeExp = append(k.RemoveMsgFeeExp, msgTypeURLs...)
+	return k
+}
+
+// WithExpSetConversionFactorE adds the provided conversion factors to the list of expected calls to SetConversionFactor.
+// This method both updates the receiver and returns it.
+func (k *MockKeeper) WithExpSetConversionFactor(conversionFactors ...types.ConversionFactor) *MockKeeper {
+	k.SetConversionFactorExp = append(k.SetConversionFactorExp, conversionFactors...)
 	return k
 }
 
@@ -158,6 +178,13 @@ func (k *MockKeeper) RemoveMsgFee(_ sdk.Context, msgType string) error {
 	return err
 }
 
+func (k *MockKeeper) SetConversionFactor(_ sdk.Context, conversionFactor types.ConversionFactor) error {
+	k.SetConversionFactorArgs = append(k.SetConversionFactorArgs, conversionFactor)
+	var err error
+	k.SetConversionFactorErrs, err = shiftErr(k.SetConversionFactorErrs)
+	return err
+}
+
 func (k *MockKeeper) AssertCalls(t testing.TB) bool {
 	ok := assert.Equal(t, k.ValidateAuthorityExp, k.ValidateAuthorityArgs, "Calls to ValidateAuthority")
 	if assert.Equal(t, len(k.SetParamsExp), len(k.SetParamsExp), "Number of calls to SetParams") {
@@ -169,6 +196,7 @@ func (k *MockKeeper) AssertCalls(t testing.TB) bool {
 	}
 	ok = assertEqualMsgFees(t, k.SetMsgFeeExp, k.SetMsgFeeArgs, "Calls to SetMsgFee") && ok
 	ok = assert.Equal(t, k.RemoveMsgFeeExp, k.RemoveMsgFeeArgs, "Calls to RemoveMsgFee") && ok
+	ok = assertEqualConversionFactors(t, k.SetConversionFactorExp, k.SetConversionFactorArgs, "Calls to SetConversionFactor") && ok
 	return ok
 }
 
@@ -247,6 +275,92 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			s.Require().NotPanics(testFunc, "UpdateParams(...)")
 			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UpdateParams(...) error")
 			s.Assert().Equal(expResp, actResp, "UpdateParams(...) response")
+
+			tc.kpr.AssertCalls(s.T())
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
+	tests := []struct {
+		name    string
+		kpr     *MockKeeper
+		req     *types.MsgUpdateConversionFactorRequest
+		expErr  string
+		expCall bool // Automatically true if expErr is empty.
+	}{
+		{
+			name: "incorrect authority",
+			kpr:  NewMockKeeper().WithValidateAuthorityErrs("that is a naughty authority"),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority: "whatever",
+				ConversionFactor: types.ConversionFactor{
+					BaseAmount:      sdk.NewInt64Coin("green", 4),
+					ConvertedAmount: sdk.NewInt64Coin("orange", 16),
+				},
+			},
+			expErr: "that is a naughty authority",
+		},
+		{
+			name: "error setting conversion factor",
+			kpr:  NewMockKeeper().WithSetConversionFactorErrs("notgonnaconvert"),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority: sdk.AccAddress("whatever____________").String(),
+				ConversionFactor: types.ConversionFactor{
+					BaseAmount:      sdk.NewInt64Coin("green", 4),
+					ConvertedAmount: sdk.NewInt64Coin("orange", 16),
+				},
+			},
+			expErr:  "rpc error: code = InvalidArgument desc = notgonnaconvert",
+			expCall: true,
+		},
+		{
+			name: "okay: non-defaults",
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority: sdk.AccAddress("some_address________").String(),
+				ConversionFactor: types.ConversionFactor{
+					BaseAmount:      sdk.NewInt64Coin("pink", 4),
+					ConvertedAmount: sdk.NewInt64Coin("fuchsia", 16),
+				},
+			},
+			expCall: true,
+		},
+		{
+			name: "okay: defaults",
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        sdk.AccAddress("some_address________").String(),
+				ConversionFactor: types.DefaultParams().ConversionFactor,
+			},
+			expCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.kpr == nil {
+				tc.kpr = NewMockKeeper()
+			}
+			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
+
+			var expResp, actResp *types.MsgUpdateConversionFactorResponse
+			if len(tc.expErr) == 0 {
+				expResp = &types.MsgUpdateConversionFactorResponse{}
+				tc.expCall = true
+			}
+
+			if tc.expCall {
+				tc.kpr = tc.kpr.WithExpSetConversionFactor(tc.req.ConversionFactor)
+			}
+
+			msgServer := keeper.NewMsgServer(tc.kpr)
+
+			var err error
+			testFunc := func() {
+				actResp, err = msgServer.UpdateConversionFactor(s.ctx, tc.req)
+			}
+			s.Require().NotPanics(testFunc, "UpdateConversionFactor()")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UpdateConversionFactor() error")
+			s.Assert().Equal(expResp, actResp, "UpdateConversionFactor() response")
 
 			tc.kpr.AssertCalls(s.T())
 		})
