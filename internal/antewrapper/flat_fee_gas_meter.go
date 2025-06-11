@@ -27,21 +27,27 @@ type FlatFeeGasMeter struct {
 	// If the tx fails, we'll miss out on the up-front costs for the extra Msgs, but I'm not sure that
 	// there's a reasonable way around that.
 	// The addedFees is anything provided to ConsumeAddedFee by any endpoints that want to use
-	// the tx fees to pay for stuff.
+	// the tx fees to pay extra for stuff.
 
 	// upFrontCost is the amount that should be collected before trying to execute the Msgs.
+	// This is set by the SetCosts method.
 	upFrontCost sdk.Coins
 	// onSuccessCost is the amount that should be collected iff all the Msgs are executed successfully.
+	// This is set by the SetCosts method.
 	onSuccessCost sdk.Coins
 	// extraMsgsCost is the amount that should be collected for msgs that weren't known when SetCosts was called.
+	// This is set by the Finalize method based on the contents of the extraMsgs field.
 	extraMsgsCost sdk.Coins
 	// addedFees is the amount that might have been consumed manually during the processing of the tx.
+	// This is the sum of the amounts provided to the ConsumeAddedFee method, and/or ConsumeAdditionalFee helper function.
 	addedFees sdk.Coins
 
 	// knownMsgs is a map of msg type url to a count of msgs of that type that have been accounted for, but not yet seen.
 	// As msgs are consumed, the values will be decremented or, if at zero, the msg is added to extraMsgs.
 	knownMsgs map[string]int
-	// extraMsgs is a list of msgs that have been consumed, but weren't in the knownMsgs map.
+	// extraMsgs is a list of msgs that have been consumed, but weren't in the knownMsgs map. I.e. these are
+	// messages that have been processed, but not paid for. Once all msgs in a tx are processed, the Finalize
+	// method is used to calculate the costs for these messages and populate the extraMsgsCost field.
 	extraMsgs []sdk.Msg
 
 	// ffk is the x/flatfees keeper.
@@ -133,6 +139,7 @@ func (g *FlatFeeGasMeter) GetOnSuccessCost() sdk.Coins {
 }
 
 // GetExtraMsgsCost is a getter for the extraMsgsCost field.
+// This is the amount owed due to the processing of msgs that weren't directly in the Tx, e.g. a smart contract issuing a MsgSend.
 func (g *FlatFeeGasMeter) GetExtraMsgsCost() sdk.Coins {
 	if g == nil {
 		return nil
@@ -141,6 +148,7 @@ func (g *FlatFeeGasMeter) GetExtraMsgsCost() sdk.Coins {
 }
 
 // GetAddedFees is a getter for the addedFees field.
+// This is the sum of the amounts provided to either the ConsumeAddedFee method, or ConsumeAdditionalFee helper function.
 func (g *FlatFeeGasMeter) GetAddedFees() sdk.Coins {
 	if g == nil {
 		return nil
@@ -297,7 +305,7 @@ func (g *FlatFeeGasMeter) ConsumeAddedFee(fee sdk.Coins) {
 	g.addedFees = g.addedFees.Add(fee...)
 }
 
-// adjustCostsForUnitTests will the chain id. If it indicates that we're running in a unit test,
+// adjustCostsForUnitTests will examine the chain id. If it indicates that we're running in a unit test,
 // it will adjust the required costs accordingly. This exists so that we didn't have to redo a
 // lot of unit tests when we switched to flat fees.
 func (g *FlatFeeGasMeter) adjustCostsForUnitTests(chainID string, feeProvided sdk.Coins) {
