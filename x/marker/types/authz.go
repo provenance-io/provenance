@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,8 +10,9 @@ import (
 )
 
 var (
-	_ authz.Authorization = &MarkerTransferAuthorization{}
-	_ authz.Authorization = &MultiAuthorization{}
+	_ authz.Authorization                = &MarkerTransferAuthorization{}
+	_ authz.Authorization                = &MultiAuthorization{}
+	_ codectypes.UnpackInterfacesMessage = &MultiAuthorization{}
 )
 
 const (
@@ -113,153 +113,148 @@ func toBech32Addresses(allowed []sdk.AccAddress) []string {
 // NewMultiAuthorization creates a new MultiAuthorization
 func NewMultiAuthorization(msgTypeURL string, subAuthorizations ...authz.Authorization) (*MultiAuthorization, error) {
 	if msgTypeURL == "" {
-		return nil, fmt.Errorf("message type URL cannot be empty")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("msgTypeURL cannot be empty")
 	}
 	if len(subAuthorizations) < MinSubAuthorizations {
-		return nil, fmt.Errorf("must have at least %d sub-authorization", MinSubAuthorizations)
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("must have at least %d sub-authorizations", MinSubAuthorizations)
 	}
 	if len(subAuthorizations) > MaxSubAuthorizations {
-		return nil, fmt.Errorf("cannot have more than %d sub-authorizations", MaxSubAuthorizations)
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot have more than %d sub-authorizations", MaxSubAuthorizations)
 	}
-	// Convert to Any and validate
+
 	anyAuths := make([]*codectypes.Any, len(subAuthorizations))
 	for i, auth := range subAuthorizations {
 		if auth == nil {
-			return nil, fmt.Errorf("sub-authorization %d cannot be nil", i)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d is nil", i)
 		}
 		if auth.MsgTypeURL() != msgTypeURL {
-			return nil, fmt.Errorf("sub-authorization %d has different msg type URL: expected %s, got %s",
-				i, msgTypeURL, auth.MsgTypeURL())
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d msg type mismatch", i)
 		}
 		if _, isMulti := auth.(*MultiAuthorization); isMulti {
-			return nil, fmt.Errorf("cannot have nested MultiAuthorization")
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("nested MultiAuthorization not allowed for sub-authorization %d", i)
 		}
+
 		any, err := codectypes.NewAnyWithValue(auth)
 		if err != nil {
-			return nil, fmt.Errorf("failed to pack sub-authorization %d: %w", i, err)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("failed to pack sub-authorization %d: %s", i, err)
 		}
 		anyAuths[i] = any
 	}
+
 	return &MultiAuthorization{
 		MsgTypeUrl:        msgTypeURL,
 		SubAuthorizations: anyAuths,
 	}, nil
 }
 
-// MsgTypeURL implements the Authorization interface
+// MsgTypeURL implements authz.Authorization
 func (m MultiAuthorization) MsgTypeURL() string {
 	return m.MsgTypeUrl
 }
 
-// Accept implements the Authorization interface
+// Accept implements authz.Authorization
 func (m MultiAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	if m.MsgTypeURL() != sdk.MsgTypeURL(msg) {
-		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrapf("message type %s does not match authorization type %s", sdk.MsgTypeURL(msg), m.MsgTypeURL())
+		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("message type mismatch")
 	}
-	if len(m.SubAuthorizations) == 0 {
-		return authz.AcceptResponse{}, fmt.Errorf("no sub-authorizations available")
-	}
-	// Process all sub-authorizations
-	updatedSubAuths := make([]*codectypes.Any, len(m.SubAuthorizations))
-	hasUpdates := false
-	hasDeletes := false
+
+	anyDeleteRequested := false
+	updatedAuths := make([]*codectypes.Any, len(m.SubAuthorizations))
+	anyUpdates := false
+
 	for i, anyAuth := range m.SubAuthorizations {
 		if anyAuth == nil {
-			return authz.AcceptResponse{}, fmt.Errorf("sub-authorization %d is nil", i)
+			return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d is nil", i)
 		}
-		cached := anyAuth.GetCachedValue()
-		if cached == nil {
-			return authz.AcceptResponse{}, fmt.Errorf("sub-authorization %d not unpacked", i)
+
+		auth, ok := anyAuth.GetCachedValue().(authz.Authorization)
+		if !ok || auth == nil {
+			return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d not unpacked", i)
 		}
-		subAuth, ok := cached.(authz.Authorization)
-		if !ok {
-			return authz.AcceptResponse{}, fmt.Errorf("sub-authorization %d is not an Authorization", i)
-		}
-		resp, err := subAuth.Accept(ctx, msg)
+		resp, err := auth.Accept(ctx, msg)
 		if err != nil {
-			return authz.AcceptResponse{}, fmt.Errorf("sub-authorization %d rejected: %w", i, err)
+			return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %s failed", err)
 		}
 		if !resp.Accept {
 			return authz.AcceptResponse{Accept: false}, nil
 		}
+		// If any sub-authorization requests delete, mark for full deletion
 		if resp.Delete {
-			hasDeletes = true
+			anyDeleteRequested = true
 		}
 		if resp.Updated != nil {
-			hasUpdates = true
+			// Validate updated authorization
+			if resp.Updated.MsgTypeURL() != m.MsgTypeUrl {
+				return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf(
+					"sub-authorization %d updated to wrong message type: expected %s, got %s",
+					i, m.MsgTypeUrl, resp.Updated.MsgTypeURL(),
+				)
+			}
+			if _, isMulti := resp.Updated.(*MultiAuthorization); isMulti {
+				return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf(
+					"nested MultiAuthorization not allowed in update for sub-authorization %d", i,
+				)
+			}
+
 			updatedAny, err := codectypes.NewAnyWithValue(resp.Updated)
 			if err != nil {
-				return authz.AcceptResponse{}, fmt.Errorf("failed to pack updated sub-authorization %d: %w", i, err)
+				return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrapf("failed to pack updated sub-authorization %s", err)
 			}
-			updatedSubAuths[i] = updatedAny
+			updatedAuths[i] = updatedAny
+			anyUpdates = true
 		} else {
-			updatedSubAuths[i] = anyAuth
+			updatedAuths[i] = anyAuth
 		}
 	}
-	if hasDeletes {
+	if anyDeleteRequested {
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil
 	}
-	if hasUpdates {
-		updatedMultiAuth := &MultiAuthorization{
+	if anyUpdates {
+		updated := &MultiAuthorization{
 			MsgTypeUrl:        m.MsgTypeUrl,
-			SubAuthorizations: updatedSubAuths,
+			SubAuthorizations: updatedAuths,
 		}
-		return authz.AcceptResponse{Accept: true, Updated: updatedMultiAuth}, nil
+		return authz.AcceptResponse{Accept: true, Updated: updated}, nil
 	}
 	return authz.AcceptResponse{Accept: true}, nil
 }
 
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+// UnpackInterfaces implements codectypes.UnpackInterfacesMessage
 func (m *MultiAuthorization) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	if m == nil {
-		return fmt.Errorf("MultiAuthorization is nil")
-	}
 	for i, anyAuth := range m.SubAuthorizations {
 		if anyAuth == nil {
-			return fmt.Errorf("sub-authorization %d is nil", i)
+			return sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d is nil", i)
 		}
-		var subAuth authz.Authorization
-		if err := unpacker.UnpackAny(anyAuth, &subAuth); err != nil {
-			return fmt.Errorf("failed to unpack sub-authorization %d: %w", i, err)
+		var auth authz.Authorization
+		if err := unpacker.UnpackAny(anyAuth, &auth); err != nil {
+			return sdkerrors.ErrInvalidType.Wrapf("failed to unpack sub-authorization %s", err)
 		}
 	}
 	return nil
 }
 
-// ValidateBasic implements basic validation
+// ValidateBasic performs basic validation
 func (m MultiAuthorization) ValidateBasic() error {
 	if m.MsgTypeUrl == "" {
-		return fmt.Errorf("message type URL cannot be empty")
+		return sdkerrors.ErrInvalidRequest.Wrap("message type URL cannot be empty")
 	}
+
 	authCount := len(m.SubAuthorizations)
 	if authCount < MinSubAuthorizations {
-		return fmt.Errorf("must have at least %d sub-authorization", MinSubAuthorizations)
+		return sdkerrors.ErrInvalidRequest.Wrapf("must have at least %d sub-authorizations, got %d", MinSubAuthorizations, authCount)
 	}
 	if authCount > MaxSubAuthorizations {
-		return fmt.Errorf("cannot have more than %d sub-authorizations", MaxSubAuthorizations)
+		return sdkerrors.ErrInvalidRequest.Wrapf("cannot have more than %d sub-authorizations, got %d", MaxSubAuthorizations, authCount)
 	}
-	// Validate cached sub-authorizations if available
+
 	for i, anyAuth := range m.SubAuthorizations {
 		if anyAuth == nil {
-			return fmt.Errorf("sub-authorization %d cannot be nil", i)
+			return sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d is nil", i)
 		}
-		if cached := anyAuth.GetCachedValue(); cached != nil {
-			subAuth, ok := cached.(authz.Authorization)
-			if !ok {
-				return fmt.Errorf("sub-authorization %d is not a valid Authorization", i)
-			}
-			if subAuth.MsgTypeURL() != m.MsgTypeUrl {
-				return fmt.Errorf("sub-authorization %d has different msg type URL", i)
-			}
-			if _, isMulti := subAuth.(*MultiAuthorization); isMulti {
-				return fmt.Errorf("cannot have nested MultiAuthorization at %d", i)
-			}
-			if validator, ok := subAuth.(interface{ ValidateBasic() error }); ok {
-				if err := validator.ValidateBasic(); err != nil {
-					return fmt.Errorf("sub-authorization %d is invalid: %w", i, err)
-				}
-			}
+		if anyAuth.TypeUrl == "" {
+			return sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d has empty type URL", i)
 		}
 	}
+
 	return nil
 }

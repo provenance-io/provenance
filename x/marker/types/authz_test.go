@@ -7,8 +7,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	. "github.com/provenance-io/provenance/x/marker/types"
@@ -148,4 +150,154 @@ func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
 			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateBasic error")
 		})
 	}
+}
+
+func TestNewMultiAuthorization(t *testing.T) {
+	msgTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
+
+	tests := []struct {
+		name      string
+		msgType   string
+		auths     []authz.Authorization
+		expectErr bool
+	}{
+		{
+			name:    "valid multi-authorization",
+			msgType: msgTypeURL,
+			auths: []authz.Authorization{
+				&authz.GenericAuthorization{Msg: msgTypeURL},
+				&authz.GenericAuthorization{Msg: msgTypeURL},
+			},
+			expectErr: false,
+		},
+		{
+			name:      "empty message type",
+			msgType:   "",
+			auths:     []authz.Authorization{&authz.GenericAuthorization{Msg: msgTypeURL}},
+			expectErr: true,
+		},
+		{
+			name:      "no sub-authorizations",
+			msgType:   msgTypeURL,
+			auths:     []authz.Authorization{},
+			expectErr: true,
+		},
+		{
+			name:    "too many sub-authorizations",
+			msgType: msgTypeURL,
+			auths: func() []authz.Authorization {
+				auths := make([]authz.Authorization, MaxSubAuthorizations+1)
+				for i := range auths {
+					auths[i] = &authz.GenericAuthorization{Msg: msgTypeURL}
+				}
+				return auths
+			}(),
+			expectErr: true,
+		},
+		{
+			name:    "mismatched message types",
+			msgType: msgTypeURL,
+			auths: []authz.Authorization{
+				&authz.GenericAuthorization{Msg: msgTypeURL},
+				&authz.GenericAuthorization{Msg: "/different.type"},
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewMultiAuthorization(tt.msgType, tt.auths...)
+			if tt.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMultiAuthorizationAccept(t *testing.T) {
+	msgTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
+
+	// Create MultiAuthorization
+	auth1 := &authz.GenericAuthorization{Msg: msgTypeURL}
+	auth2 := &authz.GenericAuthorization{Msg: msgTypeURL}
+
+	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
+	require.NoError(t, err)
+
+	// Setup codec for unpacking
+	registry := codectypes.NewInterfaceRegistry()
+	authz.RegisterInterfaces(registry)
+	RegisterInterfaces(registry)
+
+	err = multiAuth.UnpackInterfaces(registry)
+	require.NoError(t, err)
+
+	ctx := sdk.Context{}
+	msg := &banktypes.MsgSend{
+		FromAddress: "pbmos1from",
+		ToAddress:   "pbmos1to",
+		Amount:      sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))),
+	}
+
+	// Test accept
+	resp, err := multiAuth.Accept(ctx, msg)
+	require.NoError(t, err)
+	require.True(t, resp.Accept)
+	require.False(t, resp.Delete)
+	require.Nil(t, resp.Updated)
+
+	// Test wrong message type
+	wrongMsg := &banktypes.MsgMultiSend{}
+	_, err = multiAuth.Accept(ctx, wrongMsg)
+	require.Error(t, err)
+}
+
+func TestMultiAuthorizationValidateBasic(t *testing.T) {
+	msgTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
+
+	auth1 := &authz.GenericAuthorization{Msg: msgTypeURL}
+	auth2 := &authz.GenericAuthorization{Msg: msgTypeURL}
+
+	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
+	require.NoError(t, err)
+
+	err = multiAuth.ValidateBasic()
+	require.NoError(t, err)
+
+	// Test invalid
+	invalidAuth := &MultiAuthorization{
+		MsgTypeUrl:        "",
+		SubAuthorizations: []*codectypes.Any{},
+	}
+
+	err = invalidAuth.ValidateBasic()
+	require.Error(t, err)
+}
+
+func TestMultiAuthorizationCodec(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	authz.RegisterInterfaces(registry)
+	RegisterInterfaces(registry)
+
+	msgTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
+	auth1 := &authz.GenericAuthorization{Msg: msgTypeURL}
+	auth2 := &authz.GenericAuthorization{Msg: msgTypeURL}
+
+	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
+	require.NoError(t, err)
+
+	any, err := codectypes.NewAnyWithValue(multiAuth)
+	require.NoError(t, err)
+
+	var unpacked authz.Authorization
+	err = registry.UnpackAny(any, &unpacked)
+	require.NoError(t, err)
+
+	unpackedMulti, ok := unpacked.(*MultiAuthorization)
+	require.True(t, ok)
+	require.Equal(t, multiAuth.MsgTypeUrl, unpackedMulti.MsgTypeUrl)
+	require.Len(t, unpackedMulti.SubAuthorizations, 2)
 }
