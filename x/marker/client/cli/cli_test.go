@@ -2893,7 +2893,7 @@ func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectedErr  string // CLI/client error or substring to check in tx raw_log for on-chain errors
+		expectedErr  string
 		expectedCode uint32
 	}{
 		{

@@ -17,6 +17,7 @@ import (
 	cerrs "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -1714,7 +1715,6 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 				return fmt.Errorf("failed to get client context: %w", err)
 			}
 
-			// Validate addresses
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return fmt.Errorf("invalid grantee address: %w", err)
@@ -1725,13 +1725,11 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 				return fmt.Errorf("failed to get granter address from context")
 			}
 
-			// Validate message type URL
 			msgTypeURL := strings.TrimSpace(args[1])
 			if msgTypeURL == "" {
 				return fmt.Errorf("msg-type-url cannot be empty")
 			}
 
-			// Handle different input sources
 			var authzJSON []byte
 			authInput := strings.TrimSpace(args[2])
 
@@ -1780,12 +1778,10 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 				authzJSON = []byte(authInput)
 			}
 
-			// Validate input size
 			if len(authzJSON) > maxInputSize {
 				return fmt.Errorf("input too large (max %d bytes)", maxInputSize)
 			}
 
-			// Parse expiration flag
 			expStr, err := cmd.Flags().GetString(FlagExpiration)
 			if err != nil {
 				return fmt.Errorf("failed to get expiration flag: %w", err)
@@ -1807,7 +1803,6 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 				expiration = &parsedTime
 			}
 
-			// Parse authorizations
 			subAuths, err := parseAuthorizationsFromInput(clientCtx, authzJSON, msgTypeURL)
 			if err != nil {
 				return err
@@ -1819,7 +1814,6 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 				return fmt.Errorf("failed to create MultiAuthorization: %w", err)
 			}
 
-			// Pack into Any
 			anyAuth, err := codectypes.NewAnyWithValue(multiAuth)
 			if err != nil {
 				return fmt.Errorf("failed to pack MultiAuthorization: %w", err)
