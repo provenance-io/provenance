@@ -8632,10 +8632,7 @@ All sub-authorizations must accept the message for it to be allowed.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  | The message type this authorization is for. |
-| `sub_authorizations` | [google.protobuf.Any](#google-protobuf-Any) | repeated | A list of sub-authorizations that must all accept the message. sub_authorizations: a list of authorizations (minimum 2, maximum 10). |
-
-
-
+| `sub_authorizations` | [google.protobuf.Any](#google-protobuf-any) | repeated | A list of sub-authorizations that must all accept the message. Requires between 2 and 10 individual authorizations.|
 
 
  <!-- end messages -->

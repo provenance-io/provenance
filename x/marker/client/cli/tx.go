@@ -1732,19 +1732,20 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 
 			var authzJSON []byte
 			authInput := strings.TrimSpace(args[2])
-
 			switch {
 			case authInput == "-":
-				authzJSON, err = io.ReadAll(io.LimitReader(os.Stdin, maxInputSize))
+				authzJSON, err = io.ReadAll(io.LimitReader(os.Stdin, maxInputSize+1)) // +1 to detect overflow
 				if err != nil {
 					return fmt.Errorf("failed to read authorizations from stdin: %w", err)
 				}
 				if len(authzJSON) == 0 {
 					return fmt.Errorf("authorizations input from stdin is empty")
 				}
+				if len(authzJSON) > maxInputSize {
+					return fmt.Errorf("authorizations input from stdin too large (max %d bytes)", maxInputSize)
+				}
 
 			case strings.HasPrefix(authInput, "@"):
-
 				filePath := strings.TrimPrefix(authInput, "@")
 				if filePath == "" {
 					return fmt.Errorf("missing file path after '@'")
@@ -1758,20 +1759,25 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 					return fmt.Errorf("invalid file path: contains '..'")
 				}
 
-				fileInfo, err := os.Stat(cleanPath)
+				f, err := os.Open(cleanPath)
 				if err != nil {
 					if os.IsNotExist(err) {
 						return fmt.Errorf("file not found: %s", cleanPath)
 					}
-					return fmt.Errorf("failed to access file %s: %w", cleanPath, err)
+					return fmt.Errorf("failed to open file %s: %w", cleanPath, err)
 				}
-				if fileInfo.Size() > maxInputSize {
-					return fmt.Errorf("file too large (max %d bytes): %s", maxInputSize, cleanPath)
-				}
+				defer f.Close()
 
-				authzJSON, err = os.ReadFile(cleanPath)
+				limitedReader := io.LimitReader(f, maxInputSize+1) // +1 to detect overflow
+				authzJSON, err = io.ReadAll(limitedReader)
 				if err != nil {
 					return fmt.Errorf("failed to read file %s: %w", cleanPath, err)
+				}
+				if len(authzJSON) == 0 {
+					return fmt.Errorf("authorizations input from file is empty")
+				}
+				if len(authzJSON) > maxInputSize {
+					return fmt.Errorf("file too large (max %d bytes): %s", maxInputSize, cleanPath)
 				}
 
 			default:

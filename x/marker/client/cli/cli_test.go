@@ -2793,20 +2793,25 @@ func (s *IntegrationTestSuite) TestGrantMultiAuthz() {
 		{
 			name: "success - stdin input",
 			args: func() []string {
+				// Backup and replace os.Stdin
+				origStdin := os.Stdin
 				r, w, _ := os.Pipe()
 				os.Stdin = r
+				s.T().Cleanup(func() { os.Stdin = origStdin })
+
+				// Write authzJSON to the pipe
 				go func() {
 					defer w.Close()
 					w.Write(authsJSON)
 				}()
+
 				return []string{
 					grantee,
 					"/cosmos.bank.v1beta1.MsgSend",
 					"-",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				}
-			}(),
-		},
+			}()},
 		{
 			name: "fail - invalid grantee address",
 			args: []string{
