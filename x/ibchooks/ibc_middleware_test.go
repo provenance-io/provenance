@@ -81,7 +81,7 @@ type HooksTestSuite struct {
 
 func SetupSimAppFn(t *testing.T) func() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	return func() (ibctesting.TestingApp, map[string]json.RawMessage) {
-		pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+		pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 		db := dbm.NewMemDB()
 		appOpts := simtestutil.AppOptionsMap{
 			flags.FlagHome:            t.TempDir(),

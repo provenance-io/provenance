@@ -24,7 +24,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	triggercli "github.com/provenance-io/provenance/x/trigger/client/cli"
@@ -48,7 +47,6 @@ type IntegrationTestSuite struct {
 	startingTriggerID  triggertypes.TriggerID
 	startingQueueIndex uint64
 	triggers           []triggertypes.Trigger
-	gasLimits          []triggertypes.GasLimit
 	queuedTriggers     []triggertypes.QueuedTrigger
 }
 
@@ -58,7 +56,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
@@ -107,36 +104,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.CreateTrigger(4, s.accountAddresses[1].String(), &triggertypes.BlockHeightEvent{BlockHeight: 1000}, &triggertypes.MsgDestroyTriggerRequest{Id: 2, Authority: s.accountAddresses[1].String()}),
 		s.CreateTrigger(7, s.accountAddresses[0].String(), &triggertypes.BlockHeightEvent{BlockHeight: 1000}, &triggertypes.MsgDestroyTriggerRequest{Id: 2, Authority: s.accountAddresses[1].String()}),
 	}
-	s.gasLimits = []triggertypes.GasLimit{
-		{
-			TriggerId: 1,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 2,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 3,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 4,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 5,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 6,
-			Amount:    20000,
-		},
-		{
-			TriggerId: 7,
-			Amount:    20000,
-		},
-	}
 	s.queuedTriggers = []triggertypes.QueuedTrigger{
 		{
 			BlockHeight: 5,
@@ -154,7 +121,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.startingTriggerID,
 		s.startingQueueIndex,
 		s.triggers,
-		s.gasLimits,
 		s.queuedTriggers,
 	)
 

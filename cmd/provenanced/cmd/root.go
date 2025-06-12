@@ -110,7 +110,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 				// Override default value for coin-type to match our mainnet or testnet value.
 				config.CoinTypeFlag: fmt.Sprint(app.CoinType),
 				// Override min gas price(server level config) here since the provenance config would have been set based on flags.
-				server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
+				server.FlagMinGasPrices: pioconfig.GetProvConfig().ProvMinGasPrices,
 			})
 			return nil
 		},
@@ -155,8 +155,6 @@ func Execute(rootCmd *cobra.Command) error {
 
 	// Custom denom flag added to root command
 	rootCmd.PersistentFlags().String(config.CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
-	// Custom msgFee floor price flag added to root command
-	rootCmd.PersistentFlags().Int64(config.CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
 	executor := cmtcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)

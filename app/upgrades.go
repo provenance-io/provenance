@@ -12,6 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -38,13 +42,46 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"zomp": { // Upgrade for v1.24.0
+	"amaranth-rc1": { // Upgrade for v1.25.0-rc1.
+		Added:   []string{flatfeestypes.StoreKey},
+		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			unlockVestingAccounts(ctx, app, getMainnetUnlocks())
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = setupFlatFees(ctx, app); err != nil {
+				return nil, err
+			}
 			return vm, nil
 		},
 	},
-	"zomp-rc1": {}, // Upgrade for v1.24.0-rc1
+	"amaranth": { // Upgrade for v1.25.0.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = setupFlatFees(ctx, app); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
@@ -246,16 +283,8 @@ func convertFinishedVestingAccountsToBase(ctx sdk.Context, app *App) error {
 	return nil
 }
 
-// Create a use of the standard helpers so that the linter neither complains about it not being used,
-// nor complains about a nolint:unused directive that isn't needed because the function is used.
-var (
-	_ = runModuleMigrations
-	_ = removeInactiveValidatorDelegations
-	_ = pruneIBCExpiredConsensusStates
-	_ = convertFinishedVestingAccountsToBase
-)
-
 // unlockVestingAccounts will convert the provided addrs from ContinuousVestingAccount to BaseAccount.
+// This might be needed later, for another round of unlocks, so we're keeping it around in case.
 func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 	ctx.Logger().Info("Unlocking select vesting accounts.")
 
@@ -287,53 +316,48 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 	ctx.Logger().Info("Done unlocking select vesting accounts.")
 }
 
-// getMainnetUnlocks gets a list of mainnet addresses to unlock.
-func getMainnetUnlocks() []sdk.AccAddress {
-	addrs := []string{
-		"pb1yku08jr34cls842gv2c9r3ec9g3aqyhdhxn7gv",
-		"pb1uf7txm4tce8tmg95yd5jwf9lsghdl0zk7yemmf",
-		"pb12dy3ztax0yw3wlqkd5dan0q5fs8p9pzwspge63",
-		"pb13n5l87am8fgkuaeyjx8jrk6flajuw6ywgupd3l",
-		"pb1sms0k6d8ealyl3ttxsvptx7ztcthwpjq8memak",
-		"pb1v2k2d2wf8kza6r24zwajfka0kc3qrj503luljr",
-		"pb1qydxnkqygzn4qcmnvshln9v62334xgu46eq0ft",
-		"pb1pywenrwq5mxg0k24nk5v4zty5n45c8pf2xcquz",
-		"pb1nf0s5hlvzececp55rlw7243she76fwm6xktue2",
-		"pb1rnpt0x6vsmgdekmpqa94qcn7377k3nzvalka4k",
-		"pb16dhla87g7a2jexytcrh3jm3fhzrsjzwxz28e2t",
-		"pb18gl8gyf44dvyjp4tr9jrzuhmdjdcwzxravfc6n",
-		"pb108t72x4taapyvmtrvyslqfpwxkj0sh6q80vjvw",
-		"pb1qwvmrd5dm3ah4ym5eu2s3k6p46hs65hvc0zqn3",
-		"pb139x44e5l0e84h3awccfztaefurnf0z7j5w9rcaff4lfvxvv4hkvqxuz5d5",
-		"pb1enagqpfq5x7hcae9khgatd9mm4r372mylnwrqp",
-		"pb1evhycvsj44uk4j3u096j3g833qaw22qveyhul7",
-		"pb1sjppc478pta6y3x5tu9l2938ejj0qzws46fhqh",
-		"pb19zlct5wh6xfn3u4na7ujhnaudwt63p2qqhukth",
-		"pb18xlkw9evkhwfk2hn7ss2f0xm6h7qra07fzpsgq",
-		"pb1ts3zffs789nhdhsnfzfzuve9j72kwqpqsj0h7u",
-		"pb1vw5fuucvfhnkhpfm2dezj4uwln2t8ckqjdhfft",
-		"pb1f6vqww9f7g5arawrsvmwqh9zzyt0njyeyzlutu",
-		"pb1x09ku54r4m5cllnwc0m8gqx32u76xvvq0ap026",
-		"pb1pft6y8u8eay4v4ypj6hlzqvgtf20krfcnyfth5",
-		"pb1vv530hgpgmt0mtsfwmtr4t2vm84x328z0xdhvw",
-		"pb1q9y3g5wm9c8kljj4ktgcvpdyau8xzrxxa75zfz",
-		"pb1ahp9lcj9m5vkhpdzw57d8xcjuygy6xvp94q9uw",
-		"pb14af37xzm2hssdklq92r6jq86q95zqxg7nvemvh",
-		"pb1nep5lpv8kg2q7yxvepdqwngdpuvgq5h62eapq5",
-		"pb1043tjayw4fhfgm3x900w96u4ytxufgezw90f5p",
-		"pb1uds0mh9q94fmjwxavkgxncls3n33j7kkqs5ns2",
-		"pb1n9h425x77vrrl47qv25z7m7f0p396ncucxyg5r",
+// Create a use of the standard helpers so that the linter neither complains about it not being used,
+// nor complains about a nolint:unused directive that isn't needed because the function is used.
+var (
+	_ = runModuleMigrations
+	_ = removeInactiveValidatorDelegations
+	_ = pruneIBCExpiredConsensusStates
+	_ = convertFinishedVestingAccountsToBase
+	_ = unlockVestingAccounts
+)
+
+// setupFlatFees defines the flatfees module params and msg costs.
+// Part of the zydeco upgrade.
+func setupFlatFees(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting up flat fees.")
+
+	feeDefCoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin(flatfeestypes.DefaultFeeDefinitionDenom, amount)
 	}
 
-	rv := make([]sdk.AccAddress, 0, len(addrs))
-	for _, str := range addrs {
-		// This will give an error if not on mainnet (where the HRP is "pb").
-		// If that happens, we ignore the errors and essentially end up with an empty list.
-		addr, err := sdk.AccAddressFromBech32(str)
-		if err == nil {
-			rv = append(rv, addr)
+	params := flatfeestypes.Params{ // TODO[fees]: Set these params with more accurate values.
+		DefaultCost: feeDefCoin(1),
+		ConversionFactor: flatfeestypes.ConversionFactor{
+			DefinitionAmount: feeDefCoin(1),
+			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
+		},
+	}
+	err := app.FlatFeesKeeper.SetParams(ctx, params)
+	if err != nil {
+		return fmt.Errorf("could not set x/flatfees params: %w", err)
+	}
+
+	// TODO[fees]: Define all the non-default msg fees.
+	msgFees := []*flatfeestypes.MsgFee{
+		// flatfeestypes.NewMsgFee("url", feeDefCoin(2)),
+	}
+	for _, msgFee := range msgFees {
+		err = app.FlatFeesKeeper.SetMsgFee(ctx, *msgFee)
+		if err != nil {
+			return fmt.Errorf("could not set msg fee %s: %w", msgFee, err)
 		}
 	}
 
-	return rv
+	ctx.Logger().Info("Done setting up flat fees.")
+	return nil
 }

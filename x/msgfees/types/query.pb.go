@@ -9,7 +9,6 @@ import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
-	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -34,197 +33,17 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParamsRequest is the request type for the Query/Params RPC method.
-type QueryParamsRequest struct {
-}
-
-func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
-func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryParamsRequest) ProtoMessage()    {}
-func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73f2d53a5aebf81b, []int{0}
-}
-func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
-}
-func (m *QueryParamsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryParamsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
-
-// QueryParamsResponse is the response type for the Query/Params RPC method.
-type QueryParamsResponse struct {
-	// params defines the parameters of the module.
-	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-}
-
-func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
-func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryParamsResponse) ProtoMessage()    {}
-func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73f2d53a5aebf81b, []int{1}
-}
-func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
-}
-func (m *QueryParamsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryParamsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
-
-func (m *QueryParamsResponse) GetParams() Params {
-	if m != nil {
-		return m.Params
-	}
-	return Params{}
-}
-
-// QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
-type QueryAllMsgFeesRequest struct {
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *QueryAllMsgFeesRequest) Reset()         { *m = QueryAllMsgFeesRequest{} }
-func (m *QueryAllMsgFeesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryAllMsgFeesRequest) ProtoMessage()    {}
-func (*QueryAllMsgFeesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73f2d53a5aebf81b, []int{2}
-}
-func (m *QueryAllMsgFeesRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryAllMsgFeesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryAllMsgFeesRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryAllMsgFeesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllMsgFeesRequest.Merge(m, src)
-}
-func (m *QueryAllMsgFeesRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryAllMsgFeesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllMsgFeesRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryAllMsgFeesRequest proto.InternalMessageInfo
-
-func (m *QueryAllMsgFeesRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// response for querying all msg's with fees associated with them
-type QueryAllMsgFeesResponse struct {
-	MsgFees []*MsgFee `protobuf:"bytes,1,rep,name=msg_fees,json=msgFees,proto3" json:"msg_fees,omitempty"`
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *QueryAllMsgFeesResponse) Reset()         { *m = QueryAllMsgFeesResponse{} }
-func (m *QueryAllMsgFeesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryAllMsgFeesResponse) ProtoMessage()    {}
-func (*QueryAllMsgFeesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73f2d53a5aebf81b, []int{3}
-}
-func (m *QueryAllMsgFeesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryAllMsgFeesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryAllMsgFeesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryAllMsgFeesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllMsgFeesResponse.Merge(m, src)
-}
-func (m *QueryAllMsgFeesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryAllMsgFeesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllMsgFeesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryAllMsgFeesResponse proto.InternalMessageInfo
-
-func (m *QueryAllMsgFeesResponse) GetMsgFees() []*MsgFee {
-	if m != nil {
-		return m.MsgFees
-	}
-	return nil
-}
-
-func (m *QueryAllMsgFeesResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
 // CalculateTxFeesRequest is the request type for the Query RPC method.
+// Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+// This query endpoint will be removed in a future release.
 type CalculateTxFeesRequest struct {
 	// tx_bytes is the transaction to simulate.
 	TxBytes []byte `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
-	// default_base_denom is used to set the denom used for gas fees
-	// if not set it will default to nhash.
+	// default_base_denom used to be the denom used for gas fees.
+	// Deprecated: This field is now ignored. The fees will be in the appropriate denomination(s) automatically.
 	DefaultBaseDenom string `protobuf:"bytes,2,opt,name=default_base_denom,json=defaultBaseDenom,proto3" json:"default_base_denom,omitempty"`
-	// gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation
+	// gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation.
+	// This only affects the returned gas (since the fee is flat).
 	GasAdjustment float32 `protobuf:"fixed32,3,opt,name=gas_adjustment,json=gasAdjustment,proto3" json:"gas_adjustment,omitempty"`
 }
 
@@ -232,7 +51,7 @@ func (m *CalculateTxFeesRequest) Reset()         { *m = CalculateTxFeesRequest{}
 func (m *CalculateTxFeesRequest) String() string { return proto.CompactTextString(m) }
 func (*CalculateTxFeesRequest) ProtoMessage()    {}
 func (*CalculateTxFeesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73f2d53a5aebf81b, []int{4}
+	return fileDescriptor_73f2d53a5aebf81b, []int{0}
 }
 func (m *CalculateTxFeesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -283,8 +102,11 @@ func (m *CalculateTxFeesRequest) GetGasAdjustment() float32 {
 }
 
 // CalculateTxFeesResponse is the response type for the Query RPC method.
+// Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+// This query endpoint will be removed in a future release.
 type CalculateTxFeesResponse struct {
 	// additional_fees are the amount of coins to be for addition msg fees
+	// Deprecated: This field will always be empty
 	AdditionalFees github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=additional_fees,json=additionalFees,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fees"`
 	// total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
 	// note: the gas fee is calculated with the floor gas price module param.
@@ -297,7 +119,7 @@ func (m *CalculateTxFeesResponse) Reset()         { *m = CalculateTxFeesResponse
 func (m *CalculateTxFeesResponse) String() string { return proto.CompactTextString(m) }
 func (*CalculateTxFeesResponse) ProtoMessage()    {}
 func (*CalculateTxFeesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73f2d53a5aebf81b, []int{5}
+	return fileDescriptor_73f2d53a5aebf81b, []int{1}
 }
 func (m *CalculateTxFeesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -348,10 +170,6 @@ func (m *CalculateTxFeesResponse) GetEstimatedGas() uint64 {
 }
 
 func init() {
-	proto.RegisterType((*QueryParamsRequest)(nil), "provenance.msgfees.v1.QueryParamsRequest")
-	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.msgfees.v1.QueryParamsResponse")
-	proto.RegisterType((*QueryAllMsgFeesRequest)(nil), "provenance.msgfees.v1.QueryAllMsgFeesRequest")
-	proto.RegisterType((*QueryAllMsgFeesResponse)(nil), "provenance.msgfees.v1.QueryAllMsgFeesResponse")
 	proto.RegisterType((*CalculateTxFeesRequest)(nil), "provenance.msgfees.v1.CalculateTxFeesRequest")
 	proto.RegisterType((*CalculateTxFeesResponse)(nil), "provenance.msgfees.v1.CalculateTxFeesResponse")
 }
@@ -359,52 +177,40 @@ func init() {
 func init() { proto.RegisterFile("provenance/msgfees/v1/query.proto", fileDescriptor_73f2d53a5aebf81b) }
 
 var fileDescriptor_73f2d53a5aebf81b = []byte{
-	// 718 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x94, 0xcf, 0x4f, 0x13, 0x4d,
-	0x18, 0xc7, 0x3b, 0x85, 0x97, 0x1f, 0xf3, 0xf2, 0xe3, 0x7d, 0x47, 0x84, 0xd2, 0x40, 0xc1, 0x25,
-	0x28, 0x34, 0xb2, 0x9b, 0x82, 0x07, 0xa3, 0x27, 0x8a, 0x81, 0x93, 0x09, 0x6e, 0x3c, 0x79, 0x59,
-	0xa7, 0xbb, 0xc3, 0xb8, 0xba, 0xbb, 0xb3, 0x74, 0xa6, 0x4d, 0x7b, 0x33, 0x1e, 0x8c, 0xf1, 0x64,
-	0xa2, 0x27, 0xe3, 0xd9, 0x18, 0x4f, 0xfc, 0x19, 0x9c, 0x0c, 0x89, 0x17, 0x4f, 0x6a, 0xc0, 0x84,
-	0x7f, 0xc3, 0xcc, 0xcc, 0xb6, 0x5d, 0x68, 0x8b, 0x9c, 0xbc, 0xc0, 0xf6, 0x99, 0xe7, 0x99, 0xef,
-	0x67, 0x9e, 0xf9, 0x3e, 0x03, 0xaf, 0xc5, 0x55, 0x56, 0x27, 0x11, 0x8e, 0x5c, 0x62, 0x85, 0x9c,
-	0xee, 0x11, 0xc2, 0xad, 0x7a, 0xc9, 0xda, 0xaf, 0x91, 0x6a, 0xd3, 0x8c, 0xab, 0x4c, 0x30, 0x74,
-	0xb5, 0x93, 0x62, 0x26, 0x29, 0x66, 0xbd, 0x94, 0xff, 0x1f, 0x87, 0x7e, 0xc4, 0x2c, 0xf5, 0x57,
-	0x67, 0xe6, 0xa7, 0x28, 0xa3, 0x4c, 0x7d, 0x5a, 0xf2, 0x2b, 0x89, 0xce, 0x51, 0xc6, 0x68, 0x40,
-	0x2c, 0x1c, 0xfb, 0x16, 0x8e, 0x22, 0x26, 0xb0, 0xf0, 0x59, 0xc4, 0x93, 0xd5, 0xa5, 0xde, 0x00,
-	0x2d, 0x21, 0x9d, 0x54, 0x70, 0x19, 0x0f, 0x19, 0xb7, 0x2a, 0x98, 0x13, 0xab, 0x5e, 0xaa, 0x10,
-	0x81, 0x4b, 0x96, 0xcb, 0xfc, 0x28, 0x59, 0x2f, 0xa6, 0xd7, 0x15, 0x7b, 0x3b, 0x2b, 0xc6, 0xd4,
-	0x8f, 0x94, 0xa2, 0xce, 0x35, 0xa6, 0x20, 0x7a, 0x20, 0x33, 0x76, 0x71, 0x15, 0x87, 0xdc, 0x26,
-	0xfb, 0x35, 0xc2, 0x85, 0x61, 0xc3, 0x2b, 0x67, 0xa2, 0x3c, 0x66, 0x11, 0x27, 0xe8, 0x2e, 0x1c,
-	0x8a, 0x55, 0x24, 0x07, 0x16, 0xc1, 0xca, 0xbf, 0xeb, 0xf3, 0x66, 0xcf, 0x66, 0x98, 0xba, 0xac,
-	0x3c, 0x78, 0xf8, 0x7d, 0x21, 0x63, 0x27, 0x25, 0xc6, 0x63, 0x38, 0xad, 0xf6, 0xdc, 0x0c, 0x82,
-	0xfb, 0x9c, 0x6e, 0x13, 0xd2, 0x52, 0x43, 0xdb, 0x10, 0x76, 0xb8, 0x72, 0x59, 0xb5, 0xf5, 0x75,
-	0x53, 0x1f, 0xc2, 0x94, 0x87, 0x30, 0xf5, 0x05, 0x24, 0x87, 0x30, 0x77, 0x31, 0x25, 0x49, 0xad,
-	0x9d, 0xaa, 0x34, 0x3e, 0x00, 0x38, 0xd3, 0x25, 0x91, 0xa0, 0xdf, 0x86, 0x23, 0x21, 0xa7, 0x8e,
-	0x24, 0xcc, 0x81, 0xc5, 0x81, 0x0b, 0xe0, 0x75, 0xa5, 0x3d, 0x1c, 0xea, 0x1d, 0xd0, 0x4e, 0x0f,
-	0xba, 0x1b, 0x7f, 0xa4, 0xd3, 0xb2, 0x67, 0xf0, 0x5e, 0x01, 0x38, 0xbd, 0x85, 0x03, 0xb7, 0x16,
-	0x60, 0x41, 0x1e, 0x36, 0xd2, 0x1d, 0x98, 0x85, 0x23, 0xa2, 0xe1, 0x54, 0x9a, 0x82, 0xe8, 0xd6,
-	0x8e, 0xd9, 0xc3, 0xa2, 0x51, 0x96, 0x3f, 0xd1, 0x4d, 0x88, 0x3c, 0xb2, 0x87, 0x6b, 0x81, 0x70,
-	0xa4, 0x98, 0xe3, 0x91, 0x88, 0x85, 0x0a, 0x63, 0xd4, 0xfe, 0x2f, 0x59, 0x29, 0x63, 0x4e, 0xee,
-	0xc9, 0x38, 0x5a, 0x86, 0x13, 0x14, 0x73, 0x07, 0x7b, 0x4f, 0x6b, 0x5c, 0x84, 0x24, 0x12, 0xb9,
-	0x81, 0x45, 0xb0, 0x92, 0xb5, 0xc7, 0x29, 0xe6, 0x9b, 0xed, 0xa0, 0xf1, 0x25, 0x0b, 0x67, 0xba,
-	0x50, 0x92, 0x4e, 0xbd, 0x06, 0x70, 0x12, 0x7b, 0x9e, 0x2f, 0x99, 0x71, 0x90, 0xee, 0xd8, 0xec,
-	0x99, 0x53, 0xb7, 0xce, 0xbb, 0xc5, 0xfc, 0xa8, 0xbc, 0x2d, 0xaf, 0xfa, 0xf3, 0x8f, 0x85, 0x15,
-	0xea, 0x8b, 0x27, 0xb5, 0x8a, 0xe9, 0xb2, 0xd0, 0x4a, 0x5c, 0xa8, 0xff, 0xad, 0x71, 0xef, 0x99,
-	0x25, 0x9a, 0x31, 0xe1, 0xaa, 0x80, 0xbf, 0x3f, 0x3d, 0x28, 0x8e, 0x05, 0x84, 0x62, 0xb7, 0xe9,
-	0x48, 0xeb, 0xf2, 0x4f, 0xa7, 0x07, 0x45, 0x60, 0x4f, 0x74, 0x94, 0x55, 0xf3, 0x9f, 0x03, 0x08,
-	0x05, 0x13, 0x2d, 0x8e, 0xec, 0xdf, 0xe2, 0x18, 0x55, 0xa2, 0x0a, 0x61, 0x09, 0x8e, 0x13, 0x2e,
-	0xfc, 0x10, 0x0b, 0xe2, 0x39, 0x14, 0x73, 0xd5, 0xd1, 0x41, 0x7b, 0xac, 0x1d, 0xdc, 0xc1, 0x7c,
-	0xfd, 0x68, 0x00, 0xfe, 0xa3, 0xac, 0x87, 0x5e, 0x02, 0x38, 0xa4, 0xfd, 0x8f, 0x56, 0xfb, 0x38,
-	0xac, 0x7b, 0xe0, 0xf2, 0xc5, 0xcb, 0xa4, 0xea, 0x0b, 0x32, 0x96, 0x5f, 0x7c, 0xfd, 0xf5, 0x36,
-	0xbb, 0x80, 0xe6, 0xad, 0xde, 0x8f, 0x85, 0x9e, 0x37, 0xf4, 0x0e, 0xc0, 0xc9, 0x73, 0xd3, 0x80,
-	0xd6, 0x2e, 0x92, 0xe9, 0x1a, 0xcc, 0xbc, 0x79, 0xd9, 0xf4, 0x84, 0xcc, 0x50, 0x64, 0x73, 0x28,
-	0xdf, 0x87, 0x0c, 0x07, 0x01, 0xfa, 0x08, 0xe0, 0xe4, 0x39, 0xeb, 0xf5, 0xc5, 0xea, 0x3d, 0x2d,
-	0x7d, 0xb1, 0xfa, 0x38, 0xda, 0xb8, 0xa5, 0xb0, 0xcc, 0x3b, 0xa0, 0x68, 0xac, 0xa6, 0xc9, 0x44,
-	0x43, 0x42, 0xb9, 0xad, 0x2a, 0x47, 0x3e, 0x10, 0xd2, 0x52, 0x9e, 0x34, 0x5b, 0xd9, 0x3f, 0x3c,
-	0x2e, 0x80, 0xa3, 0xe3, 0x02, 0xf8, 0x79, 0x5c, 0x00, 0x6f, 0x4e, 0x0a, 0x99, 0xa3, 0x93, 0x42,
-	0xe6, 0xdb, 0x49, 0x21, 0x03, 0x73, 0x3e, 0xeb, 0x4d, 0xb0, 0x0b, 0x1e, 0x6d, 0xa4, 0x8c, 0xd7,
-	0xc9, 0x59, 0xf3, 0x59, 0x5a, 0xb8, 0xd1, 0x6e, 0x8a, 0x72, 0x62, 0x65, 0x48, 0xbd, 0xc5, 0x1b,
-	0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x36, 0xb4, 0xcd, 0xe3, 0x7f, 0x06, 0x00, 0x00,
+	// 527 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x53, 0x3d, 0x6f, 0x13, 0x41,
+	0x10, 0xf5, 0x3a, 0x7c, 0x65, 0xc9, 0x07, 0x9c, 0xf8, 0x70, 0x22, 0x74, 0x31, 0x46, 0x48, 0x26,
+	0xc2, 0xbb, 0x72, 0x42, 0x45, 0x87, 0x83, 0x42, 0x0b, 0x27, 0x2a, 0x9a, 0xd3, 0xfa, 0x6e, 0xb2,
+	0x2c, 0xdc, 0xed, 0x3a, 0x9e, 0x3d, 0xcb, 0xee, 0x10, 0x15, 0xa2, 0x42, 0xa2, 0xe3, 0x07, 0x20,
+	0x44, 0xe5, 0x9f, 0x91, 0x0a, 0x45, 0xa2, 0xa1, 0x02, 0x64, 0x23, 0xe5, 0x6f, 0xa0, 0x3d, 0x5f,
+	0x6c, 0x0b, 0x5c, 0x50, 0xd1, 0xdc, 0xed, 0xcd, 0xbc, 0xb9, 0x79, 0xf3, 0x76, 0x1e, 0xbd, 0xd9,
+	0xe9, 0x9a, 0x1e, 0x68, 0xa1, 0x23, 0xe0, 0x29, 0xca, 0x03, 0x00, 0xe4, 0xbd, 0x26, 0x3f, 0xcc,
+	0xa0, 0x3b, 0x60, 0x9d, 0xae, 0xb1, 0xc6, 0xbb, 0x3a, 0x83, 0xb0, 0x02, 0xc2, 0x7a, 0xcd, 0xcd,
+	0xcb, 0x22, 0x55, 0xda, 0xf0, 0xfc, 0x39, 0x41, 0x6e, 0x5e, 0x91, 0x46, 0x9a, 0xfc, 0xc8, 0xdd,
+	0xa9, 0x88, 0xde, 0x90, 0xc6, 0xc8, 0x04, 0xb8, 0xe8, 0x28, 0x2e, 0xb4, 0x36, 0x56, 0x58, 0x65,
+	0x34, 0x16, 0x59, 0x3f, 0x32, 0x98, 0x1a, 0xe4, 0x6d, 0x81, 0xc0, 0x7b, 0xcd, 0x36, 0x58, 0xd1,
+	0xe4, 0x91, 0x51, 0x7a, 0x92, 0xaf, 0xbd, 0x21, 0xf4, 0xda, 0x9e, 0x48, 0xa2, 0x2c, 0x11, 0x16,
+	0x9e, 0xf6, 0xf7, 0x01, 0x30, 0x80, 0xc3, 0x0c, 0xd0, 0x7a, 0x1b, 0xf4, 0x82, 0xed, 0x87, 0xed,
+	0x81, 0x05, 0xac, 0x90, 0x2a, 0xa9, 0xaf, 0x04, 0xe7, 0x6d, 0xbf, 0xe5, 0x3e, 0xbd, 0xbb, 0xd4,
+	0x8b, 0xe1, 0x40, 0x64, 0x89, 0x0d, 0xdd, 0x8f, 0xc3, 0x18, 0xb4, 0x49, 0x2b, 0xe5, 0x2a, 0xa9,
+	0x2f, 0x07, 0x97, 0x8a, 0x4c, 0x4b, 0x20, 0x3c, 0x74, 0x71, 0xef, 0x36, 0x5d, 0x93, 0x02, 0x43,
+	0x11, 0xbf, 0xc8, 0xd0, 0xa6, 0xa0, 0x6d, 0x65, 0xa9, 0x4a, 0xea, 0xe5, 0x60, 0x55, 0x0a, 0x7c,
+	0x30, 0x0d, 0xd6, 0xbe, 0x94, 0xe9, 0xf5, 0xbf, 0xa8, 0x60, 0xc7, 0x68, 0x04, 0xef, 0x2d, 0xa1,
+	0xeb, 0x22, 0x8e, 0x95, 0x1b, 0x4d, 0x24, 0xa1, 0x13, 0xa9, 0x42, 0xaa, 0x4b, 0xf5, 0x8b, 0x3b,
+	0x1b, 0x6c, 0x32, 0x21, 0x73, 0x44, 0x58, 0x31, 0x21, 0xdb, 0x33, 0x4a, 0xb7, 0xf6, 0x8f, 0xbe,
+	0x6f, 0x95, 0x3e, 0xff, 0xd8, 0xaa, 0x4b, 0x65, 0x9f, 0x67, 0x6d, 0x16, 0x99, 0x94, 0x17, 0x72,
+	0x4c, 0x5e, 0x0d, 0x8c, 0x5f, 0x72, 0x3b, 0xe8, 0x00, 0xe6, 0x05, 0xf8, 0xe1, 0x64, 0xb8, 0xbd,
+	0x92, 0x80, 0x14, 0xd1, 0x20, 0x74, 0x1a, 0xe1, 0xa7, 0x93, 0xe1, 0x36, 0x09, 0xd6, 0x66, 0x9d,
+	0x1d, 0x29, 0xef, 0x15, 0xa1, 0xd4, 0x1a, 0x7b, 0xca, 0xa3, 0xfc, 0xbf, 0x78, 0x2c, 0xe7, 0x4d,
+	0x73, 0x0a, 0xb7, 0xe8, 0x2a, 0xa0, 0x55, 0xa9, 0xb0, 0x10, 0x87, 0x52, 0x60, 0xae, 0xe8, 0x99,
+	0x60, 0x65, 0x1a, 0x7c, 0x24, 0x70, 0x67, 0x48, 0xe8, 0xd9, 0x27, 0x6e, 0xd3, 0xbc, 0x8f, 0x84,
+	0xae, 0xff, 0x21, 0xad, 0xd7, 0x60, 0x0b, 0x17, 0x8f, 0x2d, 0xde, 0x86, 0x4d, 0xf6, 0xaf, 0xf0,
+	0xc9, 0x8d, 0xd5, 0xee, 0xbd, 0xfe, 0xfa, 0xeb, 0x7d, 0x99, 0xdd, 0x27, 0xdb, 0xb5, 0x3b, 0x7c,
+	0xce, 0x05, 0xb6, 0xef, 0x0c, 0x10, 0x9d, 0x56, 0x85, 0x29, 0xca, 0x7c, 0x87, 0x62, 0x27, 0x66,
+	0x4b, 0x1d, 0x8d, 0x7c, 0x72, 0x3c, 0xf2, 0xc9, 0xcf, 0x91, 0x4f, 0xde, 0x8d, 0xfd, 0xd2, 0xf1,
+	0xd8, 0x2f, 0x7d, 0x1b, 0xfb, 0x25, 0x5a, 0x51, 0x66, 0x31, 0x83, 0xc7, 0xe4, 0xd9, 0xee, 0x9c,
+	0xb0, 0x33, 0x4c, 0x43, 0x99, 0xf9, 0xc6, 0xfd, 0xa9, 0x01, 0x73, 0xa5, 0xdb, 0xe7, 0x72, 0x03,
+	0xec, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xe6, 0x41, 0x5d, 0x54, 0xa3, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -419,11 +225,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params queries the parameters for x/msgfees
-	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Query all Msgs which have fees associated with them.
-	QueryAllMsgFees(ctx context.Context, in *QueryAllMsgFeesRequest, opts ...grpc.CallOption) (*QueryAllMsgFeesResponse, error)
 	// CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees.
+	// Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+	// This query endpoint will be removed in a future release.
 	CalculateTxFees(ctx context.Context, in *CalculateTxFeesRequest, opts ...grpc.CallOption) (*CalculateTxFeesResponse, error)
 }
 
@@ -433,24 +237,6 @@ type queryClient struct {
 
 func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
-}
-
-func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
-	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Query/Params", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) QueryAllMsgFees(ctx context.Context, in *QueryAllMsgFeesRequest, opts ...grpc.CallOption) (*QueryAllMsgFeesResponse, error) {
-	out := new(QueryAllMsgFeesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Query/QueryAllMsgFees", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *queryClient) CalculateTxFees(ctx context.Context, in *CalculateTxFeesRequest, opts ...grpc.CallOption) (*CalculateTxFeesResponse, error) {
@@ -464,11 +250,9 @@ func (c *queryClient) CalculateTxFees(ctx context.Context, in *CalculateTxFeesRe
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params queries the parameters for x/msgfees
-	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Query all Msgs which have fees associated with them.
-	QueryAllMsgFees(context.Context, *QueryAllMsgFeesRequest) (*QueryAllMsgFeesResponse, error)
 	// CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees.
+	// Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+	// This query endpoint will be removed in a future release.
 	CalculateTxFees(context.Context, *CalculateTxFeesRequest) (*CalculateTxFeesResponse, error)
 }
 
@@ -476,54 +260,12 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
-}
-func (*UnimplementedQueryServer) QueryAllMsgFees(ctx context.Context, req *QueryAllMsgFeesRequest) (*QueryAllMsgFeesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryAllMsgFees not implemented")
-}
 func (*UnimplementedQueryServer) CalculateTxFees(ctx context.Context, req *CalculateTxFeesRequest) (*CalculateTxFeesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CalculateTxFees not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
-}
-
-func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryParamsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).Params(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.msgfees.v1.Query/Params",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_QueryAllMsgFees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAllMsgFeesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).QueryAllMsgFees(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.msgfees.v1.Query/QueryAllMsgFees",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryAllMsgFees(ctx, req.(*QueryAllMsgFeesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Query_CalculateTxFees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -550,160 +292,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Params",
-			Handler:    _Query_Params_Handler,
-		},
-		{
-			MethodName: "QueryAllMsgFees",
-			Handler:    _Query_QueryAllMsgFees_Handler,
-		},
-		{
 			MethodName: "CalculateTxFees",
 			Handler:    _Query_CalculateTxFees_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provenance/msgfees/v1/query.proto",
-}
-
-func (m *QueryParamsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryParamsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryParamsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryParamsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintQuery(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryAllMsgFeesRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryAllMsgFeesRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryAllMsgFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryAllMsgFeesResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryAllMsgFeesResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryAllMsgFeesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.MsgFees) > 0 {
-		for iNdEx := len(m.MsgFees) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.MsgFees[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *CalculateTxFeesRequest) Marshal() (dAtA []byte, err error) {
@@ -816,58 +410,6 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryParamsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *QueryParamsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Params.Size()
-	n += 1 + l + sovQuery(uint64(l))
-	return n
-}
-
-func (m *QueryAllMsgFeesRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryAllMsgFeesResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.MsgFees) > 0 {
-		for _, e := range m.MsgFees {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *CalculateTxFeesRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -917,345 +459,6 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryAllMsgFeesRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllMsgFeesRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllMsgFeesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageRequest{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryAllMsgFeesResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllMsgFeesResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllMsgFeesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MsgFees", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MsgFees = append(m.MsgFees, &MsgFee{})
-			if err := m.MsgFees[len(m.MsgFees)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageResponse{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *CalculateTxFeesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

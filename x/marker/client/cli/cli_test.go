@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
@@ -77,7 +76,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
@@ -1592,10 +1590,9 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 		expInRawLog string
 	}{
 		{
-			name:        "invalid denom",
-			args:        argsWStdFlags("x", "true"),
-			expCode:     12,
-			expInRawLog: "invalid denom: x",
+			name:   "invalid denom",
+			args:   argsWStdFlags("x", "true"),
+			expErr: "invalid denom: x",
 		},
 		{
 			name:   "invalid bool",
