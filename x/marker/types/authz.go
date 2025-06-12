@@ -130,6 +130,9 @@ func NewMultiAuthorization(msgTypeURL string, subAuthorizations ...authz.Authori
 		if auth.MsgTypeURL() != msgTypeURL {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d msg type mismatch", i)
 		}
+		if err := auth.ValidateBasic(); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d failed basic validation: %v", i, err)
+		}
 		if _, isMulti := auth.(*MultiAuthorization); isMulti {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("nested MultiAuthorization not allowed for sub-authorization %d", i)
 		}
