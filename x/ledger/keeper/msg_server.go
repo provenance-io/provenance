@@ -155,6 +155,10 @@ func (k *MsgServer) TransferFundsTx(goCtx context.Context, req *ledger.MsgTransf
 	return &resp, nil
 }
 
+func (k *MsgServer) FundAssetByRegistryTx(goCtx context.Context, req *ledger.MsgFundAssetByRegistryRequest) (*ledger.MsgFundAssetByRegistryResponse, error) {
+	return nil, nil
+}
+
 func (k *MsgServer) TransferFundsWithSettlementTx(goCtx context.Context, req *ledger.MsgTransferFundsWithSettlementRequest) (*ledger.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
