@@ -147,12 +147,12 @@ func NewMultiAuthorization(msgTypeURL string, subAuthorizations ...authz.Authori
 	}, nil
 }
 
-// MsgTypeURL implements authz.Authorization
+// MsgTypeURL implements Authorization.MsgTypeURL.
 func (m MultiAuthorization) MsgTypeURL() string {
 	return m.MsgTypeUrl
 }
 
-// Accept implements authz.Authorization
+// Accept implements Authorization.Accept.
 func (m MultiAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	if m.MsgTypeURL() != sdk.MsgTypeURL(msg) {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("message type mismatch")
@@ -233,7 +233,7 @@ func (m *MultiAuthorization) UnpackInterfaces(unpacker codectypes.AnyUnpacker) e
 	return nil
 }
 
-// ValidateBasic performs basic validation
+// ValidateBasic implements Authorization.ValidateBasic.
 func (m MultiAuthorization) ValidateBasic() error {
 	if m.MsgTypeUrl == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("message type URL cannot be empty")
