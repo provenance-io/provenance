@@ -66,21 +66,21 @@ func (s *IntegrationTestSuite) TestAssetQueryCommands() {
 		expectErr      bool
 	}{
 		{
-			name:  "list asset classes (should be empty)",
-			cmd:   assetcli.GetCmdListAssetClasses(),
-			args:  []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			name:           "list asset classes (should be empty)",
+			cmd:            assetcli.GetCmdListAssetClasses(),
+			args:           []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			expectedOutput: "\"assetClasses\":[]",
 		},
 		{
-			name:  "list assets for valid address (should be empty)",
-			cmd:   assetcli.GetCmdListAssets(),
-			args:  []string{valAddr, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			name:           "list assets for valid address (should be empty)",
+			cmd:            assetcli.GetCmdListAssets(),
+			args:           []string{valAddr, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			expectedOutput: "\"assets\":[]",
 		},
 		{
-			name:  "get class with invalid id",
-			cmd:   assetcli.GetCmdGetClass(),
-			args:  []string{"notaclassid", fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			name:           "get class with invalid id",
+			cmd:            assetcli.GetCmdGetClass(),
+			args:           []string{"notaclassid", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			expectedOutput: "",
 			expectErr:      true,
 		},
@@ -261,4 +261,4 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				Execute(s.T(), s.testnet)
 		})
 	}
-} 
+}
