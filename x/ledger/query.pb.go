@@ -28,94 +28,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type QueryLedgerConfigRequest struct {
-	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-}
-
-func (m *QueryLedgerConfigRequest) Reset()         { *m = QueryLedgerConfigRequest{} }
-func (m *QueryLedgerConfigRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerConfigRequest) ProtoMessage()    {}
-func (*QueryLedgerConfigRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{0}
-}
-func (m *QueryLedgerConfigRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerConfigRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerConfigRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerConfigRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerConfigRequest.Merge(m, src)
-}
-func (m *QueryLedgerConfigRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerConfigRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerConfigRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerConfigRequest proto.InternalMessageInfo
-
-func (m *QueryLedgerConfigRequest) GetKey() *LedgerKey {
-	if m != nil {
-		return m.Key
-	}
-	return nil
-}
-
-type QueryLedgerConfigResponse struct {
-	Ledger *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
-}
-
-func (m *QueryLedgerConfigResponse) Reset()         { *m = QueryLedgerConfigResponse{} }
-func (m *QueryLedgerConfigResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerConfigResponse) ProtoMessage()    {}
-func (*QueryLedgerConfigResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{1}
-}
-func (m *QueryLedgerConfigResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerConfigResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerConfigResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerConfigResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerConfigResponse.Merge(m, src)
-}
-func (m *QueryLedgerConfigResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerConfigResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerConfigResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerConfigResponse proto.InternalMessageInfo
-
-func (m *QueryLedgerConfigResponse) GetLedger() *Ledger {
-	if m != nil {
-		return m.Ledger
-	}
-	return nil
-}
-
 type QueryLedgerRequest struct {
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
@@ -124,7 +36,7 @@ func (m *QueryLedgerRequest) Reset()         { *m = QueryLedgerRequest{} }
 func (m *QueryLedgerRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerRequest) ProtoMessage()    {}
 func (*QueryLedgerRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{2}
+	return fileDescriptor_7955b82df44e45aa, []int{0}
 }
 func (m *QueryLedgerRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -161,14 +73,14 @@ func (m *QueryLedgerRequest) GetKey() *LedgerKey {
 }
 
 type QueryLedgerResponse struct {
-	Entries []*LedgerEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	Ledger *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
 }
 
 func (m *QueryLedgerResponse) Reset()         { *m = QueryLedgerResponse{} }
 func (m *QueryLedgerResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerResponse) ProtoMessage()    {}
 func (*QueryLedgerResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{3}
+	return fileDescriptor_7955b82df44e45aa, []int{1}
 }
 func (m *QueryLedgerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -197,7 +109,95 @@ func (m *QueryLedgerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryLedgerResponse proto.InternalMessageInfo
 
-func (m *QueryLedgerResponse) GetEntries() []*LedgerEntry {
+func (m *QueryLedgerResponse) GetLedger() *Ledger {
+	if m != nil {
+		return m.Ledger
+	}
+	return nil
+}
+
+type QueryLedgerEntriesRequest struct {
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+}
+
+func (m *QueryLedgerEntriesRequest) Reset()         { *m = QueryLedgerEntriesRequest{} }
+func (m *QueryLedgerEntriesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerEntriesRequest) ProtoMessage()    {}
+func (*QueryLedgerEntriesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{2}
+}
+func (m *QueryLedgerEntriesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerEntriesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerEntriesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerEntriesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerEntriesRequest.Merge(m, src)
+}
+func (m *QueryLedgerEntriesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerEntriesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerEntriesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerEntriesRequest proto.InternalMessageInfo
+
+func (m *QueryLedgerEntriesRequest) GetKey() *LedgerKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+type QueryLedgerEntriesResponse struct {
+	Entries []*LedgerEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+}
+
+func (m *QueryLedgerEntriesResponse) Reset()         { *m = QueryLedgerEntriesResponse{} }
+func (m *QueryLedgerEntriesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerEntriesResponse) ProtoMessage()    {}
+func (*QueryLedgerEntriesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{3}
+}
+func (m *QueryLedgerEntriesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerEntriesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerEntriesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerEntriesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerEntriesResponse.Merge(m, src)
+}
+func (m *QueryLedgerEntriesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerEntriesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerEntriesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerEntriesResponse proto.InternalMessageInfo
+
+func (m *QueryLedgerEntriesResponse) GetEntries() []*LedgerEntry {
 	if m != nil {
 		return m.Entries
 	}
@@ -752,10 +752,10 @@ func (m *QueryLedgerClassResponse) GetLedgerClass() *LedgerClass {
 }
 
 func init() {
-	proto.RegisterType((*QueryLedgerConfigRequest)(nil), "provenance.ledger.v1.QueryLedgerConfigRequest")
-	proto.RegisterType((*QueryLedgerConfigResponse)(nil), "provenance.ledger.v1.QueryLedgerConfigResponse")
 	proto.RegisterType((*QueryLedgerRequest)(nil), "provenance.ledger.v1.QueryLedgerRequest")
 	proto.RegisterType((*QueryLedgerResponse)(nil), "provenance.ledger.v1.QueryLedgerResponse")
+	proto.RegisterType((*QueryLedgerEntriesRequest)(nil), "provenance.ledger.v1.QueryLedgerEntriesRequest")
+	proto.RegisterType((*QueryLedgerEntriesResponse)(nil), "provenance.ledger.v1.QueryLedgerEntriesResponse")
 	proto.RegisterType((*QueryLedgerEntryRequest)(nil), "provenance.ledger.v1.QueryLedgerEntryRequest")
 	proto.RegisterType((*QueryLedgerEntryResponse)(nil), "provenance.ledger.v1.QueryLedgerEntryResponse")
 	proto.RegisterType((*QueryBalancesAsOfRequest)(nil), "provenance.ledger.v1.QueryBalancesAsOfRequest")
@@ -773,61 +773,60 @@ func init() {
 func init() { proto.RegisterFile("provenance/ledger/v1/query.proto", fileDescriptor_7955b82df44e45aa) }
 
 var fileDescriptor_7955b82df44e45aa = []byte{
-	// 850 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x97, 0xdf, 0x4f, 0x13, 0x4b,
-	0x14, 0xc7, 0x19, 0x08, 0x5c, 0xee, 0x69, 0xef, 0xaf, 0xb9, 0xdc, 0xd0, 0xdb, 0x90, 0xde, 0xb2,
-	0x37, 0x9a, 0xfa, 0x83, 0xdd, 0x80, 0x1a, 0x04, 0x8c, 0xda, 0x0a, 0x12, 0x02, 0x8a, 0x2c, 0x28,
-	0x89, 0xd1, 0xd4, 0x6d, 0x3b, 0xad, 0x9b, 0xd6, 0xdd, 0xb2, 0xb3, 0x25, 0x36, 0x0d, 0x2f, 0xfe,
-	0x05, 0x26, 0xfe, 0x07, 0x3e, 0xfb, 0xe2, 0x8b, 0x7f, 0x83, 0x0f, 0x3e, 0x34, 0xfa, 0xe2, 0xa3,
-	0x01, 0xff, 0x10, 0xd3, 0x99, 0x29, 0x3b, 0x4b, 0x97, 0x76, 0x5b, 0x7c, 0xe4, 0x70, 0xce, 0xf7,
-	0x7c, 0x3f, 0xb3, 0x73, 0x86, 0x03, 0x24, 0xab, 0x8e, 0xbd, 0x4f, 0x2c, 0xc3, 0xca, 0x13, 0xad,
-	0x42, 0x0a, 0x25, 0xe2, 0x68, 0xfb, 0xb3, 0xda, 0x5e, 0x8d, 0x38, 0x75, 0xb5, 0xea, 0xd8, 0xae,
-	0x8d, 0x27, 0xbc, 0x0c, 0x95, 0x67, 0xa8, 0xfb, 0xb3, 0xf1, 0xa9, 0x92, 0x6d, 0x97, 0x2a, 0x44,
-	0x33, 0xaa, 0xa6, 0x66, 0x58, 0x96, 0xed, 0x1a, 0xae, 0x69, 0x5b, 0x94, 0xd7, 0xc4, 0xa7, 0x03,
-	0x55, 0x45, 0x35, 0x4b, 0x51, 0xee, 0x41, 0x6c, 0xab, 0xd5, 0x65, 0x83, 0x05, 0xef, 0xd8, 0x56,
-	0xd1, 0x2c, 0xe9, 0x64, 0xaf, 0x46, 0xa8, 0x8b, 0x67, 0x61, 0xa4, 0x4c, 0xea, 0x31, 0x94, 0x44,
-	0xa9, 0xc8, 0xdc, 0x7f, 0x6a, 0x90, 0x01, 0x95, 0xd7, 0xad, 0x93, 0xba, 0xde, 0xca, 0x55, 0xb6,
-	0xe0, 0xdf, 0x00, 0x39, 0x5a, 0xb5, 0x2d, 0x4a, 0xf0, 0x55, 0x18, 0xe3, 0x85, 0x42, 0x72, 0xaa,
-	0x9b, 0xa4, 0x2e, 0x72, 0x95, 0x55, 0xc0, 0x92, 0xe4, 0x19, 0xbc, 0xe9, 0xf0, 0xb7, 0x4f, 0x48,
-	0xb8, 0x5a, 0x82, 0x5f, 0x88, 0xe5, 0x3a, 0x26, 0xa1, 0x31, 0x94, 0x1c, 0x49, 0x45, 0xe6, 0xa6,
-	0xbb, 0xa9, 0xad, 0x58, 0xae, 0x53, 0xd7, 0xdb, 0x15, 0x0a, 0x85, 0x49, 0x49, 0x93, 0xff, 0x72,
-	0x60, 0x87, 0xf8, 0x1c, 0xfc, 0x9e, 0xb7, 0x1d, 0x87, 0x54, 0xd8, 0x57, 0xcc, 0x9a, 0x85, 0xd8,
-	0x70, 0x12, 0xa5, 0x7e, 0xd5, 0x7f, 0x93, 0xa2, 0x6b, 0x05, 0x65, 0xdb, 0xf7, 0xcd, 0x44, 0x53,
-	0x41, 0x33, 0x0f, 0xa3, 0x2d, 0x6f, 0xed, 0xbe, 0x21, 0x58, 0x78, 0xbe, 0x52, 0x16, 0xa2, 0x19,
-	0xa3, 0xd2, 0x4a, 0xa6, 0x69, 0xba, 0x59, 0x3c, 0x03, 0xca, 0x14, 0x80, 0x41, 0xb3, 0x76, 0x31,
-	0x5b, 0x30, 0x5c, 0x22, 0x30, 0xc6, 0x0d, 0xba, 0x59, 0x5c, 0x36, 0x5c, 0xa2, 0xec, 0x8a, 0x6b,
-	0xe2, 0x6f, 0x26, 0x10, 0x16, 0x61, 0x3c, 0x27, 0xe2, 0xa2, 0x65, 0x22, 0xb8, 0x65, 0xbb, 0x5a,
-	0x3f, 0xce, 0x57, 0xd6, 0x61, 0x5a, 0xbe, 0x7f, 0x15, 0x83, 0x52, 0x46, 0xb9, 0x53, 0xaf, 0x12,
-	0xda, 0xc6, 0x39, 0x0f, 0x7f, 0x70, 0x91, 0x6c, 0xbe, 0x95, 0xd0, 0x3a, 0x67, 0xc4, 0xcf, 0xb9,
-	0xe2, 0x95, 0xad, 0x15, 0x94, 0x3d, 0x50, 0xba, 0x89, 0x09, 0xbb, 0xeb, 0x10, 0x61, 0x27, 0x98,
-	0x75, 0x5b, 0x61, 0x71, 0x87, 0x2e, 0x76, 0x3b, 0x24, 0xbf, 0x92, 0x0e, 0xe4, 0x58, 0x54, 0xd9,
-	0xe8, 0x6c, 0xb9, 0xed, 0x1a, 0x6e, 0x8d, 0x0e, 0x04, 0x50, 0x83, 0xff, 0xbb, 0xaa, 0x09, 0x82,
-	0xfb, 0x10, 0xa5, 0x2c, 0xec, 0x43, 0xb8, 0xd4, 0x13, 0xc1, 0xd3, 0xd2, 0x23, 0xd4, 0xd3, 0x0d,
-	0x82, 0xc8, 0xd4, 0xf2, 0x65, 0xe2, 0xfe, 0x2c, 0x08, 0x9f, 0x9a, 0x07, 0x91, 0x63, 0xe1, 0x3e,
-	0x21, 0x3c, 0x2d, 0x3d, 0x92, 0xf3, 0x74, 0x95, 0xb4, 0x6f, 0xb2, 0x59, 0x6a, 0xbf, 0xce, 0x9f,
-	0xf9, 0xdf, 0x56, 0x2e, 0x21, 0xec, 0x2e, 0x43, 0x54, 0xd6, 0x08, 0x33, 0xae, 0x5c, 0x20, 0x22,
-	0xf5, 0x98, 0x7b, 0x1f, 0x85, 0x51, 0xd6, 0x02, 0xbf, 0x45, 0x00, 0x2c, 0xc6, 0x7f, 0x9c, 0x09,
-	0x16, 0x3a, 0x85, 0x28, 0xae, 0x86, 0x4d, 0xe7, 0xee, 0x95, 0x6b, 0xaf, 0xbe, 0x7c, 0x7f, 0x33,
-	0xac, 0xe1, 0x19, 0x2d, 0xf0, 0x2f, 0x0c, 0x43, 0xd2, 0x1a, 0x27, 0x0e, 0xe9, 0x00, 0x7f, 0x42,
-	0x30, 0x71, 0x62, 0x8c, 0xb8, 0xdd, 0xf9, 0x70, 0xfd, 0x3b, 0x46, 0x39, 0x7e, 0xbd, 0xff, 0x42,
-	0x81, 0x90, 0x66, 0x08, 0x4b, 0x78, 0xa1, 0x2f, 0x04, 0x4d, 0x1a, 0x75, 0xdc, 0x44, 0xf0, 0xcf,
-	0xc9, 0xa1, 0xe2, 0x3c, 0x21, 0x6d, 0x75, 0x8e, 0x76, 0x7c, 0x61, 0x80, 0x4a, 0x41, 0x94, 0x61,
-	0x44, 0x37, 0xf0, 0x62, 0x7f, 0x44, 0xf2, 0xe8, 0x7b, 0x48, 0xd2, 0x88, 0xf5, 0x85, 0xd4, 0x39,
-	0xe8, 0x61, 0x91, 0x02, 0x86, 0x7a, 0x50, 0x24, 0xf9, 0x21, 0xc0, 0x1f, 0x10, 0x44, 0x78, 0x1b,
-	0x0e, 0x12, 0xe2, 0xae, 0xcb, 0x5b, 0x50, 0x5c, 0x0b, 0x9d, 0x2f, 0x4c, 0xdf, 0x65, 0xa6, 0x6f,
-	0xe3, 0x9b, 0xa7, 0x98, 0x66, 0xd9, 0x5a, 0xa3, 0x4c, 0xea, 0xaa, 0x41, 0x29, 0x71, 0x25, 0xe3,
-	0x2c, 0x68, 0x15, 0x5d, 0x36, 0x2d, 0xef, 0x10, 0x44, 0x57, 0xf8, 0x9e, 0xc1, 0x9d, 0xa7, 0x7a,
-	0x3a, 0x69, 0x7b, 0xbe, 0x10, 0x22, 0x53, 0xb8, 0x5d, 0x65, 0x6e, 0xd3, 0xf8, 0x56, 0xb0, 0x5b,
-	0xb1, 0xe8, 0x84, 0xb0, 0xdb, 0x44, 0xf0, 0xa7, 0xb4, 0x57, 0x84, 0x7d, 0x87, 0xe4, 0x9d, 0x29,
-	0xc4, 0x3b, 0xe4, 0xdb, 0x76, 0x94, 0xa7, 0xcc, 0xfc, 0x2e, 0x7e, 0xa8, 0x75, 0xd9, 0x74, 0x7b,
-	0x7b, 0xe7, 0x53, 0xad, 0x35, 0xfc, 0xcb, 0xd7, 0x01, 0xfe, 0x8c, 0xe0, 0x2f, 0x79, 0x45, 0xe9,
-	0x7d, 0x81, 0x02, 0xb6, 0xa7, 0xae, 0x17, 0x28, 0x68, 0x01, 0x52, 0x9e, 0x30, 0xaa, 0x47, 0x78,
-	0xe7, 0x8c, 0x54, 0xed, 0xad, 0x48, 0x6b, 0x78, 0xab, 0xd8, 0x41, 0xc6, 0xf8, 0x78, 0x98, 0x40,
-	0xcd, 0xc3, 0x04, 0xfa, 0x76, 0x98, 0x40, 0xaf, 0x8f, 0x12, 0x43, 0xcd, 0xa3, 0xc4, 0xd0, 0xd7,
-	0xa3, 0xc4, 0x10, 0x4c, 0x9a, 0x76, 0xa0, 0xd5, 0x07, 0xe8, 0xf1, 0xe5, 0x92, 0xe9, 0x3e, 0xaf,
-	0xe5, 0xd4, 0xbc, 0xfd, 0x42, 0x32, 0x35, 0x63, 0xda, 0xb2, 0xc5, 0x97, 0xc2, 0x5a, 0x6e, 0x8c,
-	0xfd, 0x6f, 0x71, 0xe5, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa7, 0xab, 0x22, 0x1d, 0xd6, 0x0c,
-	0x00, 0x00,
+	// 847 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x97, 0xdd, 0x4e, 0x13, 0x5b,
+	0x14, 0xc7, 0xd9, 0x10, 0x38, 0x9c, 0xd5, 0x9e, 0xaf, 0x7d, 0x38, 0xa1, 0x67, 0x42, 0x7a, 0xca,
+	0x9c, 0x68, 0xea, 0x07, 0x33, 0x82, 0x1a, 0x04, 0x8c, 0xda, 0x8a, 0x12, 0x52, 0x02, 0x3a, 0xa0,
+	0x44, 0xa3, 0xa9, 0xd3, 0x76, 0xb7, 0x4e, 0x5a, 0x67, 0x4a, 0xf7, 0x94, 0xd8, 0x34, 0xdc, 0xf8,
+	0x04, 0x26, 0xbe, 0x81, 0x97, 0xde, 0x7a, 0xe7, 0x13, 0x78, 0xe1, 0x45, 0xa3, 0x37, 0x5e, 0x1a,
+	0xf0, 0x41, 0xcc, 0xec, 0xbd, 0xcb, 0xcc, 0xb4, 0x43, 0x3b, 0x2d, 0x5e, 0xb2, 0xb2, 0xd6, 0x7f,
+	0xfd, 0x7f, 0x6b, 0x66, 0x0d, 0xab, 0x90, 0xa8, 0xd6, 0xac, 0x7d, 0x62, 0xea, 0x66, 0x9e, 0xa8,
+	0x15, 0x52, 0x28, 0x91, 0x9a, 0xba, 0x3f, 0xaf, 0xee, 0xd5, 0x49, 0xad, 0xa1, 0x54, 0x6b, 0x96,
+	0x6d, 0xe1, 0x29, 0x37, 0x43, 0xe1, 0x19, 0xca, 0xfe, 0xbc, 0x34, 0x53, 0xb2, 0xac, 0x52, 0x85,
+	0xa8, 0x7a, 0xd5, 0x50, 0x75, 0xd3, 0xb4, 0x6c, 0xdd, 0x36, 0x2c, 0x93, 0xf2, 0x1a, 0x69, 0x36,
+	0x50, 0x55, 0x54, 0xb3, 0x14, 0x79, 0x0d, 0xf0, 0x7d, 0xa7, 0xcb, 0x06, 0x0b, 0x6a, 0x64, 0xaf,
+	0x4e, 0xa8, 0x8d, 0xe7, 0x61, 0xac, 0x4c, 0x1a, 0x31, 0x94, 0x40, 0xc9, 0xc8, 0xc2, 0x7f, 0x4a,
+	0x50, 0x6b, 0x85, 0x57, 0x64, 0x48, 0x43, 0x73, 0x72, 0xe5, 0x0c, 0xfc, 0xed, 0x13, 0xa2, 0x55,
+	0xcb, 0xa4, 0x04, 0x5f, 0x81, 0x09, 0x5e, 0x22, 0xc4, 0x66, 0x7a, 0x89, 0x69, 0x22, 0x57, 0xde,
+	0x84, 0x7f, 0x3d, 0x62, 0x77, 0x4c, 0xbb, 0x66, 0x10, 0x7a, 0x0a, 0x73, 0x8f, 0x40, 0x0a, 0xd2,
+	0x13, 0x1e, 0x57, 0xe0, 0x17, 0xc2, 0x43, 0x31, 0x94, 0x18, 0x4b, 0x46, 0x16, 0x66, 0x7b, 0x89,
+	0x3a, 0xd5, 0x0d, 0xad, 0x5d, 0x21, 0x53, 0x98, 0xee, 0x90, 0x6e, 0x0c, 0x6f, 0x14, 0x9f, 0x81,
+	0xdf, 0xf3, 0x56, 0xad, 0x46, 0x2a, 0xec, 0x39, 0x66, 0x8d, 0x42, 0x6c, 0x34, 0x81, 0x92, 0xbf,
+	0x6a, 0xbf, 0x79, 0xa2, 0xeb, 0x05, 0x79, 0x1b, 0x62, 0xdd, 0x4d, 0x05, 0xcd, 0x22, 0x8c, 0x3b,
+	0xde, 0xda, 0x7d, 0x43, 0xb0, 0xf0, 0x7c, 0xb9, 0x2c, 0x44, 0xd3, 0x7a, 0xc5, 0x49, 0xa6, 0x29,
+	0xba, 0x55, 0x3c, 0x05, 0xca, 0x0c, 0x80, 0x4e, 0xb3, 0x56, 0x31, 0x5b, 0xd0, 0x6d, 0x22, 0x30,
+	0x26, 0x75, 0xba, 0x55, 0x5c, 0xd5, 0x6d, 0x22, 0xef, 0x8a, 0x27, 0xec, 0x6f, 0x26, 0x10, 0x96,
+	0x61, 0x32, 0x27, 0xe2, 0xa2, 0x65, 0x3c, 0xb8, 0x65, 0xbb, 0x5a, 0x3b, 0xce, 0x97, 0x33, 0x30,
+	0xeb, 0x19, 0xcd, 0xed, 0x8a, 0x4e, 0x29, 0xa3, 0xdc, 0x69, 0x54, 0xdd, 0x57, 0xe8, 0x2c, 0xfc,
+	0xc1, 0x45, 0xb2, 0x79, 0x27, 0xc1, 0x99, 0x33, 0xe2, 0x73, 0xae, 0xb8, 0x65, 0xeb, 0x05, 0x79,
+	0x0f, 0xe4, 0x5e, 0x62, 0xc2, 0x6e, 0x06, 0x22, 0x6c, 0x82, 0x59, 0xdb, 0x09, 0x8b, 0x77, 0xe8,
+	0x7c, 0xaf, 0x21, 0xf9, 0x95, 0x34, 0x20, 0xc7, 0xa2, 0xf2, 0x46, 0x77, 0xcb, 0x6d, 0x5b, 0xb7,
+	0xeb, 0x74, 0x28, 0x80, 0x3a, 0xfc, 0xdf, 0x53, 0x4d, 0x10, 0x6c, 0x42, 0x94, 0xb2, 0xb0, 0x0f,
+	0xe1, 0x42, 0x5f, 0x04, 0x57, 0x4b, 0x8b, 0x50, 0x57, 0x37, 0x08, 0x22, 0x5d, 0xcf, 0x97, 0x89,
+	0xfd, 0xb3, 0x20, 0x7c, 0x6a, 0x2e, 0x44, 0x8e, 0x85, 0x07, 0x84, 0x70, 0xb5, 0xb4, 0x48, 0xce,
+	0xd5, 0x95, 0x53, 0xbe, 0xcd, 0x66, 0xa9, 0x83, 0x3a, 0x7f, 0xe6, 0xdb, 0x53, 0x21, 0x21, 0xec,
+	0xae, 0x42, 0xd4, 0xab, 0x11, 0x66, 0x5d, 0xb9, 0x40, 0xc4, 0xd3, 0x63, 0xe1, 0x7d, 0x14, 0xc6,
+	0x59, 0x0b, 0xfc, 0x16, 0x01, 0xb0, 0x18, 0xff, 0x73, 0x2e, 0x58, 0xe8, 0x04, 0x22, 0x49, 0x09,
+	0x9b, 0xce, 0xdd, 0xcb, 0x57, 0x5f, 0x7d, 0xf9, 0xfe, 0x66, 0x54, 0xc5, 0x73, 0x6a, 0xe0, 0xff,
+	0x18, 0x86, 0xa4, 0x36, 0x3b, 0x86, 0x74, 0x80, 0x3f, 0x21, 0x98, 0xea, 0x58, 0x23, 0x6e, 0x77,
+	0x31, 0x5c, 0xff, 0xae, 0x55, 0x96, 0xae, 0x0d, 0x5e, 0x28, 0x10, 0x52, 0x0c, 0x61, 0x05, 0x2f,
+	0x0d, 0x84, 0xa0, 0x7a, 0x56, 0x1d, 0xb7, 0x10, 0xfc, 0xd3, 0xb9, 0x54, 0x9c, 0x27, 0xa4, 0xad,
+	0xee, 0xd5, 0x96, 0x96, 0x86, 0xa8, 0x14, 0x44, 0x69, 0x46, 0x74, 0x1d, 0x2f, 0x0f, 0x46, 0xe4,
+	0x5d, 0x7d, 0x17, 0xc9, 0xb3, 0x62, 0x03, 0x21, 0x75, 0x2f, 0x7a, 0x58, 0xa4, 0x80, 0xa5, 0x1e,
+	0x16, 0xc9, 0xfb, 0x21, 0xc0, 0xef, 0x10, 0x44, 0x78, 0x1b, 0x0e, 0x92, 0xec, 0x6b, 0xa7, 0x6d,
+	0xfc, 0x5c, 0x88, 0x4c, 0x61, 0xf4, 0x2e, 0x33, 0x7a, 0x0b, 0xdf, 0x38, 0xc1, 0xa8, 0x65, 0x16,
+	0x8d, 0x92, 0xda, 0x2c, 0x93, 0x86, 0xa2, 0x53, 0x4a, 0x6c, 0x8f, 0x59, 0x16, 0x34, 0x8b, 0x36,
+	0xdb, 0x90, 0x0f, 0x08, 0xa2, 0xe2, 0x40, 0xe1, 0x6e, 0xd5, 0xbe, 0x1e, 0xfc, 0xf7, 0x91, 0x74,
+	0x29, 0x7c, 0x81, 0xf0, 0xbe, 0xc6, 0xbc, 0xa7, 0xf0, 0xcd, 0x60, 0xef, 0xe2, 0xd4, 0x09, 0x61,
+	0xbe, 0x85, 0xe0, 0x4f, 0xcf, 0x65, 0x11, 0xf6, 0x4b, 0xe4, 0xbd, 0x9a, 0x42, 0x7c, 0x89, 0x7c,
+	0xf7, 0x8e, 0xfc, 0x94, 0x99, 0xdf, 0xc5, 0x0f, 0xd4, 0x1e, 0xd7, 0x6e, 0x7f, 0xef, 0x7c, 0xaf,
+	0xd5, 0xa6, 0xff, 0xfc, 0x3a, 0xc0, 0x9f, 0x11, 0xfc, 0xe5, 0x3d, 0x52, 0x38, 0x53, 0x2f, 0x93,
+	0x01, 0xf7, 0x93, 0xa4, 0x86, 0xce, 0x17, 0x54, 0x4f, 0x18, 0xd5, 0x43, 0xbc, 0x73, 0x4a, 0xaa,
+	0xf6, 0x5d, 0xa4, 0x36, 0xdd, 0x63, 0xec, 0x20, 0xad, 0x7f, 0x3c, 0x8c, 0xa3, 0xd6, 0x61, 0x1c,
+	0x7d, 0x3b, 0x8c, 0xa3, 0xd7, 0x47, 0xf1, 0x91, 0xd6, 0x51, 0x7c, 0xe4, 0xeb, 0x51, 0x7c, 0x04,
+	0xa6, 0x0d, 0x2b, 0xd0, 0xea, 0x3d, 0xf4, 0xf8, 0x62, 0xc9, 0xb0, 0x9f, 0xd7, 0x73, 0x4a, 0xde,
+	0x7a, 0xe1, 0x31, 0x35, 0x67, 0x58, 0x5e, 0x8b, 0x2f, 0x85, 0xb5, 0xdc, 0x04, 0xfb, 0x7d, 0x71,
+	0xf9, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0x2b, 0x1a, 0x72, 0xa6, 0xda, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -849,9 +848,11 @@ type QueryClient interface {
 	ClassEntryTypesQuery(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error)
 	ClassStatusTypesQuery(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error)
 	ClassBucketTypesQuery(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error)
-	// Params queries params of the ledger module.
-	LedgerQuery(ctx context.Context, in *QueryLedgerConfigRequest, opts ...grpc.CallOption) (*QueryLedgerConfigResponse, error)
-	EntriesQuery(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
+	//****************************************************************
+	//Ledger Queries
+	//***************************************************************
+	LedgerQuery(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
+	EntriesQuery(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error)
 	// GetLedgerEntry returns a specific ledger entry for an NFT
 	LedgerEntryQuery(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
 	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
@@ -902,8 +903,8 @@ func (c *queryClient) ClassBucketTypesQuery(ctx context.Context, in *QueryLedger
 	return out, nil
 }
 
-func (c *queryClient) LedgerQuery(ctx context.Context, in *QueryLedgerConfigRequest, opts ...grpc.CallOption) (*QueryLedgerConfigResponse, error) {
-	out := new(QueryLedgerConfigResponse)
+func (c *queryClient) LedgerQuery(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error) {
+	out := new(QueryLedgerResponse)
 	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerQuery", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -911,8 +912,8 @@ func (c *queryClient) LedgerQuery(ctx context.Context, in *QueryLedgerConfigRequ
 	return out, nil
 }
 
-func (c *queryClient) EntriesQuery(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error) {
-	out := new(QueryLedgerResponse)
+func (c *queryClient) EntriesQuery(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error) {
+	out := new(QueryLedgerEntriesResponse)
 	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/EntriesQuery", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -947,9 +948,11 @@ type QueryServer interface {
 	ClassEntryTypesQuery(context.Context, *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error)
 	ClassStatusTypesQuery(context.Context, *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error)
 	ClassBucketTypesQuery(context.Context, *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error)
-	// Params queries params of the ledger module.
-	LedgerQuery(context.Context, *QueryLedgerConfigRequest) (*QueryLedgerConfigResponse, error)
-	EntriesQuery(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
+	//****************************************************************
+	//Ledger Queries
+	//***************************************************************
+	LedgerQuery(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
+	EntriesQuery(context.Context, *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error)
 	// GetLedgerEntry returns a specific ledger entry for an NFT
 	LedgerEntryQuery(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
 	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
@@ -972,10 +975,10 @@ func (*UnimplementedQueryServer) ClassStatusTypesQuery(ctx context.Context, req 
 func (*UnimplementedQueryServer) ClassBucketTypesQuery(ctx context.Context, req *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClassBucketTypesQuery not implemented")
 }
-func (*UnimplementedQueryServer) LedgerQuery(ctx context.Context, req *QueryLedgerConfigRequest) (*QueryLedgerConfigResponse, error) {
+func (*UnimplementedQueryServer) LedgerQuery(ctx context.Context, req *QueryLedgerRequest) (*QueryLedgerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LedgerQuery not implemented")
 }
-func (*UnimplementedQueryServer) EntriesQuery(ctx context.Context, req *QueryLedgerRequest) (*QueryLedgerResponse, error) {
+func (*UnimplementedQueryServer) EntriesQuery(ctx context.Context, req *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EntriesQuery not implemented")
 }
 func (*UnimplementedQueryServer) LedgerEntryQuery(ctx context.Context, req *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error) {
@@ -1062,7 +1065,7 @@ func _Query_ClassBucketTypesQuery_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _Query_LedgerQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryLedgerConfigRequest)
+	in := new(QueryLedgerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1074,13 +1077,13 @@ func _Query_LedgerQuery_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/provenance.ledger.v1.Query/LedgerQuery",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).LedgerQuery(ctx, req.(*QueryLedgerConfigRequest))
+		return srv.(QueryServer).LedgerQuery(ctx, req.(*QueryLedgerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Query_EntriesQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryLedgerRequest)
+	in := new(QueryLedgerEntriesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1092,7 +1095,7 @@ func _Query_EntriesQuery_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/provenance.ledger.v1.Query/EntriesQuery",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).EntriesQuery(ctx, req.(*QueryLedgerRequest))
+		return srv.(QueryServer).EntriesQuery(ctx, req.(*QueryLedgerEntriesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1175,76 +1178,6 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "provenance/ledger/v1/query.proto",
 }
 
-func (m *QueryLedgerConfigRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerConfigRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerConfigRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Key != nil {
-		{
-			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerConfigResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerConfigResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Ledger != nil {
-		{
-			size, err := m.Ledger.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *QueryLedgerRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1296,6 +1229,76 @@ func (m *QueryLedgerResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *QueryLedgerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Ledger != nil {
+		{
+			size, err := m.Ledger.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerEntriesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerEntriesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerEntriesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerEntriesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerEntriesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerEntriesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1748,32 +1751,6 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryLedgerConfigRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Key != nil {
-		l = m.Key.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryLedgerConfigResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Ledger != nil {
-		l = m.Ledger.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *QueryLedgerRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1788,6 +1765,32 @@ func (m *QueryLedgerRequest) Size() (n int) {
 }
 
 func (m *QueryLedgerResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Ledger != nil {
+		l = m.Ledger.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerEntriesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerEntriesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1978,178 +1981,6 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryLedgerConfigRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerConfigRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerConfigRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Key == nil {
-				m.Key = &LedgerKey{}
-			}
-			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerConfigResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerConfigResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerConfigResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ledger", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Ledger == nil {
-				m.Ledger = &Ledger{}
-			}
-			if err := m.Ledger.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *QueryLedgerRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2263,6 +2094,178 @@ func (m *QueryLedgerResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryLedgerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ledger", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Ledger == nil {
+				m.Ledger = &Ledger{}
+			}
+			if err := m.Ledger.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerEntriesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerEntriesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerEntriesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &LedgerKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerEntriesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerEntriesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerEntriesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

@@ -52,7 +52,7 @@ func GetConfigCmd() *cobra.Command {
 
 			assetClassId := args[0]
 			nftId := args[1]
-			req := ledger.QueryLedgerConfigRequest{
+			req := ledger.QueryLedgerRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassId,
 					NftId:        nftId,
@@ -100,8 +100,8 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			nftId := args[1]
 			queryClient := ledger.NewQueryClient(clientCtx)
 
-			getConfig := func(nftId string) *ledger.QueryLedgerConfigResponse {
-				req := ledger.QueryLedgerConfigRequest{
+			getConfig := func(nftId string) *ledger.QueryLedgerResponse {
+				req := ledger.QueryLedgerRequest{
 					Key: &ledger.LedgerKey{
 						AssetClassId: assetClassId,
 						NftId:        nftId,
@@ -117,7 +117,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			}
 
 			getEntries := func(nftId string) []*ledger.LedgerEntry {
-				req := ledger.QueryLedgerRequest{
+				req := ledger.QueryLedgerEntriesRequest{
 					Key: &ledger.LedgerKey{
 						AssetClassId: assetClassId,
 						NftId:        nftId,
