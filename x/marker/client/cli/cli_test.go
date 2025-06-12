@@ -2,7 +2,10 @@ package cli_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -17,7 +20,6 @@ import (
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -25,13 +27,13 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -2742,4 +2744,262 @@ func (s *IntegrationTestSuite) TestRevokeFeegrant() {
 		s.Require().Equal(uint32(0), resp.Code, "Feegrant revoke should succeed")
 	})
 
+}
+func (s *IntegrationTestSuite) TestGrantMultiAuthz() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+
+	granter := s.accountAddresses[1].String()
+	grantee := s.accountAddresses[2].String()
+
+	auth1 := authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
+	auth2 := authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
+	auths := []authz.Authorization{auth1, auth2}
+	authsJSON := s.toJSONArray(auths)
+
+	tmpDir := s.T().TempDir()
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectedErr  string
+		expectedCode uint32
+	}{
+		{
+			name: "success - inline json",
+			args: []string{
+				grantee,
+				"/cosmos.bank.v1beta1.MsgSend",
+				string(authsJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+		},
+		{
+			name: "success - file input",
+			args: func() []string {
+				filePath := filepath.Join(tmpDir, "auths.json")
+				require.NoError(s.T(), os.WriteFile(filePath, authsJSON, 0644))
+				return []string{
+					grantee,
+					"/cosmos.bank.v1beta1.MsgSend",
+					"@" + filePath,
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				}
+			}(),
+		},
+		{
+			name: "success - stdin input",
+			args: func() []string {
+				r, w, _ := os.Pipe()
+				os.Stdin = r
+				go func() {
+					defer w.Close()
+					w.Write(authsJSON)
+				}()
+				return []string{
+					grantee,
+					"/cosmos.bank.v1beta1.MsgSend",
+					"-",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				}
+			}(),
+		},
+		{
+			name: "fail - invalid grantee address",
+			args: []string{
+				"invalid-address",
+				"/type",
+				"[]",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "invalid grantee address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "fail - empty msg type",
+			args: []string{
+				grantee,
+				"",
+				"[]",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "msg-type-url cannot be empty",
+		},
+		{
+			name: "fail - invalid json",
+			args: []string{
+				grantee,
+				"/type",
+				"{invalid}",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "invalid JSON format for authorizations",
+		},
+		{
+			name: "fail - no authorizations",
+			args: []string{
+				grantee,
+				"/type",
+				"[]",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "at least one authorization is required",
+		},
+		{
+			name: "fail - too many authorizations",
+			args: []string{
+				grantee,
+				"/type",
+				fmt.Sprintf(`[%s]`, strings.Repeat(`{}`, 11)),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "invalid JSON format for authorizations",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetGrantMultiAuthzCmd()
+			tc.args = append(tc.args,
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			)
+
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectedErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+
+	auth1 := authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
+	auths := []authz.Authorization{auth1, auth1}
+	authsJSON := s.toJSONArray(auths)
+
+	granter := s.accountAddresses[1]
+	grantee := s.accountAddresses[2]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectedErr  string // CLI/client error or substring to check in tx raw_log for on-chain errors
+		expectedCode uint32
+	}{
+		{
+			name: "success - valid revocation",
+			args: []string{
+				grantee.String(),
+				"/cosmos.bank.v1beta1.MsgSend",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr:  "",
+			expectedCode: 0,
+		},
+		{
+			name: "fail - invalid grantee address",
+			args: []string{
+				"invalid-address",
+				"/type",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "invalid grantee address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "fail - empty msg type",
+			args: []string{
+				grantee.String(),
+				"",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "msg-type-url cannot be empty",
+		},
+		{
+			name: "fail - missing required args",
+			args: []string{
+				grantee.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "accepts 2 arg(s), received 1",
+		},
+		{
+			name: "fail - grantee and granter are same",
+			args: []string{
+				granter.String(),
+				"/cosmos.bank.v1beta1.MsgSend",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "grantee and granter should be different",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// For success case, create the grant first.
+			if tc.name == "success - valid revocation" {
+				grantArgs := []string{
+					grantee.String(),
+					"/cosmos.bank.v1beta1.MsgSend",
+					fmt.Sprintf("@%s", s.writeAuthzJSON(string(authsJSON))),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				}
+				testcli.NewTxExecutor(markercli.GetGrantMultiAuthzCmd(), grantArgs).
+					WithExpCode(0).
+					Execute(s.T(), s.testnet)
+			}
+
+			cmd := markercli.GetRevokeMultiAuthzCmd()
+			tc.args = append(tc.args,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			)
+
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectedErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+type authzJSON struct {
+	Type string `json:"@type"`
+	Msg  string `json:"msg"`
+}
+
+func (s *IntegrationTestSuite) toJSONArray(auths []authz.Authorization) []byte {
+	var result []authzJSON
+	for _, a := range auths {
+		if g, ok := a.(*authz.GenericAuthorization); ok {
+			result = append(result, authzJSON{
+				Type: "/cosmos.authz.v1beta1.GenericAuthorization",
+				Msg:  g.Msg,
+			})
+		}
+	}
+	bz, err := json.Marshal(result)
+	require.NoError(s.T(), err)
+	return bz
+}
+func (s *IntegrationTestSuite) writeAuthzJSON(jsonData string) string {
+	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("authz-%d.json", time.Now().UnixNano()))
+	if err := os.WriteFile(tmpFile, []byte(jsonData), 0600); err != nil {
+		s.T().Fatalf("failed to write temp authz JSON file: %v", err)
+	}
+	return tmpFile
 }

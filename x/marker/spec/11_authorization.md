@@ -3,6 +3,7 @@
 The marker module supports granting authorizations for restricted coin transfers.  This is implemented using
 the `authz` module's `Authorization` interface.
 
+### MarkerTransferAuthorization :
 ```
 // MarkerTransferAuthorization gives the grantee permissions to execute
 // a restricted coin transfer on behalf of the granter's account.
@@ -23,3 +24,25 @@ With the `MarkerTransferAuthorization` a `granter` can allow a `grantee` to do t
 A `transfer_limit` is required to be set for the `grantee`.
 The `allow_list` is optional.
 An empty list means any destination address is allowed, otherwise, the destination must be in the `allow_list`.
+
+### MultiAuthorization :
+
+The marker module supports composite authorizations using the `MultiAuthorization` type.This allows a `granter` to define multiple rules (sub-authorizations) that must all be satisfied for a `grantee` to execute a specific message.
+
+```
+// MultiAuthorization lets you combine several authorizations.
+// All sub-authorizations must accept the message for it to be allowed.
+message MultiAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  // The message type this authorization is for.
+  string msg_type_url = 1;
+
+  // A list of sub-authorizations that must all accept the message.
+  // Must have at least 2 and at most 10 items.
+  repeated google.protobuf.Any sub_authorizations = 2 [(cosmos_proto.accepts_interface) = "Authorization"];
+}
+```
+With `MultiAuthorization`, a `granter` can grant permission to a `grantee` with multiple restrictions.
+* `msg_type_url` defines which message type this applies to (e.g. /cosmos.bank.v1beta1.MsgSend).
+* `sub_authorizations` is a list of other authorizations (like GenericAuthorization) that all must accept the message.
