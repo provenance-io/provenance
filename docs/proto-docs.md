@@ -5579,9 +5579,9 @@ FundTransfer represents a single fund transfer to process
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `ledger_entry_correlation_id` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
 | `memo` | [string](#string) |  |  |
 | `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
@@ -5599,7 +5599,7 @@ FundTransferEntryWithSettlement represents a fund transfer with settlement instr
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `ledger_entry_correlation_id` | [string](#string) |  |  |
 | `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
@@ -5616,7 +5616,7 @@ SettlementInstruction represents blockchain-specific settlement instructions
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `amount` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `recipient_address` | [string](#string) |  | The recipient's blockchain address |
 | `memo` | [string](#string) |  | Optional memo or note for the transaction |
 | `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
