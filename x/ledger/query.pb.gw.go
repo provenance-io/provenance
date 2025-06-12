@@ -254,7 +254,7 @@ var (
 )
 
 func request_Query_LedgerQuery_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryLedgerConfigRequest
+	var protoReq QueryLedgerRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -299,7 +299,7 @@ func request_Query_LedgerQuery_0(ctx context.Context, marshaler runtime.Marshale
 }
 
 func local_request_Query_LedgerQuery_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryLedgerConfigRequest
+	var protoReq QueryLedgerRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -348,7 +348,7 @@ var (
 )
 
 func request_Query_EntriesQuery_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryLedgerRequest
+	var protoReq QueryLedgerEntriesRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -393,7 +393,7 @@ func request_Query_EntriesQuery_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func local_request_Query_EntriesQuery_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryLedgerRequest
+	var protoReq QueryLedgerEntriesRequest
 	var metadata runtime.ServerMetadata
 
 	var (

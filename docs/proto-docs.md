@@ -322,8 +322,8 @@
     - [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse)
     - [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest)
     - [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse)
-    - [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest)
-    - [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse)
+    - [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest)
+    - [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse)
     - [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest)
     - [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse)
     - [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest)
@@ -5205,7 +5205,8 @@ LedgerEntry
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  |  |
+| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
 | `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 
 
@@ -5446,9 +5447,9 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
-<a name="provenance-ledger-v1-QueryLedgerConfigRequest"></a>
+<a name="provenance-ledger-v1-QueryLedgerEntriesRequest"></a>
 
-### QueryLedgerConfigRequest
+### QueryLedgerEntriesRequest
 
 
 
@@ -5461,15 +5462,15 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
-<a name="provenance-ledger-v1-QueryLedgerConfigResponse"></a>
+<a name="provenance-ledger-v1-QueryLedgerEntriesResponse"></a>
 
-### QueryLedgerConfigResponse
+### QueryLedgerEntriesResponse
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 
 
 
@@ -5530,7 +5531,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
 
 
 
@@ -5554,8 +5555,8 @@ Query defines the gRPC querier service for ledger module.
 | `ClassEntryTypesQuery` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) |  |
 | `ClassStatusTypesQuery` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) |  |
 | `ClassBucketTypesQuery` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) |  |
-| `LedgerQuery` | [QueryLedgerConfigRequest](#provenance-ledger-v1-QueryLedgerConfigRequest) | [QueryLedgerConfigResponse](#provenance-ledger-v1-QueryLedgerConfigResponse) | Params queries params of the ledger module. |
-| `EntriesQuery` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) |  |
+| `LedgerQuery` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) | Ledger Queries *************************************************************** |
+| `EntriesQuery` | [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest) | [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse) |  |
 | `LedgerEntryQuery` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
 | `BalancesAsOfQuery` | [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest) | [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
 

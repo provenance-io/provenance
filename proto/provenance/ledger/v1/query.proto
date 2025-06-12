@@ -33,11 +33,11 @@ service Query {
   /*****************************************************************
     Ledger Queries
   *****************************************************************/
-  rpc LedgerQuery(QueryLedgerConfigRequest) returns (QueryLedgerConfigResponse) {
+  rpc LedgerQuery(QueryLedgerRequest) returns (QueryLedgerResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
 
-  rpc EntriesQuery(QueryLedgerRequest) returns (QueryLedgerResponse) {
+  rpc EntriesQuery(QueryLedgerEntriesRequest) returns (QueryLedgerEntriesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/entries/{key.asset_class_id}/{key.nft_id}";
   }
 
@@ -54,19 +54,19 @@ service Query {
   }
 }
 
-message QueryLedgerConfigRequest {
-  LedgerKey key = 1;
-}
-
-message QueryLedgerConfigResponse {
-  Ledger ledger = 1;
-}
-
 message QueryLedgerRequest {
   LedgerKey key = 1;
 }
 
 message QueryLedgerResponse {
+  Ledger ledger = 1;
+}
+
+message QueryLedgerEntriesRequest {
+  LedgerKey key = 1;
+}
+
+message QueryLedgerEntriesResponse {
   repeated LedgerEntry entries = 1;
 }
 

@@ -20,7 +20,7 @@ func NewLedgerQueryServer(k ViewKeeper) LedgerQueryServer {
 	}
 }
 
-func (qs LedgerQueryServer) LedgerQuery(goCtx context.Context, req *ledger.QueryLedgerConfigRequest) (*ledger.QueryLedgerConfigResponse, error) {
+func (qs LedgerQueryServer) LedgerQuery(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	l, err := qs.k.GetLedger(ctx, req.Key)
@@ -32,14 +32,14 @@ func (qs LedgerQueryServer) LedgerQuery(goCtx context.Context, req *ledger.Query
 		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
-	resp := ledger.QueryLedgerConfigResponse{
+	resp := ledger.QueryLedgerResponse{
 		Ledger: l,
 	}
 
 	return &resp, nil
 }
 
-func (qs LedgerQueryServer) EntriesQuery(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
+func (qs LedgerQueryServer) EntriesQuery(goCtx context.Context, req *ledger.QueryLedgerEntriesRequest) (*ledger.QueryLedgerEntriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	entries, err := qs.k.ListLedgerEntries(ctx, req.Key)
@@ -51,7 +51,7 @@ func (qs LedgerQueryServer) EntriesQuery(goCtx context.Context, req *ledger.Quer
 		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
 	}
 
-	resp := ledger.QueryLedgerResponse{}
+	resp := ledger.QueryLedgerEntriesResponse{}
 
 	// Add entries to the response.
 	for _, entry := range entries {

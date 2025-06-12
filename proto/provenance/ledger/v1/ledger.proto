@@ -181,8 +181,8 @@ message Ledgers {
 }
 message LedgerToEntries {
   LedgerKey            ledger_key = 1;
-  Ledger               ledger = 2;
-  repeated LedgerEntry entries = 3;
+  Ledger               ledger     = 2;
+  repeated LedgerEntry entries    = 3;
 }
 
 // Day Count Conventions used in interest calculations
