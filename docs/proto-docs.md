@@ -274,6 +274,8 @@
     - [MsgCreateResponse](#provenance-ledger-v1-MsgCreateResponse)
     - [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest)
     - [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse)
+    - [MsgFundAssetByRegistryRequest](#provenance-ledger-v1-MsgFundAssetByRegistryRequest)
+    - [MsgFundAssetByRegistryResponse](#provenance-ledger-v1-MsgFundAssetByRegistryResponse)
     - [MsgFundAssetRequest](#provenance-ledger-v1-MsgFundAssetRequest)
     - [MsgFundAssetResponse](#provenance-ledger-v1-MsgFundAssetResponse)
     - [MsgTransferFundsRequest](#provenance-ledger-v1-MsgTransferFundsRequest)
@@ -4752,6 +4754,32 @@ MsgDestroyResponse represents the response from destroying a ledger
 
 
 
+<a name="provenance-ledger-v1-MsgFundAssetByRegistryRequest"></a>
+
+### MsgFundAssetByRegistryRequest
+MsgFundAssetByRegistryRequest represents a request to fund an asset by registry
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  |  |
+| `transfers` | [FundTransfer](#provenance-ledger-v1-FundTransfer) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgFundAssetByRegistryResponse"></a>
+
+### MsgFundAssetByRegistryResponse
+MsgFundAssetByRegistryResponse represents the response from funding an asset by registry
+
+
+
+
+
+
 <a name="provenance-ledger-v1-MsgFundAssetRequest"></a>
 
 ### MsgFundAssetRequest
@@ -4760,10 +4788,8 @@ MsgFundAssetRequest represents a request to fund an asset
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
 | `authority` | [string](#string) |  |  |
-| `transfers` | [FundTransfer](#provenance-ledger-v1-FundTransfer) | repeated |  |
+| `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated |  |
 
 
 
@@ -4995,6 +5021,7 @@ Msg defines the attribute module Msg service.
 | `AppendTx` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry |
 | `UpdateBalancesTx` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied |
 | `FundAssetTx` | [MsgFundAssetRequest](#provenance-ledger-v1-MsgFundAssetRequest) | [MsgFundAssetResponse](#provenance-ledger-v1-MsgFundAssetResponse) | Fund an Asset |
+| `FundAssetByRegistryTx` | [MsgFundAssetByRegistryRequest](#provenance-ledger-v1-MsgFundAssetByRegistryRequest) | [MsgFundAssetByRegistryResponse](#provenance-ledger-v1-MsgFundAssetByRegistryResponse) | Fund an Asset by Registry |
 | `TransferFundsTx` | [MsgTransferFundsRequest](#provenance-ledger-v1-MsgTransferFundsRequest) | [MsgTransferFundsResponse](#provenance-ledger-v1-MsgTransferFundsResponse) | Process multiple fund transfers (payments and disbursements) |
 | `TransferFundsWithSettlementTx` | [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest) | [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse) | Process multiple fund transfers with manual settlement instructions |
 | `DestroyTx` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
