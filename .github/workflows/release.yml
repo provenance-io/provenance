@@ -98,7 +98,7 @@ jobs:
       - name: Install deps
         run: |
           apt-get update
-          apt-get install -y make build-essential ca-certificates libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+          apt-get install -y make zip build-essential ca-certificates libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build linux binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
