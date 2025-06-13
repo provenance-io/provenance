@@ -137,11 +137,11 @@ func NewMultiAuthorization(msgTypeURL string, subAuthorizations ...authz.Authori
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("nested MultiAuthorization not allowed for sub-authorization %d", i)
 		}
 
-		any, err := codectypes.NewAnyWithValue(auth)
+		authValue, err := codectypes.NewAnyWithValue(auth)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("failed to pack sub-authorization %d: %s", i, err)
 		}
-		anyAuths[i] = any
+		anyAuths[i] = authValue
 	}
 
 	return &MultiAuthorization{
