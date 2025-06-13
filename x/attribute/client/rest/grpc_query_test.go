@@ -80,13 +80,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.accountStr,
 			attributetypes.AttributeType_String,
 			[]byte("example attribute value string"),
-			nil),
+			nil, ""),
 		attributetypes.NewAttribute(
 			attributetypes.AccountDataName,
 			s.accountStr,
 			attributetypes.AttributeType_String,
 			[]byte("example accountdata value string"),
-			nil),
+			nil, ""),
 	)
 	accountData.Params.MaxValueLength = 32
 	accountDataBz, err := cfg.Codec.MarshalJSON(&accountData)
@@ -142,13 +142,13 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 						s.accountStr,
 						attributetypes.AttributeType_String,
 						[]byte("example attribute value string"),
-						nil),
+						nil, ""),
 					attributetypes.NewAttribute(
 						attributetypes.AccountDataName,
 						s.accountStr,
 						attributetypes.AttributeType_String,
 						[]byte("example accountdata value string"),
-						nil),
+						nil, ""),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 2},
 			},
@@ -167,6 +167,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 						attributetypes.AttributeType_String,
 						[]byte("example attribute value string"),
 						nil,
+						"",
 					),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
@@ -198,6 +199,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 						attributetypes.AttributeType_String,
 						[]byte("example attribute value string"),
 						nil,
+						"",
 					),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
