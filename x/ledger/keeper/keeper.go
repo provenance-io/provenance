@@ -27,13 +27,13 @@ type BaseKeeper struct {
 }
 
 const (
-	ledgerPrefix                 = "ledgers"
-	entriesPrefix                = "ledger_entries"
-	fundTransfersPrefix          = "fund_transfers"
-	ledgerClassesPrefix          = "ledger_classes"
-	ledgerClassEntryTypesPrefix  = "ledger_class_entry_types"
-	ledgerClassStatusTypesPrefix = "ledger_class_status_types"
-	ledgerClassBucketTypesPrefix = "ledger_class_bucket_types"
+	ledgerPrefix                 byte = 0x01
+	entriesPrefix                byte = 0x02
+	ledgerClassesPrefix          byte = 0x03
+	ledgerClassEntryTypesPrefix  byte = 0x04
+	ledgerClassStatusTypesPrefix byte = 0x05
+	ledgerClassBucketTypesPrefix byte = 0x06
+	fundTransfersPrefix          byte = 0x07
 
 	ledgerKeyHrp   = "ledger"
 	ledgerClassHrp = "ledgerc"
