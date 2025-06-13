@@ -48,7 +48,7 @@ type BaseRegistryKeeper struct {
 }
 
 const (
-	registryPrefix = "registry_entries"
+	registryPrefix byte = 0x01
 
 	registryKeyHrp = "reg"
 )
