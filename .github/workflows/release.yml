@@ -96,8 +96,8 @@ jobs:
           go-version-file: 'go.mod'
       - name: Install deps
         run: |
-          apt-get update
-          apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+          sudo apt-get update
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build linux binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
