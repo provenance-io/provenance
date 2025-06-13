@@ -31,6 +31,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),
 		&MarkerTransferAuthorization{},
+		&MultiAuthorization{},
 	)
 
 	registry.RegisterInterface(

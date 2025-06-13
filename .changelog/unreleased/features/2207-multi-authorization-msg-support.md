@@ -1,0 +1,1 @@
+* Added MultiAuthorization: allows creating multiple sub-authorizations that must all approve a message before it can execute [#2207](https://github.com/provenance-io/provenance/issues/2207).
