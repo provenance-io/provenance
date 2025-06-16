@@ -25,7 +25,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (m msgServer) AddAssetClass(goCtx context.Context, msg *types.MsgAddAssetClass) (*types.MsgAddAssetClassResponse, error) {
+func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateAssetClass) (*types.MsgCreateAssetClassResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Create NFT class from asset class
@@ -74,10 +74,10 @@ func (m msgServer) AddAssetClass(goCtx context.Context, msg *types.MsgAddAssetCl
 		"class_id", class.Id,
 		"name", class.Name)
 
-	return &types.MsgAddAssetClassResponse{}, nil
+	return &types.MsgCreateAssetClassResponse{}, nil
 }
 
-func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*types.MsgAddAssetResponse, error) {
+func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset) (*types.MsgCreateAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Verify the asset class exists
@@ -168,7 +168,7 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 		"token_id", token.Id,
 		"owner", owner.String())
 
-	return &types.MsgAddAssetResponse{}, nil
+	return &types.MsgCreateAssetResponse{}, nil
 }
 
 // CreatePool creates a new pool marker

@@ -7,23 +7,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ sdk.Msg = &MsgAddAsset{}
-var _ sdk.Msg = &MsgAddAssetClass{}
+var _ sdk.Msg = &MsgCreateAsset{}
+var _ sdk.Msg = &MsgCreateAssetClass{}
 var _ sdk.Msg = &MsgCreatePool{}
 var _ sdk.Msg = &MsgCreateParticipation{}
 var _ sdk.Msg = &MsgCreateSecuritization{}
 
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
-	(*MsgAddAsset)(nil),
-	(*MsgAddAssetClass)(nil),
+	(*MsgCreateAsset)(nil),
+	(*MsgCreateAssetClass)(nil),
 	(*MsgCreatePool)(nil),
 	(*MsgCreateParticipation)(nil),
 	(*MsgCreateSecuritization)(nil),
 }
 
 // ValidateBasic implements Msg
-func (msg MsgAddAsset) ValidateBasic() error {
+func (msg MsgCreateAsset) ValidateBasic() error {
 	if msg.Asset == nil {
 		return fmt.Errorf("asset cannot be nil")
 	}
@@ -52,7 +52,7 @@ func (msg MsgAddAsset) ValidateBasic() error {
 }
 
 // ValidateBasic implements Msg
-func (msg MsgAddAssetClass) ValidateBasic() error {
+func (msg MsgCreateAssetClass) ValidateBasic() error {
 	if msg.AssetClass == nil {
 		return fmt.Errorf("asset class cannot be nil")
 	}
@@ -224,7 +224,7 @@ func validateJSONSchema(data string) error {
 }
 
 // GetSigners implements Msg
-func (msg MsgAddAsset) GetSigners() []sdk.AccAddress {
+func (msg MsgCreateAsset) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		panic(err)
@@ -233,7 +233,7 @@ func (msg MsgAddAsset) GetSigners() []sdk.AccAddress {
 }
 
 // GetSigners implements Msg
-func (msg MsgAddAssetClass) GetSigners() []sdk.AccAddress {
+func (msg MsgCreateAssetClass) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		panic(err)

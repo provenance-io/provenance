@@ -62,7 +62,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	s.Require().NoError(err)
 	
 	// Create asset class 1
-	assetClassMsg1 := &types.MsgAddAssetClass{
+	assetClassMsg1 := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
 			Id:          "asset-class-1",
 			Name:        "AssetClass1",
@@ -75,7 +75,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 		LedgerClass: "asset-class-1",
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAssetClass(s.ctx, assetClassMsg1)
+	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg1)
 	s.Require().NoError(err)
 	
 	// Create ledger class for asset class 2
@@ -92,7 +92,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	s.Require().NoError(err)
 	
 	// Create asset class 2
-	assetClassMsg2 := &types.MsgAddAssetClass{
+	assetClassMsg2 := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
 			Id:          "asset-class-2",
 			Name:        "AssetClass2",
@@ -104,11 +104,11 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 		LedgerClass: "asset-class-2",
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAssetClass(s.ctx, assetClassMsg2)
+	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg2)
 	s.Require().NoError(err)
 	
 	// Create assets for user1
-	asset1Msg := &types.MsgAddAsset{
+	asset1Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-1",
 			Id:      "asset-1",
@@ -118,10 +118,10 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 		},
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAsset(s.ctx, asset1Msg)
+	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
 	s.Require().NoError(err)
 	
-	asset2Msg := &types.MsgAddAsset{
+	asset2Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-1",
 			Id:      "asset-2",
@@ -131,10 +131,10 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 		},
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAsset(s.ctx, asset2Msg)
+	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
 	s.Require().NoError(err)
 	
-	asset3Msg := &types.MsgAddAsset{
+	asset3Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-2",
 			Id:      "asset-3",
@@ -143,11 +143,11 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 		},
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAsset(s.ctx, asset3Msg)
+	_, err = msgServer.CreateAsset(s.ctx, asset3Msg)
 	s.Require().NoError(err)
 	
 	// Create assets for user2
-	asset4Msg := &types.MsgAddAsset{
+	asset4Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-1",
 			Id:      "asset-4",
@@ -156,7 +156,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 		},
 		FromAddress: s.user2Addr.String(),
 	}
-	_, err = msgServer.AddAsset(s.ctx, asset4Msg)
+	_, err = msgServer.CreateAsset(s.ctx, asset4Msg)
 	s.Require().NoError(err)
 }
 

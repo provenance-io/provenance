@@ -113,8 +113,8 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 		expectedCode uint32
 	}{
 		{
-			name: "add asset class - missing args",
-			cmd:  assetcli.GetCmdAddAssetClass(),
+			name: "create asset class - missing args",
+			cmd:  assetcli.GetCmdCreateAssetClass(),
 			args: []string{
 				// Missing required arguments
 			},
@@ -123,8 +123,8 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 			expectedCode: 0,
 		},
 		{
-			name: "add asset class - all args",
-			cmd:  assetcli.GetCmdAddAssetClass(),
+			name: "create asset class - all args",
+			cmd:  assetcli.GetCmdCreateAssetClass(),
 			args: []string{
 				"test-class-id",
 				"Test Asset Class",
@@ -145,8 +145,8 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 			expectedCode: 1,
 		},
 		{
-			name: "add asset - missing args",
-			cmd:  assetcli.GetCmdAddAsset(),
+			name: "create asset - missing args",
+			cmd:  assetcli.GetCmdCreateAsset(),
 			args: []string{
 				// Missing required arguments
 			},
@@ -155,8 +155,8 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 			expectedCode: 0,
 		},
 		{
-			name: "add asset - all args",
-			cmd:  assetcli.GetCmdAddAsset(),
+			name: "create asset - all args",
+			cmd:  assetcli.GetCmdCreateAsset(),
 			args: []string{
 				"test-class-id",
 				"test-asset-id",
