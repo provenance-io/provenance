@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/asset/types"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 // GetTxCmd returns the transaction commands for the asset module
@@ -72,9 +70,9 @@ func GetCmdAddAsset() *cobra.Command {
 // GetCmdAddAssetClass returns the command for adding an asset class
 func GetCmdAddAssetClass() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [entry-types] [status-types]",
+		Use:   "add-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [ledger-class-id]",
 		Short: "Add a new asset class",
-		Args:  cobra.ExactArgs(9),
+		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -91,22 +89,9 @@ func GetCmdAddAssetClass() *cobra.Command {
 				Data:        args[6],
 			}
 
-			// Parse entry types JSON array
-			var entryTypes []*ledger.LedgerClassEntryType
-			if err := json.Unmarshal([]byte(args[7]), &entryTypes); err != nil {
-				return fmt.Errorf("invalid entry-types JSON array: %w", err)
-			}
-
-			// Parse status types JSON array
-			var statusTypes []*ledger.LedgerClassStatusType
-			if err := json.Unmarshal([]byte(args[8]), &statusTypes); err != nil {
-				return fmt.Errorf("invalid status-types JSON array: %w", err)
-			}
-
 			msg := &types.MsgAddAssetClass{
 				AssetClass:  assetClass,
-				EntryTypes:  entryTypes,
-				StatusTypes: statusTypes,
+				LedgerClass: args[7],
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
