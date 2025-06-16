@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
@@ -12,18 +13,17 @@ import (
 var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
-	CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l ledger.LedgerClass) error
-	AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassEntryType) error
-	AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassStatusType) error
-	AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassBucketType) error
+	CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error
+	AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error
+	AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error
+	AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error
 
-	CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l ledger.Ledger) error
+	CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error
 
-	UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, statusTypeId int32) error
-	UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, interestRate int32, interestDayCountConvention ledger.DayCountConvention, interestAccrualMethod ledger.InterestAccrualMethod) error
-	UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency ledger.PaymentFrequency) error
-	UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey, maturityDate int32) error
-	DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ledger.LedgerKey) error
+	UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, statusTypeId int32) error
+	UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error
+	UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error
+	UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, maturityDate int32) error
 }
 
 type BaseConfigKeeper struct {
@@ -31,14 +31,14 @@ type BaseConfigKeeper struct {
 	BankKeeper
 }
 
-func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l ledger.LedgerClass) error {
-	if err := ValidateLedgerClassBasic(&l); err != nil {
+func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error {
+	if err := types.ValidateLedgerClassBasic(&l); err != nil {
 		return err
 	}
 
 	hasAssetClass := k.BaseViewKeeper.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
-		return NewLedgerCodedError(ErrCodeInvalidField, "asset_class_id", "asset_class already exists")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "asset_class_id", "asset_class already exists")
 	}
 
 	has, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
@@ -46,18 +46,18 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 		return err
 	}
 	if has {
-		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class")
+		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class")
 	}
 
 	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
 	if !k.HasSupply(ctx, l.Denom) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "denom", "denom doesn't have a supply")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "denom", "denom doesn't have a supply")
 	}
 
 	// Validate that the maintainer in the ledger class is the same as the maintainer address
 	// We force them to be the same for now so that a ledger class isn't locked out.
 	if l.MaintainerAddress != maintainerAddr.String() {
-		return NewLedgerCodedError(ErrCodeUnauthorized)
+		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
 
 	// Insert the ledger class
@@ -69,9 +69,9 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassEntryType) error {
+func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error {
 	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
-		return NewLedgerCodedError(ErrCodeUnauthorized)
+		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
 
 	key := collections.Join(ledgerClassId, l.Id)
@@ -82,7 +82,7 @@ func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.
 	}
 
 	if has {
-		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class entry type")
+		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class entry type")
 	}
 
 	err = k.LedgerClassEntryTypes.Set(ctx, key, l)
@@ -93,9 +93,9 @@ func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassStatusType) error {
+func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error {
 	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
-		return NewLedgerCodedError(ErrCodeUnauthorized)
+		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
 
 	key := collections.Join(ledgerClassId, l.Id)
@@ -106,7 +106,7 @@ func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk
 	}
 
 	if has {
-		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class status type")
+		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class status type")
 	}
 
 	err = k.LedgerClassStatusTypes.Set(ctx, key, l)
@@ -116,9 +116,9 @@ func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l ledger.LedgerClassBucketType) error {
+func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error {
 	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
-		return NewLedgerCodedError(ErrCodeUnauthorized)
+		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
 
 	key := collections.Join(ledgerClassId, l.Id)
@@ -129,7 +129,7 @@ func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk
 	}
 
 	if has {
-		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger class bucket type")
+		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class bucket type")
 	}
 
 	err = k.LedgerClassBucketTypes.Set(ctx, key, l)
@@ -154,8 +154,8 @@ func (k BaseConfigKeeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAdd
 	return false
 }
 
-func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l ledger.Ledger) error {
-	if err := ValidateLedgerBasic(&l); err != nil {
+func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error {
+	if err := types.ValidateLedgerBasic(&l); err != nil {
 		return err
 	}
 
@@ -168,7 +168,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 
 	// Do not allow creating a duplicate ledger
 	if k.HasLedger(ctx, l.Key) {
-		return NewLedgerCodedError(ErrCodeAlreadyExists, "ledger")
+		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger")
 	}
 
 	// Get the ledger class and verify that the asset class id matches
@@ -177,10 +177,10 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return err
 	}
 	if ledgerClass == nil {
-		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
 	}
 	if ledgerClass.AssetClassId != l.Key.AssetClassId {
-		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class", "ledger class not allowed for asset class id")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "ledger class", "ledger class not allowed for asset class id")
 	}
 
 	// Validate that the LedgerClass exists
@@ -189,12 +189,12 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return err
 	}
 	if !hasLedgerClass {
-		return NewLedgerCodedError(ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
 	}
 
 	// Validate that the NFT exists
 	if !k.BaseViewKeeper.RegistryKeeper.HasNFT(ctx, &l.Key.AssetClassId, &l.Key.NftId) {
-		return NewLedgerCodedError(ErrCodeNotFound, "nft")
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "nft")
 	}
 
 	// Validate that the LedgerClassStatusType exists
@@ -203,7 +203,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 		return err
 	}
 	if !hasLedgerClassStatusType {
-		return NewLedgerCodedError(ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
 	}
 
 	// We omit the nftAddress out of the data we store intentionally as
@@ -214,7 +214,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 	}
 
 	// Emit the ledger created event
-	ctx.EventManager().EmitEvent(ledger.NewEventLedgerCreated(l.Key))
+	ctx.EventManager().EmitEvent(types.NewEventLedgerCreated(l.Key))
 
 	// Empty out the key to avoid storing it in the ledger and the key field
 	l.Key = nil
@@ -228,7 +228,7 @@ func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAdd
 	return nil
 }
 
-func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, statusTypeId int32) error {
+func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, statusTypeId int32) error {
 	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
@@ -242,7 +242,7 @@ func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.
 		return err
 	}
 	if ledger == nil {
-		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Validate that the status type id exists
@@ -251,14 +251,14 @@ func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.
 		return err
 	}
 	if !hasLedgerClassStatusType {
-		return NewLedgerCodedError(ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
 	}
 
 	// Update the ledger status
 	ledger.StatusTypeId = statusTypeId
 
 	// Validate ledger basic fields
-	if err := ValidateLedgerBasic(ledger); err != nil {
+	if err := types.ValidateLedgerBasic(ledger); err != nil {
 		return err
 	}
 
@@ -275,7 +275,7 @@ func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.
 	return fmt.Errorf("not implemented")
 }
 
-func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, interestRate int32, interestDayCountConvention ledger.DayCountConvention, interestAccrualMethod ledger.InterestAccrualMethod) error {
+func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
 	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
@@ -289,7 +289,7 @@ func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAdd
 		return err
 	}
 	if ledger == nil {
-		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Update the ledger interest rate
@@ -298,7 +298,7 @@ func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAdd
 	ledger.InterestAccrualMethod = interestAccrualMethod
 
 	// Validate ledger basic fields
-	if err := ValidateLedgerBasic(ledger); err != nil {
+	if err := types.ValidateLedgerBasic(ledger); err != nil {
 		return err
 	}
 
@@ -316,7 +316,7 @@ func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAdd
 	return nil
 }
 
-func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency ledger.PaymentFrequency) error {
+func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
 	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
@@ -330,7 +330,7 @@ func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk
 		return err
 	}
 	if ledger == nil {
-		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Update the ledger payment
@@ -339,7 +339,7 @@ func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk
 	ledger.PaymentFrequency = paymentFrequency
 
 	// Validate ledger basic fields
-	if err := ValidateLedgerBasic(ledger); err != nil {
+	if err := types.ValidateLedgerBasic(ledger); err != nil {
 		return err
 	}
 
@@ -357,7 +357,7 @@ func (k BaseConfigKeeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk
 	return nil
 }
 
-func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey, maturityDate int32) error {
+func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, maturityDate int32) error {
 	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
@@ -371,14 +371,14 @@ func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAdd
 		return err
 	}
 	if ledger == nil {
-		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Update the ledger maturity date
 	ledger.MaturityDate = maturityDate
 
 	// Validate ledger basic fields
-	if err := ValidateLedgerBasic(ledger); err != nil {
+	if err := types.ValidateLedgerBasic(ledger); err != nil {
 		return err
 	}
 
@@ -410,7 +410,7 @@ func (k BaseConfigKeeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAd
 	}
 
 	if !k.HasLedger(ctx, lk) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "ledger", "ledger doesn't exist")
+		return ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "ledger", "ledger doesn't exist")
 	}
 
 	keyStr, err := LedgerKeyToString(lk)

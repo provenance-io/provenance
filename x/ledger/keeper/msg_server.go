@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -138,14 +139,27 @@ func (k *MsgServer) UpdateMaturityDateTx(goCtx context.Context, req *ledger.MsgU
 }
 
 func (k *MsgServer) FundAssetTx(goCtx context.Context, req *ledger.MsgFundAssetRequest) (*ledger.MsgFundAssetResponse, error) {
-	return nil, nil
+	_ = sdk.UnwrapSDKContext(goCtx)
+
+	_, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Implement fund asset logic
+	return &ledger.MsgFundAssetResponse{}, nil
 }
 
 func (k *MsgServer) TransferFundsTx(goCtx context.Context, req *ledger.MsgTransferFundsRequest) (*ledger.MsgTransferFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, ft := range req.Transfers {
-		err := k.TransferFunds(ctx, ft)
+		err := k.TransferFunds(ctx, authorityAddr, ft)
 		if err != nil {
 			return nil, err
 		}
@@ -156,14 +170,27 @@ func (k *MsgServer) TransferFundsTx(goCtx context.Context, req *ledger.MsgTransf
 }
 
 func (k *MsgServer) FundAssetByRegistryTx(goCtx context.Context, req *ledger.MsgFundAssetByRegistryRequest) (*ledger.MsgFundAssetByRegistryResponse, error) {
-	return nil, nil
+	_ = sdk.UnwrapSDKContext(goCtx)
+
+	_, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Implement fund asset by registry logic
+	return &ledger.MsgFundAssetByRegistryResponse{}, nil
 }
 
 func (k *MsgServer) TransferFundsWithSettlementTx(goCtx context.Context, req *ledger.MsgTransferFundsWithSettlementRequest) (*ledger.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, ft := range req.Transfers {
-		err := k.TransferFundsWithSettlement(ctx, ft)
+		err := k.TransferFundsWithSettlement(ctx, authorityAddr, ft)
 		if err != nil {
 			return nil, err
 		}
@@ -194,7 +221,7 @@ func (k *MsgServer) DestroyTx(goCtx context.Context, req *ledger.MsgDestroyReque
 func (k *MsgServer) CreateLedgerClassTx(goCtx context.Context, req *ledger.MsgCreateLedgerClassRequest) (*ledger.MsgCreateLedgerClassResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
+		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
@@ -215,7 +242,7 @@ func (k *MsgServer) AddLedgerClassStatusTypeTx(goCtx context.Context, req *ledge
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
+		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
@@ -236,7 +263,7 @@ func (k *MsgServer) AddLedgerClassEntryTypeTx(goCtx context.Context, req *ledger
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
+		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
@@ -257,7 +284,7 @@ func (k *MsgServer) AddLedgerClassBucketTypeTx(goCtx context.Context, req *ledge
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "request", "request is nil")
+		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
 	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)

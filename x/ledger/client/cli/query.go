@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
@@ -69,10 +70,10 @@ func GetConfigCmd() *cobra.Command {
 			plainText := ledger.LedgerPlainText{
 				Key:          req.Key,
 				Status:       strconv.Itoa(int(l.Ledger.StatusTypeId)),
-				NextPmtDate:  keeper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
+				NextPmtDate:  helper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
 				NextPmtAmt:   strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
 				InterestRate: strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
-				MaturityDate: keeper.EpochDaysToISO8601(l.Ledger.MaturityDate),
+				MaturityDate: helper.EpochDaysToISO8601(l.Ledger.MaturityDate),
 			}
 
 			return clientCtx.PrintProto(&plainText)
@@ -194,8 +195,8 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					CorrelationId:  entry.CorrelationId,
 					Sequence:       entry.Sequence,
 					Type:           entryTypes[entry.EntryTypeId],
-					PostedDate:     keeper.EpochDaysToISO8601(entry.PostedDate),
-					EffectiveDate:  keeper.EpochDaysToISO8601(entry.EffectiveDate),
+					PostedDate:     helper.EpochDaysToISO8601(entry.PostedDate),
+					EffectiveDate:  helper.EpochDaysToISO8601(entry.EffectiveDate),
 					TotalAmt:       entry.TotalAmt.String(),
 					AppliedAmounts: appliedAmts,
 				}
