@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/spf13/cobra"
 )
 

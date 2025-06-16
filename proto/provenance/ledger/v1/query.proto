@@ -1,7 +1,7 @@
 syntax = "proto3";
 package provenance.ledger.v1;
 
-option go_package = "github.com/provenance-io/provenance/x/ledger";
+option go_package = "github.com/provenance-io/provenance/x/ledger/types";
 
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;

@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 // GetQueryCmd is the top-level command for attribute CLI queries.

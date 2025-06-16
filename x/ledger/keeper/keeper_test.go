@@ -17,8 +17,8 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
-	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
 

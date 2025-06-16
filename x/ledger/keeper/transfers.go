@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 var _ FundTransferKeeper = (*BaseFundTransferKeeper)(nil)

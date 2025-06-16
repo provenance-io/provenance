@@ -6,12 +6,12 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	ledger "github.com/provenance-io/provenance/x/ledger"
+	types "github.com/provenance-io/provenance/x/ledger/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -120,10 +120,10 @@ func (m *MsgAddAssetResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAddAssetResponse proto.InternalMessageInfo
 
 type MsgAddAssetClass struct {
-	AssetClass  *AssetClass                     `protobuf:"bytes,1,opt,name=asset_class,json=assetClass,proto3" json:"asset_class,omitempty"`
-	EntryTypes  []*ledger.LedgerClassEntryType  `protobuf:"bytes,2,rep,name=entry_types,json=entryTypes,proto3" json:"entry_types,omitempty"`
-	StatusTypes []*ledger.LedgerClassStatusType `protobuf:"bytes,3,rep,name=status_types,json=statusTypes,proto3" json:"status_types,omitempty"`
-	FromAddress string                          `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	AssetClass  *AssetClass                    `protobuf:"bytes,1,opt,name=asset_class,json=assetClass,proto3" json:"asset_class,omitempty"`
+	EntryTypes  []*types.LedgerClassEntryType  `protobuf:"bytes,2,rep,name=entry_types,json=entryTypes,proto3" json:"entry_types,omitempty"`
+	StatusTypes []*types.LedgerClassStatusType `protobuf:"bytes,3,rep,name=status_types,json=statusTypes,proto3" json:"status_types,omitempty"`
+	FromAddress string                         `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 }
 
 func (m *MsgAddAssetClass) Reset()         { *m = MsgAddAssetClass{} }
@@ -166,14 +166,14 @@ func (m *MsgAddAssetClass) GetAssetClass() *AssetClass {
 	return nil
 }
 
-func (m *MsgAddAssetClass) GetEntryTypes() []*ledger.LedgerClassEntryType {
+func (m *MsgAddAssetClass) GetEntryTypes() []*types.LedgerClassEntryType {
 	if m != nil {
 		return m.EntryTypes
 	}
 	return nil
 }
 
-func (m *MsgAddAssetClass) GetStatusTypes() []*ledger.LedgerClassStatusType {
+func (m *MsgAddAssetClass) GetStatusTypes() []*types.LedgerClassStatusType {
 	if m != nil {
 		return m.StatusTypes
 	}
@@ -224,9 +224,9 @@ func (m *MsgAddAssetClassResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAddAssetClassResponse proto.InternalMessageInfo
 
 type MsgCreatePool struct {
-	Pool        *types.Coin `protobuf:"bytes,1,opt,name=pool,proto3" json:"pool,omitempty"`
-	Nfts        []*Nft      `protobuf:"bytes,2,rep,name=nfts,proto3" json:"nfts,omitempty"`
-	FromAddress string      `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	Pool        *types1.Coin `protobuf:"bytes,1,opt,name=pool,proto3" json:"pool,omitempty"`
+	Nfts        []*Nft       `protobuf:"bytes,2,rep,name=nfts,proto3" json:"nfts,omitempty"`
+	FromAddress string       `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 }
 
 func (m *MsgCreatePool) Reset()         { *m = MsgCreatePool{} }
@@ -262,7 +262,7 @@ func (m *MsgCreatePool) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreatePool proto.InternalMessageInfo
 
-func (m *MsgCreatePool) GetPool() *types.Coin {
+func (m *MsgCreatePool) GetPool() *types1.Coin {
 	if m != nil {
 		return m.Pool
 	}
@@ -320,8 +320,8 @@ func (m *MsgCreatePoolResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgCreatePoolResponse proto.InternalMessageInfo
 
 type MsgCreateParticipation struct {
-	Denom       types.Coin `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom"`
-	FromAddress string     `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	Denom       types1.Coin `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom"`
+	FromAddress string      `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 }
 
 func (m *MsgCreateParticipation) Reset()         { *m = MsgCreateParticipation{} }
@@ -357,11 +357,11 @@ func (m *MsgCreateParticipation) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateParticipation proto.InternalMessageInfo
 
-func (m *MsgCreateParticipation) GetDenom() types.Coin {
+func (m *MsgCreateParticipation) GetDenom() types1.Coin {
 	if m != nil {
 		return m.Denom
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 func (m *MsgCreateParticipation) GetFromAddress() string {
@@ -408,10 +408,10 @@ func (m *MsgCreateParticipationResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgCreateParticipationResponse proto.InternalMessageInfo
 
 type MsgCreateSecuritization struct {
-	Id          string        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Pools       []string      `protobuf:"bytes,2,rep,name=pools,proto3" json:"pools,omitempty"`
-	Tranches    []*types.Coin `protobuf:"bytes,3,rep,name=tranches,proto3" json:"tranches,omitempty"`
-	FromAddress string        `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	Id          string         `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Pools       []string       `protobuf:"bytes,2,rep,name=pools,proto3" json:"pools,omitempty"`
+	Tranches    []*types1.Coin `protobuf:"bytes,3,rep,name=tranches,proto3" json:"tranches,omitempty"`
+	FromAddress string         `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 }
 
 func (m *MsgCreateSecuritization) Reset()         { *m = MsgCreateSecuritization{} }
@@ -461,7 +461,7 @@ func (m *MsgCreateSecuritization) GetPools() []string {
 	return nil
 }
 
-func (m *MsgCreateSecuritization) GetTranches() []*types.Coin {
+func (m *MsgCreateSecuritization) GetTranches() []*types1.Coin {
 	if m != nil {
 		return m.Tranches
 	}
@@ -1618,7 +1618,7 @@ func (m *MsgAddAssetClass) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.EntryTypes = append(m.EntryTypes, &ledger.LedgerClassEntryType{})
+			m.EntryTypes = append(m.EntryTypes, &types.LedgerClassEntryType{})
 			if err := m.EntryTypes[len(m.EntryTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1652,7 +1652,7 @@ func (m *MsgAddAssetClass) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.StatusTypes = append(m.StatusTypes, &ledger.LedgerClassStatusType{})
+			m.StatusTypes = append(m.StatusTypes, &types.LedgerClassStatusType{})
 			if err := m.StatusTypes[len(m.StatusTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1819,7 +1819,7 @@ func (m *MsgCreatePool) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Pool == nil {
-				m.Pool = &types.Coin{}
+				m.Pool = &types1.Coin{}
 			}
 			if err := m.Pool.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2249,7 +2249,7 @@ func (m *MsgCreateSecuritization) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Tranches = append(m.Tranches, &types.Coin{})
+			m.Tranches = append(m.Tranches, &types1.Coin{})
 			if err := m.Tranches[len(m.Tranches)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

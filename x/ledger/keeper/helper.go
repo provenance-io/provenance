@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 // StrPtr returns a pointer to the string s.
