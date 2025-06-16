@@ -152,16 +152,18 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 					}
 				}
 
-				// Since there isn't a registered servicer, we'll check if the authority is the owner
-				if !servicerRegistered {
-					err = assertOwner(ctx, k, authorityAddr, lk)
-					if err != nil {
-						return false, err
-					}
-				} else {
-					return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
-				}
+				return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
 			}
+		}
+
+		if !servicerRegistered {
+			err = assertOwner(ctx, k, authorityAddr, lk)
+			if err != nil {
+				return false, err
+			}
+
+			// The authority owns the asset, and there is no registered servicer
+			return true, nil
 		}
 	}
 
