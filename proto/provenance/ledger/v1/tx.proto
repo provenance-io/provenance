@@ -40,9 +40,6 @@ service Msg {
   // Fund an Asset by Registry
   rpc FundAssetByRegistryTx(MsgFundAssetByRegistryRequest) returns (MsgFundAssetByRegistryResponse);
 
-  // Process multiple fund transfers (payments and disbursements)
-  rpc TransferFundsTx(MsgTransferFundsRequest) returns (MsgTransferFundsResponse);
-
   // Process multiple fund transfers with manual settlement instructions
   rpc TransferFundsWithSettlementTx(MsgTransferFundsWithSettlementRequest)
       returns (MsgTransferFundsWithSettlementResponse);
@@ -174,23 +171,12 @@ message MsgFundAssetResponse {}
 message MsgFundAssetByRegistryRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  string                authority = 1;
-  repeated FundTransfer transfers = 2;
+  string                              authority = 1;
+  repeated FundTransferWithSettlement transfers = 2;
 }
 
 // MsgFundAssetByRegistryResponse represents the response from funding an asset by registry
 message MsgFundAssetByRegistryResponse {}
-
-// MsgTransferFundsRequest represents a request to transfer funds
-message MsgTransferFundsRequest {
-  option (cosmos.msg.v1.signer) = "authority";
-
-  string                authority = 1;
-  repeated FundTransfer transfers = 2;
-}
-
-// MsgTransferFundsResponse represents the response from transferring funds
-message MsgTransferFundsResponse {}
 
 // MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement
 // instructions
