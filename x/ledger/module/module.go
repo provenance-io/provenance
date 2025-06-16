@@ -12,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/provenance-io/provenance/x/ledger"
 	"github.com/provenance-io/provenance/x/ledger/client/cli"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/spf13/cobra"
 )
 

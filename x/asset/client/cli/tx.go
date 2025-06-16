@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/asset/types"
-	"github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 // GetTxCmd returns the transaction commands for the asset module
@@ -130,7 +130,7 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 Example: 
   provenanced tx asset create-pool 10pooltoken "asset_class1,asset_id1;asset_class2,asset_id2"
   provenanced tx asset create-pool 10pooltoken 'asset_class1,asset_id1;asset_class2,asset_id2'`,
-		Args:  cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -210,7 +210,7 @@ The tranches argument should be a comma-separated list of coins.
 
 Example:
   provenanced tx asset create-securitization sec1 "pool1,pool2" "100tranche1,200tranche2"`,
-		Args:  cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

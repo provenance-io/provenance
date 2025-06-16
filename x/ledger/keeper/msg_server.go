@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 type MsgServer struct {

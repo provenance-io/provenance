@@ -2,11 +2,11 @@
 // source: provenance/ledger/v1/query.proto
 
 /*
-Package ledger is a reverse proxy.
+Package types is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package ledger
+package types
 
 import (
 	"context"

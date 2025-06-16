@@ -11,7 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
@@ -56,21 +56,21 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 		Ledgers: collections.NewMap(
 			sb,
 			collections.NewPrefix(ledgerPrefix),
-			ledgerPrefix,
+			"ledger",
 			collections.StringKey,
 			codec.CollValue[ledger.Ledger](cdc),
 		),
 		LedgerEntries: collections.NewMap(
 			sb,
 			collections.NewPrefix(entriesPrefix),
-			entriesPrefix,
+			"ledger_entries",
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[ledger.LedgerEntry](cdc),
 		),
 		FundTransfers: collections.NewMap(
 			sb,
 			collections.NewPrefix(fundTransfersPrefix),
-			fundTransfersPrefix,
+			"fund_transfers",
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[ledger.FundTransfer](cdc),
 		),
@@ -79,28 +79,28 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 		LedgerClasses: collections.NewMap(
 			sb,
 			collections.NewPrefix(ledgerClassesPrefix),
-			ledgerClassesPrefix,
+			"ledger_classes",
 			collections.StringKey,
 			codec.CollValue[ledger.LedgerClass](cdc),
 		),
 		LedgerClassEntryTypes: collections.NewMap(
 			sb,
 			collections.NewPrefix(ledgerClassEntryTypesPrefix),
-			ledgerClassEntryTypesPrefix,
+			"ledger_class_entry_types",
 			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
 			codec.CollValue[ledger.LedgerClassEntryType](cdc),
 		),
 		LedgerClassStatusTypes: collections.NewMap(
 			sb,
 			collections.NewPrefix(ledgerClassStatusTypesPrefix),
-			ledgerClassStatusTypesPrefix,
+			"ledger_class_status_types",
 			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
 			codec.CollValue[ledger.LedgerClassStatusType](cdc),
 		),
 		LedgerClassBucketTypes: collections.NewMap(
 			sb,
 			collections.NewPrefix(ledgerClassBucketTypesPrefix),
-			ledgerClassBucketTypesPrefix,
+			"ledger_class_bucket_types",
 			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
 			codec.CollValue[ledger.LedgerClassBucketType](cdc),
 		),

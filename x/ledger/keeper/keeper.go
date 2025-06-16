@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
 
@@ -26,15 +26,17 @@ type BaseKeeper struct {
 	BaseFundTransferKeeper
 }
 
-const (
-	ledgerPrefix                 byte = 0x01
-	entriesPrefix                byte = 0x02
-	ledgerClassesPrefix          byte = 0x03
-	ledgerClassEntryTypesPrefix  byte = 0x04
-	ledgerClassStatusTypesPrefix byte = 0x05
-	ledgerClassBucketTypesPrefix byte = 0x06
-	fundTransfersPrefix          byte = 0x07
+var (
+	ledgerPrefix                 = []byte{0x01}
+	entriesPrefix                = []byte{0x02}
+	ledgerClassesPrefix          = []byte{0x03}
+	ledgerClassEntryTypesPrefix  = []byte{0x04}
+	ledgerClassStatusTypesPrefix = []byte{0x05}
+	ledgerClassBucketTypesPrefix = []byte{0x06}
+	fundTransfersPrefix          = []byte{0x07}
+)
 
+const (
 	ledgerKeyHrp   = "ledger"
 	ledgerClassHrp = "ledgerc"
 	ledgerEntryHrp = "ledgere"

@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/asset/types"
-	ledger "github.com/provenance-io/provenance/x/ledger"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	registry "github.com/provenance-io/provenance/x/registry"
 
@@ -250,7 +250,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 			return nil, fmt.Errorf("failed to transfer nft: %w", err)
 		}
 	}
-	
+
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
@@ -290,7 +290,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		if err != nil {
 			return nil, fmt.Errorf("failed to get pool marker: %w", err)
 		}
-		
+
 		// Create a new access grant with the desired permissions
 		moduleAccessGrant := markertypes.NewAccessGrant(
 			m.GetModuleAddress(),
@@ -302,7 +302,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 				markertypes.Access_Transfer,
 			},
 		)
-		
+
 		// Revoke all access from the pool marker
 		accessList := pool.GetAccessList()
 		for _, access := range accessList {
@@ -321,7 +321,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		if err != nil {
 			return nil, fmt.Errorf("failed to update pool marker access: %w", err)
 		}
-		
+
 		// Save the updated marker
 		m.markerKeeper.SetMarker(ctx, pool)
 	}
@@ -376,4 +376,3 @@ func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr 
 
 	return marker, nil
 }
-

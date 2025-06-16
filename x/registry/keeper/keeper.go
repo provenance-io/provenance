@@ -47,9 +47,11 @@ type BaseRegistryKeeper struct {
 	MetaDataKeeper
 }
 
-const (
-	registryPrefix byte = 0x01
+var (
+	registryPrefix = []byte{0x01}
+)
 
+const (
 	registryKeyHrp = "reg"
 )
 
@@ -64,7 +66,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 		Registry: collections.NewMap(
 			sb,
 			collections.NewPrefix(registryPrefix),
-			registryPrefix,
+			"registry",
 			collections.StringKey,
 			codec.CollValue[registry.RegistryEntry](cdc),
 		),
