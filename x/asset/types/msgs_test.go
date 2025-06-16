@@ -8,15 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgAddAsset_ValidateBasic(t *testing.T) {
+func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name    string
-		msg     MsgAddAsset
+		msg     MsgCreateAsset
 		wantErr bool
 	}{
 		{
 			name: "valid message",
-			msg: MsgAddAsset{
+			msg: MsgCreateAsset{
 				Asset: &Asset{
 					ClassId: "test-class",
 					Id:      "test-id",
@@ -27,7 +27,7 @@ func TestMsgAddAsset_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "nil asset",
-			msg: MsgAddAsset{
+			msg: MsgCreateAsset{
 				Asset:       nil,
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
@@ -35,7 +35,7 @@ func TestMsgAddAsset_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty class_id",
-			msg: MsgAddAsset{
+			msg: MsgCreateAsset{
 				Asset: &Asset{
 					ClassId: "",
 					Id:      "test-id",
@@ -46,7 +46,7 @@ func TestMsgAddAsset_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty id",
-			msg: MsgAddAsset{
+			msg: MsgCreateAsset{
 				Asset: &Asset{
 					ClassId: "test-class",
 					Id:      "",
@@ -57,7 +57,7 @@ func TestMsgAddAsset_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty from_address",
-			msg: MsgAddAsset{
+			msg: MsgCreateAsset{
 				Asset: &Asset{
 					ClassId: "test-class",
 					Id:      "test-id",
@@ -68,7 +68,7 @@ func TestMsgAddAsset_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid from_address",
-			msg: MsgAddAsset{
+			msg: MsgCreateAsset{
 				Asset: &Asset{
 					ClassId: "test-class",
 					Id:      "test-id",
@@ -91,15 +91,15 @@ func TestMsgAddAsset_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgAddAssetClass_ValidateBasic(t *testing.T) {
+func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name    string
-		msg     MsgAddAssetClass
+		msg     MsgCreateAssetClass
 		wantErr bool
 	}{
 		{
 			name: "valid message",
-			msg: MsgAddAssetClass{
+			msg: MsgCreateAssetClass{
 				AssetClass: &AssetClass{
 					Id:   "test-class",
 					Name: "Test Class",
@@ -111,7 +111,7 @@ func TestMsgAddAssetClass_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "nil asset class",
-			msg: MsgAddAssetClass{
+			msg: MsgCreateAssetClass{
 				AssetClass:  nil,
 				LedgerClass: "test-ledger",
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
@@ -120,7 +120,7 @@ func TestMsgAddAssetClass_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty id",
-			msg: MsgAddAssetClass{
+			msg: MsgCreateAssetClass{
 				AssetClass: &AssetClass{
 					Id:   "",
 					Name: "Test Class",
@@ -132,7 +132,7 @@ func TestMsgAddAssetClass_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty name",
-			msg: MsgAddAssetClass{
+			msg: MsgCreateAssetClass{
 				AssetClass: &AssetClass{
 					Id:   "test-class",
 					Name: "",
@@ -144,7 +144,7 @@ func TestMsgAddAssetClass_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty ledger class",
-			msg: MsgAddAssetClass{
+			msg: MsgCreateAssetClass{
 				AssetClass: &AssetClass{
 					Id:   "test-class",
 					Name: "Test Class",

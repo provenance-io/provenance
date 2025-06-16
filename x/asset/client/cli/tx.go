@@ -24,8 +24,8 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		GetCmdAddAsset(),
-		GetCmdAddAssetClass(),
+		GetCmdCreateAsset(),
+		GetCmdCreateAssetClass(),
 		GetCmdCreatePool(),
 		GetCmdCreateParticipation(),
 		GetCmdCreateSecuritization(),
@@ -34,13 +34,13 @@ func GetTxCmd() *cobra.Command {
 	return txCmd
 }
 
-// GetCmdAddAsset returns the command for adding an asset
-func GetCmdAddAsset() *cobra.Command {
+// GetCmdCreateAsset returns the command for creating an asset
+func GetCmdCreateAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-asset [class-id] [id] [uri] [uri-hash] [data]",
-		Short: "Add a new asset",
-		Long: `Add a new asset to the specified asset class.`,
-		Example: `  provenanced tx asset add-asset "real-estate" "property-001" "https://example.com/metadata.json" "abc123" '{"location": "New York", "value": 500000}'`,
+		Use:   "create-asset [class-id] [id] [uri] [uri-hash] [data]",
+		Short: "Create a new asset",
+		Long: `Create a new asset in the specified asset class.`,
+		Example: `  provenanced tx asset create-asset "real-estate" "property-001" "https://example.com/metadata.json" "abc123" '{"location": "New York", "value": 500000}'`,
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -56,7 +56,7 @@ func GetCmdAddAsset() *cobra.Command {
 				Data:    args[4],
 			}
 
-			msg := &types.MsgAddAsset{
+			msg := &types.MsgCreateAsset{
 				Asset:       asset,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
@@ -69,13 +69,13 @@ func GetCmdAddAsset() *cobra.Command {
 	return cmd
 }
 
-// GetCmdAddAssetClass returns the command for adding an asset class
-func GetCmdAddAssetClass() *cobra.Command {
+// GetCmdCreateAssetClass returns the command for creating an asset class
+func GetCmdCreateAssetClass() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [ledger-class-id]",
-		Short: "Add a new asset class",
-		Long: `Add a new asset class with the specified properties.`,
-		Example: `  provenanced tx asset add-class "real-estate" "Real Estate Assets" "REAL" "Real estate properties" "https://example.com/class-metadata.json" "def456" '{"category": "property"}' "ledger-class-001"`,
+		Use:   "create-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [ledger-class-id]",
+		Short: "Create a new asset class",
+		Long: `Create a new asset class with the specified properties.`,
+		Example: `  provenanced tx asset create-class "real-estate" "Real Estate Assets" "REAL" "Real estate properties" "https://example.com/class-metadata.json" "def456" '{"category": "property"}' "ledger-class-001"`,
 		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -93,7 +93,7 @@ func GetCmdAddAssetClass() *cobra.Command {
 				Data:        args[6],
 			}
 
-			msg := &types.MsgAddAssetClass{
+			msg := &types.MsgCreateAssetClass{
 				AssetClass:  assetClass,
 				LedgerClass: args[7],
 				FromAddress: clientCtx.GetFromAddress().String(),

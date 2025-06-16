@@ -34,7 +34,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(priv.PubKey().Address())
 }
 
-func (s *MsgServerTestSuite) TestAddAssetClass() {
+func (s *MsgServerTestSuite) TestCreateAssetClass() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
 	ledgerClass := ledgertypes.LedgerClass{
 		LedgerClassId: "asset-class-1",
@@ -44,7 +44,7 @@ func (s *MsgServerTestSuite) TestAddAssetClass() {
 	}
 	err := s.app.LedgerKeeper.CreateLedgerClass(s.ctx, s.user1Addr, ledgerClass)
 	s.Require().NoError(err)
-	msg := &types.MsgAddAssetClass{
+	msg := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
 			Id: "asset-class-1",
 			Name: "AssetClass1",
@@ -52,11 +52,11 @@ func (s *MsgServerTestSuite) TestAddAssetClass() {
 		LedgerClass: "asset-class-1",
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAssetClass(s.ctx, msg)
+	_, err = msgServer.CreateAssetClass(s.ctx, msg)
 	s.Require().NoError(err)
 }
 
-func (s *MsgServerTestSuite) TestAddAsset() {
+func (s *MsgServerTestSuite) TestCreateAsset() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
 	
 	// First create an asset class
@@ -78,7 +78,7 @@ func (s *MsgServerTestSuite) TestAddAsset() {
 	err = s.app.LedgerKeeper.AddClassStatusType(s.ctx, s.user1Addr, "asset-class-2", statusType)
 	s.Require().NoError(err)
 	
-	assetClassMsg := &types.MsgAddAssetClass{
+	assetClassMsg := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
 			Id: "asset-class-2",
 			Name: "AssetClass2",
@@ -101,11 +101,11 @@ func (s *MsgServerTestSuite) TestAddAsset() {
 		LedgerClass: "asset-class-2",
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAssetClass(s.ctx, assetClassMsg)
+	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg)
 	s.Require().NoError(err)
 	
-	// Now add an asset to the class
-	msg := &types.MsgAddAsset{
+	// Now create an asset in the class
+	msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-2",
 			Id:      "asset-1",
@@ -115,7 +115,7 @@ func (s *MsgServerTestSuite) TestAddAsset() {
 		},
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAsset(s.ctx, msg)
+	_, err = msgServer.CreateAsset(s.ctx, msg)
 	s.Require().NoError(err)
 }
 
@@ -141,7 +141,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 	err = s.app.LedgerKeeper.AddClassStatusType(s.ctx, s.user1Addr, "asset-class-3", statusType)
 	s.Require().NoError(err)
 	
-	assetClassMsg := &types.MsgAddAssetClass{
+	assetClassMsg := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
 			Id: "asset-class-3",
 			Name: "AssetClass3",
@@ -149,11 +149,11 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 		LedgerClass: "asset-class-3",
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAssetClass(s.ctx, assetClassMsg)
+	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg)
 	s.Require().NoError(err)
 	
 	// Create assets to add to the pool
-	asset1Msg := &types.MsgAddAsset{
+	asset1Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-3",
 			Id:      "asset-pool-1",
@@ -162,10 +162,10 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 		},
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAsset(s.ctx, asset1Msg)
+	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
 	s.Require().NoError(err)
 	
-	asset2Msg := &types.MsgAddAsset{
+	asset2Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-3",
 			Id:      "asset-pool-2",
@@ -174,7 +174,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 		},
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.AddAsset(s.ctx, asset2Msg)
+	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
 	s.Require().NoError(err)
 	
 	// Create a pool with these assets
