@@ -11,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/ledger/helper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -33,9 +34,10 @@ type BaseViewKeeper struct {
 	storeKey storetypes.StoreKey
 	schema   collections.Schema
 
-	Ledgers       collections.Map[string, ledger.Ledger]
-	LedgerEntries collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
-	FundTransfers collections.Map[collections.Pair[string, string], ledger.FundTransfer]
+	Ledgers                     collections.Map[string, ledger.Ledger]
+	LedgerEntries               collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
+	FundTransfers               collections.Map[collections.Pair[string, string], ledger.FundTransfer]
+	FundTransfersWithSettlement collections.Map[collections.Pair[string, string], ledger.FundTransferWithSettlement]
 
 	// LedgerClasses stores the configuration of all ledgers for a given class of asset.
 	LedgerClasses          collections.Map[string, ledger.LedgerClass]
@@ -73,6 +75,13 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 			"fund_transfers",
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[ledger.FundTransfer](cdc),
+		),
+		FundTransfersWithSettlement: collections.NewMap(
+			sb,
+			collections.NewPrefix(fundTransfersWithSettlementPrefix),
+			"fund_transfers_with_settlement",
+			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
+			codec.CollValue[ledger.FundTransferWithSettlement](cdc),
 		),
 
 		// Ledger Class configuration data
@@ -134,7 +143,7 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 //   - The returned ledger will have its NftAddress field set to the provided nftAddress
 func (k BaseViewKeeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error) {
 	// Validate the key
-	err := ValidateLedgerKeyBasic(key)
+	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +172,7 @@ func (k BaseViewKeeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledg
 
 func (k BaseViewKeeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
 	// Validate the key
-	err := ValidateLedgerKeyBasic(key)
+	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
 		return false
 	}
@@ -179,7 +188,7 @@ func (k BaseViewKeeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
 
 func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error) {
 	// Validate the key
-	err := ValidateLedgerKeyBasic(key)
+	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
 		return nil, err
 	}
@@ -221,17 +230,17 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, key *ledger.Ledge
 // GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
 func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
 	// Validate the key
-	err := ValidateLedgerKeyBasic(key)
+	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
 		return nil, err
 	}
 
 	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), key) {
-		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger")
+		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger")
 	}
 
-	if !isCorrelationIDValid(correlationID) {
-		return nil, NewLedgerCodedError(ErrCodeInvalidField, "correlation_id")
+	if !ledger.IsCorrelationIDValid(correlationID) {
+		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "correlation_id")
 	}
 
 	entries, err := k.ListLedgerEntries(ctx, key)
@@ -277,12 +286,12 @@ func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
 func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.Balances, error) {
 	// Validate the key
-	err := ValidateLedgerKeyBasic(key)
+	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
 		return nil, err
 	}
 
-	asOfDateInt := DaysSinceEpoch(asOfDate.UTC())
+	asOfDateInt := helper.DaysSinceEpoch(asOfDate.UTC())
 
 	// Get all ledger entries for this NFT
 	entries, err := k.ListLedgerEntries(ctx, key)
@@ -290,7 +299,7 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 		return nil, err
 	}
 	if len(entries) == 0 {
-		return nil, NewLedgerCodedError(ErrCodeNotFound, "ledger entries")
+		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger entries")
 	}
 
 	// Map of bucket name to list of bucket balances.

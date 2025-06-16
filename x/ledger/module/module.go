@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/ledger/client/cli"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
@@ -91,7 +90,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // Register the protobuf message types and services with the sdk.
 func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
-	msgservice.RegisterMsgServiceDesc(registry, &ledger.Msg_serviceDesc)
+	ledger.RegisterInterfaces(registry)
 }
 
 func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {

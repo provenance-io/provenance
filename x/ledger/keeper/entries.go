@@ -7,15 +7,16 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	"github.com/provenance-io/provenance/x/ledger/helper"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
 
 var _ EntriesKeeper = (*BaseEntriesKeeper)(nil)
 
 type EntriesKeeper interface {
-	AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error
-	UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, bucketBalances []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error
+	AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error
+	UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, bucketBalances []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error
 }
 
 type BaseEntriesKeeper struct {
@@ -24,20 +25,14 @@ type BaseEntriesKeeper struct {
 }
 
 // SetValue stores a value with a given key.
-func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry) error {
-	// Validate the key
-	err := ValidateLedgerKeyBasic(ledgerKey)
-	if err != nil {
-		return err
-	}
-
+func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error {
 	// Need to resolve the ledger class for validation purposes
 	ledger, err := k.GetLedger(ctx, ledgerKey)
 	if err != nil {
 		return err
 	}
 	if ledger == nil {
-		return NewLedgerCodedError(ErrCodeNotFound, "ledger")
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
@@ -54,7 +49,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 	}
 
 	for _, le := range entries {
-		if err := ValidateLedgerEntryBasic(le); err != nil {
+		if err := types.ValidateLedgerEntryBasic(le); err != nil {
 			return err
 		}
 
@@ -74,7 +69,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 			return err
 		}
 		if !hasLedgerClassEntryType {
-			return NewLedgerCodedError(ErrCodeInvalidField, "entry_type_id", "entry type doesn't exist")
+			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "entry_type_id", "entry type doesn't exist")
 		}
 
 		err = k.saveEntry(ctx, ledgerKey, existingEntries, le)
@@ -86,9 +81,9 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 	return nil
 }
 
-func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *ledger.LedgerKey, correlationId string, balanceAmounts []*ledger.BucketBalance, appliedAmounts []*ledger.LedgerBucketAmount) error {
+func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Validate the key
-	err := ValidateLedgerKeyBasic(ledgerKey)
+	err := types.ValidateLedgerKeyBasic(ledgerKey)
 	if err != nil {
 		return err
 	}
@@ -107,7 +102,7 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 	}
 
 	if existingEntry == nil {
-		return NewLedgerCodedError(ErrCodeNotFound, "entry")
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "entry")
 	}
 
 	// Validate the applied amounts
@@ -117,7 +112,7 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 
 	// Validate the bucket balances
 	for _, bb := range balanceAmounts {
-		if err := ValidateBucketBalance(bb); err != nil {
+		if err := types.ValidateBucketBalance(bb); err != nil {
 			return err
 		}
 	}
@@ -141,9 +136,9 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 	return nil
 }
 
-func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *ledger.LedgerKey, entries []*ledger.LedgerEntry, le *ledger.LedgerEntry) error {
+func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry, le *types.LedgerEntry) error {
 	// Find entries with the same effective date
-	var sameDateEntries []ledger.LedgerEntry
+	var sameDateEntries []types.LedgerEntry
 	for _, entry := range entries {
 		if entry.EffectiveDate == le.EffectiveDate {
 			sameDateEntries = append(sameDateEntries, *entry)
@@ -151,7 +146,7 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *ledger.LedgerKe
 
 		// If the entry's correlation id is already in the list, we need to error
 		if entry.CorrelationId == le.CorrelationId {
-			return NewLedgerCodedError(ErrCodeAlreadyExists, "correlation_id")
+			return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "correlation_id")
 		}
 	}
 
@@ -192,7 +187,7 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *ledger.LedgerKe
 	}
 
 	// Emit the ledger entry added event
-	ctx.EventManager().EmitEvent(ledger.NewEventLedgerEntryAdded(
+	ctx.EventManager().EmitEvent(types.NewEventLedgerEntryAdded(
 		ledgerKey,
 		le.CorrelationId,
 	))
@@ -201,23 +196,23 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *ledger.LedgerKe
 }
 
 // validateEntryDates checks if the dates are valid
-func validateEntryDates(le *ledger.LedgerEntry, ctx sdk.Context) error {
-	blockTimeDays := DaysSinceEpoch(ctx.BlockTime().UTC())
+func validateEntryDates(le *types.LedgerEntry, ctx sdk.Context) error {
+	blockTimeDays := helper.DaysSinceEpoch(ctx.BlockTime().UTC())
 
 	if le.PostedDate <= 0 {
-		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date", "is not a valid date")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "is not a valid date")
 	}
 
 	// Check if posted date is in the future
 	if le.PostedDate > blockTimeDays {
-		return NewLedgerCodedError(ErrCodeInvalidField, "posted_date", "cannot be in the future")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "cannot be in the future")
 	}
 
 	return nil
 }
 
 // validateEntryAmounts checks if the amounts are valid
-func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*ledger.LedgerBucketAmount) error {
+func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Check if total amount matches sum of applied amounts
 	totalApplied := math.NewInt(0)
 	for _, applied := range appliedAmounts {
@@ -225,7 +220,7 @@ func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*ledger.LedgerBuck
 	}
 
 	if !totalAmt.Equal(totalApplied) {
-		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "total amount must equal sum of abs(applied amounts)")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "total_amt", "total amount must equal sum of abs(applied amounts)")
 	}
 
 	return nil

@@ -27,13 +27,14 @@ type BaseKeeper struct {
 }
 
 var (
-	ledgerPrefix                 = []byte{0x01}
-	entriesPrefix                = []byte{0x02}
-	ledgerClassesPrefix          = []byte{0x03}
-	ledgerClassEntryTypesPrefix  = []byte{0x04}
-	ledgerClassStatusTypesPrefix = []byte{0x05}
-	ledgerClassBucketTypesPrefix = []byte{0x06}
-	fundTransfersPrefix          = []byte{0x07}
+	ledgerPrefix                      = []byte{0x01}
+	entriesPrefix                     = []byte{0x02}
+	ledgerClassesPrefix               = []byte{0x03}
+	ledgerClassEntryTypesPrefix       = []byte{0x04}
+	ledgerClassStatusTypesPrefix      = []byte{0x05}
+	ledgerClassBucketTypesPrefix      = []byte{0x06}
+	fundTransfersPrefix               = []byte{0x07}
+	fundTransfersWithSettlementPrefix = []byte{0x08}
 )
 
 const (
@@ -101,7 +102,7 @@ func RequireAuthority(ctx sdk.Context, rk RegistryKeeper, addr string, key *regi
 		return err
 	}
 	if !has {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the owner or servicer")
+		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "authority is not the owner or servicer")
 	}
 	return nil
 }
@@ -110,7 +111,7 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledger
 	// Check if the authority has ownership of the NFT
 	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
 	if nftOwner == nil || nftOwner.String() != authorityAddr {
-		return NewLedgerCodedError(ErrCodeUnauthorized, "authority is not the nft owner")
+		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "authority is not the nft owner")
 	}
 
 	return nil
@@ -158,7 +159,7 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 						return false, err
 					}
 				} else {
-					return false, NewLedgerCodedError(ErrCodeUnauthorized, "registered servicer")
+					return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
 				}
 			}
 		}

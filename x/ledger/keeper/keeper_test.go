@@ -17,6 +17,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
@@ -68,7 +69,7 @@ func (s *TestSuite) SetupTest() {
 	s.addr3 = addrs[2]
 
 	// Create a timestamp 24 hours in the past to avoid future date errors
-	s.pastDate = keeper.DaysSinceEpoch(time.Now().Add(-24 * time.Hour).UTC())
+	s.pastDate = helper.DaysSinceEpoch(time.Now().Add(-24 * time.Hour).UTC())
 
 	// Load the test ledger class configs
 	s.ConfigureTest()
@@ -171,7 +172,7 @@ func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
 		Description: "Scheduled Payment",
 	})
 	s.Require().Error(err, "AddClassEntryType error")
-	s.Require().Contains(err.Error(), keeper.ErrCodeUnauthorized, "AddClassEntryType error")
+	s.Require().Contains(err.Error(), ledger.ErrCodeUnauthorized, "AddClassEntryType error")
 
 	err = s.keeper.AddClassBucketType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          1,
@@ -179,7 +180,7 @@ func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
 		Description: "Principal",
 	})
 	s.Require().Error(err, "AddClassBucketType error")
-	s.Require().Contains(err.Error(), keeper.ErrCodeUnauthorized, "AddClassBucketType error")
+	s.Require().Contains(err.Error(), ledger.ErrCodeUnauthorized, "AddClassBucketType error")
 
 	err = s.keeper.AddClassStatusType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          1,
@@ -187,7 +188,7 @@ func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
 		Description: "In Repayment",
 	})
 	s.Require().Error(err, "AddClassStatusType error")
-	s.Require().Contains(err.Error(), keeper.ErrCodeUnauthorized, "AddClassStatusType error")
+	s.Require().Contains(err.Error(), ledger.ErrCodeUnauthorized, "AddClassStatusType error")
 }
 
 // Test to ensure only the registered servicer or owner can create a ledger.
@@ -444,7 +445,7 @@ func (s *TestSuite) TestGetLedgerEntry() {
 	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
-	expErr := keeper.ErrCodeNotFound
+	expErr := ledger.ErrCodeNotFound
 
 	// Test cases
 	tests := []struct {
@@ -569,7 +570,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-9",
 			},
-			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
+			expErr: helper.StrPtr(ledger.ErrCodeNotFound),
 		},
 		{
 			name: "not found",
@@ -594,7 +595,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-10",
 			},
-			expErr: keeper.StrPtr(keeper.ErrCodeNotFound),
+			expErr: helper.StrPtr(ledger.ErrCodeNotFound),
 		},
 		{
 			name: "amounts_do_not_sum_to_total",
@@ -619,7 +620,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-11",
 			},
-			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
+			expErr: helper.StrPtr(ledger.ErrCodeInvalidField),
 		},
 		{
 			name: "valid amounts and balances",
@@ -694,7 +695,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-14",
 			},
-			expErr: keeper.StrPtr(keeper.ErrCodeInvalidField),
+			expErr: helper.StrPtr(ledger.ErrCodeInvalidField),
 		},
 		{
 			name: "allow negative principal applied amount",
@@ -916,7 +917,7 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 	// Try to add the same entry again with the same correlation ID
 	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
-	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
+	s.Require().Contains(err.Error(), ledger.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
 	// Verify that only one entry exists
 	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, l.Key)
@@ -945,7 +946,7 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 
 	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry2})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
-	s.Require().Contains(err.Error(), keeper.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
+	s.Require().Contains(err.Error(), ledger.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
 	// Verify that still only one entry exists
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
@@ -1065,7 +1066,7 @@ func (s *TestSuite) TestGetBalances() {
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(3, len(entries), "number of entries")
 
-	s.Require().Less(s.pastDate, keeper.DaysSinceEpoch(time.Now().UTC()))
+	s.Require().Less(s.pastDate, helper.DaysSinceEpoch(time.Now().UTC()))
 
 	// Get balances
 	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.Key, time.Now().UTC())

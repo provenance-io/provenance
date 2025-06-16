@@ -1,15 +1,16 @@
 // validation_basic.go contains validation functions for basic data uniformity.
 // No data access, or operations should be performed on data from this file.
-package keeper
+package types
 
 import (
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	"github.com/provenance-io/provenance/x/ledger/helper"
 )
 
-func ValidateLedgerClassBasic(l *ledger.LedgerClass) error {
+func ValidateLedgerClassBasic(l *LedgerClass) error {
 	if emptyString(&l.LedgerClassId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "ledger_class_id")
 	}
@@ -30,7 +31,7 @@ func ValidateLedgerClassBasic(l *ledger.LedgerClass) error {
 	return nil
 }
 
-func ValidateLedgerKeyBasic(key *ledger.LedgerKey) error {
+func ValidateLedgerKeyBasic(key *LedgerKey) error {
 	if emptyString(&key.NftId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "nft_id")
 	}
@@ -40,7 +41,15 @@ func ValidateLedgerKeyBasic(key *ledger.LedgerKey) error {
 	return nil
 }
 
-func ValidateLedgerBasic(l *ledger.Ledger) error {
+func ValidateLedgerBasic(l *Ledger) error {
+	if l == nil {
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger", "ledger cannot be nil")
+	}
+
+	if err := ValidateLedgerKeyBasic(l.Key); err != nil {
+		return err
+	}
+
 	// Validate the LedgerClassId field
 	if emptyString(&l.LedgerClassId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "ledger_class_id")
@@ -52,7 +61,7 @@ func ValidateLedgerBasic(l *ledger.Ledger) error {
 	}
 
 	epochTime, _ := time.Parse("2006-01-02", "1970-01-01")
-	epoch := DaysSinceEpoch(epochTime.UTC())
+	epoch := helper.DaysSinceEpoch(epochTime.UTC())
 
 	// Validate next payment date format if provided
 	if l.NextPmtDate < epoch {
@@ -77,11 +86,11 @@ func ValidateLedgerBasic(l *ledger.Ledger) error {
 	return nil
 }
 
-func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
+func ValidateLedgerEntryBasic(e *LedgerEntry) error {
 	if emptyString(&e.CorrelationId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "correlation_id")
 	} else {
-		if !isCorrelationIDValid(e.CorrelationId) {
+		if !IsCorrelationIDValid(e.CorrelationId) {
 			return NewLedgerCodedError(ErrCodeInvalidField, "correlation_id", "must be a valid string that is less than 50 characters")
 		}
 	}
@@ -102,10 +111,27 @@ func ValidateLedgerEntryBasic(e *ledger.LedgerEntry) error {
 	return nil
 }
 
-func ValidateBucketBalance(bb *ledger.BucketBalance) error {
+func ValidateBucketBalance(bb *BucketBalance) error {
 	if bb.BucketTypeId <= 0 {
 		return NewLedgerCodedError(ErrCodeInvalidField, "bucket_type_id", "must be a positive integer")
 	}
 
 	return nil
+}
+
+// Returns true if the string is nil or empty(TrimSpace(*s))
+func emptyString(s *string) bool {
+	if s == nil || strings.TrimSpace(*s) == "" {
+		return true
+	}
+	return false
+}
+
+// validateCorrelationID validates that the provided string is a valid correlation ID.
+// Returns true if the string is a valid correlation ID (non-empty and max 50 characters), false otherwise.
+func IsCorrelationIDValid(correlationID string) bool {
+	if len(correlationID) == 0 || len(correlationID) > 50 {
+		return false
+	}
+	return true
 }

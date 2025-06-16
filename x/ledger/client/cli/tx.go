@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/provenance-io/provenance/x/ledger/keeper"
+	"github.com/provenance-io/provenance/x/ledger/helper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/spf13/cobra"
 )
@@ -73,11 +73,11 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" 
 
 			// Add optional fields if provided
 			if len(args) > 4 {
-				nextPmtDate, err := keeper.StrToDate(args[4])
+				nextPmtDate, err := helper.StrToDate(args[4])
 				if err != nil {
 					return fmt.Errorf("invalid <next_pmt_date>: %v", err)
 				}
-				ledgerObj.NextPmtDate = keeper.DaysSinceEpoch(nextPmtDate.UTC())
+				ledgerObj.NextPmtDate = helper.DaysSinceEpoch(nextPmtDate.UTC())
 
 				ledgerObj.NextPmtAmt, err = strconv.ParseInt(args[5], 10, 64)
 				if err != nil {
@@ -92,11 +92,11 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" 
 				}
 				ledgerObj.InterestRate = int32(intRate)
 
-				maturityDate, err := keeper.StrToDate(args[7])
+				maturityDate, err := helper.StrToDate(args[7])
 				if err != nil {
 					return fmt.Errorf("invalid <maturity_date>: %v", err)
 				}
-				ledgerObj.MaturityDate = keeper.DaysSinceEpoch(maturityDate.UTC())
+				ledgerObj.MaturityDate = helper.DaysSinceEpoch(maturityDate.UTC())
 			}
 
 			msg := &ledger.MsgCreateRequest{
