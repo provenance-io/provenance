@@ -12,9 +12,9 @@ import "provenance/ledger/v1/ledger.proto";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  rpc AddAsset(MsgAddAsset) returns (MsgAddAssetResponse);
+  rpc CreateAsset(MsgCreateAsset) returns (MsgCreateAssetResponse);
 
-  rpc AddAssetClass(MsgAddAssetClass) returns (MsgAddAssetClassResponse);
+  rpc CreateAssetClass(MsgCreateAssetClass) returns (MsgCreateAssetClassResponse);
 
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
@@ -23,16 +23,16 @@ service Msg {
   rpc CreateSecuritization(MsgCreateSecuritization) returns (MsgCreateSecuritizationResponse);
 }
 
-message MsgAddAsset {
+message MsgCreateAsset {
   option (cosmos.msg.v1.signer) = "from_address";
 
   Asset  asset        = 1;
   string from_address = 2;
 }
 
-message MsgAddAssetResponse {}
+message MsgCreateAssetResponse {}
 
-message MsgAddAssetClass {
+message MsgCreateAssetClass {
   option (cosmos.msg.v1.signer) = "from_address";
 
   AssetClass asset_class  = 1;
@@ -40,7 +40,7 @@ message MsgAddAssetClass {
   string     from_address = 3;
 }
 
-message MsgAddAssetClassResponse {}
+message MsgCreateAssetClassResponse {}
 
 message MsgCreatePool {
   option (cosmos.msg.v1.signer) = "from_address";
