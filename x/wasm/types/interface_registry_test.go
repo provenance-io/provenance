@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	v1beta1 "github.com/provenance-io/provenance/x/wasm"
@@ -35,14 +36,17 @@ func Test_InterfaceRegistry_RegisterImplementations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Pack into Any
+			// Pack into Any
 			anyMsg, err := types.NewAnyWithValue(tt.msg)
-			require.NoError(t, err)
-			require.Equal(t, tt.typeURL, anyMsg.TypeUrl)
+			require.NoError(t, err, "NewAnyWithValue")
+			require.Equal(t, tt.typeURL, anyMsg.TypeUrl, "anyMsg.TypeUrl")
+
+			// Unpack it.
 			var unpacked sdk.Msg
 			err = cdc.UnpackAny(anyMsg, &unpacked)
-			require.NoError(t, err)
-			require.NotNil(t, unpacked)
-			require.IsType(t, tt.msg, unpacked)
+			require.NoError(t, err, "UnpackAny")
+			require.NotNil(t, unpacked, "UnpackAny result")
+			require.IsType(t, tt.msg, unpacked, "UnpackAny result")
 		})
 	}
 }
@@ -60,8 +64,7 @@ func Test_Decode_UnknownType(t *testing.T) {
 
 	var msg sdk.Msg
 	err := cdc.UnpackAny(unknownAny, &msg)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "no registered implementations")
+	require.ErrorContains(t, err, "no registered implementations")
 }
 
 func Test_Decode_MsgExecuteContract(t *testing.T) {
@@ -87,26 +90,26 @@ func Test_Decode_MsgExecuteContract(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Pack into Any
 			anyMsg, err := types.NewAnyWithValue(tt.msg)
-			require.NoError(t, err)
-			require.Equal(t, tt.typeURL, anyMsg.TypeUrl)
+			require.NoError(t, err, "NewAnyWithValue failed")
+			require.Equal(t, tt.typeURL, anyMsg.TypeUrl, "unexpected type URL")
 
 			// Unpack back
 			var unpacked sdk.Msg
 			err = cdc.UnpackAny(anyMsg, &unpacked)
-			require.NoError(t, err)
-			require.NotNil(t, unpacked)
-			require.IsType(t, tt.msg, unpacked)
+			require.NoError(t, err, "UnpackAny failed")
+			require.NotNil(t, unpacked, "unpacked message is nil")
+			require.IsType(t, tt.msg, unpacked, "unpacked message has unexpected type")
 
-			// Check field values (optional but good for validation)
+			// Check field values (use assert to continue on failure)
 			if v1msg, ok := tt.msg.(*wasmv1.MsgExecuteContract); ok {
 				unpackedV1, _ := unpacked.(*wasmv1.MsgExecuteContract)
-				require.Equal(t, v1msg.Sender, unpackedV1.Sender)
-				require.Equal(t, v1msg.Contract, unpackedV1.Contract)
+				assert.Equal(t, v1msg.Sender, unpackedV1.Sender, "Sender mismatch for v1 MsgExecuteContract")
+				assert.Equal(t, v1msg.Contract, unpackedV1.Contract, "Contract mismatch for v1 MsgExecuteContract")
 			}
 			if beta1msg, ok := tt.msg.(*v1beta1.MsgExecuteContract); ok {
 				unpackedBeta1, _ := unpacked.(*v1beta1.MsgExecuteContract)
-				require.Equal(t, beta1msg.Sender, unpackedBeta1.Sender)
-				require.Equal(t, beta1msg.Contract, unpackedBeta1.Contract)
+				assert.Equal(t, beta1msg.Sender, unpackedBeta1.Sender, "Sender mismatch for v1beta1 MsgExecuteContract")
+				assert.Equal(t, beta1msg.Contract, unpackedBeta1.Contract, "Contract mismatch for v1beta1 MsgExecuteContract")
 			}
 		})
 	}
