@@ -6,7 +6,7 @@ import (
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
-var AllRequestMsgs = []Validatable{
+var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateRequest)(nil),
 	(*MsgUpdateStatusRequest)(nil),
 	(*MsgUpdateInterestRateRequest)(nil),
@@ -16,18 +16,12 @@ var AllRequestMsgs = []Validatable{
 	(*MsgUpdateBalancesRequest)(nil),
 	(*MsgFundAssetRequest)(nil),
 	(*MsgFundAssetByRegistryRequest)(nil),
-	(*MsgTransferFundsRequest)(nil),
 	(*MsgTransferFundsWithSettlementRequest)(nil),
 	(*MsgDestroyRequest)(nil),
 	(*MsgCreateLedgerClassRequest)(nil),
 	(*MsgAddLedgerClassStatusTypeRequest)(nil),
 	(*MsgAddLedgerClassEntryTypeRequest)(nil),
 	(*MsgAddLedgerClassBucketTypeRequest)(nil),
-}
-
-type Validatable interface {
-	ValidateBasic() error
-	sdk.Msg
 }
 
 // Note: Authority address validation is performed in the message server to avoid duplicate bech32 conversions.
@@ -171,22 +165,7 @@ func (m *MsgFundAssetByRegistryRequest) ValidateBasic() error {
 	}
 
 	for _, transfer := range m.Transfers {
-		if err := ValidateFundTransferBasic(transfer); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ValidateBasic implements the sdk.Msg interface for MsgTransferFundsRequest
-func (m *MsgTransferFundsRequest) ValidateBasic() error {
-	if len(m.Transfers) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("transfers cannot be empty")
-	}
-
-	for _, transfer := range m.Transfers {
-		if err := ValidateFundTransferBasic(transfer); err != nil {
+		if err := ValidateFundTransferWithSettlementBasic(transfer); err != nil {
 			return err
 		}
 	}

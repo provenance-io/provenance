@@ -150,25 +150,6 @@ func (k *MsgServer) FundAssetTx(goCtx context.Context, req *ledger.MsgFundAssetR
 	return &ledger.MsgFundAssetResponse{}, nil
 }
 
-func (k *MsgServer) TransferFundsTx(goCtx context.Context, req *ledger.MsgTransferFundsRequest) (*ledger.MsgTransferFundsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, ft := range req.Transfers {
-		err := k.TransferFunds(ctx, authorityAddr, ft)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	resp := ledger.MsgTransferFundsResponse{}
-	return &resp, nil
-}
-
 func (k *MsgServer) FundAssetByRegistryTx(goCtx context.Context, req *ledger.MsgFundAssetByRegistryRequest) (*ledger.MsgFundAssetByRegistryResponse, error) {
 	_ = sdk.UnwrapSDKContext(goCtx)
 

@@ -20,21 +20,11 @@ enum FundingTransferStatus {
   FUNDING_TRANSFER_STATUS_FAILED      = 4;
 }
 
-// FundTransfer represents a single fund transfer to process
-message FundTransfer {
-  LedgerKey                key                         = 1;
-  string                   ledger_entry_correlation_id = 2;
-  cosmos.base.v1beta1.Coin amount                      = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins"
-  ];
-  FundingTransferStatus status = 4;
-  string                memo   = 5;
-
-  // The minimum block height or timestamp for settlement
-  int64 settlement_block = 6;
+// FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
+message FundTransferWithSettlement {
+  LedgerKey                      key                         = 1;
+  string                         ledger_entry_correlation_id = 2;
+  repeated SettlementInstruction settlementInstructions      = 3;
 }
 
 // SettlementInstruction represents blockchain-specific settlement instructions
@@ -49,16 +39,16 @@ message SettlementInstruction {
   // The recipient's blockchain address
   string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
+  FundingTransferStatus status = 3;
+
   // Optional memo or note for the transaction
-  string memo = 3;
+  string memo = 4;
 
   // The minimum block height or timestamp for settlement
-  int64 settlement_block = 4;
+  int64 settlement_block = 5;
 }
 
-// FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
-message FundTransferWithSettlement {
-  LedgerKey                      key                         = 1;
-  string                         ledger_entry_correlation_id = 2;
-  repeated SettlementInstruction settlementInstructions      = 3;
+// Used as the stored version of settlement instructions against a ledger key and entry correlation id.
+message StoredSettlementInstructions {
+  repeated SettlementInstruction settlementInstructions = 1;
 }

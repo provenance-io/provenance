@@ -278,8 +278,6 @@
     - [MsgFundAssetByRegistryResponse](#provenance-ledger-v1-MsgFundAssetByRegistryResponse)
     - [MsgFundAssetRequest](#provenance-ledger-v1-MsgFundAssetRequest)
     - [MsgFundAssetResponse](#provenance-ledger-v1-MsgFundAssetResponse)
-    - [MsgTransferFundsRequest](#provenance-ledger-v1-MsgTransferFundsRequest)
-    - [MsgTransferFundsResponse](#provenance-ledger-v1-MsgTransferFundsResponse)
     - [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest)
     - [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse)
     - [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest)
@@ -334,9 +332,9 @@
     - [Query](#provenance-ledger-v1-Query)
   
 - [provenance/ledger/v1/ledger_settlement.proto](#provenance_ledger_v1_ledger_settlement-proto)
-    - [FundTransfer](#provenance-ledger-v1-FundTransfer)
     - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
     - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
+    - [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions)
   
     - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
   
@@ -4763,7 +4761,7 @@ MsgFundAssetByRegistryRequest represents a request to fund an asset by registry
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  |  |
-| `transfers` | [FundTransfer](#provenance-ledger-v1-FundTransfer) | repeated |  |
+| `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated |  |
 
 
 
@@ -4800,32 +4798,6 @@ MsgFundAssetRequest represents a request to fund an asset
 
 ### MsgFundAssetResponse
 MsgFundAssetResponse represents the response from funding an asset
-
-
-
-
-
-
-<a name="provenance-ledger-v1-MsgTransferFundsRequest"></a>
-
-### MsgTransferFundsRequest
-MsgTransferFundsRequest represents a request to transfer funds
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  |  |
-| `transfers` | [FundTransfer](#provenance-ledger-v1-FundTransfer) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-MsgTransferFundsResponse"></a>
-
-### MsgTransferFundsResponse
-MsgTransferFundsResponse represents the response from transferring funds
 
 
 
@@ -5022,7 +4994,6 @@ Msg defines the attribute module Msg service.
 | `UpdateBalancesTx` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied |
 | `FundAssetTx` | [MsgFundAssetRequest](#provenance-ledger-v1-MsgFundAssetRequest) | [MsgFundAssetResponse](#provenance-ledger-v1-MsgFundAssetResponse) | Fund an Asset |
 | `FundAssetByRegistryTx` | [MsgFundAssetByRegistryRequest](#provenance-ledger-v1-MsgFundAssetByRegistryRequest) | [MsgFundAssetByRegistryResponse](#provenance-ledger-v1-MsgFundAssetByRegistryResponse) | Fund an Asset by Registry |
-| `TransferFundsTx` | [MsgTransferFundsRequest](#provenance-ledger-v1-MsgTransferFundsRequest) | [MsgTransferFundsResponse](#provenance-ledger-v1-MsgTransferFundsResponse) | Process multiple fund transfers (payments and disbursements) |
 | `TransferFundsWithSettlementTx` | [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest) | [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse) | Process multiple fund transfers with manual settlement instructions |
 | `DestroyTx` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address |
 | `CreateLedgerClassTx` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | Create a new ledger class |
@@ -5598,26 +5569,6 @@ Query defines the gRPC querier service for ledger module.
 
 
 
-<a name="provenance-ledger-v1-FundTransfer"></a>
-
-### FundTransfer
-FundTransfer represents a single fund transfer to process
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `ledger_entry_correlation_id` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
-| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
-| `memo` | [string](#string) |  |  |
-| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
-
-
-
-
-
-
 <a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
 
 ### FundTransferWithSettlement
@@ -5645,8 +5596,24 @@ SettlementInstruction represents blockchain-specific settlement instructions
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `recipient_address` | [string](#string) |  | The recipient's blockchain address |
+| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
 | `memo` | [string](#string) |  | Optional memo or note for the transaction |
 | `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-StoredSettlementInstructions"></a>
+
+### StoredSettlementInstructions
+Used as the stored version of settlement instructions against a ledger key and entry correlation id.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlementInstructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
 
 

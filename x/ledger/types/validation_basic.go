@@ -119,34 +119,6 @@ func ValidateBucketBalance(bb *BucketBalance) error {
 	return nil
 }
 
-func ValidateFundTransferBasic(ft *FundTransfer) error {
-	if err := ValidateLedgerKeyBasic(ft.Key); err != nil {
-		return err
-	}
-
-	if ft.LedgerEntryCorrelationId != "" {
-		if !IsCorrelationIDValid(ft.LedgerEntryCorrelationId) {
-			return NewLedgerCodedError(ErrCodeInvalidField, "ledger_entry_correlation_id", "must be a valid string that is less than 50 characters")
-		}
-	}
-
-	if ft.Amount.IsNegative() {
-		return NewLedgerCodedError(ErrCodeInvalidField, "amount", "must be a non-negative integer")
-	}
-
-	if ft.Memo != "" {
-		if len(ft.Memo) > 50 {
-			return NewLedgerCodedError(ErrCodeInvalidField, "memo", "must be less than 50 characters")
-		}
-	}
-
-	if ft.Status != 0 {
-		return NewLedgerCodedError(ErrCodeInvalidField, "status", "must remain unspecified since it is used internally to track the state of settlement of future transfers")
-	}
-
-	return nil
-}
-
 func ValidateFundTransferWithSettlementBasic(ft *FundTransferWithSettlement) error {
 	if err := ValidateLedgerKeyBasic(ft.Key); err != nil {
 		return err

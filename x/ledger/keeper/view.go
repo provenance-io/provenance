@@ -36,8 +36,7 @@ type BaseViewKeeper struct {
 
 	Ledgers                     collections.Map[string, ledger.Ledger]
 	LedgerEntries               collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
-	FundTransfers               collections.Map[collections.Pair[string, string], ledger.FundTransfer]
-	FundTransfersWithSettlement collections.Map[collections.Pair[string, string], ledger.FundTransferWithSettlement]
+	FundTransfersWithSettlement collections.Map[collections.Pair[string, string], ledger.StoredSettlementInstructions]
 
 	// LedgerClasses stores the configuration of all ledgers for a given class of asset.
 	LedgerClasses          collections.Map[string, ledger.LedgerClass]
@@ -69,19 +68,12 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[ledger.LedgerEntry](cdc),
 		),
-		FundTransfers: collections.NewMap(
-			sb,
-			collections.NewPrefix(fundTransfersPrefix),
-			"fund_transfers",
-			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
-			codec.CollValue[ledger.FundTransfer](cdc),
-		),
 		FundTransfersWithSettlement: collections.NewMap(
 			sb,
 			collections.NewPrefix(fundTransfersWithSettlementPrefix),
-			"fund_transfers_with_settlement",
+			"settlement_instructions",
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
-			codec.CollValue[ledger.FundTransferWithSettlement](cdc),
+			codec.CollValue[ledger.StoredSettlementInstructions](cdc),
 		),
 
 		// Ledger Class configuration data
