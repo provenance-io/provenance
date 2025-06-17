@@ -38,9 +38,8 @@ var (
 )
 
 const (
-	ledgerKeyHrp   = "ledger"
-	ledgerClassHrp = "ledgerc"
-	ledgerEntryHrp = "ledgere"
+	ledgerKeyHrp  = "ledger"
+	settlementHrp = "settlement"
 )
 
 // NewKeeper returns a new mymodule Keeper.
