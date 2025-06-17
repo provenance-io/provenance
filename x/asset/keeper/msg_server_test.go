@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
@@ -34,8 +35,32 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(priv.PubKey().Address())
 }
 
+// Helper function to find an event by type
+func (s *MsgServerTestSuite) findEventByType(events sdk.Events, eventType string) *sdk.Event {
+	for _, event := range events {
+		if event.Type == eventType {
+			return &event
+		}
+	}
+	return nil
+}
+
+// Helper function to find an attribute by key
+func (s *MsgServerTestSuite) findAttributeByKey(event *sdk.Event, key string) *abci.EventAttribute {
+	for _, attr := range event.Attributes {
+		if attr.Key == key {
+			return &attr
+		}
+	}
+	return nil
+}
+
 func (s *MsgServerTestSuite) TestCreateAssetClass() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+	
+	// Clear events before test
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	
 	ledgerClass := ledgertypes.LedgerClass{
 		LedgerClassId: "asset-class-1",
 		AssetClassId:  "asset-class-1",
@@ -44,20 +69,51 @@ func (s *MsgServerTestSuite) TestCreateAssetClass() {
 	}
 	err := s.app.LedgerKeeper.CreateLedgerClass(s.ctx, s.user1Addr, ledgerClass)
 	s.Require().NoError(err)
+	
 	msg := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
 			Id: "asset-class-1",
 			Name: "AssetClass1",
+			Symbol: "AC1",
 		},
 		LedgerClass: "asset-class-1",
 		FromAddress: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAssetClass(s.ctx, msg)
 	s.Require().NoError(err)
+	
+	// Verify event emission
+	events := s.ctx.EventManager().Events()
+	event := s.findEventByType(events, types.EventTypeAssetClassCreated)
+	s.Require().NotNil(event, "EventAssetClassCreated should be emitted")
+	
+	// Verify event attributes
+	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassId)
+	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
+	s.Require().Equal("asset-class-1", assetClassIdAttr.Value)
+	
+	assetNameAttr := s.findAttributeByKey(event, types.AttributeKeyAssetName)
+	s.Require().NotNil(assetNameAttr, "asset_name attribute should be present")
+	s.Require().Equal("AssetClass1", assetNameAttr.Value)
+	
+	assetSymbolAttr := s.findAttributeByKey(event, types.AttributeKeyAssetSymbol)
+	s.Require().NotNil(assetSymbolAttr, "asset_symbol attribute should be present")
+	s.Require().Equal("AC1", assetSymbolAttr.Value)
+	
+	ledgerClassAttr := s.findAttributeByKey(event, types.AttributeKeyLedgerClass)
+	s.Require().NotNil(ledgerClassAttr, "ledger_class attribute should be present")
+	s.Require().Equal("asset-class-1", ledgerClassAttr.Value)
+	
+	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	s.Require().NotNil(ownerAttr, "owner attribute should be present")
+	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
 }
 
 func (s *MsgServerTestSuite) TestCreateAsset() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+	
+	// Clear events before test
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	
 	// First create an asset class
 	ledgerClass := ledgertypes.LedgerClass{
@@ -104,6 +160,9 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg)
 	s.Require().NoError(err)
 	
+	// Clear events before creating asset
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	
 	// Now create an asset in the class
 	msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
@@ -117,10 +176,31 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 	}
 	_, err = msgServer.CreateAsset(s.ctx, msg)
 	s.Require().NoError(err)
+	
+	// Verify event emission
+	events := s.ctx.EventManager().Events()
+	event := s.findEventByType(events, types.EventTypeAssetCreated)
+	s.Require().NotNil(event, "EventAssetCreated should be emitted")
+	
+	// Verify event attributes
+	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassId)
+	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
+	s.Require().Equal("asset-class-2", assetClassIdAttr.Value)
+	
+	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetId)
+	s.Require().NotNil(assetIdAttr, "asset_id attribute should be present")
+	s.Require().Equal("asset-1", assetIdAttr.Value)
+	
+	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	s.Require().NotNil(ownerAttr, "owner attribute should be present")
+	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
 }
 
 func (s *MsgServerTestSuite) TestCreatePool() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+	
+	// Clear events before test
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	
 	// Create an asset class
 	ledgerClass := ledgertypes.LedgerClass{
@@ -177,6 +257,9 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
 	s.Require().NoError(err)
 	
+	// Clear events before creating pool
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	
 	// Create a pool with these assets
 	msg := &types.MsgCreatePool{
 		Pool: &sdk.Coin{
@@ -197,4 +280,192 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 	}
 	_, err = msgServer.CreatePool(s.ctx, msg)
 	s.Require().NoError(err)
+	
+	// Verify event emission
+	events := s.ctx.EventManager().Events()
+	event := s.findEventByType(events, types.EventTypePoolCreated)
+	s.Require().NotNil(event, "EventPoolCreated should be emitted")
+	
+	// Verify event attributes
+	poolDenomAttr := s.findAttributeByKey(event, types.AttributeKeyPoolDenom)
+	s.Require().NotNil(poolDenomAttr, "pool_denom attribute should be present")
+	s.Require().Equal("pooltoken", poolDenomAttr.Value)
+	
+	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolAmount)
+	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
+	s.Require().Equal("1000", poolAmountAttr.Value)
+	
+	nftCountAttr := s.findAttributeByKey(event, types.AttributeKeyNftCount)
+	s.Require().NotNil(nftCountAttr, "nft_count attribute should be present")
+	s.Require().Equal("2", nftCountAttr.Value)
+	
+	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	s.Require().NotNil(ownerAttr, "owner attribute should be present")
+	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+}
+
+func (s *MsgServerTestSuite) TestCreateParticipation() {
+	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+	
+	// Clear events before test
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	
+	msg := &types.MsgCreateParticipation{
+		Denom: sdk.NewCoin("participation", sdkmath.NewInt(500)),
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err := msgServer.CreateParticipation(s.ctx, msg)
+	s.Require().NoError(err)
+	
+	// Verify event emission
+	events := s.ctx.EventManager().Events()
+	event := s.findEventByType(events, types.EventTypeParticipationCreated)
+	s.Require().NotNil(event, "EventParticipationCreated should be emitted")
+	
+	// Verify event attributes
+	participationDenomAttr := s.findAttributeByKey(event, types.AttributeKeyParticipationDenom)
+	s.Require().NotNil(participationDenomAttr, "participation_denom attribute should be present")
+	s.Require().Equal("participation", participationDenomAttr.Value)
+	
+	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolAmount)
+	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
+	s.Require().Equal("500", poolAmountAttr.Value)
+	
+	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	s.Require().NotNil(ownerAttr, "owner attribute should be present")
+	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+}
+
+func (s *MsgServerTestSuite) TestCreateSecuritization() {
+	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+	
+	// Clear events before test
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	
+	// First create the pools that will be referenced in the securitization
+	// Create an asset class for the pools
+	ledgerClass := ledgertypes.LedgerClass{
+		LedgerClassId: "asset-class-sec",
+		AssetClassId:  "asset-class-sec",
+		Denom:         "stake",
+		MaintainerAddress: s.user1Addr.String(),
+	}
+	err := s.app.LedgerKeeper.CreateLedgerClass(s.ctx, s.user1Addr, ledgerClass)
+	s.Require().NoError(err)
+	
+	// Add a default status type to the ledger class
+	statusType := ledgertypes.LedgerClassStatusType{
+		Id:          1,
+		Code:        "ACTIVE",
+		Description: "Active",
+	}
+	err = s.app.LedgerKeeper.AddClassStatusType(s.ctx, s.user1Addr, "asset-class-sec", statusType)
+	s.Require().NoError(err)
+	
+	assetClassMsg := &types.MsgCreateAssetClass{
+		AssetClass: &types.AssetClass{
+			Id: "asset-class-sec",
+			Name: "AssetClassSec",
+		},
+		LedgerClass: "asset-class-sec",
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg)
+	s.Require().NoError(err)
+	
+	// Create assets for the pools
+	asset1Msg := &types.MsgCreateAsset{
+		Asset: &types.Asset{
+			ClassId: "asset-class-sec",
+			Id:      "asset-sec-1",
+			Uri:     "https://example.com/asset1",
+			UriHash: "abc123",
+		},
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
+	s.Require().NoError(err)
+	
+	asset2Msg := &types.MsgCreateAsset{
+		Asset: &types.Asset{
+			ClassId: "asset-class-sec",
+			Id:      "asset-sec-2",
+			Uri:     "https://example.com/asset2",
+			UriHash: "def456",
+		},
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
+	s.Require().NoError(err)
+	
+	// Create the pools
+	pool1Msg := &types.MsgCreatePool{
+		Pool: &sdk.Coin{
+			Denom:  "pool1",
+			Amount: sdkmath.NewInt(1000),
+		},
+		Nfts: []*types.Nft{
+			{
+				ClassId: "asset-class-sec",
+				Id:      "asset-sec-1",
+			},
+		},
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreatePool(s.ctx, pool1Msg)
+	s.Require().NoError(err)
+	
+	pool2Msg := &types.MsgCreatePool{
+		Pool: &sdk.Coin{
+			Denom:  "pool2",
+			Amount: sdkmath.NewInt(2000),
+		},
+		Nfts: []*types.Nft{
+			{
+				ClassId: "asset-class-sec",
+				Id:      "asset-sec-2",
+			},
+		},
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreatePool(s.ctx, pool2Msg)
+	s.Require().NoError(err)
+	
+	// Clear events before creating securitization
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	
+	// Now create the securitization
+	msg := &types.MsgCreateSecuritization{
+		Id: "sec-1",
+		Tranches: []*sdk.Coin{
+			{Denom: "tranche-a", Amount: sdkmath.NewInt(100)},
+			{Denom: "tranche-b", Amount: sdkmath.NewInt(200)},
+		},
+		Pools: []string{"pool1", "pool2"},
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreateSecuritization(s.ctx, msg)
+	s.Require().NoError(err)
+	
+	// Verify event emission
+	events := s.ctx.EventManager().Events()
+	event := s.findEventByType(events, types.EventTypeSecuritizationCreated)
+	s.Require().NotNil(event, "EventSecuritizationCreated should be emitted")
+	
+	// Verify event attributes
+	securitizationIdAttr := s.findAttributeByKey(event, types.AttributeKeySecuritizationId)
+	s.Require().NotNil(securitizationIdAttr, "securitization_id attribute should be present")
+	s.Require().Equal("sec-1", securitizationIdAttr.Value)
+	
+	trancheCountAttr := s.findAttributeByKey(event, types.AttributeKeyTrancheCount)
+	s.Require().NotNil(trancheCountAttr, "tranche_count attribute should be present")
+	s.Require().Equal("2", trancheCountAttr.Value)
+	
+	poolCountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolCount)
+	s.Require().NotNil(poolCountAttr, "pool_count attribute should be present")
+	s.Require().Equal("2", poolCountAttr.Value)
+	
+	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	s.Require().NotNil(ownerAttr, "owner attribute should be present")
+	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
 }
