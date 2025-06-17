@@ -392,6 +392,16 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
 	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+	
+	// Verify that the NFT was transferred to the tokenization marker
+	// Get the marker account
+	marker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "tokenization")
+	s.Require().NoError(err)
+	s.Require().NotNil(marker, "tokenization marker should exist")
+	
+	// Verify the NFT is now owned by the marker
+	nftOwner := s.app.NFTKeeper.GetOwner(s.ctx, "asset-class-token", "asset-token-1")
+	s.Require().Equal(marker.GetAddress().String(), nftOwner.String(), "NFT should be owned by the tokenization marker")
 }
 
 func (s *MsgServerTestSuite) TestCreateSecuritization() {

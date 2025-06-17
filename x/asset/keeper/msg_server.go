@@ -236,7 +236,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
 
 	// Create the marker
-	_, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
+	marker, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tokenization marker: %w", err)
 	}
@@ -245,6 +245,12 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 	owner := m.nftKeeper.GetOwner(goCtx, msg.Nft.ClassId, msg.Nft.Id)
 	if owner.String() != msg.FromAddress {
 		return nil, fmt.Errorf("nft class %s, id %s owner %s does not match from address %s", msg.Nft.ClassId, msg.Nft.Id, owner.String(), msg.FromAddress)
+	}
+
+	// Transfer the NFT to the tokenization marker address
+	err = m.nftKeeper.Transfer(goCtx, msg.Nft.ClassId, msg.Nft.Id, marker.GetAddress())
+	if err != nil {
+		return nil, fmt.Errorf("failed to transfer nft: %w", err)
 	}
 
 	// Emit event for tokenization creation
