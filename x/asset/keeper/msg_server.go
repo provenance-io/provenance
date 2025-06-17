@@ -70,6 +70,18 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 		return nil, fmt.Errorf("failed to save NFT class: %w", err)
 	}
 
+	// Emit event for asset class creation
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAssetClassCreated,
+			sdk.NewAttribute(types.AttributeKeyAssetClassId, class.Id),
+			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
+			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
+			sdk.NewAttribute(types.AttributeKeyLedgerClass, msg.LedgerClass),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
+
 	m.Logger(ctx).Info("Created new asset class as NFT class",
 		"class_id", class.Id,
 		"name", class.Name)
@@ -163,6 +175,16 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 		return nil, fmt.Errorf("failed to create default registry: %w", err)
 	}
 
+	// Emit event for asset creation
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAssetCreated,
+			sdk.NewAttribute(types.AttributeKeyAssetClassId, msg.Asset.ClassId),
+			sdk.NewAttribute(types.AttributeKeyAssetId, msg.Asset.Id),
+			sdk.NewAttribute(types.AttributeKeyOwner, owner.String()),
+		),
+	)
+
 	m.Logger(ctx).Info("Created new asset as NFT",
 		"class_id", token.ClassId,
 		"token_id", token.Id,
@@ -195,6 +217,18 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 		}
 	}
 
+	// Emit event for pool creation
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypePoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolDenom, msg.Pool.Denom),
+			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Pool.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNftCount, fmt.Sprintf("%d", len(msg.Nfts))),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
+
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
@@ -206,6 +240,17 @@ func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCrea
 	if err != nil {
 		return nil, fmt.Errorf("failed to create participation marker: %w", err)
 	}
+
+	// Emit event for participation creation
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeParticipationCreated,
+			sdk.NewAttribute(types.AttributeKeyParticipationDenom, msg.Denom.Denom),
+			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Denom.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
 
 	return &types.MsgCreateParticipationResponse{}, nil
 }
@@ -269,6 +314,17 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		// Save the updated marker
 		m.markerKeeper.SetMarker(ctx, pool)
 	}
+
+	// Emit event for securitization creation
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSecuritizationCreated,
+			sdk.NewAttribute(types.AttributeKeySecuritizationId, msg.Id),
+			sdk.NewAttribute(types.AttributeKeyTrancheCount, fmt.Sprintf("%d", len(msg.Tranches))),
+			sdk.NewAttribute(types.AttributeKeyPoolCount, fmt.Sprintf("%d", len(msg.Pools))),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
 
 	return &types.MsgCreateSecuritizationResponse{}, nil
 }
