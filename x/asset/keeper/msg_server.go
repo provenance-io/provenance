@@ -232,27 +232,35 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
-// CreateParticipation creates a new participation marker
-func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCreateParticipation) (*types.MsgCreateParticipationResponse, error) {
+// CreateTokenization creates a new tokenization marker
+func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
 
 	// Create the marker
 	_, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create participation marker: %w", err)
+		return nil, fmt.Errorf("failed to create tokenization marker: %w", err)
 	}
 
-	// Emit event for participation creation
+	// Verify the NFT exists and is owned by the from address
+	owner := m.nftKeeper.GetOwner(goCtx, msg.Nft.ClassId, msg.Nft.Id)
+	if owner.String() != msg.FromAddress {
+		return nil, fmt.Errorf("nft class %s, id %s owner %s does not match from address %s", msg.Nft.ClassId, msg.Nft.Id, owner.String(), msg.FromAddress)
+	}
+
+	// Emit event for tokenization creation
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeParticipationCreated,
-			sdk.NewAttribute(types.AttributeKeyParticipationDenom, msg.Denom.Denom),
+			types.EventTypeTokenizationCreated,
+			sdk.NewAttribute(types.AttributeKeyTokenizationDenom, msg.Denom.Denom),
 			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Denom.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNftClassId, msg.Nft.ClassId),
+			sdk.NewAttribute(types.AttributeKeyNftId, msg.Nft.Id),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
 		),
 	)
 
-	return &types.MsgCreateParticipationResponse{}, nil
+	return &types.MsgCreateTokenizationResponse{}, nil
 }
 
 // CreateSecuritization creates a new securitization marker and tranches
