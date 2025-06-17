@@ -67,7 +67,26 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 		return fmt.Errorf("failed to convert ledger key to string: %w", err)
 	}
 
-	// transfers := make([]*types.FundTransferWithSettlement, 0)
+	// k.FundTransfersWithSettlement.Get(ctx)
+
+	completed := types.StoredSettlementInstructions{
+		SettlementInstructions: make([]*types.SettlementInstruction, 0),
+	}
+
+	// Transfer funds per the settlement instructions
+	for _, inst := range transfer.SettlementInstructions {
+		recipientAddr, err := sdk.AccAddressFromBech32(inst.RecipientAddress)
+		if err != nil {
+			return fmt.Errorf("failed to convert recipient address to bech32: %w", err)
+		}
+
+		if err := k.BankKeeper.SendCoins(ctx, authorityAddr, recipientAddr, sdk.NewCoins(inst.Amount)); err != nil {
+			return fmt.Errorf("failed to send coins: %w", err)
+		}
+
+		completed.SettlementInstructions = append(completed.SettlementInstructions, inst)
+	}
+
 	// for _, inst := range transfer.SettlementInstructions {
 
 	// 	transfers = append(transfers, &types.FundTransferWithSettlement{
