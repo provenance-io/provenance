@@ -200,8 +200,8 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 			expectedCode: 1,
 		},
 		{
-			name: "create participation - missing args",
-			cmd:  assetcli.GetCmdCreateParticipation(),
+			name: "create tokenization - missing args",
+			cmd:  assetcli.GetCmdCreateTokenization(),
 			args: []string{
 				// Missing required arguments
 			},
@@ -210,17 +210,19 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 			expectedCode: 0,
 		},
 		{
-			name: "create participation - all args (expected fail, needs setup)",
-			cmd:  assetcli.GetCmdCreateParticipation(),
+			name: "create tokenization - all args (expected fail, needs setup)",
+			cmd:  assetcli.GetCmdCreateTokenization(),
 			args: []string{
-				"pool-id-123",
+				"1000tokenization",
+				"class-id-123",
+				"asset-id-123",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
 				"--yes",
 				"--keyring-backend=test",
 			},
-			expectErr:    true,
+			expectErr:    false,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 1,
 		},

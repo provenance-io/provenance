@@ -304,32 +304,90 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
 }
 
-func (s *MsgServerTestSuite) TestCreateParticipation() {
+func (s *MsgServerTestSuite) TestCreateTokenization() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
 	
 	// Clear events before test
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	
-	msg := &types.MsgCreateParticipation{
-		Denom: sdk.NewCoin("participation", sdkmath.NewInt(500)),
+	// First create an asset class and asset for the NFT
+	ledgerClass := ledgertypes.LedgerClass{
+		LedgerClassId: "asset-class-token",
+		AssetClassId:  "asset-class-token",
+		Denom:         "stake",
+		MaintainerAddress: s.user1Addr.String(),
+	}
+	err := s.app.LedgerKeeper.CreateLedgerClass(s.ctx, s.user1Addr, ledgerClass)
+	s.Require().NoError(err)
+	
+	// Add a default status type to the ledger class
+	statusType := ledgertypes.LedgerClassStatusType{
+		Id:          1,
+		Code:        "ACTIVE",
+		Description: "Active",
+	}
+	err = s.app.LedgerKeeper.AddClassStatusType(s.ctx, s.user1Addr, "asset-class-token", statusType)
+	s.Require().NoError(err)
+	
+	assetClassMsg := &types.MsgCreateAssetClass{
+		AssetClass: &types.AssetClass{
+			Id: "asset-class-token",
+			Name: "AssetClassToken",
+		},
+		LedgerClass: "asset-class-token",
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err := msgServer.CreateParticipation(s.ctx, msg)
+	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg)
+	s.Require().NoError(err)
+	
+	// Create an asset for the NFT
+	assetMsg := &types.MsgCreateAsset{
+		Asset: &types.Asset{
+			ClassId: "asset-class-token",
+			Id:      "asset-token-1",
+			Uri:     "https://example.com/asset-token",
+			UriHash: "abc123",
+		},
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreateAsset(s.ctx, assetMsg)
+	s.Require().NoError(err)
+	
+	// Clear events before creating tokenization
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	
+	msg := &types.MsgCreateTokenization{
+		Denom: sdk.NewCoin("tokenization", sdkmath.NewInt(500)),
+		Nft: &types.Nft{
+			ClassId: "asset-class-token",
+			Id:      "asset-token-1",
+		},
+		FromAddress: s.user1Addr.String(),
+	}
+	_, err = msgServer.CreateTokenization(s.ctx, msg)
 	s.Require().NoError(err)
 	
 	// Verify event emission
 	events := s.ctx.EventManager().Events()
-	event := s.findEventByType(events, types.EventTypeParticipationCreated)
-	s.Require().NotNil(event, "EventParticipationCreated should be emitted")
+	event := s.findEventByType(events, types.EventTypeTokenizationCreated)
+	s.Require().NotNil(event, "EventTokenizationCreated should be emitted")
 	
 	// Verify event attributes
-	participationDenomAttr := s.findAttributeByKey(event, types.AttributeKeyParticipationDenom)
-	s.Require().NotNil(participationDenomAttr, "participation_denom attribute should be present")
-	s.Require().Equal("participation", participationDenomAttr.Value)
+	tokenizationDenomAttr := s.findAttributeByKey(event, types.AttributeKeyTokenizationDenom)
+	s.Require().NotNil(tokenizationDenomAttr, "tokenization_denom attribute should be present")
+	s.Require().Equal("tokenization", tokenizationDenomAttr.Value)
 	
 	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolAmount)
 	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
 	s.Require().Equal("500", poolAmountAttr.Value)
+	
+	nftClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyNftClassId)
+	s.Require().NotNil(nftClassIdAttr, "nft_class_id attribute should be present")
+	s.Require().Equal("asset-class-token", nftClassIdAttr.Value)
+	
+	nftIdAttr := s.findAttributeByKey(event, types.AttributeKeyNftId)
+	s.Require().NotNil(nftIdAttr, "nft_id attribute should be present")
+	s.Require().Equal("asset-token-1", nftIdAttr.Value)
 	
 	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")

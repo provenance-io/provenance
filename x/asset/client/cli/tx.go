@@ -27,7 +27,7 @@ func GetTxCmd() *cobra.Command {
 		GetCmdCreateAsset(),
 		GetCmdCreateAssetClass(),
 		GetCmdCreatePool(),
-		GetCmdCreateParticipation(),
+		GetCmdCreateTokenization(),
 		GetCmdCreateSecuritization(),
 	)
 
@@ -157,14 +157,14 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 	return cmd
 }
 
-// GetCmdCreateParticipation returns the command for creating a new participation
-func GetCmdCreateParticipation() *cobra.Command {
+// GetCmdCreateTokenization returns the command for creating a new tokenization
+func GetCmdCreateTokenization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-participation [amount]",
-		Short: "Create a new participation marker",
-		Long: `Create a new participation marker with the specified amount.`,
-		Example: `  provenanced tx asset create-participation 1000pooltoken`,
-		Args:  cobra.ExactArgs(1),
+		Use:   "create-tokenization [amount] [nft-class-id] [nft-id]",
+		Short: "Create a new tokenization marker",
+		Long: `Create a new tokenization marker with the specified amount and NFT.`,
+		Example: `  provenanced tx asset create-tokenization 1000pooltoken real-estate property-001`,
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -176,8 +176,14 @@ func GetCmdCreateParticipation() *cobra.Command {
 				return fmt.Errorf("invalid coin %s", args[0])
 			}
 
-			msg := &types.MsgCreateParticipation{
+			nft := &types.Nft{
+				ClassId: args[1],
+				Id:      args[2],
+			}
+
+			msg := &types.MsgCreateTokenization{
 				Denom:       coin,
+				Nft:         nft,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 

@@ -18,7 +18,7 @@ service Msg {
 
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
-  rpc CreateParticipation(MsgCreateParticipation) returns (MsgCreateParticipationResponse);
+  rpc CreateTokenization(MsgCreateTokenization) returns (MsgCreateTokenizationResponse);
 
   rpc CreateSecuritization(MsgCreateSecuritization) returns (MsgCreateSecuritizationResponse);
 }
@@ -52,14 +52,15 @@ message MsgCreatePool {
 
 message MsgCreatePoolResponse {}
 
-message MsgCreateParticipation {
+message MsgCreateTokenization {
   option (cosmos.msg.v1.signer) = "from_address";
 
   cosmos.base.v1beta1.Coin denom        = 1 [(gogoproto.nullable) = false];
+  Nft                      nft          = 2;
   string                   from_address = 3;
 }
 
-message MsgCreateParticipationResponse {}
+message MsgCreateTokenizationResponse {}
 
 message MsgCreateSecuritization {
   option (cosmos.msg.v1.signer) = "from_address";

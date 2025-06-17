@@ -10,7 +10,7 @@ import (
 var _ sdk.Msg = &MsgCreateAsset{}
 var _ sdk.Msg = &MsgCreateAssetClass{}
 var _ sdk.Msg = &MsgCreatePool{}
-var _ sdk.Msg = &MsgCreateParticipation{}
+var _ sdk.Msg = &MsgCreateTokenization{}
 var _ sdk.Msg = &MsgCreateSecuritization{}
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -18,7 +18,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateAsset)(nil),
 	(*MsgCreateAssetClass)(nil),
 	(*MsgCreatePool)(nil),
-	(*MsgCreateParticipation)(nil),
+	(*MsgCreateTokenization)(nil),
 	(*MsgCreateSecuritization)(nil),
 }
 
@@ -122,9 +122,21 @@ func (msg MsgCreatePool) ValidateBasic() error {
 }
 
 // ValidateBasic implements Msg
-func (msg MsgCreateParticipation) ValidateBasic() error {
+func (msg MsgCreateTokenization) ValidateBasic() error {
 	if err := msg.Denom.Validate(); err != nil {
 		return fmt.Errorf("invalid denom: %w", err)
+	}
+
+	if msg.Nft == nil {
+		return fmt.Errorf("nft cannot be nil")
+	}
+
+	if msg.Nft.ClassId == "" {
+		return fmt.Errorf("nft class_id cannot be empty")
+	}
+
+	if msg.Nft.Id == "" {
+		return fmt.Errorf("nft id cannot be empty")
 	}
 
 	if msg.FromAddress == "" {
@@ -251,7 +263,7 @@ func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
 }
 
 // GetSigners implements Msg
-func (msg MsgCreateParticipation) GetSigners() []sdk.AccAddress {
+func (msg MsgCreateTokenization) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		panic(err)

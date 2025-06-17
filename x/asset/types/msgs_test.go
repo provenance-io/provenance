@@ -245,18 +245,22 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgCreateParticipation_ValidateBasic(t *testing.T) {
+func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name    string
-		msg     MsgCreateParticipation
+		msg     MsgCreateTokenization
 		wantErr bool
 	}{
 		{
 			name: "valid message",
-			msg: MsgCreateParticipation{
+			msg: MsgCreateTokenization{
 				Denom: sdk.Coin{
-					Denom:  "participation",
+					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
+				},
+				Nft: &Nft{
+					ClassId: "test-class",
+					Id:      "test-id",
 				},
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
@@ -264,10 +268,56 @@ func TestMsgCreateParticipation_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: MsgCreateParticipation{
+			msg: MsgCreateTokenization{
 				Denom: sdk.Coin{
 					Denom:  "",
 					Amount: sdkmath.NewInt(1000),
+				},
+				Nft: &Nft{
+					ClassId: "test-class",
+					Id:      "test-id",
+				},
+				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			wantErr: true,
+		},
+		{
+			name: "nil nft",
+			msg: MsgCreateTokenization{
+				Denom: sdk.Coin{
+					Denom:  "tokenization",
+					Amount: sdkmath.NewInt(1000),
+				},
+				Nft:         nil,
+				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty nft class_id",
+			msg: MsgCreateTokenization{
+				Denom: sdk.Coin{
+					Denom:  "tokenization",
+					Amount: sdkmath.NewInt(1000),
+				},
+				Nft: &Nft{
+					ClassId: "",
+					Id:      "test-id",
+				},
+				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty nft id",
+			msg: MsgCreateTokenization{
+				Denom: sdk.Coin{
+					Denom:  "tokenization",
+					Amount: sdkmath.NewInt(1000),
+				},
+				Nft: &Nft{
+					ClassId: "test-class",
+					Id:      "",
 				},
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
@@ -275,10 +325,14 @@ func TestMsgCreateParticipation_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty from_address",
-			msg: MsgCreateParticipation{
+			msg: MsgCreateTokenization{
 				Denom: sdk.Coin{
-					Denom:  "participation",
+					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
+				},
+				Nft: &Nft{
+					ClassId: "test-class",
+					Id:      "test-id",
 				},
 				FromAddress: "",
 			},
