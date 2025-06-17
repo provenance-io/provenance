@@ -18,7 +18,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -459,7 +458,7 @@ func TestParamChangeInGovProp(t *testing.T) {
 			},
 		},
 	}
-	paramChangePropAny, err := codectypes.NewAnyWithValue(paramChangeProp)
+	paramChangePropAny, err := sdktypes.NewAnyWithValue(paramChangeProp)
 	require.NoError(t, err, "codectypes.NewAnyWithValue(paramChangeProp)")
 	t.Logf("paramChangePropAny.TypeUrl = %q", paramChangePropAny.TypeUrl)
 
@@ -468,7 +467,7 @@ func TestParamChangeInGovProp(t *testing.T) {
 		Authority: "jerry",
 	}
 
-	execLegAny, err := codectypes.NewAnyWithValue(execLeg)
+	execLegAny, err := sdktypes.NewAnyWithValue(execLeg)
 	require.NoError(t, err, "codectypes.NewAnyWithValue(execLeg)")
 
 	submitTime := time.Unix(1618935600, 0)
@@ -478,7 +477,7 @@ func TestParamChangeInGovProp(t *testing.T) {
 
 	prop := govtypesv1.Proposal{
 		Id:               123,
-		Messages:         []*codectypes.Any{execLegAny},
+		Messages:         []*sdktypes.Any{execLegAny},
 		Status:           govtypesv1.StatusPassed,
 		FinalTallyResult: &govtypesv1.TallyResult{YesCount: "5", AbstainCount: "1", NoCount: "0", NoWithVetoCount: "0"},
 		SubmitTime:       &submitTime,
@@ -539,7 +538,7 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false)
 
 	// Register types
-	registry := codectypes.NewInterfaceRegistry()
+	registry := sdktypes.NewInterfaceRegistry()
 	registry.RegisterImplementations((*sdk.Msg)(nil), &v1beta1.MsgExecuteContract{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &govtypesv1.Proposal{})
 	cdc := codec.NewProtoCodec(registry)
@@ -550,10 +549,10 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 		Contract: "pbsmos1def...",
 		Msg:      []byte(`{"do_something":{}}`),
 	}
-	msgAny, _ := codectypes.NewAnyWithValue(oldMsg)
+	msgAny, _ := sdktypes.NewAnyWithValue(oldMsg)
 	prop := govtypesv1.Proposal{
 		Id:               123,
-		Messages:         []*codectypes.Any{msgAny},
+		Messages:         []*sdktypes.Any{msgAny},
 		Status:           govtypesv1.StatusPassed,
 		FinalTallyResult: &govtypesv1.TallyResult{YesCount: "0", AbstainCount: "0", NoCount: "0", NoWithVetoCount: "0"},
 		SubmitTime:       &time.Time{},
@@ -568,11 +567,11 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 	}
 	app.GovKeeper.SetProposal(ctx, *&prop)
 	stored, _ := app.GovKeeper.Proposals.Get(ctx, 1)
-	require.NotNil(t, stored)
+	require.NotNil(t, stored,"app.GovKeeper.Proposals.Get()")
 	for _, msg := range stored.Messages {
 		var unpacked sdk.Msg
 		err := cdc.UnpackAny(msg, &unpacked)
-		require.NoError(t, err)
+		require.NoError(t, err,"UnpackAny")
 
 		_, ok := unpacked.(*v1beta1.MsgExecuteContract)
 		require.True(t, ok, "expected v1beta1.MsgExecuteContract")

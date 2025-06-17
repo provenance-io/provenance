@@ -16,6 +16,10 @@ import (
 
 func Test_InterfaceRegistry_RegisterImplementations(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&wasmv1.MsgExecuteContract{},
+		&v1beta1.MsgExecuteContract{},
+	)
 	cdc := codec.NewProtoCodec(registry)
 	tests := []struct {
 		name    string
@@ -36,7 +40,6 @@ func Test_InterfaceRegistry_RegisterImplementations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Pack into Any
-			// Pack into Any
 			anyMsg, err := types.NewAnyWithValue(tt.msg)
 			require.NoError(t, err, "NewAnyWithValue")
 			require.Equal(t, tt.typeURL, anyMsg.TypeUrl, "anyMsg.TypeUrl")
@@ -53,7 +56,6 @@ func Test_InterfaceRegistry_RegisterImplementations(t *testing.T) {
 
 func Test_Decode_UnknownType(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
-
 	cdc := codec.NewProtoCodec(registry)
 
 	// Create an Any with a completely unknown type URL
