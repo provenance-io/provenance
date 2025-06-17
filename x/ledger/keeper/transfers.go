@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/types"
 )
@@ -67,10 +68,9 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 		return fmt.Errorf("failed to convert ledger key to string: %w", err)
 	}
 
-	// k.FundTransfersWithSettlement.Get(ctx)
-
-	completed := types.StoredSettlementInstructions{
-		SettlementInstructions: make([]*types.SettlementInstruction, 0),
+	existingSettlements, err := k.GetSettlements(ctx, keyStr, transfer.LedgerEntryCorrelationId)
+	if err != nil {
+		return err
 	}
 
 	// Transfer funds per the settlement instructions
@@ -84,24 +84,14 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 			return fmt.Errorf("failed to send coins: %w", err)
 		}
 
-		completed.SettlementInstructions = append(completed.SettlementInstructions, inst)
+		// Add the new transfer to the existing transfer list.
+		existingSettlements.SettlementInstructions = append(existingSettlements.SettlementInstructions, inst)
 	}
 
-	// for _, inst := range transfer.SettlementInstructions {
-
-	// 	transfers = append(transfers, &types.FundTransferWithSettlement{
-	// 		Key:                      transfer.Key,
-	// 		LedgerEntryCorrelationId: transfer.LedgerEntryCorrelationId,
-	// 		Amount:                   instruction.Amount,
-	// 		Memo:                     instruction.Memo,
-	// 		SettlementInstructions:   transfer.SettlementInstructions,
-	// 	})
-	// }
-
-	// key := collections.Join(*keyStr, transfer.LedgerEntryCorrelationId)
-	// if err := k.FundTransfersWithSettlement.Set(sdk.UnwrapSDKContext(ctx), key, transfer.SettlementInstructions); err != nil {
-	// 	return fmt.Errorf("failed to store transfer: %w", err)
-	// }
+	sk := collections.Join(*keyStr, transfer.LedgerEntryCorrelationId)
+	if err := k.FundTransfersWithSettlement.Set(ctx, sk, *existingSettlements); err != nil {
+		return fmt.Errorf("failed to store transfer: %w", err)
+	}
 
 	// Emit an event for the transfer
 	ctx.EventManager().EmitEvent(
@@ -121,4 +111,35 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 func (k BaseFundTransferKeeper) GetTransferHistory(ctx context.Context, nftAddress string) ([]*types.FundTransferWithSettlement, error) {
 	// TODO: Implement transfer history retrieval
 	return nil, nil
+}
+
+func (k BaseFundTransferKeeper) GetAllSettlements(ctx context.Context, keyStr *string) ([]*types.StoredSettlementInstructions, error) {
+	prefix := collections.NewPrefixedPairRange[string, string](*keyStr)
+	iter, err := k.FundTransfersWithSettlement.Iterate(ctx, prefix)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+
+	existingTransfers := make([]*types.StoredSettlementInstructions, 0)
+	for ; iter.Valid(); iter.Next() {
+		transfer, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+
+		existingTransfers = append(existingTransfers, &transfer)
+	}
+
+	return existingTransfers, nil
+}
+
+func (k BaseFundTransferKeeper) GetSettlements(ctx context.Context, keyStr *string, correlationId string) (*types.StoredSettlementInstructions, error) {
+	searchKey := collections.Join(*keyStr, correlationId)
+	settlements, err := k.FundTransfersWithSettlement.Get(ctx, searchKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &settlements, nil
 }
