@@ -38,7 +38,7 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 
 	hasAssetClass := k.BaseViewKeeper.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "asset_class_id", "asset_class already exists")
+		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "asset_class_id", "asset_class doesn't exist")
 	}
 
 	has, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)

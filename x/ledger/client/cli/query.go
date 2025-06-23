@@ -33,6 +33,7 @@ func CmdQuery() *cobra.Command {
 		GetBalancesAsOfCmd(),
 		GetLedgerClassEntryTypesCmd(),
 		GetLedgerClassStatusTypesCmd(),
+		GetLedgerClassBucketTypesCmd(),
 		GetLedgerClassCmd(),
 	)
 
@@ -260,8 +261,8 @@ func GetBalancesAsOfCmd() *cobra.Command {
 // GetLedgerClassEntryTypesCmd returns the command handler for querying ledger class entry types
 func GetLedgerClassEntryTypesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "entry-types <asset_class_id>",
-		Short:   "Query the ledger class entry types for the specified asset class",
+		Use:     "entry-types <ledger_class_id>",
+		Short:   "Query the ledger class entry types for the specified ledger class",
 		Example: fmt.Sprintf(`$ %s query ledger entry-types pb1a2b3c4...`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -293,8 +294,8 @@ func GetLedgerClassEntryTypesCmd() *cobra.Command {
 // GetLedgerClassStatusTypesCmd returns the command handler for querying ledger class status types
 func GetLedgerClassStatusTypesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "status-types <asset_class_id>",
-		Short:   "Query the ledger class status types for the specified asset class",
+		Use:     "status-types <ledger_class_id>",
+		Short:   "Query the ledger class status types for the specified ledger class",
 		Example: fmt.Sprintf(`$ %s query ledger status-types pb1a2b3c4...`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -311,6 +312,38 @@ func GetLedgerClassStatusTypesCmd() *cobra.Command {
 			}
 
 			resp, err := queryClient.ClassStatusTypesQuery(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetLedgerClassBucketTypesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "bucket-types <ledger_class_id>",
+		Short:   "Query the ledger class bucket types for the specified ledger class",
+		Example: fmt.Sprintf(`$ %s query ledger bucket-types pb1a2b3c4...`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			ledgerClassId := args[0]
+			queryClient := ledger.NewQueryClient(clientCtx)
+
+			req := ledger.QueryLedgerClassBucketTypesRequest{
+				LedgerClassId: ledgerClassId,
+			}
+
+			resp, err := queryClient.ClassBucketTypesQuery(context.Background(), &req)
 			if err != nil {
 				return err
 			}
