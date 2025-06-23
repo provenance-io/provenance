@@ -8,7 +8,6 @@ import (
 	nft "cosmossdk.io/x/nft"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/asset/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -26,7 +25,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (m msgServer) AddAssetClass(goCtx context.Context, msg *types.MsgAddAssetClass) (*types.MsgAddAssetClassResponse, error) {
+func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateAssetClass) (*types.MsgCreateAssetClassResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Create NFT class from asset class
@@ -71,14 +70,26 @@ func (m msgServer) AddAssetClass(goCtx context.Context, msg *types.MsgAddAssetCl
 		return nil, fmt.Errorf("failed to save NFT class: %w", err)
 	}
 
+	// Emit event for asset class creation
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAssetClassCreated,
+			sdk.NewAttribute(types.AttributeKeyAssetClassId, class.Id),
+			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
+			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
+			sdk.NewAttribute(types.AttributeKeyLedgerClass, msg.LedgerClass),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
+
 	m.Logger(ctx).Info("Created new asset class as NFT class",
 		"class_id", class.Id,
 		"name", class.Name)
 
-	return &types.MsgAddAssetClassResponse{}, nil
+	return &types.MsgCreateAssetClassResponse{}, nil
 }
 
-func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*types.MsgAddAssetResponse, error) {
+func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset) (*types.MsgCreateAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Verify the asset class exists
@@ -141,10 +152,9 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 		NftId:        msg.Asset.Id,
 	}
 
-	ledgerClassId := fmt.Sprintf("ledgert_%s", msg.Asset.ClassId)
 	ledgerObj := ledger.Ledger{
 		Key:           ledgerKey,
-		LedgerClassId: ledgerClassId,
+		LedgerClassId: msg.Asset.ClassId,
 		StatusTypeId:  1, // Using 1 as the default status type
 	}
 
@@ -165,12 +175,22 @@ func (m msgServer) AddAsset(goCtx context.Context, msg *types.MsgAddAsset) (*typ
 		return nil, fmt.Errorf("failed to create default registry: %w", err)
 	}
 
+	// Emit event for asset creation
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAssetCreated,
+			sdk.NewAttribute(types.AttributeKeyAssetClassId, msg.Asset.ClassId),
+			sdk.NewAttribute(types.AttributeKeyAssetId, msg.Asset.Id),
+			sdk.NewAttribute(types.AttributeKeyOwner, owner.String()),
+		),
+	)
+
 	m.Logger(ctx).Info("Created new asset as NFT",
 		"class_id", token.ClassId,
 		"token_id", token.Id,
 		"owner", owner.String())
 
-	return &types.MsgAddAssetResponse{}, nil
+	return &types.MsgCreateAssetResponse{}, nil
 }
 
 // CreatePool creates a new pool marker
@@ -197,19 +217,56 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 		}
 	}
 
+	// Emit event for pool creation
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypePoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolDenom, msg.Pool.Denom),
+			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Pool.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNftCount, fmt.Sprintf("%d", len(msg.Nfts))),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
+
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
-// CreateParticipation creates a new participation marker
-func (m msgServer) CreateParticipation(goCtx context.Context, msg *types.MsgCreateParticipation) (*types.MsgCreateParticipationResponse, error) {
+// CreateTokenization creates a new tokenization marker
+func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
 
 	// Create the marker
-	_, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
+	marker, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create participation marker: %w", err)
+		return nil, fmt.Errorf("failed to create tokenization marker: %w", err)
 	}
 
-	return &types.MsgCreateParticipationResponse{}, nil
+	// Verify the NFT exists and is owned by the from address
+	owner := m.nftKeeper.GetOwner(goCtx, msg.Nft.ClassId, msg.Nft.Id)
+	if owner.String() != msg.FromAddress {
+		return nil, fmt.Errorf("nft class %s, id %s owner %s does not match from address %s", msg.Nft.ClassId, msg.Nft.Id, owner.String(), msg.FromAddress)
+	}
+
+	// Transfer the NFT to the tokenization marker address
+	err = m.nftKeeper.Transfer(goCtx, msg.Nft.ClassId, msg.Nft.Id, marker.GetAddress())
+	if err != nil {
+		return nil, fmt.Errorf("failed to transfer nft: %w", err)
+	}
+
+	// Emit event for tokenization creation
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTokenizationCreated,
+			sdk.NewAttribute(types.AttributeKeyTokenizationDenom, msg.Denom.Denom),
+			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Denom.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNftClassId, msg.Nft.ClassId),
+			sdk.NewAttribute(types.AttributeKeyNftId, msg.Nft.Id),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
+
+	return &types.MsgCreateTokenizationResponse{}, nil
 }
 
 // CreateSecuritization creates a new securitization marker and tranches
@@ -272,6 +329,17 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		m.markerKeeper.SetMarker(ctx, pool)
 	}
 
+	// Emit event for securitization creation
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSecuritizationCreated,
+			sdk.NewAttribute(types.AttributeKeySecuritizationId, msg.Id),
+			sdk.NewAttribute(types.AttributeKeyTrancheCount, fmt.Sprintf("%d", len(msg.Tranches))),
+			sdk.NewAttribute(types.AttributeKeyPoolCount, fmt.Sprintf("%d", len(msg.Pools))),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+		),
+	)
+
 	return &types.MsgCreateSecuritizationResponse{}, nil
 }
 
@@ -279,37 +347,10 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Get the from address
-	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
+	marker, err := types.NewDefaultMarker(denom, fromAddr)
 	if err != nil {
-		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid from address: %w", err)
+		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to create marker: %w", err)
 	}
-
-	// Create a new marker account
-	markerAddr := markertypes.MustGetMarkerAddress(denom.Denom)
-	marker := markertypes.NewMarkerAccount(
-		authtypes.NewBaseAccountWithAddress(markerAddr),
-		denom,
-		fromAcc,
-		[]markertypes.AccessGrant{
-			{
-				Address: fromAcc.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Admin,
-					markertypes.Access_Mint,
-					markertypes.Access_Burn,
-					markertypes.Access_Withdraw,
-					markertypes.Access_Transfer,
-				},
-			},
-		},
-		markertypes.StatusProposed,
-		markertypes.MarkerType_RestrictedCoin,
-		true,       // Supply fixed
-		false,      // Allow governance control
-		false,      // Don't allow forced transfer
-		[]string{}, // No required attributes
-	)
 
 	// Add the marker account by setting it
 	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)

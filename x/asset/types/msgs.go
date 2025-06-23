@@ -7,20 +7,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//var _ sdk.Msg = &MsgAddAsset{}
-//var _ sdk.Msg = &MsgAddAssetClass{}
+var _ sdk.Msg = &MsgCreateAsset{}
+var _ sdk.Msg = &MsgCreateAssetClass{}
+var _ sdk.Msg = &MsgCreatePool{}
+var _ sdk.Msg = &MsgCreateTokenization{}
+var _ sdk.Msg = &MsgCreateSecuritization{}
 
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
-	(*MsgAddAsset)(nil),
-	(*MsgAddAssetClass)(nil),
+	(*MsgCreateAsset)(nil),
+	(*MsgCreateAssetClass)(nil),
 	(*MsgCreatePool)(nil),
-	(*MsgCreateParticipation)(nil),
+	(*MsgCreateTokenization)(nil),
 	(*MsgCreateSecuritization)(nil),
 }
 
 // ValidateBasic implements Msg
-func (msg MsgAddAsset) ValidateBasic() error {
+func (msg MsgCreateAsset) ValidateBasic() error {
 	if msg.Asset == nil {
 		return fmt.Errorf("asset cannot be nil")
 	}
@@ -37,11 +40,19 @@ func (msg MsgAddAsset) ValidateBasic() error {
 		return validateJSON(msg.Asset.Data)
 	}
 
+	if msg.FromAddress == "" {
+		return fmt.Errorf("from_address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return fmt.Errorf("invalid from_address: %w", err)
+	}
+
 	return nil
 }
 
 // ValidateBasic implements Msg
-func (msg MsgAddAssetClass) ValidateBasic() error {
+func (msg MsgCreateAssetClass) ValidateBasic() error {
 	if msg.AssetClass == nil {
 		return fmt.Errorf("asset class cannot be nil")
 	}
@@ -56,6 +67,124 @@ func (msg MsgAddAssetClass) ValidateBasic() error {
 
 	if msg.AssetClass.Data != "" {
 		return validateJSONSchema(msg.AssetClass.Data)
+	}
+
+	if msg.LedgerClass == "" {
+		return fmt.Errorf("ledger_class cannot be empty")
+	}
+
+	if msg.FromAddress == "" {
+		return fmt.Errorf("from_address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return fmt.Errorf("invalid from_address: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateBasic implements Msg
+func (msg MsgCreatePool) ValidateBasic() error {
+	if msg.Pool == nil {
+		return fmt.Errorf("pool cannot be nil")
+	}
+
+	if err := msg.Pool.Validate(); err != nil {
+		return fmt.Errorf("invalid pool: %w", err)
+	}
+
+	if len(msg.Nfts) == 0 {
+		return fmt.Errorf("nfts cannot be empty")
+	}
+
+	for i, nft := range msg.Nfts {
+		if nft == nil {
+			return fmt.Errorf("nft at index %d cannot be nil", i)
+		}
+		if nft.ClassId == "" {
+			return fmt.Errorf("nft at index %d class_id cannot be empty", i)
+		}
+		if nft.Id == "" {
+			return fmt.Errorf("nft at index %d id cannot be empty", i)
+		}
+	}
+
+	if msg.FromAddress == "" {
+		return fmt.Errorf("from_address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return fmt.Errorf("invalid from_address: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateBasic implements Msg
+func (msg MsgCreateTokenization) ValidateBasic() error {
+	if err := msg.Denom.Validate(); err != nil {
+		return fmt.Errorf("invalid denom: %w", err)
+	}
+
+	if msg.Nft == nil {
+		return fmt.Errorf("nft cannot be nil")
+	}
+
+	if msg.Nft.ClassId == "" {
+		return fmt.Errorf("nft class_id cannot be empty")
+	}
+
+	if msg.Nft.Id == "" {
+		return fmt.Errorf("nft id cannot be empty")
+	}
+
+	if msg.FromAddress == "" {
+		return fmt.Errorf("from_address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return fmt.Errorf("invalid from_address: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateBasic implements Msg
+func (msg MsgCreateSecuritization) ValidateBasic() error {
+	if msg.Id == "" {
+		return fmt.Errorf("id cannot be empty")
+	}
+
+	if len(msg.Pools) == 0 {
+		return fmt.Errorf("pools cannot be empty")
+	}
+
+	for i, pool := range msg.Pools {
+		if pool == "" {
+			return fmt.Errorf("pool at index %d cannot be empty", i)
+		}
+	}
+
+	if len(msg.Tranches) == 0 {
+		return fmt.Errorf("tranches cannot be empty")
+	}
+
+	for i, tranche := range msg.Tranches {
+		if tranche == nil {
+			return fmt.Errorf("tranche at index %d cannot be nil", i)
+		}
+		if err := tranche.Validate(); err != nil {
+			return fmt.Errorf("invalid tranche at index %d: %w", i, err)
+		}
+	}
+
+	if msg.FromAddress == "" {
+		return fmt.Errorf("from_address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return fmt.Errorf("invalid from_address: %w", err)
 	}
 
 	return nil
@@ -107,15 +236,46 @@ func validateJSONSchema(data string) error {
 }
 
 // GetSigners implements Msg
-func (msg MsgAddAsset) GetSigners() []sdk.AccAddress {
-	// Since there's no owner field in the struct, we'll need to determine the signer
-	// based on the asset's ownership or other business logic
-	return []sdk.AccAddress{}
+func (msg MsgCreateAsset) GetSigners() []sdk.AccAddress {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
 }
 
 // GetSigners implements Msg
-func (msg MsgAddAssetClass) GetSigners() []sdk.AccAddress {
-	// Since there's no authority field in the struct, we'll need to determine the signer
-	// based on the asset class's authority or other business logic
-	return []sdk.AccAddress{}
+func (msg MsgCreateAssetClass) GetSigners() []sdk.AccAddress {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
+}
+
+// GetSigners implements Msg
+func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
+}
+
+// GetSigners implements Msg
+func (msg MsgCreateTokenization) GetSigners() []sdk.AccAddress {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
+}
+
+// GetSigners implements Msg
+func (msg MsgCreateSecuritization) GetSigners() []sdk.AccAddress {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -257,18 +256,6 @@ func CmdAppend() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
-}
-
-// parseUint32 parses a string into a uint32
-func parseUint32(s string) (uint32, error) {
-	val, err := sdkmath.ParseUint(s)
-	if err != nil {
-		return 0, err
-	}
-	if val.GT(sdkmath.NewUint(100)) {
-		return 0, fmt.Errorf("sequence must be less than 100")
-	}
-	return uint32(val.Uint64()), nil
 }
 
 // CmdCreateLedgerClass creates a new ledger class

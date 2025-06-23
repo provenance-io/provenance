@@ -51,13 +51,11 @@ func (q queryServer) ListAssets(ctx context.Context, req *types.QueryListAssets)
 
 				// If there's data, convert it to string
 				if nft.Data != nil {
-					// Try to extract string value from Any
-					var strValue string
-					if err := q.cdc.UnpackAny(nft.Data, &strValue); err == nil {
+					strValue, err := types.AnyToString(q.cdc, nft.Data)
+					if err == nil {
 						asset.Data = strValue
 					} else {
-						// If we can't unpack as string, just use the raw data
-						asset.Data = string(nft.Data.Value)
+						return nil, fmt.Errorf("failed to convert Any to string: %w", err)
 					}
 				}
 
@@ -92,13 +90,11 @@ func (q queryServer) ListAssetClasses(ctx context.Context, req *types.QueryListA
 
 		// If there's data, convert it to string
 		if class.Data != nil {
-			// Try to extract string value from Any
-			var strValue string
-			if err := q.cdc.UnpackAny(class.Data, &strValue); err == nil {
+			strValue, err := types.AnyToString(q.cdc, class.Data)
+			if err == nil {
 				assetClass.Data = strValue
 			} else {
-				// If we can't unpack as string, just use the raw data
-				assetClass.Data = string(class.Data.Value)
+				assetClass.Data = "" // fallback to empty string if unpack fails
 			}
 		}
 
@@ -129,12 +125,13 @@ func (q queryServer) GetClass(ctx context.Context, req *types.QueryGetClass) (*t
 		},
 	}
 
-	dataString, err := types.AnyToString(q.cdc, nftClassResp.Data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert Any to string: %w", err)
+	if nftClassResp.Data != nil {
+		dataString, err := types.AnyToString(q.cdc, nftClassResp.Data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert Any to string: %w", err)
+		}
+		queryResp.AssetClass.Data = dataString
 	}
-
-	queryResp.AssetClass.Data = dataString
 
 	return queryResp, nil
 }

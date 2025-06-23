@@ -24,21 +24,23 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		GetCmdAddAsset(),
-		GetCmdAddAssetClass(),
+		GetCmdCreateAsset(),
+		GetCmdCreateAssetClass(),
 		GetCmdCreatePool(),
-		GetCmdCreateParticipation(),
+		GetCmdCreateTokenization(),
 		GetCmdCreateSecuritization(),
 	)
 
 	return txCmd
 }
 
-// GetCmdAddAsset returns the command for adding an asset
-func GetCmdAddAsset() *cobra.Command {
+// GetCmdCreateAsset returns the command for creating an asset
+func GetCmdCreateAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-asset [class-id] [id] [uri] [uri-hash] [data]",
-		Short: "Add a new asset",
+		Use:   "create-asset [class-id] [id] [uri] [uri-hash] [data]",
+		Short: "Create a new asset",
+		Long: `Create a new asset in the specified asset class.`,
+		Example: `  provenanced tx asset create-asset "real-estate" "property-001" "https://example.com/metadata.json" "abc123" '{"location": "New York", "value": 500000}'`,
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -54,7 +56,7 @@ func GetCmdAddAsset() *cobra.Command {
 				Data:    args[4],
 			}
 
-			msg := &types.MsgAddAsset{
+			msg := &types.MsgCreateAsset{
 				Asset:       asset,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
@@ -67,11 +69,13 @@ func GetCmdAddAsset() *cobra.Command {
 	return cmd
 }
 
-// GetCmdAddAssetClass returns the command for adding an asset class
-func GetCmdAddAssetClass() *cobra.Command {
+// GetCmdCreateAssetClass returns the command for creating an asset class
+func GetCmdCreateAssetClass() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [ledger-class-id]",
-		Short: "Add a new asset class",
+		Use:   "create-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [ledger-class-id]",
+		Short: "Create a new asset class",
+		Long: `Create a new asset class with the specified properties.`,
+		Example: `  provenanced tx asset create-class "real-estate" "Real Estate Assets" "REAL" "Real estate properties" "https://example.com/class-metadata.json" "def456" '{"category": "property"}' "ledger-class-001"`,
 		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -89,7 +93,7 @@ func GetCmdAddAssetClass() *cobra.Command {
 				Data:        args[6],
 			}
 
-			msg := &types.MsgAddAssetClass{
+			msg := &types.MsgCreateAssetClass{
 				AssetClass:  assetClass,
 				LedgerClass: args[7],
 				FromAddress: clientCtx.GetFromAddress().String(),
@@ -110,11 +114,10 @@ func GetCmdCreatePool() *cobra.Command {
 		Short: "Create a new pool marker",
 		Long: `Create a new pool marker with the specified NFTs.
 The nfts argument should be a semicolon-separated list of asset entries, where each entry is a comma-separated class-id and asset-id.
-The entire nfts argument must be quoted to prevent shell interpretation of the semicolons.
-
-Example: 
-  provenanced tx asset create-pool 10pooltoken "asset_class1,asset_id1;asset_class2,asset_id2"
-  provenanced tx asset create-pool 10pooltoken 'asset_class1,asset_id1;asset_class2,asset_id2'`,
+The entire nfts argument must be quoted to prevent shell interpretation of the semicolons.`,
+		Example: `  provenanced tx asset create-pool 10pooltoken "asset_class1,asset_id1;asset_class2,asset_id2"
+  provenanced tx asset create-pool 10pooltoken 'asset_class1,asset_id1;asset_class2,asset_id2'
+  provenanced tx asset create-pool 1000pooltoken "real-estate,property-001;real-estate,property-002"`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -154,12 +157,14 @@ Example:
 	return cmd
 }
 
-// GetCmdCreateParticipation returns the command for creating a new participation
-func GetCmdCreateParticipation() *cobra.Command {
+// GetCmdCreateTokenization returns the command for creating a new tokenization
+func GetCmdCreateTokenization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-participation [pool-id] [amount]",
-		Short: "Create a new participation marker",
-		Args:  cobra.ExactArgs(1),
+		Use:   "create-tokenization [amount] [nft-class-id] [nft-id]",
+		Short: "Create a new tokenization marker",
+		Long: `Create a new tokenization marker with the specified amount and NFT.`,
+		Example: `  provenanced tx asset create-tokenization 1000pooltoken real-estate property-001`,
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -171,8 +176,14 @@ func GetCmdCreateParticipation() *cobra.Command {
 				return fmt.Errorf("invalid coin %s", args[0])
 			}
 
-			msg := &types.MsgCreateParticipation{
+			nft := &types.Nft{
+				ClassId: args[1],
+				Id:      args[2],
+			}
+
+			msg := &types.MsgCreateTokenization{
 				Denom:       coin,
+				Nft:         nft,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
@@ -191,10 +202,9 @@ func GetCmdCreateSecuritization() *cobra.Command {
 		Short: "Create a new securitization marker and tranches",
 		Long: `Create a new securitization marker and tranches.
 The pools argument should be a comma-separated list of pool names.
-The tranches argument should be a comma-separated list of coins.
-
-Example:
-  provenanced tx asset create-securitization sec1 "pool1,pool2" "100tranche1,200tranche2"`,
+The tranches argument should be a comma-separated list of coins.`,
+		Example: `  provenanced tx asset create-securitization sec1 "pool1,pool2" "100tranche1,200tranche2"
+  provenanced tx asset create-securitization "mortgage-sec-001" "mortgage-pool-1,mortgage-pool-2" "1000000senior-tranche,500000mezzanine-tranche"`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
