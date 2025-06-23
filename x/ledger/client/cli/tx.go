@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,6 +33,7 @@ func CmdTx() *cobra.Command {
 		CmdAddLedgerClassStatusType(),
 		CmdAddLedgerClassEntryType(),
 		CmdAddLedgerClassBucketType(),
+		CmdTransferFundsWithSettlement(),
 	)
 
 	return cmd
@@ -402,6 +404,47 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 					Description: description,
 				},
 				Authority: clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdTransferFundsWithSettlement returns the command for transferring funds with settlement instructions
+func CmdTransferFundsWithSettlement() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "xfer [authority] [transfers-json-file]",
+		Short: "Submit a fund transfer with settlement instructions (ledger module)",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			authority := args[0]
+			transfersFile := args[1]
+
+			jsonBytes, err := os.ReadFile(transfersFile)
+			if err != nil {
+				return fmt.Errorf("failed to read transfers JSON file: %w", err)
+			}
+
+			var transfers []ledger.FundTransferWithSettlement
+			if err := json.Unmarshal(jsonBytes, &transfers); err != nil {
+				return fmt.Errorf("failed to parse transfers JSON: %w", err)
+			}
+
+			msg := &ledger.MsgTransferFundsWithSettlementRequest{
+				Authority: authority,
+				Transfers: make([]*ledger.FundTransferWithSettlement, len(transfers)),
+			}
+			for i := range transfers {
+				msg.Transfers[i] = &transfers[i]
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
