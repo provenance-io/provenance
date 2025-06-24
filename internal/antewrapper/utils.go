@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
-	cflags "github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -46,10 +45,6 @@ const (
 	DefaultGasLimit uint64 = 500_000
 	// For reference, consensus params on mainnet and testnet have max block gas at 60,000,000
 )
-
-func init() {
-	cflags.DefaultGasLimit = DefaultGasLimit
-}
 
 // lazyCzStr is an alias to provutils.NewLazyStringer(val) that needs fewer characters to type, and is typed to Coins.
 var lazyCzStr = provutils.NewLazyStringer[sdk.Coins]
