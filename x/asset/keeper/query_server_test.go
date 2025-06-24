@@ -12,7 +12,6 @@ import (
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/types"
-	ledgertypes "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 type QueryServerTestSuite struct {
@@ -42,25 +41,6 @@ func (s *QueryServerTestSuite) SetupTest() {
 func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
 	
-	// Create ledger class for asset class 1
-	ledgerClass1 := ledgertypes.LedgerClass{
-		LedgerClassId:     "asset-class-1",
-		AssetClassId:      "asset-class-1",
-		Denom:             "stake",
-		MaintainerAddress: s.user1Addr.String(),
-	}
-	err := s.app.LedgerKeeper.CreateLedgerClass(s.ctx, s.user1Addr, ledgerClass1)
-	s.Require().NoError(err)
-	
-	// Add status type to ledger class
-	statusType := ledgertypes.LedgerClassStatusType{
-		Id:          1,
-		Code:        "ACTIVE",
-		Description: "Active",
-	}
-	err = s.app.LedgerKeeper.AddClassStatusType(s.ctx, s.user1Addr, "asset-class-1", statusType)
-	s.Require().NoError(err)
-	
 	// Create asset class 1
 	assetClassMsg1 := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
@@ -72,23 +52,9 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			UriHash:     "hash1",
 			Data:        `{"schema": "test"}`,
 		},
-		LedgerClass: "asset-class-1",
 		FromAddress: s.user1Addr.String(),
 	}
-	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg1)
-	s.Require().NoError(err)
-	
-	// Create ledger class for asset class 2
-	ledgerClass2 := ledgertypes.LedgerClass{
-		LedgerClassId:     "asset-class-2",
-		AssetClassId:      "asset-class-2",
-		Denom:             "stake",
-		MaintainerAddress: s.user1Addr.String(),
-	}
-	err = s.app.LedgerKeeper.CreateLedgerClass(s.ctx, s.user1Addr, ledgerClass2)
-	s.Require().NoError(err)
-	
-	err = s.app.LedgerKeeper.AddClassStatusType(s.ctx, s.user1Addr, "asset-class-2", statusType)
+	_, err := msgServer.CreateAssetClass(s.ctx, assetClassMsg1)
 	s.Require().NoError(err)
 	
 	// Create asset class 2
@@ -101,7 +67,6 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			Uri:         "https://example.com/class2",
 			UriHash:     "hash2",
 		},
-		LedgerClass: "asset-class-2",
 		FromAddress: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg2)

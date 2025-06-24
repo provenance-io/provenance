@@ -9,7 +9,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/asset/types"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	registry "github.com/provenance-io/provenance/x/registry"
 
@@ -55,17 +54,8 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 		}
 	}
 
-	// Verify the ledger class exists and it's asset class is the same as this class
-	ledgerClass, err := m.ledgerKeeper.GetLedgerClass(ctx, msg.LedgerClass)
-	if err != nil {
-		return nil, fmt.Errorf("ledger class %s does not exist: %w", msg.LedgerClass, err)
-	}
-	if ledgerClass.AssetClassId != class.Id {
-		return nil, fmt.Errorf("ledger class %s asset class id %s does not match asset class id %s", msg.LedgerClass, ledgerClass.AssetClassId, class.Id)
-	}
-	
 	// Save the NFT class
-	err = m.nftKeeper.SaveClass(ctx, class)
+	err := m.nftKeeper.SaveClass(ctx, class)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save NFT class: %w", err)
 	}
@@ -77,7 +67,6 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 			sdk.NewAttribute(types.AttributeKeyAssetClassId, class.Id),
 			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
 			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
-			sdk.NewAttribute(types.AttributeKeyLedgerClass, msg.LedgerClass),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
 		),
 	)
@@ -144,24 +133,6 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	err = m.nftKeeper.Mint(ctx, token, owner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to mint NFT: %w", err)
-	}
-
-	// Create a ledger for this asset
-	ledgerKey := &ledger.LedgerKey{
-		AssetClassId: msg.Asset.ClassId,
-		NftId:        msg.Asset.Id,
-	}
-
-	ledgerObj := ledger.Ledger{
-		Key:           ledgerKey,
-		LedgerClassId: msg.Asset.ClassId,
-		StatusTypeId:  1, // Using 1 as the default status type
-	}
-
-	// Create the ledger
-	err = m.ledgerKeeper.CreateLedger(ctx, owner, ledgerObj)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create ledger: %w", err)
 	}
 
 	// Create a default registry for the asset

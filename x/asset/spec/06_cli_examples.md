@@ -22,7 +22,7 @@ The `x/asset` module provides command-line interface (CLI) commands for creating
 Creates a new asset class that defines the schema and classification for digital assets.
 
 ```bash
-provenanced tx asset create-class [id] [name] [symbol] [description] [uri] [uri-hash] [data] [ledger-class-id]
+provenanced tx asset create-class [id] [name] [symbol] [description] [uri] [uri-hash] [data]
 ```
 
 **Arguments:**
@@ -33,7 +33,6 @@ provenanced tx asset create-class [id] [name] [symbol] [description] [uri] [uri-
 - `uri`: Link to off-chain metadata
 - `uri-hash`: Hash of the metadata document
 - `data`: JSON schema for asset data validation
-- `ledger-class-id`: Associated ledger class ID
 
 **Example:**
 ```bash
@@ -45,7 +44,6 @@ provenanced tx asset create-class \
   "https://example.com/class-metadata.json" \
   "def456" \
   '{"type":"object","properties":{"location":{"type":"string"},"value":{"type":"number"}}}' \
-  "ledger-class-001" \
   --from=alice \
   --chain-id=testing \
   --gas=auto \
@@ -306,7 +304,6 @@ provenanced tx asset create-class \
   "https://example.com/class-metadata.json" \
   "def456" \
   '{"type":"object","properties":{"location":{"type":"string"},"value":{"type":"number"}}}' \
-  "ledger-class-001" \
   --from=alice \
   --chain-id=testing \
   --gas=auto \

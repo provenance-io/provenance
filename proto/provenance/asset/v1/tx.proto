@@ -36,8 +36,7 @@ message MsgCreateAssetClass {
   option (cosmos.msg.v1.signer) = "from_address";
 
   AssetClass asset_class  = 1;
-  string     ledger_class = 2;
-  string     from_address = 3;
+  string     from_address = 2;
 }
 
 message MsgCreateAssetClassResponse {}
