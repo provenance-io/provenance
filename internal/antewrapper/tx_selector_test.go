@@ -190,7 +190,7 @@ func TestProvTxSelector_SelectTxForProposal(t *testing.T) {
 			memTx:       NewMockFeeTx("").WithGas(350_123).WithFee(sdk.NewCoins(sdk.NewInt64Coin("nhash", 350_123))),
 			txBz:        []byte("justanothertx"),
 			exp:         false,
-			expTS:       &provTxSelector{totalTxGas: DefaultGasLimit, totalTxBytes: 13, selectedTxs: [][]byte{[]byte("justanothertx")}},
+			expTS:       &provTxSelector{totalTxGas: 200000, totalTxBytes: 13, selectedTxs: [][]byte{[]byte("justanothertx")}},
 		},
 		{
 			name:        "memTx has other gas",
@@ -200,7 +200,7 @@ func TestProvTxSelector_SelectTxForProposal(t *testing.T) {
 			memTx:       NewMockFeeTx("").WithGas(350_124).WithFee(sdk.NewCoins(sdk.NewInt64Coin("nhash", 350_123))),
 			txBz:        []byte("justanothertx"),
 			exp:         false,
-			expTS:       &provTxSelector{totalTxGas: 350_124, totalTxBytes: 13, selectedTxs: [][]byte{[]byte("justanothertx")}},
+			expTS:       &provTxSelector{totalTxGas: 200000, totalTxBytes: 13, selectedTxs: [][]byte{[]byte("justanothertx")}},
 		},
 	}
 
