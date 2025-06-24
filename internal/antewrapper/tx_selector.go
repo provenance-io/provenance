@@ -57,6 +57,12 @@ func (ts *provTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, m
 		// This little chunk is the only thing changed from the defaultTxSelector.
 		if feeTx, err := GetFeeTx(memTx); err == nil {
 			txGasLimit, _ = GetGasWanted(sdk.UnwrapSDKContext(ctx).Logger(), feeTx)
+			// Since people don't pay for gas anymore, there's no incentive to keep gas wanted small.
+			// So, for the purposes of selecting Txs for a block, we'll cap the gas limit at 200,000.
+			// That is the SDKs default gas amount for a Tx.
+			if txGasLimit > 200_000 {
+				txGasLimit = 200_000
+			}
 		}
 	}
 
