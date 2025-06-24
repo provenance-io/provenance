@@ -85,7 +85,7 @@ func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 
-	ledger.RegisterQueryServer(cfg.QueryServer(), keeper.NewLedgerQueryServer(am.keeper))
+	ledger.RegisterQueryServer(cfg.QueryServer(), keeper.NewLedgerQueryServer(am.keeper, am.keeper.BaseFundTransferKeeper))
 }
 
 // Register the protobuf message types and services with the sdk.

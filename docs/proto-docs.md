@@ -329,6 +329,10 @@
     - [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse)
     - [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest)
     - [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse)
+    - [QuerySettlementsByCorrelationIdRequest](#provenance-ledger-v1-QuerySettlementsByCorrelationIdRequest)
+    - [QuerySettlementsByCorrelationIdResponse](#provenance-ledger-v1-QuerySettlementsByCorrelationIdResponse)
+    - [QuerySettlementsRequest](#provenance-ledger-v1-QuerySettlementsRequest)
+    - [QuerySettlementsResponse](#provenance-ledger-v1-QuerySettlementsResponse)
   
     - [Query](#provenance-ledger-v1-Query)
   
@@ -5573,6 +5577,67 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
+
+<a name="provenance-ledger-v1-QuerySettlementsByCorrelationIdRequest"></a>
+
+### QuerySettlementsByCorrelationIdRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `correlation_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QuerySettlementsByCorrelationIdResponse"></a>
+
+### QuerySettlementsByCorrelationIdResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlement` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QuerySettlementsRequest"></a>
+
+### QuerySettlementsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QuerySettlementsResponse"></a>
+
+### QuerySettlementsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlements` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -5595,6 +5660,8 @@ Query defines the gRPC querier service for ledger module.
 | `EntriesQuery` | [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest) | [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse) |  |
 | `LedgerEntryQuery` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
 | `BalancesAsOfQuery` | [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest) | [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
+| `SettlementsQuery` | [QuerySettlementsRequest](#provenance-ledger-v1-QuerySettlementsRequest) | [QuerySettlementsResponse](#provenance-ledger-v1-QuerySettlementsResponse) | get all settlements for a ledger |
+| `SettlementsByCorrelationIdQuery` | [QuerySettlementsByCorrelationIdRequest](#provenance-ledger-v1-QuerySettlementsByCorrelationIdRequest) | [QuerySettlementsByCorrelationIdResponse](#provenance-ledger-v1-QuerySettlementsByCorrelationIdResponse) | get settlements by correlation id |
 
  <!-- end services -->
 

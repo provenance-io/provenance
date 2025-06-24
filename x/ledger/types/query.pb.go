@@ -751,6 +751,194 @@ func (m *QueryLedgerClassResponse) GetLedgerClass() *LedgerClass {
 	return nil
 }
 
+type QuerySettlementsRequest struct {
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+}
+
+func (m *QuerySettlementsRequest) Reset()         { *m = QuerySettlementsRequest{} }
+func (m *QuerySettlementsRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySettlementsRequest) ProtoMessage()    {}
+func (*QuerySettlementsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{16}
+}
+func (m *QuerySettlementsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySettlementsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySettlementsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySettlementsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySettlementsRequest.Merge(m, src)
+}
+func (m *QuerySettlementsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySettlementsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySettlementsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySettlementsRequest proto.InternalMessageInfo
+
+func (m *QuerySettlementsRequest) GetKey() *LedgerKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+type QuerySettlementsResponse struct {
+	Settlements []*StoredSettlementInstructions `protobuf:"bytes,1,rep,name=settlements,proto3" json:"settlements,omitempty"`
+}
+
+func (m *QuerySettlementsResponse) Reset()         { *m = QuerySettlementsResponse{} }
+func (m *QuerySettlementsResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySettlementsResponse) ProtoMessage()    {}
+func (*QuerySettlementsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{17}
+}
+func (m *QuerySettlementsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySettlementsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySettlementsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySettlementsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySettlementsResponse.Merge(m, src)
+}
+func (m *QuerySettlementsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySettlementsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySettlementsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySettlementsResponse proto.InternalMessageInfo
+
+func (m *QuerySettlementsResponse) GetSettlements() []*StoredSettlementInstructions {
+	if m != nil {
+		return m.Settlements
+	}
+	return nil
+}
+
+type QuerySettlementsByCorrelationIdRequest struct {
+	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	CorrelationId string     `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+}
+
+func (m *QuerySettlementsByCorrelationIdRequest) Reset() {
+	*m = QuerySettlementsByCorrelationIdRequest{}
+}
+func (m *QuerySettlementsByCorrelationIdRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySettlementsByCorrelationIdRequest) ProtoMessage()    {}
+func (*QuerySettlementsByCorrelationIdRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{18}
+}
+func (m *QuerySettlementsByCorrelationIdRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySettlementsByCorrelationIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySettlementsByCorrelationIdRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySettlementsByCorrelationIdRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySettlementsByCorrelationIdRequest.Merge(m, src)
+}
+func (m *QuerySettlementsByCorrelationIdRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySettlementsByCorrelationIdRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySettlementsByCorrelationIdRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySettlementsByCorrelationIdRequest proto.InternalMessageInfo
+
+func (m *QuerySettlementsByCorrelationIdRequest) GetKey() *LedgerKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *QuerySettlementsByCorrelationIdRequest) GetCorrelationId() string {
+	if m != nil {
+		return m.CorrelationId
+	}
+	return ""
+}
+
+type QuerySettlementsByCorrelationIdResponse struct {
+	Settlement *StoredSettlementInstructions `protobuf:"bytes,1,opt,name=settlement,proto3" json:"settlement,omitempty"`
+}
+
+func (m *QuerySettlementsByCorrelationIdResponse) Reset() {
+	*m = QuerySettlementsByCorrelationIdResponse{}
+}
+func (m *QuerySettlementsByCorrelationIdResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySettlementsByCorrelationIdResponse) ProtoMessage()    {}
+func (*QuerySettlementsByCorrelationIdResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{19}
+}
+func (m *QuerySettlementsByCorrelationIdResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySettlementsByCorrelationIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySettlementsByCorrelationIdResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySettlementsByCorrelationIdResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySettlementsByCorrelationIdResponse.Merge(m, src)
+}
+func (m *QuerySettlementsByCorrelationIdResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySettlementsByCorrelationIdResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySettlementsByCorrelationIdResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySettlementsByCorrelationIdResponse proto.InternalMessageInfo
+
+func (m *QuerySettlementsByCorrelationIdResponse) GetSettlement() *StoredSettlementInstructions {
+	if m != nil {
+		return m.Settlement
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryLedgerRequest)(nil), "provenance.ledger.v1.QueryLedgerRequest")
 	proto.RegisterType((*QueryLedgerResponse)(nil), "provenance.ledger.v1.QueryLedgerResponse")
@@ -768,66 +956,79 @@ func init() {
 	proto.RegisterType((*QueryLedgerClassBucketTypesResponse)(nil), "provenance.ledger.v1.QueryLedgerClassBucketTypesResponse")
 	proto.RegisterType((*QueryLedgerClassRequest)(nil), "provenance.ledger.v1.QueryLedgerClassRequest")
 	proto.RegisterType((*QueryLedgerClassResponse)(nil), "provenance.ledger.v1.QueryLedgerClassResponse")
+	proto.RegisterType((*QuerySettlementsRequest)(nil), "provenance.ledger.v1.QuerySettlementsRequest")
+	proto.RegisterType((*QuerySettlementsResponse)(nil), "provenance.ledger.v1.QuerySettlementsResponse")
+	proto.RegisterType((*QuerySettlementsByCorrelationIdRequest)(nil), "provenance.ledger.v1.QuerySettlementsByCorrelationIdRequest")
+	proto.RegisterType((*QuerySettlementsByCorrelationIdResponse)(nil), "provenance.ledger.v1.QuerySettlementsByCorrelationIdResponse")
 }
 
 func init() { proto.RegisterFile("provenance/ledger/v1/query.proto", fileDescriptor_7955b82df44e45aa) }
 
 var fileDescriptor_7955b82df44e45aa = []byte{
-	// 849 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x97, 0x4f, 0x6f, 0xd3, 0x48,
-	0x18, 0xc6, 0x3b, 0xad, 0xda, 0xed, 0xbe, 0xc9, 0xfe, 0x9b, 0xed, 0xaa, 0x59, 0xab, 0xca, 0xa6,
-	0x5e, 0xed, 0x2a, 0x80, 0x6a, 0xd3, 0x00, 0x2a, 0x6d, 0x11, 0x90, 0x50, 0xa8, 0xaa, 0x54, 0x2d,
-	0xb8, 0x85, 0x0a, 0x04, 0x0a, 0x4e, 0x32, 0x09, 0x56, 0x82, 0x9d, 0x66, 0x9c, 0x8a, 0x28, 0xea,
-	0x85, 0x4f, 0x80, 0xc4, 0x37, 0xe0, 0xc8, 0x95, 0x1b, 0x9f, 0x80, 0x03, 0x87, 0x08, 0x2e, 0x1c,
-	0x51, 0xcb, 0x07, 0x41, 0x9e, 0x99, 0xd4, 0x76, 0xe2, 0x26, 0x4e, 0xca, 0xb1, 0xa3, 0xf7, 0x7d,
-	0xde, 0xe7, 0x37, 0xf6, 0xe3, 0xbe, 0x81, 0x44, 0xad, 0x6e, 0x1d, 0x10, 0x53, 0x37, 0x0b, 0x44,
-	0xad, 0x92, 0x62, 0x99, 0xd4, 0xd5, 0x83, 0x45, 0x75, 0xbf, 0x41, 0xea, 0x4d, 0xa5, 0x56, 0xb7,
-	0x6c, 0x0b, 0xcf, 0xb8, 0x15, 0x0a, 0xaf, 0x50, 0x0e, 0x16, 0xa5, 0xb9, 0xb2, 0x65, 0x95, 0xab,
-	0x44, 0xd5, 0x6b, 0x86, 0xaa, 0x9b, 0xa6, 0x65, 0xeb, 0xb6, 0x61, 0x99, 0x94, 0xf7, 0x48, 0xf3,
-	0x81, 0xaa, 0xa2, 0x9b, 0x95, 0xc8, 0xeb, 0x80, 0xef, 0x39, 0x53, 0x36, 0xd9, 0xa1, 0x46, 0xf6,
-	0x1b, 0x84, 0xda, 0x78, 0x11, 0x26, 0x2a, 0xa4, 0x19, 0x43, 0x09, 0x94, 0x8c, 0xa4, 0xfe, 0x51,
-	0x82, 0x46, 0x2b, 0xbc, 0x23, 0x4b, 0x9a, 0x9a, 0x53, 0x2b, 0x67, 0xe1, 0x4f, 0x9f, 0x10, 0xad,
-	0x59, 0x26, 0x25, 0xf8, 0x32, 0x4c, 0xf1, 0x16, 0x21, 0x36, 0xd7, 0x4f, 0x4c, 0x13, 0xb5, 0xf2,
-	0x16, 0xfc, 0xed, 0x11, 0xbb, 0x6d, 0xda, 0x75, 0x83, 0xd0, 0x33, 0x98, 0x7b, 0x08, 0x52, 0x90,
-	0x9e, 0xf0, 0xb8, 0x0a, 0x3f, 0x11, 0x7e, 0x14, 0x43, 0x89, 0x89, 0x64, 0x24, 0x35, 0xdf, 0x4f,
-	0xd4, 0xe9, 0x6e, 0x6a, 0x9d, 0x0e, 0x99, 0xc2, 0x6c, 0x97, 0x74, 0x73, 0x74, 0xa3, 0xf8, 0x3f,
-	0xf8, 0xb5, 0x60, 0xd5, 0xeb, 0xa4, 0xca, 0x9e, 0x63, 0xce, 0x28, 0xc6, 0xc6, 0x13, 0x28, 0xf9,
-	0xb3, 0xf6, 0x8b, 0xe7, 0x74, 0xa3, 0x28, 0xef, 0x40, 0xac, 0x77, 0xa8, 0xa0, 0x59, 0x82, 0x49,
-	0xc7, 0x5b, 0x67, 0x6e, 0x08, 0x16, 0x5e, 0x2f, 0x57, 0x84, 0x68, 0x46, 0xaf, 0x3a, 0xc5, 0x34,
-	0x4d, 0xb7, 0x4b, 0x67, 0x40, 0x99, 0x03, 0xd0, 0x69, 0xce, 0x2a, 0xe5, 0x8a, 0xba, 0x4d, 0x04,
-	0xc6, 0xb4, 0x4e, 0xb7, 0x4b, 0x6b, 0xba, 0x4d, 0xe4, 0x3d, 0xf1, 0x84, 0xfd, 0xc3, 0x04, 0xc2,
-	0x0a, 0x4c, 0xe7, 0xc5, 0xb9, 0x18, 0x19, 0x0f, 0x1e, 0xd9, 0xe9, 0xd6, 0x4e, 0xea, 0xe5, 0x2c,
-	0xcc, 0x7b, 0xae, 0xe6, 0x56, 0x55, 0xa7, 0x94, 0x51, 0xee, 0x36, 0x6b, 0xee, 0x2b, 0xf4, 0x3f,
-	0xfc, 0xc6, 0x45, 0x72, 0x05, 0xa7, 0xc0, 0xb9, 0x67, 0xc4, 0xef, 0xb9, 0xea, 0xb6, 0x6d, 0x14,
-	0xe5, 0x7d, 0x90, 0xfb, 0x89, 0x09, 0xbb, 0x59, 0x88, 0xb0, 0x1b, 0xcc, 0xd9, 0xce, 0xb1, 0x78,
-	0x87, 0xce, 0xf7, 0xbb, 0x24, 0xbf, 0x92, 0x06, 0xe4, 0x44, 0x54, 0xde, 0xec, 0x1d, 0xb9, 0x63,
-	0xeb, 0x76, 0x83, 0x8e, 0x04, 0xd0, 0x80, 0x7f, 0xfb, 0xaa, 0x09, 0x82, 0x2d, 0x88, 0x52, 0x76,
-	0xec, 0x43, 0xb8, 0x30, 0x10, 0xc1, 0xd5, 0xd2, 0x22, 0xd4, 0xd5, 0x0d, 0x82, 0xc8, 0x34, 0x0a,
-	0x15, 0x62, 0xff, 0x28, 0x08, 0x9f, 0x9a, 0x0b, 0x91, 0x67, 0xc7, 0x43, 0x42, 0xb8, 0x5a, 0x5a,
-	0x24, 0xef, 0xea, 0xca, 0x69, 0x5f, 0xb2, 0x59, 0xe9, 0xb0, 0xce, 0x9f, 0xfa, 0x72, 0x2a, 0x24,
-	0x84, 0xdd, 0x35, 0x88, 0x7a, 0x35, 0xc2, 0xc4, 0x95, 0x0b, 0x44, 0x3c, 0x33, 0x52, 0xef, 0xa2,
-	0x30, 0xc9, 0x46, 0xe0, 0x37, 0x08, 0x80, 0x9d, 0xf1, 0x3f, 0x17, 0x82, 0x85, 0x4e, 0x21, 0x92,
-	0x94, 0xb0, 0xe5, 0xdc, 0xbd, 0x7c, 0xe5, 0xe5, 0xe7, 0x6f, 0xaf, 0xc7, 0x55, 0xbc, 0xa0, 0x06,
-	0xfe, 0x8f, 0x61, 0x48, 0x6a, 0xab, 0xeb, 0x92, 0x0e, 0xf1, 0x47, 0x04, 0x33, 0x5d, 0x31, 0xe2,
-	0x76, 0x97, 0xc2, 0xcd, 0xef, 0x89, 0xb2, 0x74, 0x75, 0xf8, 0x46, 0x81, 0x90, 0x66, 0x08, 0xab,
-	0x78, 0x79, 0x28, 0x04, 0xd5, 0x13, 0x75, 0xdc, 0x46, 0xf0, 0x57, 0x77, 0xa8, 0x38, 0x4f, 0x48,
-	0x5b, 0xbd, 0xd1, 0x96, 0x96, 0x47, 0xe8, 0x14, 0x44, 0x19, 0x46, 0x74, 0x0d, 0xaf, 0x0c, 0x47,
-	0xe4, 0x8d, 0xbe, 0x8b, 0xe4, 0x89, 0xd8, 0x50, 0x48, 0xbd, 0x41, 0x0f, 0x8b, 0x14, 0x10, 0xea,
-	0x51, 0x91, 0xbc, 0x1f, 0x02, 0xfc, 0x16, 0x41, 0x84, 0x8f, 0xe1, 0x20, 0xc9, 0x81, 0x76, 0x3a,
-	0xc6, 0xcf, 0x85, 0xa8, 0x14, 0x46, 0xef, 0x30, 0xa3, 0x37, 0xf1, 0xf5, 0x53, 0x8c, 0x5a, 0x66,
-	0xc9, 0x28, 0xab, 0xad, 0x0a, 0x69, 0x2a, 0x3a, 0xa5, 0xc4, 0xf6, 0x98, 0x65, 0x87, 0x66, 0xc9,
-	0x66, 0x09, 0x79, 0x8f, 0x20, 0x2a, 0x16, 0x14, 0xee, 0x56, 0x1d, 0xe8, 0xc1, 0xbf, 0x1f, 0x49,
-	0x17, 0xc3, 0x37, 0x08, 0xef, 0xeb, 0xcc, 0x7b, 0x1a, 0xdf, 0x08, 0xf6, 0x2e, 0x56, 0x9d, 0x10,
-	0xe6, 0xdb, 0x08, 0x7e, 0xf7, 0x6c, 0x16, 0x61, 0xbf, 0x44, 0xde, 0xad, 0x29, 0xc4, 0x97, 0xc8,
-	0xb7, 0xef, 0xc8, 0x4f, 0x98, 0xf9, 0x3d, 0x7c, 0x5f, 0xed, 0xb3, 0xed, 0x0e, 0xf6, 0xce, 0x73,
-	0xad, 0xb6, 0xfc, 0xeb, 0xd7, 0x21, 0xfe, 0x84, 0xe0, 0x0f, 0xef, 0x92, 0xc2, 0x99, 0xfa, 0x99,
-	0x0c, 0xd8, 0x9f, 0x24, 0x35, 0x74, 0xbd, 0xa0, 0x7a, 0xcc, 0xa8, 0x1e, 0xe0, 0xdd, 0x33, 0x52,
-	0x75, 0xf6, 0x22, 0xb5, 0xe5, 0x2e, 0x63, 0x87, 0x99, 0xf2, 0x87, 0xa3, 0x38, 0x6a, 0x1f, 0xc5,
-	0xd1, 0xd7, 0xa3, 0x38, 0x7a, 0x75, 0x1c, 0x1f, 0x6b, 0x1f, 0xc7, 0xc7, 0xbe, 0x1c, 0xc7, 0xc7,
-	0x60, 0xd6, 0xb0, 0x02, 0xad, 0xde, 0x45, 0x8f, 0x52, 0x65, 0xc3, 0x7e, 0xd6, 0xc8, 0x2b, 0x05,
-	0xeb, 0xb9, 0xc7, 0xd4, 0x82, 0x61, 0x79, 0x2d, 0xbe, 0xe8, 0x58, 0x63, 0xd1, 0xcb, 0x4f, 0xb1,
-	0x5f, 0x19, 0x97, 0xbe, 0x07, 0x00, 0x00, 0xff, 0xff, 0xd2, 0x6b, 0x0f, 0x22, 0xe0, 0x0c, 0x00,
-	0x00,
+	// 1005 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x97, 0x5b, 0x6f, 0x1b, 0x45,
+	0x14, 0xc7, 0x33, 0xa9, 0x5a, 0xca, 0xd9, 0x00, 0x61, 0x28, 0x6a, 0x58, 0x45, 0x6e, 0x32, 0x88,
+	0x12, 0x2e, 0xd9, 0x25, 0x06, 0x54, 0x7a, 0xe1, 0x12, 0xb7, 0x50, 0x85, 0x44, 0x2d, 0x6c, 0x02,
+	0x15, 0x97, 0xca, 0xac, 0xed, 0xb1, 0x59, 0xc5, 0xdd, 0x75, 0x76, 0xc6, 0x11, 0xab, 0x28, 0x0f,
+	0x94, 0x2f, 0x80, 0xc4, 0x37, 0xe0, 0x91, 0x8f, 0xc0, 0x3b, 0x12, 0x0f, 0x3c, 0x58, 0xf0, 0xc2,
+	0x23, 0x4a, 0xf8, 0x20, 0x68, 0x67, 0xc6, 0xd9, 0x59, 0x7b, 0xb3, 0x5e, 0xdb, 0xe1, 0x31, 0x93,
+	0x73, 0xfe, 0xe7, 0xff, 0x9b, 0xcb, 0xd9, 0x63, 0x58, 0xea, 0x84, 0xc1, 0x3e, 0xf5, 0x5d, 0xbf,
+	0x4e, 0xed, 0x36, 0x6d, 0xb4, 0x68, 0x68, 0xef, 0xaf, 0xd9, 0x7b, 0x5d, 0x1a, 0x46, 0x56, 0x27,
+	0x0c, 0x78, 0x80, 0x2f, 0x25, 0x11, 0x96, 0x8c, 0xb0, 0xf6, 0xd7, 0xcc, 0xc5, 0x56, 0x10, 0xb4,
+	0xda, 0xd4, 0x76, 0x3b, 0x9e, 0xed, 0xfa, 0x7e, 0xc0, 0x5d, 0xee, 0x05, 0x3e, 0x93, 0x39, 0xe6,
+	0x72, 0xa6, 0xaa, 0xca, 0x96, 0x21, 0xaf, 0xe7, 0x84, 0x54, 0x19, 0xe5, 0xbc, 0x4d, 0x1f, 0x51,
+	0x9f, 0xcb, 0x68, 0x72, 0x17, 0xf0, 0xa7, 0xb1, 0xa7, 0x2d, 0xf1, 0x7f, 0x87, 0xee, 0x75, 0x29,
+	0xe3, 0x78, 0x0d, 0xce, 0xed, 0xd2, 0x68, 0x01, 0x2d, 0xa1, 0x15, 0xa3, 0x7c, 0xc5, 0xca, 0x32,
+	0x6a, 0xc9, 0x8c, 0x4d, 0x1a, 0x39, 0x71, 0x2c, 0xd9, 0x84, 0xe7, 0x52, 0x42, 0xac, 0x13, 0xf8,
+	0x8c, 0xe2, 0xb7, 0xe0, 0x82, 0x4c, 0x51, 0x62, 0x8b, 0x79, 0x62, 0x8e, 0x8a, 0x25, 0xf7, 0xe0,
+	0x05, 0x4d, 0xec, 0x43, 0x9f, 0x87, 0x1e, 0x65, 0x53, 0x98, 0xfb, 0x02, 0xcc, 0x2c, 0x3d, 0xe5,
+	0xf1, 0x26, 0x3c, 0x41, 0xe5, 0xd2, 0x02, 0x5a, 0x3a, 0xb7, 0x62, 0x94, 0x97, 0xf3, 0x44, 0xe3,
+	0xec, 0xc8, 0xe9, 0x67, 0x10, 0x06, 0x97, 0x07, 0xa4, 0xa3, 0xc9, 0x8d, 0xe2, 0x97, 0xe0, 0xe9,
+	0x7a, 0x10, 0x86, 0xb4, 0x2d, 0x4e, 0xbd, 0xea, 0x35, 0x16, 0x66, 0x97, 0xd0, 0xca, 0x93, 0xce,
+	0x53, 0xda, 0xea, 0x46, 0x83, 0x6c, 0xc3, 0xc2, 0x70, 0x51, 0x45, 0x73, 0x0d, 0xce, 0xc7, 0xde,
+	0xfa, 0x75, 0x0b, 0xb0, 0xc8, 0x78, 0xb2, 0xab, 0x44, 0x2b, 0x6e, 0x3b, 0x0e, 0x66, 0xeb, 0xec,
+	0x7e, 0x73, 0x0a, 0x94, 0x45, 0x00, 0x97, 0x55, 0x83, 0x66, 0xb5, 0xe1, 0x72, 0xaa, 0x30, 0x2e,
+	0xba, 0xec, 0x7e, 0xf3, 0x8e, 0xcb, 0x29, 0x79, 0xa0, 0x4e, 0x38, 0x5d, 0x4c, 0x21, 0xdc, 0x80,
+	0x8b, 0x35, 0xb5, 0xae, 0x4a, 0x96, 0xb2, 0x4b, 0xf6, 0xb3, 0x9d, 0x93, 0x78, 0xb2, 0x09, 0xcb,
+	0xda, 0xd6, 0xdc, 0x6e, 0xbb, 0x8c, 0x09, 0xca, 0x9d, 0xa8, 0x93, 0x5c, 0xa1, 0xab, 0xf0, 0x8c,
+	0x7a, 0x10, 0xf5, 0x38, 0x20, 0xde, 0x67, 0x24, 0xf7, 0xb9, 0x9d, 0xa4, 0x6d, 0x34, 0xc8, 0x1e,
+	0x90, 0x3c, 0x31, 0x65, 0x77, 0x13, 0x0c, 0xb1, 0x83, 0x55, 0x1e, 0x2f, 0xab, 0x3b, 0xf4, 0x6a,
+	0xde, 0x26, 0xa5, 0x95, 0x1c, 0xa0, 0x27, 0xa2, 0x64, 0x6b, 0xb8, 0xe4, 0x36, 0x77, 0x79, 0x97,
+	0x4d, 0x04, 0xd0, 0x85, 0x17, 0x73, 0xd5, 0x14, 0xc1, 0x3d, 0x98, 0x63, 0x62, 0x39, 0x85, 0xf0,
+	0xda, 0x48, 0x84, 0x44, 0xcb, 0x31, 0x58, 0xa2, 0x9b, 0x05, 0x51, 0xe9, 0xd6, 0x77, 0x29, 0x3f,
+	0x2b, 0x88, 0x94, 0x5a, 0x02, 0x51, 0x13, 0xcb, 0x63, 0x42, 0x24, 0x5a, 0x8e, 0x51, 0x4b, 0x74,
+	0xc9, 0x7a, 0xea, 0x65, 0x8b, 0xd0, 0x71, 0x9d, 0x7f, 0x93, 0x7a, 0xa7, 0x4a, 0x42, 0xd9, 0xbd,
+	0x03, 0x73, 0xba, 0x46, 0x91, 0xe7, 0x2a, 0x05, 0x0c, 0xad, 0x06, 0xd9, 0x52, 0x26, 0xb7, 0x4f,
+	0x1a, 0xfb, 0x34, 0x7d, 0xb2, 0xa3, 0xfc, 0xa6, 0xd4, 0x94, 0xdf, 0x1d, 0x30, 0x92, 0xaf, 0x47,
+	0x7f, 0x77, 0xcb, 0xd9, 0xb2, 0xdb, 0x3c, 0x08, 0x69, 0x23, 0x51, 0xd9, 0xf0, 0x19, 0x0f, 0xbb,
+	0x75, 0xf1, 0x25, 0x73, 0x74, 0x19, 0xf2, 0x18, 0xc1, 0xd5, 0xc1, 0x92, 0x95, 0xe8, 0xb6, 0xde,
+	0xed, 0xfe, 0xff, 0x76, 0x7a, 0x08, 0x2f, 0x8f, 0xf4, 0xa0, 0x76, 0xc1, 0x01, 0x48, 0xec, 0x2b,
+	0x2f, 0x93, 0x6c, 0x82, 0xa6, 0x52, 0xfe, 0x7e, 0x1e, 0xce, 0x8b, 0xfa, 0xf8, 0x67, 0x04, 0x20,
+	0xce, 0x55, 0xfe, 0xb9, 0x9a, 0x2d, 0x7c, 0xca, 0xad, 0x34, 0xad, 0xa2, 0xe1, 0x92, 0x85, 0xbc,
+	0xfd, 0xf8, 0xaf, 0x7f, 0x7f, 0x9a, 0xb5, 0xf1, 0xaa, 0x9d, 0x39, 0x32, 0x88, 0x6b, 0x69, 0x1f,
+	0x0c, 0x5c, 0xf4, 0x43, 0xfc, 0x07, 0x82, 0x4b, 0x03, 0xad, 0x50, 0xda, 0xbd, 0x56, 0xac, 0xfe,
+	0x50, 0x3b, 0x36, 0xdf, 0x19, 0x3f, 0x51, 0x21, 0xac, 0x0b, 0x84, 0x9b, 0xf8, 0xfa, 0x58, 0x08,
+	0xb6, 0xd6, 0xae, 0x71, 0x0f, 0xc1, 0xf3, 0x83, 0x8d, 0x51, 0xf2, 0x14, 0xb4, 0x35, 0xdc, 0x9e,
+	0xcd, 0xeb, 0x13, 0x64, 0x2a, 0xa2, 0x8a, 0x20, 0xba, 0x85, 0x6f, 0x8c, 0x47, 0xa4, 0xb7, 0xef,
+	0x04, 0x49, 0x6b, 0x93, 0x63, 0x21, 0x0d, 0x37, 0xeb, 0xa2, 0x48, 0x19, 0x8d, 0x79, 0x52, 0x24,
+	0xbd, 0x99, 0xe3, 0x5f, 0x10, 0x18, 0xb2, 0x8c, 0x04, 0x59, 0x19, 0x69, 0xa7, 0x6f, 0xfc, 0x95,
+	0x02, 0x91, 0xca, 0xe8, 0x47, 0xc2, 0xe8, 0x07, 0xf8, 0xbd, 0x53, 0x8c, 0x06, 0x7e, 0xd3, 0x6b,
+	0xd9, 0x07, 0xbb, 0x34, 0xb2, 0x5c, 0xc6, 0x28, 0xd7, 0xcc, 0x8a, 0x45, 0xbf, 0xc9, 0xc5, 0x0b,
+	0xf9, 0x15, 0xc1, 0x9c, 0x1a, 0x32, 0xa5, 0x5b, 0x7b, 0xa4, 0x87, 0xf4, 0x8c, 0x6b, 0xbe, 0x51,
+	0x3c, 0x41, 0x79, 0xbf, 0x2b, 0xbc, 0xaf, 0xe3, 0xf7, 0xb3, 0xbd, 0xab, 0x71, 0xb5, 0x80, 0xf9,
+	0x1e, 0x82, 0x79, 0x6d, 0x3a, 0x2c, 0xda, 0x89, 0xf4, 0xc9, 0xb7, 0x40, 0x27, 0x4a, 0xcd, 0xac,
+	0xe4, 0xa1, 0x30, 0xff, 0x00, 0x7f, 0x66, 0xe7, 0xfc, 0x78, 0x19, 0xed, 0x5d, 0xbe, 0x6b, 0xfb,
+	0x20, 0xdd, 0xf3, 0x0f, 0xf1, 0x9f, 0x08, 0x9e, 0xd5, 0x07, 0x4d, 0xc9, 0x94, 0x67, 0x32, 0x63,
+	0x06, 0x36, 0xed, 0xc2, 0xf1, 0x8a, 0xea, 0x6b, 0x41, 0xf5, 0x39, 0xde, 0x99, 0x92, 0xaa, 0x3f,
+	0xdb, 0xda, 0x07, 0xc9, 0x40, 0x7d, 0x88, 0x7f, 0x43, 0x30, 0xaf, 0x7d, 0xb0, 0x46, 0x9f, 0xd3,
+	0xf0, 0x88, 0x90, 0x7b, 0x4e, 0x19, 0x33, 0x00, 0x71, 0x04, 0xd1, 0x16, 0xfe, 0x78, 0x4a, 0x22,
+	0x6d, 0x02, 0xc0, 0x3f, 0xcc, 0xc2, 0x95, 0xd3, 0x3f, 0xbc, 0x12, 0xeb, 0x56, 0x31, 0x9f, 0xd9,
+	0x83, 0x83, 0xf9, 0xee, 0x84, 0xd9, 0x0a, 0xba, 0x2e, 0xa0, 0x1f, 0xe2, 0xaf, 0xce, 0x0e, 0x7a,
+	0xe8, 0x8a, 0x56, 0x5a, 0xbf, 0x1f, 0x95, 0x50, 0xef, 0xa8, 0x84, 0xfe, 0x39, 0x2a, 0xa1, 0x1f,
+	0x8f, 0x4b, 0x33, 0xbd, 0xe3, 0xd2, 0xcc, 0xdf, 0xc7, 0xa5, 0x19, 0xb8, 0xec, 0x05, 0x99, 0xfe,
+	0x3f, 0x41, 0x5f, 0x96, 0x5b, 0x1e, 0xff, 0xb6, 0x5b, 0xb3, 0xea, 0xc1, 0x23, 0xcd, 0xdb, 0xaa,
+	0x17, 0xe8, 0x4e, 0xbf, 0xeb, 0x3b, 0x14, 0x8d, 0xb4, 0x76, 0x41, 0xfc, 0xee, 0x7f, 0xf3, 0xbf,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0xf5, 0x32, 0xa7, 0xad, 0xa0, 0x10, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -858,6 +1059,10 @@ type QueryClient interface {
 	LedgerEntryQuery(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
 	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
 	BalancesAsOfQuery(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error)
+	// get all settlements for a ledger
+	SettlementsQuery(ctx context.Context, in *QuerySettlementsRequest, opts ...grpc.CallOption) (*QuerySettlementsResponse, error)
+	// get settlements by correlation id
+	SettlementsByCorrelationIdQuery(ctx context.Context, in *QuerySettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QuerySettlementsByCorrelationIdResponse, error)
 }
 
 type queryClient struct {
@@ -940,6 +1145,24 @@ func (c *queryClient) BalancesAsOfQuery(ctx context.Context, in *QueryBalancesAs
 	return out, nil
 }
 
+func (c *queryClient) SettlementsQuery(ctx context.Context, in *QuerySettlementsRequest, opts ...grpc.CallOption) (*QuerySettlementsResponse, error) {
+	out := new(QuerySettlementsResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/SettlementsQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SettlementsByCorrelationIdQuery(ctx context.Context, in *QuerySettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QuerySettlementsByCorrelationIdResponse, error) {
+	out := new(QuerySettlementsByCorrelationIdResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/SettlementsByCorrelationIdQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	//****************************************************************
@@ -958,6 +1181,10 @@ type QueryServer interface {
 	LedgerEntryQuery(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
 	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
 	BalancesAsOfQuery(context.Context, *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error)
+	// get all settlements for a ledger
+	SettlementsQuery(context.Context, *QuerySettlementsRequest) (*QuerySettlementsResponse, error)
+	// get settlements by correlation id
+	SettlementsByCorrelationIdQuery(context.Context, *QuerySettlementsByCorrelationIdRequest) (*QuerySettlementsByCorrelationIdResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -987,6 +1214,12 @@ func (*UnimplementedQueryServer) LedgerEntryQuery(ctx context.Context, req *Quer
 }
 func (*UnimplementedQueryServer) BalancesAsOfQuery(ctx context.Context, req *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BalancesAsOfQuery not implemented")
+}
+func (*UnimplementedQueryServer) SettlementsQuery(ctx context.Context, req *QuerySettlementsRequest) (*QuerySettlementsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SettlementsQuery not implemented")
+}
+func (*UnimplementedQueryServer) SettlementsByCorrelationIdQuery(ctx context.Context, req *QuerySettlementsByCorrelationIdRequest) (*QuerySettlementsByCorrelationIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SettlementsByCorrelationIdQuery not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1137,6 +1370,42 @@ func _Query_BalancesAsOfQuery_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_SettlementsQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySettlementsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SettlementsQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Query/SettlementsQuery",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SettlementsQuery(ctx, req.(*QuerySettlementsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SettlementsByCorrelationIdQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySettlementsByCorrelationIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SettlementsByCorrelationIdQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.ledger.v1.Query/SettlementsByCorrelationIdQuery",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SettlementsByCorrelationIdQuery(ctx, req.(*QuerySettlementsByCorrelationIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.ledger.v1.Query",
@@ -1173,6 +1442,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BalancesAsOfQuery",
 			Handler:    _Query_BalancesAsOfQuery_Handler,
+		},
+		{
+			MethodName: "SettlementsQuery",
+			Handler:    _Query_SettlementsQuery_Handler,
+		},
+		{
+			MethodName: "SettlementsByCorrelationIdQuery",
+			Handler:    _Query_SettlementsByCorrelationIdQuery_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1741,6 +2018,155 @@ func (m *QueryLedgerClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *QuerySettlementsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySettlementsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySettlementsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySettlementsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySettlementsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySettlementsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Settlements) > 0 {
+		for iNdEx := len(m.Settlements) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Settlements[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySettlementsByCorrelationIdRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySettlementsByCorrelationIdRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySettlementsByCorrelationIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.CorrelationId) > 0 {
+		i -= len(m.CorrelationId)
+		copy(dAtA[i:], m.CorrelationId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.CorrelationId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySettlementsByCorrelationIdResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySettlementsByCorrelationIdResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySettlementsByCorrelationIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Settlement != nil {
+		{
+			size, err := m.Settlement.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1971,6 +2397,64 @@ func (m *QueryLedgerClassResponse) Size() (n int) {
 	_ = l
 	if m.LedgerClass != nil {
 		l = m.LedgerClass.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QuerySettlementsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QuerySettlementsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Settlements) > 0 {
+		for _, e := range m.Settlements {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QuerySettlementsByCorrelationIdRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.CorrelationId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QuerySettlementsByCorrelationIdResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Settlement != nil {
+		l = m.Settlement.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -3374,6 +3858,380 @@ func (m *QueryLedgerClassResponse) Unmarshal(dAtA []byte) error {
 				m.LedgerClass = &LedgerClass{}
 			}
 			if err := m.LedgerClass.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySettlementsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySettlementsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySettlementsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &LedgerKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySettlementsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySettlementsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySettlementsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settlements", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Settlements = append(m.Settlements, &StoredSettlementInstructions{})
+			if err := m.Settlements[len(m.Settlements)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySettlementsByCorrelationIdRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySettlementsByCorrelationIdRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySettlementsByCorrelationIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &LedgerKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CorrelationId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CorrelationId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySettlementsByCorrelationIdResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySettlementsByCorrelationIdResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySettlementsByCorrelationIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settlement", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Settlement == nil {
+				m.Settlement = &StoredSettlementInstructions{}
+			}
+			if err := m.Settlement.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
