@@ -31,6 +31,15 @@ func (b *EventsBuilder) Build() sdk.Events {
 	return b.Events
 }
 
+// BuildABCI returns the list of Events built so far as a list of abci.Event types.
+func (b *EventsBuilder) BuildABCI() []abci.Event {
+	rv := make([]abci.Event, len(b.Events))
+	for i, event := range b.Events {
+		rv[i] = abci.Event(event)
+	}
+	return rv
+}
+
 // AddEvent adds one or more sdk.Event entries to this builder.
 func (b *EventsBuilder) AddEvent(events ...sdk.Event) *EventsBuilder {
 	b.Events = append(b.Events, events...)

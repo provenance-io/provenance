@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/marker/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -38,7 +37,6 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(KeeperTestSuite))
 }
 

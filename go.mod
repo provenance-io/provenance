@@ -42,7 +42,6 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/text v0.25.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a
 	google.golang.org/grpc v1.72.2
@@ -198,6 +197,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.26.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
@@ -222,7 +222,8 @@ replace (
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
 	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.52.0-pio-1
 
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.13-pio-1
+	// github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.13-pio-1
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.13-pio-1-flat-fees-2
 
 	// Replace iavl to fix the node stop/start app hash problem. This can be removed once upstream is off v1.1.2
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.0

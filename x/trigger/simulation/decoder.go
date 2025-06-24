@@ -36,12 +36,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &attribB)
 
 			return fmt.Sprintf("QueuedTrigger: A:[%v] B:[%v]\n", attribA, attribB)
-		case bytes.Equal(kvA.Key[:1], types.GasLimitKeyPrefix):
-			var attribA, attribB uint64
-			attribA = types.GetGasLimitFromBytes(kvA.Value)
-			attribB = types.GetGasLimitFromBytes(kvB.Value)
-
-			return fmt.Sprintf("GasLimit: A:[%v] B:[%v]\n", attribA, attribB)
 		case bytes.Equal(kvA.Key[:1], types.NextTriggerIDKey):
 			var attribA, attribB uint64
 			attribA = types.GetTriggerIDFromBytes(kvA.Value)

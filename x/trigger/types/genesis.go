@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 
 	types "github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,19 +12,18 @@ import (
 
 var _ types.UnpackInterfacesMessage = (*GenesisState)(nil)
 
-func NewGenesisState(triggerID, queueStart uint64, triggers []Trigger, gasLimits []GasLimit, queuedTriggers []QueuedTrigger) *GenesisState {
+func NewGenesisState(triggerID, queueStart uint64, triggers []Trigger, queuedTriggers []QueuedTrigger) *GenesisState {
 	return &GenesisState{
 		TriggerId:      triggerID,
 		QueueStart:     queueStart,
 		Triggers:       triggers,
-		GasLimits:      gasLimits,
 		QueuedTriggers: queuedTriggers,
 	}
 }
 
 // DefaultGenesis returns the default trigger genesis state
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(1, 1, []Trigger{}, []GasLimit{}, []QueuedTrigger{})
+	return NewGenesisState(1, 1, []Trigger{}, []QueuedTrigger{})
 }
 
 // Validate performs basic genesis state validation returning an error upon any
@@ -35,21 +35,14 @@ func (gs GenesisState) Validate() error {
 	if gs.QueueStart == 0 {
 		return fmt.Errorf("invalid queue start")
 	}
-	if len(gs.Triggers)+len(gs.QueuedTriggers) != len(gs.GasLimits) {
-		return fmt.Errorf("gas limit list length must match sum of triggers and queued triggers length")
-	}
 
 	triggers := append([]Trigger{}, gs.Triggers...)
 	for _, queuedTrigger := range gs.QueuedTriggers {
 		triggers = append(triggers, queuedTrigger.GetTrigger())
 	}
 
-	gasLimitMap := make(map[uint64]bool)
-	for _, gasLimit := range gs.GasLimits {
-		if _, found := gasLimitMap[gasLimit.TriggerId]; found {
-			return fmt.Errorf("cannot have duplicate trigger id (%d) in gas limits", gasLimit.TriggerId)
-		}
-		gasLimitMap[gasLimit.TriggerId] = true
+	if len(gs.GasLimits) != 0 {
+		return errors.New("gas limits are deprecated and must be empty")
 	}
 
 	triggerMap := make(map[uint64]bool)
@@ -75,10 +68,6 @@ func (gs GenesisState) Validate() error {
 		}
 		if err = event.Validate(); err != nil {
 			return fmt.Errorf("could not validate event for trigger with id %d: %w", trigger.GetId(), err)
-		}
-
-		if _, found := gasLimitMap[trigger.GetId()]; !found {
-			return fmt.Errorf("trigger or queued trigger does not have a gas limit that matches it with id %d", trigger.GetId())
 		}
 
 		if _, found := triggerMap[trigger.GetId()]; found {
