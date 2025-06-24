@@ -42,7 +42,7 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"amaranth-rc1": { // Upgrade for v1.25.0-rc1.
+	"alyssum-rc1": { // Upgrade for v1.25.0-rc1.
 		Added:   []string{flatfeestypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -57,13 +57,13 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
-			if err = setupFlatFees(ctx, app); err != nil {
+			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
 		},
 	},
-	"amaranth": { // Upgrade for v1.25.0.
+	"alyssum": { // Upgrade for v1.25.0.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -76,7 +76,7 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
-			if err = setupFlatFees(ctx, app); err != nil {
+			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -326,33 +326,27 @@ var (
 	_ = unlockVestingAccounts
 )
 
+// FlatFeesKeeper has the flatfees keeper methods needed for setting up flat fees.
+// Part of the alyssum upgrade.
+type FlatFeesKeeper interface {
+	SetParams(ctx sdk.Context, params flatfeestypes.Params) error
+	SetMsgFee(ctx sdk.Context, msgFee flatfeestypes.MsgFee) error
+}
+
 // setupFlatFees defines the flatfees module params and msg costs.
-// Part of the zydeco upgrade.
-func setupFlatFees(ctx sdk.Context, app *App) error {
+// Part of the alyssum upgrade.
+func setupFlatFees(ctx sdk.Context, ffk FlatFeesKeeper) error {
 	ctx.Logger().Info("Setting up flat fees.")
 
-	feeDefCoin := func(amount int64) sdk.Coin {
-		return sdk.NewInt64Coin(flatfeestypes.DefaultFeeDefinitionDenom, amount)
-	}
-
-	params := flatfeestypes.Params{ // TODO[fees]: Set these params with more accurate values.
-		DefaultCost: feeDefCoin(1),
-		ConversionFactor: flatfeestypes.ConversionFactor{
-			DefinitionAmount: feeDefCoin(1),
-			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
-		},
-	}
-	err := app.FlatFeesKeeper.SetParams(ctx, params)
+	params := MakeFlatFeesParams()
+	err := ffk.SetParams(ctx, params)
 	if err != nil {
 		return fmt.Errorf("could not set x/flatfees params: %w", err)
 	}
 
-	// TODO[fees]: Define all the non-default msg fees.
-	msgFees := []*flatfeestypes.MsgFee{
-		// flatfeestypes.NewMsgFee("url", feeDefCoin(2)),
-	}
+	msgFees := MakeFlatFeesCosts()
 	for _, msgFee := range msgFees {
-		err = app.FlatFeesKeeper.SetMsgFee(ctx, *msgFee)
+		err = ffk.SetMsgFee(ctx, *msgFee)
 		if err != nil {
 			return fmt.Errorf("could not set msg fee %s: %w", msgFee, err)
 		}
@@ -360,4 +354,178 @@ func setupFlatFees(ctx sdk.Context, app *App) error {
 
 	ctx.Logger().Info("Done setting up flat fees.")
 	return nil
+}
+
+// feeDefCoin returns a coin in the fee definition denom with the given amount.
+// Part of the alyssum upgrade.
+func feeDefCoin(amount int64) sdk.Coin {
+	return sdk.NewInt64Coin(flatfeestypes.DefaultFeeDefinitionDenom, amount)
+}
+
+// MakeFlatFeesParams returns the params to give the flatfeees module.
+func MakeFlatFeesParams() flatfeestypes.Params {
+	return flatfeestypes.Params{
+		DefaultCost: feeDefCoin(150),
+		ConversionFactor: flatfeestypes.ConversionFactor{
+			// 1 hash = $0.025, so 1000000000nhash = 25musd
+			DefinitionAmount: feeDefCoin(25),
+			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1000000000),
+		},
+	}
+}
+
+// MakeFlatFeesCosts returns the list of MsgFees that we want to set.
+// Part of the alyssum upgrade.
+func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
+	return []*flatfeestypes.MsgFee{
+		// Free Msg types. These are gov-prop-only Msg types. A gov prop costs $2.50 + the cost of each msg in it.
+		// So even though these msgs are free, it'll still cost $2.50 to submit one.
+		flatfeestypes.NewMsgFee("/cosmos.auth.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.bank.v1beta1.MsgSetSendEnabled"),
+		flatfeestypes.NewMsgFee("/cosmos.bank.v1beta1.MsgUpdateDenomMetadata"),
+		flatfeestypes.NewMsgFee("/cosmos.bank.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.consensus.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.crisis.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.distribution.v1beta1.MsgCommunityPoolSpend"),
+		flatfeestypes.NewMsgFee("/cosmos.distribution.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgExecLegacyContent"),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.mint.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.sanction.v1beta1.MsgSanction"),
+		flatfeestypes.NewMsgFee("/cosmos.sanction.v1beta1.MsgUnsanction"),
+		flatfeestypes.NewMsgFee("/cosmos.sanction.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.slashing.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.staking.v1beta1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/cosmos.upgrade.v1beta1.MsgCancelUpgrade"),
+		flatfeestypes.NewMsgFee("/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgAddCodeUploadParamsAddresses"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgPinCodes"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddresses"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgStoreAndInstantiateContract"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgStoreAndMigrateContract"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgSudoContract"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgUnpinCodes"),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/ibc.applications.transfer.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/ibc.core.client.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/ibc.core.connection.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/icq.v1.MsgUpdateParams"),
+		flatfeestypes.NewMsgFee("/provenance.attribute.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgGovCloseMarketRequest"),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgGovCreateMarketRequest"),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgGovManageFeesRequest"),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgGovUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateConversionFactorRequest"),
+		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateMsgFeesRequest"),
+		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.ibchooks.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgChangeStatusProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgRemoveAdministratorProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSetAdministratorProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSetDenomMetadataProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSupplyDecreaseProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSupplyIncreaseProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgUpdateForcedTransferRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgWithdrawEscrowProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.msgfees.v1.MsgAddMsgFeeProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"),
+		flatfeestypes.NewMsgFee("/provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest"),
+		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgCreateRootNameRequest"),
+		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.oracle.v1.MsgUpdateOracleRequest"),
+
+		// Msgs that cost $0.05.
+		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgExec", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgRevoke", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.distribution.v1beta1.MsgFundCommunityPool", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgCancelProposal", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgDeposit", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgVote", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgVoteWeighted", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgDeposit", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgExec", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgWithdrawProposal", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgAcknowledgement", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgRecvPacket", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgAcceptPaymentRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgCommitFundsRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentsRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgActivateRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgFinalizeRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgGrantAllowanceRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSetDenomMetadataRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddNetAssetValuesRequest", feeDefCoin(50)),
+
+		// Msgs that cost $0.10.
+		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgGrant", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/cosmos.feegrant.v1beta1.MsgGrantAllowance", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgVote", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgVoteWeighted", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgMigrateContract", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/ibc.applications.transfer.v1.MsgTransfer", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.attribute.v1.MsgDeleteAttributeRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.attribute.v1.MsgUpdateAttributeRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateDetailsRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateEnabledRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateUserSettleRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.trigger.v1.MsgCreateTriggerRequest", feeDefCoin(100)),
+
+		// The default cost is $0.15. All Msg types not in this list will use the default.
+
+		// Msgs that cost $0.25.
+		flatfeestypes.NewMsgFee("/provenance.attribute.v1.MsgAddAttributeRequest", feeDefCoin(250)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgIbcTransferRequest", feeDefCoin(250)),
+		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgBindNameRequest", feeDefCoin(250)),
+		flatfeestypes.NewMsgFee("/provenance.oracle.v1.MsgSendQueryOracleRequest", feeDefCoin(250)),
+
+		// Msgs that cost $0.50.
+		flatfeestypes.NewMsgFee("/cosmos.staking.v1beta1.MsgBeginRedelegate", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract2", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/ibc.core.client.v1.MsgCreateClient", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddNetAssetValuesRequest", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgMigrateValueOwnerRequest", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgUpdateValueOwnersRequest", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteContractSpecificationRequest", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteRecordSpecificationRequest", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteScopeSpecificationRequest", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteSessionRequest", feeDefCoin(500)),
+
+		// Msgs that cost $1.00.
+		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgSubmitProposal", feeDefCoin(1000)),
+		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgStoreCode", feeDefCoin(1000)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest", feeDefCoin(1000)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecRequest", feeDefCoin(1000)),
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteScopeRequest", feeDefCoin(1000)),
+
+		// Msgs that cost $1.50.
+		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgChannelOpenTry", feeDefCoin(1500)),
+		flatfeestypes.NewMsgFee("/ibc.core.connection.v1.MsgConnectionOpenConfirm", feeDefCoin(1500)),
+		flatfeestypes.NewMsgFee("/ibc.core.connection.v1.MsgConnectionOpenTry", feeDefCoin(1500)),
+
+		// Msgs that cost $2.50.
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgSubmitProposal", feeDefCoin(2500)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgSubmitProposal", feeDefCoin(2500)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddMarkerRequest", feeDefCoin(2500)),
+	}
 }

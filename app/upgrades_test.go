@@ -2,17 +2,22 @@ package app
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -25,6 +30,8 @@ import (
 
 	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
+	"github.com/provenance-io/provenance/testutil/assertions"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 type UpgradeTestSuite struct {
@@ -708,7 +715,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	}
 }
 
-func (s *UpgradeTestSuite) TestAmaranthRC1() {
+func (s *UpgradeTestSuite) TestAlyssumRC1() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Pruning expired consensus states for IBC.",
@@ -716,10 +723,10 @@ func (s *UpgradeTestSuite) TestAmaranthRC1() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
 	}
-	s.AssertUpgradeHandlerLogs("amaranth-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("alyssum-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestAmaranth() {
+func (s *UpgradeTestSuite) TestAlyssum() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Pruning expired consensus states for IBC.",
@@ -727,5 +734,186 @@ func (s *UpgradeTestSuite) TestAmaranth() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
 	}
-	s.AssertUpgradeHandlerLogs("amaranth", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("alyssum", expInLog, nil)
+}
+
+type MockFlatFeesKeeper struct {
+	SetParamsErrs  []string
+	SetParamsCalls []flatfeestypes.Params
+
+	SetMsgFeeErrs  []string
+	SetMsgFeeCalls []*flatfeestypes.MsgFee
+}
+
+var _ FlatFeesKeeper = (*MockFlatFeesKeeper)(nil)
+
+func NewMockFlatFeesKeeper() *MockFlatFeesKeeper {
+	return &MockFlatFeesKeeper{}
+}
+
+func (m *MockFlatFeesKeeper) WithSetParamsErrs(errs ...string) *MockFlatFeesKeeper {
+	m.SetParamsErrs = append(m.SetParamsErrs, errs...)
+	return m
+}
+
+func (m *MockFlatFeesKeeper) WithSetMsgFeeErrs(errs ...string) *MockFlatFeesKeeper {
+	m.SetMsgFeeErrs = append(m.SetMsgFeeErrs, errs...)
+	return m
+}
+
+func (m *MockFlatFeesKeeper) SetParams(_ sdk.Context, params flatfeestypes.Params) error {
+	m.SetParamsCalls = append(m.SetParamsCalls, params)
+	var rv string
+	if len(m.SetParamsErrs) > 0 {
+		rv = m.SetParamsErrs[0]
+		m.SetParamsErrs = m.SetParamsErrs[1:]
+	}
+	if len(rv) > 0 {
+		return errors.New(rv)
+	}
+	return nil
+}
+
+func (m *MockFlatFeesKeeper) SetMsgFee(_ sdk.Context, msgFee flatfeestypes.MsgFee) error {
+	msgFeeCopy := msgFee
+	m.SetMsgFeeCalls = append(m.SetMsgFeeCalls, &msgFeeCopy)
+	var rv string
+	if len(m.SetMsgFeeErrs) > 0 {
+		rv = m.SetMsgFeeErrs[0]
+		m.SetMsgFeeErrs = m.SetMsgFeeErrs[1:]
+	}
+	if len(rv) > 0 {
+		return errors.New(rv)
+	}
+	return nil
+}
+
+func TestSetupFlatFees(t *testing.T) {
+	ctx := sdk.Context{}.WithLogger(log.NewNopLogger())
+	expParams := MakeFlatFeesParams()
+	expCosts := MakeFlatFeesCosts()
+
+	tests := []struct {
+		name    string
+		ffk     *MockFlatFeesKeeper
+		expErr  string
+		expFees []*flatfeestypes.MsgFee
+	}{
+		{
+			name:   "error setting params",
+			ffk:    NewMockFlatFeesKeeper().WithSetParamsErrs("notgonnadoit"),
+			expErr: "could not set x/flatfees params: notgonnadoit",
+		},
+		{
+			name:    "error setting first cost",
+			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("one error to rule them all"),
+			expErr:  "could not set msg fee " + expCosts[0].String() + ": one error to rule them all",
+			expFees: expCosts[0:1],
+		},
+		{
+			name:    "error setting second cost",
+			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("", "oopsies"),
+			expErr:  "could not set msg fee " + expCosts[1].String() + ": oopsies",
+			expFees: expCosts[0:2],
+		},
+		{
+			name:    "error setting 10th cost",
+			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("", "", "", "", "", "", "", "", "", "sproing"),
+			expErr:  "could not set msg fee " + expCosts[9].String() + ": sproing",
+			expFees: expCosts[0:10],
+		},
+		{
+			name: "error setting 125th cost",
+			ffk: NewMockFlatFeesKeeper().
+				WithSetMsgFeeErrs(slices.Repeat([]string{""}, 124)...).
+				WithSetMsgFeeErrs("almosthadit"),
+			expErr:  "could not set msg fee " + expCosts[124].String() + ": almosthadit",
+			expFees: expCosts[0:125],
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.ffk == nil {
+				tc.ffk = NewMockFlatFeesKeeper()
+			}
+
+			var err error
+			testFunc := func() {
+				err = setupFlatFees(ctx, tc.ffk)
+			}
+			require.NotPanics(t, testFunc, "setupFlatFees")
+			assertions.AssertErrorValue(t, err, tc.expErr, "setupFlatFees error")
+
+			// SetParams should always get called exactly once.
+			assert.Len(t, tc.ffk.SetParamsCalls, 1, "Calls made to SetParams(...)")
+			for _, actParams := range tc.ffk.SetParamsCalls {
+				ok := assert.Equal(t, expParams.DefaultCost.String(), actParams.DefaultCost.String(), "params.DefaultCost")
+				ok = assert.Equal(t, expParams.ConversionFactor.String(), actParams.ConversionFactor.String(), "params.ConversionFactor") && ok
+				if ok {
+					assert.Equal(t, expParams, actParams, "params")
+				}
+			}
+
+			expCalls := sliceToStrings(tc.expFees)
+			actCalls := sliceToStrings(tc.ffk.SetMsgFeeCalls)
+			if assert.Equal(t, expCalls, actCalls, "calls made to SetMsgFee (as strings)") {
+				assert.Equal(t, tc.expFees, tc.ffk.SetMsgFeeCalls, "calls made to SetMsgFee")
+			}
+		})
+	}
+}
+
+func sliceToStrings[S ~[]E, E fmt.Stringer](vals S) []string {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]string, len(vals))
+	for i, val := range vals {
+		rv[i] = val.String()
+	}
+	return rv
+}
+
+func TestMakeFlatFeesParams(t *testing.T) {
+	var params flatfeestypes.Params
+	testFunc := func() {
+		params = MakeFlatFeesParams()
+	}
+	require.NotPanics(t, testFunc, "MakeFlatFeesParams()")
+	err := params.Validate()
+	require.NoError(t, err, "params.Validate()")
+	assert.Equal(t, "musd", params.DefaultCost.Denom, "params.DefaultCost.Denom")
+	assert.Equal(t, "musd", params.ConversionFactor.DefinitionAmount.Denom, "params.ConversionFactor.DefinitionAmount.Denom")
+	assert.Equal(t, "nhash", params.ConversionFactor.ConvertedAmount.Denom, "params.ConversionFactor.ConvertedAmount.Denom")
+}
+
+func TestMakeMsgFees(t *testing.T) {
+	var msgFees []*flatfeestypes.MsgFee
+	testFunc := func() {
+		msgFees = MakeFlatFeesCosts()
+	}
+	require.NotPanics(t, testFunc, "MakeFlatFeesCosts()")
+	require.NotNil(t, msgFees, "MakeFlatFeesCosts() result")
+	require.NotEmpty(t, msgFees, "MakeFlatFeesCosts() result")
+
+	for i, msgFee := range msgFees {
+		t.Run(fmt.Sprintf("%d: %s", i, msgFee.MsgTypeUrl), func(t *testing.T) {
+			err := msgFee.Validate()
+			assert.NoError(t, err, "msgFee.Validate()")
+			if len(msgFee.Cost) != 0 {
+				if assert.Len(t, msgFee.Cost, 1, "msgFee.Cost") {
+					assert.Equal(t, flatfeestypes.DefaultFeeDefinitionDenom, msgFee.Cost[0].Denom, "msgFee.Cost[0].Denom")
+				}
+			}
+
+			// Make sure the msg type doesn't appear anywhere else in the list.
+			for j, msgFee2 := range msgFees {
+				if i == j {
+					continue
+				}
+				assert.NotEqual(t, msgFee.MsgTypeUrl, msgFee2.MsgTypeUrl, "MsgTypeUrl of msgFees[%d] and msgFees[%d]", i, j)
+			}
+		})
+	}
 }

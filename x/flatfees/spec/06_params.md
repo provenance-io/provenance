@@ -7,7 +7,7 @@ The conversion factor dictates an equivalent amount of fee coin (converted amoun
 The `conversion_factor.definition_amount` should have the same denom as the `default_cost`.
 The `conversion_factor.converted_amount` should have the fee denom.
 
-This setup allows us to define the costs in, e.g. `cusd`, and charge them in `nhash`.
+This setup allows us to define the costs in, e.g. `musd`, and charge them in `nhash`.
 Later, when the price of nhash changes (externally), we can update the conversion factor to match; this keeps Msg costs roughly constant in terms of USD (or whatever denom is used). 
 
 Params are set using the [UpdateParams](03_messages.md#updateparams) governance proposal endpoint.

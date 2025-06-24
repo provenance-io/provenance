@@ -28,7 +28,7 @@ Provenance Blockchain mainnet and testnet users should ALWAYS use `1nhash` for t
 ## Fee definition
 
 Fees for messages are defined in one denom, then a conversion factor allows us to get the equivalent amount in the fee denom.
-For example, we might say that `MsgSend` takes `25cusd`. Then, we use a conversion factor to calculate the amount of `nhash` that is worth `25cusd`.
+For example, we might say that `MsgSend` takes `250musd`. Then, we use a conversion factor to calculate the amount of `nhash` that is worth `250musd`.
 This conversion factor can be updated in order to keep the cost of Msgs steady even as the price of `nhash` fluctuates.
 
 ### Default Fee
@@ -54,7 +54,7 @@ required fee = defined cost * converted_amount / definition_amount
 ```
 
 When the conversion factor is applied, it only converts the coin with the same denom as the `definition_amount`, all other denominations are left unchanged.
-For example, if the conversion factor is `1cusd` = `2nhash`, and a `MsgFee` has a cost of `10cusd,15peach`, then the required (converted) fee will be `20nhash,15peach`.
+For example, if the conversion factor is `1musd` = `2nhash`, and a `MsgFee` has a cost of `100musd,15peach`, then the required (converted) fee will be `200nhash,15peach`.
 
 ### Added Fees
 
@@ -129,9 +129,9 @@ This fee is collected even if the Tx fails.
 
 The up-front cost of a Msg is the smaller of the cost of the Msg or the default Msg cost, and is only the portion in the fee denom.
 This is calculated for each Msg in a tx, then summed.
-For example, say the default cost is `5cusd`, and tx has three Msgs with costs `4cusd`, `5cusd`, and `6cusd`.
-The up-front cost for the tx would be `14cusd` = `4cusd` (less than default) + `5cusd` (equal to default) + `5cusd` (more than default).
-In that example, `1cusd` would still need to be collected at the end.
+For example, say the default cost is `50musd`, and tx has three Msgs with costs `40musd`, `50musd`, and `60musd`.
+The up-front cost for the tx would be `140musd` = `40musd` (less than default) + `50musd` (equal to default) + `50musd` (more than default).
+In that example, `10musd` would still need to be collected at the end.
 
 When calculating the up-front cost, only Msgs contained in the Tx (either directly or as sub-Msgs) are considered.
 For example, if a Tx has a smart contract execution in it that will issue Msgs as part of its operation, those Msgs are not accounted for in the up-front cost.
