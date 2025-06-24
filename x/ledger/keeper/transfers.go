@@ -14,27 +14,15 @@ import (
 var _ FundTransferKeeper = (*BaseFundTransferKeeper)(nil)
 
 type FundTransferKeeper interface {
-	FundAsset(ctx context.Context, authorityAddr sdk.AccAddress, assetAddr sdk.AccAddress, amount sdk.Coin) error
-	FundAssetByRegistry(ctx context.Context, authorityAddr sdk.AccAddress, assetAddr sdk.AccAddress, amount sdk.Coin) error
 	TransferFundsWithSettlement(ctx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error
-	GetTransferHistory(ctx context.Context, nftAddress string) ([]*types.FundTransferWithSettlement, error)
+
+	GetAllSettlements(ctx context.Context, keyStr *string) ([]*types.StoredSettlementInstructions, error)
+	GetSettlements(ctx context.Context, keyStr *string, correlationId string) (*types.StoredSettlementInstructions, error)
 }
 
 type BaseFundTransferKeeper struct {
 	BankKeeper
 	BaseViewKeeper
-}
-
-// Fund an asset by transferring funds from the authority account to the asset account
-func (k BaseFundTransferKeeper) FundAsset(ctx context.Context, authorityAddr sdk.AccAddress, assetAddr sdk.AccAddress, amount sdk.Coin) error {
-	// TODO: Implement fund asset logic
-	return nil
-}
-
-// Fund an asset based on the registered borrower in the registry
-func (k BaseFundTransferKeeper) FundAssetByRegistry(ctx context.Context, authorityAddr sdk.AccAddress, assetAddr sdk.AccAddress, amount sdk.Coin) error {
-	// TODO: Implement fund asset based on borrower logic
-	return nil
 }
 
 // TransferFundsWithSettlement processes a fund transfer request with settlement instructions
@@ -118,12 +106,6 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 	)
 
 	return nil
-}
-
-// GetTransferHistory returns the transfer history for an account
-func (k BaseFundTransferKeeper) GetTransferHistory(ctx context.Context, nftAddress string) ([]*types.FundTransferWithSettlement, error) {
-	// TODO: Implement transfer history retrieval
-	return nil, nil
 }
 
 func (k BaseFundTransferKeeper) GetAllSettlements(ctx context.Context, keyStr *string) ([]*types.StoredSettlementInstructions, error) {
