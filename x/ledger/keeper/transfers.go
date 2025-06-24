@@ -136,6 +136,9 @@ func (k BaseFundTransferKeeper) GetSettlements(ctx context.Context, keyStr *stri
 	searchKey := collections.Join(*keyStr, correlationId)
 	settlements, err := k.FundTransfersWithSettlement.Get(ctx, searchKey)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
