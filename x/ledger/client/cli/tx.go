@@ -32,6 +32,7 @@ func CmdTx() *cobra.Command {
 		CmdAddLedgerClassStatusType(),
 		CmdAddLedgerClassEntryType(),
 		CmdAddLedgerClassBucketType(),
+		CmdTransferFundsWithSettlement(),
 	)
 
 	return cmd
@@ -402,6 +403,41 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 					Description: description,
 				},
 				Authority: clientCtx.FromAddress.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdTransferFundsWithSettlement returns the command for transferring funds with settlement instructions
+func CmdTransferFundsWithSettlement() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "xfer [transfers-json]",
+		Short: "Submit a fund transfer with settlement instructions (ledger module)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonStr := args[0]
+
+			var transfers []ledger.FundTransferWithSettlement
+			if err := json.Unmarshal([]byte(jsonStr), &transfers); err != nil {
+				return fmt.Errorf("failed to parse transfers JSON: %w", err)
+			}
+
+			msg := &ledger.MsgTransferFundsWithSettlementRequest{
+				Authority: clientCtx.FromAddress.String(),
+				Transfers: make([]*ledger.FundTransferWithSettlement, len(transfers)),
+			}
+			for i := range transfers {
+				msg.Transfers[i] = &transfers[i]
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
