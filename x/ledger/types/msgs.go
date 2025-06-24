@@ -14,8 +14,6 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMaturityDateRequest)(nil),
 	(*MsgAppendRequest)(nil),
 	(*MsgUpdateBalancesRequest)(nil),
-	(*MsgFundAssetRequest)(nil),
-	(*MsgFundAssetByRegistryRequest)(nil),
 	(*MsgTransferFundsWithSettlementRequest)(nil),
 	(*MsgDestroyRequest)(nil),
 	(*MsgCreateLedgerClassRequest)(nil),
@@ -136,36 +134,6 @@ func (m *MsgUpdateBalancesRequest) ValidateBasic() error {
 
 	for _, balanceAmount := range m.BalanceAmounts {
 		if err := ValidateBucketBalance(balanceAmount); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ValidateBasic implements the sdk.Msg interface for MsgFundAssetRequest
-func (m *MsgFundAssetRequest) ValidateBasic() error {
-	if len(m.Transfers) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("transfers cannot be empty")
-	}
-
-	for _, transfer := range m.Transfers {
-		if err := ValidateFundTransferWithSettlementBasic(transfer); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ValidateBasic implements the sdk.Msg interface for MsgFundAssetByRegistryRequest
-func (m *MsgFundAssetByRegistryRequest) ValidateBasic() error {
-	if len(m.Transfers) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("transfers cannot be empty")
-	}
-
-	for _, transfer := range m.Transfers {
-		if err := ValidateFundTransferWithSettlementBasic(transfer); err != nil {
 			return err
 		}
 	}

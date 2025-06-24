@@ -34,12 +34,6 @@ service Msg {
   // Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied
   rpc UpdateBalancesTx(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
 
-  // Fund an Asset
-  rpc FundAssetTx(MsgFundAssetRequest) returns (MsgFundAssetResponse);
-
-  // Fund an Asset by Registry
-  rpc FundAssetByRegistryTx(MsgFundAssetByRegistryRequest) returns (MsgFundAssetByRegistryResponse);
-
   // Process multiple fund transfers with manual settlement instructions
   rpc TransferFundsWithSettlementTx(MsgTransferFundsWithSettlementRequest)
       returns (MsgTransferFundsWithSettlementResponse);
@@ -155,28 +149,6 @@ message MsgUpdateBalancesRequest {
 
 // MsgUpdateBalancesResponse
 message MsgUpdateBalancesResponse {}
-
-// MsgFundAssetRequest represents a request to fund an asset
-message MsgFundAssetRequest {
-  option (cosmos.msg.v1.signer) = "authority";
-
-  string                              authority = 1;
-  repeated FundTransferWithSettlement transfers = 2;
-}
-
-// MsgFundAssetResponse represents the response from funding an asset
-message MsgFundAssetResponse {}
-
-// MsgFundAssetByRegistryRequest represents a request to fund an asset by registry
-message MsgFundAssetByRegistryRequest {
-  option (cosmos.msg.v1.signer) = "authority";
-
-  string                              authority = 1;
-  repeated FundTransferWithSettlement transfers = 2;
-}
-
-// MsgFundAssetByRegistryResponse represents the response from funding an asset by registry
-message MsgFundAssetByRegistryResponse {}
 
 // MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement
 // instructions

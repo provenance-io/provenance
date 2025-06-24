@@ -138,30 +138,6 @@ func (k *MsgServer) UpdateMaturityDateTx(goCtx context.Context, req *ledger.MsgU
 	return &resp, nil
 }
 
-func (k *MsgServer) FundAssetTx(goCtx context.Context, req *ledger.MsgFundAssetRequest) (*ledger.MsgFundAssetResponse, error) {
-	_ = sdk.UnwrapSDKContext(goCtx)
-
-	_, err := sdk.AccAddressFromBech32(req.Authority)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Implement fund asset logic
-	return &ledger.MsgFundAssetResponse{}, nil
-}
-
-func (k *MsgServer) FundAssetByRegistryTx(goCtx context.Context, req *ledger.MsgFundAssetByRegistryRequest) (*ledger.MsgFundAssetByRegistryResponse, error) {
-	_ = sdk.UnwrapSDKContext(goCtx)
-
-	_, err := sdk.AccAddressFromBech32(req.Authority)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Implement fund asset by registry logic
-	return &ledger.MsgFundAssetByRegistryResponse{}, nil
-}
-
 func (k *MsgServer) TransferFundsWithSettlementTx(goCtx context.Context, req *ledger.MsgTransferFundsWithSettlementRequest) (*ledger.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
