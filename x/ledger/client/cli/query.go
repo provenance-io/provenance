@@ -35,6 +35,8 @@ func CmdQuery() *cobra.Command {
 		GetLedgerClassStatusTypesCmd(),
 		GetLedgerClassBucketTypesCmd(),
 		GetLedgerClassCmd(),
+		GetAllSettlementsCmd(),
+		GetSettlementsByCorrelationIdCmd(),
 	)
 
 	return queryCmd
@@ -385,6 +387,77 @@ func GetLedgerClassCmd() *cobra.Command {
 			}
 
 			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetAllSettlementsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "settlements <asset_class_id> <nft_id>",
+		Short:   "Query all settlements for an NFT",
+		Example: fmt.Sprintf(`$ %s query ledger settlements pb1a2b3c4... nft-123`, version.AppName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			assetClassId := args[0]
+			nftId := args[1]
+
+			queryClient := ledger.NewQueryClient(clientCtx)
+			res, err := queryClient.SettlementsQuery(cmd.Context(), &ledger.QuerySettlementsRequest{
+				Key: &ledger.LedgerKey{
+					AssetClassId: assetClassId,
+					NftId:        nftId,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetSettlementsByCorrelationIdCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "settlement <asset_class_id> <nft_id> <correlation_id>",
+		Short:   "Query settlements for an NFT by correlation ID",
+		Example: fmt.Sprintf(`$ %s query ledger settlement pb1a2b3c4... nft-123 correlation-456`, version.AppName),
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			assetClassId := args[0]
+			nftId := args[1]
+			correlationId := args[2]
+
+			queryClient := ledger.NewQueryClient(clientCtx)
+			res, err := queryClient.SettlementsByCorrelationIdQuery(cmd.Context(), &ledger.QuerySettlementsByCorrelationIdRequest{
+				Key: &ledger.LedgerKey{
+					AssetClassId: assetClassId,
+					NftId:        nftId,
+				},
+				CorrelationId: correlationId,
+			})
+			if err != nil {
+				fmt.Println("error", err)
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 

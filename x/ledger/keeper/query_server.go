@@ -11,12 +11,14 @@ import (
 var _ ledger.QueryServer = LedgerQueryServer{}
 
 type LedgerQueryServer struct {
-	k ViewKeeper
+	k  ViewKeeper
+	sk FundTransferKeeper
 }
 
-func NewLedgerQueryServer(k ViewKeeper) LedgerQueryServer {
+func NewLedgerQueryServer(k ViewKeeper, sk FundTransferKeeper) LedgerQueryServer {
 	return LedgerQueryServer{
-		k: k,
+		k:  k,
+		sk: sk,
 	}
 }
 
@@ -172,5 +174,47 @@ func (qs LedgerQueryServer) ClassQuery(ctx context.Context, req *ledger.QueryLed
 
 	return &ledger.QueryLedgerClassResponse{
 		LedgerClass: ledgerClass,
+	}, nil
+}
+
+func (qs LedgerQueryServer) SettlementsQuery(ctx context.Context, req *ledger.QuerySettlementsRequest) (*ledger.QuerySettlementsResponse, error) {
+	if req == nil {
+		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
+	}
+
+	// convert the ledger key to a string
+	keyStr, err := LedgerKeyToString(req.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	settlements, err := qs.sk.GetAllSettlements(ctx, keyStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ledger.QuerySettlementsResponse{
+		Settlements: settlements,
+	}, nil
+}
+
+func (qs LedgerQueryServer) SettlementsByCorrelationIdQuery(ctx context.Context, req *ledger.QuerySettlementsByCorrelationIdRequest) (*ledger.QuerySettlementsByCorrelationIdResponse, error) {
+	if req == nil {
+		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
+	}
+
+	// convert the ledger key to a string
+	keyStr, err := LedgerKeyToString(req.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	settlement, err := qs.sk.GetSettlements(ctx, keyStr, req.CorrelationId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ledger.QuerySettlementsByCorrelationIdResponse{
+		Settlement: settlement,
 	}, nil
 }

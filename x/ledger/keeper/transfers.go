@@ -85,6 +85,9 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 			return fmt.Errorf("failed to send coins: %w", err)
 		}
 
+		// Set the xfer status to completed
+		inst.Status = types.FundingTransferStatus_FUNDING_TRANSFER_STATUS_COMPLETED
+
 		// Add the new transfer to the existing transfer list.
 		existingSettlements.SettlementInstructions = append(existingSettlements.SettlementInstructions, inst)
 	}
