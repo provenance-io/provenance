@@ -17,7 +17,6 @@ const (
 	AttributeKeyAssetId        string = "asset_id"
 	AttributeKeyAssetName      string = "asset_name"
 	AttributeKeyAssetSymbol    string = "asset_symbol"
-	AttributeKeyLedgerClass    string = "ledger_class"
 	AttributeKeyOwner          string = "owner"
 	AttributeKeyPoolDenom      string = "pool_denom"
 	AttributeKeyPoolAmount     string = "pool_amount"

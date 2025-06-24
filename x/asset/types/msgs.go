@@ -69,10 +69,6 @@ func (msg MsgCreateAssetClass) ValidateBasic() error {
 		return validateJSONSchema(msg.AssetClass.Data)
 	}
 
-	if msg.LedgerClass == "" {
-		return fmt.Errorf("ledger_class cannot be empty")
-	}
-
 	if msg.FromAddress == "" {
 		return fmt.Errorf("from_address cannot be empty")
 	}

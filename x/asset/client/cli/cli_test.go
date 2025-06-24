@@ -133,7 +133,6 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				"https://example.com/uri",
 				"uri-hash-123",
 				"{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"integer\"}}}",
-				"ledger-class-id-123",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),

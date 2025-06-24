@@ -104,7 +104,6 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 					Id:   "test-class",
 					Name: "Test Class",
 				},
-				LedgerClass: "test-ledger",
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: false,
@@ -113,7 +112,6 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 			name: "nil asset class",
 			msg: MsgCreateAssetClass{
 				AssetClass:  nil,
-				LedgerClass: "test-ledger",
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
@@ -125,7 +123,6 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 					Id:   "",
 					Name: "Test Class",
 				},
-				LedgerClass: "test-ledger",
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
@@ -137,19 +134,6 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 					Id:   "test-class",
 					Name: "",
 				},
-				LedgerClass: "test-ledger",
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-			},
-			wantErr: true,
-		},
-		{
-			name: "empty ledger class",
-			msg: MsgCreateAssetClass{
-				AssetClass: &AssetClass{
-					Id:   "test-class",
-					Name: "Test Class",
-				},
-				LedgerClass: "",
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
