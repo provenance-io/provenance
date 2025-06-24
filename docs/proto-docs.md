@@ -438,16 +438,16 @@
     - [GenesisState](#provenance-attribute-v1-GenesisState)
   
 - [provenance/asset/v1/tx.proto](#provenance_asset_v1_tx-proto)
-    - [MsgAddAsset](#provenance-asset-v1-MsgAddAsset)
-    - [MsgAddAssetClass](#provenance-asset-v1-MsgAddAssetClass)
-    - [MsgAddAssetClassResponse](#provenance-asset-v1-MsgAddAssetClassResponse)
-    - [MsgAddAssetResponse](#provenance-asset-v1-MsgAddAssetResponse)
-    - [MsgCreateParticipation](#provenance-asset-v1-MsgCreateParticipation)
-    - [MsgCreateParticipationResponse](#provenance-asset-v1-MsgCreateParticipationResponse)
+    - [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset)
+    - [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass)
+    - [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse)
+    - [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse)
     - [MsgCreatePool](#provenance-asset-v1-MsgCreatePool)
     - [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse)
     - [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization)
     - [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse)
+    - [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization)
+    - [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse)
   
     - [Msg](#provenance-asset-v1-Msg)
   
@@ -5799,6 +5799,9 @@ Ledger
 | `next_pmt_amt` | [string](#string) |  | Next payment amount |
 | `interest_rate` | [string](#string) |  | Interest rate |
 | `maturity_date` | [string](#string) |  | Maturity date |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | Day count convention for interest |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | Interest accrual method for interest |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | Payment frequency |
 
 
 
@@ -6981,9 +6984,9 @@ GenesisState defines the attribute module's genesis state.
 
 
 
-<a name="provenance-asset-v1-MsgAddAsset"></a>
+<a name="provenance-asset-v1-MsgCreateAsset"></a>
 
-### MsgAddAsset
+### MsgCreateAsset
 
 
 
@@ -6997,17 +7000,16 @@ GenesisState defines the attribute module's genesis state.
 
 
 
-<a name="provenance-asset-v1-MsgAddAssetClass"></a>
+<a name="provenance-asset-v1-MsgCreateAssetClass"></a>
 
-### MsgAddAssetClass
+### MsgCreateAssetClass
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  |  |
-| `entry_types` | [provenance.ledger.v1.LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) | repeated |  |
-| `status_types` | [provenance.ledger.v1.LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated |  |
+| `ledger_class` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
 
 
@@ -7015,19 +7017,9 @@ GenesisState defines the attribute module's genesis state.
 
 
 
-<a name="provenance-asset-v1-MsgAddAssetClassResponse"></a>
+<a name="provenance-asset-v1-MsgCreateAssetClassResponse"></a>
 
-### MsgAddAssetClassResponse
-
-
-
-
-
-
-
-<a name="provenance-asset-v1-MsgAddAssetResponse"></a>
-
-### MsgAddAssetResponse
+### MsgCreateAssetClassResponse
 
 
 
@@ -7035,25 +7027,9 @@ GenesisState defines the attribute module's genesis state.
 
 
 
-<a name="provenance-asset-v1-MsgCreateParticipation"></a>
+<a name="provenance-asset-v1-MsgCreateAssetResponse"></a>
 
-### MsgCreateParticipation
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
-| `from_address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-asset-v1-MsgCreateParticipationResponse"></a>
-
-### MsgCreateParticipationResponse
+### MsgCreateAssetResponse
 
 
 
@@ -7115,6 +7091,33 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+
+<a name="provenance-asset-v1-MsgCreateTokenization"></a>
+
+### MsgCreateTokenization
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
+| `nft` | [Nft](#provenance-asset-v1-Nft) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateTokenizationResponse"></a>
+
+### MsgCreateTokenizationResponse
+
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -7129,10 +7132,10 @@ GenesisState defines the attribute module's genesis state.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `AddAsset` | [MsgAddAsset](#provenance-asset-v1-MsgAddAsset) | [MsgAddAssetResponse](#provenance-asset-v1-MsgAddAssetResponse) |  |
-| `AddAssetClass` | [MsgAddAssetClass](#provenance-asset-v1-MsgAddAssetClass) | [MsgAddAssetClassResponse](#provenance-asset-v1-MsgAddAssetClassResponse) |  |
+| `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) |  |
+| `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) |  |
 | `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) |  |
-| `CreateParticipation` | [MsgCreateParticipation](#provenance-asset-v1-MsgCreateParticipation) | [MsgCreateParticipationResponse](#provenance-asset-v1-MsgCreateParticipationResponse) |  |
+| `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) |  |
 | `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) |  |
 
  <!-- end services -->
