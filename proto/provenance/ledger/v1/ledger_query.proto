@@ -26,6 +26,15 @@ message LedgerPlainText {
 
   // Maturity date
   string maturity_date = 6;
+
+  // Day count convention for interest
+  DayCountConvention interest_day_count_convention = 7;
+
+  // Interest accrual method for interest
+  InterestAccrualMethod interest_accrual_method = 8;
+
+  // Payment frequency
+  PaymentFrequency payment_frequency = 9;
 }
 
 // LedgerEntry

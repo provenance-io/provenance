@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -44,6 +45,13 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 		return err
 	}
 
+	// print the transfer key as json
+	transferKeyJSON, err := json.MarshalIndent(transfer, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal transfer key to JSON: %w", err)
+	}
+	fmt.Println(string(transferKeyJSON))
+
 	// Get the ledger to ensure it exists
 	ledger, err := k.GetLedger(ctx, transfer.Key)
 	if err != nil {
@@ -70,7 +78,12 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 
 	existingSettlements, err := k.GetSettlements(ctx, keyStr, transfer.LedgerEntryCorrelationId)
 	if err != nil {
-		return err
+		// ignore not found error
+		if errors.Is(err, collections.ErrNotFound) {
+			existingSettlements = &types.StoredSettlementInstructions{}
+		} else {
+			return err
+		}
 	}
 
 	// Transfer funds per the settlement instructions

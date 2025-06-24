@@ -56,7 +56,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 			BaseViewKeeper: viewKeeper,
 		},
 		BaseFundTransferKeeper: BaseFundTransferKeeper{
-			BankKeeper: bankKeeper,
+			BankKeeper:     bankKeeper,
+			BaseViewKeeper: viewKeeper,
 		},
 	}
 }
@@ -110,7 +111,7 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledger
 	// Check if the authority has ownership of the NFT
 	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
 	if nftOwner == nil || nftOwner.String() != authorityAddr {
-		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "authority is not the nft owner")
+		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, fmt.Sprintf("authority is not the nft owner (%s)", nftOwner.String()))
 	}
 
 	return nil

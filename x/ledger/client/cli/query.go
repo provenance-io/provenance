@@ -69,12 +69,15 @@ func GetConfigCmd() *cobra.Command {
 
 			// Convert to PlainText
 			plainText := ledger.LedgerPlainText{
-				Key:          req.Key,
-				Status:       strconv.Itoa(int(l.Ledger.StatusTypeId)),
-				NextPmtDate:  helper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
-				NextPmtAmt:   strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
-				InterestRate: strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
-				MaturityDate: helper.EpochDaysToISO8601(l.Ledger.MaturityDate),
+				Key:                        req.Key,
+				Status:                     strconv.Itoa(int(l.Ledger.StatusTypeId)),
+				NextPmtDate:                helper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
+				NextPmtAmt:                 strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
+				InterestRate:               strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
+				MaturityDate:               helper.EpochDaysToISO8601(l.Ledger.MaturityDate),
+				InterestDayCountConvention: l.Ledger.InterestDayCountConvention,
+				InterestAccrualMethod:      l.Ledger.InterestAccrualMethod,
+				PaymentFrequency:           l.Ledger.PaymentFrequency,
 			}
 
 			return clientCtx.PrintProto(&plainText)
