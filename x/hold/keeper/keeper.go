@@ -7,25 +7,28 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/provenance-io/provenance/x/hold"
 )
 
 type Keeper struct {
-	cdc      codec.BinaryCodec
-	storeKey storetypes.StoreKey
-
-	bankKeeper hold.BankKeeper
+	cdc           codec.BinaryCodec
+	storeKey      storetypes.StoreKey
+	accountKeeper hold.AccountKeeper
+	bankKeeper    hold.BankKeeper
+	authority     string
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper hold.BankKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
 	rv := Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		bankKeeper: bankKeeper,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 	bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins)
 	return rv
@@ -291,4 +294,9 @@ func (k Keeper) GetAllAccountHolds(ctx sdk.Context) ([]*hold.AccountHold, error)
 		return false
 	})
 	return holds, err
+}
+
+// GetAuthority returns the module's authority address
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

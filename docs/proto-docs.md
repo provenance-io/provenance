@@ -843,6 +843,13 @@
     - [GenesisState](#provenance-metadata-v1-GenesisState)
     - [MarkerNetAssetValues](#provenance-metadata-v1-MarkerNetAssetValues)
   
+- [provenance/hold/v1/tx.proto](#provenance_hold_v1_tx-proto)
+    - [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest)
+    - [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse)
+    - [UnlockFailure](#provenance-hold-v1-UnlockFailure)
+  
+    - [Msg](#provenance-hold-v1-Msg)
+  
 - [provenance/hold/v1/events.proto](#provenance_hold_v1_events-proto)
     - [EventHoldAdded](#provenance-hold-v1-EventHoldAdded)
     - [EventHoldReleased](#provenance-hold-v1-EventHoldReleased)
@@ -12529,6 +12536,80 @@ MarkerNetAssetValues defines the net asset values for a scope
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_hold_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/tx.proto
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsRequest"></a>
+
+### MsgUnlockVestingAccountsRequest
+MsgUnlockVestingAccountsRequest defines the request for unlocking vesting accounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that can execute this message (governance module account) |
+| `addresses` | [string](#string) | repeated | addresses is the list of vesting account addresses to convert back to base accounts |
+
+
+
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsResponse"></a>
+
+### MsgUnlockVestingAccountsResponse
+MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `unlocked_addresses` | [string](#string) | repeated | unlocked_addresses contains the addresses that were successfully unlocked |
+| `failed_addresses` | [UnlockFailure](#provenance-hold-v1-UnlockFailure) | repeated | failed_addresses contains addresses that failed to unlock with reasons |
+
+
+
+
+
+
+<a name="provenance-hold-v1-UnlockFailure"></a>
+
+### UnlockFailure
+UnlockFailure represents a failed unlock attempt
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `reason` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-hold-v1-Msg"></a>
+
+### Msg
+Msg defines the hold Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UnlockVestingAccounts` | [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest) | [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse) | UnlockVestingAccounts unlocks one or more vesting accounts. |
 
  <!-- end services -->
 

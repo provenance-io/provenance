@@ -255,6 +255,19 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/provenance/hold/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Hold"
+        ]
+      },
+      "operationIds": {
+        "rename": {
+          "UnlockVestingAccounts": "HoldUnlockVestingAccounts"
+        }
+      }
+    },
+    {
       "url": "./client/docs/swagger_third_party.yaml",
       "dereference": {
         "circular": "ignore"
