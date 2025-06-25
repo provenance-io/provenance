@@ -42,7 +42,7 @@ pub fn process_packet(
 /// that has been transfered through the channel for a specific denom.
 /// If the period for a RateLimit has ended, the Flow information is reset.
 ///
-/// The channel_value is the current value of the denom for the the channel as
+/// The channel_value is the current value of the denom for the channel as
 /// calculated by the caller. This should be the total supply of a denom
 pub fn try_transfer(
     deps: DepsMut,
