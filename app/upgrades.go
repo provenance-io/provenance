@@ -377,6 +377,7 @@ func MakeFlatFeesParams() flatfeestypes.Params {
 // MakeFlatFeesCosts returns the list of MsgFees that we want to set.
 // Part of the alyssum upgrade.
 func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
+	// TODO[fees]: Identify the new Msgs being added how much we want them to cost, and add them to this list.
 	return []*flatfeestypes.MsgFee{
 		// Free Msg types. These are gov-prop-only Msg types. A gov prop costs $2.50 + the cost of each msg in it.
 		// So even though these msgs are free, it'll still cost $2.50 to submit one.
