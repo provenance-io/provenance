@@ -24,6 +24,7 @@ import (
 	"github.com/provenance-io/provenance/x/hold/client/cli"
 	"github.com/provenance-io/provenance/x/hold/keeper"
 	"github.com/provenance-io/provenance/x/hold/simulation"
+	holdtypes "github.com/provenance-io/provenance/x/hold/types"
 )
 
 var (
@@ -91,7 +92,9 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 }
 
 // RegisterInterfaces registers the hold module's interface types
-func (AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	holdtypes.RegisterInterfaces(registry)
+}
 
 // RegisterLegacyAminoCodec registers the hold module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
@@ -119,6 +122,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // RegisterServices registers a gRPC query service to respond to the hold-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	hold.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	holdtypes.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

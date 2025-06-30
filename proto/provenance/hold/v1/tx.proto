@@ -26,8 +26,7 @@ message MsgUnlockVestingAccountsRequest {
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // addresses is the list of vesting account addresses to convert back to base accounts
-  repeated string addresses = 2
-      [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "validate:\"max=1000\""];
+  repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
@@ -40,6 +39,8 @@ message MsgUnlockVestingAccountsResponse {
 
 // UnlockFailure represents a failed unlock attempt
 message UnlockFailure {
+  // addresses is the list of vesting account addresses failed to convert back to base accounts
   string address = 1;
-  string reason  = 2;
+  // reason for failed address
+  string reason = 2;
 }

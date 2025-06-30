@@ -853,6 +853,7 @@
 - [provenance/hold/v1/events.proto](#provenance_hold_v1_events-proto)
     - [EventHoldAdded](#provenance-hold-v1-EventHoldAdded)
     - [EventHoldReleased](#provenance-hold-v1-EventHoldReleased)
+    - [EventUnlockVestingAccounts](#provenance-hold-v1-EventUnlockVestingAccounts)
   
 - [provenance/hold/v1/hold.proto](#provenance_hold_v1_hold-proto)
     - [AccountHold](#provenance-hold-v1-AccountHold)
@@ -12588,8 +12589,8 @@ UnlockFailure represents a failed unlock attempt
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `reason` | [string](#string) |  |  |
+| `address` | [string](#string) |  | addresses is the list of vesting account addresses failed to convert back to base accounts |
+| `reason` | [string](#string) |  | reason for failed address |
 
 
 
@@ -12649,6 +12650,24 @@ EventHoldReleased is an event indicating that some funds were released from hold
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
 | `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
+
+
+
+
+
+
+<a name="provenance-hold-v1-EventUnlockVestingAccounts"></a>
+
+### EventUnlockVestingAccounts
+EventUnlockVestingAccounts is an event emitted when vesting accounts are
+processed for unlock.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that initiated the unlock (e.g., governance module account). |
+| `unlocked_count` | [uint32](#uint32) |  | unlocked_count is the number of vesting accounts successfully unlocked. |
+| `failed_count` | [uint32](#uint32) |  | failed_count is the number of vesting accounts that failed to unlock. |
 
 
 

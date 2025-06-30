@@ -2,17 +2,21 @@ package cli_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/ghodss/yaml"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/cosmos/gogoproto/proto"
-
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -543,6 +547,120 @@ func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 		s.Run(tc.name, func() {
 			actual := queries.GetSpendableBalances(s.T(), s.testnet, tc.addr.String())
 			s.Assert().Equal(tc.exp.String(), actual.String(), "spendable balances")
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
+	fromAddr := s.testnet.Validators[0].Address.String()
+	fee := sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()
+	validDeposit := "10000000stake"
+	validAddresses := []string{
+		s.addr1.String(),
+		s.addr2.String(),
+	}
+	validAddressCSV := strings.Join(validAddresses, ",")
+
+	// Valid file with addresses
+	validFilePath := filepath.Join(os.TempDir(), "unlock-valid-addresses.json")
+	data, _ := json.Marshal(validAddresses)
+	_ = os.WriteFile(validFilePath, data, 0644)
+	defer os.Remove(validFilePath)
+
+	// Empty address file
+	emptyFilePath := filepath.Join(os.TempDir(), "unlock-empty-addresses.json")
+	_ = os.WriteFile(emptyFilePath, []byte("[]"), 0644)
+	defer os.Remove(emptyFilePath)
+
+	badJSONFilePath := filepath.Join(os.TempDir(), "unlock-bad-json.json")
+	_ = os.WriteFile(badJSONFilePath, []byte("{not json"), 0644)
+	defer os.Remove(badJSONFilePath)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedCode   uint32
+		expectedErrMsg string
+	}{
+		{
+			name: "happy path via --addresses",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=Unlock Accounts",
+				"--summary=Unlocking via addresses",
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+		},
+		{
+			name: "happy path via --addresses-file",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=Unlock from file",
+				"--summary=Valid address file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, validFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+		},
+
+		{
+			name: "fail: missing deposit",
+			args: []string{
+				// fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit), // This line is intentionally missing
+				"--title=Missing Deposit",
+				"--summary=No deposit provided",
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+			expectedCode:   16,
+			expectedErrMsg: "minimum deposit is too small",
+		},
+		{
+			name: "fail: missing title",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--summary=No title",
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+			expectedCode:   18,                               // Expect transaction to fail on-chain with code 18.
+			expectedErrMsg: "proposal title cannot be empty", // Still good to assert on the specific message
+		},
+		{
+			name: "fail: duplicate addresses",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "10000000stake"),
+				"--title=Dupes",
+				"--summary=Same address twice",
+				"--addresses=cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv,cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv", // Duplicate address
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expectedCode:   12,
+			expectedErrMsg: "duplicate address",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdUnlockVestingAccountsProposal()
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+
 		})
 	}
 }

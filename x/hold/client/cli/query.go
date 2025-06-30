@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 
-	"github.com/provenance-io/provenance/x/hold"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -11,6 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	"github.com/provenance-io/provenance/x/hold"
 )
 
 // exampleQueryCmdBase is the base command that gets a user to one of the query commands in here.
