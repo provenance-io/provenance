@@ -123,7 +123,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	hold.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	holdtypes.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

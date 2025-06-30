@@ -2,17 +2,16 @@ package cli
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/provcli"
@@ -75,28 +74,20 @@ JSON file format (array of strings):
 			if err != nil {
 				return err
 			}
-
-			// Get addresses
 			addresses, err := getAddresses(cmd)
 			if err != nil {
 				return err
 			}
-
-			// Validate addresses
 			for _, addr := range addresses {
 				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-					return fmt.Errorf("invalid address %q: %w", addr, err)
+					return sdkErrors.ErrInvalidAddress.Wrapf("invalid address %q: %w", addr, err)
 				}
 			}
 
-			// Get gov module authority
 			flagSet := cmd.Flags()
 			authority := provcli.GetAuthority(flagSet)
-
-			// Create unlock message
 			unlockMsg := types.NewMsgUnlockVestingAccounts(authority, addresses)
 
-			// Submit the proposal
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, unlockMsg)
 		},
 	}
@@ -115,16 +106,16 @@ JSON file format (array of strings):
 func getAddresses(cmd *cobra.Command) ([]string, error) {
 	filePath, err := cmd.Flags().GetString(FlagAddressesFile)
 	if err != nil {
-		return nil, fmt.Errorf("get flag %s: %w", FlagAddressesFile, err)
+		return nil, sdkErrors.ErrIO.Wrapf("get flag %s: %w", FlagAddressesFile, err)
 	}
 
 	addressList, err := cmd.Flags().GetStringSlice(FlagAddresses)
 	if err != nil {
-		return nil, fmt.Errorf("get flag %s: %w", FlagAddresses, err)
+		return nil, sdkErrors.ErrInvalidAddress.Wrapf("get flag %s: %w", FlagAddresses, err)
 	}
 
 	if filePath != "" && len(addressList) > 0 {
-		return nil, errors.New("only one of --addresses or --addresses-file can be specified")
+		return nil, sdkErrors.ErrInvalidAddress.Wrapf("only one of --addresses or --addresses-file can be specified")
 	}
 
 	if filePath != "" {
@@ -132,7 +123,7 @@ func getAddresses(cmd *cobra.Command) ([]string, error) {
 	}
 
 	if len(addressList) == 0 {
-		return nil, errors.New("no addresses provided")
+		return nil, sdkErrors.ErrInvalidAddress.Wrapf("no addresses provided")
 	}
 
 	return addressList, nil
@@ -142,14 +133,14 @@ func getAddresses(cmd *cobra.Command) ([]string, error) {
 func parseAddressFile(path string) ([]string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("read file: %w", err)
+		return nil, sdkErrors.ErrInvalidType.Wrapf("read file: %w", err)
 	}
 	var addresses []string
 	if err := json.Unmarshal(data, &addresses); err != nil {
-		return nil, fmt.Errorf("parse JSON: %w", err)
+		return nil, sdkErrors.ErrInvalidType.Wrapf("parse JSON: %w", err)
 	}
 	if len(addresses) == 0 {
-		return nil, errors.New("no addresses in file")
+		return nil, sdkErrors.ErrInvalidAddress.Wrapf("no addresses in file")
 	}
 	return addresses, nil
 }

@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/types"
 )
@@ -80,7 +81,6 @@ func (s msgServer) validateAuthority(authority string) error {
 		return sdkerrors.ErrUnauthorized.Wrapf("invalid authority; expected %s, got %s",
 			govModuleAddr,
 			authority)
-
 	}
 	return nil
 }
