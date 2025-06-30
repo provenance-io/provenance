@@ -15,5 +15,5 @@ message GenesisState {
   option (gogoproto.goproto_getters) = false;
 
   // Ledgers with their entries - matches the test.json structure
-  repeated LedgerToEntries ledger_to_entries = 1 [(gogoproto.nullable) = false];
+  repeated LedgerToEntries ledger_to_entries = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerToEntries,omitempty"];
 }
