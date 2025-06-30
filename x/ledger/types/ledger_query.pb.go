@@ -123,21 +123,21 @@ func (m *LedgerPlainText) GetInterestDayCountConvention() DayCountConvention {
 	if m != nil {
 		return m.InterestDayCountConvention
 	}
-	return DayCountConvention_LEDGER_DAY_COUNT_UNSPECIFIED
+	return LEDGER_DAY_COUNT_UNSPECIFIED
 }
 
 func (m *LedgerPlainText) GetInterestAccrualMethod() InterestAccrualMethod {
 	if m != nil {
 		return m.InterestAccrualMethod
 	}
-	return InterestAccrualMethod_LEDGER_ACCRUAL_UNSPECIFIED
+	return LEDGER_ACCRUAL_UNSPECIFIED
 }
 
 func (m *LedgerPlainText) GetPaymentFrequency() PaymentFrequency {
 	if m != nil {
 		return m.PaymentFrequency
 	}
-	return PaymentFrequency_LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED
+	return LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED
 }
 
 // LedgerEntry

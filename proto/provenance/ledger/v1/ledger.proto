@@ -14,247 +14,259 @@ option java_multiple_files = true;
 message LedgerClass {
   // Unique ID for the ledger class (eg. 1, 2, 3, etc.)
   // This is necessary since the nft class does not have an owner.
-  string ledger_class_id = 1;
+  string ledger_class_id = 1 [(gogoproto.jsontag) = "ledgerClassId,omitempty"];
 
   // Scope Specification ID or NFT Class ID
-  string asset_class_id = 2;
+  string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
 
   // Denom that this class of asset will be ledgered in
-  string denom = 3;
+  string denom = 3 [(gogoproto.jsontag) = "denom,omitempty"];
 
   // Address of the maintainer for the ledger class
-  string maintainer_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string maintainer_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.jsontag) = "maintainerAddress,omitempty"];
 }
 
 // LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
 // for minimal data storage while providing a human readable description of the entry type.
 message LedgerClassEntryType {
   // Unique ID for the entry type (eg. 1, 2, 3, etc.)
-  int32 id = 1;
+  int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
   // Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER")
-  string code = 2;
+  string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 
   // Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other")
-  string description = 3;
+  string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
 message LedgerClassStatusType {
   // Unique ID for the status type (eg. 1, 2, 3, etc.)
-  int32 id = 1;
+  int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
   // Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY""CLOSED",
   // "CANCELLED", "SUSPENDED", "OTHER")
-  string code = 2;
+  string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 
   // Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy",
   // "Closed", "Cancelled", "Suspended", "Other")
-  string description = 3;
+  string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
 message LedgerKey {
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
   // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
-  string nft_id = 1;
+  string nft_id = 1 [(gogoproto.jsontag) = "nftId,omitempty"];
 
   // Scope Specification ID or NFT Class ID
-  string asset_class_id = 2;
+  string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
 }
 
 // Ledger
 message Ledger {
-  LedgerKey key = 1;
+  LedgerKey key = 1 [(gogoproto.jsontag) = "key,omitempty"];
 
   // Ledger class id for the ledger
-  string ledger_class_id = 2;
+  string ledger_class_id = 2 [(gogoproto.jsontag) = "ledgerClassId,omitempty"];
 
   // Status of the ledger
-  int32 status_type_id = 3;
+  int32 status_type_id = 3 [(gogoproto.jsontag) = "statusTypeId,omitempty"];
 
   // Next payment date days since epoch
-  int32 next_pmt_date = 4;
+  int32 next_pmt_date = 4 [(gogoproto.jsontag) = "nextPmtDate,omitempty"];
 
   // Next payment amount
-  int64 next_pmt_amt = 5;
+  int64 next_pmt_amt = 5 [(gogoproto.jsontag) = "nextPmtAmt,omitempty"];
 
   // Interest rate (10000000 = 10.000000%) - 6 decimal places
-  int32 interest_rate = 6;
+  int32 interest_rate = 6 [(gogoproto.jsontag) = "interestRate,omitempty"];
 
   // Maturity date days since epoch
-  int32 maturity_date = 7;
+  int32 maturity_date = 7 [(gogoproto.jsontag) = "maturityDate,omitempty"];
 
   // Day count convention for interest
-  DayCountConvention interest_day_count_convention = 8;
+  DayCountConvention interest_day_count_convention = 8 [(gogoproto.jsontag) = "interestDayCountConvention,omitempty"];
 
   // Interest accrual method for interest
-  InterestAccrualMethod interest_accrual_method = 9;
+  InterestAccrualMethod interest_accrual_method = 9 [(gogoproto.jsontag) = "interestAccrualMethod,omitempty"];
 
   // Payment frequency
-  PaymentFrequency payment_frequency = 10;
+  PaymentFrequency payment_frequency = 10 [(gogoproto.jsontag) = "paymentFrequency,omitempty"];
 }
 
 // LedgerClassBucketType represents a bucket type for a ledger class
 message LedgerClassBucketType {
   // Unique ID for the bucket type (eg. 1, 2, 3, etc.)
-  int32 id = 1;
+  int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
   // Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER")
-  string code = 2;
+  string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 
   // Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other")
-  string description = 3;
+  string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
 // LedgerEntry
 message LedgerEntry {
   // Correlation ID for tracking ledger entries with external systems (max 50 characters)
-  string correlation_id = 1;
+  string correlation_id = 1 [(gogoproto.jsontag) = "correlationId,omitempty"];
 
   // If this entry reverses another entry, the correlation id of the entry it reverses
-  string reverses_correlation_id = 2;
+  string reverses_correlation_id = 2 [(gogoproto.jsontag) = "reversesCorrelationId,omitempty"];
 
   // If true, this entry is a void and should not be included in the ledger balance calculations
-  bool is_void = 3;
+  bool is_void = 3 [(gogoproto.jsontag) = "isVoid,omitempty"];
 
   // The NFT address that this ledger entry pertains to
   // Sequence number of the ledger entry (less than 100)
   // This field is used to maintain the correct order of entries when multiple entries
   // share the same effective date. Entries are sorted first by effective date, then by sequence.
-  uint32 sequence = 4;
+  uint32 sequence = 4 [(gogoproto.jsontag) = "sequence,omitempty"];
 
   // The type of ledger entry specified by the LedgerClassEntryType.id
-  int32 entry_type_id = 5;
+  int32 entry_type_id = 5 [(gogoproto.jsontag) = "entryTypeId,omitempty"];
 
   // Posted date days since epoch
-  int32 posted_date = 7;
+  int32 posted_date = 7 [(gogoproto.jsontag) = "postedDate,omitempty"];
 
   // Effective date days since epoch
-  int32 effective_date = 8;
+  int32 effective_date = 8 [(gogoproto.jsontag) = "effectiveDate,omitempty"];
 
   // Total amount of the ledger entry
   string total_amt = 9 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "totalAmt,omitempty"
   ];
 
   // Applied amounts for each bucket
-  repeated LedgerBucketAmount applied_amounts = 10;
+  repeated LedgerBucketAmount applied_amounts = 10 [(gogoproto.jsontag) = "appliedAmounts,omitempty"];
 
   // Balances for each bucket
-  repeated BucketBalance balance_amounts = 11;
+  repeated BucketBalance balance_amounts = 11 [(gogoproto.jsontag) = "balanceAmounts,omitempty"];
 }
 
 message LedgerBucketAmount {
   // The bucket type specified by the LedgerClassBucketType.id
-  int32 bucket_type_id = 1;
+  int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
 
   // The amount applied to the bucket
   string applied_amt = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "appliedAmt,omitempty"
   ];
 }
 
 // Balances represents the current balances for principal, interest, and other amounts
 message Balances {
-  repeated BucketBalance bucket_balances = 1;
+  repeated BucketBalance bucket_balances = 1 [(gogoproto.jsontag) = "bucketBalances,omitempty"];
 }
 
 message BucketBalance {
   // The bucket type specified by the LedgerClassBucketType.id
-  int32 bucket_type_id = 1;
+  int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
 
   // The balance of the bucket
   string balance_amt = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "balanceAmt,omitempty"
   ];
 }
 
 // Used for conversion....
 message Ledgers {
-  repeated LedgerToEntries ledger_to_entries = 1;
+  repeated LedgerToEntries ledger_to_entries = 1 [(gogoproto.jsontag) = "ledgerToEntries,omitempty"];
 }
 message LedgerToEntries {
-  LedgerKey            ledger_key = 1;
-  Ledger               ledger     = 2;
-  repeated LedgerEntry entries    = 3;
+  LedgerKey            ledger_key = 1 [(gogoproto.jsontag) = "ledgerKey,omitempty"];
+  Ledger               ledger     = 2 [(gogoproto.jsontag) = "ledger,omitempty"];
+  repeated LedgerEntry entries    = 3 [(gogoproto.jsontag) = "entries,omitempty"];
 }
 
 // Day Count Conventions used in interest calculations
 enum DayCountConvention {
+  option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
   // Unspecified day count convention.
-  LEDGER_DAY_COUNT_UNSPECIFIED = 0;
+  LEDGER_DAY_COUNT_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_UNSPECIFIED"];
 
   // Actual/365: Uses the actual number of days in the period with a fixed denominator of 365
   // (or sometimes 365.25 to adjust for leap years).
-  LEDGER_DAY_COUNT_ACTUAL_365 = 1;
+  LEDGER_DAY_COUNT_ACTUAL_365 = 1 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_ACTUAL_365"];
 
   // Actual/360: Uses the actual number of days in the period but divides by 360.
-  LEDGER_DAY_COUNT_ACTUAL_360 = 2;
+  LEDGER_DAY_COUNT_ACTUAL_360 = 2 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_ACTUAL_360"];
 
   // 30/360: Assumes each month has 30 days and the year has 360 days.
-  LEDGER_DAY_COUNT_THIRTY_360 = 3;
+  LEDGER_DAY_COUNT_THIRTY_360 = 3 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_THIRTY_360"];
 
   // Actual/Actual: Uses the actual number of days in the period and the actual days in the year
   // (365 or 366, depending on the year).
-  LEDGER_DAY_COUNT_ACTUAL_ACTUAL = 4;
+  LEDGER_DAY_COUNT_ACTUAL_ACTUAL = 4 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_ACTUAL_ACTUAL"];
 
   // 365/365: Always uses 365 days in the denominator regardless of leap years.
-  LEDGER_DAY_COUNT_DAYS_365 = 5;
+  LEDGER_DAY_COUNT_DAYS_365 = 5 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_DAYS_365"];
 
   // 360/360: Always uses 360 days in both the numerator and denominator.
-  LEDGER_DAY_COUNT_DAYS_360 = 6;
+  LEDGER_DAY_COUNT_DAYS_360 = 6 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_DAYS_360"];
 }
 
 // Interest Accrual Methods describing how interest is calculated over time
 enum InterestAccrualMethod {
+  option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
   // Unspecified interest accrual method.
-  LEDGER_ACCRUAL_UNSPECIFIED = 0;
+  LEDGER_ACCRUAL_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_UNSPECIFIED"];
 
   // Simple Interest: Calculated only on the principal amount.
-  LEDGER_ACCRUAL_SIMPLE_INTEREST = 1;
+  LEDGER_ACCRUAL_SIMPLE_INTEREST = 1 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_SIMPLE_INTEREST"];
 
   // Compound Interest: Calculated on both the principal and on previously accumulated interest.
-  LEDGER_ACCRUAL_COMPOUND_INTEREST = 2;
+  LEDGER_ACCRUAL_COMPOUND_INTEREST = 2 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_COMPOUND_INTEREST"];
 
   // Daily Compounding: Interest is compounded on a daily basis.
-  LEDGER_ACCRUAL_DAILY_COMPOUNDING = 3;
+  LEDGER_ACCRUAL_DAILY_COMPOUNDING = 3 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_DAILY_COMPOUNDING"];
 
   // Monthly Compounding: Interest is compounded each month.
-  LEDGER_ACCRUAL_MONTHLY_COMPOUNDING = 4;
+  LEDGER_ACCRUAL_MONTHLY_COMPOUNDING = 4 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_MONTHLY_COMPOUNDING"];
 
   // Quarterly Compounding: Interest is compounded every quarter.
-  LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING = 5;
+  LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING = 5 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING"];
 
   // Annually Compounding: Interest is compounded once per year.
-  LEDGER_ACCRUAL_ANNUAL_COMPOUNDING = 6;
+  LEDGER_ACCRUAL_ANNUAL_COMPOUNDING = 6 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_ANNUAL_COMPOUNDING"];
 
   // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
-  LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING = 7;
+  LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING = 7 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING"];
 }
 
 // Payment frequencies for loan repayments
 enum PaymentFrequency {
+  option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
   // Unspecified payment frequency.
-  LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED = 0;
+  LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED"];
 
   // Daily payments.
-  LEDGER_PAYMENT_FREQUENCY_DAILY = 1;
+  LEDGER_PAYMENT_FREQUENCY_DAILY = 1 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_DAILY"];
 
   // Weekly or biweekly payments.
-  LEDGER_PAYMENT_FREQUENCY_WEEKLY = 2;
+  LEDGER_PAYMENT_FREQUENCY_WEEKLY = 2 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_WEEKLY"];
 
   // Monthly payments (most common for consumer loans and mortgages).
-  LEDGER_PAYMENT_FREQUENCY_MONTHLY = 3;
+  LEDGER_PAYMENT_FREQUENCY_MONTHLY = 3 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_MONTHLY"];
 
   // Quarterly payments.
-  LEDGER_PAYMENT_FREQUENCY_QUARTERLY = 4;
+  LEDGER_PAYMENT_FREQUENCY_QUARTERLY = 4 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_QUARTERLY"];
 
   // Annual payments.
-  LEDGER_PAYMENT_FREQUENCY_ANNUALLY = 5;
+  LEDGER_PAYMENT_FREQUENCY_ANNUALLY = 5 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_ANNUALLY"];
 }
