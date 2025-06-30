@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,6 +34,7 @@ func CmdTx() *cobra.Command {
 		CmdAddLedgerClassEntryType(),
 		CmdAddLedgerClassBucketType(),
 		CmdTransferFundsWithSettlement(),
+		CmdBulkImport(),
 	)
 
 	return cmd
@@ -438,6 +440,47 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 			}
 			for i := range transfers {
 				msg.Transfers[i] = &transfers[i]
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdBulkImport imports ledger data from a genesis state file
+func CmdBulkImport() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "bulk-import <genesis_state_file>",
+		Aliases: []string{"bi"},
+		Short:   "Bulk import ledger data from a genesis state file",
+		Example: `$ provenanced tx ledger bulk-import genesis.json --from mykey`,
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			genesisStateFile := args[0]
+
+			// Read the genesis state file
+			genesisStateBytes, err := os.ReadFile(genesisStateFile)
+			if err != nil {
+				return fmt.Errorf("failed to read genesis state file: %w", err)
+			}
+
+			// Parse the genesis state
+			var genesisState ledger.GenesisState
+			if err := json.Unmarshal(genesisStateBytes, &genesisState); err != nil {
+				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+			}
+
+			msg := &ledger.MsgBulkImportRequest{
+				Authority:    clientCtx.FromAddress.String(),
+				GenesisState: &genesisState,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

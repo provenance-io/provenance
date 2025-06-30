@@ -250,31 +250,6 @@ func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKe
 	return nil, nil
 }
 
-func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
-	state := &ledger.GenesisState{}
-
-	// Iterate through all ledgers
-	iter, err := k.Ledgers.Iterate(ctx, nil)
-	if err != nil {
-		panic(err)
-	}
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		_, err := iter.Key()
-		if err != nil {
-			panic(err)
-		}
-		_, err = iter.Value()
-		if err != nil {
-			panic(err)
-		}
-
-	}
-
-	return state
-}
-
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
 func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.Balances, error) {
 	// Validate the key
