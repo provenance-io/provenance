@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,7 +11,7 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/provenance-io/provenance/x/hold"
-	"github.com/provenance-io/provenance/x/hold/types"
+
 )
 
 type msgServer struct {
@@ -18,15 +19,15 @@ type msgServer struct {
 }
 
 // NewMsgServerImpl returns an implementation of the hold MsgServer interface
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper Keeper) hold.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-var _ types.MsgServer = msgServer{}
+var _ hold.MsgServer = msgServer{}
 
 // UnlockVestingAccounts converts vesting accounts back to base accounts
 // This is a governance-only endpoint for security
-func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *types.MsgUnlockVestingAccountsRequest) (*types.MsgUnlockVestingAccountsResponse, error) {
+func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *hold.MsgUnlockVestingAccountsRequest) (*hold.MsgUnlockVestingAccountsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := s.validateAuthority(req.Authority); err != nil {
@@ -34,14 +35,14 @@ func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *types.MsgUn
 	}
 
 	var unlockedAddresses []string
-	var failedAddresses []*types.UnlockFailure
+	var failedAddresses []*hold.UnlockFailure
 	accountsToSave := make([]sdk.AccountI, 0, len(req.Addresses))
 	addressToIndexMap := make(map[string]int)
 
 	for _, addrStr := range req.Addresses {
 		addr, err := sdk.AccAddressFromBech32(addrStr)
 		if err != nil {
-			failedAddresses = append(failedAddresses, &types.UnlockFailure{
+			failedAddresses = append(failedAddresses, &hold.UnlockFailure{
 				Address: addrStr,
 				Reason:  fmt.Sprintf("invalid address format: %s", err),
 			})
@@ -50,7 +51,7 @@ func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *types.MsgUn
 
 		baseAccount, err := s.unlockVestingAccount(ctx, addr)
 		if err != nil {
-			failedAddresses = append(failedAddresses, &types.UnlockFailure{
+			failedAddresses = append(failedAddresses, &hold.UnlockFailure{
 				Address: addrStr,
 				Reason:  err.Error(),
 			})
@@ -65,10 +66,15 @@ func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *types.MsgUn
 	for _, acc := range accountsToSave {
 		s.accountKeeper.SetAccount(ctx, acc)
 	}
-	if err := ctx.EventManager().EmitTypedEvent(hold.NewEventUnlockVestingAccounts(sdk.AccAddress(s.authority), uint32(len(unlockedAddresses)), uint32(len(failedAddresses)))); err != nil {
+	unlockedCount := len(unlockedAddresses)
+	failedCount := len(failedAddresses)
+	if unlockedCount > math.MaxUint32 || failedCount > math.MaxUint32 {
+		return nil, fmt.Errorf("number of addresses exceeds uint32 limit: unlocked %d, failed %d", unlockedCount, failedCount)
+	}
+	if err := ctx.EventManager().EmitTypedEvent(hold.NewEventUnlockVestingAccounts(sdk.AccAddress(s.authority), uint32(unlockedCount), uint32(failedCount))); err != nil {
 		return nil, err
 	}
-	return &types.MsgUnlockVestingAccountsResponse{
+	return &hold.MsgUnlockVestingAccountsResponse{
 		UnlockedAddresses: unlockedAddresses,
 		FailedAddresses:   failedAddresses,
 	}, nil

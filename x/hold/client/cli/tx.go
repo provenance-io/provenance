@@ -15,8 +15,7 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/provcli"
-	holdmodule "github.com/provenance-io/provenance/x/hold"
-	"github.com/provenance-io/provenance/x/hold/types"
+	hold "github.com/provenance-io/provenance/x/hold"
 )
 
 const (
@@ -27,7 +26,7 @@ const (
 // NewTxCmd returns the top-level command for hold CLI transactions
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
-		Use:                        holdmodule.ModuleName,
+		Use:                        hold.ModuleName,
 		Short:                      "Transaction commands for the hold module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -67,7 +66,7 @@ $ %[1]s tx gov submit-proposal unlock-vesting-accounts-proposal \
 
 JSON file format (array of strings):
 ["addr1", "addr2", "addr3"]
-`, holdmodule.ModuleName),
+`, hold.ModuleName),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -80,13 +79,13 @@ JSON file format (array of strings):
 			}
 			for _, addr := range addresses {
 				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-					return sdkErrors.ErrInvalidAddress.Wrapf("invalid address %q: %w", addr, err)
+					return sdkErrors.ErrInvalidAddress.Wrapf("invalid address %q: %v", addr, err)
 				}
 			}
 
 			flagSet := cmd.Flags()
 			authority := provcli.GetAuthority(flagSet)
-			unlockMsg := types.NewMsgUnlockVestingAccounts(authority, addresses)
+			unlockMsg := hold.NewMsgUnlockVestingAccounts(authority, addresses)
 
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, unlockMsg)
 		},
@@ -106,12 +105,12 @@ JSON file format (array of strings):
 func getAddresses(cmd *cobra.Command) ([]string, error) {
 	filePath, err := cmd.Flags().GetString(FlagAddressesFile)
 	if err != nil {
-		return nil, sdkErrors.ErrIO.Wrapf("get flag %s: %w", FlagAddressesFile, err)
+		return nil, sdkErrors.ErrIO.Wrapf("get flag %s: %v", FlagAddressesFile, err)
 	}
 
 	addressList, err := cmd.Flags().GetStringSlice(FlagAddresses)
 	if err != nil {
-		return nil, sdkErrors.ErrInvalidAddress.Wrapf("get flag %s: %w", FlagAddresses, err)
+		return nil, sdkErrors.ErrInvalidAddress.Wrapf("get flag %s: %v", FlagAddresses, err)
 	}
 
 	if filePath != "" && len(addressList) > 0 {
@@ -133,11 +132,11 @@ func getAddresses(cmd *cobra.Command) ([]string, error) {
 func parseAddressFile(path string) ([]string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, sdkErrors.ErrInvalidType.Wrapf("read file: %w", err)
+		return nil, sdkErrors.ErrInvalidType.Wrapf("read file: %v", err)
 	}
 	var addresses []string
 	if err := json.Unmarshal(data, &addresses); err != nil {
-		return nil, sdkErrors.ErrInvalidType.Wrapf("parse JSON: %w", err)
+		return nil, sdkErrors.ErrInvalidType.Wrapf("parse JSON: %v", err)
 	}
 	if len(addresses) == 0 {
 		return nil, sdkErrors.ErrInvalidAddress.Wrapf("no addresses in file")

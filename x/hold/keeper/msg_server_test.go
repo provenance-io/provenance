@@ -16,8 +16,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/hold"
 	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
-	"github.com/provenance-io/provenance/x/hold/types"
 )
 
 type MsgServerTestSuite struct {
@@ -25,7 +25,7 @@ type MsgServerTestSuite struct {
 
 	app            *simapp.App
 	ctx            sdk.Context
-	msgServer      types.MsgServer
+	msgServer      hold.MsgServer
 	blockStartTime time.Time
 
 	// Test accounts
@@ -171,7 +171,7 @@ func (s *MsgServerTestSuite) TestMsgUnlockVestingAccounts_SuccessCases() {
 			}
 
 			ctx := s.ctx
-			msg := types.MsgUnlockVestingAccountsRequest{
+			msg := hold.MsgUnlockVestingAccountsRequest{
 				Authority: s.govAddr,
 				Addresses: addresses,
 			}
@@ -202,7 +202,7 @@ func (s *MsgServerTestSuite) TestMsgUnlockVestingAccounts_PartialFailures() {
 		s.createTestAccounts()
 		ctx := s.ctx
 		nonExistentAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-		msg := types.MsgUnlockVestingAccountsRequest{
+		msg := hold.MsgUnlockVestingAccountsRequest{
 			Authority: s.govAddr,
 			Addresses: []string{
 				s.vestingAddrs[0].String(), // Valid
@@ -252,14 +252,14 @@ func (s *MsgServerTestSuite) TestMsgUnlockVestingAccounts_EdgeCases() {
 		s.createTestAccounts()
 		ctx := s.ctx
 
-		msg1 := types.MsgUnlockVestingAccountsRequest{
+		msg1 := hold.MsgUnlockVestingAccountsRequest{
 			Authority: s.govAddr,
 			Addresses: []string{s.vestingAddrs[0].String()},
 		}
 		_, err := s.msgServer.UnlockVestingAccounts(ctx, &msg1)
 		s.Require().NoError(err, "s.msgServer.UnlockVestingAccounts")
 
-		msg2 := types.MsgUnlockVestingAccountsRequest{
+		msg2 := hold.MsgUnlockVestingAccountsRequest{
 			Authority: s.govAddr,
 			Addresses: []string{s.vestingAddrs[0].String()},
 		}
@@ -286,7 +286,7 @@ func (s *MsgServerTestSuite) TestMsgUnlockVestingAccounts_EdgeCases() {
 		s.Require().NoError(err)
 		s.app.AccountKeeper.SetAccount(ctx, vestingAccount)
 
-		msg := types.MsgUnlockVestingAccountsRequest{
+		msg := hold.MsgUnlockVestingAccountsRequest{
 			Authority: s.govAddr,
 			Addresses: []string{addr.String()},
 		}
@@ -327,7 +327,7 @@ func (s *MsgServerTestSuite) TestMsgUnlockVestingAccounts_Performance() {
 			accAddrs = append(accAddrs, addr)
 		}
 
-		msg := types.MsgUnlockVestingAccountsRequest{
+		msg := hold.MsgUnlockVestingAccountsRequest{
 			Authority: s.govAddr,
 			Addresses: addresses,
 		}
