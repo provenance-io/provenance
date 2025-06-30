@@ -20,6 +20,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgAddLedgerClassStatusTypeRequest)(nil),
 	(*MsgAddLedgerClassEntryTypeRequest)(nil),
 	(*MsgAddLedgerClassBucketTypeRequest)(nil),
+	(*MsgBulkImportRequest)(nil),
 }
 
 // Note: Authority address validation is performed in the message server to avoid duplicate bech32 conversions.
@@ -205,6 +206,18 @@ func (m *MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 	}
 	if m.BucketType == nil {
 		return sdkerrors.ErrInvalidRequest.Wrap("bucket type cannot be nil")
+	}
+
+	return nil
+}
+
+// ValidateBasic implements the sdk.Msg interface for MsgBulkImportRequest
+func (m *MsgBulkImportRequest) ValidateBasic() error {
+	if m.Authority == "" {
+		return sdkerrors.ErrInvalidRequest.Wrap("authority cannot be empty")
+	}
+	if m.GenesisState == nil {
+		return sdkerrors.ErrInvalidRequest.Wrap("genesis state cannot be nil")
 	}
 
 	return nil

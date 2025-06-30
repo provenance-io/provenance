@@ -117,22 +117,33 @@ func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk
 }
 
 func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error {
-	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
-		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
-	}
+	// Bucket type validation is performed at the message level in ValidateBasic()
 
-	key := collections.Join(ledgerClassId, l.Id)
-
-	has, err := k.LedgerClassBucketTypes.Has(ctx, key)
+	// Check if the ledger class exists
+	ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
 	if err != nil {
 		return err
 	}
-
-	if has {
-		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class bucket type")
+	if ledgerClass == nil {
+		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger class")
 	}
 
-	err = k.LedgerClassBucketTypes.Set(ctx, key, l)
+	// Check if the maintainer address matches
+	if ledgerClass.MaintainerAddress != maintainerAddr.String() {
+		return types.NewLedgerCodedError(types.ErrCodeUnauthorized, "maintainer")
+	}
+
+	// Check if the bucket type already exists
+	has, err := k.LedgerClassBucketTypes.Has(ctx, collections.Join(ledgerClassId, l.Id))
+	if err != nil {
+		return err
+	}
+	if has {
+		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "bucket type")
+	}
+
+	// Add the bucket type
+	err = k.LedgerClassBucketTypes.Set(ctx, collections.Join(ledgerClassId, l.Id), l)
 	if err != nil {
 		return err
 	}
@@ -397,7 +408,14 @@ func (k BaseConfigKeeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAdd
 }
 
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
-	// no-op: we start with a clean ledger state.
+	if state == nil {
+		return
+	}
+
+	// For new chains, we only set up the basic module structure
+	// Actual ledger data should be imported during upgrades, not during genesis
+	// This ensures that new chains start with a clean slate and data is only
+	// imported when explicitly intended through upgrade handlers
 }
 
 // DestroyLedger removes a ledger from the store by NFT address

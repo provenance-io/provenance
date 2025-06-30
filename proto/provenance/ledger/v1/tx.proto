@@ -8,6 +8,7 @@ option java_multiple_files = true;
 import "cosmos/msg/v1/msg.proto";
 import "provenance/ledger/v1/ledger.proto";
 import "provenance/ledger/v1/ledger_settlement.proto";
+import "provenance/ledger/v1/genesis.proto";
 
 // Msg defines the attribute module Msg service.
 service Msg {
@@ -52,6 +53,9 @@ service Msg {
 
   // Add a bucket type to a ledger class
   rpc AddLedgerClassBucketTypeTx(MsgAddLedgerClassBucketTypeRequest) returns (MsgAddLedgerClassBucketTypeResponse);
+
+  // Bulk import ledger data from genesis state
+  rpc BulkImportTx(MsgBulkImportRequest) returns (MsgBulkImportResponse);
 }
 
 // MsgCreateRequest
@@ -219,3 +223,14 @@ message MsgAddLedgerClassBucketTypeRequest {
 
 // MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type
 message MsgAddLedgerClassBucketTypeResponse {}
+
+// MsgBulkImportRequest represents a request to bulk import ledger data from genesis state
+message MsgBulkImportRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string       authority = 1;
+  GenesisState genesis_state = 2;
+}
+
+// MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state
+message MsgBulkImportResponse {}

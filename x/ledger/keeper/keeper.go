@@ -170,3 +170,52 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 	// Default to false if the authority is not the owner or servicer
 	return false, nil
 }
+
+// BulkImportLedgerData imports ledger data from genesis state
+// This function assumes that ledger classes, status types, entry types, and bucket types
+// are already created before calling this function.
+func (k BaseKeeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddress, genesisState ledger.GenesisState) error {
+	ctx.Logger().Info("Starting bulk import of ledger data",
+		"ledger_to_entries", len(genesisState.LedgerToEntries))
+
+	// Import ledgers and their entries
+	for _, ledgerToEntries := range genesisState.LedgerToEntries {
+		// Get the maintainer address from the ledger class
+		ledgerClass, err := k.GetLedgerClass(ctx, ledgerToEntries.Ledger.LedgerClassId)
+		if err != nil {
+			return fmt.Errorf("failed to get ledger class %s: %w", ledgerToEntries.Ledger.LedgerClassId, err)
+		}
+		if ledgerClass == nil {
+			return fmt.Errorf("ledger class %s not found - ensure it is created before bulk import", ledgerToEntries.Ledger.LedgerClassId)
+		}
+
+		maintainerAddr, err := sdk.AccAddressFromBech32(ledgerClass.MaintainerAddress)
+		if err != nil {
+			return fmt.Errorf("invalid maintainer address %s: %w", ledgerClass.MaintainerAddress, err)
+		}
+
+		// Create the ledger
+		if err := k.CreateLedger(ctx, maintainerAddr, *ledgerToEntries.Ledger); err != nil {
+			return fmt.Errorf("failed to create ledger: %w", err)
+		}
+		ctx.Logger().Info("Created ledger", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)
+
+		// Add ledger entries
+		if len(ledgerToEntries.Entries) > 0 {
+			entries := make([]*ledger.LedgerEntry, len(ledgerToEntries.Entries))
+			for i, entry := range ledgerToEntries.Entries {
+				entries[i] = entry
+			}
+
+			if err := k.AppendEntries(ctx, maintainerAddr, ledgerToEntries.LedgerKey, entries); err != nil {
+				return fmt.Errorf("failed to append entries for ledger key %s: %w", ledgerToEntries.LedgerKey.NftId, err)
+			}
+			ctx.Logger().Info("Added ledger entries", "ledger_key", ledgerToEntries.LedgerKey.NftId, "count", len(entries))
+		}
+	}
+
+	ctx.Logger().Info("Successfully completed bulk import of ledger data",
+		"ledger_to_entries", len(genesisState.LedgerToEntries))
+
+	return nil
+}

@@ -240,19 +240,33 @@ func (k *MsgServer) AddLedgerClassEntryTypeTx(goCtx context.Context, req *ledger
 func (k *MsgServer) AddLedgerClassBucketTypeTx(goCtx context.Context, req *ledger.MsgAddLedgerClassBucketTypeRequest) (*ledger.MsgAddLedgerClassBucketTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if req == nil {
-		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
-	}
-
-	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.AddClassBucketType(sdk.UnwrapSDKContext(ctx), authority, req.LedgerClassId, *req.BucketType)
+	err = k.AddClassBucketType(ctx, authorityAddr, req.LedgerClassId, *req.BucketType)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ledger.MsgAddLedgerClassBucketTypeResponse{}, nil
+	resp := ledger.MsgAddLedgerClassBucketTypeResponse{}
+	return &resp, nil
+}
+
+func (k *MsgServer) BulkImportTx(goCtx context.Context, req *ledger.MsgBulkImportRequest) (*ledger.MsgBulkImportResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityAddr, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.BulkImportLedgerData(ctx, authorityAddr, *req.GenesisState)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := ledger.MsgBulkImportResponse{}
+	return &resp, nil
 }

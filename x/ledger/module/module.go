@@ -56,7 +56,15 @@ func NewAppModule(cdc codec.Codec, k keeper.BaseKeeper) AppModule {
 
 // InitGenesis initializes the genesis state.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
-	// no-op: we start with a clean ledger state.
+	var genState ledger.GenesisState
+	// Initialize default genesis state
+	if gs == nil {
+		genState = ledger.GenesisState{}
+	} else {
+		cdc.MustUnmarshalJSON(gs, &genState)
+	}
+
+	am.keeper.InitGenesis(ctx, &genState)
 	return nil
 }
 
@@ -72,8 +80,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // ExportGenesis exports the module's genesis state.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	// TODO wire up the export genesis.
-	return cdc.MustMarshalJSON(&ledger.GenesisState{})
+	genState := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(genState)
 }
 
 // Satisfy the AppModule interface for now..

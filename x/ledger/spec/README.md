@@ -13,6 +13,7 @@ The Ledger module provides a comprehensive financial tracking system for NFTs, a
 - Real-time event emission
 - Comprehensive query system
 - Fund transfer processing with settlement instructions
+- Bulk import functionality for ledger data
 
 ## Contents
 
@@ -21,6 +22,7 @@ The Ledger module provides a comprehensive financial tracking system for NFTs, a
 3. **[Events](03_events.md)** - Event types and usage
 4. **[Queries](04_queries.md)** - Query endpoints and usage
 5. **[Messages](05_messages.md)** - Transaction messages and CLI commands
+6. **[Bulk Import](06_bulk_import.md)** - Bulk import functionality and usage
 
 ## Integration
 
