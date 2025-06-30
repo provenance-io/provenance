@@ -85,13 +85,13 @@ message Ledger {
   int32 maturity_date = 7 [(gogoproto.jsontag) = "maturityDate,omitempty"];
 
   // Day count convention for interest
-  DayCountConvention interest_day_count_convention = 8 [(gogoproto.jsontag) = "interestDayCountConvention,omitempty"];
+  DayCountConvention interest_day_count_convention = 8 [(gogoproto.jsontag) = "interestDayCountConvention,omitempty", (gogoproto.casttype) = "DayCountConvention"];
 
   // Interest accrual method for interest
-  InterestAccrualMethod interest_accrual_method = 9 [(gogoproto.jsontag) = "interestAccrualMethod,omitempty"];
+  InterestAccrualMethod interest_accrual_method = 9 [(gogoproto.jsontag) = "interestAccrualMethod,omitempty", (gogoproto.casttype) = "InterestAccrualMethod"];
 
   // Payment frequency
-  PaymentFrequency payment_frequency = 10 [(gogoproto.jsontag) = "paymentFrequency,omitempty"];
+  PaymentFrequency payment_frequency = 10 [(gogoproto.jsontag) = "paymentFrequency,omitempty", (gogoproto.casttype) = "PaymentFrequency"];
 }
 
 // LedgerClassBucketType represents a bucket type for a ledger class
