@@ -9,7 +9,7 @@ import (
 )
 
 func GetCmdPioSimulateTx() *cobra.Command {
-	// This is the command same as the one for the flatfees CalculateTxFees query.
+	// This command is the same as the one for the flatfees CalculateTxFees query.
 	// However, we want this one named "simulate". So, if it's not, we put the current name in the aliases
 	// remove "simulate" from the aliases, and then update the use to have the name "simulate".
 	cmd := flatfeescli.NewCmdCalculateTxFees()
