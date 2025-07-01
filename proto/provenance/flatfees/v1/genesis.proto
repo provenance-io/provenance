@@ -8,10 +8,10 @@ option java_multiple_files = true;
 import "gogoproto/gogo.proto";
 import "provenance/flatfees/v1/flatfees.proto";
 
-// GenesisState contains a set of the flat fees module, persisted from the store.
+// GenesisState contains a set of the flat fees module data, persisted from the store.
 message GenesisState {
   // params defines all the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
-  // msg_fees are the additional fees on specific tx msgs
+  // msg_fees are the fees defined for specific msg types.
   repeated MsgFee msg_fees = 2;
 }

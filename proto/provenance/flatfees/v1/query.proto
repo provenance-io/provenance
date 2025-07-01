@@ -12,9 +12,9 @@ import "provenance/flatfees/v1/flatfees.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-// Query defines the gRPC querier service for marker module.
+// Query defines the gRPC querier service for flatfees module.
 service Query {
-  // Params queries the parameters for x/flatfees.
+  // Params returns the parameters for the x/flatfees module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/provenance/flatfees/v1/params";
   }
@@ -44,13 +44,13 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Params query.
 message QueryParamsResponse {
-  // params defines the parameters of the module.
+  // params defines the parameters of the x/flatfees module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
 message QueryAllMsgFeesRequest {
-  // do_not_convert will return the fees as defined (instead of as converted).
+  // do_not_convert, if true, will return the fees as defined (instead of as converted).
   bool do_not_convert = 1;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
@@ -68,7 +68,7 @@ message QueryAllMsgFeesResponse {
 message QueryMsgFeeRequest {
   // msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend".
   string msg_type_url = 1;
-  // do_not_convert will return the fees as defined (instead of as converted).
+  // do_not_convert, if true, will return the fees as defined (instead of as converted).
   bool do_not_convert = 2;
 }
 

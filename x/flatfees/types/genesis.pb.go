@@ -23,11 +23,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState contains a set of the flat fees module, persisted from the store.
+// GenesisState contains a set of the flat fees module data, persisted from the store.
 type GenesisState struct {
 	// params defines all the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	// msg_fees are the additional fees on specific tx msgs
+	// msg_fees are the fees defined for specific msg types.
 	MsgFees []*MsgFee `protobuf:"bytes,2,rep,name=msg_fees,json=msgFees,proto3" json:"msg_fees,omitempty"`
 }
 

@@ -6087,8 +6087,8 @@ actual cost = defined cost * converted_amount / definition_amount (truncated to 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `definition_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount. This cannot have an amount of zero. If this has the same denomination as the converted_amount, then the amounts must also be equal. |
-| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denomination equal to the definition_amount. If this is zero, all msgs will be free. If this has the same denomination as the definition_amount, then the amounts must also be equal. |
+| `definition_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount. This cannot have an amount of zero. If this has the same denomination as the converted_amount, then the amounts must also be equal. The denom of this field should be the same as the default cost, e.g. musd. |
+| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denomination equal to the definition_amount. If this is zero, all msgs will be free. If this has the same denomination as the definition_amount, then the amounts must also be equal. The denom of this field should be the fee denom, e.g. nhash. |
 
 
 
@@ -6104,7 +6104,7 @@ MsgFee defines the cost to use a specific message type.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
-| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. It should have the same denomination as the default cost and as the conversion factor's definition_amount. Any other denomination will be charged as defined. |
+| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. It should have the same denomination as the default cost and as the conversion factor's definition_amount, e.g. musdc. Any other denomination will be charged as defined. |
 
 
 
@@ -6119,8 +6119,8 @@ Params defines the set of params for the flatfees module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. |
-| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. The denom used here should be the same as used to define the specific msg costs. The recommended denom is musd. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. The definition_amount should have the same denom as the default cost. The denom of the converted amount should be the denom that fees are paid in, e.g. nhash. |
 
 
 
@@ -6151,7 +6151,7 @@ QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `do_not_convert` | [bool](#bool) |  | do_not_convert will return the fees as defined (instead of as converted). |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -6216,7 +6216,7 @@ QueryMsgFeeRequest is the request type for the MsgFee query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  | msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
-| `do_not_convert` | [bool](#bool) |  | do_not_convert will return the fees as defined (instead of as converted). |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
 
 
 
@@ -6256,7 +6256,7 @@ QueryParamsResponse is the response type for the Params query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines the parameters of the module. |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines the parameters of the x/flatfees module. |
 
 
 
@@ -6272,11 +6272,11 @@ QueryParamsResponse is the response type for the Params query.
 <a name="provenance-flatfees-v1-Query"></a>
 
 ### Query
-Query defines the gRPC querier service for marker module.
+Query defines the gRPC querier service for flatfees module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `Params` | [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse) | Params queries the parameters for x/flatfees. |
+| `Params` | [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse) | Params returns the parameters for the x/flatfees module. |
 | `AllMsgFees` | [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse) | AllMsgFees returns info on all msg types that have a customized msg fee. |
 | `MsgFee` | [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest) | [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse) | MsgFee will return information about what it will cost to execute a given msg type. If the provided msg type does not have a specific fee defined, the default is returned. |
 | `CalculateTxFees` | [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest) | [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and fees. |
@@ -6295,13 +6295,13 @@ Query defines the gRPC querier service for marker module.
 <a name="provenance-flatfees-v1-GenesisState"></a>
 
 ### GenesisState
-GenesisState contains a set of the flat fees module, persisted from the store.
+GenesisState contains a set of the flat fees module data, persisted from the store.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines all the parameters of the module. |
-| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the additional fees on specific tx msgs |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the fees defined for specific msg types. |
 
 
 

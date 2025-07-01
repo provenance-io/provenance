@@ -73,7 +73,7 @@ var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryParamsResponse is the response type for the Params query.
 type QueryParamsResponse struct {
-	// params defines the parameters of the module.
+	// params defines the parameters of the x/flatfees module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
@@ -119,7 +119,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 
 // QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
 type QueryAllMsgFeesRequest struct {
-	// do_not_convert will return the fees as defined (instead of as converted).
+	// do_not_convert, if true, will return the fees as defined (instead of as converted).
 	DoNotConvert bool `protobuf:"varint,1,opt,name=do_not_convert,json=doNotConvert,proto3" json:"do_not_convert,omitempty"`
 	// pagination defines optional pagination parameters for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -231,7 +231,7 @@ func (m *QueryAllMsgFeesResponse) GetPagination() *query.PageResponse {
 type QueryMsgFeeRequest struct {
 	// msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend".
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
-	// do_not_convert will return the fees as defined (instead of as converted).
+	// do_not_convert, if true, will return the fees as defined (instead of as converted).
 	DoNotConvert bool `protobuf:"varint,2,opt,name=do_not_convert,json=doNotConvert,proto3" json:"do_not_convert,omitempty"`
 }
 
@@ -520,7 +520,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params queries the parameters for x/flatfees.
+	// Params returns the parameters for the x/flatfees module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// AllMsgFees returns info on all msg types that have a customized msg fee.
 	AllMsgFees(ctx context.Context, in *QueryAllMsgFeesRequest, opts ...grpc.CallOption) (*QueryAllMsgFeesResponse, error)
@@ -577,7 +577,7 @@ func (c *queryClient) CalculateTxFees(ctx context.Context, in *QueryCalculateTxF
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params queries the parameters for x/flatfees.
+	// Params returns the parameters for the x/flatfees module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// AllMsgFees returns info on all msg types that have a customized msg fee.
 	AllMsgFees(context.Context, *QueryAllMsgFeesRequest) (*QueryAllMsgFeesResponse, error)

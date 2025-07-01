@@ -25,13 +25,13 @@ It is expected to fail if:
 
 #### MsgUpdateParamsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L27-L36
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/tx.proto#L27-L36
 
 See also: [Params](06_params.md#params).
 
 #### MsgUpdateParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L38-L39
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/tx.proto#L38-L39
 
 
 ### UpdateConversionFactor
@@ -44,11 +44,11 @@ It is expected to fail if:
 
 #### MsgUpdateConversionFactorRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L41-L50
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/tx.proto#L41-L50
 
 #### MsgUpdateConversionFactorResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L52-L53
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/tx.proto#L52-L53
 
 
 ### UpdateMsgFees
@@ -67,12 +67,12 @@ It is expected to fail if:
 
 #### MsgUpdateMsgFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L55-L67
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/tx.proto#L55-L67
 
 #### MsgFee
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/flatfees.proto#L38-L53
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/flatfees.proto#L44-L59
 
 #### MsgUpdateMsgFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.24.0/proto/provenance/flatfees/v1/tx.proto#L69-L70
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/tx.proto#L69-L70

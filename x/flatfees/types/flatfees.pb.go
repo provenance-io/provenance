@@ -29,8 +29,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Params defines the set of params for the flatfees module.
 type Params struct {
 	// default_cost is the amount a msg costs when there is no specific msg-fee defined for it.
+	// The denom used here should be the same as used to define the specific msg costs.
+	// The recommended denom is musd.
 	DefaultCost types.Coin `protobuf:"bytes,1,opt,name=default_cost,json=defaultCost,proto3" json:"default_cost"`
 	// conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination.
+	// The definition_amount should have the same denom as the default cost.
+	// The denom of the converted amount should be the denom that fees are paid in, e.g. nhash.
 	ConversionFactor ConversionFactor `protobuf:"bytes,3,opt,name=conversion_factor,json=conversionFactor,proto3" json:"conversion_factor"`
 }
 
@@ -88,10 +92,12 @@ type ConversionFactor struct {
 	// definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount.
 	// This cannot have an amount of zero.
 	// If this has the same denomination as the converted_amount, then the amounts must also be equal.
+	// The denom of this field should be the same as the default cost, e.g. musd.
 	DefinitionAmount types.Coin `protobuf:"bytes,1,opt,name=definition_amount,json=definitionAmount,proto3" json:"definition_amount"`
 	// converted_amount is an amount in the fee denomination equal to the definition_amount.
 	// If this is zero, all msgs will be free.
 	// If this has the same denomination as the definition_amount, then the amounts must also be equal.
+	// The denom of this field should be the fee denom, e.g. nhash.
 	ConvertedAmount types.Coin `protobuf:"bytes,2,opt,name=converted_amount,json=convertedAmount,proto3" json:"converted_amount"`
 }
 
@@ -146,8 +152,8 @@ type MsgFee struct {
 	// msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend".
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// cost is the Tx fee required for this msg_type_url.
-	// It should have the same denomination as the default cost and as the conversion factor's definition_amount.
-	// Any other denomination will be charged as defined.
+	// It should have the same denomination as the default cost and as the conversion factor's
+	// definition_amount, e.g. musdc. Any other denomination will be charged as defined.
 	Cost github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=cost,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"cost"`
 }
 
