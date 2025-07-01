@@ -157,3 +157,54 @@ func TestTypedEventToEvent(t *testing.T) {
 		})
 	}
 }
+
+func TestNewEventUnlockVestingAccounts(t *testing.T) {
+	tests := []struct {
+		name          string
+		authority     sdk.AccAddress
+		unlockedCount uint32
+		failedCount   uint32
+		exp           *EventUnlockVestingAccounts
+	}{
+		{
+			name:          "nil authority, zero counts",
+			authority:     nil,
+			unlockedCount: 0,
+			failedCount:   0,
+			exp: &EventUnlockVestingAccounts{
+				Authority:     "",
+				UnlockedCount: 0,
+				FailedCount:   0,
+			},
+		},
+		{
+			name:          "empty authority, non-zero counts",
+			authority:     sdk.AccAddress{},
+			unlockedCount: 3,
+			failedCount:   1,
+			exp: &EventUnlockVestingAccounts{
+				Authority:     "",
+				UnlockedCount: 3,
+				FailedCount:   1,
+			},
+		},
+		{
+			name:          "normal authority with mixed counts",
+			authority:     sdk.AccAddress("valid_address_123"),
+			unlockedCount: 7,
+			failedCount:   2,
+			exp: &EventUnlockVestingAccounts{
+				Authority:     sdk.AccAddress("valid_address_123").String(),
+				UnlockedCount: 7,
+				FailedCount:   2,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			event := NewEventUnlockVestingAccounts(tc.authority, tc.unlockedCount, tc.failedCount)
+			assert.Equal(t, tc.exp, event, "NewEventUnlockVestingAccounts")
+		})
+	}
+}

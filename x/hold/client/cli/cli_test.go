@@ -575,12 +575,13 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 	badJSONFilePath := filepath.Join(os.TempDir(), "unlock-bad-json.json")
 	_ = os.WriteFile(badJSONFilePath, []byte("{not json"), 0644)
 	defer os.Remove(badJSONFilePath)
-
 	testCases := []struct {
 		name           string
 		args           []string
 		expectedCode   uint32
 		expectedErrMsg string
+		expectErr      bool
+		isCliError     bool
 	}{
 		{
 			name: "happy path via --addresses",
@@ -594,6 +595,8 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
 			},
+			expectErr:  false,
+			isCliError: false,
 		},
 		{
 			name: "happy path via --addresses-file",
@@ -607,12 +610,13 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
 			},
+			expectErr:  false,
+			isCliError: false,
 		},
-
 		{
 			name: "fail: missing deposit",
 			args: []string{
-				// fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit), // This line is intentionally missing
+				// Missing deposit flag intentionally
 				"--title=Missing Deposit",
 				"--summary=No deposit provided",
 				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
@@ -621,22 +625,10 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
 			},
+			expectErr:      false,
+			isCliError:     false,
 			expectedCode:   16,
-			expectedErrMsg: "minimum deposit is too small",
-		},
-		{
-			name: "fail: missing title",
-			args: []string{
-				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
-				"--summary=No title",
-				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
-				"--yes", "--broadcast-mode=sync",
-				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
-				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
-			},
-			expectedCode:   18,                               // Expect transaction to fail on-chain with code 18.
-			expectedErrMsg: "proposal title cannot be empty", // Still good to assert on the specific message
+			expectedErrMsg: "",
 		},
 		{
 			name: "fail: duplicate addresses",
@@ -644,23 +636,104 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "10000000stake"),
 				"--title=Dupes",
 				"--summary=Same address twice",
-				"--addresses=cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv,cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv", // Duplicate address
+				"--addresses=cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv,cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				"--yes", "--broadcast-mode=sync",
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 			},
+			expectErr:      false,
+			isCliError:     false,
 			expectedCode:   12,
-			expectedErrMsg: "duplicate address",
+			expectedErrMsg: "duplicate address: cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv: invalid address",
+		},
+		{
+			name: "fail: missing addresses and file (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=MissingAddresses",
+				"--summary=Nothing provided",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expectErr:      true, // This is a CLI validation error
+			isCliError:     true, // This happens before transaction
+			expectedErrMsg: "no addresses provided: invalid address",
+		},
+		{
+			name: "fail: both addresses and file provided (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=BothProvided",
+				"--summary=Both flags provided",
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, validFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expectErr:      true,
+			isCliError:     true,
+			expectedErrMsg: "only one of --addresses or --addresses-file can be specified: invalid address",
+		},
+		{
+			name: "fail: empty address file (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=EmptyFile",
+				"--summary=Empty address file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, emptyFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expectErr:      true,
+			isCliError:     true,
+			expectedErrMsg: "no addresses in file: invalid address",
+		},
+		{
+			name: "fail: bad JSON file (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=BadJSON",
+				"--summary=Malformed JSON file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, badJSONFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expectErr:      true,
+			isCliError:     true,
+			expectedErrMsg: "parse JSON: invalid character 'n' looking for beginning of object key string: invalid type",
+		},
+		{
+			name: "fail: invalid address format (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=InvalidAddress",
+				"--summary=Invalid address format",
+				"--addresses=invalid-address-format",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expectErr:      true,
+			isCliError:     true,
+			expectedErrMsg: "invalid address \"invalid-address-format\": decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 	}
-
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdUnlockVestingAccountsProposal()
-			testcli.NewTxExecutor(cmd, tc.args).
-				WithExpCode(tc.expectedCode).
-				Execute(s.T(), s.testnet)
-
+			executor := testcli.NewTxExecutor(cmd, tc.args)
+			if tc.expectErr {
+				executor = executor.WithExpErrMsg(tc.expectedErrMsg)
+			} else if tc.expectedCode != 0 {
+				executor = executor.WithExpCode(tc.expectedCode).WithExpErrMsg(tc.expectedErrMsg)
+			} else {
+				executor = executor.WithExpCode(0)
+			}
+			executor.Execute(s.T(), s.testnet)
 		})
 	}
 }

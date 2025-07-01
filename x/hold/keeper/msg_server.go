@@ -11,7 +11,6 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/provenance-io/provenance/x/hold"
-
 )
 
 type msgServer struct {
@@ -34,8 +33,8 @@ func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *hold.MsgUnl
 		return nil, err
 	}
 
-	var unlockedAddresses []string
-	var failedAddresses []*hold.UnlockFailure
+	unlockedAddresses := make([]string, 0, len(req.Addresses))
+	failedAddresses := make([]*hold.UnlockFailure, 0)
 	accountsToSave := make([]sdk.AccountI, 0, len(req.Addresses))
 	addressToIndexMap := make(map[string]int)
 
@@ -69,8 +68,9 @@ func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *hold.MsgUnl
 	unlockedCount := len(unlockedAddresses)
 	failedCount := len(failedAddresses)
 	if unlockedCount > math.MaxUint32 || failedCount > math.MaxUint32 {
-		return nil, fmt.Errorf("number of addresses exceeds uint32 limit: unlocked %d, failed %d", unlockedCount, failedCount)
+		return nil, sdkerrors.ErrInvalidType.Wrapf("number of addresses exceeds uint32 limit: unlocked %d, failed %d", unlockedCount, failedCount)
 	}
+	// nolint:gosec // G115:
 	if err := ctx.EventManager().EmitTypedEvent(hold.NewEventUnlockVestingAccounts(sdk.AccAddress(s.authority), uint32(unlockedCount), uint32(failedCount))); err != nil {
 		return nil, err
 	}

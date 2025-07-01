@@ -68,7 +68,7 @@ JSON file format (array of strings):
 ["addr1", "addr2", "addr3"]
 `, hold.ModuleName),
 		),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -77,6 +77,7 @@ JSON file format (array of strings):
 			if err != nil {
 				return err
 			}
+
 			for _, addr := range addresses {
 				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
 					return sdkErrors.ErrInvalidAddress.Wrapf("invalid address %q: %v", addr, err)
@@ -86,7 +87,9 @@ JSON file format (array of strings):
 			flagSet := cmd.Flags()
 			authority := provcli.GetAuthority(flagSet)
 			unlockMsg := hold.NewMsgUnlockVestingAccounts(authority, addresses)
-
+			if err := unlockMsg.ValidateBasic(); err != nil {
+				return err
+			}
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, unlockMsg)
 		},
 	}
