@@ -363,6 +363,7 @@ func feeDefCoin(amount int64) sdk.Coin {
 }
 
 // MakeFlatFeesParams returns the params to give the flatfeees module.
+// Part of the alyssum upgrade.
 func MakeFlatFeesParams() flatfeestypes.Params {
 	return flatfeestypes.Params{
 		DefaultCost: feeDefCoin(150),
