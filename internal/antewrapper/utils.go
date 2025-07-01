@@ -112,7 +112,7 @@ func GetGasWanted(logger log.Logger, feeTx sdk.FeeTx) (uint64, error) {
 	// Prior to flat-fees, we told everyone to use gas-prices of 1905nhash (or 19050nhash on testnet).
 	// If they're still using that, they're providing way too much as a fee and need to update their client settings.
 	// To prevent charging for what would be a pretty costly mistake, we return max uint in such cases.
-	// This gives users have a chance to update their clients without paying 1905 times what's needed.
+	// This gives users a chance to update their clients without paying 1905 times what's needed.
 	if isOldGasPrices(feeNhash.Amount, txGasInt) {
 		// There's a very small chance that this catches a legitimate situation where the tx was not simulated;
 		// e.g. the user defined the gas and fee on their own and the numbers worked out just wrong.
