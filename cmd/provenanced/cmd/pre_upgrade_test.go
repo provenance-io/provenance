@@ -273,7 +273,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 	successMsg := "pre-upgrade successful"
 	updatingBlocksyncMsg := "Updating the broadcast_mode config value to \"sync\" (from \"block\", which is no longer an option)."
 	updatingMinGasPricesMsgStart := "Updating the minimum-gas-prices config value to \"0nhash\""
-	updatingMinGasPricesMsg := updatingMinGasPricesMsgStart + " (from \"1905nhash\", to accommodate flat fees)."
+	updatingMinGasPricesMsg := updatingMinGasPricesMsgStart + " (from \"1906nhash\", to accommodate flat fees)."
 
 	tests := []struct {
 		name         string
@@ -492,7 +492,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			name: "packed config min-gas-prices changed",
 			setup: func(t *testing.T) (string, func(), bool) {
 				appCfg := config.DefaultAppConfig()
-				appCfg.MinGasPrices = "1905nhash"
+				appCfg.MinGasPrices = "1906nhash"
 				home, success := newHomePacked(t, "packed_min-gas-prices", appCfg, cmtCfgD, clientCfgD)
 				return home, nil, success
 			},
@@ -521,7 +521,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			name: "unpacked config min-gas-prices changed",
 			setup: func(t *testing.T) (string, func(), bool) {
 				appCfg := config.DefaultAppConfig()
-				appCfg.MinGasPrices = "1905nhash"
+				appCfg.MinGasPrices = "1906nhash"
 				home, success := newHome(t, "unpacked_min-gas-prices", appCfg, cmtCfgD, clientCfgD)
 				return home, nil, success
 			},
