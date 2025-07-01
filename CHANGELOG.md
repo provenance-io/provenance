@@ -52,6 +52,18 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.24.0](https://github.com/provenance-io/provenance/releases/tag/v1.24.0) 2025-06-10
+
+### Features
+
+* Create the `zomp` upgrade to unlock a handful of accounts [PR 2373](https://github.com/provenance-io/provenance/pull/2373).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.23.0...v1.24.0
+
+---
+
 ## [v1.23.0](https://github.com/provenance-io/provenance/releases/tag/v1.23.0) 2025-05-20
 
 ### Features
