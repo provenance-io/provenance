@@ -2,17 +2,250 @@
 
 ## Overview
 
-The ledger module supports bulk importing ledger data through a dedicated endpoint that accepts a `GenesisState` proto message. This provides several benefits:
+The ledger module supports bulk importing ledger data through dedicated endpoints that accept `GenesisState` proto messages. This provides several benefits:
 
 1. **Clean Architecture**: Uses proper proto messages instead of JSON files
 2. **Type Safety**: Compile-time validation of data structures
 3. **Flexibility**: Can be called at any time, not just during upgrades
 4. **Maintainability**: Data is properly structured and validated
 5. **Reusability**: Can be used for testing, development, and production
+6. **Large Dataset Support**: Includes chunked import for handling large datasets
+
+## Available Commands
+
+The ledger module provides two main bulk import commands:
+
+### 1. Standard Bulk Import (`bulk-import`)
+
+For smaller datasets that fit within transaction limits.
+
+```bash
+# Basic usage
+provenanced tx ledger bulk-import <json_file> --from <key> --chain-id <chain_id>
+
+# Example with testnet
+provenanced tx ledger bulk-import test.json \
+    --from validator \
+    --keyring-backend test \
+    --chain-id testing \
+    --gas-prices 1905nhash \
+    --testnet \
+    --yes
+
+# Example with mainnet
+provenanced tx ledger bulk-import production.json \
+    --from mykey \
+    --chain-id pio-mainnet-1 \
+    --gas-prices 1905nhash \
+    --yes
+```
+
+### 2. Chunked Bulk Import (`chunked-bulk-import`)
+
+For large datasets that need to be split into manageable chunks.
+
+```bash
+# Import with default chunk size (100 ledgers per chunk)
+provenanced tx ledger chunked-bulk-import large_dataset.json --from mykey
+
+# Import with custom chunk size (50 ledgers per chunk)
+provenanced tx ledger chunked-bulk-import large_dataset.json 50 --from mykey
+
+# Example with full options
+provenanced tx ledger chunked-bulk-import large_dataset.json 75 \
+    --from mykey \
+    --chain-id pio-mainnet-1 \
+    --gas-prices 1905nhash \
+    --yes
+```
+
+### 3. Import Status Query (`bulk-import-status`)
+
+Check the status of a chunked bulk import operation.
+
+```bash
+# Check local import status
+provenanced query ledger bulk-import-status <import_id>
+
+# Example
+provenanced query ledger bulk-import-status import_1751488486228131162
+```
+
+## Large Data Import Strategies
+
+When importing large datasets into the ledger module, you may encounter block size and gas limitations. The following strategies help handle large data imports effectively.
+
+### Current Limitations
+
+#### Block and Transaction Limits
+
+1. **Transaction Gas Limit**: 4,000,000 gas per transaction
+2. **Block Gas Limit**: Configurable via consensus parameters
+3. **Block Size**: Limited by `max_bytes` in consensus parameters
+4. **Transaction Size**: Limited by block size and gas constraints
+
+#### Typical Constraints
+
+- **Small datasets**: < 100 ledgers, < 1,000 entries
+- **Medium datasets**: 100-1,000 ledgers, 1,000-10,000 entries  
+- **Large datasets**: > 1,000 ledgers, > 10,000 entries
+
+### Strategy 1: Chunked Bulk Import (Recommended)
+
+#### Overview
+
+Split large datasets into manageable chunks that fit within block size and gas limitations using the `chunked-bulk-import` command.
+
+#### Implementation
+
+The chunked bulk import automatically:
+- Processes files using streaming JSON parsing for memory efficiency
+- Splits data into configurable chunk sizes
+- Tracks import progress locally
+- Provides detailed status reporting
+
+#### Default Configuration
+
+```go
+type ChunkConfig struct {
+    MaxLedgersPerChunk  int // Default: 100
+    MaxEntriesPerChunk  int // Default: 1,000
+    MaxChunkSizeBytes   int // Default: 500KB
+    MaxGasPerChunk      int // Default: 2M gas
+}
+```
+
+#### Benefits
+
+- **Reliable**: Each chunk fits within transaction limits
+- **Resumable**: Failed chunks can be retried individually
+- **Progress tracking**: Monitor import progress with status files
+- **Flexible**: Adjustable chunk sizes based on data characteristics
+- **Memory efficient**: Uses streaming JSON parsing for large files
+
+#### Example Workflow
+
+1. **Prepare data**: Ensure ledger classes, status types, and entry types exist
+2. **Estimate size**: Use helper functions to estimate chunk requirements
+3. **Configure chunking**: Set appropriate chunk sizes
+4. **Execute import**: Run chunked import with progress monitoring
+5. **Verify results**: Check import status and validate data
+
+### Strategy 2: Incremental Import
+
+#### Overview
+
+Import data incrementally over multiple transactions, focusing on specific subsets.
+
+#### Implementation
+
+```bash
+# Import ledgers first
+provenanced tx ledger bulk-import ledgers_only.json --from mykey
+
+# Import entries for specific ledgers
+provenanced tx ledger bulk-import entries_batch_1.json --from mykey
+provenanced tx ledger bulk-import entries_batch_2.json --from mykey
+```
+
+#### Benefits
+
+- **Controlled**: Import specific data types or ranges
+- **Flexible**: Can prioritize critical data first
+- **Debuggable**: Easier to identify issues in specific batches
+
+#### Use Cases
+
+- Import ledgers first, then entries
+- Import by date ranges
+- Import by ledger class or asset type
+- Import critical data first, then supplementary data
+
+### Strategy 3: Parallel Import
+
+#### Overview
+
+Import multiple chunks in parallel across different transactions.
+
+#### Implementation
+
+```bash
+# Terminal 1: Import first chunk
+provenanced tx ledger bulk-import chunk_1.json --from mykey
+
+# Terminal 2: Import second chunk (different key)
+provenanced tx ledger bulk-import chunk_2.json --from mykey2
+
+# Terminal 3: Import third chunk (different key)
+provenanced tx ledger bulk-import chunk_3.json --from mykey3
+```
+
+#### Benefits
+
+- **Faster**: Multiple chunks processed simultaneously
+- **Efficient**: Better resource utilization
+- **Scalable**: Can use multiple validators or accounts
+
+#### Considerations
+
+- **Nonce management**: Each account needs proper nonce sequencing
+- **Gas competition**: Multiple transactions may compete for gas
+- **Order dependency**: Ensure no conflicts between parallel imports
+
+### Strategy 4: Genesis Import
+
+#### Overview
+
+Import large datasets during chain initialization or upgrades.
+
+#### Implementation
+
+```json
+{
+  "app_state": {
+    "ledger": {
+      "ledger_to_entries": [
+        // Large dataset here
+      ]
+    }
+  }
+}
+```
+
+#### Benefits
+
+- **No limits**: Bypasses transaction size constraints
+- **Atomic**: All data imported in single operation
+- **Efficient**: No transaction overhead
+
+#### Considerations
+
+- **Chain restart**: Requires chain restart or upgrade
+- **Timing**: Only available during genesis or upgrades
+- **Validation**: Must validate entire dataset before import
+
+### Strategy 5: Hybrid Approach
+
+#### Overview
+
+Combine multiple strategies based on data characteristics and requirements.
+
+#### Implementation
+
+```bash
+# 1. Import critical ledgers via genesis
+# 2. Import remaining ledgers via chunked import
+provenanced tx ledger chunked-bulk-import remaining_ledgers.json --from mykey
+
+# 3. Import entries in parallel batches
+provenanced tx ledger bulk-import entries_batch_1.json --from mykey1 &
+provenanced tx ledger bulk-import entries_batch_2.json --from mykey2 &
+provenanced tx ledger bulk-import entries_batch_3.json --from mykey3 &
+```
 
 ## JSON Format Support
 
-The bulk import now supports **both** snake_case and camelCase field names, as well as **both** integer and string enum values. This provides maximum flexibility for JSON input:
+The bulk import supports **both** snake_case and camelCase field names, as well as **both** integer and string enum values. This provides maximum flexibility for JSON input:
 
 ### Field Naming Support
 
@@ -195,53 +428,116 @@ message LedgerToEntries {
 }
 ```
 
-## Command Usage
+## Monitoring and Verification
+
+### Import Status
 
 ```bash
-# Basic usage
-provenanced tx ledger bulk-import <json_file> --from <key> --chain-id <chain_id>
+# Check chunked import status
+provenanced query ledger bulk-import-status <import_id>
 
-# Example with testnet
-provenanced tx ledger bulk-import test.json \
-    --from validator \
-    --keyring-backend test \
-    --chain-id testing \
-    --gas-prices 1905nhash \
-    --testnet \
-    --yes
-
-# Example with mainnet
-provenanced tx ledger bulk-import production.json \
-    --from mykey \
-    --chain-id pio-mainnet-1 \
-    --gas-prices 1905nhash \
-    --yes
+# Verify imported data
+provenanced query ledger ledgers
+provenanced query ledger entries
 ```
 
-## Validation
+### Status File Format
 
-The bulk import validates:
+The chunked import creates a local status file (`.bulk_import_status.<import_id>.json`) with the following structure:
 
-1. **JSON Format**: Ensures the JSON structure matches the expected proto message format
-2. **Field Names**: Accepts both snake_case and camelCase field names
-3. **Enum Values**: Accepts both integer and string enum values
-4. **Data Types**: Validates all data types match the proto definitions
-5. **Required Fields**: Ensures all required fields are present
-6. **Ledger Class**: Verifies the ledger class exists before importing data
+```json
+{
+  "import_id": "import_1751488486228131162",
+  "total_chunks": 5,
+  "completed_chunks": 3,
+  "total_ledgers": 500,
+  "total_entries": 1500,
+  "status": "in_progress",
+  "error_message": "",
+  "created_at": "2024-01-01T12:00:00Z",
+  "updated_at": "2024-01-01T12:15:00Z"
+}
+```
 
-## Error Handling
+### Validation Scripts
+
+```bash
+# Validate import completeness
+./scripts/validate_import.sh <import_id>
+
+# Compare source and imported data
+./scripts/compare_data.sh <source_file> <import_id>
+```
+
+## Best Practices
+
+### 1. Data Preparation
+
+- **Validate data**: Ensure all required ledger classes exist
+- **Estimate sizes**: Use helper functions to estimate chunk requirements
+- **Test with samples**: Test import process with small datasets first
+
+### 2. Chunking Strategy
+
+- **Ledger-based**: Split by ledger count (recommended)
+- **Entry-based**: Split by entry count for ledger-heavy data
+- **Size-based**: Split by estimated transaction size
+- **Time-based**: Split by date ranges for time-series data
+
+### 3. Error Handling
+
+- **Retry logic**: Implement retry mechanisms for failed chunks
+- **Rollback capability**: Ensure ability to rollback partial imports
+- **Status tracking**: Monitor import progress and status
+
+### 4. Performance Optimization
+
+- **Gas estimation**: Accurately estimate gas consumption
+- **Batch sizing**: Optimize chunk sizes for your data
+- **Parallel processing**: Use multiple accounts for parallel imports
+
+### 5. JSON Best Practices
+
+- **Use camelCase for new JSON files**: It's more readable and follows modern JSON conventions
+- **Use string enums for readability**: String enum values are self-documenting
+- **Validate JSON before importing**: Use JSON validators to check format
+- **Test with small datasets first**: Import a few records before bulk importing large datasets
+- **Backup existing data**: Always backup existing ledger data before bulk imports
+- **Use dry-run for testing**: Test the import with `--dry-run` flag before actual import
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Gas limit exceeded**: Reduce chunk size or optimize data
+2. **Block size exceeded**: Split data into smaller chunks
+3. **Missing dependencies**: Ensure ledger classes exist before import
+4. **Duplicate data**: Check for existing ledgers/entries before import
+
+### Debugging Commands
+
+```bash
+# Check transaction gas usage
+provenanced query tx <tx_hash> --output json | jq '.gas_used'
+
+# Check block size
+provenanced query block <height> --output json | jq '.block.data.txs | length'
+
+# Validate chunk before import
+provenanced tx ledger validate-chunk chunk.json
+```
+
+### Error Handling
 
 Common error messages and their solutions:
 
 - **`failed to get ledger class: collections: not found`**: The ledger class doesn't exist. Create it first using the ledger class commands.
 - **`failed to unmarshal JSON`**: Check that the JSON format is valid and field names are correct.
 - **`account not found`**: The signing account doesn't exist on the target network. Create the account or use a different key.
+- **`chunk size too large`**: Reduce the chunk size parameter for chunked imports.
 
-## Best Practices
+## Conclusion
 
-1. **Use camelCase for new JSON files**: It's more readable and follows modern JSON conventions
-2. **Use string enums for readability**: String enum values are self-documenting
-3. **Validate JSON before importing**: Use JSON validators to check format
-4. **Test with small datasets first**: Import a few records before bulk importing large datasets
-5. **Backup existing data**: Always backup existing ledger data before bulk imports
-6. **Use dry-run for testing**: Test the import with `--dry-run` flag before actual import 
+For large data imports, the **chunked bulk import** strategy is recommended as it provides the best balance of reliability, flexibility, and performance. The hybrid approach can be used for very large datasets that require multiple strategies.
+
+Always test your import strategy with sample data before running on production datasets, and ensure you have proper monitoring and rollback capabilities in place. 

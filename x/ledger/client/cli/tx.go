@@ -35,6 +35,7 @@ func CmdTx() *cobra.Command {
 		CmdAddLedgerClassBucketType(),
 		CmdTransferFundsWithSettlement(),
 		CmdBulkImport(),
+		CmdChunkedBulkImport(),
 	)
 
 	return cmd
