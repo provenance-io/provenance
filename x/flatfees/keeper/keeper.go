@@ -262,5 +262,8 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 func (k Keeper) SetConversionFactor(ctx sdk.Context, conversionFactor types.ConversionFactor) error {
 	params := k.GetParams(ctx)
 	params.ConversionFactor = conversionFactor
+	if err := params.Validate(); err != nil {
+		return err
+	}
 	return k.SetParams(ctx, params)
 }

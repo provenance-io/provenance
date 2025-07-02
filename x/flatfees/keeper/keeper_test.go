@@ -1095,6 +1095,14 @@ func (s *KeeperTestSuite) TestKeeper_SetConversionFactor() {
 				ConvertedAmount:  sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 563),
 			},
 		},
+		{
+			name: "wrong definition denom",
+			cf: types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin(defaultParams.ConversionFactor.DefinitionAmount.Denom+"x", 1),
+				ConvertedAmount:  sdk.NewInt64Coin(defaultParams.ConversionFactor.ConvertedAmount.Denom, 2),
+			},
+			expErr: "default cost denom \"musd\" does not equal conversion factor base amount denom \"musdx\"",
+		},
 	}
 
 	for _, tc := range tests {
