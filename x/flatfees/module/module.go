@@ -43,8 +43,7 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterServices registers a gRPC query service to respond to the
-// module-specific gRPC queries.
+// RegisterServices registers a gRPC query service to respond to the x/flatfees gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
@@ -53,7 +52,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // RegisterLegacyAminoCodec registers the x/flatfees module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
-// RegisterInterfaces registers the x/flatfees module's interface types
+// RegisterInterfaces registers the x/flatfees module's interface types.
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
@@ -80,24 +79,24 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 	}
 }
 
-// GetQueryCmd returns the cli query commands for the x/flatfees module
+// GetQueryCmd returns the cli query commands for the x/flatfees module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.NewQueryCmd()
 }
 
-// GetTxCmd returns the transaction commands for the x/flatfees module
+// GetTxCmd returns the transaction commands for the x/flatfees module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
-// AppModule implements the sdk.AppModule interface
+// AppModule implements the sdk.AppModule interface for the x/flatfees module.
 type AppModule struct {
 	AppModuleBasic
 	keeper   keeper.Keeper
 	registry cdctypes.InterfaceRegistry
 }
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new x/flatfees AppModule object.
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -117,7 +116,7 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterInvariants does nothing, there are no invariants to enforce
+// RegisterInvariants does nothing, there are no invariants to enforce.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs genesis initialization for the x/flatfees module. It returns no validator updates.
