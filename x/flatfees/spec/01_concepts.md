@@ -77,10 +77,10 @@ Gas is still metered.
 Max gas for a Tx is 4,000,000 (defined in code).
 Max gas for a block is 60,000,000 (defined in consensus params).
 
-Users must still provide a `gas_wanted` that is greater than (or equal to) what gets used.
-Failure to do so will cause the Tx will fail, and the user will be charged the up-front cost.
+Since there is no longer a financial incentive to provide the lowest possible `gas_wanted`, that field is now largely ignored.
 
-Gas used during simulation is still expected to be lower than gas used during actual Tx execution.
+If `gas_wanted` equals the provided `fee` times either `1905nhash` or `19050nhash`, the tx will return an error.
+This is to prevent users from paying 1905 (or 19050) times what they need to pay that results from using the old `gas-prices` amounts.
 
 ### The CalculateTxFees Query
 
@@ -102,13 +102,7 @@ By doing this, the generic Cosmos-SDK clients will multiply the `gas_used` by 1 
 It essentially allows existing third-party clients to continue to work.
 
 When a Tx is simulated and submitted this way, it will have the correct fee amount, but will also end up with that amount as the gas wanted (standard client behavior).
-In our antehandler, we check for that case and use a default amount of gas for the Tx (500,000) instead of what was provided (which is probably more than the block maximum anyway).
-This default is large enough to handle most Txs, but won't be enough for some.
-
-If the default isn't enough, users have a few options:
-
-1. Manually set their `gas_wanted` based on the `gas_wanted` returned from the simulation (probably still need to apply a multiplier).
-2. Use the `CalculateTxFees` query to get both fee and gas information, and use those values instead.
+In our antehandler, we check for that case and adjust things so that it won't run out of gas (unless its more than the tx gas limit).
 
 This method of simulation also has a blind spot.
 If the required fee has an amount in a denom other than the standard fee denom, info about it is not returned using this method of simulation.
@@ -162,7 +156,7 @@ Provenance Blockchain uses a custom gas meter that enhances another gas meter to
 The antehandler creates it and sets the initial costs, the collects the up-front cost.
 The post handler finalizes it before collecting anything remaining.
 
-If `FlatFeeGasMeter.ConsumeAddedFee` or `antehandler.ConsumeAdditionalFee` is called while processing a Msg, 
+If `FlatFeeGasMeter.ConsumeAddedFee` or `antehandler.ConsumeAdditionalFee` is called while processing a Msg,
 that amount is added to the amount of fee required for the Tx (which is checked again in the post handler).
 
 ### Antehandler

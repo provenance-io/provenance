@@ -41,6 +41,7 @@ The conversion factor (part of Params) can be updated on its own using a governa
 It is expected to fail if:
 * The provided `authority` is not the governance module's account.
 * The provided conversion factor is invalid.
+* The resulting `Params` would be invalid.
 
 #### MsgUpdateConversionFactorRequest
 
