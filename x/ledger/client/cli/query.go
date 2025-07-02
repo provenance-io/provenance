@@ -37,6 +37,7 @@ func CmdQuery() *cobra.Command {
 		GetLedgerClassCmd(),
 		GetAllSettlementsCmd(),
 		GetSettlementsByCorrelationIdCmd(),
+		CmdBulkImportStatus(),
 	)
 
 	return queryCmd
