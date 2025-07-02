@@ -114,7 +114,7 @@ func (s *CLITestSuite) SetupSuite() {
 				ConvertedAmount:  sdk.NewInt64Coin(s.cfg.BondDenom, 1),
 			},
 		}
-		// Note that these are sorted alphabetically here to match the state store.
+
 		flatfeeGen.MsgFees = append(flatfeeGen.MsgFees,
 			// MsgSend should remain using the default cost since some tests rely on that being how it's set up.
 			// Only the gov prop msg is fee, still gotta pay for the Msgs in it, though.
