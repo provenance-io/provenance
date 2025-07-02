@@ -21,8 +21,6 @@ The trigger module manages the state of every trigger.
 
 A `Trigger` is the main data structure used by the module. It keeps track of the owner, event, and actions for a single `Trigger`. Every `Trigger` gets its own unique identifier, and a unique entry within the `Event Listener`. The `Event Listener` table allows the event detection system to quickly filter applicable `Triggers` by name and type.
 
-The excess gas on a MsgCreateTrigger transaction will be used for the `Trigger's` `Gas Limit` table. The maximum `Gas Limit` for a `Trigger` is `2000000`.
-
 * Trigger: `0x01 | Trigger ID (8 bytes) -> ProtocolBuffers(Trigger)`
 * Trigger ID: `0x05 -> uint64(TriggerID)`
 * Event Listener: `0x02 | Event Type (32 bytes) | Order (8 bytes) -> []byte{}`
