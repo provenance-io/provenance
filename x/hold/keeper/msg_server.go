@@ -70,7 +70,7 @@ func (s msgServer) UnlockVestingAccounts(goCtx context.Context, req *hold.MsgUnl
 	if unlockedCount > math.MaxUint32 || failedCount > math.MaxUint32 {
 		return nil, sdkerrors.ErrInvalidType.Wrapf("number of addresses exceeds uint32 limit: unlocked %d, failed %d", unlockedCount, failedCount)
 	}
-	//nolint:govet // safe: bounds checked above
+	//nolint:gosec // safe: bounds checked above
 	if err := ctx.EventManager().EmitTypedEvent(hold.NewEventUnlockVestingAccounts(sdk.AccAddress(s.authority), uint32(unlockedCount), uint32(failedCount))); err != nil {
 		return nil, err
 	}
