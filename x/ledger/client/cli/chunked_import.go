@@ -184,21 +184,98 @@ func CmdChunkedBulkImport() *cobra.Command {
 					return fmt.Errorf("chunk %d is nil", i+1)
 				}
 
-				fmt.Printf("Chunk %d contains %d ledger to entries\n", i+1, len(chunk.LedgerToEntries))
+				chunkEntries := 0
+				for _, ledger := range chunk.LedgerToEntries {
+					chunkEntries += len(ledger.Entries)
+				}
+
+				fmt.Printf("Chunk %d contains:\n%d ledgers and %d entries\n", i+1, len(chunk.LedgerToEntries), chunkEntries)
+
+				// Get fresh client context for each transaction to ensure proper sequence number handling
+				clientCtx, err = client.GetClientTxContext(cmd)
+				if err != nil {
+					status.Status = "failed"
+					status.ErrorMessage = fmt.Sprintf("failed to get client context for chunk %d: %v", i+1, err)
+					status.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(status)
+					return fmt.Errorf("failed to get client context for chunk %d: %w", i+1, err)
+				}
+
+				// Get current account sequence number
+				account, err := clientCtx.AccountRetriever.GetAccount(clientCtx, clientCtx.FromAddress)
+				if err != nil {
+					status.Status = "failed"
+					status.ErrorMessage = fmt.Sprintf("failed to get account info for chunk %d: %v", i+1, err)
+					status.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(status)
+					return fmt.Errorf("failed to get account info for chunk %d: %w", i+1, err)
+				}
+
+				fmt.Printf("Using sequence number: %d for chunk %d\n", account.GetSequence(), i+1)
 
 				msg := &types.MsgBulkImportRequest{
 					Authority:    clientCtx.FromAddress.String(),
 					GenesisState: chunk,
 				}
 
+				// Force broadcast mode to sync for this transaction to ensure it's committed
+				// before proceeding to the next chunk
+				originalBroadcastMode := cmd.Flag(flags.FlagBroadcastMode).Value.String()
+				cmd.Flag(flags.FlagBroadcastMode).Value.Set("sync")
+
 				// Broadcast transaction
 				err = tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+
+				// Restore original broadcast mode
+				cmd.Flag(flags.FlagBroadcastMode).Value.Set(originalBroadcastMode)
+
 				if err != nil {
 					status.Status = "failed"
 					status.ErrorMessage = fmt.Sprintf("failed to process chunk %d: %v", i+1, err)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
 					return fmt.Errorf("failed to process chunk %d: %w", i+1, err)
+				}
+
+				// Wait for transaction to be committed and account sequence to be updated
+				// This is necessary to ensure the next transaction uses the correct sequence number
+				if i < len(chunkedState.Chunks)-1 {
+					fmt.Printf("Waiting for transaction confirmation...\n")
+
+					// Get the configured consensus timeout commit value for block time
+					timeoutCommit := clientCtx.Viper.GetDuration("consensus.timeout_commit")
+					if timeoutCommit == 0 {
+						// Fallback to a reasonable default if not configured
+						timeoutCommit = 3 * time.Second
+					}
+
+					// Wait for the next block to ensure the transaction is committed
+					// and the account sequence number is updated in the blockchain state
+					// Use 2x the timeout commit to ensure we wait for the next block
+					waitDuration := timeoutCommit * 2
+					fmt.Printf("Waiting %v for next block (timeout_commit: %v)...\n", waitDuration, timeoutCommit)
+					time.Sleep(waitDuration)
+
+					// Explicitly query the account to get the updated sequence number
+					// and verify it has been incremented
+					maxRetries := 10
+					for retry := 0; retry < maxRetries; retry++ {
+						account, err := clientCtx.AccountRetriever.GetAccount(clientCtx, clientCtx.FromAddress)
+						if err != nil {
+							if retry == maxRetries-1 {
+								status.Status = "failed"
+								status.ErrorMessage = fmt.Sprintf("failed to get account info after chunk %d: %v", i+1, err)
+								status.UpdatedAt = time.Now().Format(time.RFC3339)
+								_ = writeLocalBulkImportStatus(status)
+								return fmt.Errorf("failed to get account info after chunk %d: %w", i+1, err)
+							}
+							time.Sleep(1 * time.Second)
+							continue
+						}
+
+						fmt.Printf("Account sequence updated to: %d\n", account.GetSequence())
+						break
+					}
 				}
 
 				fmt.Printf("Chunk %d/%d completed successfully\n", i+1, chunkedState.TotalChunks)
@@ -319,7 +396,7 @@ func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader) err
 			return fmt.Errorf("expected field name, got %v", token)
 		}
 
-		if fieldName == "ledgerToEntries" {
+		if fieldName == "ledgerToEntries" || fieldName == "ledger_to_entries" {
 			err = p.parseLedgerToEntriesArray(decoder)
 			if err != nil {
 				return fmt.Errorf("failed to parse ledgerToEntries: %w", err)

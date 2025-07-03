@@ -19,6 +19,8 @@ The ledger module provides two main bulk import commands:
 
 For smaller datasets that fit within transaction limits.
 
+**Note**: Standard bulk import only supports camelCase for the root key (`ledgerToEntries`). Use chunked bulk import for snake_case support.
+
 ```bash
 # Basic usage
 provenanced tx ledger bulk-import <json_file> --from <key> --chain-id <chain_id>
@@ -43,6 +45,8 @@ provenanced tx ledger bulk-import production.json \
 ### 2. Chunked Bulk Import (`chunked-bulk-import`)
 
 For large datasets that need to be split into manageable chunks.
+
+**Note**: Chunked bulk import supports both camelCase (`ledgerToEntries`) and snake_case (`ledger_to_entries`) for the root key.
 
 ```bash
 # Import with default chunk size (100 ledgers per chunk)
@@ -246,6 +250,8 @@ provenanced tx ledger bulk-import entries_batch_3.json --from mykey3 &
 ## JSON Format Support
 
 The bulk import supports **both** snake_case and camelCase field names, as well as **both** integer and string enum values. This provides maximum flexibility for JSON input:
+
+**Note**: For the root key `ledger_to_entries`/`ledgerToEntries`, both formats are supported in chunked imports, but standard bulk imports currently only support camelCase (`ledgerToEntries`) due to protobuf JSON tag limitations.
 
 ### Field Naming Support
 
@@ -535,6 +541,7 @@ Common error messages and their solutions:
 - **`failed to unmarshal JSON`**: Check that the JSON format is valid and field names are correct.
 - **`account not found`**: The signing account doesn't exist on the target network. Create the account or use a different key.
 - **`chunk size too large`**: Reduce the chunk size parameter for chunked imports.
+- **`no data imported`**: If using snake_case (`ledger_to_entries`) with standard bulk import, switch to chunked bulk import or use camelCase (`ledgerToEntries`).
 
 ## Conclusion
 
