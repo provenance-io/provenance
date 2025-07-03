@@ -66,12 +66,11 @@ func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Contex
 
 	existingSettlements, err := k.GetSettlements(ctx, keyStr, transfer.LedgerEntryCorrelationId)
 	if err != nil {
-		// ignore not found error
-		if errors.Is(err, collections.ErrNotFound) {
-			existingSettlements = &types.StoredSettlementInstructions{}
-		} else {
-			return err
-		}
+		return err
+	}
+
+	if existingSettlements == nil {
+		existingSettlements = &types.StoredSettlementInstructions{}
 	}
 
 	// Transfer funds per the settlement instructions
