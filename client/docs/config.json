@@ -57,6 +57,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/provenance/hold/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Hold"
+        ]
+      },
+    },
+    {
       "url": "./tmp-swagger-gen/provenance/ibchooks/v1/tx.swagger.json",
       "tags": {
         "add": [
@@ -251,19 +259,6 @@
       "operationIds": {
         "rename": {
           "Params": "IBCHooksParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/provenance/hold/v1/tx.swagger.json",
-      "tags": {
-        "add": [
-          "Hold"
-        ]
-      },
-      "operationIds": {
-        "rename": {
-          "UnlockVestingAccounts": "HoldUnlockVestingAccounts"
         }
       }
     },

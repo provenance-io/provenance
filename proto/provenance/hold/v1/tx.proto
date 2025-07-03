@@ -9,7 +9,6 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-
 // Msg defines the hold Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
