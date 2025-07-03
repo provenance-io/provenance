@@ -41,22 +41,23 @@ func (k queryServer) AllMsgFees(ctx context.Context, req *types.QueryAllMsgFeesR
 		pageReq = req.Pagination
 	}
 
-	var cf *types.ConversionFactor
-	if convert {
-		params := k.GetParams(sdk.UnwrapSDKContext(ctx))
-		cf = &params.ConversionFactor
-	}
+	params := k.GetParams(sdk.UnwrapSDKContext(ctx))
 
 	rv := &types.QueryAllMsgFeesResponse{}
 	var err error
 	rv.MsgFees, rv.Pagination, err = query.CollectionPaginate(ctx, k.msgFees, pageReq, func(_ string, msgFee types.MsgFee) (*types.MsgFee, error) {
 		if convert {
-			return cf.ConvertMsgFee(&msgFee), nil
+			return params.ConversionFactor.ConvertMsgFee(&msgFee), nil
 		}
 		return &msgFee, nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	rv.DefaultCost = params.DefaultCost
+	if convert {
+		rv.DefaultCost = params.ConversionFactor.ConvertCoin(params.DefaultCost)
 	}
 
 	return rv, nil

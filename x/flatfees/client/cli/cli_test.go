@@ -59,6 +59,8 @@ type CLITestSuite struct {
 	account2Key  *secp256k1.PrivKey
 
 	genState types.GenesisState
+
+	ffParams *types.Params
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -107,13 +109,14 @@ func (s *CLITestSuite) SetupSuite() {
 	})
 
 	testutil.MutateGenesisState(s.T(), &s.cfg, types.ModuleName, &types.GenesisState{}, func(flatfeeGen *types.GenesisState) *types.GenesisState {
-		flatfeeGen.Params = types.Params{
+		s.ffParams = &types.Params{
 			DefaultCost: sdk.NewInt64Coin("banana", 10), // 10 banana * 1 stake / 2 banana = 5 stake (default cost).
 			ConversionFactor: types.ConversionFactor{
 				DefinitionAmount: sdk.NewInt64Coin("banana", 2),
 				ConvertedAmount:  sdk.NewInt64Coin(s.cfg.BondDenom, 1),
 			},
 		}
+		flatfeeGen.Params = *s.ffParams
 
 		flatfeeGen.MsgFees = append(flatfeeGen.MsgFees,
 			// MsgSend should remain using the default cost since some tests rely on that being how it's set up.
@@ -555,6 +558,9 @@ func (s *CLITestSuite) TestNewCmdGetParams() {
 }
 
 func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
+	defaultCostRaw := s.ffParams.DefaultCost
+	defaultCostConverted := s.ffParams.ConversionFactor.ConvertCoin(s.ffParams.DefaultCost)
+
 	tests := []testcli.QueryExecutor{
 		{
 			Name:      "one arg",
@@ -570,7 +576,8 @@ func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
 			Name: "limit 1 with count",
 			Args: []string{"--limit", "1", "--count-total", "--output", "json"},
 			ExpOut: s.asJSON(&types.QueryAllMsgFeesResponse{
-				MsgFees: s.convertMsgFees(s.genState.MsgFees[0:1]),
+				MsgFees:     s.convertMsgFees(s.genState.MsgFees[0:1]),
+				DefaultCost: defaultCostConverted,
 				Pagination: &query.PageResponse{
 					NextKey: []byte(s.genState.MsgFees[1].MsgTypeUrl),
 					Total:   uint64(len(s.genState.MsgFees)),
@@ -581,7 +588,8 @@ func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
 			Name: "limit 3 with next key",
 			Args: []string{"--limit", "3", "--page-key", s.nextKeyFor(5), "--output", "json"},
 			ExpOut: s.asJSON(&types.QueryAllMsgFeesResponse{
-				MsgFees: s.convertMsgFees(s.genState.MsgFees[5:8]),
+				MsgFees:     s.convertMsgFees(s.genState.MsgFees[5:8]),
+				DefaultCost: defaultCostConverted,
 				Pagination: &query.PageResponse{
 					NextKey: []byte(s.genState.MsgFees[8].MsgTypeUrl),
 				},
@@ -591,7 +599,8 @@ func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
 			Name: "limit 3 with next key and no conversion",
 			Args: []string{"--limit", "3", "--page-key", s.nextKeyFor(5), "--do-not-convert", "--output", "text"},
 			ExpOut: s.asYAML(&types.QueryAllMsgFeesResponse{
-				MsgFees: s.genState.MsgFees[5:8],
+				MsgFees:     s.genState.MsgFees[5:8],
+				DefaultCost: defaultCostRaw,
 				Pagination: &query.PageResponse{
 					NextKey: []byte(s.genState.MsgFees[8].MsgTypeUrl),
 				},
@@ -601,7 +610,8 @@ func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
 			Name: "limit 3 with offset",
 			Args: []string{"--limit", "3", "--offset", "1", "--output", "text"},
 			ExpOut: s.asYAML(&types.QueryAllMsgFeesResponse{
-				MsgFees: s.convertMsgFees(s.genState.MsgFees[1:4]),
+				MsgFees:     s.convertMsgFees(s.genState.MsgFees[1:4]),
+				DefaultCost: defaultCostConverted,
 				Pagination: &query.PageResponse{
 					NextKey: []byte(s.genState.MsgFees[4].MsgTypeUrl),
 				},
@@ -611,7 +621,8 @@ func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
 			Name: "limit 4 reversed",
 			Args: []string{"--limit", "4", "--reverse", "--output", "json"},
 			ExpOut: s.asJSON(&types.QueryAllMsgFeesResponse{
-				MsgFees: s.convertMsgFees(reversed(s.genState.MsgFees)[0:4]),
+				MsgFees:     s.convertMsgFees(reversed(s.genState.MsgFees)[0:4]),
+				DefaultCost: defaultCostConverted,
 				Pagination: &query.PageResponse{
 					NextKey: []byte(s.genState.MsgFees[len(s.genState.MsgFees)-5].MsgTypeUrl),
 				},
@@ -622,7 +633,8 @@ func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
 			Args: []string{"--limit", "5", "--page-key", s.nextKeyFor(6),
 				"--do-not-convert", "--reverse", "--output", "text"},
 			ExpOut: s.asYAML(&types.QueryAllMsgFeesResponse{
-				MsgFees: reversed(s.genState.MsgFees[2:7]),
+				MsgFees:     reversed(s.genState.MsgFees[2:7]),
+				DefaultCost: defaultCostRaw,
 				Pagination: &query.PageResponse{
 					NextKey: []byte(s.genState.MsgFees[1].MsgTypeUrl),
 				},

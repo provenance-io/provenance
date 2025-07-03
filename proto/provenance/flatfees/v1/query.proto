@@ -60,6 +60,8 @@ message QueryAllMsgFeesRequest {
 message QueryAllMsgFeesResponse {
   // msg_fees contains the requested information.
   repeated MsgFee msg_fees = 1;
+  // default_cost is the amount a msg costs when there is no specific msg-fee defined for it.
+  cosmos.base.v1beta1.Coin default_cost = 2 [(gogoproto.nullable) = false];
   // pagination defines the pagination parameters of the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

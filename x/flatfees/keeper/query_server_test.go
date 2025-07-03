@@ -238,6 +238,10 @@ func (s *QueryServerTestSuite) TestAllMsgFees() {
 		return []byte(msgFees[i].MsgTypeUrl)
 	}
 
+	params := s.app.FlatFeesKeeper.GetParams(s.ctx)
+	defaultCostRaw := params.DefaultCost
+	defaultCostConverted := params.ConversionFactor.ConvertCoin(params.DefaultCost)
+
 	tests := []struct {
 		name    string
 		req     *types.QueryAllMsgFeesRequest
@@ -248,56 +252,63 @@ func (s *QueryServerTestSuite) TestAllMsgFees() {
 			name: "nil req",
 			req:  nil,
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    s.convertMsgFees(msgFees),
-				Pagination: &query.PageResponse{Total: 15},
+				MsgFees:     s.convertMsgFees(msgFees),
+				DefaultCost: defaultCostConverted,
+				Pagination:  &query.PageResponse{Total: 15},
 			},
 		},
 		{
 			name: "nil pagination: converted",
 			req:  &types.QueryAllMsgFeesRequest{DoNotConvert: false, Pagination: nil},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    s.convertMsgFees(msgFees),
-				Pagination: &query.PageResponse{Total: 15},
+				MsgFees:     s.convertMsgFees(msgFees),
+				DefaultCost: defaultCostConverted,
+				Pagination:  &query.PageResponse{Total: 15},
 			},
 		},
 		{
 			name: "nil pagination: not converted",
 			req:  &types.QueryAllMsgFeesRequest{DoNotConvert: true, Pagination: nil},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    msgFees,
-				Pagination: &query.PageResponse{Total: 15},
+				MsgFees:     msgFees,
+				DefaultCost: defaultCostRaw,
+				Pagination:  &query.PageResponse{Total: 15},
 			},
 		},
 		{
 			name: "empty pagination: converted",
 			req:  &types.QueryAllMsgFeesRequest{DoNotConvert: false, Pagination: &query.PageRequest{}},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    s.convertMsgFees(msgFees),
-				Pagination: &query.PageResponse{Total: 15},
+				MsgFees:     s.convertMsgFees(msgFees),
+				DefaultCost: defaultCostConverted,
+				Pagination:  &query.PageResponse{Total: 15},
 			},
 		},
 		{
 			name: "empty pagination: not converted",
 			req:  &types.QueryAllMsgFeesRequest{DoNotConvert: true, Pagination: &query.PageRequest{}},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    msgFees,
-				Pagination: &query.PageResponse{Total: 15},
+				MsgFees:     msgFees,
+				DefaultCost: defaultCostRaw,
+				Pagination:  &query.PageResponse{Total: 15},
 			},
 		},
 		{
 			name: "limit 1 with count",
 			req:  &types.QueryAllMsgFeesRequest{Pagination: &query.PageRequest{Limit: 1, CountTotal: true}},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    s.convertMsgFees(msgFees[0:1]),
-				Pagination: &query.PageResponse{NextKey: nextKeyFor(1), Total: uint64(len(msgFees))},
+				MsgFees:     s.convertMsgFees(msgFees[0:1]),
+				DefaultCost: defaultCostConverted,
+				Pagination:  &query.PageResponse{NextKey: nextKeyFor(1), Total: uint64(len(msgFees))},
 			},
 		},
 		{
 			name: "limit 3 with next key",
 			req:  &types.QueryAllMsgFeesRequest{Pagination: &query.PageRequest{Limit: 3, Key: nextKeyFor(5)}},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    s.convertMsgFees(msgFees[5:8]),
-				Pagination: &query.PageResponse{NextKey: nextKeyFor(8)},
+				MsgFees:     s.convertMsgFees(msgFees[5:8]),
+				DefaultCost: defaultCostConverted,
+				Pagination:  &query.PageResponse{NextKey: nextKeyFor(8)},
 			},
 		},
 		{
@@ -307,24 +318,27 @@ func (s *QueryServerTestSuite) TestAllMsgFees() {
 				Pagination:   &query.PageRequest{Limit: 3, Key: nextKeyFor(5)},
 			},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    msgFees[5:8],
-				Pagination: &query.PageResponse{NextKey: nextKeyFor(8)},
+				MsgFees:     msgFees[5:8],
+				DefaultCost: defaultCostRaw,
+				Pagination:  &query.PageResponse{NextKey: nextKeyFor(8)},
 			},
 		},
 		{
 			name: "limit 3 with offset",
 			req:  &types.QueryAllMsgFeesRequest{Pagination: &query.PageRequest{Limit: 3, Offset: 1}},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    s.convertMsgFees(msgFees[1:4]),
-				Pagination: &query.PageResponse{NextKey: nextKeyFor(4)},
+				MsgFees:     s.convertMsgFees(msgFees[1:4]),
+				DefaultCost: defaultCostConverted,
+				Pagination:  &query.PageResponse{NextKey: nextKeyFor(4)},
 			},
 		},
 		{
 			name: "limit 4 reversed",
 			req:  &types.QueryAllMsgFeesRequest{Pagination: &query.PageRequest{Limit: 4, Reverse: true}},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    s.convertMsgFees(reversed(msgFees)[0:4]),
-				Pagination: &query.PageResponse{NextKey: nextKeyFor(len(msgFees) - 5)},
+				MsgFees:     s.convertMsgFees(reversed(msgFees)[0:4]),
+				DefaultCost: defaultCostConverted,
+				Pagination:  &query.PageResponse{NextKey: nextKeyFor(len(msgFees) - 5)},
 			},
 		},
 		{
@@ -334,8 +348,9 @@ func (s *QueryServerTestSuite) TestAllMsgFees() {
 				Pagination:   &query.PageRequest{Limit: 5, Reverse: true, Key: nextKeyFor(6)},
 			},
 			expResp: &types.QueryAllMsgFeesResponse{
-				MsgFees:    reversed(msgFees[2:7]),
-				Pagination: &query.PageResponse{NextKey: nextKeyFor(1)},
+				MsgFees:     reversed(msgFees[2:7]),
+				DefaultCost: defaultCostRaw,
+				Pagination:  &query.PageResponse{NextKey: nextKeyFor(1)},
 			},
 		},
 		{
@@ -358,6 +373,7 @@ func (s *QueryServerTestSuite) TestAllMsgFees() {
 			ok := true
 			if tc.expResp != nil && actResp != nil {
 				ok = assertEqualMsgFees(s.T(), tc.expResp.MsgFees, actResp.MsgFees) && ok
+				ok = s.Assert().Equal(tc.expResp.DefaultCost.String(), actResp.DefaultCost.String(), "Default Cost") && ok
 				ok = s.assertEqualPagination(tc.expResp.Pagination, actResp.Pagination) && ok
 			}
 			if ok {

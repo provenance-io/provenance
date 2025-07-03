@@ -6168,6 +6168,7 @@ QueryAllMsgFeesResponse is the response type for the AllMsgFees query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees contains the requested information. |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination parameters of the response. |
 
 
