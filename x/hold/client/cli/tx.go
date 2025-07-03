@@ -1,19 +1,17 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/version"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	"github.com/provenance-io/provenance/internal/provcli"
 	hold "github.com/provenance-io/provenance/x/hold"
 )
@@ -22,6 +20,9 @@ const (
 	FlagAddresses     = "addresses"
 	FlagAddressesFile = "addresses-file"
 )
+
+// exampleTxCmdBase is the base command that gets a user to one of the query commands in here.
+var exampleTxCmdBase = fmt.Sprintf("%s tx %s", version.AppName, hold.ModuleName)
 
 // NewTxCmd returns the top-level command for hold CLI transactions
 func NewTxCmd() *cobra.Command {
@@ -33,64 +34,57 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
-		GetCmdUnlockVestingAccountsProposal(),
+		GetCmdUnlockVestingAccounts(),
 	)
 	return txCmd
 }
 
-// GetCmdUnlockVestingAccountsProposal creates a governance proposal to unlock vesting accounts
-func GetCmdUnlockVestingAccountsProposal() *cobra.Command {
+// GetCmdUnlockVestingAccounts creates a governance proposal to unlock vesting accounts
+func GetCmdUnlockVestingAccounts() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unlock-vesting-accounts-proposal",
-		Args:  cobra.NoArgs,
-		Short: "Submit a governance proposal to unlock vesting accounts",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a governance proposal to convert vesting accounts back to base accounts.
+		Use:     "unlock-vesting-accounts [--addresses <addr1>[,<addr2> ...]] [--addresses-file <filename>] [gov prop and tx flags]",
+		Aliases: []string{"unlock-vesting", "unlock-vesting-account"},
+		Args:    cobra.NoArgs,
+		Short:   "Submit a governance proposal to unlock vesting accounts",
+		Long: strings.TrimSpace(fmt.Sprintf(`Submit a governance proposal to convert vesting accounts back to base accounts.
 
-Supports both command-line addresses and JSON files for large address sets.
+At least one address must be provided using either the --%[2]s and/or --%[3]s flags.
 
 Examples:
 Command-line addresses:
-$ %[1]s tx gov submit-proposal unlock-vesting-accounts-proposal \
+$ %[1]s unlock-vesting-accounts \
   --title "Unlock Vesting Accounts" \
   --description "Convert vesting accounts to base accounts" \
   --addresses addr1,addr2,addr3 \
   --deposit 10000000nhash
 
-JSON file input:
-$ %[1]s tx gov submit-proposal unlock-vesting-accounts-proposal \
+File input:
+$ %[1]s unlock-vesting-accounts \
   --title "Unlock Vesting Accounts" \
   --description "Convert vesting accounts to base accounts" \
-  --addresses-file addresses.json \
+  --addresses-file addresses.txt \
   --deposit 10000000nhash
 
-JSON file format (array of strings):
-["addr1", "addr2", "addr3"]
-`, hold.ModuleName),
-		),
+The provided file should contain bech32 address strings, one per line.
+`, exampleTxCmdBase, FlagAddresses, FlagAddressesFile)),
+		DisableFlagsInUseLine: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			addresses, err := getAddresses(cmd)
+
+			flagSet := cmd.Flags()
+			msg := &hold.MsgUnlockVestingAccountsRequest{
+				Authority: provcli.GetAuthority(flagSet),
+			}
+			msg.Addresses, err = getAddressesFromFlags(flagSet)
 			if err != nil {
 				return err
 			}
 
-			for _, addr := range addresses {
-				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-					return sdkErrors.ErrInvalidAddress.Wrapf("invalid address %q: %v", addr, err)
-				}
-			}
-
-			flagSet := cmd.Flags()
-			authority := provcli.GetAuthority(flagSet)
-			unlockMsg := hold.NewMsgUnlockVestingAccounts(authority, addresses)
-			if err := unlockMsg.ValidateBasic(); err != nil {
-				return err
-			}
-			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, unlockMsg)
+			cmd.SilenceUsage = true
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
 
@@ -99,50 +93,59 @@ JSON file format (array of strings):
 	flags.AddTxFlagsToCmd(cmd)
 
 	cmd.Flags().StringSlice(FlagAddresses, []string{}, "Comma-separated list of addresses to unlock")
-	cmd.Flags().String(FlagAddressesFile, "", "Path to a JSON file containing an array of addresses to unlock")
+	cmd.Flags().String(FlagAddressesFile, "", "Path to a file containing the addresses to unlock")
 
 	return cmd
 }
 
-// getAddresses retrieves addresses from flags or file and enforces mutual exclusivity
-func getAddresses(cmd *cobra.Command) ([]string, error) {
-	filePath, err := cmd.Flags().GetString(FlagAddressesFile)
+// getAddressesFromFlags retrieves addresses from flags and/or file.
+func getAddressesFromFlags(flagSet *pflag.FlagSet) ([]string, error) {
+	addrs, err := readAddressesFlag(flagSet)
 	if err != nil {
-		return nil, sdkErrors.ErrIO.Wrapf("get flag %s: %v", FlagAddressesFile, err)
+		return nil, err
 	}
-
-	addressList, err := cmd.Flags().GetStringSlice(FlagAddresses)
+	fileAddrs, err := readAddressesFileFlag(flagSet)
 	if err != nil {
-		return nil, sdkErrors.ErrInvalidAddress.Wrapf("get flag %s: %v", FlagAddresses, err)
+		return nil, err
 	}
 
-	if filePath != "" && len(addressList) > 0 {
-		return nil, sdkErrors.ErrInvalidAddress.Wrapf("only one of --addresses or --addresses-file can be specified")
-	}
-
-	if filePath != "" {
-		return parseAddressFile(filePath)
-	}
-
-	if len(addressList) == 0 {
-		return nil, sdkErrors.ErrInvalidAddress.Wrapf("no addresses provided")
-	}
-
-	return addressList, nil
+	return append(fileAddrs, addrs...), nil
 }
 
-// parseAddressFile reads addresses from a JSON file
-func parseAddressFile(path string) ([]string, error) {
+// readAddressesFlag returns the addresses provided with the --addresses flag.
+func readAddressesFlag(flagSet *pflag.FlagSet) ([]string, error) {
+	addrs, err := flagSet.GetStringSlice(FlagAddresses)
+	if err != nil {
+		return nil, fmt.Errorf("could not read --%q flag: %w", FlagAddresses, err)
+	}
+	return addrs, nil
+}
+
+// readAddressesFileFlag will get the value of the --addresses-file flag, read the file, and return the its contents.
+func readAddressesFileFlag(flagSet *pflag.FlagSet) ([]string, error) {
+	path, err := flagSet.GetString(FlagAddressesFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not read --%q flag: %w", FlagAddressesFile, err)
+	}
+	if len(path) == 0 {
+		return nil, nil
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, sdkErrors.ErrInvalidType.Wrapf("read file: %v", err)
+		return nil, err
 	}
-	var addresses []string
-	if err := json.Unmarshal(data, &addresses); err != nil {
-		return nil, sdkErrors.ErrInvalidType.Wrapf("parse JSON: %v", err)
+
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	addrs := make([]string, 0, len(lines))
+	for _, line := range lines {
+		l2 := strings.TrimSpace(line)
+		if len(l2) != 0 {
+			addrs = append(addrs, l2)
+		}
 	}
-	if len(addresses) == 0 {
-		return nil, sdkErrors.ErrInvalidAddress.Wrapf("no addresses in file")
+	if len(addrs) == 0 {
+		return nil, fmt.Errorf("no addresses found in file: %s", path)
 	}
-	return addresses, nil
+	return addrs, nil
 }
