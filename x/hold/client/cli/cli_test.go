@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,10 +10,7 @@ import (
 	"time"
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/ghodss/yaml"
-	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
@@ -25,10 +21,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/client/cli"
@@ -551,7 +550,7 @@ func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 	}
 }
 
-func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
+func (s *IntegrationCLITestSuite) TestGetCmdUnlockVestingAccounts() {
 	fromAddr := s.testnet.Validators[0].Address.String()
 	fee := sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()
 	validDeposit := "10000000stake"
@@ -562,26 +561,28 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 	validAddressCSV := strings.Join(validAddresses, ",")
 
 	// Valid file with addresses
-	validFilePath := filepath.Join(os.TempDir(), "unlock-valid-addresses.json")
-	data, _ := json.Marshal(validAddresses)
-	_ = os.WriteFile(validFilePath, data, 0644)
-	defer os.Remove(validFilePath)
+	tmpDir := s.T().TempDir()
+	validFilePath := filepath.Join(tmpDir, "addresses-valid.txt")
+	var data strings.Builder
+	for _, addr := range validAddresses {
+		data.WriteString(addr)
+		data.WriteByte('\n')
+	}
+	err := os.WriteFile(validFilePath, []byte(data.String()), 0644)
+	s.Require().NoError(err, "WriteFile(%q, ...)", validFilePath)
 
 	// Empty address file
-	emptyFilePath := filepath.Join(os.TempDir(), "unlock-empty-addresses.json")
-	_ = os.WriteFile(emptyFilePath, []byte("[]"), 0644)
-	defer os.Remove(emptyFilePath)
+	emptyFilePath := filepath.Join(tmpDir, "addresses-empty.txt")
+	err = os.WriteFile(emptyFilePath, []byte(""), 0644)
+	s.Require().NoError(err, "WriteFile(%q, ...)", emptyFilePath)
 
-	badJSONFilePath := filepath.Join(os.TempDir(), "unlock-bad-json.json")
-	_ = os.WriteFile(badJSONFilePath, []byte("{not json"), 0644)
-	defer os.Remove(badJSONFilePath)
+	noSuchFilePath := filepath.Join(tmpDir, "addresses-does-not-exist.txt")
+
 	testCases := []struct {
-		name           string
-		args           []string
-		expectedCode   uint32
-		expectedErrMsg string
-		expectErr      bool
-		isCliError     bool
+		name    string
+		args    []string
+		expCode uint32
+		expErr  string
 	}{
 		{
 			name: "happy path via --addresses",
@@ -595,8 +596,6 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
 			},
-			expectErr:  false,
-			isCliError: false,
 		},
 		{
 			name: "happy path via --addresses-file",
@@ -610,8 +609,6 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
 			},
-			expectErr:  false,
-			isCliError: false,
 		},
 		{
 			name: "fail: missing deposit",
@@ -625,10 +622,7 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
 			},
-			expectErr:      false,
-			isCliError:     false,
-			expectedCode:   16,
-			expectedErrMsg: "",
+			expCode: 16,
 		},
 		{
 			name: "fail: duplicate addresses",
@@ -641,10 +635,8 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				"--yes", "--broadcast-mode=sync",
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 			},
-			expectErr:      false,
-			isCliError:     false,
-			expectedCode:   12,
-			expectedErrMsg: "duplicate address: cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv: invalid address",
+			expCode: 12,
+			expErr:  "duplicate address \"cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv\" at addresses[0] and [1]: invalid request",
 		},
 		{
 			name: "fail: missing addresses and file (CLI error)",
@@ -656,12 +648,24 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				"--yes", "--broadcast-mode=sync",
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 			},
-			expectErr:      true, // This is a CLI validation error
-			isCliError:     true, // This happens before transaction
-			expectedErrMsg: "no addresses provided: invalid address",
+			expErr: "addresses list cannot be empty: invalid request",
 		},
 		{
-			name: "fail: both addresses and file provided (CLI error)",
+			name: "happy path: both flag and file provided",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=Unlock from file",
+				"--summary=Valid address file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, validFilePath),
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, s.addr3.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+		},
+		{
+			name: "fail: same address in both flag and file provided (CLI error)",
 			args: []string{
 				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
 				"--title=BothProvided",
@@ -672,9 +676,7 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				"--yes", "--broadcast-mode=sync",
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 			},
-			expectErr:      true,
-			isCliError:     true,
-			expectedErrMsg: "only one of --addresses or --addresses-file can be specified: invalid address",
+			expErr: "duplicate address \"" + validAddresses[0] + "\" at addresses[0] and [2]: invalid request",
 		},
 		{
 			name: "fail: empty address file (CLI error)",
@@ -687,24 +689,20 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				"--yes", "--broadcast-mode=sync",
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 			},
-			expectErr:      true,
-			isCliError:     true,
-			expectedErrMsg: "no addresses in file: invalid address",
+			expErr: "no addresses found in file: " + emptyFilePath,
 		},
 		{
-			name: "fail: bad JSON file (CLI error)",
+			name: "fail: file does not exist",
 			args: []string{
 				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
-				"--title=BadJSON",
-				"--summary=Malformed JSON file",
-				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, badJSONFilePath),
+				"--title=NoSuchFile",
+				"--summary=Missing file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, noSuchFilePath),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				"--yes", "--broadcast-mode=sync",
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 			},
-			expectErr:      true,
-			isCliError:     true,
-			expectedErrMsg: "parse JSON: invalid character 'n' looking for beginning of object key string: invalid type",
+			expErr: "open " + noSuchFilePath + ": no such file or directory",
 		},
 		{
 			name: "fail: invalid address format (CLI error)",
@@ -717,23 +715,17 @@ func (s *IntegrationCLITestSuite) TestHoldTxCommands() {
 				"--yes", "--broadcast-mode=sync",
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
 			},
-			expectErr:      true,
-			isCliError:     true,
-			expectedErrMsg: "invalid address \"invalid-address-format\": decoding bech32 failed: invalid separator index -1: invalid address",
+			expErr: "invalid addresses[0] \"invalid-address-format\": decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 	}
+
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdUnlockVestingAccountsProposal()
-			executor := testcli.NewTxExecutor(cmd, tc.args)
-			if tc.expectErr {
-				executor = executor.WithExpErrMsg(tc.expectedErrMsg)
-			} else if tc.expectedCode != 0 {
-				executor = executor.WithExpCode(tc.expectedCode).WithExpErrMsg(tc.expectedErrMsg)
-			} else {
-				executor = executor.WithExpCode(0)
-			}
-			executor.Execute(s.T(), s.testnet)
+			cmd := cli.GetCmdUnlockVestingAccounts()
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpCode(tc.expCode).
+				WithExpErrMsg(tc.expErr).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
