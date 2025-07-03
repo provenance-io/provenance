@@ -31,17 +31,4 @@ message MsgUnlockVestingAccountsRequest {
 }
 
 // MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
-message MsgUnlockVestingAccountsResponse {
-  // unlocked_addresses contains the addresses that were successfully unlocked
-  repeated string unlocked_addresses = 1;
-  // failed_addresses contains addresses that failed to unlock with reasons
-  repeated UnlockFailure failed_addresses = 2;
-}
-
-// UnlockFailure represents a failed unlock attempt
-message UnlockFailure {
-  // addresses is the list of vesting account addresses failed to convert back to base accounts
-  string address = 1;
-  // reason for failed address
-  string reason = 2;
-}
+message MsgUnlockVestingAccountsResponse {}

@@ -26,13 +26,7 @@ message EventHoldReleased {
   string amount = 2;
 }
 
-// EventUnlockVestingAccounts is an event emitted when vesting accounts are
-// processed for unlock.
-message EventUnlockVestingAccounts {
-  // authority is the address that initiated the unlock (e.g., governance module account).
-  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // unlocked_count is the number of vesting accounts successfully unlocked.
-  uint32 unlocked_count = 2;
-  // failed_count is the number of vesting accounts that failed to unlock.
-  uint32 failed_count = 3;
+// EventUnlockVestingAccounts is an event indicating that a vesting account has been unlocked.
+message EventVestingAccountUnlocked {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

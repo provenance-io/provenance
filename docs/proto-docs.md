@@ -846,14 +846,13 @@
 - [provenance/hold/v1/tx.proto](#provenance_hold_v1_tx-proto)
     - [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest)
     - [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse)
-    - [UnlockFailure](#provenance-hold-v1-UnlockFailure)
   
     - [Msg](#provenance-hold-v1-Msg)
   
 - [provenance/hold/v1/events.proto](#provenance_hold_v1_events-proto)
     - [EventHoldAdded](#provenance-hold-v1-EventHoldAdded)
     - [EventHoldReleased](#provenance-hold-v1-EventHoldReleased)
-    - [EventUnlockVestingAccounts](#provenance-hold-v1-EventUnlockVestingAccounts)
+    - [EventVestingAccountUnlocked](#provenance-hold-v1-EventVestingAccountUnlocked)
   
 - [provenance/hold/v1/hold.proto](#provenance_hold_v1_hold-proto)
     - [AccountHold](#provenance-hold-v1-AccountHold)
@@ -12571,28 +12570,6 @@ MsgUnlockVestingAccountsRequest defines the request for unlocking vesting accoun
 MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
 
 
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `unlocked_addresses` | [string](#string) | repeated | unlocked_addresses contains the addresses that were successfully unlocked |
-| `failed_addresses` | [UnlockFailure](#provenance-hold-v1-UnlockFailure) | repeated | failed_addresses contains addresses that failed to unlock with reasons |
-
-
-
-
-
-
-<a name="provenance-hold-v1-UnlockFailure"></a>
-
-### UnlockFailure
-UnlockFailure represents a failed unlock attempt
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | addresses is the list of vesting account addresses failed to convert back to base accounts |
-| `reason` | [string](#string) |  | reason for failed address |
-
-
 
 
 
@@ -12656,18 +12633,15 @@ EventHoldReleased is an event indicating that some funds were released from hold
 
 
 
-<a name="provenance-hold-v1-EventUnlockVestingAccounts"></a>
+<a name="provenance-hold-v1-EventVestingAccountUnlocked"></a>
 
-### EventUnlockVestingAccounts
-EventUnlockVestingAccounts is an event emitted when vesting accounts are
-processed for unlock.
+### EventVestingAccountUnlocked
+EventUnlockVestingAccounts is an event indicating that a vesting account has been unlocked.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that initiated the unlock (e.g., governance module account). |
-| `unlocked_count` | [uint32](#uint32) |  | unlocked_count is the number of vesting accounts successfully unlocked. |
-| `failed_count` | [uint32](#uint32) |  | failed_count is the number of vesting accounts that failed to unlock. |
+| `address` | [string](#string) |  |  |
 
 
 
