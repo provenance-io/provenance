@@ -17,11 +17,6 @@ func NewEventHoldReleased(addr sdk.AccAddress, amount sdk.Coins) *EventHoldRelea
 	}
 }
 
-// NewEventUnlockVestingAccounts creates a new EventUnlockVestingAccounts.
-func NewEventUnlockVestingAccounts(authority sdk.AccAddress, unlockedCount, failedCount uint32) *EventUnlockVestingAccounts {
-	return &EventUnlockVestingAccounts{
-		Authority:     authority.String(), // Converts sdk.AccAddress to string representation
-		UnlockedCount: unlockedCount,
-		FailedCount:   failedCount,
-	}
+func NewEventVestingAccountUnlocked(addr sdk.AccAddress) *EventVestingAccountUnlocked {
+	return &EventVestingAccountUnlocked{Address: addr.String()}
 }
