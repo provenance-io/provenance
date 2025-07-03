@@ -19,6 +19,7 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -1648,3 +1649,76 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 		})
 	}
 }
+
+func (s *TestSuite) TestKeeper_GetAuthority() {
+	expected := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	var actual string
+	testFunc := func() {
+		actual = s.keeper.GetAuthority()
+	}
+	s.Require().NotPanics(testFunc, "GetAuthority()")
+	s.Assert().Equal(expected, actual, "GetAuthority() result")
+}
+
+func (s *TestSuite) TestKeeper_IsAuthority() {
+	tests := []struct {
+		name string
+		addr string
+		exp  bool
+	}{
+		{name: "empty string", addr: "", exp: false},
+		{name: "whitespace", addr: strings.Repeat(" ", len(s.keeper.GetAuthority())), exp: false},
+		{name: "authority", addr: s.keeper.GetAuthority(), exp: true},
+		{name: "authority upper-case", addr: strings.ToUpper(s.keeper.GetAuthority()), exp: true},
+		{name: "authority space", addr: s.keeper.GetAuthority() + " ", exp: false},
+		{name: "space authority", addr: " " + s.keeper.GetAuthority(), exp: false},
+		{name: "other addr", addr: s.addr1.String(), exp: false},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var actual bool
+			testFunc := func() {
+				actual = s.keeper.IsAuthority(tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "IsAuthority(%q)", tc.addr)
+			s.Assert().Equal(tc.exp, actual, "IsAuthority(%q) result", tc.addr)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ValidateAuthority() {
+	tests := []struct {
+		name   string
+		addr   string
+		expErr bool
+	}{
+		{name: "empty string", addr: "", expErr: true},
+		{name: "whitespace", addr: strings.Repeat(" ", len(s.keeper.GetAuthority())), expErr: true},
+		{name: "authority", addr: s.keeper.GetAuthority(), expErr: false},
+		{name: "authority upper-case", addr: strings.ToUpper(s.keeper.GetAuthority()), expErr: false},
+		{name: "authority space", addr: s.keeper.GetAuthority() + " ", expErr: true},
+		{name: "space authority", addr: " " + s.keeper.GetAuthority(), expErr: true},
+		{name: "other addr", addr: s.addr1.String(), expErr: true},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expErr := ""
+			if tc.expErr {
+				expErr = fmt.Sprintf("expected %q got %q: expected gov account as only signer for proposal message",
+					s.keeper.GetAuthority(), tc.addr)
+			}
+			var err error
+			testFunc := func() {
+				err = s.keeper.ValidateAuthority(tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "ValidateAuthority(%q)", tc.addr)
+			s.assertErrorValue(err, expErr, "ValidateAuthority(%q) error", tc.addr)
+		})
+	}
+}
+
+// TODO: func (s *TestSuite) TestKeeper_UnlockVestingAccounts()
+
+// TODO: func (s *TestSuite) TestKeeper_UnlockVestingAccount()
