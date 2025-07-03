@@ -383,6 +383,8 @@ func (k Keeper) UnlockVestingAccount(ctx sdk.Context, addr sdk.AccAddress) (err 
 		baseVestAcct = acct.BaseVestingAccount
 	case *vesting.PeriodicVestingAccount:
 		baseVestAcct = acct.BaseVestingAccount
+	case *vesting.PermanentLockedAccount:
+		baseVestAcct = acct.BaseVestingAccount
 	default:
 		return sdkerrors.ErrInvalidAddress.Wrapf("could not unlock account %s: unsupported account type %T", addr.String(), account)
 	}
