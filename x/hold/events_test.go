@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
@@ -108,6 +108,41 @@ func TestNewEventHoldReleased(t *testing.T) {
 	}
 }
 
+func TestNewEventVestingAccountUnlocked(t *testing.T) {
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  *EventVestingAccountUnlocked
+	}{
+		{
+			name: "nil addr",
+			addr: nil,
+			exp:  &EventVestingAccountUnlocked{Address: ""},
+		},
+		{
+			name: "empty addr",
+			addr: sdk.AccAddress{},
+			exp:  &EventVestingAccountUnlocked{Address: ""},
+		},
+		{
+			name: "non-empty addr",
+			addr: sdk.AccAddress("some_addr___________"),
+			exp:  &EventVestingAccountUnlocked{Address: sdk.AccAddress("some_addr___________").String()},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var act *EventVestingAccountUnlocked
+			testFunc := func() {
+				act = NewEventVestingAccountUnlocked(tc.addr)
+			}
+			require.NotPanics(t, testFunc, "NewEventVestingAccountUnlocked(%q)", string(tc.addr))
+			assert.Equal(t, tc.exp, act, "NewEventVestingAccountUnlocked(%q) result", string(tc.addr))
+		})
+	}
+}
+
 func TestTypedEventToEvent(t *testing.T) {
 	addr := sdk.AccAddress("address_in_the_event")
 	coins := sdk.NewCoins(sdk.NewInt64Coin("elbowcoin", 4), sdk.NewInt64Coin("kneecoin", 2))
@@ -142,6 +177,16 @@ func TestTypedEventToEvent(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "NewEventVestingAccountUnlocked",
+			tev:  NewEventVestingAccountUnlocked(addr),
+			expEvent: sdk.Event{
+				Type: "provenance.hold.v1.EventVestingAccountUnlocked",
+				Attributes: []abci.EventAttribute{
+					{Key: "address", Value: addrQ},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -154,57 +199,6 @@ func TestTypedEventToEvent(t *testing.T) {
 				actAttrs := assertions.AttrsToStrings(event.Attributes)
 				assert.Equal(t, expAttrs, actAttrs, "event attributes")
 			}
-		})
-	}
-}
-
-func TestNewEventUnlockVestingAccounts(t *testing.T) {
-	tests := []struct {
-		name          string
-		authority     sdk.AccAddress
-		unlockedCount uint32
-		failedCount   uint32
-		exp           *EventUnlockVestingAccounts
-	}{
-		{
-			name:          "nil authority, zero counts",
-			authority:     nil,
-			unlockedCount: 0,
-			failedCount:   0,
-			exp: &EventUnlockVestingAccounts{
-				Authority:     "",
-				UnlockedCount: 0,
-				FailedCount:   0,
-			},
-		},
-		{
-			name:          "empty authority, non-zero counts",
-			authority:     sdk.AccAddress{},
-			unlockedCount: 3,
-			failedCount:   1,
-			exp: &EventUnlockVestingAccounts{
-				Authority:     "",
-				UnlockedCount: 3,
-				FailedCount:   1,
-			},
-		},
-		{
-			name:          "normal authority with mixed counts",
-			authority:     sdk.AccAddress("valid_address_123"),
-			unlockedCount: 7,
-			failedCount:   2,
-			exp: &EventUnlockVestingAccounts{
-				Authority:     sdk.AccAddress("valid_address_123").String(),
-				UnlockedCount: 7,
-				FailedCount:   2,
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			event := NewEventUnlockVestingAccounts(tc.authority, tc.unlockedCount, tc.failedCount)
-			assert.Equal(t, tc.exp, event, "NewEventUnlockVestingAccounts")
 		})
 	}
 }
