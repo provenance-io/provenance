@@ -21,24 +21,24 @@ func NewMsgUnlockVestingAccounts(authority string, addresses []string) *MsgUnloc
 // ValidateBasic performs basic validation of the message
 func (msg MsgUnlockVestingAccountsRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address %q: %v", msg.Authority, err)
 	}
 
 	if len(msg.Addresses) == 0 {
-		return sdkerrors.ErrInvalidAddress.Wrapf("addresses list cannot be empty: %s", msg.Addresses)
+		return sdkerrors.ErrInvalidRequest.Wrap("addresses list cannot be empty")
 	}
 
 	// Validate each address and check for duplicates
-	addressSet := make(map[string]struct{})
+	addressSet := make(map[string]int)
 	for i, addr := range msg.Addresses {
 		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-			return sdkerrors.ErrInvalidAddress.Wrapf("invalid address at index %d: %s", i, err)
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid addresses[%d] %q: %v", i, addr, err)
 		}
 
-		if _, exists := addressSet[addr]; exists {
-			return sdkerrors.ErrInvalidAddress.Wrapf("duplicate address: %s", addr)
+		if j, exists := addressSet[addr]; exists {
+			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate address %q at addresses[%d] and [%d]", addr, j, i)
 		}
-		addressSet[addr] = struct{}{}
+		addressSet[addr] = i
 	}
 
 	return nil
