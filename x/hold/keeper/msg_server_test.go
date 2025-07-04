@@ -260,8 +260,6 @@ func (s *MsgServerTestSuite) TestUnlockVestingAccounts_Performance() {
 
 	for _, addr := range accAddrs {
 		acc := s.app.AccountKeeper.GetAccount(ctx, addr)
-		s.Assert().IsType(acc, &authtypes.BaseAccount{}, "unlocked account")
-		//_, isBase := acc.(*authtypes.BaseAccount)
-		// s.Assert().True(isBase, "account should be unlocked")
+		s.Assert().IsType(&authtypes.BaseAccount{}, acc, "unlocked account")
 	}
 }

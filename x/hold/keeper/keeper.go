@@ -370,9 +370,9 @@ func (k Keeper) UnlockVestingAccount(ctx sdk.Context, addr sdk.AccAddress) (err 
 
 	account := k.accountKeeper.GetAccount(ctx, addr)
 	if account == nil {
-		return sdkerrors.ErrInvalidAddress.Wrap(addr.String())
+		return sdkerrors.ErrUnknownAddress.Wrapf("account %q does not exist", addr.String())
 	}
-	logger = logger.With("original_type", fmt.Sprintf("%T", account), "account_number", account.GetAccountNumber())
+	logger = logger.With("original_type", fmt.Sprintf("%T", account), "account_number", safeGetAcctNo(account))
 
 	// Extract base account directly
 	var baseVestAcct *vesting.BaseVestingAccount
@@ -386,7 +386,7 @@ func (k Keeper) UnlockVestingAccount(ctx sdk.Context, addr sdk.AccAddress) (err 
 	case *vesting.PermanentLockedAccount:
 		baseVestAcct = acct.BaseVestingAccount
 	default:
-		return sdkerrors.ErrInvalidAddress.Wrapf("could not unlock account %s: unsupported account type %T", addr.String(), account)
+		return sdkerrors.ErrInvalidType.Wrapf("could not unlock account %s: unsupported account type %T", addr.String(), account)
 	}
 	if baseVestAcct == nil {
 		return sdkerrors.ErrInvalidType.Wrapf("could not unlock account %s: base vesting account is nil", addr.String())
@@ -399,4 +399,14 @@ func (k Keeper) UnlockVestingAccount(ctx sdk.Context, addr sdk.AccAddress) (err 
 	logger.Info("Unlocked vesting account.")
 	k.emitTypedEvent(ctx, hold.NewEventVestingAccountUnlocked(addr))
 	return nil
+}
+
+// safeGetAcctNo returns acct.GetAccountNumber() ensuring that it doesn't panic.
+func safeGetAcctNo(acct sdk.AccountI) (rv uint64) {
+	defer func() {
+		if r := recover(); r != nil {
+			rv = 0
+		}
+	}()
+	return acct.GetAccountNumber()
 }
