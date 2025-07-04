@@ -163,7 +163,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 		{
 			name:         "failure - unable to pass validate basic with bad address",
 			address:      "badaddress",
-			expectErrMsg: "invalid address for oracle: decoding bech32 failed: invalid separator index -1: invalid proposal message",
+			expectErrMsg: "invalid address for oracle: decoding bech32 failed: invalid separator index -1",
 			expectedCode: 12,
 			signer:       s.accountAddresses[0].String(),
 		},
@@ -183,7 +183,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 			}
 			testcli.NewTxExecutor(cmd, args).
 				WithExpCode(tc.expectedCode).
-				WithExpInRawLog([]string{tc.expectErrMsg}).
+				WithExpErrMsg(tc.expectErrMsg).
 				Execute(s.T(), s.network)
 		})
 	}

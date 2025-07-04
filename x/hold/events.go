@@ -16,3 +16,7 @@ func NewEventHoldReleased(addr sdk.AccAddress, amount sdk.Coins) *EventHoldRelea
 		Amount:  amount.String(),
 	}
 }
+
+func NewEventVestingAccountUnlocked(addr sdk.AccAddress) *EventVestingAccountUnlocked {
+	return &EventVestingAccountUnlocked{Address: addr.String()}
+}
