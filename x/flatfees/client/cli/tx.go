@@ -35,6 +35,7 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		NewCmdUpdateParams(),
+		NewCmdUpdateConversionFactor(),
 		NewCmdUpdateMsgFees(),
 	)
 
@@ -150,6 +151,42 @@ The denominations in the <default cost> and <base> should be the same.
 			}
 
 			msg.Params, err = ParseParamsArgs(args)
+			if err != nil {
+				return err
+			}
+
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+func NewCmdUpdateConversionFactor() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "conversion-factor <base>=<converted> <gov prop flags>",
+		Short: "Submit a governance proposal to update just the conversion-factor portion of the x/flatfees module params",
+		Long: strings.TrimSpace(`Submit a governance proposal to update just the conversion-factor portion of the x/flatfees module params.
+
+The <base>=<converted> arg is the conversion factor, and each should be a standard coin string.
+`),
+		Example: fmt.Sprintf("$ %[1]s conversion-factor 5%[2]s=7nhash", cmdStart, types.DefaultFeeDefinitionDenom),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			flagSet := cmd.Flags()
+			msg := &types.MsgUpdateConversionFactorRequest{
+				Authority: provcli.GetAuthority(flagSet),
+			}
+
+			msg.ConversionFactor, err = ParseConversionFactor(args[0])
 			if err != nil {
 				return err
 			}

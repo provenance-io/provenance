@@ -348,6 +348,7 @@ func (s *CLITestSuite) TestNewTxCmd() {
 	// These tests are only for making sure the sub commands are all added and named/aliased as expected.
 	subCmds := []subCommand{
 		{name: "update", aliases: []string{"costs"}},
+		{name: "conversion-factor"},
 		{name: "params"},
 	}
 	s.assertBaseCmd(cli.NewTxCmd, subCmds)
@@ -402,6 +403,55 @@ func (s *CLITestSuite) TestNewCmdUpdateParams() {
 			}
 			tc.Args = append(tc.Args,
 				"--title", "Update msg fees", "--summary", "Updates the MsgFees.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			tc.Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *CLITestSuite) TestNewCmdUpdateConversionFactor() {
+	tests := []testcli.TxExecutor{
+		{
+			Name:      "zero args",
+			Args:      []string{},
+			ExpErrMsg: "accepts 1 arg(s), received 0",
+		},
+		{
+			Name:      "two args",
+			Args:      []string{"15banana", "3banana"},
+			ExpErrMsg: "accepts 1 arg(s), received 2",
+		},
+		{
+			Name:        "wrong authority",
+			Args:        []string{"15banana=33stake", "--authority", s.account2Addr.String()},
+			ExpCode:     13,
+			ExpInRawLog: []string{s.account2Addr.String(), "expected gov account as only signer for proposal message"},
+		},
+		{
+			Name:      "invalid conversion factor",
+			Args:      []string{"1banana==3stake"},
+			ExpErrMsg: "invalid conversion factor \"1banana==3stake\": expected exactly one equals sign",
+		},
+		{
+			Name:    "all good",
+			Args:    []string{"3banana=22stake"},
+			ExpCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.Name, func() {
+			if tc.Cmd == nil {
+				tc.Cmd = cli.NewCmdUpdateConversionFactor()
+			}
+			tc.Args = append(tc.Args,
+				"--title", "Update Conversion Factor", "--summary", "Updates the flatfees conversion factor.",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
