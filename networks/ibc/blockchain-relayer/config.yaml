@@ -12,8 +12,8 @@ chains:
             rpc-addr: http://192.168.20.2:26657
             account-prefix: tp
             keyring-backend: test
-            gas-adjustment: 1.5
-            gas-prices: 1905nhash
+            gas-adjustment: 1
+            gas-prices: 1nhash
             debug: false
             timeout: 20s
             output-format: json
@@ -26,8 +26,8 @@ chains:
             rpc-addr: http://192.168.20.3:26657
             account-prefix: tp
             keyring-backend: test
-            gas-adjustment: 1.5
-            gas-prices: 1905nhash
+            gas-adjustment: 1
+            gas-prices: 1nhash
             debug: false
             timeout: 20s
             output-format: json

@@ -4,15 +4,16 @@ Modules are the code components of the Provenance Blockchain that execute the ma
 
 Provenance Blockchain leverages inherited modules from Cosmos SDK, and has purpose-built custom modules unique to Provenance Blockchain.
 
-* [Inherited Cosmos modules](https://docs.cosmos.network/v0.47/build/modules)
+* [Inherited Cosmos modules](https://docs.cosmos.network/v0.50/build/modules)
 * [Attribute](./attribute/spec/README.md) - Functions as a blockchain registry for storing \<Name, Value\> pairs.
 * [Exchange](./exchange/spec/README.md) - Facilitates the trading of on-chain assets.
+* [Flat Fees](./flatfees/spec/README.md) - Manages `Msg` costs.
 * [Hold](./hold/spec/README.md) - Keeps track of funds in an account that have a hold placed on them.
 * [Ibc Hooks](./ibchooks/README.md) - Forked from https://github.com/osmosis-labs/osmosis/tree/main/x/ibchooks
 * [Ibc Rate Limit](./ibcratelimit/README.md) - Forked from https://github.com/osmosis-labs/osmosis/tree/main/x/ibc-rate-limit
 * [Marker](./marker/spec/README.md) - Allows for the creation of fungible tokens.
 * [Metadata](./metadata/spec/README.md) - Provides a system for referencing off-chain information.
-* [Msg Fees](./msgfees/spec/README.md) - Manages additional fees that can be applied to tx msgs.
+* [Msg Fees](./msgfees/spec/README.md) - **DEPRECATED** Managed additional fees that could be added to msgs.
 * [Name](./name/spec/README.md) - Provides a system for providing human-readable names as aliases for addresses.
 * [Oracle](./oracle/spec/README.md) - Provides the capability to dynamically expose query endpoints.
 * [Quarantine](./quarantine/spec/README.md) - Prevents accounts from receiving unwanted funds.

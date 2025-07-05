@@ -17,7 +17,6 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -40,7 +39,6 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(KeeperTestSuite))
 }
 

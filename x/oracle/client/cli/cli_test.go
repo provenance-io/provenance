@@ -21,7 +21,6 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	oraclecli "github.com/provenance-io/provenance/x/oracle/client/cli"
@@ -52,7 +51,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	var addrErr error
@@ -163,8 +161,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 		{
 			name:         "failure - unable to pass validate basic with bad address",
 			address:      "badaddress",
-			expectErrMsg: "invalid address for oracle: decoding bech32 failed: invalid separator index -1: invalid proposal message",
-			expectedCode: 12,
+			expectErrMsg: "invalid address for oracle: decoding bech32 failed: invalid separator index -1",
 			signer:       s.accountAddresses[0].String(),
 		},
 	}
@@ -183,7 +180,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 			}
 			testcli.NewTxExecutor(cmd, args).
 				WithExpCode(tc.expectedCode).
-				WithExpInRawLog([]string{tc.expectErrMsg}).
+				WithExpErrMsg(tc.expectErrMsg).
 				Execute(s.T(), s.network)
 		})
 	}

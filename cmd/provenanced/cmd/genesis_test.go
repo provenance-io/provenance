@@ -29,7 +29,6 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/mocks"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -44,39 +43,34 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 
 	appCodec := app.MakeTestEncodingConfig(t).Marshaler
 	tests := []struct {
-		name            string
-		msgType         string
-		fee             string
-		msgFeeFloorCoin string
-		expectErrMsg    string
+		name         string
+		msgType      string
+		fee          string
+		expectErrMsg string
 	}{
 		{
-			name:            "invalid msg type",
-			msgType:         "InvalidMsgType",
-			fee:             "1000jackthecat",
-			msgFeeFloorCoin: "0vspn",
-			expectErrMsg:    "unable to resolve type URL /InvalidMsgType",
+			name:         "invalid msg type",
+			msgType:      "InvalidMsgType",
+			fee:          "1000jackthecat",
+			expectErrMsg: "invalid msg type \"/InvalidMsgType\": unable to resolve type URL /InvalidMsgType",
 		},
 		{
-			name:            "invalid fee",
-			msgType:         "/provenance.name.v1.MsgBindNameRequest",
-			fee:             "not-a-fee",
-			msgFeeFloorCoin: "0vspn",
-			expectErrMsg:    "failed to parse coin: invalid decimal coin expression: not-a-fee",
+			name:         "invalid fee",
+			msgType:      "/provenance.name.v1.MsgBindNameRequest",
+			fee:          "not-a-fee",
+			expectErrMsg: "invalid cost \"not-a-fee\": invalid decimal coin expression: not-a-fee",
 		},
 		{
-			name:            "valid msg type and fee",
-			msgType:         "/provenance.name.v1.MsgBindNameRequest",
-			fee:             "1000jackthecat",
-			msgFeeFloorCoin: "10jackthecat",
-			expectErrMsg:    "",
+			name:         "valid msg type and fee",
+			msgType:      "/provenance.name.v1.MsgBindNameRequest",
+			fee:          "1000jackthecat",
+			expectErrMsg: "",
 		},
 		{
-			name:            "invalid fee",
-			msgType:         "provenance.name.v1.MsgBindNameRequest",
-			fee:             "1000jackthecat",
-			msgFeeFloorCoin: "0vspn",
-			expectErrMsg:    "",
+			name:         "valid msg type without slash",
+			msgType:      "provenance.name.v1.MsgBindNameRequest",
+			fee:          "1000jackthecat",
+			expectErrMsg: "",
 		},
 	}
 
@@ -97,13 +91,6 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmdFloorPrice := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
-			cmdFloorPrice.SetArgs([]string{
-				tc.msgFeeFloorCoin,
-				fmt.Sprintf("--%s=home", flags.FlagHome)})
-			cmdFloorPrice.SetOut(io.Discard)
-			cmdFloorPrice.SetErr(io.Discard)
-
 			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home)
 			cmdFee.SetArgs([]string{
 				tc.msgType,
@@ -116,7 +103,6 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 				err = cmdFee.ExecuteContext(ctx)
 				require.EqualError(t, err, tc.expectErrMsg)
 			} else {
-				require.NoError(t, cmdFloorPrice.ExecuteContext(ctx))
 				require.NoError(t, cmdFee.ExecuteContext(ctx))
 			}
 		})
@@ -213,7 +199,6 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 	defer sdk.SetAddrCacheEnabled(origCache)
 	sdk.SetAddrCacheEnabled(false)
 
-	pioconfig.SetProvenanceConfig("", 0)
 	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	expDefaultMarket := func(marketID uint32, denom string, addrs ...string) exchange.Market {
 		rv := provenancecmd.MakeDefaultMarket(denom, addrs)

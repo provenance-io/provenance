@@ -23,6 +23,7 @@ message GenesisState {
   repeated Trigger triggers = 3 [(gogoproto.nullable) = false];
 
   // Maximum amount of gas that the triggers can use.
+  // Deprecated: We no longer need to keep track of gas limits since we use flat fees.
   repeated GasLimit gas_limits = 4 [(gogoproto.nullable) = false];
 
   // Triggers to initially start with in the queue.
@@ -30,9 +31,12 @@ message GenesisState {
 }
 
 // GasLimit defines the trigger module's grouping of a trigger and a gas limit
+// Deprecated: The GasLimit type is no longer used since we use flat fees.
 message GasLimit {
   // The identifier of the trigger this GasLimit belongs to.
+  // Deprecated: The GasLimit type is no longer used since we use flat fees.
   uint64 trigger_id = 1;
   // The maximum amount of gas that the trigger can use.
+  // Deprecated: The GasLimit type is no longer used since we use flat fees.
   uint64 amount = 2;
 }
