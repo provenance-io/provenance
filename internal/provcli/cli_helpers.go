@@ -50,6 +50,16 @@ func GenerateOrBroadcastTxCLIAsGovProp(clientCtx client.Context, flagSet *pflag.
 		return fmt.Errorf("no messages to submit")
 	}
 
+	// The gov SubmitProposal msg no longer has its own ValidateBasic, so we call it here
+	// on all the sub-msgs to help prevent submitting a proposal that will fail.
+	for _, msg := range msgs {
+		if vmsg, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := vmsg.ValidateBasic(); err != nil {
+				return err
+			}
+		}
+	}
+
 	prop, err := govcli.ReadGovPropFlags(clientCtx, flagSet)
 	if err != nil {
 		return err
