@@ -25,3 +25,8 @@ message EventHoldReleased {
   // amount is a Coins string of the funds released from hold.
   string amount = 2;
 }
+
+// EventUnlockVestingAccounts is an event indicating that a vesting account has been unlocked.
+message EventVestingAccountUnlocked {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

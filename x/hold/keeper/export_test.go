@@ -21,6 +21,12 @@ func (k Keeper) WithBankKeeper(bk hold.BankKeeper) Keeper {
 	return k
 }
 
+// WithBankKeeper returns a new keeper that uses the provided account keeper for unit tests.
+func (k Keeper) WithAccountKeeper(ak hold.AccountKeeper) Keeper {
+	k.accountKeeper = ak
+	return k
+}
+
 // GetStoreKey exposes this keeper's storekey for unit tests.
 func (k Keeper) GetStoreKey() storetypes.StoreKey {
 	return k.storeKey
