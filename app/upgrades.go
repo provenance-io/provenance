@@ -446,6 +446,9 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.oracle.v1.MsgUpdateOracleRequest"),
 
+		// Msgs that cost $0.005
+		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddNetAssetValuesRequest", feeDefCoin(5)),
+
 		// Msgs that cost $0.05.
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgExec", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgRevoke", feeDefCoin(50)),
@@ -469,10 +472,10 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentsRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgActivateRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddNetAssetValuesRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgFinalizeRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgGrantAllowanceRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSetDenomMetadataRequest", feeDefCoin(50)),
-		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddNetAssetValuesRequest", feeDefCoin(50)),
 
 		// Msgs that cost $0.10.
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgGrant", feeDefCoin(100)),
@@ -505,7 +508,6 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract2", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/ibc.core.client.v1.MsgCreateClient", feeDefCoin(500)),
-		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddNetAssetValuesRequest", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgMigrateValueOwnerRequest", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgUpdateValueOwnersRequest", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteContractSpecificationRequest", feeDefCoin(500)),
