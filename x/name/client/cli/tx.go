@@ -168,7 +168,7 @@ $ %s tx name modify-name \
 	return cmd
 }
 
-// GetRootNameProposalCmd returns a command for registration with the gov module
+// GetGovRootNameCmd returns a command for registration with the gov module
 func GetGovRootNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gov-root-name [name] (--owner [address]) (--unrestrict) [flags]",
