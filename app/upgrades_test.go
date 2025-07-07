@@ -715,7 +715,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	}
 }
 
-func (s *UpgradeTestSuite) TestAlyssumRC1() {
+func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Pruning expired consensus states for IBC.",
@@ -723,10 +723,10 @@ func (s *UpgradeTestSuite) TestAlyssumRC1() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
 	}
-	s.AssertUpgradeHandlerLogs("alyssum-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestAlyssum() {
+func (s *UpgradeTestSuite) TestBouvardia() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Pruning expired consensus states for IBC.",
@@ -734,7 +734,7 @@ func (s *UpgradeTestSuite) TestAlyssum() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
 	}
-	s.AssertUpgradeHandlerLogs("alyssum", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
 }
 
 type MockFlatFeesKeeper struct {

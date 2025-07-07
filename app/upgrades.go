@@ -42,7 +42,7 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"alyssum-rc1": { // Upgrade for v1.25.0-rc1.
+	"bouvardia-rc1": { // Upgrade for v1.25.0-rc1.
 		Added:   []string{flatfeestypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -63,7 +63,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"alyssum": { // Upgrade for v1.25.0.
+	"bouvardia": { // Upgrade for v1.25.0.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -327,14 +327,14 @@ var (
 )
 
 // FlatFeesKeeper has the flatfees keeper methods needed for setting up flat fees.
-// Part of the alyssum upgrade.
+// Part of the bouvardia upgrade.
 type FlatFeesKeeper interface {
 	SetParams(ctx sdk.Context, params flatfeestypes.Params) error
 	SetMsgFee(ctx sdk.Context, msgFee flatfeestypes.MsgFee) error
 }
 
 // setupFlatFees defines the flatfees module params and msg costs.
-// Part of the alyssum upgrade.
+// Part of the bouvardia upgrade.
 func setupFlatFees(ctx sdk.Context, ffk FlatFeesKeeper) error {
 	ctx.Logger().Info("Setting up flat fees.")
 
@@ -357,13 +357,13 @@ func setupFlatFees(ctx sdk.Context, ffk FlatFeesKeeper) error {
 }
 
 // feeDefCoin returns a coin in the fee definition denom with the given amount.
-// Part of the alyssum upgrade.
+// Part of the bouvardia upgrade.
 func feeDefCoin(amount int64) sdk.Coin {
 	return sdk.NewInt64Coin(flatfeestypes.DefaultFeeDefinitionDenom, amount)
 }
 
 // MakeFlatFeesParams returns the params to give the flatfeees module.
-// Part of the alyssum upgrade.
+// Part of the bouvardia upgrade.
 func MakeFlatFeesParams() flatfeestypes.Params {
 	return flatfeestypes.Params{
 		DefaultCost: feeDefCoin(150),
@@ -376,7 +376,7 @@ func MakeFlatFeesParams() flatfeestypes.Params {
 }
 
 // MakeFlatFeesCosts returns the list of MsgFees that we want to set.
-// Part of the alyssum upgrade.
+// Part of the bouvardia upgrade.
 func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 	// TODO[fees]: Identify the new Msgs being added how much we want them to cost, and add them to this list.
 	return []*flatfeestypes.MsgFee{
