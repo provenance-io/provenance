@@ -575,7 +575,7 @@ func New(
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
-		appCodec, keys[hold.StoreKey], app.BankKeeper,
+		appCodec, keys[hold.StoreKey], app.AccountKeeper, app.BankKeeper,
 	)
 
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
