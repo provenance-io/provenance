@@ -846,9 +846,16 @@
     - [GenesisState](#provenance-metadata-v1-GenesisState)
     - [MarkerNetAssetValues](#provenance-metadata-v1-MarkerNetAssetValues)
   
+- [provenance/hold/v1/tx.proto](#provenance_hold_v1_tx-proto)
+    - [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest)
+    - [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse)
+  
+    - [Msg](#provenance-hold-v1-Msg)
+  
 - [provenance/hold/v1/events.proto](#provenance_hold_v1_events-proto)
     - [EventHoldAdded](#provenance-hold-v1-EventHoldAdded)
     - [EventHoldReleased](#provenance-hold-v1-EventHoldReleased)
+    - [EventVestingAccountUnlocked](#provenance-hold-v1-EventVestingAccountUnlocked)
   
 - [provenance/hold/v1/hold.proto](#provenance_hold_v1_hold-proto)
     - [AccountHold](#provenance-hold-v1-AccountHold)
@@ -12571,6 +12578,58 @@ MarkerNetAssetValues defines the net asset values for a scope
 
 
 
+<a name="provenance_hold_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/tx.proto
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsRequest"></a>
+
+### MsgUnlockVestingAccountsRequest
+MsgUnlockVestingAccountsRequest defines the request for unlocking vesting accounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that can execute this message (governance module account) |
+| `addresses` | [string](#string) | repeated | addresses is the list of vesting account addresses to convert back to base accounts |
+
+
+
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsResponse"></a>
+
+### MsgUnlockVestingAccountsResponse
+MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-hold-v1-Msg"></a>
+
+### Msg
+Msg defines the hold Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UnlockVestingAccounts` | [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest) | [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse) | UnlockVestingAccounts unlocks one or more vesting accounts. |
+
+ <!-- end services -->
+
+
+
 <a name="provenance_hold_v1_events-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -12605,6 +12664,21 @@ EventHoldReleased is an event indicating that some funds were released from hold
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
 | `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
+
+
+
+
+
+
+<a name="provenance-hold-v1-EventVestingAccountUnlocked"></a>
+
+### EventVestingAccountUnlocked
+EventUnlockVestingAccounts is an event indicating that a vesting account has been unlocked.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
 
 
 
