@@ -3,29 +3,39 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
 
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/hold"
 )
 
 type Keeper struct {
-	cdc      codec.BinaryCodec
-	storeKey storetypes.StoreKey
-
-	bankKeeper hold.BankKeeper
+	cdc           codec.BinaryCodec
+	storeKey      storetypes.StoreKey
+	accountKeeper hold.AccountKeeper
+	bankKeeper    hold.BankKeeper
+	authority     string
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper hold.BankKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
 	rv := Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		bankKeeper: bankKeeper,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 	bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins)
 	return rv
@@ -291,4 +301,112 @@ func (k Keeper) GetAllAccountHolds(ctx sdk.Context) ([]*hold.AccountHold, error)
 		return false
 	})
 	return holds, err
+}
+
+// GetLogger gets the logger to use in the hold module keeper stuff.
+func (k Keeper) GetLogger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "hold")
+}
+
+// emitTypedEvents will emit the provided event, logging an error about it if there's a problem.
+func (k Keeper) emitTypedEvent(ctx sdk.Context, tev proto.Message) {
+	if err := ctx.EventManager().EmitTypedEvent(tev); err != nil {
+		k.GetLogger(ctx).Error("Could not emit typed event.", "event", tev, "error", err)
+	}
+}
+
+// GetAuthority returns the module's authority address
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// IsAuthority returns true if the provided address bech32 string is the authority address.
+func (k Keeper) IsAuthority(addr string) bool {
+	return strings.EqualFold(k.authority, addr)
+}
+
+// ValidateAuthority returns an error if the provided address is not the authority.
+func (k Keeper) ValidateAuthority(addr string) error {
+	if !k.IsAuthority(addr) {
+		return govtypes.ErrInvalidSigner.Wrapf("expected %q got %q", k.GetAuthority(), addr)
+	}
+	return nil
+}
+
+// UnlockVestingAccounts unlocks each of the accounts with the given addrs.
+// A failure to convert one of them does not prevent the conversion of the rest.
+// Returns an error if anything went wrong (even if some stuff also went right).
+func (k Keeper) UnlockVestingAccounts(ctx sdk.Context, addrs []string) error {
+	var errs []error
+	for _, addrStr := range addrs {
+		addr, err := sdk.AccAddressFromBech32(addrStr)
+		if err != nil {
+			err = fmt.Errorf("invalid address %q: %w", addrStr, err)
+			errs = append(errs, err)
+			k.GetLogger(ctx).Error("Could not unlock vesting account with invalid address.", "address", addrStr, "error", err)
+			continue
+		}
+
+		err = k.UnlockVestingAccount(ctx, addr)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) == 1 {
+		return errs[0]
+	}
+	return errors.Join(errs...)
+}
+
+// UnlockVestingAccount converts a vesting account back to a base account
+func (k Keeper) UnlockVestingAccount(ctx sdk.Context, addr sdk.AccAddress) (err error) {
+	logger := k.GetLogger(ctx).With("address", addr.String())
+	defer func() {
+		if err != nil {
+			logger.Error("Could not unlock vesting account.", "error", err)
+		}
+	}()
+
+	account := k.accountKeeper.GetAccount(ctx, addr)
+	if account == nil {
+		return sdkerrors.ErrUnknownAddress.Wrapf("account %q does not exist", addr.String())
+	}
+	logger = logger.With("original_type", fmt.Sprintf("%T", account), "account_number", safeGetAcctNo(account))
+
+	// Extract base account directly
+	var baseVestAcct *vesting.BaseVestingAccount
+	switch acct := account.(type) {
+	case *vesting.ContinuousVestingAccount:
+		baseVestAcct = acct.BaseVestingAccount
+	case *vesting.DelayedVestingAccount:
+		baseVestAcct = acct.BaseVestingAccount
+	case *vesting.PeriodicVestingAccount:
+		baseVestAcct = acct.BaseVestingAccount
+	case *vesting.PermanentLockedAccount:
+		baseVestAcct = acct.BaseVestingAccount
+	default:
+		return sdkerrors.ErrInvalidType.Wrapf("could not unlock account %s: unsupported account type %T", addr.String(), account)
+	}
+	if baseVestAcct == nil {
+		return sdkerrors.ErrInvalidType.Wrapf("could not unlock account %s: base vesting account is nil", addr.String())
+	}
+	if baseVestAcct.BaseAccount == nil {
+		return sdkerrors.ErrInvalidType.Wrapf("could not unlock account %s: base account is nil", addr.String())
+	}
+
+	k.accountKeeper.SetAccount(ctx, baseVestAcct.BaseAccount)
+	logger.Info("Unlocked vesting account.")
+	k.emitTypedEvent(ctx, hold.NewEventVestingAccountUnlocked(addr))
+	return nil
+}
+
+// safeGetAcctNo returns acct.GetAccountNumber() ensuring that it doesn't panic.
+func safeGetAcctNo(acct sdk.AccountI) (rv uint64) {
+	defer func() {
+		if r := recover(); r != nil {
+			rv = 0
+		}
+	}()
+	return acct.GetAccountNumber()
 }
