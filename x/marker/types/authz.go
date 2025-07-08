@@ -209,17 +209,12 @@ func (m MultiAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 			updatedAuths[i] = anyAuth
 		}
 	}
-	if anyDeleteRequested {
-		return authz.AcceptResponse{Accept: true, Delete: true}, nil
-	}
+
+	rv := authz.AcceptResponse{Accept: true, Delete: anyDeleteRequested}
 	if anyUpdates {
-		updated := &MultiAuthorization{
-			MsgTypeUrl:        m.MsgTypeUrl,
-			SubAuthorizations: updatedAuths,
-		}
-		return authz.AcceptResponse{Accept: true, Updated: updated}, nil
+		rv.Updated = &MultiAuthorization{MsgTypeUrl: m.MsgTypeUrl, SubAuthorizations: updatedAuths}
 	}
-	return authz.AcceptResponse{Accept: true}, nil
+	return rv, nil
 }
 
 // UnpackInterfaces implements codectypes.UnpackInterfacesMessage
