@@ -306,7 +306,7 @@ pub mod tests {
         assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
 
         // Now let's pretend we're the hub.
-        // The following tests are from perspective of the the hub (i.e.: if this contract were deployed there)
+        // The following tests are from perspective of the hub (i.e.: if this contract were deployed there)
         //
         // osmo sent to the hub
         let packet = Packet::mock(
