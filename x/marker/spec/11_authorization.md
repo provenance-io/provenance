@@ -27,7 +27,12 @@ An empty list means any destination address is allowed, otherwise, the destinati
 
 ### MultiAuthorization :
 
-The marker module supports composite authorizations using the `MultiAuthorization` type.This allows a `granter` to define multiple rules (sub-authorizations) that must all be satisfied for a `grantee` to execute a specific message.
+A `MultiAuthorization` contains multiple sub-authorizations that must each be satisfied for the authorization to be valid.
+
+For example, consider a `MultiAuthorization` with a `CountAuthorization` with `2` uses, and a `SendAuthorization` with `500nhash`.
+
+* If the grantee uses it once to send `500nhash`, then the `SendAuthorization` will be depleted and the whole `MultiAuthorization` will become unusable (be deleted) even though there's `1` more use left on the `CountAuthorization`.
+* If the grantee uses it twice to send a total of `400nhash`, then the `CountAuthorization` will be depleted and the whole `MultiAuthorization` will become unusable (be deleted) even though there's still `100nhash` left in the `SendAuthorization`.
 
 ```
 // MultiAuthorization lets you combine several authorizations.
