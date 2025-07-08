@@ -180,25 +180,53 @@ func (k BaseKeeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccA
 
 	// Import ledgers and their entries
 	for _, ledgerToEntries := range genesisState.LedgerToEntries {
-		// Get the maintainer address from the ledger class
-		ledgerClass, err := k.GetLedgerClass(ctx, ledgerToEntries.Ledger.LedgerClassId)
-		if err != nil {
-			return fmt.Errorf("failed to get ledger class %s: %w", ledgerToEntries.Ledger.LedgerClassId, err)
-		}
-		if ledgerClass == nil {
-			return fmt.Errorf("ledger class %s not found - ensure it is created before bulk import", ledgerToEntries.Ledger.LedgerClassId)
+		var maintainerAddr sdk.AccAddress
+		var ledgerClassId string
+
+		// Determine the ledger class ID and get maintainer address
+		if ledgerToEntries.Ledger != nil {
+			// If we have a ledger object, use its ledger class ID
+			ledgerClassId = ledgerToEntries.Ledger.LedgerClassId
+		} else {
+			// If we don't have a ledger object, get it from the existing ledger
+			existingLedger, err := k.GetLedger(ctx, ledgerToEntries.LedgerKey)
+			if err != nil {
+				return fmt.Errorf("failed to get existing ledger: %w", err)
+			}
+			if existingLedger == nil {
+				return fmt.Errorf("ledger %s does not exist and no ledger object provided", ledgerToEntries.LedgerKey.NftId)
+			}
+			ledgerClassId = existingLedger.LedgerClassId
 		}
 
-		maintainerAddr, err := sdk.AccAddressFromBech32(ledgerClass.MaintainerAddress)
+		// Get the maintainer address from the ledger class
+		ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
+		if err != nil {
+			return fmt.Errorf("failed to get ledger class %s: %w", ledgerClassId, err)
+		}
+		if ledgerClass == nil {
+			return fmt.Errorf("ledger class %s not found - ensure it is created before bulk import", ledgerClassId)
+		}
+
+		maintainerAddr, err = sdk.AccAddressFromBech32(ledgerClass.MaintainerAddress)
 		if err != nil {
 			return fmt.Errorf("invalid maintainer address %s: %w", ledgerClass.MaintainerAddress, err)
 		}
 
-		// Create the ledger
-		if err := k.CreateLedger(ctx, maintainerAddr, *ledgerToEntries.Ledger); err != nil {
-			return fmt.Errorf("failed to create ledger: %w", err)
+		// Create the ledger only if it doesn't already exist
+		if ledgerToEntries.Ledger != nil && !k.HasLedger(ctx, ledgerToEntries.Ledger.Key) {
+			if err := k.CreateLedger(ctx, maintainerAddr, *ledgerToEntries.Ledger); err != nil {
+				return fmt.Errorf("failed to create ledger: %w", err)
+			}
+			ctx.Logger().Info("Created ledger", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)
+		} else if ledgerToEntries.Ledger != nil {
+			ctx.Logger().Info("Ledger already exists, skipping creation", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)
 		}
-		ctx.Logger().Info("Created ledger", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)
+
+		// If the ledger doesn't exist, we can't add entries to it
+		if !k.HasLedger(ctx, ledgerToEntries.LedgerKey) {
+			return fmt.Errorf("ledger %s does not exist", ledgerToEntries.LedgerKey.NftId)
+		}
 
 		// Add ledger entries
 		if len(ledgerToEntries.Entries) > 0 {
