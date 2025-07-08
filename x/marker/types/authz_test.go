@@ -209,9 +209,9 @@ func TestNewMultiAuthorization(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := NewMultiAuthorization(tt.msgType, tt.auths...)
 			if tt.expectErr {
-				require.Error(t, err)
+				require.Error(t, err, "NewMultiAuthorization")
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, "NewMultiAuthorization")
 			}
 		})
 	}
@@ -225,7 +225,7 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 	auth2 := &authz.GenericAuthorization{Msg: msgTypeURL}
 
 	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
-	require.NoError(t, err)
+	require.NoError(t, err, "NewMultiAuthorization")
 
 	// Setup codec for unpacking
 	registry := codectypes.NewInterfaceRegistry()
@@ -233,7 +233,7 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 	RegisterInterfaces(registry)
 
 	err = multiAuth.UnpackInterfaces(registry)
-	require.NoError(t, err)
+	require.NoError(t, err, "UnpackInterfaces")
 
 	ctx := sdk.Context{}
 	msg := &banktypes.MsgSend{
@@ -244,15 +244,15 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 
 	// Test accept
 	resp, err := multiAuth.Accept(ctx, msg)
-	require.NoError(t, err)
+	require.NoError(t, err, "multiAuth.Accept")
 	require.True(t, resp.Accept)
 	require.False(t, resp.Delete)
-	require.Nil(t, resp.Updated)
+	require.Nil(t, resp.Updated, "multiAuth.Accept")
 
 	// Test wrong message type
 	wrongMsg := &banktypes.MsgMultiSend{}
 	_, err = multiAuth.Accept(ctx, wrongMsg)
-	require.Error(t, err)
+	require.Error(t, err, "wrongMsg")
 }
 
 func TestMultiAuthorizationValidateBasic(t *testing.T) {
@@ -262,10 +262,10 @@ func TestMultiAuthorizationValidateBasic(t *testing.T) {
 	auth2 := &authz.GenericAuthorization{Msg: msgTypeURL}
 
 	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
-	require.NoError(t, err)
+	require.NoError(t, err, "NewMultiAuthorization")
 
 	err = multiAuth.ValidateBasic()
-	require.NoError(t, err)
+	require.NoError(t, err, "ValidateBasic")
 
 	// Test invalid
 	invalidAuth := &MultiAuthorization{
@@ -274,7 +274,7 @@ func TestMultiAuthorizationValidateBasic(t *testing.T) {
 	}
 
 	err = invalidAuth.ValidateBasic()
-	require.Error(t, err)
+	require.Error(t, err, "invalidAuth.ValidateBasic()")
 }
 
 func TestMultiAuthorizationCodec(t *testing.T) {
@@ -287,17 +287,17 @@ func TestMultiAuthorizationCodec(t *testing.T) {
 	auth2 := &authz.GenericAuthorization{Msg: msgTypeURL}
 
 	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
-	require.NoError(t, err)
+	require.NoError(t, err, "NewMultiAuthorization")
 
 	any, err := codectypes.NewAnyWithValue(multiAuth)
-	require.NoError(t, err)
+	require.NoError(t, err, "codectypes.NewAnyWithValue")
 
 	var unpacked authz.Authorization
 	err = registry.UnpackAny(any, &unpacked)
-	require.NoError(t, err)
+	require.NoError(t, err, "UnpackAny")
 
 	unpackedMulti, ok := unpacked.(*MultiAuthorization)
-	require.True(t, ok)
+	require.True(t, ok, "unpacked")
 	require.Equal(t, multiAuth.MsgTypeUrl, unpackedMulti.MsgTypeUrl)
 	require.Len(t, unpackedMulti.SubAuthorizations, 2)
 }

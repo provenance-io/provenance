@@ -2998,7 +2998,7 @@ func (s *IntegrationTestSuite) toJSONArray(auths []authz.Authorization) []byte {
 		}
 	}
 	bz, err := json.Marshal(result)
-	require.NoError(s.T(), err)
+	require.NoError(s.T(), err, "json.Marshal")
 	return bz
 }
 func (s *IntegrationTestSuite) writeAuthzJSON(jsonData string) string {
