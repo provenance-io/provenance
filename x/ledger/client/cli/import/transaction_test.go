@@ -285,3 +285,40 @@ func TestTransactionConfirmationLogic(t *testing.T) {
 		require.Less(t, retry, maxRetries, "Retry count should be less than max retries")
 	}
 }
+
+func TestExtractTxHashFromOutput(t *testing.T) {
+	// Test JSON format with txhash
+	output1 := `{"txhash": "ABC123456789DEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0"}`
+	hash1 := extractTxHashFromOutput(output1)
+	require.Equal(t, "ABC123456789DEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0", hash1)
+
+	// Test JSON format with hash
+	output2 := `{"hash": "DEF123456789ABC0123456789DEF0123456789ABC0123456789DEF0123456789"}`
+	hash2 := extractTxHashFromOutput(output2)
+	require.Equal(t, "DEF123456789ABC0123456789DEF0123456789ABC0123456789DEF0123456789", hash2)
+
+	// Test plain text format
+	output3 := `txhash: 1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF`
+	hash3 := extractTxHashFromOutput(output3)
+	require.Equal(t, "1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF", hash3)
+
+	// Test transaction hash format
+	output4 := `transaction hash: FEDCBA0987654321FEDCBA0987654321FEDCBA0987654321FEDCBA0987654321`
+	hash4 := extractTxHashFromOutput(output4)
+	require.Equal(t, "FEDCBA0987654321FEDCBA0987654321FEDCBA0987654321FEDCBA0987654321", hash4)
+
+	// Test with no hash
+	output5 := `{"code": 0, "gas_used": 100000}`
+	hash5 := extractTxHashFromOutput(output5)
+	require.Equal(t, "", hash5)
+
+	// Test with invalid hash length
+	output6 := `{"txhash": "ABC123"}`
+	hash6 := extractTxHashFromOutput(output6)
+	require.Equal(t, "", hash6)
+
+	// Test with mixed content
+	output7 := `Some output text with hash: ABC123456789DEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0 and more text`
+	hash7 := extractTxHashFromOutput(output7)
+	require.Equal(t, "ABC123456789DEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0", hash7)
+}

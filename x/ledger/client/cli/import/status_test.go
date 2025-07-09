@@ -63,11 +63,10 @@ func TestReadLocalBulkImportStatusFileNotFound(t *testing.T) {
 }
 
 func TestWriteLocalBulkImportStatusNilStatus(t *testing.T) {
-	// Test writing nil status (should panic or return error)
-	// This is a defensive test to ensure the function handles nil gracefully
-	require.Panics(t, func() {
-		writeLocalBulkImportStatus(nil)
-	}, "Should panic when writing nil status")
+	// Test writing nil status (should return error)
+	err := writeLocalBulkImportStatus(nil)
+	require.Error(t, err, "Should return error when writing nil status")
+	require.Contains(t, err.Error(), "cannot write nil status", "Error message should mention nil status")
 }
 
 func TestWriteLocalBulkImportStatusEmptyImportID(t *testing.T) {

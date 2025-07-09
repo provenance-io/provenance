@@ -233,3 +233,64 @@ func TestGasCostsValidation(t *testing.T) {
 	require.Equal(t, 0, zeroCosts.LedgerWithKeyGas, "LedgerWithKeyGas can be zero")
 	require.Equal(t, 0, zeroCosts.EntryGas, "EntryGas can be zero")
 }
+
+func TestGasCostsStorageAndReuse(t *testing.T) {
+	// Test that gas costs can be stored and reused
+	costs := &GasCosts{
+		LedgerWithKeyGas: 150000,
+		EntryGas:         7500,
+	}
+
+	// Create a test chunk
+	chunk := &types.GenesisState{
+		LedgerToEntries: []types.LedgerToEntries{
+			{
+				LedgerKey: &types.LedgerKey{
+					NftId:        "test-nft-1",
+					AssetClassId: "test-asset-1",
+				},
+				Ledger: &types.Ledger{
+					LedgerClassId: "test-class-1",
+					StatusTypeId:  1,
+				},
+				Entries: []*types.LedgerEntry{
+					{
+						CorrelationId: "entry-1",
+						Sequence:      1,
+						EntryTypeId:   1,
+						PostedDate:    20000,
+						EffectiveDate: 20000,
+						TotalAmt:      math.NewInt(1000000),
+					},
+					{
+						CorrelationId: "entry-2",
+						Sequence:      2,
+						EntryTypeId:   2,
+						PostedDate:    20001,
+						EffectiveDate: 20001,
+						TotalAmt:      math.NewInt(2000000),
+					},
+				},
+			},
+		},
+	}
+
+	// Estimate gas using the costs
+	estimatedGas := estimateChunkGasFromCosts(chunk, costs)
+	expectedGas := costs.LedgerWithKeyGas + (2 * costs.EntryGas) // 1 ledger + 2 entries
+	require.Equal(t, expectedGas, estimatedGas, "Estimated gas should match expected calculation")
+
+	// Test that the same costs produce consistent results
+	estimatedGas2 := estimateChunkGasFromCosts(chunk, costs)
+	require.Equal(t, estimatedGas, estimatedGas2, "Gas estimation should be consistent with same costs")
+
+	// Test with different costs
+	differentCosts := &GasCosts{
+		LedgerWithKeyGas: 200000,
+		EntryGas:         10000,
+	}
+	estimatedGas3 := estimateChunkGasFromCosts(chunk, differentCosts)
+	expectedGas3 := differentCosts.LedgerWithKeyGas + (2 * differentCosts.EntryGas)
+	require.Equal(t, expectedGas3, estimatedGas3, "Different costs should produce different estimates")
+	require.NotEqual(t, estimatedGas, estimatedGas3, "Different costs should produce different estimates")
+}

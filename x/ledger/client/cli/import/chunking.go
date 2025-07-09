@@ -22,13 +22,31 @@ func (p *StreamingGenesisProcessor) optimizeChunksUsingSimulation(clientCtx clie
 		"ledger_key_gas", gasCosts.LedgerWithKeyGas,
 		"entry_gas", gasCosts.EntryGas)
 
-	var optimizedChunks []*types.GenesisState
+	return p.optimizeChunksWithCosts(gasCosts)
+}
 
-	for _, chunk := range p.chunks {
+// optimizeChunksUsingStoredCosts optimizes chunks using pre-stored gas costs for deterministic behavior
+func (p *StreamingGenesisProcessor) optimizeChunksUsingStoredCosts(storedCosts *GasCosts) error {
+	p.logger.Info("Using stored gas costs for optimization",
+		"ledger_key_gas", storedCosts.LedgerWithKeyGas,
+		"entry_gas", storedCosts.EntryGas)
+
+	return p.optimizeChunksWithCosts(storedCosts)
+}
+
+// optimizeChunksWithCosts is the common optimization logic using provided gas costs
+func (p *StreamingGenesisProcessor) optimizeChunksWithCosts(gasCosts *GasCosts) error {
+	var optimizedChunks []*types.GenesisState
+	inputChunkCount := len(p.chunks)
+
+	p.logger.Info("Starting chunk optimization", "input_chunks", inputChunkCount)
+
+	for i, chunk := range p.chunks {
 		// Estimate gas for this chunk using our cost model
 		estimatedGas := estimateChunkGasFromCosts(chunk, gasCosts)
 
 		p.logger.Info("Processing chunk for optimization",
+			"chunk_index", i+1,
 			"ledger_count", len(chunk.LedgerToEntries),
 			"estimated_gas", estimatedGas,
 			"max_gas", p.config.MaxGasPerTx-100000)
@@ -52,6 +70,9 @@ func (p *StreamingGenesisProcessor) optimizeChunksUsingSimulation(clientCtx clie
 	}
 
 	p.chunks = optimizedChunks
+	p.logger.Info("Chunk optimization completed",
+		"input_chunks", inputChunkCount,
+		"output_chunks", len(optimizedChunks))
 	return nil
 }
 
