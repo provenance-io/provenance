@@ -461,19 +461,238 @@ The chunked import creates a local status file (`.bulk_import_status.<import_id>
   "status": "in_progress",
   "error_message": "",
   "created_at": "2024-01-01T12:00:00Z",
-  "updated_at": "2024-01-01T12:15:00Z"
+  "updated_at": "2024-01-01T12:15:00Z",
+  "last_successful_correlation_id": "corr_12345",
+  "file_hash": "sha256:abc123...",
+  "last_attempted_chunk": {
+    "first_correlation_id": "corr_12340",
+    "last_correlation_id": "corr_12345",
+    "confirmed": true,
+    "transaction_hash": "0x123456..."
+  },
+  "gas_costs": {
+    "ledger_with_key_gas": 150000,
+    "entry_gas": 7500
+  }
 }
 ```
 
-### Validation Scripts
+## Resume Functionality
+
+The chunked bulk import supports robust resume functionality that allows interrupted imports to be restarted from where they left off.
+
+### Overview
+
+Resume functionality provides:
+- **Automatic detection** of interrupted imports
+- **File integrity validation** to prevent data corruption
+- **Gas cost persistence** for efficient chunking
+- **Transaction hash tracking** for reliable resume points
+- **Correlation ID tracking** for precise data positioning
+
+### How Resume Works
+
+1. **Status File Detection**: When `--import-id` is provided, the system checks for an existing status file
+2. **File Hash Validation**: Validates that the source file hasn't changed using SHA256 hash
+3. **Resume Point Calculation**: Determines the correct starting point based on last successful chunk
+4. **Gas Cost Reuse**: Uses stored gas costs to maintain consistent chunk structure
+5. **Transaction Verification**: Checks if the last attempted transaction was actually processed
+
+### Import ID Behavior
+
+The `--import-id` flag controls resume behavior:
 
 ```bash
-# Validate import completeness
-./scripts/validate_import.sh <import_id>
+# Fresh import (auto-generated ID)
+provenanced tx ledger chunked-bulk-import data.json --yes
 
-# Compare source and imported data
-./scripts/compare_data.sh <source_file> <import_id>
+# Resume existing import
+provenanced tx ledger chunked-bulk-import data.json --import-id my_import_123 --yes
+
+# Fresh import with specific ID
+provenanced tx ledger chunked-bulk-import data.json --import-id new_import_456 --yes
 ```
+
+### Gas Cost Storage
+
+The system stores component-based gas costs for efficient resume:
+
+```json
+{
+  "gas_costs": {
+    "ledger_with_key_gas": 150000,
+    "entry_gas": 7500
+  }
+}
+```
+
+- **`ledger_with_key_gas`**: Base cost for creating a ledger with its key
+- **`entry_gas`**: Cost per individual ledger entry
+
+These costs are calculated from representative simulations and reused on resume to avoid re-simulation.
+
+### Transaction Hash Tracking
+
+The system ensures transaction information is preserved:
+
+```json
+{
+  "last_attempted_chunk": {
+    "first_correlation_id": "corr_12340",
+    "last_correlation_id": "corr_12345",
+    "confirmed": true,
+    "transaction_hash": "0x123456..."
+  }
+}
+```
+
+- **Immediate Storage**: Transaction hash saved immediately after broadcast
+- **Pre-confirmation Safety**: Status written before confirmation wait
+- **Robust Extraction**: Handles various output formats and parsing failures
+
+### Resume Scenarios
+
+#### Scenario 1: Normal Interruption
+- **Cause**: Ctrl+C, network interruption, process kill
+- **Status**: `"in_progress"` with complete `LastAttemptedChunk`
+- **Resume**: Starts from next chunk using stored gas costs
+- **Result**: Seamless continuation
+
+#### Scenario 2: Transaction Confirmation Wait
+- **Cause**: Interruption during `waitForTransactionConfirmation`
+- **Status**: `LastAttemptedChunk` contains transaction hash
+- **Resume**: Verifies transaction status and continues appropriately
+- **Result**: Reliable resume regardless of confirmation state
+
+#### Scenario 3: Gas Cost Changes
+- **Cause**: Network gas costs change between runs
+- **Status**: Uses stored gas costs for consistent chunking
+- **Resume**: Maintains same chunk structure
+- **Result**: Predictable behavior
+
+#### Scenario 4: File Modification
+- **Cause**: Source file modified between runs
+- **Status**: File hash mismatch detected
+- **Resume**: Prevents resume to avoid corruption
+- **Result**: Clear error message
+
+### Resume Algorithm
+
+```go
+// Resume detection and processing
+func detectResume(importID string, sourceFile string) (*ResumeInfo, error) {
+    // 1. Check for existing status file
+    status, err := readLocalBulkImportStatus(importID)
+    if err != nil {
+        return nil, fmt.Errorf("no existing import found")
+    }
+    
+    // 2. Validate file hash
+    currentHash := calculateFileHash(sourceFile)
+    if status.FileHash != currentHash {
+        return nil, fmt.Errorf("source file modified")
+    }
+    
+    // 3. Determine resume point
+    resumePoint := calculateResumePoint(status)
+    
+    // 4. Load stored gas costs
+    gasCosts := status.GasCosts
+    
+    return &ResumeInfo{
+        StartChunk: resumePoint.ChunkIndex,
+        GasCosts:   gasCosts,
+        Status:     status,
+    }, nil
+}
+```
+
+### Best Practices for Resume
+
+#### 1. Import ID Management
+- Use descriptive, meaningful import IDs
+- Maintain consistent naming conventions
+- Document import IDs and their purposes
+- Use version control for import configurations
+
+#### 2. File Management
+- Never modify source files during import
+- Keep backups of source files
+- Use version control for source files
+- Validate file integrity before import
+
+#### 3. Monitoring and Verification
+- Regularly check import status
+- Monitor logs for gas cost calculations
+- Verify transactions on-chain after completion
+- Use status queries to track progress
+
+#### 4. Error Recovery
+- Understand different error conditions
+- Use appropriate resume strategies
+- Test resume functionality with sample data
+- Keep detailed logs for troubleshooting
+
+### Troubleshooting Resume Issues
+
+#### Common Problems
+
+1. **File Hash Mismatch**
+   ```bash
+   # Error: "file hash doesn't match"
+   # Solution: Use new import ID or restore original file
+   provenanced tx ledger chunked-bulk-import data.json --import-id new_import_123
+   ```
+
+2. **Missing Transaction Hash**
+   ```bash
+   # Check transaction broadcast logs
+   # Verify network connectivity
+   # Check gas estimation
+   ```
+
+3. **Gas Cost Extraction Failed**
+   ```bash
+   # Check network connectivity
+   # Verify gas estimation parameters
+   # Check simulation logs
+   ```
+
+4. **Wrong Resume Point**
+   ```bash
+   # Verify correlation ID tracking
+   # Check status file contents
+   # Validate resume logic
+   ```
+
+#### Debug Commands
+
+```bash
+# Check status file contents
+cat .bulk_import_status.<import_id>.json
+
+# Verify file hash
+sha256sum <source_file>
+
+# Check transaction status
+provenanced query tx <tx_hash>
+
+# Validate gas costs
+provenanced query ledger bulk-import-status <import_id> | jq '.gas_costs'
+
+# Check import progress
+provenanced query ledger bulk-import-status <import_id> | jq '.completed_chunks'
+```
+
+#### Error Messages and Solutions
+
+| Error Message | Cause | Solution |
+|---------------|-------|----------|
+| `"file hash doesn't match"` | Source file modified | Use new import ID or restore file |
+| `"no next correlation ID found"` | Import complete or file corrupted | Check if import is finished |
+| `"failed to extract transaction hash"` | Transaction broadcast failed | Check network and gas settings |
+| `"gas costs not found"` | First run needed | Let first run complete to calculate costs |
+| `"last chunk was not processed"` | Transaction failed | Check transaction status and retry |
 
 ## Best Practices
 

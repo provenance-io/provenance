@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -14,8 +15,31 @@ import (
 	"cosmossdk.io/log"
 )
 
+// extractTxHashFromOutput attempts to extract a transaction hash from the output string
+func extractTxHashFromOutput(output string) string {
+	// Common patterns for transaction hashes in output
+	patterns := []string{
+		`"txhash":\s*"([a-fA-F0-9]{64})"`,       // JSON format: "txhash": "ABC123..."
+		`"hash":\s*"([a-fA-F0-9]{64})"`,         // JSON format: "hash": "ABC123..."
+		`txhash:\s*([a-fA-F0-9]{64})`,           // Plain text: txhash: ABC123...
+		`hash:\s*([a-fA-F0-9]{64})`,             // Plain text: hash: ABC123...
+		`transaction hash:\s*([a-fA-F0-9]{64})`, // Plain text: transaction hash: ABC123...
+		`([a-fA-F0-9]{64})`,                     // Any 64-character hex string
+	}
+
+	for _, pattern := range patterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(output)
+		if len(matches) > 1 {
+			return matches[1]
+		}
+	}
+
+	return ""
+}
+
 // broadcastAndCheckTx broadcasts a transaction and checks its response for success/failure
-func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.Msg, chunkIndex int, logger log.Logger) error {
+func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.Msg, chunkIndex int, logger log.Logger) (string, error) {
 	// Force broadcast mode to sync for this transaction to ensure it's committed
 	originalBroadcastMode := cmd.Flag(flags.FlagBroadcastMode).Value.String()
 	cmd.Flag(flags.FlagBroadcastMode).Value.Set("sync")
@@ -33,7 +57,7 @@ func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.M
 	clientCtx.Output = originalOutput
 
 	if err != nil {
-		return fmt.Errorf("failed to broadcast transaction for chunk %d: %w", chunkIndex, err)
+		return "", fmt.Errorf("failed to broadcast transaction for chunk %d: %w", chunkIndex, err)
 	}
 
 	// Parse the captured output to check transaction status
@@ -42,22 +66,36 @@ func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.M
 	logger.Debug("Transaction output captured", "chunk_index", chunkIndex, "output", outputStr)
 
 	var txResp sdk.TxResponse
+	var txHash string
+
 	if err := clientCtx.Codec.UnmarshalJSON(outputBytes, &txResp); err != nil {
-		// If we can't parse the response, log it and continue
+		// If we can't parse the response, try to extract tx hash from the output string
 		logger.Debug("Could not parse transaction response", "output", outputStr, "error", err)
+
+		// Try to extract transaction hash from the output string
+		// Look for patterns like "txhash: ABC123..." or "hash: ABC123..."
+		txHash = extractTxHashFromOutput(outputStr)
+		if txHash == "" {
+			logger.Warn("Could not extract transaction hash from output", "output", outputStr)
+		} else {
+			logger.Info("Extracted transaction hash from output", "tx_hash", txHash)
+		}
 	} else {
+		// Successfully parsed the response
+		txHash = txResp.TxHash
+
 		// Check if the transaction was successful
 		if txResp.Code != 0 {
 			logger.Error("Transaction failed",
 				"chunk_index", chunkIndex,
 				"code", txResp.Code,
 				"raw_log", txResp.RawLog,
-				"tx_hash", txResp.TxHash)
-			return fmt.Errorf("transaction failed for chunk %d with code %d: %s", chunkIndex, txResp.Code, txResp.RawLog)
+				"tx_hash", txHash)
+			return txHash, fmt.Errorf("transaction failed for chunk %d with code %d: %s", chunkIndex, txResp.Code, txResp.RawLog)
 		}
 		logger.Info("Transaction successful",
 			"chunk_index", chunkIndex,
-			"tx_hash", txResp.TxHash,
+			"tx_hash", txHash,
 			"code", txResp.Code,
 			"gas_used", txResp.GasUsed,
 			"gas_wanted", txResp.GasWanted)
@@ -70,13 +108,13 @@ func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.M
 	// This provides additional confirmation that the transaction was accepted
 	account, err := clientCtx.AccountRetriever.GetAccount(clientCtx, clientCtx.FromAddress)
 	if err != nil {
-		return fmt.Errorf("failed to get account info after chunk %d: %w", chunkIndex, err)
+		return txHash, fmt.Errorf("failed to get account info after chunk %d: %w", chunkIndex, err)
 	}
 
 	// Log the sequence number for debugging
 	logger.Debug("Account sequence after transaction", "sequence", account.GetSequence())
 
-	return nil
+	return txHash, nil
 }
 
 // waitForTransactionConfirmation waits for transaction confirmation and sequence update

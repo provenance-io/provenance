@@ -31,6 +31,11 @@ func NewStreamingGenesisProcessor(config ChunkConfig, logger log.Logger) *Stream
 
 // ProcessFile processes a genesis file using streaming JSON parsing
 func (p *StreamingGenesisProcessor) ProcessFile(filename string) (*ChunkedGenesisState, error) {
+	return p.ProcessFileFromCorrelationID(filename, "")
+}
+
+// ProcessFileFromCorrelationID processes a genesis file starting from a specific correlation ID
+func (p *StreamingGenesisProcessor) ProcessFileFromCorrelationID(filename string, startFromCorrelationID string) (*ChunkedGenesisState, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open genesis state file: %w", err)
@@ -43,13 +48,17 @@ func (p *StreamingGenesisProcessor) ProcessFile(filename string) (*ChunkedGenesi
 		return nil, fmt.Errorf("failed to get file info: %w", err)
 	}
 
-	p.logger.Info("Processing genesis file", "filename", filename, "size_bytes", fileInfo.Size())
+	if startFromCorrelationID != "" {
+		p.logger.Info("Processing genesis file from correlation ID", "filename", filename, "size_bytes", fileInfo.Size(), "start_correlation_id", startFromCorrelationID)
+	} else {
+		p.logger.Info("Processing genesis file", "filename", filename, "size_bytes", fileInfo.Size())
+	}
 
 	// Use buffered reader for efficient reading
 	reader := bufio.NewReader(file)
 
 	// Parse the JSON structure using streaming
-	err = p.parseStreamingJSON(reader)
+	err = p.parseStreamingJSON(reader, startFromCorrelationID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
@@ -66,8 +75,30 @@ func (p *StreamingGenesisProcessor) ProcessFile(filename string) (*ChunkedGenesi
 	}, nil
 }
 
+// ProcessFileWithStoredCosts processes a genesis file using stored gas costs for deterministic chunking
+func (p *StreamingGenesisProcessor) ProcessFileWithStoredCosts(filename string, storedCosts *GasCosts) (*ChunkedGenesisState, error) {
+	// First process the file normally
+	chunkedState, err := p.ProcessFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// Then optimize chunks using stored gas costs instead of simulation
+	p.logger.Info("Optimizing chunks using stored gas costs for deterministic chunking")
+	err = p.optimizeChunksUsingStoredCosts(storedCosts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to optimize chunks using stored costs: %w", err)
+	}
+
+	// Update chunkedState with optimized chunks
+	chunkedState.Chunks = p.chunks
+	chunkedState.TotalChunks = len(p.chunks)
+
+	return chunkedState, nil
+}
+
 // parseStreamingJSON parses the JSON file using a streaming approach
-func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader) error {
+func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader, startFromCorrelationID string) error {
 	decoder := json.NewDecoder(reader)
 
 	// Expect the root object
@@ -93,7 +124,7 @@ func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader) err
 		}
 
 		if fieldName == "ledgerToEntries" || fieldName == "ledger_to_entries" {
-			err = p.parseLedgerToEntriesArray(decoder)
+			err = p.parseLedgerToEntriesArray(decoder, startFromCorrelationID)
 			if err != nil {
 				return fmt.Errorf("failed to parse ledgerToEntries: %w", err)
 			}
@@ -119,7 +150,7 @@ func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader) err
 }
 
 // parseLedgerToEntriesArray parses the ledgerToEntries array
-func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Decoder) error {
+func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Decoder, startFromCorrelationID string) error {
 	// Expect array start
 	token, err := decoder.Token()
 	if err != nil {
@@ -134,6 +165,10 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 		LedgerToEntries: []types.LedgerToEntries{},
 	}
 
+	// Track if we should start processing (for resume functionality)
+	skipUntilFound := startFromCorrelationID != ""
+	foundStartCorrelationID := false
+
 	// Process each ledger entry
 	for decoder.More() {
 		var lte types.LedgerToEntries
@@ -144,6 +179,42 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 		// Validate the ledger entry
 		if err := p.validateLedgerToEntries(&lte); err != nil {
 			return fmt.Errorf("validation failed: %w", err)
+		}
+
+		// Handle resume functionality - skip until we find the start correlation ID
+		if skipUntilFound {
+			// Check if any entry in this ledger has the start correlation ID
+			for _, entry := range lte.Entries {
+				if entry.CorrelationId == startFromCorrelationID {
+					foundStartCorrelationID = true
+					skipUntilFound = false
+					break
+				}
+			}
+
+			if !foundStartCorrelationID {
+				// Skip this entire ledger entry
+				continue
+			} else {
+				// We found the start correlation ID, but we need to filter out entries before and including it
+				// (since we want to start from the NEXT correlation ID after the last processed one)
+				var filteredEntries []*types.LedgerEntry
+				startFound := false
+
+				for _, entry := range lte.Entries {
+					if !startFound && entry.CorrelationId == startFromCorrelationID {
+						startFound = true
+						// Skip this entry (the last processed one) and continue to the next
+						continue
+					}
+					if startFound {
+						filteredEntries = append(filteredEntries, entry)
+					}
+				}
+
+				// Update the ledger entry with filtered entries
+				lte.Entries = filteredEntries
+			}
 		}
 
 		// Add to current chunk

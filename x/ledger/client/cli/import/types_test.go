@@ -12,7 +12,7 @@ func TestDefaultChunkConfig(t *testing.T) {
 	config := DefaultChunkConfig()
 
 	// Test default values
-	require.Equal(t, 10000000, config.MaxChunkSizeBytes, "MaxChunkSizeBytes should be 10MB")
+	require.Equal(t, 5000000, config.MaxChunkSizeBytes, "MaxChunkSizeBytes should be 5MB")
 	require.Equal(t, 4000000, config.MaxGasPerTx, "MaxGasPerTx should be 4M gas")
 	require.Equal(t, 1000000, config.MaxTxSizeBytes, "MaxTxSizeBytes should be 1MB")
 }

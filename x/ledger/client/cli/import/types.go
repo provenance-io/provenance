@@ -17,9 +17,9 @@ type ChunkConfig struct {
 // DefaultChunkConfig returns a reasonable default configuration
 func DefaultChunkConfig() ChunkConfig {
 	return ChunkConfig{
-		MaxChunkSizeBytes: 10000000, // 10MB per chunk (memory safety limit)
-		MaxGasPerTx:       4000000,  // 4M gas per transaction (matching blockchain limit)
-		MaxTxSizeBytes:    1000000,  // 1MB max transaction size (typical blockchain limit)
+		MaxChunkSizeBytes: 5000000, // 5MB per chunk (5x larger than max tx size for efficient gas optimization)
+		MaxGasPerTx:       4000000, // 4M gas per transaction (matching blockchain limit)
+		MaxTxSizeBytes:    1000000, // 1MB max transaction size (typical blockchain limit)
 	}
 }
 
@@ -30,6 +30,14 @@ type ChunkedGenesisState struct {
 	Chunks       []*types.GenesisState
 	TotalLedgers int
 	TotalEntries int
+}
+
+// ChunkStatus tracks the status of a single chunk
+type ChunkStatus struct {
+	FirstCorrelationID string `json:"first_correlation_id,omitempty"`
+	LastCorrelationID  string `json:"last_correlation_id,omitempty"`
+	Confirmed          bool   `json:"confirmed"`                  // Whether the transaction was confirmed on-chain
+	TransactionHash    string `json:"transaction_hash,omitempty"` // Hash of the transaction for this chunk
 }
 
 // LocalBulkImportStatus tracks the status of a chunked bulk import on the client side.
@@ -43,6 +51,13 @@ type LocalBulkImportStatus struct {
 	ErrorMessage    string `json:"error_message,omitempty"`
 	CreatedAt       string `json:"created_at"`
 	UpdatedAt       string `json:"updated_at"`
+	// Simple resume tracking
+	LastSuccessfulCorrelationID string `json:"last_successful_correlation_id,omitempty"`
+	FileHash                    string `json:"file_hash,omitempty"` // Hash of the source file for validation
+	// Last attempted chunk status for resume safety
+	LastAttemptedChunk *ChunkStatus `json:"last_attempted_chunk,omitempty"` // Status of the last chunk that was attempted
+	// Stored gas costs for deterministic chunking (can be reused on resume)
+	GasCosts *GasCosts `json:"gas_costs,omitempty"`
 }
 
 // ImportStats tracks import statistics
