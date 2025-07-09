@@ -5162,7 +5162,7 @@ Attribute holds a typed key/value structure for data associated with an account
 | `attribute_type` | [AttributeType](#provenance-attribute-v1-AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
-| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute.<br>Optional. Max 200 characters. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
