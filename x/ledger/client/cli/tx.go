@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	chunkimport "github.com/provenance-io/provenance/x/ledger/client/cli/import"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/spf13/cobra"
@@ -35,7 +36,7 @@ func CmdTx() *cobra.Command {
 		CmdAddLedgerClassBucketType(),
 		CmdTransferFundsWithSettlement(),
 		CmdBulkImport(),
-		CmdChunkedBulkImport(),
+		chunkimport.CmdChunkedBulkImport(),
 	)
 
 	return cmd

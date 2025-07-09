@@ -15,6 +15,7 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	chunkimport "github.com/provenance-io/provenance/x/ledger/client/cli/import"
 )
 
 // GetQueryCmd is the top-level command for attribute CLI queries.
@@ -37,7 +38,7 @@ func CmdQuery() *cobra.Command {
 		GetLedgerClassCmd(),
 		GetAllSettlementsCmd(),
 		GetSettlementsByCorrelationIdCmd(),
-		CmdBulkImportStatus(),
+		chunkimport.CmdBulkImportStatus(),
 	)
 
 	return queryCmd
