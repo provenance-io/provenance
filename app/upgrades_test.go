@@ -906,6 +906,7 @@ func (s *UpgradeTestSuite) TestAlyssum() {
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Unlocking select vesting accounts.",
 	}
 	s.AssertUpgradeHandlerLogs("alyssum", expInLog, nil)
 }
@@ -937,15 +938,16 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	expect := func(name string, addr sdk.AccAddress, orig, exp sdk.AccountI) {
 		expectedAccts = append(expectedAccts, expectedAcct{name: name, addr: addr, orig: orig, exp: exp})
 	}
-	saveAcct := func(acct sdk.AccountI) {
+	saveAcct := func(acct sdk.AccountI) sdk.AccountI {
 		acct = s.app.AccountKeeper.NewAccount(s.ctx, acct)
 		s.app.AccountKeeper.SetAccount(s.ctx, acct)
+		return s.app.AccountKeeper.GetAccount(s.ctx, acct.GetAddress())
 	}
 
 	baseAddr := newAddr()
 	baseAcct := authtypes.NewBaseAccountWithAddress(baseAddr)
 	baseAcct.Sequence = 5
-	saveAcct(baseAcct)
+	baseAcctI := saveAcct(baseAcct)
 	expect("base", baseAddr, baseAcct, baseAcct)
 
 	vestContAddr := newAddr()
@@ -957,7 +959,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewContinuousVestingAccount")
 	vestContAcct.Sequence = 3
-	saveAcct(vestContAcct)
+	vestContAcctI := saveAcct(vestContAcct)
 	expect("continuous", vestContAddr, vestContAcct, vestContAcct.BaseAccount)
 
 	vestDelAddr := newAddr()
@@ -968,7 +970,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewDelayedVestingAccount")
 	vestDelAcct.Sequence = 12
-	saveAcct(vestDelAcct)
+	vestDelAcctI := saveAcct(vestDelAcct)
 	expect("delayed", vestDelAddr, vestDelAcct, vestDelAcct.BaseAccount)
 
 	vestPerAddr := newAddr()
@@ -983,7 +985,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewPeriodicVestingAccount")
 	vestPerAcct.Sequence = 6
-	saveAcct(vestPerAcct)
+	vestPerAcctI := saveAcct(vestPerAcct)
 	expect("periodic", vestPerAddr, vestPerAcct, vestPerAcct.BaseAccount)
 
 	permLockAddr := newAddr()
@@ -993,7 +995,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewPermanentLockedAccount")
 	permLockAcct.Sequence = 19
-	saveAcct(permLockAcct)
+	permLockAcctI := saveAcct(permLockAcct)
 	expect("permanent locked", permLockAddr, permLockAcct, permLockAcct.BaseAccount)
 
 	modAddr := s.app.AccountKeeper.GetModuleAddress("marker")
@@ -1007,13 +1009,30 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	expLogLines := []string{
 		"INF Unlocking select vesting accounts.",
 		"INF Identified 7 accounts to unlock.",
-		"INF [1/7]: Cannot unlock account " + baseAddr.String() + ": not a vesting account: *types.BaseAccount.",
-		"DBG [2/7]: Unlocked account: " + vestContAddr.String() + ".",
-		"DBG [3/7]: Unlocked account: " + vestDelAddr.String() + ".",
-		"DBG [4/7]: Unlocked account: " + vestPerAddr.String() + ".",
-		"DBG [5/7]: Unlocked account: " + permLockAddr.String() + ".",
-		"INF [6/7]: Cannot unlock account " + modAddr.String() + ": not a vesting account: *types.ModuleAccount.",
-		"INF [7/7]: Cannot unlock account " + unknownAddr.String() + ": account not found.",
+		fmt.Sprintf("ERR Could not unlock vesting account. "+
+			"error=\"could not unlock account %s: unsupported account type *types.BaseAccount: invalid type\" "+
+			"account_number=%d address=%s module=hold original_type=*types.BaseAccount",
+			baseAddr, baseAcctI.GetAccountNumber(), baseAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.ContinuousVestingAccount",
+			vestContAcctI.GetAccountNumber(), vestContAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.DelayedVestingAccount",
+			vestDelAcctI.GetAccountNumber(), vestDelAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.PeriodicVestingAccount",
+			vestPerAcctI.GetAccountNumber(), vestPerAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.PermanentLockedAccount",
+			permLockAcctI.GetAccountNumber(), permLockAddr),
+		fmt.Sprintf("ERR Could not unlock vesting account. "+
+			"error=\"could not unlock account %s: unsupported account type *types.ModuleAccount: invalid type\" "+
+			"account_number=%d address=%s module=hold original_type=*types.ModuleAccount",
+			modAddr, modAcct.GetAccountNumber(), modAddr),
+		fmt.Sprintf("ERR Could not unlock vesting account. "+
+			"error=\"account \\\"%s\\\" does not exist: unknown address\" "+
+			"address=%s module=hold",
+			unknownAddr, unknownAddr),
 		"INF Done unlocking select vesting accounts.",
 		"",
 	}

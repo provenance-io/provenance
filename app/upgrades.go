@@ -51,6 +51,7 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+			unlockVestingAccounts(ctx, app, getMainnetUnlocks())
 			return vm, nil
 		},
 	},
@@ -285,28 +286,9 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 	ctx.Logger().Info("Unlocking select vesting accounts.")
 
 	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to unlock.", len(addrs)))
-	for i, addr := range addrs {
-		acctI := app.AccountKeeper.GetAccount(ctx, addr)
-		if acctI == nil {
-			ctx.Logger().Info(fmt.Sprintf("[%d/%d]: Cannot unlock account %s: account not found.", i+1, len(addrs), addr))
-			continue
-		}
-		switch acct := acctI.(type) {
-		case *vesting.ContinuousVestingAccount:
-			app.AccountKeeper.SetAccount(ctx, acct.BaseAccount)
-			ctx.Logger().Debug(fmt.Sprintf("[%d/%d]: Unlocked account: %s.", i+1, len(addrs), addr))
-		case *vesting.DelayedVestingAccount:
-			app.AccountKeeper.SetAccount(ctx, acct.BaseAccount)
-			ctx.Logger().Debug(fmt.Sprintf("[%d/%d]: Unlocked account: %s.", i+1, len(addrs), addr))
-		case *vesting.PeriodicVestingAccount:
-			app.AccountKeeper.SetAccount(ctx, acct.BaseAccount)
-			ctx.Logger().Debug(fmt.Sprintf("[%d/%d]: Unlocked account: %s.", i+1, len(addrs), addr))
-		case *vesting.PermanentLockedAccount:
-			app.AccountKeeper.SetAccount(ctx, acct.BaseAccount)
-			ctx.Logger().Debug(fmt.Sprintf("[%d/%d]: Unlocked account: %s.", i+1, len(addrs), addr))
-		default:
-			ctx.Logger().Info(fmt.Sprintf("[%d/%d]: Cannot unlock account %s: not a vesting account: %T.", i+1, len(addrs), addr, acctI))
-		}
+	for _, addr := range addrs {
+		// We don't care about the error here because it's already logged, and we want to move on.
+		_ = app.HoldKeeper.UnlockVestingAccount(ctx, addr)
 	}
 
 	ctx.Logger().Info("Done unlocking select vesting accounts.")
@@ -315,39 +297,15 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 // getMainnetUnlocks gets a list of mainnet addresses to unlock.
 func getMainnetUnlocks() []sdk.AccAddress {
 	addrs := []string{
-		"pb1yku08jr34cls842gv2c9r3ec9g3aqyhdhxn7gv",
-		"pb1uf7txm4tce8tmg95yd5jwf9lsghdl0zk7yemmf",
-		"pb12dy3ztax0yw3wlqkd5dan0q5fs8p9pzwspge63",
-		"pb13n5l87am8fgkuaeyjx8jrk6flajuw6ywgupd3l",
-		"pb1sms0k6d8ealyl3ttxsvptx7ztcthwpjq8memak",
-		"pb1v2k2d2wf8kza6r24zwajfka0kc3qrj503luljr",
-		"pb1qydxnkqygzn4qcmnvshln9v62334xgu46eq0ft",
-		"pb1pywenrwq5mxg0k24nk5v4zty5n45c8pf2xcquz",
-		"pb1nf0s5hlvzececp55rlw7243she76fwm6xktue2",
-		"pb1rnpt0x6vsmgdekmpqa94qcn7377k3nzvalka4k",
-		"pb16dhla87g7a2jexytcrh3jm3fhzrsjzwxz28e2t",
-		"pb18gl8gyf44dvyjp4tr9jrzuhmdjdcwzxravfc6n",
-		"pb108t72x4taapyvmtrvyslqfpwxkj0sh6q80vjvw",
-		"pb1qwvmrd5dm3ah4ym5eu2s3k6p46hs65hvc0zqn3",
-		"pb139x44e5l0e84h3awccfztaefurnf0z7j5w9rcaff4lfvxvv4hkvqxuz5d5",
-		"pb1enagqpfq5x7hcae9khgatd9mm4r372mylnwrqp",
-		"pb1evhycvsj44uk4j3u096j3g833qaw22qveyhul7",
-		"pb1sjppc478pta6y3x5tu9l2938ejj0qzws46fhqh",
-		"pb19zlct5wh6xfn3u4na7ujhnaudwt63p2qqhukth",
-		"pb18xlkw9evkhwfk2hn7ss2f0xm6h7qra07fzpsgq",
-		"pb1ts3zffs789nhdhsnfzfzuve9j72kwqpqsj0h7u",
-		"pb1vw5fuucvfhnkhpfm2dezj4uwln2t8ckqjdhfft",
-		"pb1f6vqww9f7g5arawrsvmwqh9zzyt0njyeyzlutu",
-		"pb1x09ku54r4m5cllnwc0m8gqx32u76xvvq0ap026",
-		"pb1pft6y8u8eay4v4ypj6hlzqvgtf20krfcnyfth5",
-		"pb1vv530hgpgmt0mtsfwmtr4t2vm84x328z0xdhvw",
-		"pb1q9y3g5wm9c8kljj4ktgcvpdyau8xzrxxa75zfz",
-		"pb1ahp9lcj9m5vkhpdzw57d8xcjuygy6xvp94q9uw",
-		"pb14af37xzm2hssdklq92r6jq86q95zqxg7nvemvh",
-		"pb1nep5lpv8kg2q7yxvepdqwngdpuvgq5h62eapq5",
-		"pb1043tjayw4fhfgm3x900w96u4ytxufgezw90f5p",
-		"pb1uds0mh9q94fmjwxavkgxncls3n33j7kkqs5ns2",
-		"pb1n9h425x77vrrl47qv25z7m7f0p396ncucxyg5r",
+		"pb1npzfcx3qrtxnwuqxqnzufmk777nj6k4568t5n3",
+		"pb1y6hl64k2u5khyex5fzk5ss5nj5dqrxacvxvha6",
+		"pb13l7duyn5wn3tvuv08rkl8azee38s3xwp3x36rr",
+		"pb1x42u2yvpg2xq9me28rzg6x25qw379tsa8rua0v",
+		"pb1t5d3mm66cxsnyufqjk7y38m4zjes44avwncynu",
+		"pb1lermz6u6r7cjw4khamdxhddw8h2n4u4fsemx3t",
+		"pb1v0mjw2802n898gmhaceumltn2l4kdnsgtptezk",
+		"pb1m65lmxsrs5fdpley5frqaa55rfrl7c2e2dj507",
+		"pb14t3me36m9gpkdwpyczgevctlt6trdq46dugccdnrlu92n9eee0ss5k65tq",
 	}
 
 	rv := make([]sdk.AccAddress, 0, len(addrs))
