@@ -599,19 +599,6 @@ var (
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
 )
 
-func (s *UpgradeTestSuite) TestZomp() {
-	expInLog := []string{
-		"INF Unlocking select vesting accounts.",
-	}
-	expNotInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Converting accounts to vesting accounts.",
-	}
-	s.AssertUpgradeHandlerLogs("zomp", expInLog, expNotInLog)
-}
-
 func (s *UpgradeTestSuite) TestAlyssum() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
