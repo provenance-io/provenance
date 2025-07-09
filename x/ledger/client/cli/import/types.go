@@ -17,7 +17,7 @@ type ChunkConfig struct {
 // DefaultChunkConfig returns a reasonable default configuration
 func DefaultChunkConfig() ChunkConfig {
 	return ChunkConfig{
-		MaxChunkSizeBytes: 5000000, // 5MB per chunk (5x larger than max tx size for efficient gas optimization)
+		MaxChunkSizeBytes: 10000000, // 5MB per chunk (5x larger than max tx size for efficient gas optimization)
 		MaxGasPerTx:       4000000, // 4M gas per transaction (matching blockchain limit)
 		MaxTxSizeBytes:    1000000, // 1MB max transaction size (typical blockchain limit)
 	}

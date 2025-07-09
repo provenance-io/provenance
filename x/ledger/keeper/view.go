@@ -45,9 +45,10 @@ type BaseViewKeeper struct {
 	LedgerClassBucketTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassBucketType]
 
 	RegistryKeeper RegistryKeeper
+	MetaDataKeeper MetaDataKeeper
 }
 
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, registryKeeper RegistryKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, registryKeeper RegistryKeeper, metadataKeeper MetaDataKeeper) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
 	lk := BaseViewKeeper{
@@ -107,6 +108,7 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 		),
 
 		RegistryKeeper: registryKeeper,
+		MetaDataKeeper: metadataKeeper,
 	}
 	// Build and set the schema
 	schema, err := sb.Build()

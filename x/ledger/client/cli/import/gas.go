@@ -87,11 +87,27 @@ func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *
 // estimateGasCosts runs representative simulations to understand gas costs
 func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cmd *cobra.Command, logger log.Logger) (*GasCosts, error) {
 	// Find a representative ledger to use for testing
+	// Only look at the first few chunks to avoid iterating through the entire 2GB dataset
 	var testLedger *types.LedgerToEntries
-	for _, chunk := range chunks {
+	maxChunksToCheck := 3 // Only check first 3 chunks to find a representative ledger
+
+	logger.Info("Starting gas cost estimation",
+		"total_chunks", len(chunks),
+		"max_chunks_to_check", maxChunksToCheck)
+
+	for i, chunk := range chunks {
+		if i >= maxChunksToCheck {
+			logger.Info("Stopped checking chunks early to avoid performance issues",
+				"chunks_checked", i,
+				"total_chunks", len(chunks))
+			break // Stop after checking first few chunks
+		}
 		for _, lte := range chunk.LedgerToEntries {
 			if lte.LedgerKey != nil && lte.Ledger != nil && len(lte.Entries) > 0 {
 				testLedger = &lte
+				logger.Info("Found representative ledger for gas estimation",
+					"chunk_index", i+1,
+					"ledger_entries_count", len(lte.Entries))
 				break
 			}
 		}
@@ -99,11 +115,18 @@ func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cm
 			break
 		}
 	}
+
 	if testLedger == nil {
-		return nil, fmt.Errorf("no suitable test ledger found")
+		// If we still can't find a test ledger, use reasonable defaults
+		logger.Warn("No suitable test ledger found in first few chunks, using default gas costs")
+		return &GasCosts{
+			LedgerWithKeyGas: 100000,
+			EntryGas:         5000,
+		}, nil
 	}
 
 	// Simulation 1: LedgerKey + Ledger (no entries)
+	logger.Info("Running simulation 1: LedgerKey + Ledger (no entries)")
 	ledgerWithKey := &types.GenesisState{
 		LedgerToEntries: []types.LedgerToEntries{
 			{
@@ -119,6 +142,7 @@ func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cm
 	}
 
 	// Simulation 2: LedgerKey + Ledger + 1 Entry
+	logger.Info("Running simulation 2: LedgerKey + Ledger + 1 Entry")
 	ledgerWithEntry := &types.GenesisState{
 		LedgerToEntries: []types.LedgerToEntries{
 			{
@@ -140,6 +164,7 @@ func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cm
 	numTestEntries := 10
 	var ledgerWithMoreEntriesGas int
 	if len(testLedger.Entries) >= numTestEntries {
+		logger.Info("Running simulation 3: LedgerKey + Ledger + multiple entries for better accuracy")
 		testEntries := testLedger.Entries[:numTestEntries]
 		ledgerWithMoreEntries := &types.GenesisState{
 			LedgerToEntries: []types.LedgerToEntries{
@@ -160,7 +185,7 @@ func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cm
 		}
 	}
 
-	logger.Info("Gas cost calculation",
+	logger.Info("Gas cost calculation completed",
 		"ledger_with_key_gas", ledgerWithKeyGas,
 		"ledger_with_entry_gas", ledgerWithEntryGas,
 		"ledger_with_more_entries_gas", ledgerWithMoreEntriesGas,
