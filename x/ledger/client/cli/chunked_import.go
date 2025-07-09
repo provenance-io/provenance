@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,28 +14,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // ChunkConfig defines configuration for chunking large datasets
 type ChunkConfig struct {
-	MaxChunkSizeBytes  int // Maximum chunk size in bytes (approximate)
-	MaxGasPerChunk     int // Maximum gas consumption per chunk (approximate)
-	MaxEntriesPerChunk int // Maximum number of entries per chunk (fallback limit)
-	MaxTxSizeBytes     int // Maximum transaction size in bytes (blockchain limit)
+	MaxChunkSizeBytes int // Maximum chunk size in bytes (memory safety limit during parsing)
+	MaxGasPerTx       int // Maximum gas consumption per transaction
+	MaxTxSizeBytes    int // Maximum transaction size in bytes (blockchain limit)
 }
 
 // DefaultChunkConfig returns a reasonable default configuration
 func DefaultChunkConfig() ChunkConfig {
 	return ChunkConfig{
-		MaxChunkSizeBytes:  300000,  // ~300KB per chunk (reduced for gas considerations)
-		MaxGasPerChunk:     4000000, // 4M gas per chunk (matching blockchain limit)
-		MaxEntriesPerChunk: 200,     // 200 entries per chunk (reduced for gas considerations)
-		MaxTxSizeBytes:     1000000, // 1MB max transaction size (typical blockchain limit)
+		MaxChunkSizeBytes: 10000000, // 10MB per chunk (memory safety limit)
+		MaxGasPerTx:       4000000,  // 4M gas per transaction (matching blockchain limit)
+		MaxTxSizeBytes:    1000000,  // 1MB max transaction size (typical blockchain limit)
 	}
 }
 
@@ -114,8 +115,10 @@ func estimateLedgerToEntriesSize(lte *types.LedgerToEntries) int {
 	// Estimate ledger size
 	if lte.Ledger != nil {
 		size += len(lte.Ledger.LedgerClassId)
-		size += len(lte.Ledger.Key.NftId)
-		size += len(lte.Ledger.Key.AssetClassId)
+		if lte.Ledger.Key != nil {
+			size += len(lte.Ledger.Key.NftId)
+			size += len(lte.Ledger.Key.AssetClassId)
+		}
 		// Add some overhead for other ledger fields
 		size += 100
 	}
@@ -169,18 +172,68 @@ func estimateChunkSize(chunk *types.GenesisState) int {
 	return totalSize + 100
 }
 
-// estimateChunkGas estimates the gas consumption for a chunk based on its content
-func estimateChunkGas(chunk *types.GenesisState) int {
-	totalEntries := 0
-	for _, lte := range chunk.LedgerToEntries {
-		if lte.Entries != nil {
-			totalEntries += len(lte.Entries)
-		}
+// simulateChunkGas builds, signs, and simulates the transaction for accurate gas estimation
+func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *cobra.Command) (int, error) {
+	msg := &types.MsgBulkImportRequest{
+		Authority:    clientCtx.FromAddress.String(),
+		GenesisState: chunk,
 	}
-	gasPerEntry := 4000 // Lowered for more safety
-	baseGas := 100000
-	totalGas := baseGas + (totalEntries * gasPerEntry)
-	return int(float64(totalGas) * 1.20) // 20% margin
+
+	txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+	if err != nil {
+		return 0, fmt.Errorf("failed to create tx factory: %w", err)
+	}
+
+	// Get account number and sequence
+	accountRetriever := clientCtx.AccountRetriever
+	account, err := accountRetriever.GetAccount(clientCtx, clientCtx.FromAddress)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get account info: %w", err)
+	}
+	accNum := account.GetAccountNumber()
+	seq := account.GetSequence()
+
+	txFactory = txFactory.WithAccountNumber(accNum).WithSequence(seq)
+
+	txBuilder := clientCtx.TxConfig.NewTxBuilder()
+	if err := txBuilder.SetMsgs(msg); err != nil {
+		return 0, fmt.Errorf("failed to set message in tx builder: %w", err)
+	}
+
+	// Set a dummy fee and gas (will be overwritten by simulation)
+	txBuilder.SetFeeAmount([]sdk.Coin{sdk.NewInt64Coin("nhash", 1)})
+	txBuilder.SetGasLimit(2000000)
+
+	// Sign the transaction
+	err = tx.Sign(cmd.Context(), txFactory, clientCtx.GetFromName(), txBuilder, false)
+	if err != nil {
+		return 0, fmt.Errorf("failed to sign tx for simulation: %w", err)
+	}
+
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return 0, fmt.Errorf("failed to encode tx: %w", err)
+	}
+
+	queryClient := msgfeestypes.NewQueryClient(clientCtx)
+	response, err := queryClient.CalculateTxFees(
+		context.Background(),
+		&msgfeestypes.CalculateTxFeesRequest{
+			TxBytes:          txBytes,
+			DefaultBaseDenom: "nhash",
+			GasAdjustment:    1.2, // 20% margin
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to simulate tx: %w", err)
+	}
+
+	return int(response.EstimatedGas), nil
+}
+
+// estimateChunkGas estimates the gas consumption for a chunk using full simulation
+func estimateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *cobra.Command) (int, error) {
+	return simulateChunkGas(chunk, clientCtx, cmd)
 }
 
 // CmdChunkedBulkImport creates a command for chunked bulk import
@@ -192,10 +245,9 @@ func CmdChunkedBulkImport() *cobra.Command {
 		Long: `Bulk import ledger data from a genesis state file using intelligent chunking based on data size, gas consumption, and transaction limits.
 
 The chunking algorithm considers:
-- Maximum chunk size in bytes (default: 300KB)
-- Maximum gas consumption per chunk (default: 4M gas)
+- Maximum chunk size in bytes (default: 10MB, memory safety limit)
+- Maximum gas consumption per transaction (default: 4M gas)
 - Maximum transaction size (default: 1MB)
-- Maximum number of entries per chunk (default: 200)
 
 This ensures chunks fit within blockchain transaction and gas limits while optimizing for performance.`,
 		Example: `$ provenanced tx ledger chunked-bulk-import genesis.json --from mykey
@@ -230,6 +282,17 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 			if err != nil {
 				return fmt.Errorf("failed to process genesis file: %w", err)
 			}
+
+			// Optimize chunks using cost model to ensure they fit within gas limits
+			logger.Info("Optimizing chunks using cost model (3 simulations)")
+			err = processor.optimizeChunksUsingSimulation(clientCtx, cmd)
+			if err != nil {
+				return fmt.Errorf("failed to optimize chunks using cost model: %w", err)
+			}
+
+			// Update chunkedState with optimized chunks
+			chunkedState.Chunks = processor.chunks
+			chunkedState.TotalChunks = len(processor.chunks)
 
 			logger.Info("Import summary",
 				"import_id", chunkedState.ImportID,
@@ -312,7 +375,14 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					chunkEntries += len(ledger.Entries)
 				}
 				chunkSize := getChunkSizeBytes(chunk)
-				chunkGas := estimateChunkGas(chunk)
+				chunkGas, err := estimateChunkGas(chunk, clientCtx, cmd)
+				if err != nil {
+					status.Status = "failed"
+					status.ErrorMessage = fmt.Sprintf("failed to estimate gas for chunk %d: %v", i+1, err)
+					status.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(status)
+					return fmt.Errorf("failed to estimate gas for chunk %d: %w", i+1, err)
+				}
 
 				// Validate chunk size against transaction limits
 				if chunkSize > config.MaxTxSizeBytes {
@@ -324,12 +394,12 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				}
 
 				// Validate chunk gas against gas limits
-				if chunkGas > config.MaxGasPerChunk {
+				if chunkGas > config.MaxGasPerTx-100000 { // 100k gas safety margin
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum gas limit: %d gas > %d gas", i+1, chunkGas, config.MaxGasPerChunk)
+					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum gas limit: %d gas > %d gas", i+1, chunkGas, config.MaxGasPerTx-100000)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("chunk %d exceeds maximum gas limit: %d gas > %d gas", i+1, chunkGas, config.MaxGasPerChunk)
+					return fmt.Errorf("chunk %d exceeds maximum gas limit: %d gas > %d gas", i+1, chunkGas, config.MaxGasPerTx-100000)
 				}
 
 				logger.Info("Chunk details",
@@ -607,13 +677,17 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 		LedgerToEntries: []types.LedgerToEntries{},
 	}
 	chunkSizeBytes := 0
-	chunkEntries := 0
 
 	// Process each ledger entry
 	for decoder.More() {
 		var lte types.LedgerToEntries
 		if err := decoder.Decode(&lte); err != nil {
 			return fmt.Errorf("failed to decode LedgerToEntries: %w", err)
+		}
+
+		// Validate the ledger entry
+		if err := p.validateLedgerToEntries(&lte); err != nil {
+			return fmt.Errorf("validation failed: %w", err)
 		}
 
 		// Debug: Print what was decoded
@@ -630,68 +704,46 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 			p.logger.Debug("Ledger details", "ledger_class_id", lte.Ledger.LedgerClassId)
 		}
 
-		// Debug: Print entry count and max entries per chunk before split check
-		p.logger.Debug("LedgerToEntries entry count check",
-			"entries_count", len(lte.Entries),
-			"max_entries_per_chunk", p.config.MaxEntriesPerChunk)
+		// Process all ledgers normally - let the optimization step handle chunking based on gas limits
+		// Estimate the size of this ledger entry
+		estimatedSize := estimateLedgerToEntriesSize(&lte)
 
-		// If this ledger has too many entries, we need to split it
-		if len(lte.Entries) > p.config.MaxEntriesPerChunk {
-			// Split the ledger into multiple chunks
-			err := p.splitLargeLedger(&lte, p.config)
-			if err != nil {
-				return fmt.Errorf("failed to split large ledger: %w", err)
-			}
-			// After splitting, continue to next ledger
-			continue
-		} else {
-			// Estimate the size of this ledger entry
-			estimatedSize := estimateLedgerToEntriesSize(&lte)
+		// Check if adding this entry would exceed our memory safety limit during parsing
+		wouldExceedSize := chunkSizeBytes+estimatedSize > p.config.MaxChunkSizeBytes
 
-			// Check if adding this entry would exceed our limits
-			wouldExceedSize := chunkSizeBytes+estimatedSize > p.config.MaxChunkSizeBytes
-			wouldExceedEntries := chunkEntries+len(lte.Entries) > p.config.MaxEntriesPerChunk
-
-			// Also check against transaction size limit
-			testChunk := &types.GenesisState{
-				LedgerToEntries: append(currentChunk.LedgerToEntries, lte),
-			}
-			testChunkSize := getChunkSizeBytes(testChunk)
-			wouldExceedTxSize := testChunkSize > p.config.MaxTxSizeBytes
-
-			// Check against gas limit
-			testChunkGas := estimateChunkGas(testChunk)
-			wouldExceedGas := testChunkGas > p.config.MaxGasPerChunk
-
-			// Start a new chunk if we would exceed any limits
-			if (wouldExceedSize || wouldExceedEntries || wouldExceedTxSize || wouldExceedGas) && len(currentChunk.LedgerToEntries) > 0 {
-				p.logger.Debug("Appending chunk to chunks list",
-					"first_ledger_has_ledger", len(currentChunk.LedgerToEntries) > 0 && currentChunk.LedgerToEntries[0].Ledger != nil)
-				// Create a deep copy to avoid pointer issues
-				chunkCopy := &types.GenesisState{
-					LedgerToEntries: make([]types.LedgerToEntries, len(currentChunk.LedgerToEntries)),
-				}
-				for i, lte := range currentChunk.LedgerToEntries {
-					chunkCopy.LedgerToEntries[i] = lte
-					// Deep copy the Ledger object if it exists
-					if lte.Ledger != nil {
-						ledgerCopy := *lte.Ledger
-						chunkCopy.LedgerToEntries[i].Ledger = &ledgerCopy
-					}
-				}
-				p.chunks = append(p.chunks, chunkCopy)
-				currentChunk = &types.GenesisState{
-					LedgerToEntries: []types.LedgerToEntries{},
-				}
-				chunkSizeBytes = 0
-				chunkEntries = 0
-			}
-
-			// Add to current chunk
-			currentChunk.LedgerToEntries = append(currentChunk.LedgerToEntries, lte)
-			chunkSizeBytes += estimatedSize
-			chunkEntries += len(lte.Entries)
+		// Also check against transaction size limit
+		testChunk := &types.GenesisState{
+			LedgerToEntries: append(currentChunk.LedgerToEntries, lte),
 		}
+		testChunkSize := getChunkSizeBytes(testChunk)
+		wouldExceedTxSize := testChunkSize > p.config.MaxTxSizeBytes
+
+		// Start a new chunk if we would exceed size limits
+		if (wouldExceedSize || wouldExceedTxSize) && len(currentChunk.LedgerToEntries) > 0 {
+			p.logger.Debug("Appending chunk to chunks list",
+				"first_ledger_has_ledger", len(currentChunk.LedgerToEntries) > 0 && currentChunk.LedgerToEntries[0].Ledger != nil)
+			// Create a deep copy to avoid pointer issues
+			chunkCopy := &types.GenesisState{
+				LedgerToEntries: make([]types.LedgerToEntries, len(currentChunk.LedgerToEntries)),
+			}
+			for i, lte := range currentChunk.LedgerToEntries {
+				chunkCopy.LedgerToEntries[i] = lte
+				// Deep copy the Ledger object if it exists
+				if lte.Ledger != nil {
+					ledgerCopy := *lte.Ledger
+					chunkCopy.LedgerToEntries[i].Ledger = &ledgerCopy
+				}
+			}
+			p.chunks = append(p.chunks, chunkCopy)
+			currentChunk = &types.GenesisState{
+				LedgerToEntries: []types.LedgerToEntries{},
+			}
+			chunkSizeBytes = 0
+		}
+
+		// Add to current chunk
+		currentChunk.LedgerToEntries = append(currentChunk.LedgerToEntries, lte)
+		chunkSizeBytes += estimatedSize
 
 		p.stats.TotalLedgers++
 
@@ -735,7 +787,7 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 
 // splitLargeLedger splits a ledger with too many entries into multiple chunks
 func (p *StreamingGenesisProcessor) splitLargeLedger(lte *types.LedgerToEntries, config ChunkConfig) error {
-	entriesPerChunk := config.MaxEntriesPerChunk
+	entriesPerChunk := 1000 // Default to 1000 entries per chunk
 
 	p.logger.Debug("Splitting large ledger",
 		"entries_count", len(lte.Entries),
@@ -851,4 +903,268 @@ func generateImportID() string {
 	// In a real implementation, you might want to use a more sophisticated ID generation
 	// For now, we'll use a simple timestamp-based approach
 	return fmt.Sprintf("import_%d", time.Now().UnixNano())
+}
+
+// optimizeChunksUsingSimulation takes the initial chunks from parsing and optimizes them
+// using 3 representative simulations to estimate gas costs for each component
+func (p *StreamingGenesisProcessor) optimizeChunksUsingSimulation(clientCtx client.Context, cmd *cobra.Command) error {
+	// Run 3 representative simulations to understand gas costs
+	gasCosts, err := p.estimateGasCosts(clientCtx, cmd)
+	if err != nil {
+		return fmt.Errorf("failed to estimate gas costs: %w", err)
+	}
+
+	p.logger.Info("Gas cost estimates",
+		"ledger_key_gas", gasCosts.LedgerWithKeyGas,
+		"entry_gas", gasCosts.EntryGas)
+
+	var optimizedChunks []*types.GenesisState
+
+	for _, chunk := range p.chunks {
+		// Estimate gas for this chunk using our cost model
+		estimatedGas := p.estimateChunkGasFromCosts(chunk, gasCosts)
+
+		p.logger.Info("Processing chunk for optimization",
+			"ledger_count", len(chunk.LedgerToEntries),
+			"estimated_gas", estimatedGas,
+			"max_gas", p.config.MaxGasPerTx-100000)
+
+		// If the chunk fits within gas limits, keep it as-is
+		if estimatedGas <= p.config.MaxGasPerTx-100000 {
+			optimizedChunks = append(optimizedChunks, chunk)
+			p.logger.Info("Chunk fits within gas limits, keeping as-is")
+			continue
+		}
+
+		// If the chunk is too large, split it into smaller chunks
+		p.logger.Info("Chunk exceeds gas limit, splitting into smaller chunks",
+			"estimated_gas", estimatedGas,
+			"max_gas", p.config.MaxGasPerTx-100000,
+			"ledger_count", len(chunk.LedgerToEntries))
+
+		// Split the chunk using our cost model
+		splitChunks := p.splitChunkByCostModel(chunk, gasCosts)
+		optimizedChunks = append(optimizedChunks, splitChunks...)
+	}
+
+	p.chunks = optimizedChunks
+	return nil
+}
+
+// GasCosts represents the estimated gas costs for different components
+type GasCosts struct {
+	LedgerWithKeyGas int // Gas cost for a ledger key + ledger (base cost)
+	EntryGas         int // Gas cost per entry
+}
+
+// estimateGasCosts runs 2 representative simulations to understand gas costs
+func (p *StreamingGenesisProcessor) estimateGasCosts(clientCtx client.Context, cmd *cobra.Command) (*GasCosts, error) {
+	// Find a representative ledger to use for testing
+	var testLedger *types.LedgerToEntries
+	for _, chunk := range p.chunks {
+		for _, lte := range chunk.LedgerToEntries {
+			if lte.LedgerKey != nil && lte.Ledger != nil && len(lte.Entries) > 0 {
+				testLedger = &lte
+				break
+			}
+		}
+		if testLedger != nil {
+			break
+		}
+	}
+	if testLedger == nil {
+		return nil, fmt.Errorf("no suitable test ledger found")
+	}
+
+	// Simulation 1: LedgerKey + Ledger (no entries)
+	ledgerWithKey := &types.GenesisState{
+		LedgerToEntries: []types.LedgerToEntries{
+			{
+				LedgerKey: testLedger.LedgerKey,
+				Ledger:    testLedger.Ledger,
+				Entries:   []*types.LedgerEntry{},
+			},
+		},
+	}
+	ledgerWithKeyGas, err := simulateChunkGas(ledgerWithKey, clientCtx, cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to simulate ledger with key: %w", err)
+	}
+
+	// Simulation 2: LedgerKey + Ledger + 1 Entry
+	ledgerWithEntry := &types.GenesisState{
+		LedgerToEntries: []types.LedgerToEntries{
+			{
+				LedgerKey: testLedger.LedgerKey,
+				Ledger:    testLedger.Ledger,
+				Entries:   []*types.LedgerEntry{testLedger.Entries[0]},
+			},
+		},
+	}
+	ledgerWithEntryGas, err := simulateChunkGas(ledgerWithEntry, clientCtx, cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to simulate ledger with entry: %w", err)
+	}
+
+	// Calculate component costs
+	entryCost := ledgerWithEntryGas - ledgerWithKeyGas
+
+	// Run a third simulation with more entries to get a more accurate per-entry cost
+	// Use 10 entries to get a better average
+	numTestEntries := 10
+	var ledgerWithMoreEntriesGas int
+	if len(testLedger.Entries) >= numTestEntries {
+		testEntries := testLedger.Entries[:numTestEntries]
+		ledgerWithMoreEntries := &types.GenesisState{
+			LedgerToEntries: []types.LedgerToEntries{
+				{
+					LedgerKey: testLedger.LedgerKey,
+					Ledger:    testLedger.Ledger,
+					Entries:   testEntries,
+				},
+			},
+		}
+
+		ledgerWithMoreEntriesGas, err = simulateChunkGas(ledgerWithMoreEntries, clientCtx, cmd)
+		if err != nil {
+			p.logger.Warn("Failed to simulate with more entries, using single entry cost", "error", err)
+		} else {
+			// Calculate per-entry cost from the larger sample
+			entryCost = (ledgerWithMoreEntriesGas - ledgerWithKeyGas) / numTestEntries
+		}
+	}
+
+	p.logger.Info("Gas cost calculation",
+		"ledger_with_key_gas", ledgerWithKeyGas,
+		"ledger_with_entry_gas", ledgerWithEntryGas,
+		"ledger_with_more_entries_gas", ledgerWithMoreEntriesGas,
+		"calculated_entry_cost", entryCost)
+
+	return &GasCosts{
+		LedgerWithKeyGas: ledgerWithKeyGas,
+		EntryGas:         entryCost,
+	}, nil
+}
+
+// estimateChunkGasFromCosts estimates gas usage for a chunk using the cost model
+func (p *StreamingGenesisProcessor) estimateChunkGasFromCosts(chunk *types.GenesisState, costs *GasCosts) int {
+	totalGas := 0
+	for _, lte := range chunk.LedgerToEntries {
+		if lte.LedgerKey != nil && lte.Ledger != nil {
+			// First chunk: ledger + key + entries
+			totalGas += costs.LedgerWithKeyGas
+			if len(lte.Entries) > 0 {
+				totalGas += len(lte.Entries) * costs.EntryGas
+			}
+		} else if lte.LedgerKey != nil && lte.Ledger == nil {
+			// Subsequent chunks: only entries (ledger already exists)
+			if len(lte.Entries) > 0 {
+				totalGas += len(lte.Entries) * costs.EntryGas
+			}
+		}
+	}
+	return totalGas
+}
+
+// splitChunkByCostModel splits a chunk using the cost model instead of simulation
+func (p *StreamingGenesisProcessor) splitChunkByCostModel(chunk *types.GenesisState, costs *GasCosts) []*types.GenesisState {
+	var result []*types.GenesisState
+	for _, lte := range chunk.LedgerToEntries {
+		if len(lte.Entries) > 100 {
+			splitLedgerChunks := p.splitLargeLedgerByCostModel(&lte, costs)
+			result = append(result, splitLedgerChunks...)
+		} else {
+			singleLedgerChunk := &types.GenesisState{
+				LedgerToEntries: []types.LedgerToEntries{lte},
+			}
+			estimatedGas := p.estimateChunkGasFromCosts(singleLedgerChunk, costs)
+			if estimatedGas <= p.config.MaxGasPerTx-100000 {
+				result = append(result, singleLedgerChunk)
+			} else {
+				splitLedgerChunks := p.splitLargeLedgerByCostModel(&lte, costs)
+				result = append(result, splitLedgerChunks...)
+			}
+		}
+	}
+	return result
+}
+
+// splitLargeLedgerByCostModel splits a large ledger using the cost model
+func (p *StreamingGenesisProcessor) splitLargeLedgerByCostModel(lte *types.LedgerToEntries, costs *GasCosts) []*types.GenesisState {
+	var result []*types.GenesisState
+
+	// Calculate how many entries we can fit in each chunk
+	maxGasPerChunk := p.config.MaxGasPerTx - 100000 // 100k safety margin
+	baseGas := costs.LedgerWithKeyGas
+	gasPerEntry := costs.EntryGas
+
+	// Calculate optimal entries per chunk
+	// Formula: baseGas + (entries * gasPerEntry) <= maxGasPerChunk
+	// So: entries <= (maxGasPerChunk - baseGas) / gasPerEntry
+	maxEntriesPerChunk := (maxGasPerChunk - baseGas) / gasPerEntry
+
+	// Ensure we don't have negative entries
+	if maxEntriesPerChunk <= 0 {
+		maxEntriesPerChunk = 1
+	}
+
+	p.logger.Info("Calculated optimal chunk size",
+		"max_gas_per_chunk", maxGasPerChunk,
+		"base_gas", baseGas,
+		"gas_per_entry", gasPerEntry,
+		"max_entries_per_chunk", maxEntriesPerChunk,
+		"total_entries", len(lte.Entries))
+
+	// Split entries into optimal chunks
+	for i := 0; i < len(lte.Entries); i += maxEntriesPerChunk {
+		end := i + maxEntriesPerChunk
+		if end > len(lte.Entries) {
+			end = len(lte.Entries)
+		}
+
+		chunkEntries := lte.Entries[i:end]
+		isFirstChunk := i == 0
+
+		// Only include ledger in the first chunk
+		var chunkLedger *types.Ledger
+		if isFirstChunk && lte.Ledger != nil {
+			chunkLedger = lte.Ledger
+		}
+
+		chunk := &types.GenesisState{
+			LedgerToEntries: []types.LedgerToEntries{
+				{
+					LedgerKey: lte.LedgerKey,
+					Entries:   chunkEntries,
+					Ledger:    chunkLedger,
+				},
+			},
+		}
+
+		// Verify the chunk fits within gas limits
+		estimatedGas := p.estimateChunkGasFromCosts(chunk, costs)
+		if estimatedGas > maxGasPerChunk {
+			p.logger.Warn("Chunk exceeds gas limit, reducing entries",
+				"estimated_gas", estimatedGas,
+				"max_gas", maxGasPerChunk,
+				"entries_count", len(chunkEntries))
+
+			// If we still exceed the limit, reduce entries one by one
+			for len(chunkEntries) > 1 && estimatedGas > maxGasPerChunk {
+				chunkEntries = chunkEntries[:len(chunkEntries)-1]
+				chunk.LedgerToEntries[0].Entries = chunkEntries
+				estimatedGas = p.estimateChunkGasFromCosts(chunk, costs)
+			}
+		}
+
+		result = append(result, chunk)
+
+		p.logger.Info("Created chunk",
+			"chunk_index", len(result),
+			"entries_count", len(chunkEntries),
+			"estimated_gas", p.estimateChunkGasFromCosts(chunk, costs),
+			"has_ledger", chunkLedger != nil)
+	}
+
+	return result
 }
