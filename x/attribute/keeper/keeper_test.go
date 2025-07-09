@@ -1347,22 +1347,21 @@ func (s *KeeperTestSuite) TestAttributeWithConcreteType() {
 
 			err := s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
 			if tc.expectError {
-				s.Assert().Error(err)
+				s.Assert().Error(err, "SetAttribute should return an error when expectError is true")
 				return
 			}
-			s.Assert().NoError(err)
+			s.Assert().NoError(err, "SetAttribute should not return an error when expectError is false")
 			savedAttr, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr.String(), tc.attributeName)
 			if tc.expectError {
-				s.Assert().Error(err)
+				s.Assert().Error(err, "GetAttributes should return an error when expectError is true")
 				return
 			}
-			s.Assert().NoError(err)
-			s.Assert().Equal(tc.attributeName, savedAttr[0].Name)
-			s.Assert().Equal(tc.attributeType, savedAttr[0].AttributeType)
-			s.Assert().Equal(tc.value, savedAttr[0].Value)
-			s.Assert().Equal(s.user1Addr.String(), savedAttr[0].Address)
-			s.Assert().Equal(tc.concreteType, savedAttr[0].ConcreteType)
-
+			s.Assert().NoError(err, "s.app.AttributeKeeper.GetAttributes")
+			s.Assert().Equal(tc.attributeName, savedAttr[0].Name, "Attribute Name mismatch")
+			s.Assert().Equal(tc.attributeType, savedAttr[0].AttributeType, "Attribute Type mismatch")
+			s.Assert().Equal(tc.value, savedAttr[0].Value, "Attribute Value mismatch")
+			s.Assert().Equal(s.user1Addr.String(), savedAttr[0].Address, "Attribute Address mismatch")
+			s.Assert().Equal(tc.concreteType, savedAttr[0].ConcreteType, "Attribute ConcreteType mismatch")
 		})
 	}
 }
@@ -1419,27 +1418,27 @@ func (s *KeeperTestSuite) TestValidateAttributeConcreteType() {
 	testCases := []struct {
 		name         string
 		concreteType string
-		expectValid  bool
+		expErr       string 
 	}{
 		{
 			name:         "Valid type URL",
 			concreteType: "provenance.attributes.v1.KnowYourCustomer",
-			expectValid:  true,
+			expErr:       "", // No error expected
 		},
 		{
 			name:         "Empty concrete type",
 			concreteType: "",
-			expectValid:  true,
+			expErr:       "", // No error expected
 		},
 		{
 			name:         "Maximum length",
 			concreteType: strings.Repeat("a", 200),
-			expectValid:  true,
+			expErr:       "", // No error expected
 		},
 		{
 			name:         "Exceeds maximum length",
 			concreteType: strings.Repeat("a", 201),
-			expectValid:  false,
+			expErr:       "concrete_type exceeds maximum length of 200 characters",
 		},
 	}
 
@@ -1454,10 +1453,10 @@ func (s *KeeperTestSuite) TestValidateAttributeConcreteType() {
 			}
 
 			err := attr.ValidateBasic()
-			if tc.expectValid {
-				s.Assert().NoError(err)
+			if tc.expErr == "" {
+				s.Assert().NoError(err, "Expected no error for concreteType: %q", tc.concreteType)
 			} else {
-				s.Assert().Error(err)
+				s.Assert().ErrorContains(err, tc.expErr, "Expected error message mismatch for concreteType: %q", tc.concreteType)
 			}
 		})
 	}
