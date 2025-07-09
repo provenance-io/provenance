@@ -383,7 +383,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 1, "GetAllValidators after setup")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
 		}
@@ -406,7 +406,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -443,7 +443,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -490,7 +490,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 2 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -539,7 +539,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 old unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -576,7 +576,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 empty unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
@@ -591,6 +591,14 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 // TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
 
+// Create strings with the log statements that start off the reusable upgrade functions.
+var (
+	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
+	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
+	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
+	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
+)
+
 func (s *UpgradeTestSuite) TestZomp() {
 	expInLog := []string{
 		"INF Unlocking select vesting accounts.",
@@ -602,6 +610,26 @@ func (s *UpgradeTestSuite) TestZomp() {
 		"INF Converting accounts to vesting accounts.",
 	}
 	s.AssertUpgradeHandlerLogs("zomp", expInLog, expNotInLog)
+}
+
+func (s *UpgradeTestSuite) TestAlyssum() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("alyssum", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestAlyssumRC1() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("alyssum-rc1", expInLog, nil)
 }
 
 func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {

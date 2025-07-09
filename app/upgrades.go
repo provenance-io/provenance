@@ -45,6 +45,38 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"zomp-rc1": {}, // Upgrade for v1.24.0-rc1
+	"alyssum": { // Upgrade for v1.25.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
+	"alyssum-rc1": { // Upgrade for v1.25.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
