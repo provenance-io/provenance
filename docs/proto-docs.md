@@ -273,6 +273,8 @@
     - [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse)
     - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
+    - [MsgBulkImportRequest](#provenance-ledger-v1-MsgBulkImportRequest)
+    - [MsgBulkImportResponse](#provenance-ledger-v1-MsgBulkImportResponse)
     - [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest)
     - [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse)
     - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
@@ -572,6 +574,8 @@
   
 - [provenance/registry/v1/registry.proto](#provenance_registry_v1_registry-proto)
     - [GenesisState](#provenance-registry-v1-GenesisState)
+    - [RegistryBulkUpdate](#provenance-registry-v1-RegistryBulkUpdate)
+    - [RegistryBulkUpdateEntry](#provenance-registry-v1-RegistryBulkUpdateEntry)
     - [RegistryEntry](#provenance-registry-v1-RegistryEntry)
     - [RegistryKey](#provenance-registry-v1-RegistryKey)
     - [RolesEntry](#provenance-registry-v1-RolesEntry)
@@ -4770,6 +4774,32 @@ MsgAppendResponse
 
 
 
+<a name="provenance-ledger-v1-MsgBulkImportRequest"></a>
+
+### MsgBulkImportRequest
+MsgBulkImportRequest represents a request to bulk import ledger data from genesis state
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  |  |
+| `genesis_state` | [GenesisState](#provenance-ledger-v1-GenesisState) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgBulkImportResponse"></a>
+
+### MsgBulkImportResponse
+MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state
+
+
+
+
+
+
 <a name="provenance-ledger-v1-MsgCreateLedgerClassRequest"></a>
 
 ### MsgCreateLedgerClassRequest
@@ -5042,6 +5072,7 @@ Msg defines the attribute module Msg service.
 | `AddLedgerClassStatusTypeTx` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | Add a status type to a ledger class |
 | `AddLedgerClassEntryTypeTx` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | Add an entry type to a ledger class |
 | `AddLedgerClassBucketTypeTx` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | Add a bucket type to a ledger class |
+| `BulkImportTx` | [MsgBulkImportRequest](#provenance-ledger-v1-MsgBulkImportRequest) | [MsgBulkImportResponse](#provenance-ledger-v1-MsgBulkImportResponse) | Bulk import ledger data from genesis state |
 
  <!-- end services -->
 
@@ -5852,6 +5883,12 @@ Ledger
 
 ### GenesisState
 Initial state of the ledger store.
+This structure matches the test.json format for bulk import.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | Ledgers with their entries - matches the test.json structure |
 
 
 
@@ -8615,6 +8652,37 @@ GenesisState defines the registry module's genesis state
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RegistryBulkUpdate"></a>
+
+### RegistryBulkUpdate
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [RegistryBulkUpdateEntry](#provenance-registry-v1-RegistryBulkUpdateEntry) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RegistryBulkUpdateEntry"></a>
+
+### RegistryBulkUpdateEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  |  |
+| `roles` | [RegistryRole](#provenance-registry-v1-RegistryRole) | repeated |  |
 
 
 

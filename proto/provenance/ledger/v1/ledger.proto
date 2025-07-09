@@ -23,7 +23,8 @@ message LedgerClass {
   string denom = 3 [(gogoproto.jsontag) = "denom,omitempty"];
 
   // Address of the maintainer for the ledger class
-  string maintainer_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.jsontag) = "maintainerAddress,omitempty"];
+  string maintainer_address = 4
+      [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.jsontag) = "maintainerAddress,omitempty"];
 }
 
 // LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
@@ -85,13 +86,16 @@ message Ledger {
   int32 maturity_date = 7 [(gogoproto.jsontag) = "maturityDate,omitempty"];
 
   // Day count convention for interest
-  DayCountConvention interest_day_count_convention = 8 [(gogoproto.jsontag) = "interestDayCountConvention,omitempty", (gogoproto.casttype) = "DayCountConvention"];
+  DayCountConvention interest_day_count_convention = 8
+      [(gogoproto.jsontag) = "interestDayCountConvention,omitempty", (gogoproto.casttype) = "DayCountConvention"];
 
   // Interest accrual method for interest
-  InterestAccrualMethod interest_accrual_method = 9 [(gogoproto.jsontag) = "interestAccrualMethod,omitempty", (gogoproto.casttype) = "InterestAccrualMethod"];
+  InterestAccrualMethod interest_accrual_method = 9
+      [(gogoproto.jsontag) = "interestAccrualMethod,omitempty", (gogoproto.casttype) = "InterestAccrualMethod"];
 
   // Payment frequency
-  PaymentFrequency payment_frequency = 10 [(gogoproto.jsontag) = "paymentFrequency,omitempty", (gogoproto.casttype) = "PaymentFrequency"];
+  PaymentFrequency payment_frequency = 10
+      [(gogoproto.jsontag) = "paymentFrequency,omitempty", (gogoproto.casttype) = "PaymentFrequency"];
 }
 
 // LedgerClassBucketType represents a bucket type for a ledger class
@@ -190,7 +194,7 @@ message LedgerToEntries {
 
 // Day Count Conventions used in interest calculations
 enum DayCountConvention {
-  option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_prefix)   = false;
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified day count convention.
@@ -219,7 +223,7 @@ enum DayCountConvention {
 
 // Interest Accrual Methods describing how interest is calculated over time
 enum InterestAccrualMethod {
-  option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_prefix)   = false;
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified interest accrual method.
@@ -244,12 +248,13 @@ enum InterestAccrualMethod {
   LEDGER_ACCRUAL_ANNUAL_COMPOUNDING = 6 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_ANNUAL_COMPOUNDING"];
 
   // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
-  LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING = 7 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING"];
+  LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING = 7
+      [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING"];
 }
 
 // Payment frequencies for loan repayments
 enum PaymentFrequency {
-  option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_prefix)   = false;
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified payment frequency.

@@ -228,7 +228,7 @@ message MsgAddLedgerClassBucketTypeResponse {}
 message MsgBulkImportRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  string       authority = 1;
+  string       authority     = 1;
   GenesisState genesis_state = 2;
 }
 

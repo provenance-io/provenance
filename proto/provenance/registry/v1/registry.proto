@@ -57,3 +57,12 @@ message GenesisState {
   // entries is the list of registry entries
   repeated RegistryEntry entries = 1 [(gogoproto.nullable) = false];
 }
+
+message RegistryBulkUpdate {
+  repeated RegistryBulkUpdateEntry entries = 1 [(gogoproto.nullable) = false];
+}
+
+message RegistryBulkUpdateEntry {
+  RegistryKey           key   = 1;
+  repeated RegistryRole roles = 2;
+}
