@@ -48,6 +48,9 @@ func TestStreamingGenesisProcessor(t *testing.T) {
 		totalLedgersInChunks += len(chunk.LedgerToEntries)
 	}
 	require.Equal(t, 150, totalLedgersInChunks)
+
+	// Verify that the total entries across all chunks matches the expected total
+	verifyTotalEntriesAcrossChunks(t, chunkedState, 300)
 }
 
 func TestStreamingGenesisProcessorSmallFile(t *testing.T) {
@@ -80,6 +83,9 @@ func TestStreamingGenesisProcessorSmallFile(t *testing.T) {
 	require.Equal(t, 1, chunkedState.TotalChunks)
 	require.Len(t, chunkedState.Chunks, 1)
 	require.Len(t, chunkedState.Chunks[0].LedgerToEntries, 25)
+
+	// Verify that the total entries across all chunks matches the expected total
+	verifyTotalEntriesAcrossChunks(t, chunkedState, 50)
 }
 
 func TestStreamingGenesisProcessorEmptyFile(t *testing.T) {
@@ -207,6 +213,9 @@ func TestStreamingGenesisProcessorLargeLedger(t *testing.T) {
 		}
 	}
 	require.Equal(t, 2000, totalEntriesInChunks)
+
+	// Verify that the total entries across all chunks matches the expected total
+	verifyTotalEntriesAcrossChunks(t, chunkedState, 2000)
 }
 
 func TestStreamingGenesisProcessorMixedData(t *testing.T) {
@@ -218,6 +227,13 @@ func TestStreamingGenesisProcessorMixedData(t *testing.T) {
 
 	// Create test data with mixed ledger sizes
 	testData := createTestGenesisDataMixed(10) // 10 ledgers with varying entry counts
+
+	// Calculate expected total entries
+	expectedTotalEntries := 0
+	for i := 0; i < 10; i++ {
+		entriesCount := (i % 100) + 1
+		expectedTotalEntries += entriesCount
+	}
 
 	// Write test data to file
 	encoder := json.NewEncoder(tmpFile)
@@ -235,8 +251,11 @@ func TestStreamingGenesisProcessorMixedData(t *testing.T) {
 	// Verify results
 	require.NotEmpty(t, chunkedState.ImportID)
 	require.Equal(t, 10, chunkedState.TotalLedgers)
-	require.Greater(t, chunkedState.TotalEntries, 0)
+	require.Equal(t, expectedTotalEntries, chunkedState.TotalEntries)
 	require.GreaterOrEqual(t, chunkedState.TotalChunks, 1)
+
+	// Verify that the total entries across all chunks matches the expected total
+	verifyTotalEntriesAcrossChunks(t, chunkedState, expectedTotalEntries)
 }
 
 func TestStreamingGenesisProcessorFileNotFound(t *testing.T) {
@@ -439,4 +458,17 @@ func createTestGenesisDataMixed(numLedgers int) map[string]interface{} {
 	return map[string]interface{}{
 		"ledgerToEntries": ledgerToEntries,
 	}
+}
+
+// verifyTotalEntriesAcrossChunks verifies that the total entries across all chunks matches the expected count
+func verifyTotalEntriesAcrossChunks(t *testing.T, chunkedState *ChunkedGenesisState, expectedTotalEntries int) {
+	totalEntriesInChunks := 0
+	for _, chunk := range chunkedState.Chunks {
+		for _, lte := range chunk.LedgerToEntries {
+			totalEntriesInChunks += len(lte.Entries)
+		}
+	}
+	require.Equal(t, expectedTotalEntries, totalEntriesInChunks,
+		"Total entries across chunks (%d) should match expected total (%d)",
+		totalEntriesInChunks, expectedTotalEntries)
 }
