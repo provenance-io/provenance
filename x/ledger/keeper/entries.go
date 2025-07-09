@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/ledger/helper"
+	// "github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
@@ -197,16 +197,16 @@ func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey
 
 // validateEntryDates checks if the dates are valid
 func validateEntryDates(le *types.LedgerEntry, ctx sdk.Context) error {
-	blockTimeDays := helper.DaysSinceEpoch(ctx.BlockTime().UTC())
+	// blockTimeDays := helper.DaysSinceEpoch(ctx.BlockTime().UTC())
 
-	if le.PostedDate <= 0 {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "is not a valid date")
-	}
+	// if le.PostedDate <= 0 {
+	// 	return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "is not a valid date")
+	// }
 
-	// Check if posted date is in the future
-	if le.PostedDate > blockTimeDays {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "cannot be in the future")
-	}
+	// // Check if posted date is in the future
+	// if le.PostedDate > blockTimeDays {
+	// 	return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "cannot be in the future")
+	// }
 
 	return nil
 }
@@ -214,14 +214,14 @@ func validateEntryDates(le *types.LedgerEntry, ctx sdk.Context) error {
 // validateEntryAmounts checks if the amounts are valid
 func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Check if total amount matches sum of applied amounts
-	totalApplied := math.NewInt(0)
-	for _, applied := range appliedAmounts {
-		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
-	}
+	// totalApplied := math.NewInt(0)
+	// for _, applied := range appliedAmounts {
+	// 	totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
+	// }
 
-	if !totalAmt.Equal(totalApplied) {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "total_amt", "total amount must equal sum of abs(applied amounts)")
-	}
+	// if !totalAmt.Equal(totalApplied) {
+	// 	return types.NewLedgerCodedError(types.ErrCodeInvalidField, "total_amt", "total amount must equal sum of abs(applied amounts)")
+	// }
 
 	return nil
 }
