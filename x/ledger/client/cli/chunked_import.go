@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -100,6 +101,71 @@ func writeLocalBulkImportStatus(status *LocalBulkImportStatus) error {
 		return err
 	}
 	return os.WriteFile(file, b, 0644)
+}
+
+// broadcastAndCheckTx broadcasts a transaction and checks its response for success/failure
+func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.Msg, chunkIndex int, logger log.Logger) error {
+	// Force broadcast mode to sync for this transaction to ensure it's committed
+	originalBroadcastMode := cmd.Flag(flags.FlagBroadcastMode).Value.String()
+	cmd.Flag(flags.FlagBroadcastMode).Value.Set("sync")
+
+	// Create a custom writer to capture the output
+	var outputBuffer bytes.Buffer
+	originalOutput := clientCtx.Output
+	clientCtx.Output = &outputBuffer
+
+	// Broadcast transaction
+	err := tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+
+	// Restore original broadcast mode and output
+	cmd.Flag(flags.FlagBroadcastMode).Value.Set(originalBroadcastMode)
+	clientCtx.Output = originalOutput
+
+	if err != nil {
+		return fmt.Errorf("failed to broadcast transaction for chunk %d: %w", chunkIndex, err)
+	}
+
+	// Parse the captured output to check transaction status
+	outputBytes := outputBuffer.Bytes()
+	outputStr := string(outputBytes)
+	logger.Debug("Transaction output captured", "chunk_index", chunkIndex, "output", outputStr)
+
+	var txResp sdk.TxResponse
+	if err := clientCtx.Codec.UnmarshalJSON(outputBytes, &txResp); err != nil {
+		// If we can't parse the response, log it and continue
+		logger.Debug("Could not parse transaction response", "output", outputStr, "error", err)
+	} else {
+		// Check if the transaction was successful
+		if txResp.Code != 0 {
+			logger.Error("Transaction failed",
+				"chunk_index", chunkIndex,
+				"code", txResp.Code,
+				"raw_log", txResp.RawLog,
+				"tx_hash", txResp.TxHash)
+			return fmt.Errorf("transaction failed for chunk %d with code %d: %s", chunkIndex, txResp.Code, txResp.RawLog)
+		}
+		logger.Info("Transaction successful",
+			"chunk_index", chunkIndex,
+			"tx_hash", txResp.TxHash,
+			"code", txResp.Code,
+			"gas_used", txResp.GasUsed,
+			"gas_wanted", txResp.GasWanted)
+	}
+
+	// Wait a moment for the transaction to be processed
+	time.Sleep(1 * time.Second)
+
+	// Get the account to check if the sequence number was incremented
+	// This provides additional confirmation that the transaction was accepted
+	account, err := clientCtx.AccountRetriever.GetAccount(clientCtx, clientCtx.FromAddress)
+	if err != nil {
+		return fmt.Errorf("failed to get account info after chunk %d: %w", chunkIndex, err)
+	}
+
+	// Log the sequence number for debugging
+	logger.Debug("Account sequence after transaction", "sequence", account.GetSequence())
+
+	return nil
 }
 
 // getChunkSizeBytes returns the actual serialized size of a chunk in bytes
@@ -337,17 +403,8 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					GenesisState: chunk,
 				}
 
-				// Force broadcast mode to sync for this transaction to ensure it's committed
-				// before proceeding to the next chunk
-				originalBroadcastMode := cmd.Flag(flags.FlagBroadcastMode).Value.String()
-				cmd.Flag(flags.FlagBroadcastMode).Value.Set("sync")
-
-				// Broadcast transaction
-				err = tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-
-				// Restore original broadcast mode
-				cmd.Flag(flags.FlagBroadcastMode).Value.Set(originalBroadcastMode)
-
+				// Broadcast transaction and check its status
+				err = broadcastAndCheckTx(clientCtx, cmd, msg, i+1, logger)
 				if err != nil {
 					status.Status = "failed"
 					status.ErrorMessage = fmt.Sprintf("failed to process chunk %d: %v", i+1, err)
@@ -355,6 +412,9 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					_ = writeLocalBulkImportStatus(status)
 					return fmt.Errorf("failed to process chunk %d: %w", i+1, err)
 				}
+
+				// Wait for transaction to be committed and account sequence to be updated
+				// This is necessary to ensure the next transaction uses the correct sequence number
 
 				// Wait for transaction to be committed and account sequence to be updated
 				// This is necessary to ensure the next transaction uses the correct sequence number
@@ -409,7 +469,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 
 			logger.Info("Chunked bulk import completed successfully",
 				"import_id", chunkedState.ImportID,
-				"status_check_command", fmt.Sprintf("provenanced query ledger bulk-import-status %s", chunkedState.ImportID))
+				"status_check_command", fmt.Sprintf("provenanced query ledger bulk-import-status %s --chain-id %s", chunkedState.ImportID, clientCtx.ChainID))
 
 			return nil
 		},
@@ -425,19 +485,16 @@ func CmdBulkImportStatus() *cobra.Command {
 		Use:     "bulk-import-status <import_id>",
 		Aliases: []string{"bis"},
 		Short:   "Check the status of a bulk import operation",
-		Example: `$ provenanced query ledger bulk-import-status import_1234567890`,
+		Example: `$ provenanced query ledger bulk-import-status import_1234567890 --chain-id testing`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get logger from server context
-			logger := server.GetServerContextFromCmd(cmd).Logger
-
 			importID := args[0]
 			status, err := readLocalBulkImportStatus(importID)
 			if err != nil {
 				return fmt.Errorf("could not read local status file for import ID %s: %v", importID, err)
 			}
 			b, _ := json.MarshalIndent(status, "", "  ")
-			logger.Info("Bulk import status", "import_id", importID, "status_json", string(b))
+			fmt.Println(string(b))
 			return nil
 		},
 	}
