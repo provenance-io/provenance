@@ -14,7 +14,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -271,6 +270,37 @@ func (s *UpgradeTestSuite) GetOperatorAddr(val stakingtypes.ValidatorI) sdk.ValA
 	addr, err := internalsdk.GetOperatorAddr(val)
 	s.Require().NoError(err, "GetOperatorAddr(%q)", val.GetOperator())
 	return addr
+}
+
+// addrCoins associates an address with coins.
+type addrCoins struct {
+	addr sdk.AccAddress
+	bal  sdk.Coins
+}
+
+// getAllSpendable will get the spendable balance of all known accounts (even if the account doesn't have anything in it).
+func (s *UpgradeTestSuite) getAllSpendable() []addrCoins {
+	var rv []addrCoins
+	err := s.app.AccountKeeper.Accounts.Walk(s.ctx, nil, func(addr sdk.AccAddress, _ sdk.AccountI) (stop bool, err error) {
+		bal := s.app.BankKeeper.SpendableCoins(s.ctx, addr)
+		rv = append(rv, addrCoins{addr: addr, bal: bal})
+		return false, nil
+	})
+	s.Require().NoError(err, "error walking accounts to get all balances")
+	return rv
+}
+
+// assertAllSpendable will assert that each of the accounts has the correct spendable balance.
+// Returns true if all spendable balances are as expected.
+func (s *UpgradeTestSuite) assertAllSpendable(expBals []addrCoins) bool {
+	ok := true
+	for i, exp := range expBals {
+		s.Run(fmt.Sprintf("%d: %s", i, exp.addr), func() {
+			act := s.app.BankKeeper.SpendableCoins(s.ctx, exp.addr)
+			ok = s.Assert().Equal(exp.bal.String(), act.String(), "SpendableCoins") && ok
+		})
+	}
+	return ok
 }
 
 func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
@@ -589,7 +619,278 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
-// TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
+func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase() {
+	stakeCoins := func(amt int64) sdk.Coins {
+		return sdk.Coins{sdk.NewInt64Coin("stake", amt)}
+	}
+
+	pivotTime := time.Date(2020, 4, 20, 16, 20, 0, 0, time.UTC).UTC()
+	reallyOldTime := time.Date(1999, 12, 31, 59, 59, 59, 999999999, time.UTC).UTC()
+	now := pivotTime.Unix()
+	thePast := pivotTime.Add(time.Hour * 24 * -100).Unix()
+	oneDayAgo := pivotTime.Add(time.Hour * -24).Unix()
+	oneSecAgo := pivotTime.Add(time.Second * -1).Unix()
+	oneSecFromNow := pivotTime.Add(time.Second).Unix()
+	theFuture := pivotTime.Add(time.Hour * 24 * 1000).Unix()
+
+	// newContinuousVestingAccount returns an acctSetup func for creating a continuous vesting account.
+	newContinuousVestingAccount := func(origVest sdk.Coins, startTime, endTime int64) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewContinuousVestingAccount(acct, origVest, startTime, endTime)
+		}
+	}
+
+	// newDelayedVestingAccount returns an acctSetup func for creating a delayed vesting account.
+	newDelayedVestingAccount := func(origVest sdk.Coins, endTime int64) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewDelayedVestingAccount(acct, origVest, endTime)
+		}
+	}
+
+	// newPeriodicVestingAccount returns an acctSetup func for creating a periodic vesting account.
+	newPeriodicVestingAccount := func(origVest sdk.Coins, startTime int64, periods vesting.Periods) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewPeriodicVestingAccount(acct, origVest, startTime, periods)
+		}
+	}
+
+	// newPermanentLockedAccount returns an acctSetup func for creating a permanent locked account.
+	newPermanentLockedAccount := func(origVest sdk.Coins) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewPermanentLockedAccount(acct, origVest)
+		}
+	}
+
+	tests := []*struct {
+		name      string
+		noPK      bool
+		seq       uint64
+		expConv   bool
+		acctSetup func(baseAcct *authtypes.BaseAccount) (sdk.AccountI, error)
+		addr      sdk.AccAddress
+		baseAcct  *authtypes.BaseAccount
+		origAcct  sdk.AccountI
+		expAcct   sdk.AccountI
+	}{
+		{name: "base account: no pubkey, no sequence", noPK: true, seq: 0},
+		{name: "base account: no pubkey, with sequence", noPK: true, seq: 5},
+		{name: "base account: with pubkey, no sequence", noPK: false, seq: 0},
+		{name: "base account: with pubkey, with sequence", noPK: false, seq: 12},
+		{name: "fee_collector module account", addr: authtypes.NewModuleAddress("fee_collector")},
+		{
+			name: "permanent locked: no pubkey, no sequence",
+			noPK: true, seq: 0,
+			acctSetup: newPermanentLockedAccount(stakeCoins(500000)),
+		},
+		{
+			name: "permanent locked: no pubkey, with sequence",
+			noPK: true, seq: 41,
+			acctSetup: newPermanentLockedAccount(stakeCoins(700000)),
+		},
+		{
+			name: "permanent locked: with pubkey, no sequence",
+			noPK: false, seq: 0,
+			acctSetup: newPermanentLockedAccount(stakeCoins(300000)),
+		},
+		{
+			name: "permanent locked: with pubkey, with sequence",
+			noPK: false, seq: 83,
+			acctSetup: newPermanentLockedAccount(stakeCoins(400000)),
+		},
+		{
+			name: "continuous vesting: finished 1 second ago",
+			seq:  177, expConv: true,
+			acctSetup: newContinuousVestingAccount(stakeCoins(800000), thePast, oneSecAgo),
+		},
+		{
+			name: "continuous vesting: finishes now",
+			seq:  212, expConv: true,
+			acctSetup: newContinuousVestingAccount(stakeCoins(700000), thePast, now),
+		},
+		{
+			name: "continuous vesting: already started, not finished",
+			seq:  41, expConv: false,
+			acctSetup: newContinuousVestingAccount(stakeCoins(600000), thePast, oneSecFromNow),
+		},
+		{
+			name: "continuous vesting: not started yet",
+			seq:  18918, expConv: false,
+			acctSetup: newContinuousVestingAccount(stakeCoins(850000), oneSecFromNow, theFuture),
+		},
+		{
+			name: "delayed vesting: finished 1 second ago",
+			seq:  71, expConv: true,
+			acctSetup: newDelayedVestingAccount(stakeCoins(870000), oneSecAgo),
+		},
+		{
+			name: "delayed vesting: finishes now",
+			noPK: true, seq: 661, expConv: true,
+			acctSetup: newDelayedVestingAccount(stakeCoins(870070), now),
+		},
+		{
+			name: "delayed vesting: finishes in 1 second",
+			seq:  661, expConv: false,
+			acctSetup: newDelayedVestingAccount(stakeCoins(840000), oneSecFromNow),
+		},
+		{
+			name: "periodic vesting: no periods finished",
+			seq:  5551, expConv: false,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500000), thePast, []vesting.Period{
+				{Length: oneSecFromNow - thePast, Amount: stakeCoins(100000)},
+				{Length: theFuture - oneSecFromNow, Amount: stakeCoins(400000)},
+			}),
+		},
+		{
+			name: "periodic vesting: first of two periods finishes now",
+			seq:  3412, expConv: false,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500500), thePast, []vesting.Period{
+				{Length: now - thePast, Amount: stakeCoins(100400)},
+				{Length: theFuture - now, Amount: stakeCoins(400100)},
+			}),
+		},
+		{
+			name: "periodic vesting: finishes in 1 second",
+			seq:  1255, expConv: false,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500050), thePast, []vesting.Period{
+				{Length: oneDayAgo - thePast, Amount: stakeCoins(100040)},
+				{Length: oneSecFromNow - oneDayAgo, Amount: stakeCoins(400010)},
+			}),
+		},
+		{
+			name: "periodic vesting: finishes now",
+			seq:  9811, expConv: true,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500050), thePast, []vesting.Period{
+				{Length: oneDayAgo - thePast, Amount: stakeCoins(100040)},
+				{Length: now - oneDayAgo, Amount: stakeCoins(400010)},
+			}),
+		},
+		{
+			name: "periodic vesting: finished 1 second ago",
+			seq:  7111, expConv: true,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(505000), thePast, []vesting.Period{
+				{Length: oneDayAgo - thePast, Amount: stakeCoins(102000)},
+				{Length: oneSecAgo - oneDayAgo, Amount: stakeCoins(403000)},
+			}),
+		},
+	}
+
+	// Set up all the tests cases. Set the addr, baseAcct, origAcct, and expAcct fields, creating the accounts as needed.
+	acctBalance := stakeCoins(1000000)
+	expConvCount := 0
+	setupOK := s.Run("account setup", func() {
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				if len(tc.addr) > 0 {
+					tc.origAcct = s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+					// Not doing anything with tc.baseAcct since it shouldn't be needed for this case.
+					tc.expAcct = tc.origAcct
+					return
+				}
+
+				privKey := secp256k1.GenPrivKey()
+				pubKey := privKey.PubKey()
+				tc.addr = sdk.AccAddress(pubKey.Address())
+				err := testutil.FundAccount(s.ctx, s.app.BankKeeper, tc.addr, acctBalance)
+				s.LogIfError(err, "FundAccount(..., %q)", acctBalance.String())
+
+				tc.origAcct = s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+				if !tc.noPK {
+					err = tc.origAcct.SetPubKey(pubKey)
+					s.Require().NoError(err, "acctI.SetPubKey(pubKey)")
+				}
+
+				s.Require().IsType(tc.baseAcct, tc.origAcct, "origAcct after funding")
+				tc.baseAcct = tc.origAcct.(*authtypes.BaseAccount)
+				tc.baseAcct.Sequence = tc.seq
+
+				if tc.acctSetup == nil {
+					tc.origAcct = tc.baseAcct
+				} else {
+					tc.origAcct, err = tc.acctSetup(tc.baseAcct)
+					s.Require().NoError(err, "tc.acctSetup(...)")
+				}
+
+				s.app.AccountKeeper.SetAccount(s.ctx, tc.origAcct)
+
+				tc.expAcct = tc.origAcct
+				if tc.expConv {
+					expConvCount++
+					tc.expAcct = tc.baseAcct
+				}
+			})
+		}
+
+		s.Require().NotZero(expConvCount, "count of accounts expected to be converted.")
+	})
+
+	var err error
+	runner := func() {
+		err = convertFinishedVestingAccountsToBase(s.ctx, s.app)
+	}
+
+	s.Run("no accounts to convert", func() {
+		if !setupOK {
+			s.T().Skip("Skipping due to problem with setup.")
+		}
+		origCtx := s.ctx
+		defer func() {
+			s.ctx = origCtx
+		}()
+		s.ctx = s.ctx.WithBlockTime(reallyOldTime)
+
+		expBals := s.getAllSpendable()
+
+		expInLog := []string{
+			LogMsgConvertFinishedVestingAccountsToBase,
+			"INF No completed vesting accounts found.",
+			"INF Done converting completed vesting accounts into base accounts.",
+		}
+		s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "convertFinishedVestingAccountsToBase")
+		s.Require().NoError(err, "convertFinishedVestingAccountsToBase")
+
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				acct := s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+				s.Require().NotNil(acct, "GetAccount(%q)", tc.addr.String())
+				// Should still be the original since nothing was converted.
+				s.Assert().Equal(tc.origAcct, acct, "GetAccount(%q) result", tc.addr.String())
+			})
+		}
+
+		s.assertAllSpendable(expBals)
+	})
+
+	s.Run("with accounts to convert", func() {
+		if !setupOK {
+			s.T().Skip("Skipping due to problem with setup.")
+		}
+		origCtx := s.ctx
+		defer func() {
+			s.ctx = origCtx
+		}()
+		s.ctx = s.ctx.WithBlockTime(pivotTime)
+
+		expBals := s.getAllSpendable()
+
+		expInLog := []string{
+			LogMsgConvertFinishedVestingAccountsToBase,
+			fmt.Sprintf("INF Found %d completed vesting accounts. Updating them now.", expConvCount),
+			"INF Done converting completed vesting accounts into base accounts.",
+		}
+		s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "convertFinishedVestingAccountsToBase")
+		s.Assert().NoError(err, "convertFinishedVestingAccountsToBase")
+
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				acct := s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+				s.Require().NotNil(acct, "GetAccount(%q)", tc.addr.String())
+				s.Assert().Equal(tc.expAcct, acct, "GetAccount(%q) result", tc.addr.String())
+			})
+		}
+
+		s.assertAllSpendable(expBals)
+	})
+}
 
 // Create strings with the log statements that start off the reusable upgrade functions.
 var (
