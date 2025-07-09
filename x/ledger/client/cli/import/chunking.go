@@ -41,25 +41,39 @@ func (p *StreamingGenesisProcessor) optimizeChunksWithCosts(gasCosts *GasCosts) 
 
 	p.logger.Info("Starting chunk optimization", "input_chunks", inputChunkCount)
 
+	// Log progress every 10 chunks to avoid excessive logging
+	logProgressEvery := 10
+	if inputChunkCount > 100 {
+		logProgressEvery = 50 // Less frequent logging for very large datasets
+	}
+
 	for i, chunk := range p.chunks {
 		// Estimate gas for this chunk using our cost model
 		estimatedGas := estimateChunkGasFromCosts(chunk, gasCosts)
 
-		p.logger.Info("Processing chunk for optimization",
-			"chunk_index", i+1,
-			"ledger_count", len(chunk.LedgerToEntries),
-			"estimated_gas", estimatedGas,
-			"max_gas", p.config.MaxGasPerTx-100000)
+		// Only log detailed info for every Nth chunk or when splitting is needed
+		shouldLogDetails := (i+1)%logProgressEvery == 0 || estimatedGas > p.config.MaxGasPerTx-100000
+
+		if shouldLogDetails {
+			p.logger.Info("Processing chunk for optimization",
+				"chunk_index", i+1,
+				"ledger_count", len(chunk.LedgerToEntries),
+				"estimated_gas", estimatedGas,
+				"max_gas", p.config.MaxGasPerTx-100000)
+		}
 
 		// If the chunk fits within gas limits, keep it as-is
 		if estimatedGas <= p.config.MaxGasPerTx-100000 {
 			optimizedChunks = append(optimizedChunks, chunk)
-			p.logger.Info("Chunk fits within gas limits, keeping as-is")
+			if shouldLogDetails {
+				p.logger.Info("Chunk fits within gas limits, keeping as-is")
+			}
 			continue
 		}
 
 		// If the chunk is too large, split it into smaller chunks
 		p.logger.Info("Chunk exceeds gas limit, splitting into smaller chunks",
+			"chunk_index", i+1,
 			"estimated_gas", estimatedGas,
 			"max_gas", p.config.MaxGasPerTx-100000,
 			"ledger_count", len(chunk.LedgerToEntries))
@@ -193,12 +207,10 @@ func (p *StreamingGenesisProcessor) splitLargeLedgerByCostModel(lte *types.Ledge
 		maxEntriesPerChunk = 1
 	}
 
-	p.logger.Info("Calculated optimal chunk size",
-		"max_gas_per_chunk", maxGasPerChunk,
-		"base_gas", baseGas,
-		"gas_per_entry", gasPerEntry,
+	p.logger.Info("Splitting large ledger",
+		"total_entries", len(lte.Entries),
 		"max_entries_per_chunk", maxEntriesPerChunk,
-		"total_entries", len(lte.Entries))
+		"estimated_chunks", (len(lte.Entries)+maxEntriesPerChunk-1)/maxEntriesPerChunk)
 
 	// Split entries into optimal chunks
 	for i := 0; i < len(lte.Entries); i += maxEntriesPerChunk {
@@ -244,12 +256,20 @@ func (p *StreamingGenesisProcessor) splitLargeLedgerByCostModel(lte *types.Ledge
 
 		result = append(result, chunk)
 
-		p.logger.Info("Created chunk",
-			"chunk_index", len(result),
-			"entries_count", len(chunkEntries),
-			"estimated_gas", estimateChunkGasFromCosts(chunk, costs),
-			"has_ledger", chunkLedger != nil)
+		// Only log for first and last chunks, or every 10th chunk for very large ledgers
+		shouldLog := len(result) == 1 || i+maxEntriesPerChunk >= len(lte.Entries) || len(result)%10 == 0
+		if shouldLog {
+			p.logger.Info("Created split chunk",
+				"chunk_index", len(result),
+				"entries_count", len(chunkEntries),
+				"estimated_gas", estimateChunkGasFromCosts(chunk, costs),
+				"has_ledger", chunkLedger != nil)
+		}
 	}
+
+	p.logger.Info("Finished splitting large ledger",
+		"total_chunks_created", len(result),
+		"total_entries", len(lte.Entries))
 
 	return result
 }

@@ -477,13 +477,22 @@ func (p *StreamingChunkProcessor) skipValue(decoder *json.Decoder) error {
 
 // ProcessFile processes a genesis file using streaming JSON parsing
 func (p *StreamingGenesisProcessor) ProcessFile(filename string) (*ChunkedGenesisState, error) {
-	return p.ProcessFileFromCorrelationID(filename, "")
+	p.logger.Debug("Starting ProcessFile", "filename", filename)
+	result, err := p.ProcessFileFromCorrelationID(filename, "")
+	if err != nil {
+		p.logger.Error("ProcessFile failed", "error", err)
+	} else {
+		p.logger.Debug("Finished ProcessFile", "filename", filename, "total_chunks", result.TotalChunks, "total_ledgers", result.TotalLedgers, "total_entries", result.TotalEntries)
+	}
+	return result, err
 }
 
 // ProcessFileFromCorrelationID processes a genesis file starting from a specific correlation ID
 func (p *StreamingGenesisProcessor) ProcessFileFromCorrelationID(filename string, startFromCorrelationID string) (*ChunkedGenesisState, error) {
+	p.logger.Debug("Opening file for processing", "filename", filename)
 	file, err := os.Open(filename)
 	if err != nil {
+		p.logger.Error("Failed to open file", "filename", filename, "error", err)
 		return nil, fmt.Errorf("failed to open genesis state file: %w", err)
 	}
 	defer file.Close()
@@ -491,6 +500,7 @@ func (p *StreamingGenesisProcessor) ProcessFileFromCorrelationID(filename string
 	// Get file size for progress reporting
 	fileInfo, err := file.Stat()
 	if err != nil {
+		p.logger.Error("Failed to get file info", "filename", filename, "error", err)
 		return nil, fmt.Errorf("failed to get file info: %w", err)
 	}
 
@@ -503,11 +513,14 @@ func (p *StreamingGenesisProcessor) ProcessFileFromCorrelationID(filename string
 	// Use buffered reader for efficient reading
 	reader := bufio.NewReader(file)
 
+	p.logger.Debug("Starting parseStreamingJSON")
 	// Parse the JSON structure using streaming
 	err = p.parseStreamingJSON(reader, startFromCorrelationID)
 	if err != nil {
+		p.logger.Error("parseStreamingJSON failed", "error", err)
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
+	p.logger.Debug("Finished parseStreamingJSON", "total_chunks", len(p.chunks), "total_ledgers", p.stats.TotalLedgers, "total_entries", p.stats.TotalEntries)
 
 	// Generate import ID
 	importID := generateImportID()
@@ -589,15 +602,18 @@ func (p *StreamingGenesisProcessor) ProcessFileWithLimit(filename string, maxChu
 
 // parseStreamingJSON parses the JSON file using a streaming approach
 func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader, startFromCorrelationID string) error {
+	p.logger.Debug("parseStreamingJSON: begin")
 	decoder := json.NewDecoder(reader)
 
 	// Expect the root object
 	token, err := decoder.Token()
 	if err != nil {
+		p.logger.Error("parseStreamingJSON: failed to read root token", "error", err)
 		return fmt.Errorf("failed to read JSON token: %w", err)
 	}
 
 	if delim, ok := token.(json.Delim); !ok || delim != '{' {
+		p.logger.Error("parseStreamingJSON: expected root object", "token", token)
 		return fmt.Errorf("expected JSON object, got %v", token)
 	}
 
@@ -605,22 +621,29 @@ func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader, sta
 	for decoder.More() {
 		token, err := decoder.Token()
 		if err != nil {
+			p.logger.Error("parseStreamingJSON: failed to read field name", "error", err)
 			return fmt.Errorf("failed to read field name: %w", err)
 		}
 
 		fieldName, ok := token.(string)
 		if !ok {
+			p.logger.Error("parseStreamingJSON: expected field name string", "token", token)
 			return fmt.Errorf("expected field name, got %v", token)
 		}
 
+		p.logger.Debug("parseStreamingJSON: found field", "field", fieldName)
+
 		if fieldName == "ledgerToEntries" || fieldName == "ledger_to_entries" {
+			p.logger.Debug("parseStreamingJSON: parsing ledgerToEntries array")
 			err = p.parseLedgerToEntriesArray(decoder, startFromCorrelationID)
 			if err != nil {
+				p.logger.Error("parseStreamingJSON: failed to parse ledgerToEntries", "error", err)
 				return fmt.Errorf("failed to parse ledgerToEntries: %w", err)
 			}
 		} else {
 			// Skip unknown fields
 			if err := p.skipValue(decoder); err != nil {
+				p.logger.Error("parseStreamingJSON: failed to skip field", "field", fieldName, "error", err)
 				return fmt.Errorf("failed to skip field %s: %w", fieldName, err)
 			}
 		}
@@ -629,25 +652,31 @@ func (p *StreamingGenesisProcessor) parseStreamingJSON(reader *bufio.Reader, sta
 	// Expect closing brace
 	token, err = decoder.Token()
 	if err != nil {
+		p.logger.Error("parseStreamingJSON: failed to read closing brace", "error", err)
 		return fmt.Errorf("failed to read closing brace: %w", err)
 	}
 
 	if delim, ok := token.(json.Delim); !ok || delim != '}' {
+		p.logger.Error("parseStreamingJSON: expected closing brace", "token", token)
 		return fmt.Errorf("expected closing brace, got %v", token)
 	}
 
+	p.logger.Debug("parseStreamingJSON: end")
 	return nil
 }
 
 // parseLedgerToEntriesArray parses the ledgerToEntries array
 func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Decoder, startFromCorrelationID string) error {
+	p.logger.Debug("parseLedgerToEntriesArray: begin")
 	// Expect array start
 	token, err := decoder.Token()
 	if err != nil {
+		p.logger.Error("parseLedgerToEntriesArray: failed to read array start", "error", err)
 		return fmt.Errorf("failed to read array start: %w", err)
 	}
 
 	if delim, ok := token.(json.Delim); !ok || delim != '[' {
+		p.logger.Error("parseLedgerToEntriesArray: expected array start", "token", token)
 		return fmt.Errorf("expected array start, got %v", token)
 	}
 
@@ -659,15 +688,20 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 	skipUntilFound := startFromCorrelationID != ""
 	foundStartCorrelationID := false
 
+	ledgerCount := 0
+	entryCount := 0
+
 	// Process each ledger entry
 	for decoder.More() {
 		var lte types.LedgerToEntries
 		if err := decoder.Decode(&lte); err != nil {
+			p.logger.Error("parseLedgerToEntriesArray: failed to decode LedgerToEntries", "error", err, "ledger_count", ledgerCount)
 			return fmt.Errorf("failed to decode LedgerToEntries: %w", err)
 		}
 
 		// Validate the ledger entry
 		if err := p.validateLedgerToEntries(&lte); err != nil {
+			p.logger.Error("parseLedgerToEntriesArray: validation failed", "error", err, "ledger_count", ledgerCount)
 			return fmt.Errorf("validation failed: %w", err)
 		}
 
@@ -718,6 +752,7 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 
 			// Add the current chunk to chunks list
 			p.chunks = append(p.chunks, currentChunk)
+			p.logger.Debug("parseLedgerToEntriesArray: created chunk", "chunk_index", len(p.chunks), "chunk_size_bytes", chunkSize, "ledger_count", ledgerCount, "entry_count", entryCount)
 
 			// Start a new chunk with the current entry
 			currentChunk = &types.GenesisState{
@@ -726,28 +761,39 @@ func (p *StreamingGenesisProcessor) parseLedgerToEntriesArray(decoder *json.Deco
 		}
 
 		p.stats.TotalLedgers++
+		ledgerCount++
 
 		// Count entries
 		if lte.Entries != nil {
 			p.stats.TotalEntries += len(lte.Entries)
+			entryCount += len(lte.Entries)
+		}
+
+		// Periodic progress log
+		if ledgerCount%1000 == 0 {
+			p.logger.Debug("parseLedgerToEntriesArray: progress", "ledger_count", ledgerCount, "entry_count", entryCount, "chunks", len(p.chunks))
 		}
 	}
 
 	// Add the final chunk if it has data
 	if len(currentChunk.LedgerToEntries) > 0 {
 		p.chunks = append(p.chunks, currentChunk)
+		p.logger.Debug("parseLedgerToEntriesArray: final chunk added", "chunk_index", len(p.chunks), "ledger_count", ledgerCount, "entry_count", entryCount)
 	}
 
 	// Expect array end
 	token, err = decoder.Token()
 	if err != nil {
+		p.logger.Error("parseLedgerToEntriesArray: failed to read array end", "error", err)
 		return fmt.Errorf("failed to read array end: %w", err)
 	}
 
 	if delim, ok := token.(json.Delim); !ok || delim != ']' {
+		p.logger.Error("parseLedgerToEntriesArray: expected array end", "token", token)
 		return fmt.Errorf("expected array end, got %v", token)
 	}
 
+	p.logger.Debug("parseLedgerToEntriesArray: end", "total_ledgers", ledgerCount, "total_entries", entryCount, "total_chunks", len(p.chunks))
 	return nil
 }
 

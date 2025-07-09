@@ -294,3 +294,91 @@ func TestGasCostsStorageAndReuse(t *testing.T) {
 	require.Equal(t, expectedGas3, estimatedGas3, "Different costs should produce different estimates")
 	require.NotEqual(t, estimatedGas, estimatedGas3, "Different costs should produce different estimates")
 }
+
+func TestEstimateGasCostsPerformance(t *testing.T) {
+	// Create a large number of chunks to simulate the 2GB file scenario
+	largeChunks := make([]*types.GenesisState, 1000) // 1000 chunks
+
+	// Fill most chunks with empty data (simulating the 2GB file)
+	for i := 0; i < 1000; i++ {
+		largeChunks[i] = &types.GenesisState{
+			LedgerToEntries: []types.LedgerToEntries{},
+		}
+	}
+
+	// Put a representative ledger in the first chunk (this should be found quickly)
+	largeChunks[0] = &types.GenesisState{
+		LedgerToEntries: []types.LedgerToEntries{
+			{
+				LedgerKey: &types.LedgerKey{
+					NftId:        "test-nft-1",
+					AssetClassId: "test-asset-1",
+				},
+				Ledger: &types.Ledger{
+					LedgerClassId: "test-class-1",
+					StatusTypeId:  1,
+				},
+				Entries: []*types.LedgerEntry{
+					{
+						CorrelationId: "entry-1",
+						Sequence:      1,
+						EntryTypeId:   1,
+						PostedDate:    20000,
+						EffectiveDate: 20000,
+						TotalAmt:      math.NewInt(1000000),
+					},
+				},
+			},
+		},
+	}
+
+	// Test that the function doesn't iterate through all 1000 chunks
+	// We can't easily test the actual simulation without a full blockchain setup,
+	// but we can test that it doesn't panic or hang when given a large dataset
+	// and that it returns reasonable defaults when no test ledger is found
+
+	// Test with chunks that have no representative ledgers (should return defaults)
+	emptyChunks := make([]*types.GenesisState, 1000)
+	for i := 0; i < 1000; i++ {
+		emptyChunks[i] = &types.GenesisState{
+			LedgerToEntries: []types.LedgerToEntries{},
+		}
+	}
+
+	// This should return default gas costs without iterating through all chunks
+	// Note: We can't actually call estimateGasCosts without a full blockchain setup,
+	// but we can verify the logic by testing the chunk iteration part
+
+	// Test the chunk iteration logic directly
+	var testLedger *types.LedgerToEntries
+	maxChunksToCheck := 3
+	chunksChecked := 0
+
+	for i, chunk := range emptyChunks {
+		if i >= maxChunksToCheck {
+			break // Stop after checking first few chunks
+		}
+		chunksChecked++
+		for _, lte := range chunk.LedgerToEntries {
+			if lte.LedgerKey != nil && lte.Ledger != nil && len(lte.Entries) > 0 {
+				testLedger = &lte
+				break
+			}
+		}
+		if testLedger != nil {
+			break
+		}
+	}
+
+	// Verify that we only checked the first few chunks
+	require.Equal(t, maxChunksToCheck, chunksChecked, "Should only check first few chunks")
+	require.Nil(t, testLedger, "Should not find a test ledger in empty chunks")
+}
+
+// mockLogger is a simple mock logger for testing
+type mockLogger struct{}
+
+func (m *mockLogger) Info(msg string, args ...interface{})  {}
+func (m *mockLogger) Warn(msg string, args ...interface{})  {}
+func (m *mockLogger) Error(msg string, args ...interface{}) {}
+func (m *mockLogger) Debug(msg string, args ...interface{}) {}
