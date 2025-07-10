@@ -886,7 +886,6 @@
 
 ### MsgExecuteContract
 
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
@@ -4927,7 +4926,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
-| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute.<br>Optional. Max 200 characters. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 

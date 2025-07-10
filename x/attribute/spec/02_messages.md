@@ -38,7 +38,8 @@ message MsgAddAttributeRequest {
   // Time that an attribute will expire.
   google.protobuf.Timestamp expiration_date = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
   // Concrete_type defines the specific type of data for PROTO or JSON attribute.
-  string concrete_type = 7; // Optional. Max 200 characters.
+  // Optional. Max 200 characters.
+  string concrete_type = 7;
 }
 ```
 

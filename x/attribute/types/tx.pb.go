@@ -50,6 +50,7 @@ type MsgAddAttributeRequest struct {
 	// Time that an attribute will expire.
 	ExpirationDate *time.Time `protobuf:"bytes,6,opt,name=expiration_date,json=expirationDate,proto3,stdtime" json:"expiration_date,omitempty"`
 	// concrete_type defines the specific type of data for PROTO or JSON attribute.
+	// Optional. Max 200 characters.
 	ConcreteType string `protobuf:"bytes,7,opt,name=concrete_type,json=concreteType,proto3" json:"concrete_type,omitempty"`
 }
 
