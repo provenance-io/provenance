@@ -466,13 +466,80 @@ func (s *TestSuite) TestKeeper_getSpendableForDenoms() {
 		bk    *MockBankKeeper
 		exp   sdk.Coins
 	}{
-		// one coin, nothing locked, no balance
-		// one coin, some locked, no balance
-		// one coin, nothing locked, some balance
-		// one coin, some locked, same balance
-		// one coin, some locked, less balance
-		// one coin, some locked, more balance
-		// three coins, all with balances: none locked, some locked, all locked.
+		{
+			name:  "one coin, nothing locked, no balance",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			exp:   nil,
+		},
+		{
+			name:  "one coin, some locked, no balance",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk:    NewMockBankKeeper().WithLocked(s.addr1, s.coins("3apple")),
+			exp:   nil,
+		},
+		{
+			name:  "one coin, nothing locked, some balance",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk:    NewMockBankKeeper().WithBalance(s.addr1, s.coins("4apple")),
+			exp:   s.coins("4apple"),
+		},
+		{
+			name:  "one coin, some locked, same balance",
+			addr:  s.addr2,
+			funds: s.coins("1banana"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr2, s.coins("99banana")).
+				WithLocked(s.addr2, s.coins("99banana")),
+			exp: nil,
+		},
+		{
+			name:  "one coin, some locked, less balance",
+			addr:  s.addr2,
+			funds: s.coins("1banana"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr2, s.coins("97banana")).
+				WithLocked(s.addr2, s.coins("99banana")),
+			exp: nil,
+		},
+		{
+			name:  "one coin, some locked, more balance",
+			addr:  s.addr2,
+			funds: s.coins("1banana"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr2, s.coins("99banana")).
+				WithLocked(s.addr2, s.coins("41banana")),
+			exp: s.coins("58banana"),
+		},
+		{
+			name:  "one coin, one balance, two others locked",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr1, s.coins("351apple")).
+				WithLocked(s.addr1, s.coins("12apricot,18banana")),
+			exp: s.coins("351apple"),
+		},
+		{
+			name:  "one coin, one balance, some locked with others locked",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr1, s.coins("76apple")).
+				WithLocked(s.addr1, s.coins("42apple,18banana")),
+			exp: s.coins("34apple"),
+		},
+		{
+			name:  "three coins, all with balances: none locked, some locked, all locked.",
+			addr:  s.addr3,
+			funds: s.coins("1apple,1banana,1cherry"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr3, s.coins("16apple,71banana,4000cherry")).
+				WithLocked(s.addr3, s.coins("12apricot,18banana,4000cherry")),
+			exp: s.coins("16apple,53banana"),
+		},
 	}
 
 	for _, tc := range tests {
