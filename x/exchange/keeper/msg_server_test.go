@@ -3727,7 +3727,7 @@ func (s *TestSuite) TestMsgServer_MarketTransferCommitments() {
 			},
 		},
 		{
-			name: "insufficent fund to transfer",
+			name: "insufficient fund to transfer",
 			setup: func() {
 				s.requireFundAccount(s.addr2, "100apple")
 				s.requireCreateMarket(exchange.Market{
