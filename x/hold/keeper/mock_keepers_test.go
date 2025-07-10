@@ -15,19 +15,28 @@ import (
 var _ hold.BankKeeper = (*MockBankKeeper)(nil)
 
 type MockBankKeeper struct {
-	// Spendable is a map of sdk.AccAddress (cast to string) to
-	// what the result of SpendableCoins should be for it.
-	Spendable map[string]sdk.Coins
+	// Locked is a map of sdk.AccAddress (cast to string) to
+	// what the result of LockedCoins should be for it.
+	Locked map[string]sdk.Coins
+	// Balance is a map of sdk.AccAddress (cast to string) to
+	// what the result of GetBalance should be for it.
+	Balance map[string]sdk.Coins
 }
 
 func NewMockBankKeeper() *MockBankKeeper {
 	return &MockBankKeeper{
-		Spendable: make(map[string]sdk.Coins),
+		Locked:  make(map[string]sdk.Coins),
+		Balance: make(map[string]sdk.Coins),
 	}
 }
 
-func (k *MockBankKeeper) WithSpendable(addr sdk.AccAddress, amount sdk.Coins) *MockBankKeeper {
-	k.Spendable[string(addr)] = amount
+func (k *MockBankKeeper) WithLocked(addr sdk.AccAddress, amount sdk.Coins) *MockBankKeeper {
+	k.Locked[string(addr)] = amount
+	return k
+}
+
+func (k *MockBankKeeper) WithBalance(addr sdk.AccAddress, amount sdk.Coins) *MockBankKeeper {
+	k.Balance[string(addr)] = amount
 	return k
 }
 
@@ -35,8 +44,12 @@ func (k *MockBankKeeper) AppendLockedCoinsGetter(_ banktypes.GetLockedCoinsFn) {
 	// Do nothing.
 }
 
-func (k *MockBankKeeper) SpendableCoins(_ context.Context, addr sdk.AccAddress) sdk.Coins {
-	return k.Spendable[string(addr)]
+func (k *MockBankKeeper) LockedCoins(_ context.Context, addr sdk.AccAddress) sdk.Coins {
+	return k.Locked[string(addr)]
+}
+
+func (k *MockBankKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	return sdk.Coin{Denom: denom, Amount: k.Balance[string(addr)].AmountOf(denom)}
 }
 
 type MockAccountKeeper struct {

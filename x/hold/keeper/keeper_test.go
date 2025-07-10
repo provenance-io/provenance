@@ -445,7 +445,7 @@ func (s *TestSuite) TestKeeper_ValidateNewHold() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			bk := NewMockBankKeeper().WithSpendable(tc.addr, tc.spendable)
+			bk := NewMockBankKeeper().WithBalance(tc.addr, tc.spendable)
 			k := s.app.HoldKeeper.WithBankKeeper(bk)
 
 			var err error
@@ -457,6 +457,8 @@ func (s *TestSuite) TestKeeper_ValidateNewHold() {
 		})
 	}
 }
+
+// TODO: func (s *TestSuite) TestKeeper_getSpendableForDenoms() {}
 
 func (s *TestSuite) TestKeeper_AddHold() {
 	store := s.getStore()
@@ -641,7 +643,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			if len(tc.expErr) > 0 {
 				tc.expErr = append(tc.expErr, tc.addr.String())
 			}
-			bk := NewMockBankKeeper().WithSpendable(tc.addr, tc.spendBal)
+			bk := NewMockBankKeeper().WithBalance(tc.addr, tc.spendBal)
 			k := s.keeper.WithBankKeeper(bk)
 
 			em := sdk.NewEventManager()
