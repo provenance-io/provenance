@@ -210,19 +210,17 @@ func TestNewMultiAuthorization(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Run(tt.name, func(t *testing.T) {
-				ma, err := NewMultiAuthorization(tt.msgType, tt.auths...)
-				require.NoError(t, err, "NewMultiAuthorization should not fail on packing")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ma, err := NewMultiAuthorization(tc.msgType, tc.auths...)
+			require.NoError(t, err, "NewMultiAuthorization should not fail on packing")
 
-				err = ma.ValidateBasic()
-				if tt.expectErr {
-					require.Error(t, err, "ValidateBasic")
-				} else {
-					require.NoError(t, err, "ValidateBasic")
-				}
-			})
+			err = ma.ValidateBasic()
+			if tc.expectErr {
+				require.Error(t, err, "ValidateBasic")
+			} else {
+				require.NoError(t, err, "ValidateBasic")
+			}
 		})
 	}
 }
@@ -546,7 +544,7 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 			expResp: authz.AcceptResponse{Accept: false},
 		},
 		{
-			name: "three: not accept first",
+			name: "three: not accept second",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
 				newAny(newMockAuthorization().ToAccept()),
 				newAny(newMockAuthorization()),
