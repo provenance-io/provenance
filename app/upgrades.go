@@ -297,6 +297,10 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 // getMainnetUnlocks gets a list of mainnet addresses to unlock.
 func getMainnetUnlocks() []sdk.AccAddress {
 	addrs := []string{
+		"pb15yfx2r9sxjzgrcdghvt8me9vvt540w4kg25mehwlcjm4jq2m2hmsh6af7z",
+		"pb14t3me36m9gpkdwpyczgevctlt6trdq46dugccdnrlu92n9eee0ss5k65tq",
+		"pb1e2fhljv44saqmewp6j6ra0y94e8vzfs9a9r4aq",
+		"pb1rkml5878l2daw3a7xvg48wqecnh9u9dn2dtl8g57rsctq5pnc00s9ej3xw",
 		"pb1npzfcx3qrtxnwuqxqnzufmk777nj6k4568t5n3",
 		"pb1y6hl64k2u5khyex5fzk5ss5nj5dqrxacvxvha6",
 		"pb13l7duyn5wn3tvuv08rkl8azee38s3xwp3x36rr",
@@ -305,7 +309,6 @@ func getMainnetUnlocks() []sdk.AccAddress {
 		"pb1lermz6u6r7cjw4khamdxhddw8h2n4u4fsemx3t",
 		"pb1v0mjw2802n898gmhaceumltn2l4kdnsgtptezk",
 		"pb1m65lmxsrs5fdpley5frqaa55rfrl7c2e2dj507",
-		"pb14t3me36m9gpkdwpyczgevctlt6trdq46dugccdnrlu92n9eee0ss5k65tq",
 	}
 
 	rv := make([]sdk.AccAddress, 0, len(addrs))
