@@ -584,6 +584,7 @@
   
 - [provenance/marker/v1/authz.proto](#provenance_marker_v1_authz-proto)
     - [MarkerTransferAuthorization](#provenance-marker-v1-MarkerTransferAuthorization)
+    - [MultiAuthorization](#provenance-marker-v1-MultiAuthorization)
   
 - [provenance/marker/v1/genesis.proto](#provenance_marker_v1_genesis-proto)
     - [DenySendAddress](#provenance-marker-v1-DenySendAddress)
@@ -8619,6 +8620,20 @@ a marker transfer on behalf of the granter's account.
 
 
 
+
+
+
+<a name="provenance-marker-v1-MultiAuthorization"></a>
+
+### MultiAuthorization
+MultiAuthorization lets you combine several authorizations.
+All sub-authorizations must accept the message for it to be allowed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | The message type this authorization is for. |
+| `sub_authorizations` | [google.protobuf.Any](#google-protobuf-any) | repeated | A list of sub-authorizations that must all accept the message. Requires between 2 and 10 individual authorizations.|
 
 
  <!-- end messages -->
