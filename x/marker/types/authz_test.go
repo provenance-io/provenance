@@ -212,12 +212,17 @@ func TestNewMultiAuthorization(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewMultiAuthorization(tt.msgType, tt.auths...)
-			if tt.expectErr {
-				require.Error(t, err, "NewMultiAuthorization")
-			} else {
-				require.NoError(t, err, "NewMultiAuthorization")
-			}
+			t.Run(tt.name, func(t *testing.T) {
+				ma, err := NewMultiAuthorization(tt.msgType, tt.auths...)
+				require.NoError(t, err, "NewMultiAuthorization should not fail on packing")
+
+				err = ma.ValidateBasic()
+				if tt.expectErr {
+					require.Error(t, err, "ValidateBasic")
+				} else {
+					require.NoError(t, err, "ValidateBasic")
+				}
+			})
 		})
 	}
 }

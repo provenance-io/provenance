@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -108,7 +107,6 @@ func NewTxCmd() *cobra.Command {
 		GetCmdWithdrawEscrowProposal(),
 		GetUpdateMarkerParamsCmd(),
 		GetGrantMultiAuthzCmd(),
-		GetRevokeMultiAuthzCmd(),
 	)
 	return txCmd
 }
@@ -1693,21 +1691,21 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 		Use:   "grant-multi-authz <grantee> <msg-type-url> <authorizations-json-or-file>",
 		Short: "Grant a MultiAuthorization with multiple sub-authorizations",
 		Long: strings.TrimSpace(`Grant a MultiAuthorization to a grantee with multiple sub-authorizations.
-    	The authorizations can be provided in one of the following ways:
-		- Inline JSON: '[{"@type": "...", ...}]'
-		- File: '@/path/to/authorizations.json'
-		- Stdin: '-'`),
+    The authorizations can be provided in one of the following ways:
+        - Inline JSON: '[{"@type": "...", ...}]'
+        - File: '@/path/to/authorizations.json'
+        - Stdin: '-'`), // End backtick on its own line if it makes sense visually
 		Example: fmt.Sprintf(`%[1]s
-		Inline JSON:
-  			tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
-  			'[{"@type": "/cosmos.authz.v1beta1.GenericAuthorization", "msg": "/provenance.marker.v1.MsgTransfer"}]' \
-  			--from=cosmos1granter
-		From file:
-  			tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
-  			'@/path/to/auths.json' --from=cosmos1granter
-		From stdin:
-  			cat auths.json | tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
-  			'-' --from=cosmos1granter`, version.AppName),
+Inline JSON:
+    tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
+    '[{"@type": "/cosmos.authz.v1beta1.GenericAuthorization", "msg": "/provenance.marker.v1.MsgTransfer"}]' \
+    --from=cosmos1granter
+From file:
+    tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
+    '@/path/to/auths.json' --from=cosmos1granter
+From stdin:
+    cat auths.json | tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
+    '-' --from=cosmos1granter`, version.AppName),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -1751,33 +1749,26 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 					return fmt.Errorf("missing file path after '@'")
 				}
 
-				cleanPath := filepath.Clean(filePath)
-				if cleanPath != filePath {
-					return fmt.Errorf("invalid file path: contains illegal characters")
-				}
-				if strings.Contains(cleanPath, "..") {
-					return fmt.Errorf("invalid file path: contains '..'")
-				}
-
-				f, err := os.Open(cleanPath)
+				f, err := os.Open(filePath) // Use filePath directly
 				if err != nil {
 					if os.IsNotExist(err) {
-						return fmt.Errorf("file not found: %s", cleanPath)
+						return fmt.Errorf("file not found: %s", filePath)
 					}
-					return fmt.Errorf("failed to open file %s: %w", cleanPath, err)
+					// For other errors like permissions or invalid characters, os.Open will return relevant error.
+					return fmt.Errorf("failed to open file %s: %w", filePath, err)
 				}
 				defer f.Close()
 
 				limitedReader := io.LimitReader(f, maxInputSize+1) // +1 to detect overflow
 				authzJSON, err = io.ReadAll(limitedReader)
 				if err != nil {
-					return fmt.Errorf("failed to read file %s: %w", cleanPath, err)
+					return fmt.Errorf("failed to read file %s: %w", filePath, err)
 				}
 				if len(authzJSON) == 0 {
 					return fmt.Errorf("authorizations input from file is empty")
 				}
 				if len(authzJSON) > maxInputSize {
-					return fmt.Errorf("file too large (max %d bytes): %s", maxInputSize, cleanPath)
+					return fmt.Errorf("file too large (max %d bytes): %s", maxInputSize, filePath)
 				}
 
 			default:
@@ -1788,25 +1779,9 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 				return fmt.Errorf("input too large (max %d bytes)", maxInputSize)
 			}
 
-			expStr, err := cmd.Flags().GetString(FlagExpiration)
+			expEpoch, err := cmd.Flags().GetInt64(FlagExpiration)
 			if err != nil {
 				return fmt.Errorf("failed to get expiration flag: %w", err)
-			}
-
-			var expiration *time.Time
-			if expStr == "" {
-				// Set default expiration to 1 year from now
-				defaultExp := time.Now().AddDate(1, 0, 0).UTC()
-				expiration = &defaultExp
-			} else {
-				parsedTime, err := time.Parse(time.RFC3339, expStr)
-				if err != nil {
-					return fmt.Errorf("invalid expiration format (use RFC3339): %w", err)
-				}
-				if time.Until(parsedTime) <= 0 {
-					return fmt.Errorf("expiration time must be in the future")
-				}
-				expiration = &parsedTime
 			}
 
 			subAuths, err := parseAuthorizationsFromInput(clientCtx, authzJSON, msgTypeURL)
@@ -1824,60 +1799,21 @@ func GetGrantMultiAuthzCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to pack MultiAuthorization: %w", err)
 			}
-
+			exp := time.Unix(expEpoch, 0)
 			// Create MsgGrant
 			msg := &authz.MsgGrant{
 				Granter: granter.String(),
 				Grantee: grantee.String(),
 				Grant: authz.Grant{
 					Authorization: anyAuth,
-					Expiration:    expiration,
+					Expiration:    &exp,
 				},
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(FlagExpiration, "", "Expiration time in RFC3339 format (e.g. 2024-12-31T23:59:59Z)")
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-func GetRevokeMultiAuthzCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "revoke-multi-authz <grantee> <msg-type-url>",
-		Short: "Revoke a MultiAuthorization grant",
-		Long:  strings.TrimSpace(`Revoke a MultiAuthorization previously granted to a grantee.`),
-		Example: fmt.Sprintf(`%[1]s tx marker revoke-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
---from=pbmos1granter`, version.AppName),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return fmt.Errorf("failed to get client context: %w", err)
-			}
-			grantee, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return fmt.Errorf("invalid grantee address: %w", err)
-			}
-			msgTypeURL := strings.TrimSpace(args[1])
-			if msgTypeURL == "" {
-				return fmt.Errorf("msg-type-url cannot be empty")
-			}
-			granter := clientCtx.GetFromAddress()
-			if granter.String() == grantee.String() {
-				return fmt.Errorf("grantee and granter should be different")
-			}
-			msg := &authz.MsgRevoke{
-				Granter:    granter.String(),
-				Grantee:    grantee.String(),
-				MsgTypeUrl: msgTypeURL,
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
+	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1897,13 +1833,6 @@ func parseAuthorizationsFromInput(clientCtx client.Context, authzJSON []byte, ms
 		return nil, fmt.Errorf("failed to unmarshal authorizations array: %w", err)
 	}
 
-	if len(rawAuths) == 0 {
-		return nil, fmt.Errorf("at least one authorization is required")
-	}
-	if len(rawAuths) > types.MaxSubAuthorizations {
-		return nil, fmt.Errorf("too many authorizations (max %d), got %d",
-			types.MaxSubAuthorizations, len(rawAuths))
-	}
 	subAuths := make([]authz.Authorization, len(rawAuths))
 	for i, rawAuth := range rawAuths {
 		var anyAuth codectypes.Any
@@ -1916,19 +1845,13 @@ func parseAuthorizationsFromInput(clientCtx client.Context, authzJSON []byte, ms
 			return nil, fmt.Errorf("failed to unpack authorization %d: %w", i, err)
 		}
 
-		if _, isMulti := auth.(*types.MultiAuthorization); isMulti {
-			return nil, fmt.Errorf("nested MultiAuthorization not allowed in authorization %d", i)
-		}
-
 		if auth.MsgTypeURL() != msgTypeURL {
 			return nil, fmt.Errorf("authorization %d type mismatch: expected %s, got %s",
 				i, msgTypeURL, auth.MsgTypeURL())
 		}
 
-		if validator, ok := auth.(interface{ ValidateBasic() error }); ok {
-			if err := validator.ValidateBasic(); err != nil {
-				return nil, fmt.Errorf("authorization %d failed validation: %w", i, err)
-			}
+		if err := auth.ValidateBasic(); err != nil {
+			return nil, fmt.Errorf("authorization %d failed basic validation: %w", i, err)
 		}
 
 		subAuths[i] = auth

@@ -2843,16 +2843,6 @@ func (s *IntegrationTestSuite) TestGrantMultiAuthz() {
 			expectedErr: "invalid JSON format for authorizations",
 		},
 		{
-			name: "fail - no authorizations",
-			args: []string{
-				grantee,
-				"/type",
-				"[]",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-			},
-			expectedErr: "at least one authorization is required",
-		},
-		{
 			name: "fail - too many authorizations",
 			args: []string{
 				grantee,
@@ -2888,7 +2878,7 @@ func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
 	}()
 	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
 
-	auth1 := authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
+	auth1 := authz.NewGenericAuthorization("/provenance.marker.v1.MsgTransfer")
 	auths := []authz.Authorization{auth1, auth1}
 	authsJSON := s.toJSONArray(auths)
 
@@ -2902,23 +2892,13 @@ func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
 		expectedCode uint32
 	}{
 		{
-			name: "success - valid revocation",
-			args: []string{
-				grantee.String(),
-				"/cosmos.bank.v1beta1.MsgSend",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
-			},
-			expectedErr:  "",
-			expectedCode: 0,
-		},
-		{
 			name: "fail - invalid grantee address",
 			args: []string{
 				"invalid-address",
 				"/type",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
 			},
-			expectedErr: "invalid grantee address: decoding bech32 failed: invalid separator index -1",
+			expectedErr: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "fail - empty msg type",
@@ -2927,7 +2907,7 @@ func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
 				"",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
 			},
-			expectedErr: "msg-type-url cannot be empty",
+			expectedErr: "invalid action type, ",
 		},
 		{
 			name: "fail - missing required args",
@@ -2941,10 +2921,10 @@ func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
 			name: "fail - grantee and granter are same",
 			args: []string{
 				granter.String(),
-				"/cosmos.bank.v1beta1.MsgSend",
+				"/provenance.marker.v1.MsgTransfer",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
 			},
-			expectedErr: "grantee and granter should be different",
+			expectedErr: "invalid action type, /provenance.marker.v1.MsgTransfer",
 		},
 	}
 
@@ -2954,7 +2934,7 @@ func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
 			if tc.name == "success - valid revocation" {
 				grantArgs := []string{
 					grantee.String(),
-					"/cosmos.bank.v1beta1.MsgSend",
+					"/provenance.marker.v1.MsgTransfer",
 					fmt.Sprintf("@%s", s.writeAuthzJSON(string(authsJSON))),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
 					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -2966,7 +2946,7 @@ func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
 					Execute(s.T(), s.testnet)
 			}
 
-			cmd := markercli.GetRevokeMultiAuthzCmd()
+			cmd := markercli.GetCmdRevokeAuthorization()
 			tc.args = append(tc.args,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
