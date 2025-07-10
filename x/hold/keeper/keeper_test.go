@@ -458,7 +458,39 @@ func (s *TestSuite) TestKeeper_ValidateNewHold() {
 	}
 }
 
-// TODO: func (s *TestSuite) TestKeeper_getSpendableForDenoms() {}
+func (s *TestSuite) TestKeeper_getSpendableForDenoms() {
+	tests := []struct {
+		name  string
+		addr  sdk.AccAddress
+		funds sdk.Coins
+		bk    *MockBankKeeper
+		exp   sdk.Coins
+	}{
+		// one coin, nothing locked, no balance
+		// one coin, some locked, no balance
+		// one coin, nothing locked, some balance
+		// one coin, some locked, same balance
+		// one coin, some locked, less balance
+		// one coin, some locked, more balance
+		// three coins, all with balances: none locked, some locked, all locked.
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.bk == nil {
+				tc.bk = NewMockBankKeeper()
+			}
+			kpr := s.keeper.WithBankKeeper(tc.bk)
+
+			var act sdk.Coins
+			testFunc := func() {
+				act = kpr.GetSpendableForDenoms(s.ctx, tc.addr, tc.funds)
+			}
+			s.Require().NotPanics(testFunc, "getSpendableForDenoms")
+			s.Assert().Equal(tc.exp.String(), act.String(), "getSpendableForDenoms result")
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_AddHold() {
 	store := s.getStore()
