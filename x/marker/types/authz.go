@@ -2,6 +2,8 @@ package types
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -158,7 +160,7 @@ func (m MultiAuthorization) MsgTypeURL() string {
 // Accept implements Authorization.Accept.
 func (m MultiAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	if m.MsgTypeURL() != sdk.MsgTypeURL(msg) {
-		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("message type mismatch")
+		return authz.AcceptResponse{}, errors.New("message type mismatch")
 	}
 
 	anyDeleteRequested := false
@@ -167,41 +169,33 @@ func (m MultiAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 
 	for i, anyAuth := range m.SubAuthorizations {
 		if anyAuth == nil {
-			return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d is nil", i)
+			return authz.AcceptResponse{}, fmt.Errorf("sub-authorization %d is nil", i)
 		}
 
 		auth, ok := anyAuth.GetCachedValue().(authz.Authorization)
 		if !ok || auth == nil {
-			return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %d not unpacked", i)
+			return authz.AcceptResponse{}, fmt.Errorf("sub-authorization %d not unpacked", i)
 		}
 		resp, err := auth.Accept(ctx, msg)
 		if err != nil {
-			return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf("sub-authorization %s failed", err)
+			return authz.AcceptResponse{}, fmt.Errorf("sub-authorization %d was not accepted: %w", i, err)
 		}
+
+		// If any sub-authorization is not accepted, the whole thing is not accepted and there's nothing more to do.
 		if !resp.Accept {
 			return authz.AcceptResponse{Accept: false}, nil
 		}
+
 		// If any sub-authorization requests delete, mark for full deletion
 		if resp.Delete {
 			anyDeleteRequested = true
 		}
-		if resp.Updated != nil {
-			// Validate updated authorization
-			if resp.Updated.MsgTypeURL() != m.MsgTypeUrl {
-				return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf(
-					"sub-authorization %d updated to wrong message type: expected %s, got %s",
-					i, m.MsgTypeUrl, resp.Updated.MsgTypeURL(),
-				)
-			}
-			if _, isMulti := resp.Updated.(*MultiAuthorization); isMulti {
-				return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrapf(
-					"nested MultiAuthorization not allowed in update for sub-authorization %d", i,
-				)
-			}
 
+		// If the sub-authorization needs to be updated, we need to update it in this multi-authorization.
+		if resp.Updated != nil {
 			updatedAny, err := codectypes.NewAnyWithValue(resp.Updated)
 			if err != nil {
-				return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrapf("failed to pack updated sub-authorization %s", err)
+				return authz.AcceptResponse{}, fmt.Errorf("failed to pack updated sub-authorization %w", err)
 			}
 			updatedAuths[i] = updatedAny
 			anyUpdates = true
@@ -211,7 +205,7 @@ func (m MultiAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 	}
 
 	rv := authz.AcceptResponse{Accept: true, Delete: anyDeleteRequested}
-	if anyUpdates {
+	if anyUpdates && !anyDeleteRequested {
 		rv.Updated = &MultiAuthorization{MsgTypeUrl: m.MsgTypeUrl, SubAuthorizations: updatedAuths}
 	}
 	return rv, nil
