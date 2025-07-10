@@ -33,6 +33,7 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 		msg.AttributeType,
 		msg.Value,
 		msg.ExpirationDate,
+		msg.ConcreteType,
 	)
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -81,6 +82,7 @@ func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAt
 		Name:          msg.Name,
 		AttributeType: msg.OriginalAttributeType,
 		Value:         msg.OriginalValue,
+		ConcreteType:  msg.ConcreteType,
 	}
 
 	updateAttribute := types.Attribute{
@@ -88,6 +90,7 @@ func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAt
 		Name:          msg.Name,
 		AttributeType: msg.UpdateAttributeType,
 		Value:         msg.UpdateValue,
+		ConcreteType:  msg.ConcreteType,
 	}
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
