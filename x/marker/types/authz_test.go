@@ -280,9 +280,16 @@ func (a *mockAuthorization) WasCalled() *mockAuthorization {
 }
 
 // ToAccept sets this mockAuthorization up to the provided error from Accept.
-func (a *mockAuthorization) WithError(err string) *mockAuthorization {
+func (a *mockAuthorization) WithAcceptError(err string) *mockAuthorization {
 	a.RespErr = err
 	return a
+}
+
+// AsAny returns this mockAuthorization as an Any requiring the wrapping to succeed.
+func (a *mockAuthorization) AsAny(t *testing.T) *codectypes.Any {
+	rv, err := codectypes.NewAnyWithValue(a)
+	require.NoError(t, err, "NewAnyWithValue(%#v)", a)
+	return rv
 }
 
 // Accept just returns everything it was defined to return.
@@ -325,11 +332,6 @@ func (a *mockAuthorization) String() string {
 func (a *mockAuthorization) ProtoMessage() {}
 
 func TestMultiAuthorizationAccept(t *testing.T) {
-	newAny := func(v proto.Message) *codectypes.Any {
-		rv, err := codectypes.NewAnyWithValue(v)
-		require.NoError(t, err, "NewAnyWithValue(%#v)", v)
-		return rv
-	}
 	newMultiAuthz := func(msgTypeURL string, subAuths ...*codectypes.Any) *MultiAuthorization {
 		return &MultiAuthorization{
 			MsgTypeUrl:        msgTypeURL,
@@ -354,8 +356,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "wrong msg type",
 			multiAuthz: newMultiAuthz(msgSendTypeURL+"2",
-				newAny(newMockAuthorization()),
-				newAny(newMockAuthorization()),
+				newMockAuthorization().AsAny(t),
+				newMockAuthorization().AsAny(t),
 			),
 			msg:     msgSend,
 			expErr:  "message type mismatch",
@@ -364,7 +366,7 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "nil first sub-auth",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				nil, newAny(newMockAuthorization())),
+				nil, newMockAuthorization().AsAny(t)),
 			msg:     msgSend,
 			expErr:  "sub-authorization 0 is nil",
 			expResp: authz.AcceptResponse{},
@@ -372,7 +374,7 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "nil second sub-auth",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()), nil),
+				newMockAuthorization().ToAccept().AsAny(t), nil),
 			msg:     msgSend,
 			expErr:  "sub-authorization 1 is nil",
 			expResp: authz.AcceptResponse{},
@@ -380,8 +382,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "error from first accept",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().WithError("no-accepty")),
-				newAny(newMockAuthorization()),
+				newMockAuthorization().WithAcceptError("no-accepty").AsAny(t),
+				newMockAuthorization().AsAny(t),
 			),
 			msg:     msgSend,
 			expErr:  "sub-authorization 0 was not accepted: no-accepty",
@@ -390,8 +392,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "error from second accept",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().WithError("what-now-this-time")),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().WithAcceptError("what-now-this-time").AsAny(t),
 			),
 			msg:     msgSend,
 			expErr:  "sub-authorization 1 was not accepted: what-now-this-time",
@@ -400,8 +402,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: not accept first",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: false},
@@ -409,8 +411,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: not accept second",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: false},
@@ -418,8 +420,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: both accept",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true},
@@ -427,8 +429,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: delete from first",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -436,8 +438,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: delete from second",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -445,8 +447,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: delete from both",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -454,8 +456,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: delete then not accept",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
-				newAny(newMockAuthorization()),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
+				newMockAuthorization().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: false},
@@ -463,8 +465,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: not accept then delete",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization()),
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
+				newMockAuthorization().AsAny(t),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: false},
@@ -472,8 +474,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: delete then update",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -481,8 +483,8 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: update then delete",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -490,55 +492,55 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "two: update from first",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg: msgSend,
 			expResp: authz.AcceptResponse{
 				Accept: true,
 				Updated: newMultiAuthz(msgSendTypeURL,
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
 				),
 			},
 		},
 		{
 			name: "two: update from second",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
 			),
 			msg: msgSend,
 			expResp: authz.AcceptResponse{
 				Accept: true,
 				Updated: newMultiAuthz(msgSendTypeURL,
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
 				),
 			},
 		},
 		{
 			name: "two: update from both",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
 			),
 			msg: msgSend,
 			expResp: authz.AcceptResponse{
 				Accept: true,
 				Updated: newMultiAuthz(msgSendTypeURL,
 					// We don't use WasCalled() on this first one since it's not marked for update.
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
 				),
 			},
 		},
 		{
 			name: "three: not accept first",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization()),
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: false},
@@ -546,9 +548,9 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "three: not accept second",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: false},
@@ -556,9 +558,9 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "three: not accept third",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: false},
@@ -566,9 +568,9 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "three: all accept",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true},
@@ -576,77 +578,77 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "three: update from first",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg: msgSend,
 			expResp: authz.AcceptResponse{
 				Accept: true,
 				Updated: newMultiAuthz(msgSendTypeURL,
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
 				),
 			},
 		},
 		{
 			name: "three: update from second",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg: msgSend,
 			expResp: authz.AcceptResponse{
 				Accept: true,
 				Updated: newMultiAuthz(msgSendTypeURL,
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
 				),
 			},
 		},
 		{
 			name: "three: update from third",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
 			),
 			msg: msgSend,
 			expResp: authz.AcceptResponse{
 				Accept: true,
 				Updated: newMultiAuthz(msgSendTypeURL,
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
 				),
 			},
 		},
 		{
 			name: "three: update from all",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
 			),
 			msg: msgSend,
 			expResp: authz.AcceptResponse{
 				Accept: true,
 				Updated: newMultiAuthz(msgSendTypeURL,
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
-					newAny(newMockAuthorization().ToAccept().ToUpdate().WasCalled()),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
+					newMockAuthorization().ToAccept().ToUpdate().WasCalled().AsAny(t),
 				),
 			},
 		},
 		{
 			name: "three: delete from first",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -654,9 +656,9 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "three: delete from second",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
-				newAny(newMockAuthorization().ToAccept()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -664,9 +666,9 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "three: delete from third",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept()),
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().AsAny(t),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
@@ -674,9 +676,9 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 		{
 			name: "three: update from first and second, delete from third",
 			multiAuthz: newMultiAuthz(msgSendTypeURL,
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept().ToUpdate()),
-				newAny(newMockAuthorization().ToAccept().ToDelete()),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().ToUpdate().AsAny(t),
+				newMockAuthorization().ToAccept().ToDelete().AsAny(t),
 			),
 			msg:     msgSend,
 			expResp: authz.AcceptResponse{Accept: true, Delete: true},
