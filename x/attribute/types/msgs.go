@@ -36,9 +36,6 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	if len(msg.ConcreteType) > 200 {
-		return fmt.Errorf("concrete_type exceeds maximum length of 200 characters")
-	}
 	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value, msg.ExpirationDate, msg.ConcreteType)
 	return a.ValidateBasic()
 }

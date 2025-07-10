@@ -55,7 +55,7 @@ func NewAddAccountAttributeCmd() *cobra.Command {
 Refer to %s tx name bind --help for more information on how to do this.`, version.AppName),
 		Args: cobra.RangeArgs(4, 5),
 		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"
-		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z provenance.attributes.v1.TestJSON`, version.AppName, version.AppName),
+		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" --concrete-type provenance.attributes.v1.TestJSON`, version.AppName, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -109,7 +109,7 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value>",
 		Aliases: []string{"u"},
 		Short:   "Update an account attribute on the provenance blockchain",
-		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100 provenance.attributes.v1.TestJSON`, version.AppName),
+		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100 --concrete-type provenance.attributes.v1.TestJSON`, version.AppName),
 		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -343,7 +343,7 @@ func NewUpdateParamsCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid max value length: %w", err)
 			}
-			maxValueLength32 := uint32(maxValueLength) //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+			maxValueLength32 := uint32(maxValueLength)
 			msg := types.NewMsgUpdateParamsRequest(authority, maxValueLength32)
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},

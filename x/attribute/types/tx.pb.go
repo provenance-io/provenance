@@ -190,6 +190,7 @@ type MsgUpdateAttributeRequest struct {
 	// The address that the name must resolve to.
 	Owner string `protobuf:"bytes,7,opt,name=owner,proto3" json:"owner,omitempty"`
 	// concrete_type defines the specific type of data for PROTO or JSON attribute.
+	// Optional. Max 200 characters.
 	ConcreteType string `protobuf:"bytes,8,opt,name=concrete_type,json=concreteType,proto3" json:"concrete_type,omitempty"`
 }
 

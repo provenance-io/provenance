@@ -79,7 +79,8 @@ message MsgUpdateAttributeRequest {
   // The address that the name must resolve to.
   string owner = 7;
   // Concrete_type defines the specific type of data for PROTO or JSON attribute.
-  string concrete_type = 8; // Optional. Max 200 characters.
+  // Optional. Max 200 characters.
+  string concrete_type = 8;
 }
 ```
 
