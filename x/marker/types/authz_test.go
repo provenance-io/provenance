@@ -235,6 +235,8 @@ type mockAuthorization struct {
 	RespDelete  bool
 	RespUpdated bool
 	RespErr     string
+
+	VBErr string
 }
 
 var _ authz.Authorization = (*mockAuthorization)(nil)
@@ -242,6 +244,11 @@ var _ authz.Authorization = (*mockAuthorization)(nil)
 // newMockAuthorization creates a new mock authorization.
 func newMockAuthorization() *mockAuthorization {
 	return &mockAuthorization{}
+}
+
+// newMockAuthorizationFor creates a new mock authorization with the given msgTypeURL.
+func newMockAuthorizationFor(msgTypeURL string) *mockAuthorization {
+	return &mockAuthorization{msgTypeURL: msgTypeURL}
 }
 
 // ToAccept sets this mockAuthorization up to return Accept = true in the accept response.
@@ -285,11 +292,14 @@ func (a *mockAuthorization) WithAcceptError(err string) *mockAuthorization {
 	return a
 }
 
+func (a *mockAuthorization) WithValidateBasicError(err string) *mockAuthorization {
+	a.VBErr = err
+	return a
+}
+
 // AsAny returns this mockAuthorization as an Any requiring the wrapping to succeed.
 func (a *mockAuthorization) AsAny(t *testing.T) *codectypes.Any {
-	rv, err := codectypes.NewAnyWithValue(a)
-	require.NoError(t, err, "NewAnyWithValue(%#v)", a)
-	return rv
+	return asAny(t, a)
 }
 
 // Accept just returns everything it was defined to return.
@@ -314,8 +324,11 @@ func (a *mockAuthorization) MsgTypeURL() string {
 	return a.msgTypeURL
 }
 
-// ValidateBasic returns nil. Satisfies the authz.Authorization interface.
+// ValidateBasic returns the mocked VBErr. Satisfies the authz.Authorization interface.
 func (a *mockAuthorization) ValidateBasic() error {
+	if len(a.VBErr) > 0 {
+		return errors.New(a.VBErr)
+	}
 	return nil
 }
 
@@ -331,7 +344,14 @@ func (a *mockAuthorization) String() string {
 // ProtoMessage does nothing. Satisfies the authz.Authorization interface.
 func (a *mockAuthorization) ProtoMessage() {}
 
-func TestMultiAuthorizationAccept(t *testing.T) {
+// asAny will wrap the provided v in an Any, requiring no errors.
+func asAny(t *testing.T, v proto.Message) *codectypes.Any {
+	rv, err := codectypes.NewAnyWithValue(v)
+	require.NoError(t, err, "NewAnyWithValue(%#v)", v)
+	return rv
+}
+
+func TestMultiAuthorization_Accept(t *testing.T) {
 	newMultiAuthz := func(msgTypeURL string, subAuths ...*codectypes.Any) *MultiAuthorization {
 		return &MultiAuthorization{
 			MsgTypeUrl:        msgTypeURL,
@@ -720,26 +740,259 @@ func TestMultiAuthorizationAccept(t *testing.T) {
 	}
 }
 
-func TestMultiAuthorizationValidateBasic(t *testing.T) {
-	msgTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
-
-	auth1 := &authz.GenericAuthorization{Msg: msgTypeURL}
-	auth2 := &authz.GenericAuthorization{Msg: msgTypeURL}
-
-	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
-	require.NoError(t, err, "NewMultiAuthorization")
-
-	err = multiAuth.ValidateBasic()
-	require.NoError(t, err, "ValidateBasic")
-
-	// Test invalid
-	invalidAuth := &MultiAuthorization{
-		MsgTypeUrl:        "",
-		SubAuthorizations: []*codectypes.Any{},
+func TestMultiAuthorization_ValidateBasic(t *testing.T) {
+	newMultiAuthz := func(msgTypeURL string, subAuths ...*codectypes.Any) *MultiAuthorization {
+		return &MultiAuthorization{
+			MsgTypeUrl:        msgTypeURL,
+			SubAuthorizations: subAuths,
+		}
 	}
 
-	err = invalidAuth.ValidateBasic()
-	require.Error(t, err, "invalidAuth.ValidateBasic()")
+	msgTypeURL1 := "/provenance.marker.v1.MsgMintRequest"
+	msgTypeURL2 := "/provenance.marker.v1.MsgBurnRequest"
+
+	mockAny := newMockAuthorization().AsAny(t)
+	anyWithEmptyTypeURL := &codectypes.Any{TypeUrl: "", Value: mockAny.Value}
+	anyWithoutCachedValue := &codectypes.Any{TypeUrl: mockAny.TypeUrl, Value: mockAny.Value}
+	anyNotAuth := asAny(t, &MsgAddMarkerRequest{})
+	anyMulti := asAny(t, newMultiAuthz(msgTypeURL1,
+		newMockAuthorization().ToAccept().AsAny(t),
+		newMockAuthorization().ToAccept().AsAny(t),
+	))
+
+	tests := []struct {
+		name   string
+		ma     *MultiAuthorization
+		expErr string
+	}{
+		{
+			name:   "no msgTypeURL",
+			ma:     newMultiAuthz("", newMockAuthorization().AsAny(t), newMockAuthorization().AsAny(t)),
+			expErr: "message type URL cannot be empty: invalid request",
+		},
+		{
+			name:   "one sub-auth",
+			ma:     newMultiAuthz(msgTypeURL1, newMockAuthorizationFor(msgTypeURL1).AsAny(t)),
+			expErr: "must have at least 2 sub-authorizations, got 1: invalid request",
+		},
+		{
+			name: "eleven sub-auths",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "cannot have more than 10 sub-authorizations, got 11: invalid request",
+		},
+		{
+			name: "nil 1st sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				nil,
+				newMockAuthorization().WithMsgTypeURL(msgTypeURL1).AsAny(t),
+				newMockAuthorization().WithMsgTypeURL(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 0 is nil: invalid request",
+		},
+		{
+			name: "nil 2nd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorization().WithMsgTypeURL(msgTypeURL1).AsAny(t),
+				nil,
+				newMockAuthorization().WithMsgTypeURL(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 1 is nil: invalid request",
+		},
+		{
+			name: "nil 3rd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				nil,
+			),
+			expErr: "sub-authorization 2 is nil: invalid request",
+		},
+		{
+			name: "empty any type url in 1st sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				anyWithEmptyTypeURL,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 0 has empty type URL: invalid request",
+		},
+		{
+			name: "empty any type url in 2nd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyWithEmptyTypeURL,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 1 has empty type URL: invalid request",
+		},
+		{
+			name: "empty any type url in 3rd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyWithEmptyTypeURL,
+			),
+			expErr: "sub-authorization 2 has empty type URL: invalid request",
+		},
+		{
+			name: "no cached value in 1st sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				anyWithoutCachedValue,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 0 has not been unpacked: invalid type",
+		},
+		{
+			name: "no cached value in 2nd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyWithoutCachedValue,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 1 has not been unpacked: invalid type",
+		},
+		{
+			name: "no cached value in 3rd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyWithoutCachedValue,
+			),
+			expErr: "sub-authorization 2 has not been unpacked: invalid type",
+		},
+		{
+			name: "not an authorization in 1st sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				anyNotAuth,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 0 is not an Authorization: invalid type",
+		},
+		{
+			name: "not an authorization in 2nd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyNotAuth,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 1 is not an Authorization: invalid type",
+		},
+		{
+			name: "not an authorization in 3rd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyNotAuth,
+			),
+			expErr: "sub-authorization 2 is not an Authorization: invalid type",
+		},
+		{
+			name: "wrong type url in 1st sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL2).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 0 has msg type \"" + msgTypeURL2 + "\", expected \"" + msgTypeURL1 + "\": invalid type",
+		},
+		{
+			name: "wrong type url in 2nd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL2).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 1 has msg type \"" + msgTypeURL2 + "\", expected \"" + msgTypeURL1 + "\": invalid type",
+		},
+		{
+			name: "wrong type url in 3rd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL2).AsAny(t),
+			),
+			expErr: "sub-authorization 2 has msg type \"" + msgTypeURL2 + "\", expected \"" + msgTypeURL1 + "\": invalid type",
+		},
+		{
+			name: "mutli-auth as 1st sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				anyMulti,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "nested MultiAuthorization not allowed for sub-authorization 0: invalid type",
+		},
+		{
+			name: "mutli-auth as 2nd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyMulti,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "nested MultiAuthorization not allowed for sub-authorization 1: invalid type",
+		},
+		{
+			name: "mutli-auth as 3rd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				anyMulti,
+			),
+			expErr: "nested MultiAuthorization not allowed for sub-authorization 2: invalid type",
+		},
+		{
+			name: "validate basic fails 1st sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).WithValidateBasicError("not good").AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 0 failed basic validation: not good: invalid type",
+		},
+		{
+			name: "validate basic fails 2nd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).WithValidateBasicError("also bad").AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+			),
+			expErr: "sub-authorization 1 failed basic validation: also bad: invalid type",
+		},
+		{
+			name: "validate basic fails 3rd sub-auth",
+			ma: newMultiAuthz(msgTypeURL1,
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).AsAny(t),
+				newMockAuthorizationFor(msgTypeURL1).WithValidateBasicError("still naughty").AsAny(t),
+			),
+			expErr: "sub-authorization 2 failed basic validation: still naughty: invalid type",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.ma.ValidateBasic()
+			}
+			require.NotPanics(t, testFunc, "ValidateBasic()")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateBasic() error")
+		})
+	}
 }
 
 func TestMultiAuthorizationCodec(t *testing.T) {
@@ -754,11 +1007,11 @@ func TestMultiAuthorizationCodec(t *testing.T) {
 	multiAuth, err := NewMultiAuthorization(msgTypeURL, auth1, auth2)
 	require.NoError(t, err, "NewMultiAuthorization")
 
-	any, err := codectypes.NewAnyWithValue(multiAuth)
+	multiAny, err := codectypes.NewAnyWithValue(multiAuth)
 	require.NoError(t, err, "codectypes.NewAnyWithValue")
 
 	var unpacked authz.Authorization
-	err = registry.UnpackAny(any, &unpacked)
+	err = registry.UnpackAny(multiAny, &unpacked)
 	require.NoError(t, err, "UnpackAny")
 
 	unpackedMulti, ok := unpacked.(*MultiAuthorization)

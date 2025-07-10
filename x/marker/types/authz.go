@@ -232,7 +232,7 @@ func (m MultiAuthorization) ValidateBasic() error {
 		// Type safety check
 		if auth.MsgTypeURL() != m.MsgTypeUrl {
 			return sdkerrors.ErrInvalidType.Wrapf(
-				"sub-authorization %d has msg type %s, expected %s",
+				"sub-authorization %d has msg type %q, expected %q",
 				i, auth.MsgTypeURL(), m.MsgTypeUrl,
 			)
 		}
