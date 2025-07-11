@@ -561,6 +561,11 @@ func TestTransactionFailureHandling(t *testing.T) {
 	err = writeLocalBulkImportStatus(status)
 	require.NoError(t, err)
 
+	// Clean up the status file after test
+	defer func() {
+		_ = os.Remove(statusFileName(chunkedState.ImportID))
+	}()
+
 	// Now read it back to verify
 	readStatus, err := readLocalBulkImportStatus(chunkedState.ImportID)
 	require.NoError(t, err)
@@ -609,6 +614,11 @@ func TestResumeFunctionality(t *testing.T) {
 
 	// Verify we have multiple chunks
 	require.Greater(t, chunkedState.TotalChunks, 1, "Should have multiple chunks for resume testing")
+
+	// Clean up the status file after test
+	defer func() {
+		_ = os.Remove(statusFileName(chunkedState.ImportID))
+	}()
 
 	// Test 1: Create a status file with partial completion
 	status := &LocalBulkImportStatus{
@@ -720,6 +730,11 @@ func TestCorrelationIDTracking(t *testing.T) {
 
 	// Verify we have multiple chunks
 	require.Greater(t, chunkedState1.TotalChunks, 1, "Should have multiple chunks for testing")
+
+	// Clean up the status file after test
+	defer func() {
+		_ = os.Remove(statusFileName(chunkedState1.ImportID))
+	}()
 
 	// Test 2: Test file hash calculation
 	fileHash1, err := calculateFileHash(tmpFile.Name())
