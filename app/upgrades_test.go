@@ -907,6 +907,7 @@ func (s *UpgradeTestSuite) TestAlyssum() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgConvertFinishedVestingAccountsToBase,
 		"INF Unlocking select vesting accounts.",
+		"INF Transferring some locked funds.",
 	}
 	s.AssertUpgradeHandlerLogs("alyssum", expInLog, nil)
 }
