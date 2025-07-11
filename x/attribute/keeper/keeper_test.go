@@ -1418,7 +1418,7 @@ func (s *KeeperTestSuite) TestValidateAttributeConcreteType() {
 	testCases := []struct {
 		name         string
 		concreteType string
-		expErr       string 
+		expErr       string
 	}{
 		{
 			name:         "Valid type URL",
