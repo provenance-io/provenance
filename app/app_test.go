@@ -567,11 +567,11 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 	}
 	app.GovKeeper.SetProposal(ctx, *&prop)
 	stored, _ := app.GovKeeper.Proposals.Get(ctx, 1)
-	require.NotNil(t, stored,"app.GovKeeper.Proposals.Get()")
+	require.NotNil(t, stored, "app.GovKeeper.Proposals.Get()")
 	for _, msg := range stored.Messages {
 		var unpacked sdk.Msg
 		err := cdc.UnpackAny(msg, &unpacked)
-		require.NoError(t, err,"UnpackAny")
+		require.NoError(t, err, "UnpackAny")
 
 		_, ok := unpacked.(*v1beta1.MsgExecuteContract)
 		require.True(t, ok, "expected v1beta1.MsgExecuteContract")
