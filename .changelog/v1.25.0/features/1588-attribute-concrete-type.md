@@ -1,0 +1,1 @@
+* Added support for an optional `concrete_type` in attributes to describe value types [#1588](https://github.com/provenance-io/provenance/issues/1588).
