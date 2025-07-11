@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 )
@@ -51,7 +52,11 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
+			// Doing some account-specific stuff on mainnet that isn't applicable to testnet.
 			unlockVestingAccounts(ctx, app, getMainnetUnlocks())
+			_ = transferLocked(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -301,6 +306,7 @@ func getMainnetUnlocks() []sdk.AccAddress {
 		"pb14t3me36m9gpkdwpyczgevctlt6trdq46dugccdnrlu92n9eee0ss5k65tq",
 		"pb1e2fhljv44saqmewp6j6ra0y94e8vzfs9a9r4aq",
 		"pb1rkml5878l2daw3a7xvg48wqecnh9u9dn2dtl8g57rsctq5pnc00s9ej3xw",
+
 		"pb1npzfcx3qrtxnwuqxqnzufmk777nj6k4568t5n3",
 		"pb1y6hl64k2u5khyex5fzk5ss5nj5dqrxacvxvha6",
 		"pb13l7duyn5wn3tvuv08rkl8azee38s3xwp3x36rr",
@@ -322,4 +328,91 @@ func getMainnetUnlocks() []sdk.AccAddress {
 	}
 
 	return rv
+}
+
+// transferLocked transfers some locked hash from one specific account to another, keeping it locked.
+// Part of the alyssum upgrade.
+func transferLocked(ctx sdk.Context, app *App) (err error) {
+	ctx.Logger().Info("Transferring some locked funds.")
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic (recovered): %v", r)
+		}
+		if err != nil {
+			ctx.Logger().Error("Error transferring some locked funds.", "error", err)
+		} else {
+			ctx.Logger().Info("Done transferring some locked funds.")
+		}
+	}()
+
+	from := "pb1mfejechmw7n70drzxkem3fu463ea9sc87kzz2m"
+	to := "pb1w07247yzrkcslcxtn0c2n6spxkzs4nnntet9x33r0jghhlgh7jdqgdvtpe"
+	moveAmt := sdk.NewInt64Coin("nhash", 40_250_000_000000000)
+	ctx.Logger().Debug(fmt.Sprintf("Transferring %s from %s to %s.", moveAmt, from, to))
+
+	fromAddr, err := sdk.AccAddressFromBech32(from)
+	if err != nil {
+		return fmt.Errorf("invalid source address %q: %w", from, err)
+	}
+	fromAcctI := app.AccountKeeper.GetAccount(ctx, fromAddr)
+	if fromAcctI == nil {
+		return fmt.Errorf("source account %q not found", from)
+	}
+	fromAcct, ok := fromAcctI.(*vesting.ContinuousVestingAccount)
+	if !ok {
+		return fmt.Errorf("source account %q is not a continuous vesting account, is %T", from, fromAcctI)
+	}
+
+	toAddr, err := sdk.AccAddressFromBech32(to)
+	if err != nil {
+		return fmt.Errorf("invalid destination address %q: %w", to, err)
+	}
+	toAcctI := app.AccountKeeper.GetAccount(ctx, toAddr)
+	if toAcctI == nil {
+		return fmt.Errorf("destination account %q not found", to)
+	}
+	toAcct, ok := toAcctI.(*authtypes.BaseAccount)
+	if !ok {
+		return fmt.Errorf("destination account %q is not a continuous vesting account, is %T", to, toAcctI)
+	}
+
+	// I already know that the source account's original vesting is more than 40.25M.
+	// So no worry about a negative here.
+	fromAcct.OriginalVesting = fromAcct.OriginalVesting.Sub(moveAmt)
+
+	// Adjust delegated vesting and delegated free.
+	delTot := fromAcct.DelegatedVesting.Add(fromAcct.DelegatedFree...)
+	var delVest, delFree sdk.Coins
+	for _, delCoin := range delTot {
+		ogv := fromAcct.OriginalVesting.AmountOf(delCoin.Denom)
+		if ogv.LTE(delCoin.Amount) {
+			delVest = delVest.Add(delCoin)
+		} else {
+			delVest = delVest.Add(sdk.NewCoin(delCoin.Denom, ogv))
+			delFree = delFree.Add(sdk.NewCoin(delCoin.Denom, delCoin.Amount.Sub(ogv)))
+		}
+	}
+	fromAcct.DelegatedVesting = delVest
+	fromAcct.DelegatedFree = delFree
+
+	newToAcct := &vesting.ContinuousVestingAccount{
+		BaseVestingAccount: &vesting.BaseVestingAccount{
+			BaseAccount:      toAcct,
+			OriginalVesting:  sdk.NewCoins(moveAmt),
+			DelegatedFree:    nil,
+			DelegatedVesting: nil,
+			EndTime:          fromAcct.EndTime,
+		},
+		StartTime: fromAcct.StartTime,
+	}
+
+	cacheCtx, writeCache := ctx.CacheContext()
+	app.AccountKeeper.SetAccount(cacheCtx, fromAcct)
+	err = app.BankKeeper.SendCoins(cacheCtx, fromAddr, toAddr, sdk.Coins{moveAmt})
+	if err != nil {
+		return fmt.Errorf("could not move funds to new account: %w", err)
+	}
+	app.AccountKeeper.SetAccount(cacheCtx, newToAcct)
+	writeCache()
+	return nil
 }
