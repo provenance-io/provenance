@@ -1,0 +1,236 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "cosmos/msg/v1/msg.proto";
+import "provenance/ledger/v1/ledger.proto";
+import "provenance/ledger/v1/ledger_settlement.proto";
+import "provenance/ledger/v1/genesis.proto";
+
+// Msg defines the attribute module Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // Create a new NFT ledger
+  rpc CreateTx(MsgCreateRequest) returns (MsgCreateResponse);
+
+  // Update Status
+  rpc UpdateStatusTx(MsgUpdateStatusRequest) returns (MsgUpdateStatusResponse);
+
+  // Update Interest Rate
+  rpc UpdateInterestRateTx(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
+
+  // Update Payment Amount, Next Payment Date, and Payment Frequency
+  rpc UpdatePaymentTx(MsgUpdatePaymentRequest) returns (MsgUpdatePaymentResponse);
+
+  // Update Maturity Date
+  rpc UpdateMaturityDateTx(MsgUpdateMaturityDateRequest) returns (MsgUpdateMaturityDateResponse);
+
+  // Append a ledger entry
+  rpc AppendTx(MsgAppendRequest) returns (MsgAppendResponse);
+
+  // Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied
+  rpc UpdateBalancesTx(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
+
+  // Process multiple fund transfers with manual settlement instructions
+  rpc TransferFundsWithSettlementTx(MsgTransferFundsWithSettlementRequest)
+      returns (MsgTransferFundsWithSettlementResponse);
+
+  // Destroy a ledger by NFT address
+  rpc DestroyTx(MsgDestroyRequest) returns (MsgDestroyResponse);
+
+  // Create a new ledger class
+  rpc CreateLedgerClassTx(MsgCreateLedgerClassRequest) returns (MsgCreateLedgerClassResponse);
+
+  // Add a status type to a ledger class
+  rpc AddLedgerClassStatusTypeTx(MsgAddLedgerClassStatusTypeRequest) returns (MsgAddLedgerClassStatusTypeResponse);
+
+  // Add an entry type to a ledger class
+  rpc AddLedgerClassEntryTypeTx(MsgAddLedgerClassEntryTypeRequest) returns (MsgAddLedgerClassEntryTypeResponse);
+
+  // Add a bucket type to a ledger class
+  rpc AddLedgerClassBucketTypeTx(MsgAddLedgerClassBucketTypeRequest) returns (MsgAddLedgerClassBucketTypeResponse);
+
+  // Bulk import ledger data from genesis state
+  rpc BulkImportTx(MsgBulkImportRequest) returns (MsgBulkImportResponse);
+}
+
+// MsgCreateRequest
+message MsgCreateRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  Ledger ledger    = 1;
+  string authority = 2;
+}
+
+// MsgCreateResponse
+message MsgCreateResponse {}
+
+// MsgUpdateStatusRequest
+message MsgUpdateStatusRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key       = 1;
+  string    authority = 2;
+
+  int32 status_type_id = 3;
+}
+
+// MsgUpdateStatusResponse
+message MsgUpdateStatusResponse {}
+
+// MsgUpdateInterestRateRequest
+message MsgUpdateInterestRateRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey             key                           = 1;
+  string                authority                     = 2;
+  int32                 interest_rate                 = 3;
+  DayCountConvention    interest_day_count_convention = 4;
+  InterestAccrualMethod interest_accrual_method       = 5;
+}
+
+// MsgUpdateInterestRateResponse
+message MsgUpdateInterestRateResponse {}
+
+// MsgUpdatePaymentRequest
+message MsgUpdatePaymentRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key       = 1;
+  string    authority = 2;
+
+  int64            next_pmt_amt      = 3;
+  int32            next_pmt_date     = 4;
+  PaymentFrequency payment_frequency = 5;
+}
+
+// MsgUpdatePaymentResponse
+message MsgUpdatePaymentResponse {}
+
+// MsgUpdateMaturityDateRequest
+message MsgUpdateMaturityDateRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key           = 1;
+  string    authority     = 2;
+  int32     maturity_date = 3;
+}
+
+// MsgUpdateMaturityDateResponse
+message MsgUpdateMaturityDateResponse {}
+
+// MsgAppendRequest
+message MsgAppendRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey            key       = 1;
+  repeated LedgerEntry entries   = 2;
+  string               authority = 3;
+}
+
+// MsgAppendResponse
+message MsgAppendResponse {}
+
+// MsgUpdateBalancesRequest
+message MsgUpdateBalancesRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key       = 1;
+  string    authority = 2;
+
+  string correlation_id = 3;
+
+  // The applied amounts to be updated
+  repeated LedgerBucketAmount applied_amounts = 4;
+
+  // The bucket balances to update
+  repeated BucketBalance balance_amounts = 5;
+}
+
+// MsgUpdateBalancesResponse
+message MsgUpdateBalancesResponse {}
+
+// MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement
+// instructions
+message MsgTransferFundsWithSettlementRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string                              authority = 1;
+  repeated FundTransferWithSettlement transfers = 2;
+}
+
+// MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement
+message MsgTransferFundsWithSettlementResponse {}
+
+// MsgDestroyRequest represents a request to destroy a ledger
+message MsgDestroyRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerKey key       = 1;
+  string    authority = 2;
+}
+
+// MsgDestroyResponse represents the response from destroying a ledger
+message MsgDestroyResponse {}
+
+// MsgCreateLedgerClassRequest represents a request to create a new ledger class
+message MsgCreateLedgerClassRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  LedgerClass ledger_class = 1;
+  string      authority    = 2;
+}
+
+// MsgCreateLedgerClassResponse represents the response from creating a ledger class
+message MsgCreateLedgerClassResponse {}
+
+// MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class
+message MsgAddLedgerClassStatusTypeRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string                ledger_class_id = 1;
+  LedgerClassStatusType status_type     = 2;
+  string                authority       = 3;
+}
+
+// MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type
+message MsgAddLedgerClassStatusTypeResponse {}
+
+// MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class
+message MsgAddLedgerClassEntryTypeRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string               ledger_class_id = 1;
+  LedgerClassEntryType entry_type      = 2;
+  string               authority       = 3;
+}
+
+// MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type
+message MsgAddLedgerClassEntryTypeResponse {}
+
+// MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class
+message MsgAddLedgerClassBucketTypeRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string                ledger_class_id = 1;
+  LedgerClassBucketType bucket_type     = 2;
+  string                authority       = 3;
+}
+
+// MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type
+message MsgAddLedgerClassBucketTypeResponse {}
+
+// MsgBulkImportRequest represents a request to bulk import ledger data from genesis state
+message MsgBulkImportRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string       authority     = 1;
+  GenesisState genesis_state = 2;
+}
+
+// MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state
+message MsgBulkImportResponse {}
