@@ -9,7 +9,8 @@ import (
 
 type BankKeeper interface {
 	AppendLockedCoinsGetter(getter banktypes.GetLockedCoinsFn)
-	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	LockedCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI

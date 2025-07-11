@@ -36,3 +36,8 @@ func (k Keeper) GetStoreKey() storetypes.StoreKey {
 func (k Keeper) SetHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
 	return k.setHoldCoinAmount(store, addr, denom, amount)
 }
+
+// GetSpendableForDenoms exposes this keeper's getSpendableForDenoms function for unit tests.
+func (k Keeper) GetSpendableForDenoms(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) sdk.Coins {
+	return k.getSpendableForDenoms(ctx, addr, funds)
+}
