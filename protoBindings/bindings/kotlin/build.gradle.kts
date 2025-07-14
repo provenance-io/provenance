@@ -73,6 +73,10 @@ tasks.withType<KotlinCompile> {
 
 // Protobuf file source directories
 sourceSets.main {
+    val excludes = (project.property("protoDirsExclude") as String).split(",")
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
     val protoDirs = (project.property("protoDirs") as String).split(",")
         .map {
             var path = it.trim()
@@ -89,6 +93,7 @@ sourceSets.main {
 
     // Exclude Google well-known types from compilation
     proto.exclude("**/google/**")
+    proto.exclude(excludes)
 }
 
 // For more advanced options see: https://github.com/google/protobuf-gradle-plugin
