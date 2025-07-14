@@ -645,6 +645,7 @@ func TestHandlersConsumeMsgs(t *testing.T) {
 	expNoHandlers := []string{
 		"/cosmwasm.wasm.v1.MsgIBCCloseChannel",
 		"/cosmwasm.wasm.v1.MsgIBCSend",
+		"/cosmwasm.wasm.v1beta1.MsgExecuteContract",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTx",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams",
