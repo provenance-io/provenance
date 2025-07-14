@@ -4,6 +4,9 @@
 
 ## Table of Contents
 
+- [cosmwasm/wasm/v1beta1/msg_execute_contract.proto](#cosmwasm_wasm_v1beta1_msg_execute_contract-proto)
+    - [MsgExecuteContract](#cosmwasm-wasm-v1beta1-MsgExecuteContract)
+  
 - [cosmos/quarantine/v1beta1/tx.proto](#cosmos_quarantine_v1beta1_tx-proto)
     - [MsgAccept](#cosmos-quarantine-v1beta1-MsgAccept)
     - [MsgAcceptResponse](#cosmos-quarantine-v1beta1-MsgAcceptResponse)
@@ -596,6 +599,7 @@
   
 - [provenance/marker/v1/authz.proto](#provenance_marker_v1_authz-proto)
     - [MarkerTransferAuthorization](#provenance-marker-v1-MarkerTransferAuthorization)
+    - [MultiAuthorization](#provenance-marker-v1-MultiAuthorization)
   
 - [provenance/marker/v1/genesis.proto](#provenance_marker_v1_genesis-proto)
     - [DenySendAddress](#provenance-marker-v1-DenySendAddress)
@@ -858,9 +862,16 @@
     - [GenesisState](#provenance-metadata-v1-GenesisState)
     - [MarkerNetAssetValues](#provenance-metadata-v1-MarkerNetAssetValues)
   
+- [provenance/hold/v1/tx.proto](#provenance_hold_v1_tx-proto)
+    - [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest)
+    - [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse)
+  
+    - [Msg](#provenance-hold-v1-Msg)
+  
 - [provenance/hold/v1/events.proto](#provenance_hold_v1_events-proto)
     - [EventHoldAdded](#provenance-hold-v1-EventHoldAdded)
     - [EventHoldReleased](#provenance-hold-v1-EventHoldReleased)
+    - [EventVestingAccountUnlocked](#provenance-hold-v1-EventVestingAccountUnlocked)
   
 - [provenance/hold/v1/hold.proto](#provenance_hold_v1_hold-proto)
     - [AccountHold](#provenance-hold-v1-AccountHold)
@@ -877,6 +888,40 @@
     - [GenesisState](#provenance-hold-v1-GenesisState)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="cosmwasm_wasm_v1beta1_msg_execute_contract-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmwasm/wasm/v1beta1/msg_execute_contract.proto
+
+
+
+<a name="cosmwasm-wasm-v1beta1-MsgExecuteContract"></a>
+
+### MsgExecuteContract
+MsgExecuteContract defines a message to execute a smart contract.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `contract` | [string](#string) |  |  |
+| `msg` | [bytes](#bytes) |  |  |
+| `funds` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 
@@ -4900,6 +4945,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -5045,6 +5091,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `update_attribute_type` | [AttributeType](#provenance-attribute-v1-AttributeType) |  | The update attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -5132,6 +5179,7 @@ Attribute holds a typed key/value structure for data associated with an account
 | `attribute_type` | [AttributeType](#provenance-attribute-v1-AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -8775,6 +8823,23 @@ a marker transfer on behalf of the granter's account.
 | ----- | ---- | ----- | ----------- |
 | `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | transfer_limit is the total amount the grantee can transfer |
 | `allow_list` | [string](#string) | repeated | allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the granter. If omitted, any recipient is allowed. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MultiAuthorization"></a>
+
+### MultiAuthorization
+MultiAuthorization lets you combine several authorizations.
+All sub-authorizations must accept the message for it to be allowed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | The message type this authorization is for. |
+| `sub_authorizations` | [google.protobuf.Any](#google-protobuf-Any) | repeated | A list of sub-authorizations that must all accept the message. sub_authorizations: a list of authorizations (minimum 2, maximum 10). |
 
 
 
@@ -12738,6 +12803,58 @@ MarkerNetAssetValues defines the net asset values for a scope
 
 
 
+<a name="provenance_hold_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/tx.proto
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsRequest"></a>
+
+### MsgUnlockVestingAccountsRequest
+MsgUnlockVestingAccountsRequest defines the request for unlocking vesting accounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that can execute this message (governance module account) |
+| `addresses` | [string](#string) | repeated | addresses is the list of vesting account addresses to convert back to base accounts |
+
+
+
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsResponse"></a>
+
+### MsgUnlockVestingAccountsResponse
+MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-hold-v1-Msg"></a>
+
+### Msg
+Msg defines the hold Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UnlockVestingAccounts` | [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest) | [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse) | UnlockVestingAccounts unlocks one or more vesting accounts. |
+
+ <!-- end services -->
+
+
+
 <a name="provenance_hold_v1_events-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -12772,6 +12889,21 @@ EventHoldReleased is an event indicating that some funds were released from hold
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
 | `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
+
+
+
+
+
+
+<a name="provenance-hold-v1-EventVestingAccountUnlocked"></a>
+
+### EventVestingAccountUnlocked
+EventUnlockVestingAccounts is an event indicating that a vesting account has been unlocked.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
 
 
 

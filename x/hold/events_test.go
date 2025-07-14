@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
@@ -108,6 +108,41 @@ func TestNewEventHoldReleased(t *testing.T) {
 	}
 }
 
+func TestNewEventVestingAccountUnlocked(t *testing.T) {
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  *EventVestingAccountUnlocked
+	}{
+		{
+			name: "nil addr",
+			addr: nil,
+			exp:  &EventVestingAccountUnlocked{Address: ""},
+		},
+		{
+			name: "empty addr",
+			addr: sdk.AccAddress{},
+			exp:  &EventVestingAccountUnlocked{Address: ""},
+		},
+		{
+			name: "non-empty addr",
+			addr: sdk.AccAddress("some_addr___________"),
+			exp:  &EventVestingAccountUnlocked{Address: sdk.AccAddress("some_addr___________").String()},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var act *EventVestingAccountUnlocked
+			testFunc := func() {
+				act = NewEventVestingAccountUnlocked(tc.addr)
+			}
+			require.NotPanics(t, testFunc, "NewEventVestingAccountUnlocked(%q)", string(tc.addr))
+			assert.Equal(t, tc.exp, act, "NewEventVestingAccountUnlocked(%q) result", string(tc.addr))
+		})
+	}
+}
+
 func TestTypedEventToEvent(t *testing.T) {
 	addr := sdk.AccAddress("address_in_the_event")
 	coins := sdk.NewCoins(sdk.NewInt64Coin("elbowcoin", 4), sdk.NewInt64Coin("kneecoin", 2))
@@ -139,6 +174,16 @@ func TestTypedEventToEvent(t *testing.T) {
 				Attributes: []abci.EventAttribute{
 					{Key: "address", Value: addrQ},
 					{Key: "amount", Value: coinsQ},
+				},
+			},
+		},
+		{
+			name: "NewEventVestingAccountUnlocked",
+			tev:  NewEventVestingAccountUnlocked(addr),
+			expEvent: sdk.Event{
+				Type: "provenance.hold.v1.EventVestingAccountUnlocked",
+				Attributes: []abci.EventAttribute{
+					{Key: "address", Value: addrQ},
 				},
 			},
 		},

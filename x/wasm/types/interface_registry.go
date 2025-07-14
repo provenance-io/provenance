@@ -2,13 +2,17 @@ package types
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+
+	v1beta1 "github.com/provenance-io/provenance/x/wasm"
 )
 
 var _ codectypes.InterfaceRegistry = &WasmInterfaceRegistry{}
 
 // NewWasmInterfaceRegistry returns a new WasmInterfaceRegistry instance
 func NewWasmInterfaceRegistry(registry codectypes.InterfaceRegistry) WasmInterfaceRegistry {
+	registry.RegisterImplementations((*sdk.Msg)(nil), &v1beta1.MsgExecuteContract{})
 	return WasmInterfaceRegistry{registry}
 }
 
@@ -18,6 +22,13 @@ type WasmInterfaceRegistry struct {
 }
 
 // Resolve implements codectypes.InterfaceRegistry
-func (WasmInterfaceRegistry) Resolve(_ string) (proto.Message, error) {
+func (wir WasmInterfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
+	msg, err := wir.InterfaceRegistry.Resolve(typeURL)
+	if err == nil {
+		return msg, nil
+	}
+	if typeURL == "/cosmwasm.wasm.v1beta1.MsgExecuteContract" {
+		return &v1beta1.MsgExecuteContract{}, nil
+	}
 	return new(WasmAny), nil
 }

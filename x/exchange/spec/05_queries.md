@@ -48,13 +48,13 @@ Then choose one entry from each of `settlement_flat_fee_options` and `settlement
 
 ### QueryOrderFeeCalcRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L157-L164
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L158-L165
 
 See also: [AskOrder](03_messages.md#askorder), and [BidOrder](03_messages.md#bidorder).
 
 ### QueryOrderFeeCalcResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L166-L185
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L167-L186
 
 
 ## GetOrder
@@ -63,15 +63,15 @@ Use the `GetOrder` query to look up an order by its id.
 
 ### QueryGetOrderRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L187-L191
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L188-L192
 
 ### QueryGetOrderResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L193-L197
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L194-L198
 
 ### Order
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/orders.proto#L15-L28
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/orders.proto#L15-L28
 
 See also: [AskOrder](03_messages.md#askorder), and [BidOrder](03_messages.md#bidorder).
 
@@ -82,11 +82,11 @@ Orders with external ids can be looked up using the `GetOrderByExternalID` query
 
 ### QueryGetOrderByExternalIDRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L199-L205
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L200-L206
 
 ### QueryGetOrderByExternalIDResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L207-L211
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L208-L212
 
 See also: [Order](#order).
 
@@ -100,11 +100,11 @@ This query is paginated.
 
 ### QueryGetMarketOrdersRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L213-L224
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L214-L225
 
 ### QueryGetMarketOrdersResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L226-L233
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L227-L234
 
 See also: [Order](#order).
 
@@ -118,11 +118,11 @@ This query is paginated.
 
 ### QueryGetOwnerOrdersRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L235-L246
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L236-L247
 
 ### QueryGetOwnerOrdersResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L248-L255
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L249-L256
 
 See also: [Order](#order).
 
@@ -136,11 +136,11 @@ This query is paginated.
 
 ### QueryGetAssetOrdersRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L257-L268
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L258-L269
 
 ### QueryGetAssetOrdersResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L270-L277
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L271-L278
 
 See also: [Order](#order).
 
@@ -153,11 +153,11 @@ This query is paginated.
 
 ### QueryGetAllOrdersRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L279-L283
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L280-L284
 
 ### QueryGetAllOrdersResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L285-L292
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L286-L293
 
 See also: [Order](#order).
 
@@ -168,11 +168,11 @@ To find out how much an account has committed to a market, use the `GetCommitmen
 
 ### QueryGetCommitmentRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L294-L300
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L295-L301
 
 ### QueryGetCommitmentResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L302-L311
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L303-L312
 
 
 ## GetAccountCommitments
@@ -182,11 +182,11 @@ You can optionally filter the results for a specific denomination using the `den
 
 ### QueryGetAccountCommitmentsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L313-L317
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L314-L320
 
 ### QueryGetAccountCommitmentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L319-L323
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L322-L326
 
 
 ## GetMarketCommitments
@@ -195,11 +195,11 @@ To get the amounts committed to a market by any account, use the `GetMarketCommi
 
 ### QueryGetMarketCommitmentsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L325-L332
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L328-L335
 
 ### QueryGetMarketCommitmentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L334-L341
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L337-L344
 
 
 ## GetAllCommitments
@@ -208,11 +208,11 @@ To get all funds committed by any account to any market, use the `GetAllCommitme
 
 ### QueryGetAllCommitmentsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L343-L347
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L346-L350
 
 ### QueryGetAllCommitmentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L349-L356
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L352-L359
 
 
 ## GetMarket
@@ -221,11 +221,11 @@ All the information and setup for a market can be looked up using the `GetMarket
 
 ### QueryGetMarketRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L358-L362
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L361-L365
 
 ### QueryGetMarketResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L364-L370
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L367-L373
 
 See also: [Market](03_messages.md#market).
 
@@ -236,15 +236,15 @@ Use the `GetAllMarkets` query to get brief information about all markets.
 
 ### QueryGetAllMarketsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L372-L376
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L375-L379
 
 ### QueryGetAllMarketsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L378-L385
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L381-L388
 
 ### MarketBrief
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/market.proto#L42-L50
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/market.proto#L42-L50
 
 
 ## Params
@@ -253,11 +253,11 @@ The exchange module params can be looked up using the `Params` query.
 
 ### QueryParamsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L387-L388
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L390-L391
 
 ### QueryParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L390-L394
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L393-L397
 
 See also: [Params](06_params.md#params).
 
@@ -268,13 +268,13 @@ To find out the additional tx fee required for a commitment settlement, use the 
 
 ### QueryCommitmentSettlementFeeCalcRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L396-L406
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L399-L409
 
 See also: [MsgMarketCommitmentSettleRequest](03_messages.md#msgmarketcommitmentsettlerequest).
 
 ### QueryCommitmentSettlementFeeCalcResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L408-L435
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L411-L438
 
 
 ## ValidateCreateMarket
@@ -289,13 +289,13 @@ If the result has:
 
 ### QueryValidateCreateMarketRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L437-L441
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L440-L444
 
 See also: [MsgGovCreateMarketRequest](03_messages.md#msggovcreatemarketrequest).
 
 ### QueryValidateCreateMarketResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L443-L453
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L446-L456
 
 
 ## ValidateMarket
@@ -306,11 +306,11 @@ Any problems detected will be returned in the `error` field.
 
 ### QueryValidateMarketRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L455-L459
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L458-L462
 
 ### QueryValidateMarketResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L461-L465
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L464-L468
 
 
 ## ValidateManageFees
@@ -325,13 +325,13 @@ If the result has:
 
 ### QueryValidateManageFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L467-L471
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L470-L474
 
 See also: [MsgGovManageFeesRequest](03_messages.md#msggovmanagefeesrequest).
 
 ### QueryValidateManageFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L473-L483
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L476-L486
 
 
 ## GetPayment
@@ -340,11 +340,11 @@ Use the `GetPayment` query to look up a payment by `source` and `external_id`.
 
 ### QueryGetPaymentRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L485-L491
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L488-L494
 
 ### QueryGetPaymentResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L493-L497
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L496-L500
 
 See also: [Payment](03_messages.md#payment).
 
@@ -357,11 +357,11 @@ This query is paginated.
 
 ### QueryGetPaymentsWithSourceRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L499-L506
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L502-L509
 
 ### QueryGetPaymentsWithSourceResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L508-L515
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L511-L518
 
 See also: [Payment](03_messages.md#payment).
 
@@ -374,11 +374,11 @@ This query is paginated.
 
 ### QueryGetPaymentsWithTargetRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L517-L524
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L520-L527
 
 ### QueryGetPaymentsWithTargetResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L526-L533
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L529-L536
 
 See also: [Payment](03_messages.md#payment).
 
@@ -391,11 +391,11 @@ This query is paginated.
 
 ### QueryGetAllPaymentsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L535-L539
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L538-L542
 
 ### QueryGetAllPaymentsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L541-L548
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L544-L551
 
 See also: [Payment](03_messages.md#payment).
 
@@ -406,10 +406,10 @@ The `PaymentFeeCalc` query can be used to calculate the fees for creating or acc
 
 ### QueryPaymentFeeCalcRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L550-L554
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L553-L557
 
 See also: [Payment](03_messages.md#payment).
 
 ### QueryPaymentFeeCalcResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.20.0/proto/provenance/exchange/v1/query.proto#L556-L572
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/exchange/v1/query.proto#L559-L575

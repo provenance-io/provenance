@@ -45,7 +45,7 @@ func TestBankSend(tt *testing.T) {
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "AccountKeeper.Params.Set(...)")
 
 	require.NoError(tt, app.NameKeeper.SetNameRecord(ctx, "some.kyc.provenance.io", addr1, false))
-	require.NoError(tt, app.AttributeKeeper.SetAttribute(ctx, attrtypes.NewAttribute("some.kyc.provenance.io", acct3.Address, attrtypes.AttributeType_Bytes, []byte{}, nil), addr1))
+	require.NoError(tt, app.AttributeKeeper.SetAttribute(ctx, attrtypes.NewAttribute("some.kyc.provenance.io", acct3.Address, attrtypes.AttributeType_Bytes, []byte{}, nil, ""), addr1))
 
 	nrMarkerDenom := "nonrestrictedmarker"
 	nrMarkerBaseAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(nrMarkerDenom), nil, 200, 0)
