@@ -93,15 +93,21 @@ func getCorrelationIDRangeFromChunk(chunk *types.GenesisState) (string, string) 
 // checkTransactionAlreadyProcessed checks if a transaction was already processed by querying the blockchain
 func checkTransactionAlreadyProcessed(clientCtx client.Context, txHash string, logger log.Logger) (bool, error) {
 	if txHash == "" {
-		return false, nil
+		return false, fmt.Errorf("failed to query transaction is empty")
 	}
 
 	// Query the transaction by hash using the correct API
-	resp, err := clientCtx.Client.Tx(context.Background(), []byte(txHash), false)
+	// Convert hash to lowercase and decode from hex string to bytes
+	hashLower := strings.ToLower(txHash)
+	hashBytes, err := hex.DecodeString(hashLower)
+	if err != nil {
+		return false, fmt.Errorf("failed to decode transaction hash %s: %w", txHash, err)
+	}
+	resp, err := clientCtx.Client.Tx(context.Background(), hashBytes, false)
 	if err != nil {
 		// If transaction not found, it wasn't processed
 		if strings.Contains(err.Error(), "not found") {
-			return false, nil
+			return false, err
 		}
 		return false, fmt.Errorf("failed to query transaction %s: %w", txHash, err)
 	}
@@ -344,7 +350,6 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 			logger.Info("Checking for existing status file", "import_id", importID, "status_file", statusFileName(importID))
 			existingStatus, err := readLocalBulkImportStatus(importID)
 			isResume := false
-			startChunkIndex := 0
 			lastSuccessfulCorrelationID := ""
 
 			if err != nil {
@@ -378,7 +383,6 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					if existingStatus.FileHash == fileHash {
 
 						isResume = true
-						startChunkIndex = existingStatus.CompletedChunks
 						lastSuccessfulCorrelationID = existingStatus.LastSuccessfulCorrelationID
 
 						logger.Info("Resuming import from previous state",
@@ -469,30 +473,63 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				}
 			}
 
-			// Process the file using streaming, with resume-aware positioning
-			processor := NewStreamingGenesisProcessor(config, logger)
-			var chunkedState *ChunkedGenesisState
+			// For gas estimation, we still need to process a sample of the file
+			// Use the original processor to get representative chunks for gas estimation
+			gasEstimationProcessor := NewStreamingGenesisProcessor(config, logger)
+			var gasEstimationChunks []*types.GenesisState
+			var gasCosts *GasCosts
 
-			if isResume && lastSuccessfulCorrelationID != "" {
-				// Resume mode: process file starting from the appropriate correlation ID
-				logger.Info("Processing file for resume", "start_correlation_id", lastSuccessfulCorrelationID)
-				chunkedState, err = processor.ProcessFileFromCorrelationID(genesisStateFile, lastSuccessfulCorrelationID)
-			} else if isResume && lastSuccessfulCorrelationID == "" {
-				// Resume mode but no next correlation ID found - import may be complete
-				logger.Info("No next correlation ID found, checking if import is complete")
-
-				// Mark the import as completed since there's nothing more to process
-				if existingStatus != nil {
-					existingStatus.Status = "completed"
-					existingStatus.UpdatedAt = time.Now().Format(time.RFC3339)
-					_ = writeLocalBulkImportStatus(existingStatus)
-					logger.Info("Import marked as completed - no more data to process")
-				}
-				return nil
+			if isResume && existingStatus != nil && existingStatus.GasCosts != nil {
+				// Use stored gas costs for resume
+				logger.Info("Using stored gas costs for resume")
+				gasCosts = existingStatus.GasCosts
 			} else {
-				// Fresh start: process entire file
-				logger.Info("Processing file for fresh import")
-				chunkedState, err = processor.ProcessFile(genesisStateFile)
+				// Run gas estimation on a limited sample of the file
+				logger.Info("Running gas cost estimation on limited file sample")
+				maxChunksForEstimation := 3
+				var sampleChunkedState *ChunkedGenesisState
+
+				if isResume && lastSuccessfulCorrelationID != "" {
+					// For resume, we need to process from the resume point, but still limit chunks
+					sampleChunkedState, err = gasEstimationProcessor.ProcessFileFromCorrelationID(genesisStateFile, lastSuccessfulCorrelationID)
+					if err != nil {
+						return fmt.Errorf("failed to process file sample for gas estimation: %w", err)
+					}
+					// Limit to first few chunks for gas estimation
+					if len(gasEstimationProcessor.chunks) > maxChunksForEstimation {
+						gasEstimationChunks = gasEstimationProcessor.chunks[:maxChunksForEstimation]
+					} else {
+						gasEstimationChunks = gasEstimationProcessor.chunks
+					}
+				} else {
+					// For fresh import, use the new limited processing method
+					sampleChunkedState, err = gasEstimationProcessor.ProcessFileWithLimit(genesisStateFile, maxChunksForEstimation)
+					if err != nil {
+						return fmt.Errorf("failed to process file sample for gas estimation: %w", err)
+					}
+					gasEstimationChunks = gasEstimationProcessor.chunks
+				}
+
+				logger.Info("Gas estimation sample prepared",
+					"sample_chunks", len(gasEstimationChunks),
+					"total_ledgers", sampleChunkedState.TotalLedgers,
+					"total_entries", sampleChunkedState.TotalEntries)
+
+				// Extract gas costs from representative simulations
+				logger.Info("Estimating gas costs from representative simulations")
+				gasCosts, err = estimateGasCosts(gasEstimationChunks, clientCtx, cmd, logger)
+				if err != nil {
+					logger.Warn("Failed to estimate gas costs, using fallback values", "error", err)
+					// Fallback to reasonable defaults if estimation fails
+					gasCosts = &GasCosts{
+						LedgerWithKeyGas: 100000,
+						EntryGas:         5000,
+					}
+				} else {
+					logger.Info("Gas costs estimated successfully",
+						"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
+						"entry_gas", gasCosts.EntryGas)
+				}
 			}
 
 			// Log the final resume decision for debugging
@@ -503,44 +540,22 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					"will_process_file", lastSuccessfulCorrelationID != "")
 			}
 
-			if err != nil {
-				return fmt.Errorf("failed to process genesis file: %w", err)
+			// Handle case where no next correlation ID found during resume
+			if isResume && lastSuccessfulCorrelationID == "" {
+				logger.Info("No next correlation ID found, checking if import is complete")
+
+				// Mark the import as completed since there's nothing more to process
+				if existingStatus != nil {
+					existingStatus.Status = "completed"
+					existingStatus.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(existingStatus)
+					logger.Info("Import marked as completed - no more data to process")
+				}
+				return nil
 			}
-
-			// Optimize chunks using simulation AFTER file processing to ensure accurate gas estimation
-			// This ensures we estimate gas based on the actual data that will be processed (after resume filtering)
-			logger.Info("Optimizing chunks using simulation")
-			logger.Info("Pre-optimization chunk info",
-				"total_chunks", len(processor.chunks),
-				"total_ledgers", chunkedState.TotalLedgers,
-				"total_entries", chunkedState.TotalEntries)
-
-			// Use stored gas costs if available (for resume), otherwise run simulations
-			if isResume && existingStatus != nil && existingStatus.GasCosts != nil {
-				logger.Info("Using stored gas costs for chunk optimization during resume")
-				err = processor.optimizeChunksUsingStoredCosts(existingStatus.GasCosts)
-			} else {
-				logger.Info("Running gas cost estimation for fresh import")
-				err = processor.optimizeChunksUsingSimulation(clientCtx, cmd)
-			}
-			if err != nil {
-				return fmt.Errorf("failed to optimize chunks: %w", err)
-			}
-
-			// Update chunkedState with optimized chunks
-			chunkedState.Chunks = processor.chunks
-			chunkedState.TotalChunks = len(processor.chunks)
-
-			logger.Info("Post-optimization chunk info",
-				"total_chunks", len(processor.chunks),
-				"total_ledgers", chunkedState.TotalLedgers,
-				"total_entries", chunkedState.TotalEntries)
 
 			logger.Info("Import summary",
 				"import_id", importID,
-				"total_ledgers", chunkedState.TotalLedgers,
-				"total_entries", chunkedState.TotalEntries,
-				"total_chunks", chunkedState.TotalChunks,
 				"max_chunk_size_bytes", config.MaxChunkSizeBytes,
 				"max_tx_size_bytes", config.MaxTxSizeBytes,
 				"status_check_command", fmt.Sprintf("provenanced query ledger bulk-import-status %s --chain-id %s", importID, clientCtx.ChainID))
@@ -560,13 +575,13 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 						"entry_gas", status.GasCosts.EntryGas)
 				}
 			} else {
-				// Create new status
+				// Create new status - we'll update totals as we process
 				status = &LocalBulkImportStatus{
 					ImportID:        importID,
-					TotalChunks:     chunkedState.TotalChunks,
+					TotalChunks:     0, // Will be updated as we process
 					CompletedChunks: 0,
-					TotalLedgers:    chunkedState.TotalLedgers,
-					TotalEntries:    chunkedState.TotalEntries,
+					TotalLedgers:    0, // Will be updated as we process
+					TotalEntries:    0, // Will be updated as we process
 					Status:          "pending",
 					CreatedAt:       time.Now().Format(time.RFC3339),
 					UpdatedAt:       time.Now().Format(time.RFC3339),
@@ -583,9 +598,9 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 
 			if !confirm {
 				if isResume {
-					fmt.Printf("Resume import from chunk %d/%d? (y/N): ", startChunkIndex+1, chunkedState.TotalChunks)
+					fmt.Printf("Resume import from correlation ID %s? (y/N): ", lastSuccessfulCorrelationID)
 				} else {
-					fmt.Print("Proceed with chunked import? (y/N): ")
+					fmt.Print("Proceed with streaming import? (y/N): ")
 				}
 				var response string
 				fmt.Scanln(&response)
@@ -602,24 +617,46 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				_ = writeLocalBulkImportStatus(status)
 			}
 
-			// Process chunks starting from the resume point
-			logger.Info("Starting chunk processing",
-				"total_chunks", len(chunkedState.Chunks),
-				"start_chunk", startChunkIndex+1,
+			// Initialize streaming processor
+			streamingProcessor := NewStreamingChunkProcessor(config, logger)
+			defer streamingProcessor.Close()
+
+			// Open file for streaming
+			err = streamingProcessor.OpenFile(genesisStateFile, lastSuccessfulCorrelationID)
+			if err != nil {
+				return fmt.Errorf("failed to open file for streaming: %w", err)
+			}
+
+			// Process chunks using streaming
+			logger.Info("Starting streaming chunk processing",
 				"is_resume", isResume,
 				"last_correlation_id", lastSuccessfulCorrelationID)
 
-			for i := startChunkIndex; i < len(chunkedState.Chunks); i++ {
-				chunk := chunkedState.Chunks[i]
-				logger.Info("Processing chunk", "chunk_index", i+1, "total_chunks", chunkedState.TotalChunks)
+			chunkIndex := 0
+			for {
+				chunk, err := streamingProcessor.NextChunkWithGasLimit(gasCosts)
+				if err == io.EOF {
+					logger.Info("Reached end of file")
+					break
+				}
+				if err != nil {
+					status.Status = "failed"
+					status.ErrorMessage = fmt.Sprintf("failed to read chunk %d: %v", chunkIndex+1, err)
+					status.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(status)
+					return fmt.Errorf("failed to read chunk %d: %w", chunkIndex+1, err)
+				}
+
+				chunkIndex++
+				logger.Info("Processing chunk", "chunk_index", chunkIndex)
 
 				// Validate chunk before processing
 				if chunk == nil {
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("chunk %d is nil", i+1)
+					status.ErrorMessage = fmt.Sprintf("chunk %d is nil", chunkIndex)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("chunk %d is nil", i+1)
+					return fmt.Errorf("chunk %d is nil", chunkIndex)
 				}
 
 				chunkEntries := 0
@@ -628,67 +665,40 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				}
 				chunkSize := getChunkSizeBytes(chunk)
 
-				// Get gas estimate for this chunk
-				var chunkGas uint64
-				if status.GasCosts != nil {
-					// Use stored gas costs to estimate gas for this chunk
-					gas := estimateChunkGasFromCosts(chunk, status.GasCosts)
-					chunkGas = uint64(gas)
-					logger.Info("Using stored gas costs for chunk", "chunk_index", i+1, "gas", chunkGas)
-				} else {
-					// Simulate to get gas estimate and store the costs for future use
-					gas, err := simulateChunkGas(chunk, clientCtx, cmd)
-					chunkGas = uint64(gas)
-					if err != nil {
-						status.Status = "failed"
-						status.ErrorMessage = fmt.Sprintf("failed to estimate gas for chunk %d: %v", i+1, err)
-						status.UpdatedAt = time.Now().Format(time.RFC3339)
-						_ = writeLocalBulkImportStatus(status)
-						return fmt.Errorf("failed to estimate gas for chunk %d: %w", i+1, err)
-					}
+				// Get gas estimate for this chunk using the pre-estimated gas costs
+				gas := estimateChunkGasFromCosts(chunk, gasCosts)
+				chunkGas := uint64(gas)
+				logger.Info("Using estimated gas costs for chunk", "chunk_index", chunkIndex, "gas", chunkGas)
 
-					// Store gas costs for future use (only on first chunk or if not already stored)
-					if status.GasCosts == nil {
-						// Extract gas costs from representative simulations
-						logger.Info("Estimating gas costs from representative simulations")
-						gasCosts, err := estimateGasCosts(chunkedState.Chunks, clientCtx, cmd, logger)
-						if err != nil {
-							logger.Warn("Failed to estimate gas costs, using fallback values", "error", err)
-							// Fallback to reasonable defaults if estimation fails
-							status.GasCosts = &GasCosts{
-								LedgerWithKeyGas: 100000,
-								EntryGas:         5000,
-							}
-						} else {
-							status.GasCosts = gasCosts
-							logger.Info("Stored gas costs for future use",
-								"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
-								"entry_gas", gasCosts.EntryGas)
-						}
-						_ = writeLocalBulkImportStatus(status)
-					}
+				// Store gas costs in status for future use (only on first chunk)
+				if status.GasCosts == nil {
+					status.GasCosts = gasCosts
+					logger.Info("Stored gas costs for future use",
+						"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
+						"entry_gas", gasCosts.EntryGas)
+					_ = writeLocalBulkImportStatus(status)
 				}
 
 				// Validate chunk size against transaction limits
 				if chunkSize > config.MaxTxSizeBytes {
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum transaction size: %d bytes > %d bytes", i+1, chunkSize, config.MaxTxSizeBytes)
+					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum transaction size: %d bytes > %d bytes", chunkIndex, chunkSize, config.MaxTxSizeBytes)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("chunk %d exceeds maximum transaction size: %d bytes > %d bytes", i+1, chunkSize, config.MaxTxSizeBytes)
+					return fmt.Errorf("chunk %d exceeds maximum transaction size: %d bytes > %d bytes", chunkIndex, chunkSize, config.MaxTxSizeBytes)
 				}
 
 				// Validate chunk gas against gas limits
 				if chunkGas > uint64(config.MaxGasPerTx-100000) { // 100k gas safety margin
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum gas limit: %d gas > %d gas", i+1, chunkGas, config.MaxGasPerTx-100000)
+					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum gas limit: %d gas > %d gas", chunkIndex, chunkGas, config.MaxGasPerTx-100000)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("chunk %d exceeds maximum gas limit: %d gas > %d gas", i+1, chunkGas, config.MaxGasPerTx-100000)
+					return fmt.Errorf("chunk %d exceeds maximum gas limit: %d gas > %d gas", chunkIndex, chunkGas, config.MaxGasPerTx-100000)
 				}
 
 				logger.Info("Chunk details",
-					"chunk_index", i+1,
+					"chunk_index", chunkIndex,
 					"ledger_count", len(chunk.LedgerToEntries),
 					"entry_count", chunkEntries,
 					"size_bytes", chunkSize,
@@ -698,10 +708,10 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				clientCtx, err = client.GetClientTxContext(cmd)
 				if err != nil {
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("failed to get client context for chunk %d: %v", i+1, err)
+					status.ErrorMessage = fmt.Sprintf("failed to get client context for chunk %d: %v", chunkIndex, err)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("failed to get client context for chunk %d: %w", i+1, err)
+					return fmt.Errorf("failed to get client context for chunk %d: %w", chunkIndex, err)
 				}
 
 				msg := &types.MsgBulkImportRequest{
@@ -727,7 +737,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 
 						processed, err := checkTransactionAlreadyProcessed(clientCtx, lastChunk.TransactionHash, logger)
 						if err != nil {
-							logger.Warn("Failed to check transaction status, proceeding anyway", "error", err)
+							logger.Info("Transaction indexing disabled or unavailable, proceeding with resume", "tx_hash", lastChunk.TransactionHash)
 						} else if processed {
 							// The transaction actually succeeded, mark it as confirmed
 							logger.Info("Last chunk was actually processed successfully, marking as confirmed",
@@ -744,14 +754,14 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				}
 
 				// Broadcast transaction and check its status
-				txHash, err := broadcastAndCheckTx(clientCtx, cmd, msg, i+1, logger)
+				txHash, err := broadcastAndCheckTx(clientCtx, cmd, msg, chunkIndex, logger)
 
 				if err != nil {
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("failed to process chunk %d: %v", i+1, err)
+					status.ErrorMessage = fmt.Sprintf("failed to process chunk %d: %v", chunkIndex, err)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("failed to process chunk %d: %w", i+1, err)
+					return fmt.Errorf("failed to process chunk %d: %w", chunkIndex, err)
 				}
 
 				// Update LastAttemptedChunk immediately after successful broadcast
@@ -764,7 +774,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 						TransactionHash:    txHash, // Set immediately after successful broadcast
 					}
 					logger.Info("Updated last attempted chunk status after successful broadcast",
-						"chunk_index", i+1,
+						"chunk_index", chunkIndex,
 						"first_correlation_id", firstCorrelationID,
 						"last_correlation_id", lastCorrelationID,
 						"tx_hash", txHash)
@@ -776,27 +786,27 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 						logger.Warn("Failed to write status file after broadcast", "error", err)
 					} else {
 						logger.Info("Status file written with transaction hash before confirmation wait",
-							"chunk_index", i+1,
+							"chunk_index", chunkIndex,
 							"tx_hash", txHash,
 							"status_file", statusFileName(status.ImportID))
 					}
 				}
 
 				// Wait for transaction confirmation
-				err = waitForTransactionConfirmation(clientCtx, cmd, i, len(chunkedState.Chunks), logger)
+				err = waitForTransactionConfirmation(clientCtx, cmd, chunkIndex-1, 0, logger) // chunkIndex-1 because waitForTransactionConfirmation expects 0-based index
 				if err != nil {
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("failed to wait for transaction confirmation for chunk %d: %v", i+1, err)
+					status.ErrorMessage = fmt.Sprintf("failed to wait for transaction confirmation for chunk %d: %v", chunkIndex, err)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("failed to wait for transaction confirmation for chunk %d: %w", i+1, err)
+					return fmt.Errorf("failed to wait for transaction confirmation for chunk %d: %w", chunkIndex, err)
 				}
 
 				// Mark last attempted chunk as confirmed after successful transaction confirmation
 				if status.LastAttemptedChunk != nil {
 					status.LastAttemptedChunk.Confirmed = true
 					logger.Info("Marked last attempted chunk as confirmed",
-						"chunk_index", i+1,
+						"chunk_index", chunkIndex,
 						"first_correlation_id", status.LastAttemptedChunk.FirstCorrelationID,
 						"last_correlation_id", status.LastAttemptedChunk.LastCorrelationID)
 				}
@@ -807,13 +817,19 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					logger.Info("Updated last successful correlation ID", "correlation_id", lastCorrelationID)
 				}
 
-				logger.Info("Chunk completed successfully", "chunk_index", i+1, "total_chunks", chunkedState.TotalChunks)
-				status.CompletedChunks = i + 1
+				// Update totals from streaming processor stats
+				stats := streamingProcessor.GetStats()
+				status.TotalLedgers = stats.TotalLedgers
+				status.TotalEntries = stats.TotalEntries
+				status.TotalChunks = chunkIndex
+
+				logger.Info("Chunk completed successfully", "chunk_index", chunkIndex)
+				status.CompletedChunks = chunkIndex
 				status.UpdatedAt = time.Now().Format(time.RFC3339)
 				_ = writeLocalBulkImportStatus(status)
 			}
 
-			logger.Info("All chunks processed successfully", "total_chunks_processed", len(chunkedState.Chunks))
+			logger.Info("All chunks processed successfully", "total_chunks_processed", chunkIndex)
 			status.Status = "completed"
 			status.UpdatedAt = time.Now().Format(time.RFC3339)
 			_ = writeLocalBulkImportStatus(status)
