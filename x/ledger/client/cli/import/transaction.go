@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
+	"gopkg.in/yaml.v3"
 )
 
 // extractTxHashFromOutput attempts to extract a transaction hash from the output string
@@ -36,6 +38,37 @@ func extractTxHashFromOutput(output string) string {
 	}
 
 	return ""
+}
+
+// parseTransactionResponse attempts to parse transaction response in multiple formats
+func parseTransactionResponse(outputBytes []byte, outputStr string) (*sdk.TxResponse, string, error) {
+	var txResp sdk.TxResponse
+	var txHash string
+
+	// Try JSON parsing first
+	if err := json.Unmarshal(outputBytes, &txResp); err == nil {
+		// JSON parsing successful
+		return &txResp, txResp.TxHash, nil
+	}
+
+	// Try YAML parsing
+	if err := yaml.Unmarshal(outputBytes, &txResp); err == nil {
+		// YAML parsing successful
+		return &txResp, txResp.TxHash, nil
+	}
+
+	// If both JSON and YAML parsing fail, try to extract hash from the output string
+	txHash = extractTxHashFromOutput(outputStr)
+	if txHash != "" {
+		// Create a minimal response with just the hash
+		return &sdk.TxResponse{
+			TxHash: txHash,
+			Code:   0, // Assume success if we can extract hash
+		}, txHash, nil
+	}
+
+	// All parsing methods failed
+	return nil, "", fmt.Errorf("could not parse transaction response in JSON, YAML, or extract hash from output")
 }
 
 // broadcastAndCheckTx broadcasts a transaction and checks its response for success/failure
@@ -65,25 +98,18 @@ func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.M
 	outputStr := string(outputBytes)
 	logger.Debug("Transaction output captured", "chunk_index", chunkIndex, "output", outputStr)
 
-	var txResp sdk.TxResponse
-	var txHash string
-
-	if err := clientCtx.Codec.UnmarshalJSON(outputBytes, &txResp); err != nil {
-		// If we can't parse the response, try to extract tx hash from the output string
-		logger.Debug("Could not parse transaction response", "output", outputStr, "error", err)
-
-		// Try to extract transaction hash from the output string
-		// Look for patterns like "txhash: ABC123..." or "hash: ABC123..."
+	// Parse transaction response in multiple formats
+	txResp, txHash, err := parseTransactionResponse(outputBytes, outputStr)
+	if err != nil {
+		logger.Warn("Could not parse transaction response, but transaction may have succeeded", "error", err)
+		// Try to extract hash as last resort
 		txHash = extractTxHashFromOutput(outputStr)
 		if txHash == "" {
-			logger.Warn("Could not extract transaction hash from output", "output", outputStr)
-		} else {
-			logger.Info("Extracted transaction hash from output", "tx_hash", txHash)
+			return "", fmt.Errorf("failed to parse transaction response or extract hash for chunk %d: %w", chunkIndex, err)
 		}
+		logger.Info("Extracted transaction hash from output", "tx_hash", txHash)
 	} else {
 		// Successfully parsed the response
-		txHash = txResp.TxHash
-
 		// Check if the transaction was successful
 		if txResp.Code != 0 {
 			logger.Error("Transaction failed",
