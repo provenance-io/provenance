@@ -1,8 +1,6 @@
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.nio.file.Paths
 
@@ -13,7 +11,7 @@ plugins {
     id(PluginIds.Protobuf) version PluginVersions.Protobuf
     id(PluginIds.MavenPublish)
     id(PluginIds.Signing)
-    id(PluginIds.KtLint) version PluginVersions.KtLint
+    id(PluginIds.Spotless) version PluginVersions.KtLint
 }
 
 group = project.property("group.id") as String
@@ -45,23 +43,31 @@ dependencies {
     implementation(Libraries.GrpcStub)
 }
 
+spotless {
+    kotlin {
+        targetExclude("**/generated/**")
+        ktlint()
+    }
+}
+
 tasks.jar {
     archiveBaseName.set("proto-${project.name}")
+    exclude("**/google/**")
 }
 
 tasks.withType<Javadoc> { enabled = true }
 
 tasks.withType<JavaCompile> {
-    sourceCompatibility = JavaVersion.VERSION_11.toString()
+    sourceCompatibility = JavaVersion.VERSION_17.toString()
     targetCompatibility = sourceCompatibility
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
-        jvmTarget = "11"
-        languageVersion = "1.5"
-        apiVersion = "1.5"
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
+        jvmTarget.set(JvmTarget.JVM_17)
+        languageVersion.set(KotlinVersion.KOTLIN_2_0)
+        apiVersion.set(KotlinVersion.KOTLIN_2_0)
     }
 }
 
@@ -78,7 +84,11 @@ sourceSets.main {
                 File(path).normalize()
             }
         }
+
     proto.srcDirs(protoDirs)
+
+    // Exclude Google well-known types from compilation
+    proto.exclude("**/google/**")
 }
 
 // For more advanced options see: https://github.com/google/protobuf-gradle-plugin

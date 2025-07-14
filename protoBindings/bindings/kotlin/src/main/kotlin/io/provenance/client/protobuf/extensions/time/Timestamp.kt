@@ -54,11 +54,12 @@ private fun TimestampOrBuilder.bound(): TimestampOrBuilder {
 /**
  * Get Timestamp as OffsetDateTime (system time zone) if can; otherwise, return null
  */
-fun TimestampOrBuilder.toOffsetDateTimeOrNull(): OffsetDateTime? = try {
-    toOffsetDateTime(ZoneId.systemDefault())
-} catch (t: Throwable) {
-    null
-}
+fun TimestampOrBuilder.toOffsetDateTimeOrNull(): OffsetDateTime? =
+    try {
+        toOffsetDateTime(ZoneId.systemDefault())
+    } catch (t: Throwable) {
+        null
+    }
 
 /**
  * Get Timestamp as OffsetDateTime (system time zone)
@@ -68,11 +69,12 @@ fun TimestampOrBuilder.toOffsetDateTime(): OffsetDateTime = toOffsetDateTime(Zon
 /**
  * Get Timestamp as OffsetDateTime
  */
-fun TimestampOrBuilder.toOffsetDateTimeOrNull(zoneId: ZoneId): OffsetDateTime? = try {
-    OffsetDateTime.ofInstant(bound().toInstant(), zoneId)
-} catch (t: Throwable) {
-    null
-}
+fun TimestampOrBuilder.toOffsetDateTimeOrNull(zoneId: ZoneId): OffsetDateTime? =
+    try {
+        OffsetDateTime.ofInstant(bound().toInstant(), zoneId)
+    } catch (t: Throwable) {
+        null
+    }
 
 /**
  * Get Timestamp as OffsetDateTime

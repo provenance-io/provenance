@@ -1,8 +1,4 @@
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
 import java.nio.file.Paths
 
 plugins {
@@ -40,12 +36,13 @@ dependencies {
 
 tasks.jar {
     archiveBaseName.set("proto-${project.name}")
+    exclude("**/google/**")
 }
 
 tasks.withType<Javadoc> { enabled = true }
 
 tasks.withType<JavaCompile> {
-    sourceCompatibility = JavaVersion.VERSION_11.toString()
+    sourceCompatibility = JavaVersion.VERSION_17.toString()
     targetCompatibility = sourceCompatibility
 }
 
@@ -62,7 +59,11 @@ sourceSets.main {
                 File(path).normalize()
             }
         }
+
     proto.srcDirs(protoDirs)
+
+    // Exclude Google well-known types from compilation
+    proto.exclude("**/google/**")
 }
 
 // For more advanced options see: https://github.com/google/protobuf-gradle-plugin
