@@ -143,7 +143,9 @@ publishing {
         }
     }
 
-    signing {
-        sign(publishing.publications["mavenJava"])
+    if (!project.hasProperty("signing.disabled")) {
+        signing {
+            sign(publishing.publications["mavenJava"])
+        }
     }
 }
