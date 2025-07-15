@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"sort"
@@ -26,7 +27,6 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -1266,4 +1266,109 @@ func TestMakeMsgFees(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLogCostGrid(t *testing.T) {
+	// This test just outputs (to logs) a table of costs at various conversion factors.
+	// Delete this test with the other bouvardia stuff.
+	// 1 hash = $0.025, so 1000000000nhash = 25musd.
+	// Define the conversion factor musd amounts (per 1 hash).
+	cfVals := []int64{20, 25, 30, 35, 40, 50, 75, 100}
+	// Define a set of costs (in musd) that we always want in the table. All actually used amounts are automatically included.
+	standardCosts := []int64{5, 50, 100, 150, 250, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000}
+
+	// Create the conversion factors.
+	cfs := make([]flatfeestypes.ConversionFactor, len(cfVals))
+	for i, cf := range cfVals {
+		cfs[i] = flatfeestypes.ConversionFactor{
+			DefinitionAmount: sdk.NewInt64Coin("musd", cf),
+			ConvertedAmount:  sdk.NewInt64Coin("nhash", 1000000000),
+		}
+	}
+
+	// Combine the standard costs with all the actual costs without dups.
+	// Start with the standard costs that we always want in the list.
+	allCostAmounts := make(map[int64]bool)
+	for _, amt := range standardCosts {
+		allCostAmounts[amt] = true
+	}
+
+	// Add all the ones actually used, keeping track of them (for later reference).
+	var usedCostAmounts []int64
+	costUsed := make(map[int64]bool)
+	for _, msgFee := range MakeFlatFeesCosts() {
+		amt := msgFee.Cost.AmountOf("musd").Int64()
+		if !costUsed[amt] {
+			usedCostAmounts = append(usedCostAmounts, amt)
+		}
+		costUsed[amt] = true
+		allCostAmounts[amt] = true
+	}
+	// The default isn't in this list, but should still be considered in use.
+	if !costUsed[150] {
+		costUsed[150] = true
+		usedCostAmounts = append(usedCostAmounts, 150)
+	}
+
+	// Get the deduped list of cost amounts, sorted smallest to largest.
+	costAmounts := slices.Sorted(maps.Keys(allCostAmounts))
+	costs := make([]sdk.Coin, len(costAmounts))
+	for i, amt := range costAmounts {
+		costs[i] = sdk.NewInt64Coin("musd", amt)
+	}
+
+	// usdStr converts an amount of musd into a string in the format of "$1.234". The string will always
+	// start with $, then have all needed whole digits and exactly three fractional digits.
+	usdStr := func(musdAmount sdkmath.Int) string {
+		rv := musdAmount.String()
+		if len(rv) < 4 {
+			rv = strings.Repeat("0", 4-len(rv)) + rv
+		}
+		p := len(rv) - 3
+		return "$" + rv[:p] + "." + rv[p:]
+	}
+	// hashStr converts an amount of nhash into a string in the format of "1.23 hash". It will always have
+	// at least one whole digit and exactly two fractional digits, and will always end with " hash".
+	// Extra fractional decimals are simply truncated.
+	hashStr := func(nhashAmount sdkmath.Int) string {
+		rv := nhashAmount.String()
+		if len(rv) < 10 {
+			rv = strings.Repeat("0", 10-len(rv)) + rv
+		}
+		p := len(rv) - 9
+		return rv[:p] + "." + rv[p:p+2] + " hash"
+	}
+
+	// Create a line for each cost amount.
+	lines := make([]string, len(costAmounts))
+	for i, costAmt := range costAmounts {
+		cost := sdk.NewInt64Coin("musd", costAmt)
+		// Create a column for each conversion factor.
+		parts := make([]string, len(cfs))
+		for j, cf := range cfs {
+			convCost := cf.ConvertCoin(cost)
+			parts[j] = fmt.Sprintf("%11s", hashStr(convCost.Amount))
+		}
+		// Put together the whole line.
+		lines[i] = fmt.Sprintf("%8s = %s", usdStr(cost.Amount), strings.Join(parts, " | "))
+		if !costUsed[costAmt] {
+			lines[i] = "x" + strings.TrimPrefix(lines[i], " ")
+		}
+	}
+	head := make([]string, len(cfs))
+	for j, cf := range cfs {
+		head[j] = fmt.Sprintf("%9s", usdStr(cf.DefinitionAmount.Amount)) + "  "
+	}
+	head[0] = "usd/hash = " + head[0]
+	headLine := strings.Join(head, " | ")
+	hrBz := make([]rune, len(headLine))
+	for i, r := range headLine {
+		switch r {
+		case '|':
+			hrBz[i] = '+'
+		default:
+			hrBz[i] = '-'
+		}
+	}
+	t.Logf("Defined Costs at various conversion factors:\n%s\n%s\n%s", headLine, string(hrBz), strings.Join(lines, "\n"))
 }
