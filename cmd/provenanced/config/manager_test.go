@@ -259,9 +259,9 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 	configDir := GetFullPathToConfigDir(s.makeDummyCmd())
 	s.Require().NoError(os.MkdirAll(configDir, 0o755), "making config dir")
 
-	pioconfig.SetProvenanceConfig("manager", 42)
-	defaultMinGasPrices := pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
-	s.Require().NotEqual("", defaultMinGasPrices, "ProvenanceMinGasPrices")
+	pioconfig.SetProvConfig("manager")
+	defaultMinGasPrices := pioconfig.GetProvConfig().ProvMinGasPrices
+	s.Require().NotEqual("", defaultMinGasPrices, "ProvMinGasPrices")
 
 	s.Run("DefaultAppConfig has MinGasPrices", func() {
 		cfg := DefaultAppConfig()

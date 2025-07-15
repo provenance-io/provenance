@@ -10,13 +10,6 @@ import (
 func (k Keeper) RegisterTrigger(ctx sdk.Context, trigger triggertypes.Trigger) {
 	k.SetTrigger(ctx, trigger)
 	k.SetEventListener(ctx, trigger)
-
-	gasLimit := ctx.GasMeter().GasRemaining() - SetGasLimitCost
-	if gasLimit > MaximumTriggerGas {
-		gasLimit = MaximumTriggerGas
-	}
-	k.SetGasLimit(ctx, trigger.GetId(), gasLimit)
-	ctx.GasMeter().ConsumeGas(gasLimit, "trigger creation")
 }
 
 // UnregisterTrigger Removes the trigger from the trigger, and event listener

@@ -1,54 +1,49 @@
-<!--
-order: 4
--->
-
 # MsgFees Queries
 
+Since the msgfees module is deprecated, most queries have been removed except `CalculateTxFees`.
 
-## Msg/GenesisState
+## CalculateTxFees
 
-GenesisState contains a set of msg fees, exported and later imported from/to the store.
-[genesis.proto](../../../proto/provenance/msgfees/v1/genesis.proto?plain=1)
+This query has been deprecated in favor of a query in the `x/flatfees` module with the same name.
+This query will be removed in a future version (possibly the next), but is still available to help users transition to the new query.
+This query is implemented by calling the `x/flatfees` version and returning its response anyway.
+Now, only the `total_fees` and `estimated_gas` fields will be populated.
 
+Also, the `gas_adjustment` now only applies to the returned `estimated_gas` field, and does not affect the `total_fees` (since those are flat now).
 
-## Query Request/Response Object
-get params for the module. [get params](../../../proto/provenance/msgfees/v1/query.proto?plain=1)  
+### CalculateTxFeesRequest
 
-[query all msgfees in the system](../../../proto/provenance/msgfees/v1/query.proto?plain=1)
-QueryAllMsgFeesRequest/QueryAllMsgFeesResponse resquest/response for all messages
-which have fees associated with them.
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/msgfees/v1/query.proto#L26-L38
 
-[simuate fees(including additional fees to be paid for a Tx)](../../../proto/provenance/msgfees/v1/query.proto?plain=1)
-To simulate the fees required on the Tx use CalculateTxFeesRequest
+### CalculateTxFeesResponse
 
-Request: [CalculateTxFeesRequest](../../../proto/provenance/msgfees/v1/query.proto#L59-L68)
-```protobuf
-// CalculateTxFeesRequest is the request type for the Query RPC method.
-message CalculateTxFeesRequest {
-  // tx_bytes is the transaction to simulate.
-  bytes tx_bytes = 1;
-  // default_base_denom is used to set the denom used for gas fees
-  // if not set it will default to nhash.
-  string default_base_denom = 2;
-  // gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation
-  float gas_adjustment = 3;
-}
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/msgfees/v1/query.proto#L40-L62
+
+### CalculateTxFees Client Info
+
+The standard SDK's simulation method looks like this:
+
+```kotlin
+val cosmosService = cosmos.tx.v1beta1.ServiceGrpc.newBlockingStub(channel)
+cosmosService.simulate(SimulateRequest.newBuilder().setTx(txFinal).build()).gasInfo.gasUsed
 ```
 
-Response: [CalculateTxFeesResponse](../../../proto/provenance/msgfees/v1/query.proto#L68-L79)
-```protobuf
-// CalculateTxFeesResponse is the response type for the Query RPC method.
-message CalculateTxFeesResponse {
-  // additional_fees are the amount of coins to be for addition msg fees
-  repeated cosmos.base.v1beta1.Coin additional_fees = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
-  // note: the gas fee is calculated with the floor gas price module param.
-  repeated cosmos.base.v1beta1.Coin total_fees = 2
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // estimated_gas is the amount of gas needed for the transaction
-  uint64 estimated_gas = 3;
-}
+Using the msgsfees query looks like this (deprecated):
+
+```kotlin
+val msgFeeClient = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
+msgFeeClient.calculateTxFees(CalculateTxFeesRequest.newBuilder().setTx(txFinal).build())
 ```
 
-Total fee is calculated based on `floor_gas_price` param set to 1905nhash for now.
+Using the flatfees query looks like this:
+
+```kotlin
+val flatFeeClient = io.provenance.flatfees.v1.QueryGrpc.newBlockingStub(channel)
+flatFeeClient.calculateTxFees(QueryCalculateTxFeesRequest.newBuilder().setTx(txFinal).build())
+```
+
+Or from the cmd line as (this uses the flatfees query now):
+
+```bash
+provenanced tx simulate <required params>
+```

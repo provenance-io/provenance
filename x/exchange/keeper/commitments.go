@@ -297,7 +297,7 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 		return nil, fmt.Errorf("market %d does not have an intermediary denom", req.MarketId)
 	}
 
-	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+	feeDenom := pioconfig.GetProvConfig().FeeDenom
 	if convDenom != feeDenom {
 		rv.ToFeeNav = k.lookupNav(ctx, convDenom, feeDenom, req.Navs)
 		if rv.ToFeeNav == nil {
@@ -450,11 +450,11 @@ func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTran
 
 // consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.
 func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
-	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)
+	calcResp, err := k.CalculateCommitmentSettlementFee(ctx, req)
 	if err != nil {
 		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
 	}
-	antewrapper.ConsumeMsgFee(ctx, exchangeFees.ExchangeFees, req, "")
+	antewrapper.ConsumeAdditionalFee(ctx, calcResp.ExchangeFees)
 	return nil
 }
 

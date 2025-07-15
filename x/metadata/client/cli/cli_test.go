@@ -133,7 +133,7 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("atom", 0)
+	pioconfig.SetProvConfig("atom")
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1

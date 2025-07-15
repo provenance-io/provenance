@@ -115,7 +115,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	err = testutil.FundAccount(ctx, bk, account.GetAddress(), sdk.NewCoins(sdk.Coin{
-		Denom:  pioconfig.GetProvenanceConfig().BondDenom,
+		Denom:  pioconfig.GetProvConfig().BondDenom,
 		Amount: sdkmath.NewInt(1_000_000_000_000_000),
 	}))
 	if err != nil {

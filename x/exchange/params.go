@@ -23,7 +23,7 @@ const (
 
 // DefaultParams returns the default exchange module params.
 func DefaultParams() *Params {
-	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+	feeDenom := pioconfig.GetProvConfig().FeeDenom
 	return &Params{
 		DefaultSplit:         DefaultDefaultSplit,
 		DenomSplits:          nil,
