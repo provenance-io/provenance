@@ -1261,7 +1261,8 @@ func TestMakeMsgFees(t *testing.T) {
 				if i == j {
 					continue
 				}
-				assert.NotEqual(t, msgFee.MsgTypeUrl, msgFee2.MsgTypeUrl, "MsgTypeUrl of msgFees[%d] and msgFees[%d]", i, j)
+				assert.NotEqual(t, msgFee.MsgTypeUrl, msgFee2.MsgTypeUrl,
+					"MsgTypeUrl of msgFees[%d]=%s and msgFees[%d]=%s", i, msgFee.Cost, j, msgFee2.Cost)
 			}
 		})
 	}

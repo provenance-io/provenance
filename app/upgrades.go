@@ -515,10 +515,10 @@ func MakeFlatFeesParams() flatfeestypes.Params {
 // MakeFlatFeesCosts returns the list of MsgFees that we want to set.
 // Part of the bouvardia upgrade.
 func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
-	// TODO[fees]: Identify the new Msgs being added how much we want them to cost, and add them to this list.
+	// TODO[fees]: Identify the new Msgs being added, how much we want them to cost, and add them to this list.
 	return []*flatfeestypes.MsgFee{
-		// Free Msg types. These are gov-prop-only Msg types. A gov prop costs $2.50 + the cost of each msg in it.
-		// So even though these msgs are free, it'll still cost $2.50 to submit one.
+		// Free Msg types. These are gov-prop-only Msg types. A gov prop costs $2.00 + the cost of each msg in it.
+		// So even though these msgs are free, it'll still cost $2.00 to submit one.
 		flatfeestypes.NewMsgFee("/cosmos.auth.v1beta1.MsgUpdateParams"),
 		flatfeestypes.NewMsgFee("/cosmos.bank.v1beta1.MsgSetSendEnabled"),
 		flatfeestypes.NewMsgFee("/cosmos.bank.v1beta1.MsgUpdateDenomMetadata"),
@@ -664,9 +664,12 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/ibc.core.connection.v1.MsgConnectionOpenConfirm", feeDefCoin(1500)),
 		flatfeestypes.NewMsgFee("/ibc.core.connection.v1.MsgConnectionOpenTry", feeDefCoin(1500)),
 
+		// Msgs that cost $2.00.
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgSubmitProposal", feeDefCoin(2000)),
+		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgSubmitProposal", feeDefCoin(2000)),
+
 		// Msgs that cost $2.50.
-		flatfeestypes.NewMsgFee("/cosmos.gov.v1.MsgSubmitProposal", feeDefCoin(2500)),
-		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgSubmitProposal", feeDefCoin(2500)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest", feeDefCoin(2500)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddMarkerRequest", feeDefCoin(2500)),
 	}
 }
