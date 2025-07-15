@@ -26,7 +26,7 @@ object PluginVersions { // please keep this sorted in sections
     const val NexusPublish = "1.1.0"
 
     // KtLint
-    const val KtLint = "7.1.0"
+    const val Spotless = "7.1.0"
 }
 
 object Versions {

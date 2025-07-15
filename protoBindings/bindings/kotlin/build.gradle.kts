@@ -12,7 +12,7 @@ plugins {
     id(PluginIds.Protobuf) version PluginVersions.Protobuf
     id(PluginIds.MavenPublish)
     id(PluginIds.Signing)
-    id(PluginIds.Spotless) version PluginVersions.KtLint
+    id(PluginIds.Spotless) version PluginVersions.Spotless
 }
 
 group = project.property("group.id") as String
