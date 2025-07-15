@@ -1576,6 +1576,129 @@ func TestGetFlatFeeGasMeter(t *testing.T) {
 	}
 }
 
+func TestConsumeMsg(t *testing.T) {
+	// cz is a shorter way to call sdk.ParseCoinsNormalized, and it requires it to work.
+	cz := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		require.NoError(t, err, "ParseCoinNormalized(%q)", coins)
+		return rv
+	}
+	// newGM returns a new FlatFeeGasMeter ensuring that the knownMsgs map isn't nil.
+	newGM := func(gm FlatFeeGasMeter) *FlatFeeGasMeter {
+		if gm.knownMsgs == nil {
+			gm.knownMsgs = make(map[string]int)
+		}
+		return &gm
+	}
+
+	msg1 := &banktypes.MsgSend{}
+	msg2 := &banktypes.MsgMultiSend{}
+	msg3 := &govv1.MsgVote{}
+
+	msg1Type := sdk.MsgTypeURL(msg1)
+	msg2Type := sdk.MsgTypeURL(msg2)
+	msg3Type := sdk.MsgTypeURL(msg3)
+
+	tests := []struct {
+		name  string
+		ctxGM storetypes.GasMeter
+		msgs  []sdk.Msg
+		expGM *FlatFeeGasMeter
+	}{
+		{
+			name:  "no msgs",
+			ctxGM: newGM(FlatFeeGasMeter{upFrontCost: cz("3apple")}),
+			msgs:  nil,
+			expGM: newGM(FlatFeeGasMeter{upFrontCost: cz("3apple")}),
+		},
+		{
+			name: "one msg: expected",
+			ctxGM: newGM(FlatFeeGasMeter{
+				upFrontCost: cz("4banana"),
+				knownMsgs: map[string]int{
+					msg1Type: 1,
+				},
+				msgTypeURLs: []string{msg1Type},
+			}),
+			msgs: []sdk.Msg{msg1},
+			expGM: newGM(FlatFeeGasMeter{
+				upFrontCost: cz("4banana"),
+				knownMsgs: map[string]int{
+					sdk.MsgTypeURL(msg1): 0,
+				},
+				msgTypeURLs: []string{msg1Type},
+			}),
+		},
+		{
+			name: "one msg: not expected",
+			ctxGM: newGM(FlatFeeGasMeter{
+				upFrontCost: cz("5cherry"),
+				knownMsgs: map[string]int{
+					msg1Type: 0,
+				},
+				msgTypeURLs: []string{msg1Type},
+			}),
+			msgs: []sdk.Msg{msg1},
+			expGM: newGM(FlatFeeGasMeter{
+				upFrontCost: cz("5cherry"),
+				knownMsgs: map[string]int{
+					msg1Type: 0,
+				},
+				extraMsgs:   []sdk.Msg{msg1},
+				msgTypeURLs: []string{msg1Type, msg1Type},
+			}),
+		},
+		{
+			name:  "two msgs: same types",
+			ctxGM: newGM(FlatFeeGasMeter{upFrontCost: cz("14apricot")}),
+			msgs:  []sdk.Msg{msg2, msg2},
+			expGM: newGM(FlatFeeGasMeter{
+				upFrontCost: cz("14apricot"),
+				extraMsgs:   []sdk.Msg{msg2, msg2},
+				msgTypeURLs: []string{msg2Type, msg2Type},
+			}),
+		},
+		{
+			name:  "two msgs: diff types",
+			ctxGM: newGM(FlatFeeGasMeter{upFrontCost: cz("72banana")}),
+			msgs:  []sdk.Msg{msg3, msg1},
+			expGM: newGM(FlatFeeGasMeter{
+				upFrontCost: cz("72banana"),
+				extraMsgs:   []sdk.Msg{msg3, msg1},
+				msgTypeURLs: []string{msg3Type, msg1Type},
+			}),
+		},
+		{
+			name:  "three msgs: diff types",
+			ctxGM: newGM(FlatFeeGasMeter{upFrontCost: cz("2cherry")}),
+			msgs:  []sdk.Msg{msg1, msg2, msg3},
+			expGM: newGM(FlatFeeGasMeter{
+				upFrontCost: cz("2cherry"),
+				extraMsgs:   []sdk.Msg{msg1, msg2, msg3},
+				msgTypeURLs: []string{msg1Type, msg2Type, msg3Type},
+			}),
+		},
+		{
+			name:  "not a flat fee gas meter",
+			ctxGM: storetypes.NewGasMeter(100),
+			msgs:  []sdk.Msg{msg1},
+			expGM: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			testFunc := func() {
+				ConsumeMsg(ctx, tc.msgs...)
+			}
+			require.NotPanics(t, testFunc, "ConsumeMsg")
+			actGM, _ := GetFlatFeeGasMeter(ctx)
+			AssertEqualFlatFeeGasMeters(t, tc.expGM, actGM)
+		})
+	}
+}
+
 func TestConsumeAdditionalFee(t *testing.T) {
 	cz := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
@@ -1618,6 +1741,12 @@ func TestConsumeAdditionalFee(t *testing.T) {
 			ctxGM: &FlatFeeGasMeter{addedFees: cz("3apple,4cherry")},
 			fee:   cz("99banana,18cherry"),
 			expGM: &FlatFeeGasMeter{addedFees: cz("3apple,99banana,22cherry")},
+		},
+		{
+			name:  "not a flat fee gas meter",
+			ctxGM: storetypes.NewGasMeter(100),
+			fee:   cz("12apple"),
+			expGM: nil,
 		},
 	}
 

@@ -334,8 +334,24 @@ func GetFlatFeeGasMeter(ctx sdk.Context) (*FlatFeeGasMeter, error) {
 	return rv, nil
 }
 
+// ConsumeMsg will get the FlatFeeGasMeter from the context and call ConsumeMsg with the provided msg.
+// Use this if you want to include the cost of another Msg in the required fee.
+// If you want to add a specific cost to the required fee, use ConsumeAdditionalFee.
+func ConsumeMsg(ctx sdk.Context, msgs ...sdk.Msg) {
+	// There are some legitimate reasons why we might not get a flat fee gas meter here
+	// (e.g. during a gov prop). In those cases, we just skip consuming this fee and move on.
+	feeGasMeter, err := GetFlatFeeGasMeter(ctx)
+	if err == nil && feeGasMeter != nil {
+		for _, msg := range msgs {
+			feeGasMeter.ConsumeMsg(msg)
+		}
+	}
+}
+
 // ConsumeAdditionalFee will get the FlatFeeGasMeter from the context and call ConsumeAddedFee with the provided fee.
 // Does nothing if the fee is zero, or the context doesn't have a FlatFeeGasMeter.
+// Use this if you want to add a specific amount to the required fee.
+// If you want the cost to reflect a specific Msg type, use ConsumeMsg.
 func ConsumeAdditionalFee(ctx sdk.Context, fee sdk.Coins) {
 	if fee.IsZero() {
 		return
