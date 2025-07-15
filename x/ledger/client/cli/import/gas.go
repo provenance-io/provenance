@@ -12,8 +12,8 @@ import (
 
 	"cosmossdk.io/log"
 
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	"github.com/provenance-io/provenance/x/ledger/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // getChunkSizeBytes returns the actual serialized size of a chunk in bytes
@@ -25,7 +25,7 @@ func getChunkSizeBytes(chunk *types.GenesisState) int {
 	return len(data)
 }
 
-// simulateChunkGas builds, signs, and simulates the transaction for accurate gas estimation
+// simulateChunkGas builds, signs, and simulates the transaction for gas estimation (for validation only)
 func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *cobra.Command) (int, error) {
 	msg := &types.MsgBulkImportRequest{
 		Authority:    clientCtx.FromAddress.String(),
@@ -68,13 +68,13 @@ func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *
 		return 0, fmt.Errorf("failed to encode tx: %w", err)
 	}
 
-	queryClient := msgfeestypes.NewQueryClient(clientCtx)
+	// Use flat fees CalculateTxFees query for simulation
+	queryClient := flatfeestypes.NewQueryClient(clientCtx)
 	response, err := queryClient.CalculateTxFees(
 		context.Background(),
-		&msgfeestypes.CalculateTxFeesRequest{
-			TxBytes:          txBytes,
-			DefaultBaseDenom: "nhash",
-			GasAdjustment:    1.2, // 20% margin
+		&flatfeestypes.QueryCalculateTxFeesRequest{
+			TxBytes:       txBytes,
+			GasAdjustment: 1.2, // 20% margin for gas estimation
 		},
 	)
 	if err != nil {
@@ -84,14 +84,14 @@ func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *
 	return int(response.EstimatedGas), nil
 }
 
-// estimateGasCosts runs representative simulations to understand gas costs
+// estimateGasCosts runs representative simulations to understand gas costs (for validation only)
 func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cmd *cobra.Command, logger log.Logger) (*GasCosts, error) {
 	// Find a representative ledger to use for testing
 	// Only look at the first few chunks to avoid iterating through the entire 2GB dataset
 	var testLedger *types.LedgerToEntries
 	maxChunksToCheck := 3 // Only check first 3 chunks to find a representative ledger
 
-	logger.Info("Starting gas cost estimation",
+	logger.Info("Starting gas cost estimation for validation",
 		"total_chunks", len(chunks),
 		"max_chunks_to_check", maxChunksToCheck)
 
@@ -185,7 +185,7 @@ func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cm
 		}
 	}
 
-	logger.Info("Gas cost calculation completed",
+	logger.Info("Gas cost calculation completed for validation",
 		"ledger_with_key_gas", ledgerWithKeyGas,
 		"ledger_with_entry_gas", ledgerWithEntryGas,
 		"ledger_with_more_entries_gas", ledgerWithMoreEntriesGas,
@@ -197,7 +197,7 @@ func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cm
 	}, nil
 }
 
-// estimateChunkGasFromCosts estimates gas usage for a chunk using the cost model
+// estimateChunkGasFromCosts estimates gas usage for a chunk using the cost model (for validation only)
 func estimateChunkGasFromCosts(chunk *types.GenesisState, costs *GasCosts) int {
 	totalGas := 0
 	for _, lte := range chunk.LedgerToEntries {

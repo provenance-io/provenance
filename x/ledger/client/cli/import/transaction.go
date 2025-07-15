@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
-	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/yaml"
 )
 
 // extractTxHashFromOutput attempts to extract a transaction hash from the output string
@@ -72,7 +72,7 @@ func parseTransactionResponse(outputBytes []byte, outputStr string) (*sdk.TxResp
 }
 
 // broadcastAndCheckTx broadcasts a transaction and checks its response for success/failure
-func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.Msg, chunkIndex int, logger log.Logger) (string, error) {
+func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.Msg, chunkIndex int, logger log.Logger, flatFeeInfo *FlatFeeInfo) (string, error) {
 	// Force broadcast mode to sync for this transaction to ensure it's committed
 	originalBroadcastMode := cmd.Flag(flags.FlagBroadcastMode).Value.String()
 	cmd.Flag(flags.FlagBroadcastMode).Value.Set("sync")
@@ -82,16 +82,29 @@ func broadcastAndCheckTx(clientCtx client.Context, cmd *cobra.Command, msg sdk.M
 	originalOutput := clientCtx.Output
 	clientCtx.Output = &outputBuffer
 
-	// Broadcast transaction
+	// Set flat fee if available
+	if flatFeeInfo != nil && !flatFeeInfo.FeeAmount.IsZero() {
+		// Clear gas-prices to avoid conflict with fees
+		if cmd.Flag("gas-prices") != nil {
+			cmd.Flag("gas-prices").Value.Set("")
+		}
+		// Set the fee amount in the command flags
+		cmd.Flag(flags.FlagFees).Value.Set(flatFeeInfo.FeeAmount.String())
+		logger.Debug("Set flat fee for transaction", "fee", flatFeeInfo.FeeAmount.String())
+	}
+
+	// Use GenerateOrBroadcastTxCLI which provides detailed response information
 	err := tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+	if err != nil {
+		// Restore original broadcast mode and output
+		cmd.Flag(flags.FlagBroadcastMode).Value.Set(originalBroadcastMode)
+		clientCtx.Output = originalOutput
+		return "", fmt.Errorf("failed to broadcast transaction for chunk %d: %w", chunkIndex, err)
+	}
 
 	// Restore original broadcast mode and output
 	cmd.Flag(flags.FlagBroadcastMode).Value.Set(originalBroadcastMode)
 	clientCtx.Output = originalOutput
-
-	if err != nil {
-		return "", fmt.Errorf("failed to broadcast transaction for chunk %d: %w", chunkIndex, err)
-	}
 
 	// Parse the captured output to check transaction status
 	outputBytes := outputBuffer.Bytes()
