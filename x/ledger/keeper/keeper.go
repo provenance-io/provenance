@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"cosmossdk.io/core/store"
@@ -406,18 +407,24 @@ func (k BaseKeeper) CreateDefaultLedgerClass(ctx sdk.Context, ledgerClassID stri
 	ctx.Logger().Info("Created default ledger class", "ledger_class_id", ledgerClassID)
 
 	// Create default status types
-	defaultStatusTypes := []ledger.LedgerClassStatusType{
-		{Id: 1, Code: "IN_REPAYMENT", Description: "In Repayment"},
-		{Id: 24, Code: "DEFAULTED", Description: "Defaulted"},
-		{Id: 2, Code: "IN_FORECLOSURE", Description: "In Foreclosure"},
-		{Id: 3, Code: "FORBEARANCE", Description: "Forbearance"},
-		{Id: 4, Code: "DEFERMENT", Description: "Deferment"},
-		{Id: 5, Code: "BANKRUPTCY", Description: "Bankruptcy"},
-		{Id: 6, Code: "CLOSED", Description: "Closed"},
-		{Id: 7, Code: "CANCELLED", Description: "Cancelled"},
-		{Id: 8, Code: "SUSPENDED", Description: "Suspended"},
-		{Id: 9, Code: "OTHER", Description: "Other"},
+	defaultStatusTypes := []ledger.LedgerClassStatusType{}
+	
+	// Fill in missing entry types for IDs 0-120
+	statusTypeMap := make(map[int]ledger.LedgerClassStatusType)
+	for _, et := range defaultStatusTypes {
+		statusTypeMap[int(et.Id)] = et
 	}
+	for i := 0; i <= 120; i++ {
+		if _, exists := statusTypeMap[i]; !exists {
+			defaultStatusTypes = append(defaultStatusTypes, ledger.LedgerClassStatusType{
+				Id:          int32(i),
+				Code:        fmt.Sprintf("RANDOM_STATUS_%d", i),
+				Description: fmt.Sprintf("Random Status %d", i),
+			})
+		}
+	}
+	// Sort by ID for consistency
+	sort.Slice(defaultStatusTypes, func(i, j int) bool { return defaultStatusTypes[i].Id < defaultStatusTypes[j].Id })
 
 	for _, statusType := range defaultStatusTypes {
 		if err := k.AddClassStatusType(ctx, authorityAddr, ledgerClassID, statusType); err != nil {
@@ -427,71 +434,24 @@ func (k BaseKeeper) CreateDefaultLedgerClass(ctx sdk.Context, ledgerClassID stri
 	}
 
 	// Create default entry types
-	defaultEntryTypes := []ledger.LedgerClassEntryType{
-		{Id: 0, Code: "UNKNOWN", Description: "UNKNOWN"},
-		{Id: 1, Code: "DISBURSEMENT", Description: "DISBURSEMENT"},
-		{Id: 2, Code: "DRAW_DOWN", Description: "DRAW_DOWN"},
-		{Id: 3, Code: "REFUND", Description: "REFUND"},
-		{Id: 10, Code: "AUTOMATIC_PAYMENT", Description: "AUTOMATIC_PAYMENT"},
-		{Id: 11, Code: "AUTOMATIC_PAYMENT_IN_KIND", Description: "AUTOMATIC_PAYMENT_IN_KIND"},
-		{Id: 12, Code: "MANUAL_PAYMENT", Description: "MANUAL_PAYMENT"},
-		{Id: 13, Code: "MANUAL_PAYMENT_IN_KIND", Description: "MANUAL_PAYMENT_IN_KIND"},
-		{Id: 14, Code: "CREDIT", Description: "CREDIT"},
-		{Id: 15, Code: "PAYOFF", Description: "PAYOFF"},
-		{Id: 16, Code: "SUSPENDED_PAYMENT", Description: "SUSPENDED_PAYMENT"},
-		{Id: 17, Code: "REQUESTED_ALLOCATION_MANUAL_PAYMENT", Description: "REQUESTED_ALLOCATION_MANUAL_PAYMENT"},
-		{Id: 18, Code: "INTEREST_PREPAYMENT", Description: "INTEREST_PREPAYMENT"},
-		{Id: 19, Code: "EXTERNAL_PAYMENT", Description: "EXTERNAL_PAYMENT"},
-		{Id: 20, Code: "CREDIT_SETTLEMENT", Description: "CREDIT_SETTLEMENT"},
-		{Id: 30, Code: "FEE", Description: "FEE"},
-		{Id: 31, Code: "ORIGINATION_FEE", Description: "ORIGINATION_FEE"},
-		{Id: 32, Code: "LATE_FEE", Description: "LATE_FEE"},
-		{Id: 33, Code: "NSF_FEE", Description: "NSF_FEE"},
-		{Id: 34, Code: "RELEASE_FEE", Description: "RELEASE_FEE"},
-		{Id: 35, Code: "SUBORDINATION_FEE", Description: "SUBORDINATION_FEE"},
-		{Id: 36, Code: "MANUAL_NOTARY_COST", Description: "MANUAL_NOTARY_COST"},
-		{Id: 37, Code: "MANUAL_NOTARY_ATTORNEY_FEE", Description: "MANUAL_NOTARY_ATTORNEY_FEE"},
-		{Id: 38, Code: "INTANGIBLE_TAX", Description: "INTANGIBLE_TAX"},
-		{Id: 39, Code: "MORTGAGE_TAX", Description: "MORTGAGE_TAX"},
-		{Id: 40, Code: "STATE_TRANSFER_TAX", Description: "STATE_TRANSFER_TAX"},
-		{Id: 41, Code: "LOCAL_TRANSFER_TAX", Description: "LOCAL_TRANSFER_TAX"},
-		{Id: 42, Code: "RECORDATION_TRANSFER_STAMP_TAX", Description: "RECORDATION_TRANSFER_STAMP_TAX"},
-		{Id: 43, Code: "FULL_PROPERTY_REPORT", Description: "FULL_PROPERTY_REPORT"},
-		{Id: 44, Code: "INSTANT_TITLE", Description: "INSTANT_TITLE"},
-		{Id: 45, Code: "PRE_PAYMENT_FEE", Description: "PRE_PAYMENT_FEE"},
-		{Id: 50, Code: "ADJUSTMENT", Description: "ADJUSTMENT"},
-		{Id: 51, Code: "REVERSAL", Description: "REVERSAL"},
-		{Id: 52, Code: "RECALCULATION_ADJUSTMENT", Description: "RECALCULATION_ADJUSTMENT"},
-		{Id: 53, Code: "FUNDING_BOUNCE_INTEREST_ADJUSTMENT", Description: "FUNDING_BOUNCE_INTEREST_ADJUSTMENT"},
-		{Id: 54, Code: "COLLATERAL_LIQUIDATION_RECALCULATION_ADJUSTMENT", Description: "COLLATERAL_LIQUIDATION_RECALCULATION_ADJUSTMENT"},
-		{Id: 60, Code: "COLLATERAL_LIQUIDATION", Description: "COLLATERAL_LIQUIDATION"},
-		{Id: 61, Code: "COLLATERAL_SLIPPAGE", Description: "COLLATERAL_SLIPPAGE"},
-		{Id: 70, Code: "ESCROW_REFUND", Description: "ESCROW_REFUND"},
-		{Id: 71, Code: "ESCROW_PAYMENT", Description: "ESCROW_PAYMENT"},
-		{Id: 72, Code: "SERVICER_ADVANCE", Description: "SERVICER_ADVANCE"},
-		{Id: 73, Code: "LENDER_PLACED_FLOOD_INSURANCE", Description: "LENDER_PLACED_FLOOD_INSURANCE"},
-		{Id: 74, Code: "LENDER_PLACED_HAZARD_INSURANCE", Description: "LENDER_PLACED_HAZARD_INSURANCE"},
-		{Id: 75, Code: "ESCROW_PREPAYMENT", Description: "ESCROW_PREPAYMENT"},
-		{Id: 76, Code: "INSURANCE_DISBURSEMENT", Description: "INSURANCE_DISBURSEMENT"},
-		{Id: 77, Code: "TAX_DISBURSEMENT", Description: "TAX_DISBURSEMENT"},
-		{Id: 78, Code: "ESCROW_CLOSEOUT", Description: "ESCROW_CLOSEOUT"},
-		{Id: 79, Code: "INTEREST_ON_ESCROW", Description: "INTEREST_ON_ESCROW"},
-		{Id: 90, Code: "DEFERMENT", Description: "DEFERMENT"},
-		{Id: 91, Code: "RATE_CHANGE", Description: "RATE_CHANGE"},
-		{Id: 92, Code: "SETTLEMENT_WRITE_OFF", Description: "SETTLEMENT_WRITE_OFF"},
-		{Id: 93, Code: "FORECLOSURE", Description: "FORECLOSURE"},
-		{Id: 94, Code: "CLOSING_CREDIT", Description: "CLOSING_CREDIT"},
-		{Id: 95, Code: "CLOSING_COST", Description: "CLOSING_COST"},
-		{Id: 96, Code: "PRE_PETITION_DEFERMENT", Description: "PRE_PETITION_DEFERMENT"},
-		{Id: 97, Code: "BPO", Description: "BPO"},
-		{Id: 98, Code: "DRIVE_BY_VALUATION", Description: "DRIVE_BY_VALUATION"},
-		{Id: 99, Code: "DIRECT_DEBT_LIABILITY", Description: "DIRECT_DEBT_LIABILITY"},
-		{Id: 100, Code: "DIRECT_DEBT_LIABILITY_CREDIT", Description: "DIRECT_DEBT_LIABILITY_CREDIT"},
-		{Id: 101, Code: "VOID_DRAW", Description: "VOID_DRAW"},
-		{Id: 102, Code: "UPFRONT_ORIGINATION_FEE", Description: "UPFRONT_ORIGINATION_FEE"},
-		{Id: 103, Code: "SUB_SERVICER_TRANSACTION", Description: "SUB_SERVICER_TRANSACTION"},
-		{Id: 104, Code: "PARTIAL_RELEASE_FEE", Description: "PARTIAL_RELEASE_FEE"},
+	defaultEntryTypes := []ledger.LedgerClassEntryType{}
+	
+	// Fill in missing entry types for IDs 0-120
+	entryTypeMap := make(map[int]ledger.LedgerClassEntryType)
+	for _, et := range defaultEntryTypes {
+		entryTypeMap[int(et.Id)] = et
 	}
+	for i := 0; i <= 120; i++ {
+		if _, exists := entryTypeMap[i]; !exists {
+			defaultEntryTypes = append(defaultEntryTypes, ledger.LedgerClassEntryType{
+				Id:          int32(i),
+				Code:        fmt.Sprintf("RANDOM_ENTRY_%d", i),
+				Description: fmt.Sprintf("Random Entry %d", i),
+			})
+		}
+	}
+	// Sort by ID for consistency
+	sort.Slice(defaultEntryTypes, func(i, j int) bool { return defaultEntryTypes[i].Id < defaultEntryTypes[j].Id })
 
 	for _, entryType := range defaultEntryTypes {
 		if err := k.AddClassEntryType(ctx, authorityAddr, ledgerClassID, entryType); err != nil {
@@ -501,52 +461,21 @@ func (k BaseKeeper) CreateDefaultLedgerClass(ctx sdk.Context, ledgerClassID stri
 	}
 
 	// Create default bucket types
-	defaultBucketTypes := []ledger.LedgerClassBucketType{
-		{Id: 0, Code: "UNKNOWN", Description: "UNKNOWN"},
-		{Id: 1, Code: "FEE", Description: "FEE"},
-		{Id: 2, Code: "FLOOD", Description: "FLOOD"},
-		{Id: 3, Code: "HAZARD", Description: "HAZARD"},
-		{Id: 4, Code: "INTEREST", Description: "INTEREST"},
-		{Id: 5, Code: "CAP_ORIGINATION_FEE", Description: "CAP_ORIGINATION_FEE"},
-		{Id: 6, Code: "NON_CAP_ORIGINATION_FEE", Description: "NON_CAP_ORIGINATION_FEE"},
-		{Id: 7, Code: "PRINCIPAL", Description: "PRINCIPAL"},
-		{Id: 8, Code: "PRINCIPAL_OVERPAY", Description: "PRINCIPAL_OVERPAY"},
-		{Id: 9, Code: "CREDIT", Description: "CREDIT"},
-		{Id: 10, Code: "RECORDING_FEE", Description: "RECORDING_FEE"},
-		{Id: 11, Code: "MORTGAGE_INSURANCE", Description: "MORTGAGE_INSURANCE"},
-		{Id: 12, Code: "HOMEOWNER_TAXES", Description: "HOMEOWNER_TAXES"},
-		{Id: 13, Code: "HOA_FEE", Description: "HOA_FEE"},
-		{Id: 14, Code: "LATE_FEE", Description: "LATE_FEE"},
-		{Id: 15, Code: "INTEREST_PREPAYMENT", Description: "INTEREST_PREPAYMENT"},
-		{Id: 16, Code: "ESCROW", Description: "ESCROW"},
-		{Id: 17, Code: "NSF_FEE", Description: "NSF_FEE"},
-		{Id: 18, Code: "DEFERRED_INTEREST", Description: "DEFERRED_INTEREST"},
-		{Id: 19, Code: "INVESTOR_RECOVERABLE_FEES", Description: "INVESTOR_RECOVERABLE_FEES"},
-		{Id: 20, Code: "DEFERRED_PRINCIPAL", Description: "DEFERRED_PRINCIPAL"},
-		{Id: 21, Code: "BORROWER_RECOVERABLE_FEES", Description: "BORROWER_RECOVERABLE_FEES"},
-		{Id: 22, Code: "RESTRICTED_ESCROW", Description: "RESTRICTED_ESCROW"},
-		{Id: 23, Code: "SUSPENSE", Description: "SUSPENSE"},
-		{Id: 24, Code: "LENDER_PLACED_FLOOD_INSURANCE", Description: "LENDER_PLACED_FLOOD_INSURANCE"},
-		{Id: 25, Code: "LENDER_PLACED_HAZARD_INSURANCE", Description: "LENDER_PLACED_HAZARD_INSURANCE"},
-		{Id: 26, Code: "REPORTED_MORT_DSI", Description: "REPORTED_MORT_DSI"},
-		{Id: 27, Code: "DEFERRED_INTEREST_V2", Description: "DEFERRED_INTEREST_V2"},
-		{Id: 28, Code: "SUBORDINATION_FEE", Description: "SUBORDINATION_FEE"},
-		{Id: 29, Code: "SERVICER_ADVANCE_PROPERTY_TAX_REPAYMENT", Description: "SERVICER_ADVANCE_PROPERTY_TAX_REPAYMENT"},
-		{Id: 30, Code: "SERVICER_ADVANCE_HOA_REPAYMENT", Description: "SERVICER_ADVANCE_HOA_REPAYMENT"},
-		{Id: 31, Code: "SERVICER_ADVANCE_PROPERTY_PRESERVATION", Description: "SERVICER_ADVANCE_PROPERTY_PRESERVATION"},
-		{Id: 32, Code: "SERVICER_ADVANCE_DELINQUENCY_EXPENSE", Description: "SERVICER_ADVANCE_DELINQUENCY_EXPENSE"},
-		{Id: 33, Code: "SERVICER_ADVANCE_LEGAL_EXPENSE", Description: "SERVICER_ADVANCE_LEGAL_EXPENSE"},
-		{Id: 34, Code: "ESCROW_INTEREST", Description: "ESCROW_INTEREST"},
-		{Id: 35, Code: "ESCROW_SHORTAGE", Description: "ESCROW_SHORTAGE"},
-		{Id: 36, Code: "ESCROW_ADVANCE", Description: "ESCROW_ADVANCE"},
-		{Id: 37, Code: "SETTLEMENT_WRITE_OFF", Description: "SETTLEMENT_WRITE_OFF"},
-		{Id: 38, Code: "DELINQUENCY_REPAYMENT_PLAN", Description: "DELINQUENCY_REPAYMENT_PLAN"},
-		{Id: 39, Code: "PRE_PETITION_PRINCIPAL_DEFERRED", Description: "PRE_PETITION_PRINCIPAL_DEFERRED"},
-		{Id: 40, Code: "PRE_PETITION_INTEREST_DEFERRED", Description: "PRE_PETITION_INTEREST_DEFERRED"},
-		{Id: 41, Code: "DEFERRAL_FEE", Description: "DEFERRAL_FEE"},
-		{Id: 42, Code: "PARTIAL_RELEASE_FEE", Description: "PARTIAL_RELEASE_FEE"},
-		{Id: 43, Code: "PRE_PAYMENT_FEE", Description: "PRE_PAYMENT_FEE"},
+	defaultBucketTypes := []ledger.LedgerClassBucketType{}
+	// Fill in missing bucket types for IDs 0-60
+	bucketTypeMap := make(map[int]ledger.LedgerClassBucketType)
+	for _, bt := range defaultBucketTypes {
+		bucketTypeMap[int(bt.Id)] = bt
 	}
+	for i := 0; i <= 60; i++ {
+		defaultBucketTypes = append(defaultBucketTypes, ledger.LedgerClassBucketType{
+			Id:          int32(i),
+			Code:        fmt.Sprintf("RANDOM_BUCKET_%d", i),
+			Description: fmt.Sprintf("Random Bucket %d", i),
+		})
+	}
+	// Sort by ID for consistency
+	sort.Slice(defaultBucketTypes, func(i, j int) bool { return defaultBucketTypes[i].Id < defaultBucketTypes[j].Id })
 
 	for _, bucketType := range defaultBucketTypes {
 		if err := k.AddClassBucketType(ctx, authorityAddr, ledgerClassID, bucketType); err != nil {
