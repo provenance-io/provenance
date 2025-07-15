@@ -274,6 +274,63 @@ func skipJSONValue(decoder *json.Decoder) error {
 	return nil
 }
 
+// scanLedgerAndEntryCounts scans the genesis file for total ledgers and entries efficiently.
+func scanLedgerAndEntryCounts(filename string) (int, int, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+
+	// Expect root object
+	token, err := decoder.Token()
+	if err != nil {
+		return 0, 0, err
+	}
+	if delim, ok := token.(json.Delim); !ok || delim != '{' {
+		return 0, 0, fmt.Errorf("expected root object, got %v", token)
+	}
+
+	var numLedgers, numEntries int
+
+	// Find ledgerToEntries array
+	for decoder.More() {
+		t, err := decoder.Token()
+		if err != nil {
+			return numLedgers, numEntries, err
+		}
+		fieldName, ok := t.(string)
+		if !ok {
+			return numLedgers, numEntries, fmt.Errorf("expected field name, got %v", t)
+		}
+		if fieldName == "ledgerToEntries" || fieldName == "ledger_to_entries" {
+			// Expect array start
+			token, err = decoder.Token()
+			if err != nil {
+				return numLedgers, numEntries, err
+			}
+			if delim, ok := token.(json.Delim); !ok || delim != '[' {
+				return numLedgers, numEntries, fmt.Errorf("expected array start, got %v", token)
+			}
+			// Iterate through array
+			for decoder.More() {
+				var lte types.LedgerToEntries
+				if err := decoder.Decode(&lte); err != nil {
+					return numLedgers, numEntries, err
+				}
+				numLedgers++
+				numEntries += len(lte.Entries)
+			}
+			break
+		} else {
+			// Skip unknown fields
+			_ = skipJSONValue(decoder)
+		}
+	}
+	return numLedgers, numEntries, nil
+}
+
 // CmdChunkedBulkImport creates a command for chunked bulk import
 func CmdChunkedBulkImport() *cobra.Command {
 	cmd := &cobra.Command{
@@ -349,88 +406,99 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 
 			// Check for existing status file to determine if this is a resume operation
 			logger.Info("Checking for existing status file", "import_id", importID, "status_file", statusFileName(importID))
-			existingStatus, err := readLocalBulkImportStatus(importID)
+			status, err := readLocalBulkImportStatus(importID)
 			isResume := false
 			lastSuccessfulCorrelationID := ""
 
 			if err != nil {
 				logger.Info("No existing status file found, starting fresh import", "error", err)
-			} else if existingStatus != nil {
+			} else if status != nil {
 				logger.Info("Existing status file found",
-					"status", existingStatus.Status,
-					"completed_chunks", existingStatus.CompletedChunks,
-					"total_chunks", existingStatus.TotalChunks,
-					"total_ledgers", existingStatus.TotalLedgers,
-					"total_entries", existingStatus.TotalEntries,
-					"file_hash", existingStatus.FileHash,
+					"status", status.Status,
+					"completed_chunks", status.CompletedChunks,
+					"total_ledgers", status.TotalLedgers,
+					"total_entries", status.TotalEntries,
+					"file_hash", status.FileHash,
 					"current_file_hash", fileHash)
 			}
 
+			// After determining importID and fileHash, and before the scan for total ledgers/entries:
+			if status == nil {
+				logger.Info("No existing status file found, creating new status file", "import_id", importID)
+				status = &LocalBulkImportStatus{
+					ImportID:  importID,
+					FileHash:  fileHash,
+					Status:    "pending",
+					CreatedAt: time.Now().Format(time.RFC3339),
+					UpdatedAt: time.Now().Format(time.RFC3339),
+				}
+				_ = writeLocalBulkImportStatus(status)
+			}
+
 			// Determine resume mode and starting position
-			if err == nil && existingStatus != nil && existingStatus.LastAttemptedChunk != nil {
+			if err == nil && status != nil && status.LastAttemptedChunk != nil {
 				// Status file exists with LastAttemptedChunk - check if we can resume
-				switch existingStatus.Status {
+				switch status.Status {
 				case "completed":
 					logger.Info("Import already completed", "import_id", importID)
 					return nil
 				case "failed", "in_progress":
 					// Validate that the existing status matches our current import
 					logger.Info("Checking if existing status matches current import",
-						"existing_ledgers", existingStatus.TotalLedgers,
-						"existing_entries", existingStatus.TotalEntries,
-						"existing_file_hash", existingStatus.FileHash,
+						"existing_ledgers", status.TotalLedgers,
+						"existing_entries", status.TotalEntries,
+						"existing_file_hash", status.FileHash,
 						"current_file_hash", fileHash)
 
 					// For resume, we only check file hash since we'll reprocess the file
-					if existingStatus.FileHash == fileHash {
+					if status.FileHash == fileHash {
 
 						isResume = true
-						lastSuccessfulCorrelationID = existingStatus.LastSuccessfulCorrelationID
+						lastSuccessfulCorrelationID = status.LastSuccessfulCorrelationID
 
 						logger.Info("Resuming import from previous state",
 							"import_id", importID,
-							"completed_chunks", existingStatus.CompletedChunks,
-							"total_chunks", existingStatus.TotalChunks,
-							"status", existingStatus.Status,
+							"completed_chunks", status.CompletedChunks,
+							"status", status.Status,
 							"last_correlation_id", lastSuccessfulCorrelationID,
 							"file_hash", fileHash)
 
 						// Log resume details
-						if existingStatus.LastAttemptedChunk != nil {
+						if status.LastAttemptedChunk != nil {
 							logger.Info("Resume details",
-								"last_attempted_first_correlation_id", existingStatus.LastAttemptedChunk.FirstCorrelationID,
-								"last_attempted_last_correlation_id", existingStatus.LastAttemptedChunk.LastCorrelationID,
-								"last_attempted_confirmed", existingStatus.LastAttemptedChunk.Confirmed)
+								"last_attempted_first_correlation_id", status.LastAttemptedChunk.FirstCorrelationID,
+								"last_attempted_last_correlation_id", status.LastAttemptedChunk.LastCorrelationID,
+								"last_attempted_confirmed", status.LastAttemptedChunk.Confirmed)
 						}
 
 						// Handle unconfirmed last attempted chunk
-						if !existingStatus.LastAttemptedChunk.Confirmed {
+						if !status.LastAttemptedChunk.Confirmed {
 							logger.Info("Last chunk was unconfirmed, checking if it was actually processed",
-								"last_tx_hash", existingStatus.LastAttemptedChunk.TransactionHash)
+								"last_tx_hash", status.LastAttemptedChunk.TransactionHash)
 
-							processed, err := checkTransactionAlreadyProcessed(clientCtx, existingStatus.LastAttemptedChunk.TransactionHash, logger)
+							processed, err := checkTransactionAlreadyProcessed(clientCtx, status.LastAttemptedChunk.TransactionHash, logger)
 							if err != nil {
 								logger.Warn("Failed to check transaction status, proceeding anyway", "error", err)
 							}
 							if processed {
 								// The transaction actually succeeded, mark it as confirmed
 								logger.Info("Last chunk was actually processed successfully, marking as confirmed",
-									"last_tx_hash", existingStatus.LastAttemptedChunk.TransactionHash)
-								existingStatus.LastAttemptedChunk.Confirmed = true
-								existingStatus.UpdatedAt = time.Now().Format(time.RFC3339)
-								_ = writeLocalBulkImportStatus(existingStatus)
+									"last_tx_hash", status.LastAttemptedChunk.TransactionHash)
+								status.LastAttemptedChunk.Confirmed = true
+								status.UpdatedAt = time.Now().Format(time.RFC3339)
+								_ = writeLocalBulkImportStatus(status)
 
 								// Start from the next correlation ID (after the last one)
-								lastSuccessfulCorrelationID = existingStatus.LastAttemptedChunk.LastCorrelationID
+								lastSuccessfulCorrelationID = status.LastAttemptedChunk.LastCorrelationID
 							} else {
 								// The transaction really failed, we need to find the next correlation ID after the last successfully processed one
 								// Since we don't have a transaction hash, we need to determine where to resume from
-								if existingStatus.LastSuccessfulCorrelationID != "" {
+								if status.LastSuccessfulCorrelationID != "" {
 									// We have a last successful correlation ID, so we should start from the next one
 									logger.Info("Last chunk was not processed, scanning file to find next correlation ID after",
-										"last_successful_correlation_id", existingStatus.LastSuccessfulCorrelationID)
+										"last_successful_correlation_id", status.LastSuccessfulCorrelationID)
 
-									nextCorrelationID, err := findNextCorrelationIDAfter(genesisStateFile, existingStatus.LastSuccessfulCorrelationID, logger)
+									nextCorrelationID, err := findNextCorrelationIDAfter(genesisStateFile, status.LastSuccessfulCorrelationID, logger)
 									if err != nil {
 										logger.Warn("Failed to find next correlation ID, import may be complete or file may be corrupted", "error", err)
 										lastSuccessfulCorrelationID = ""
@@ -445,9 +513,9 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 									// No last successful correlation ID, we need to find the next correlation ID after the first correlation ID of the last attempted chunk
 									// This is because the first correlation ID might have already been processed
 									logger.Info("Last chunk was not processed and no last successful correlation ID, scanning file to find next correlation ID after",
-										"first_correlation_id", existingStatus.LastAttemptedChunk.FirstCorrelationID)
+										"first_correlation_id", status.LastAttemptedChunk.FirstCorrelationID)
 
-									nextCorrelationID, err := findNextCorrelationIDAfter(genesisStateFile, existingStatus.LastAttemptedChunk.FirstCorrelationID, logger)
+									nextCorrelationID, err := findNextCorrelationIDAfter(genesisStateFile, status.LastAttemptedChunk.FirstCorrelationID, logger)
 									if err != nil {
 										logger.Warn("Failed to find next correlation ID, import may be complete or file may be corrupted", "error", err)
 										lastSuccessfulCorrelationID = ""
@@ -462,16 +530,33 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 							}
 						} else {
 							// Last chunk was confirmed, start from the next correlation ID
-							lastSuccessfulCorrelationID = existingStatus.LastAttemptedChunk.LastCorrelationID
+							lastSuccessfulCorrelationID = status.LastAttemptedChunk.LastCorrelationID
 						}
 
-						if existingStatus.Status == "failed" {
-							logger.Info("Previous import failed", "error", existingStatus.ErrorMessage)
+						if status.Status == "failed" {
+							logger.Info("Previous import failed", "error", status.ErrorMessage)
 						}
 					} else {
 						logger.Warn("Existing status file found but file hash doesn't match - starting fresh import",
-							"existing_file_hash", existingStatus.FileHash,
+							"existing_file_hash", status.FileHash,
 							"current_file_hash", fileHash)
+					}
+				}
+			}
+
+			// Scan for total ledgers and entries if not already set in status
+			if (status.TotalLedgers == 0 || status.TotalEntries == 0) && genesisStateFile != "" {
+				logger.Info("Scanning file for total ledgers and entries for progress tracking")
+				numLedgers, numEntries, err := scanLedgerAndEntryCounts(genesisStateFile)
+				if err != nil {
+					logger.Warn("Failed to scan file for total ledgers/entries", "error", err)
+				} else {
+					logger.Info("File scan complete", "total_ledgers", numLedgers, "total_entries", numEntries)
+					if status != nil {
+						status.TotalLedgers = numLedgers
+						status.TotalEntries = numEntries
+						status.UpdatedAt = time.Now().Format(time.RFC3339)
+						_ = writeLocalBulkImportStatus(status)
 					}
 				}
 			}
@@ -495,13 +580,13 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				logFlatFeeInfo(flatFeeInfo, logger)
 			}
 
-			if isResume && existingStatus != nil && existingStatus.GasCosts != nil {
+			if isResume && status != nil && status.GasCosts != nil {
 				// Use stored gas costs for resume
 				logger.Info("Using stored gas costs for resume")
-				gasCosts = existingStatus.GasCosts
+				gasCosts = status.GasCosts
 				// Use stored flat fee info if available
-				if existingStatus.FlatFeeInfo != nil {
-					flatFeeInfo = existingStatus.FlatFeeInfo
+				if status.FlatFeeInfo != nil {
+					flatFeeInfo = status.FlatFeeInfo
 					logger.Info("Using stored flat fee info for resume")
 					logFlatFeeInfo(flatFeeInfo, logger)
 				}
@@ -553,11 +638,11 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
 					"entry_gas", gasCosts.EntryGas)
 				// Optionally, store these in the status file for future resumes
-				if existingStatus != nil {
-					existingStatus.GasCosts = gasCosts
-					existingStatus.FlatFeeInfo = flatFeeInfo
-					existingStatus.UpdatedAt = time.Now().Format(time.RFC3339)
-					_ = writeLocalBulkImportStatus(existingStatus)
+				if status != nil {
+					status.GasCosts = gasCosts
+					status.FlatFeeInfo = flatFeeInfo
+					status.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(status)
 				}
 			}
 
@@ -574,10 +659,10 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				logger.Info("No next correlation ID found, checking if import is complete")
 
 				// Mark the import as completed since there's nothing more to process
-				if existingStatus != nil {
-					existingStatus.Status = "completed"
-					existingStatus.UpdatedAt = time.Now().Format(time.RFC3339)
-					_ = writeLocalBulkImportStatus(existingStatus)
+				if status != nil {
+					status.Status = "completed"
+					status.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(status)
 					logger.Info("Import marked as completed - no more data to process")
 				}
 				return nil
@@ -590,10 +675,8 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				"status_check_command", fmt.Sprintf("provenanced query ledger bulk-import-status %s --chain-id %s", importID, clientCtx.ChainID))
 
 			// Initialize or update local status file
-			var status *LocalBulkImportStatus
 			if isResume {
 				// Use existing status but update for resume
-				status = existingStatus
 				status.Status = "in_progress"
 				status.UpdatedAt = time.Now().Format(time.RFC3339)
 				status.ErrorMessage = "" // Clear any previous error message
@@ -608,19 +691,6 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					logger.Info("Preserving stored flat fee info for resume",
 						"msg_type", status.FlatFeeInfo.MsgType,
 						"fee_amount", status.FlatFeeInfo.FeeAmount.String())
-				}
-			} else {
-				// Create new status - we'll update totals as we process
-				status = &LocalBulkImportStatus{
-					ImportID:        importID,
-					TotalChunks:     0, // Will be updated as we process
-					CompletedChunks: 0,
-					TotalLedgers:    0, // Will be updated as we process
-					TotalEntries:    0, // Will be updated as we process
-					Status:          "pending",
-					CreatedAt:       time.Now().Format(time.RFC3339),
-					UpdatedAt:       time.Now().Format(time.RFC3339),
-					FileHash:        fileHash,
 				}
 			}
 			_ = writeLocalBulkImportStatus(status)
@@ -843,6 +913,19 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 						"chunk_index", chunkIndex,
 						"first_correlation_id", status.LastAttemptedChunk.FirstCorrelationID,
 						"last_correlation_id", status.LastAttemptedChunk.LastCorrelationID)
+					// Update completed ledgers and entries
+					stats := streamingProcessor.GetStats()
+					status.CompletedLedgers = stats.TotalLedgers
+					status.CompletedEntries = stats.TotalEntries
+					// Log the current status after confirmation
+					logger.Info("Status after tx confirmation",
+						"chunk_index", chunkIndex,
+						"completed_chunks", status.CompletedChunks,
+						"completed_ledgers", status.CompletedLedgers,
+						"completed_entries", status.CompletedEntries,
+						"total_ledgers", status.TotalLedgers,
+						"total_entries", status.TotalEntries,
+						"status", status.Status)
 				}
 
 				// Update status with last successful correlation ID
@@ -853,9 +936,8 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 
 				// Update totals from streaming processor stats
 				stats := streamingProcessor.GetStats()
-				status.TotalLedgers = stats.TotalLedgers
-				status.TotalEntries = stats.TotalEntries
-				status.TotalChunks = chunkIndex
+				status.CompletedLedgers = stats.TotalLedgers
+				status.CompletedEntries = stats.TotalEntries
 
 				logger.Info("Chunk completed successfully", "chunk_index", chunkIndex)
 				status.CompletedChunks = chunkIndex
