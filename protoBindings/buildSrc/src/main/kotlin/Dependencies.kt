@@ -17,7 +17,7 @@ object PluginIds { // please keep this sorted in sections
 
 object PluginVersions { // please keep this sorted in sections
     // Kotlin
-    const val Kotlin = "2.2.0"
+    const val Kotlin = "1.9.25"
 
     // Protobuf
     const val Protobuf = "0.9.5"

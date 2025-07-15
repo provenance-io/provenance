@@ -1,3 +1,4 @@
+import com.diffplug.spotless.LineEnding
 import com.google.protobuf.gradle.id
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -44,9 +45,20 @@ dependencies {
 }
 
 spotless {
+    lineEndings = LineEnding.PLATFORM_NATIVE
+
     kotlin {
-        targetExclude("**/generated/**")
-        ktlint()
+        // https://github.com/diffplug/spotless/issues/1308
+        target(
+            "src/main/**/*.kt",
+            "src/test/**/*.kt",
+            "src/testFixtures/**/*.kt",
+        )
+    }
+
+    kotlinGradle {
+        // https://github.com/diffplug/spotless/issues/1308
+        target("*.kts")
     }
 }
 
@@ -66,8 +78,8 @@ tasks.withType<KotlinCompile> {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
         jvmTarget.set(JvmTarget.JVM_17)
-        languageVersion.set(KotlinVersion.KOTLIN_2_0)
-        apiVersion.set(KotlinVersion.KOTLIN_2_0)
+        languageVersion.set(KotlinVersion.KOTLIN_1_9)
+        apiVersion.set(KotlinVersion.KOTLIN_1_9)
     }
 }
 
