@@ -369,10 +369,11 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 			// Determine resume mode and starting position
 			if err == nil && existingStatus != nil && existingStatus.LastAttemptedChunk != nil {
 				// Status file exists with LastAttemptedChunk - check if we can resume
-				if existingStatus.Status == "completed" {
+				switch existingStatus.Status {
+				case "completed":
 					logger.Info("Import already completed", "import_id", importID)
 					return nil
-				} else if existingStatus.Status == "failed" || existingStatus.Status == "in_progress" {
+				case "failed", "in_progress":
 					// Validate that the existing status matches our current import
 					logger.Info("Checking if existing status matches current import",
 						"existing_ledgers", existingStatus.TotalLedgers,
@@ -410,7 +411,8 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 							processed, err := checkTransactionAlreadyProcessed(clientCtx, existingStatus.LastAttemptedChunk.TransactionHash, logger)
 							if err != nil {
 								logger.Warn("Failed to check transaction status, proceeding anyway", "error", err)
-							} else if processed {
+							}
+							if processed {
 								// The transaction actually succeeded, mark it as confirmed
 								logger.Info("Last chunk was actually processed successfully, marking as confirmed",
 									"last_tx_hash", existingStatus.LastAttemptedChunk.TransactionHash)
@@ -476,8 +478,6 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 
 			// For gas estimation and flat fee querying, we still need to process a sample of the file
 			// Use the original processor to get representative chunks for gas estimation
-			gasEstimationProcessor := NewStreamingGenesisProcessor(config, logger)
-			var gasEstimationChunks []*types.GenesisState
 			var gasCosts *GasCosts
 			var flatFeeInfo *FlatFeeInfo
 
@@ -506,51 +506,58 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					logFlatFeeInfo(flatFeeInfo, logger)
 				}
 			} else {
-				// Run gas estimation on a limited sample of the file
-				logger.Info("Running gas cost estimation on limited file sample")
-				maxChunksForEstimation := 3
-				var sampleChunkedState *ChunkedGenesisState
-
-				if isResume && lastSuccessfulCorrelationID != "" {
-					// For resume, we need to process from the resume point, but still limit chunks
-					sampleChunkedState, err = gasEstimationProcessor.ProcessFileFromCorrelationID(genesisStateFile, lastSuccessfulCorrelationID)
-					if err != nil {
-						return fmt.Errorf("failed to process file sample for gas estimation: %w", err)
-					}
-					// Limit to first few chunks for gas estimation
-					if len(gasEstimationProcessor.chunks) > maxChunksForEstimation {
-						gasEstimationChunks = gasEstimationProcessor.chunks[:maxChunksForEstimation]
-					} else {
-						gasEstimationChunks = gasEstimationProcessor.chunks
-					}
-				} else {
-					// For fresh import, use the new limited processing method
-					sampleChunkedState, err = gasEstimationProcessor.ProcessFileWithLimit(genesisStateFile, maxChunksForEstimation)
-					if err != nil {
-						return fmt.Errorf("failed to process file sample for gas estimation: %w", err)
-					}
-					gasEstimationChunks = gasEstimationProcessor.chunks
-				}
-
-				logger.Info("Gas estimation sample prepared",
-					"sample_chunks", len(gasEstimationChunks),
-					"total_ledgers", sampleChunkedState.TotalLedgers,
-					"total_entries", sampleChunkedState.TotalEntries)
-
-				// Extract gas costs from representative simulations (for validation only)
-				logger.Info("Estimating gas costs from representative simulations for validation")
-				gasCosts, err = estimateGasCosts(gasEstimationChunks, clientCtx, cmd, logger)
+				// --- Initial gas estimation by streaming in just enough data for CalculateTxFees ---
+				logger.Info("Performing initial gas estimation by streaming minimal chunk for simulation")
+				streamingProcessor := NewStreamingChunkProcessor(config, logger)
+				err := streamingProcessor.OpenFile(genesisStateFile, "")
 				if err != nil {
-					logger.Warn("Failed to estimate gas costs, using fallback values", "error", err)
-					// Fallback to reasonable defaults if estimation fails
+					return fmt.Errorf("failed to open file for initial gas estimation: %w", err)
+				}
+				defer streamingProcessor.Close()
+				// Get the first chunk (could be just the first ledger or a few entries)
+				minimalChunk, err := streamingProcessor.NextChunk()
+				if err != nil {
+					return fmt.Errorf("failed to get minimal chunk for gas estimation: %w", err)
+				}
+				// Simulate gas for this minimal chunk
+				gasSim, err := simulateChunkGas(minimalChunk, clientCtx, cmd)
+				if err != nil {
+					logger.Warn("Failed to simulate gas for minimal chunk, using fallback values", "error", err)
 					gasCosts = &GasCosts{
 						LedgerWithKeyGas: 100000,
 						EntryGas:         5000,
 					}
 				} else {
-					logger.Info("Gas costs estimated successfully for validation",
-						"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
-						"entry_gas", gasCosts.EntryGas)
+					// Use the simulated gas as a baseline for the first chunk
+					// For simplicity, assign all gas to LedgerWithKeyGas if only one ledger, or split if possible
+					ledgerCount := len(minimalChunk.LedgerToEntries)
+					entryCount := 0
+					for _, lte := range minimalChunk.LedgerToEntries {
+						entryCount += len(lte.Entries)
+					}
+					if ledgerCount > 0 && entryCount > 0 {
+						// Estimate per-entry cost
+						perEntry := gasSim / entryCount
+						gasCosts = &GasCosts{
+							LedgerWithKeyGas: gasSim - (perEntry * entryCount),
+							EntryGas:         perEntry,
+						}
+					} else {
+						gasCosts = &GasCosts{
+							LedgerWithKeyGas: gasSim,
+							EntryGas:         5000, // fallback
+						}
+					}
+				}
+				logger.Info("Initial gas costs estimated from minimal chunk",
+					"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
+					"entry_gas", gasCosts.EntryGas)
+				// Optionally, store these in the status file for future resumes
+				if existingStatus != nil {
+					existingStatus.GasCosts = gasCosts
+					existingStatus.FlatFeeInfo = flatFeeInfo
+					existingStatus.UpdatedAt = time.Now().Format(time.RFC3339)
+					_ = writeLocalBulkImportStatus(existingStatus)
 				}
 			}
 
