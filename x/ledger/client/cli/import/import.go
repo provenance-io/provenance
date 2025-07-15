@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
@@ -473,16 +474,37 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				}
 			}
 
-			// For gas estimation, we still need to process a sample of the file
+			// For gas estimation and flat fee querying, we still need to process a sample of the file
 			// Use the original processor to get representative chunks for gas estimation
 			gasEstimationProcessor := NewStreamingGenesisProcessor(config, logger)
 			var gasEstimationChunks []*types.GenesisState
 			var gasCosts *GasCosts
+			var flatFeeInfo *FlatFeeInfo
+
+			// Query flat fee for bulk import
+			logger.Info("Querying flat fee for bulk import")
+			flatFeeInfo, err = getFlatFeeForBulkImport(clientCtx)
+			if err != nil {
+				logger.Warn("Failed to query flat fee, using default fee", "error", err)
+				// Fallback to default fee if query fails
+				flatFeeInfo = &FlatFeeInfo{
+					FeeAmount: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000)), // 1 nhash default
+					MsgType:   "/provenance.ledger.v1.MsgBulkImportRequest",
+				}
+			} else {
+				logFlatFeeInfo(flatFeeInfo, logger)
+			}
 
 			if isResume && existingStatus != nil && existingStatus.GasCosts != nil {
 				// Use stored gas costs for resume
 				logger.Info("Using stored gas costs for resume")
 				gasCosts = existingStatus.GasCosts
+				// Use stored flat fee info if available
+				if existingStatus.FlatFeeInfo != nil {
+					flatFeeInfo = existingStatus.FlatFeeInfo
+					logger.Info("Using stored flat fee info for resume")
+					logFlatFeeInfo(flatFeeInfo, logger)
+				}
 			} else {
 				// Run gas estimation on a limited sample of the file
 				logger.Info("Running gas cost estimation on limited file sample")
@@ -515,8 +537,8 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					"total_ledgers", sampleChunkedState.TotalLedgers,
 					"total_entries", sampleChunkedState.TotalEntries)
 
-				// Extract gas costs from representative simulations
-				logger.Info("Estimating gas costs from representative simulations")
+				// Extract gas costs from representative simulations (for validation only)
+				logger.Info("Estimating gas costs from representative simulations for validation")
 				gasCosts, err = estimateGasCosts(gasEstimationChunks, clientCtx, cmd, logger)
 				if err != nil {
 					logger.Warn("Failed to estimate gas costs, using fallback values", "error", err)
@@ -526,7 +548,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 						EntryGas:         5000,
 					}
 				} else {
-					logger.Info("Gas costs estimated successfully",
+					logger.Info("Gas costs estimated successfully for validation",
 						"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
 						"entry_gas", gasCosts.EntryGas)
 				}
@@ -573,6 +595,12 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					logger.Info("Preserving stored gas costs for resume",
 						"ledger_with_key_gas", status.GasCosts.LedgerWithKeyGas,
 						"entry_gas", status.GasCosts.EntryGas)
+				}
+				// Preserve stored flat fee info for reuse
+				if status.FlatFeeInfo != nil {
+					logger.Info("Preserving stored flat fee info for resume",
+						"msg_type", status.FlatFeeInfo.MsgType,
+						"fee_amount", status.FlatFeeInfo.FeeAmount.String())
 				}
 			} else {
 				// Create new status - we'll update totals as we process
@@ -668,33 +696,31 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				// Get gas estimate for this chunk using the pre-estimated gas costs
 				gas := estimateChunkGasFromCosts(chunk, gasCosts)
 				chunkGas := uint64(gas)
-				logger.Info("Using estimated gas costs for chunk", "chunk_index", chunkIndex, "gas", chunkGas)
+				logger.Info("Using estimated gas costs for chunk validation", "chunk_index", chunkIndex, "gas", chunkGas)
 
-				// Store gas costs in status for future use (only on first chunk)
+				// Store gas costs and flat fee info in status for future use (only on first chunk)
 				if status.GasCosts == nil {
 					status.GasCosts = gasCosts
 					logger.Info("Stored gas costs for future use",
 						"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
 						"entry_gas", gasCosts.EntryGas)
+				}
+				if status.FlatFeeInfo == nil {
+					status.FlatFeeInfo = flatFeeInfo
+					logger.Info("Stored flat fee info for future use",
+						"msg_type", flatFeeInfo.MsgType,
+						"fee_amount", flatFeeInfo.FeeAmount.String())
 					_ = writeLocalBulkImportStatus(status)
 				}
 
-				// Validate chunk size against transaction limits
-				if chunkSize > config.MaxTxSizeBytes {
+				// Validate chunk using flat fees and gas limits
+				err = validateChunkWithFlatFees(chunk, int(chunkGas), config, logger)
+				if err != nil {
 					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum transaction size: %d bytes > %d bytes", chunkIndex, chunkSize, config.MaxTxSizeBytes)
+					status.ErrorMessage = fmt.Sprintf("chunk %d validation failed: %v", chunkIndex, err)
 					status.UpdatedAt = time.Now().Format(time.RFC3339)
 					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("chunk %d exceeds maximum transaction size: %d bytes > %d bytes", chunkIndex, chunkSize, config.MaxTxSizeBytes)
-				}
-
-				// Validate chunk gas against gas limits
-				if chunkGas > uint64(config.MaxGasPerTx-100000) { // 100k gas safety margin
-					status.Status = "failed"
-					status.ErrorMessage = fmt.Sprintf("chunk %d exceeds maximum gas limit: %d gas > %d gas", chunkIndex, chunkGas, config.MaxGasPerTx-100000)
-					status.UpdatedAt = time.Now().Format(time.RFC3339)
-					_ = writeLocalBulkImportStatus(status)
-					return fmt.Errorf("chunk %d exceeds maximum gas limit: %d gas > %d gas", chunkIndex, chunkGas, config.MaxGasPerTx-100000)
+					return fmt.Errorf("chunk %d validation failed: %w", chunkIndex, err)
 				}
 
 				logger.Info("Chunk details",
@@ -702,7 +728,8 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					"ledger_count", len(chunk.LedgerToEntries),
 					"entry_count", chunkEntries,
 					"size_bytes", chunkSize,
-					"estimated_gas", chunkGas)
+					"estimated_gas", chunkGas,
+					"flat_fee", flatFeeInfo.FeeAmount.String())
 
 				// Get fresh client context for each transaction to ensure proper sequence number handling
 				clientCtx, err = client.GetClientTxContext(cmd)
@@ -754,7 +781,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				}
 
 				// Broadcast transaction and check its status
-				txHash, err := broadcastAndCheckTx(clientCtx, cmd, msg, chunkIndex, logger)
+				txHash, err := broadcastAndCheckTx(clientCtx, cmd, msg, chunkIndex, logger, flatFeeInfo)
 
 				if err != nil {
 					status.Status = "failed"
