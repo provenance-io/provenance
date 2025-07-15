@@ -49,18 +49,19 @@ type FlatFeeInfo struct {
 
 // LocalBulkImportStatus tracks the status of a chunked bulk import on the client side.
 type LocalBulkImportStatus struct {
-	ImportID        string `json:"import_id"`
-	TotalChunks     int    `json:"total_chunks"`
-	CompletedChunks int    `json:"completed_chunks"`
-	TotalLedgers    int    `json:"total_ledgers"`
-	TotalEntries    int    `json:"total_entries"`
-	Status          string `json:"status"` // "pending", "in_progress", "completed", "failed"
-	ErrorMessage    string `json:"error_message,omitempty"`
-	CreatedAt       string `json:"created_at"`
-	UpdatedAt       string `json:"updated_at"`
-	// Simple resume tracking
-	LastSuccessfulCorrelationID string `json:"last_successful_correlation_id,omitempty"`
+	ImportID                    string `json:"import_id"`
 	FileHash                    string `json:"file_hash,omitempty"` // Hash of the source file for validation
+	CreatedAt                   string `json:"created_at"`
+	UpdatedAt                   string `json:"updated_at"`
+	Status                      string `json:"status"` // "pending", "in_progress", "completed", "failed"
+	ErrorMessage                string `json:"error_message,omitempty"`
+	TotalLedgers                int    `json:"total_ledgers"`
+	TotalEntries                int    `json:"total_entries"`
+	CompletedLedgers            int    `json:"completed_ledgers"`
+	CompletedEntries            int    `json:"completed_entries"`
+	CompletedChunks             int    `json:"completed_chunks"`
+	LastSuccessfulCorrelationID string `json:"last_successful_correlation_id,omitempty"`
+
 	// Last attempted chunk status for resume safety
 	LastAttemptedChunk *ChunkStatus `json:"last_attempted_chunk,omitempty"` // Status of the last chunk that was attempted
 	// Stored flat fee info for deterministic chunking (can be reused on resume)
