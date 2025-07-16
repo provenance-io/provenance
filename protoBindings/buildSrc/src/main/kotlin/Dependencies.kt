@@ -34,8 +34,9 @@ object Versions {
     const val Kotlin = PluginVersions.Kotlin
 
     // Protobuf & gRPC
-    const val Protobuf = "3.25.6"
-    const val Grpc = "1.63.2"
+    // Use .5 for compatibility with older protobuf runtimes (see https://protobuf.dev/news/2025-01-23/)
+    const val Protobuf = "3.25.5"
+    const val Grpc = "1.73.0"
     const val KotlinGrpc = "1.4.3"
 
     // Testing
