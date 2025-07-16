@@ -10,7 +10,10 @@ import cosmos.gov.v1beta1.QueryGrpcKt.QueryCoroutineStub as CoroutineGovernance
  * @return A list of [Gov.Proposal]
  */
 fun BlockingGovernance.getAllProposals(): List<Gov.Proposal> =
-    proposals(cosmos.gov.v1beta1.QueryOuterClass.QueryProposalsRequest.getDefaultInstance()).proposalsList
+    proposals(
+        cosmos.gov.v1beta1.QueryOuterClass.QueryProposalsRequest
+            .getDefaultInstance(),
+    ).proposalsList
 
 /**
  * Get a coin balance in the account at the supplied address.
@@ -18,4 +21,7 @@ fun BlockingGovernance.getAllProposals(): List<Gov.Proposal> =
  * @return A list of [Gov.Proposal]
  */
 suspend fun CoroutineGovernance.getAllProposals(): List<Gov.Proposal> =
-    proposals(cosmos.gov.v1beta1.QueryOuterClass.QueryProposalsRequest.getDefaultInstance()).proposalsList
+    proposals(
+        cosmos.gov.v1beta1.QueryOuterClass.QueryProposalsRequest
+            .getDefaultInstance(),
+    ).proposalsList

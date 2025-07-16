@@ -14,15 +14,17 @@ import cosmos.feegrant.v1beta1.QueryGrpcKt.QueryCoroutineStub as CoroutineFeeGra
  * @param granteeAddress The bech32 address of the fee grantee.
  * @return [Feegrant.Grant]
  */
-fun BlockingFeeGrants.getFeeGrant(granterAddress: String, granteeAddress: String): Feegrant.Grant =
+fun BlockingFeeGrants.getFeeGrant(
+    granterAddress: String,
+    granteeAddress: String,
+): Feegrant.Grant =
     allowance(
         QueryOuterClass.QueryAllowanceRequest
             .newBuilder()
             .setGranter(granterAddress)
             .setGrantee(granteeAddress)
-            .build()
-    )
-        .allowance
+            .build(),
+    ).allowance
 
 /**
  * Get the fee grants for (granter, grantee) addresses.
@@ -33,12 +35,14 @@ fun BlockingFeeGrants.getFeeGrant(granterAddress: String, granteeAddress: String
  * @param granteeAddress The bech32 address of the fee grantee.
  * @return [Feegrant.Grant]
  */
-suspend fun CoroutineFeeGrants.getFeeGrant(granterAddress: String, granteeAddress: String): Feegrant.Grant =
+suspend fun CoroutineFeeGrants.getFeeGrant(
+    granterAddress: String,
+    granteeAddress: String,
+): Feegrant.Grant =
     allowance(
         QueryOuterClass.QueryAllowanceRequest
             .newBuilder()
             .setGranter(granterAddress)
             .setGrantee(granteeAddress)
-            .build()
-    )
-        .allowance
+            .build(),
+    ).allowance

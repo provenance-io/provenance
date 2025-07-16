@@ -11,7 +11,12 @@ import cosmos.base.tendermint.v1beta1.ServiceGrpcKt.ServiceCoroutineStub as Coro
  * @return [Query.GetBlockByHeightResponse]
  */
 fun BlockingTendermintService.getBlockAtHeight(height: Long): Query.GetBlockByHeightResponse =
-    getBlockByHeight(Query.GetBlockByHeightRequest.newBuilder().setHeight(height).build())
+    getBlockByHeight(
+        Query.GetBlockByHeightRequest
+            .newBuilder()
+            .setHeight(height)
+            .build(),
+    )
 
 /**
  * Fetches the block at the given height.
@@ -20,7 +25,12 @@ fun BlockingTendermintService.getBlockAtHeight(height: Long): Query.GetBlockByHe
  * @return [Query.GetBlockByHeightResponse]
  */
 suspend fun CoroutineTendermintService.getBlockAtHeight(height: Long): Query.GetBlockByHeightResponse =
-    getBlockByHeight(Query.GetBlockByHeightRequest.newBuilder().setHeight(height).build())
+    getBlockByHeight(
+        Query.GetBlockByHeightRequest
+            .newBuilder()
+            .setHeight(height)
+            .build(),
+    )
 
 /**
  * Fetches the current block height.

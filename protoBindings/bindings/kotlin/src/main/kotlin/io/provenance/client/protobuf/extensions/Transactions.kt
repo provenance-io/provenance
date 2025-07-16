@@ -13,7 +13,12 @@ import cosmos.tx.v1beta1.ServiceGrpcKt.ServiceCoroutineStub as CoroutineTransact
  * @return [ServiceOuterClass.GetTxResponse].
  */
 fun BlockingTransactions.getTx(hash: String): ServiceOuterClass.GetTxResponse =
-    getTx(ServiceOuterClass.GetTxRequest.newBuilder().setHash(hash).build())
+    getTx(
+        ServiceOuterClass.GetTxRequest
+            .newBuilder()
+            .setHash(hash)
+            .build(),
+    )
 
 /**
  * Get a transaction by its hash.
@@ -24,7 +29,12 @@ fun BlockingTransactions.getTx(hash: String): ServiceOuterClass.GetTxResponse =
  * @return [ServiceOuterClass.GetTxResponse].
  */
 suspend fun CoroutineTransactions.getTx(hash: String): ServiceOuterClass.GetTxResponse =
-    getTx(ServiceOuterClass.GetTxRequest.newBuilder().setHash(hash).build())
+    getTx(
+        ServiceOuterClass.GetTxRequest
+            .newBuilder()
+            .setHash(hash)
+            .build(),
+    )
 
 /**
  * Get transactions sent by address.
@@ -36,9 +46,10 @@ suspend fun CoroutineTransactions.getTx(hash: String): ServiceOuterClass.GetTxRe
  */
 fun BlockingTransactions.getSentTxsByAddress(address: String): ServiceOuterClass.GetTxsEventResponse =
     getTxsEvent(
-        ServiceOuterClass.GetTxsEventRequest.newBuilder()
+        ServiceOuterClass.GetTxsEventRequest
+            .newBuilder()
             .addEvents("message.sender='$address'")
-            .build()
+            .build(),
     )
 
 /**
@@ -51,9 +62,10 @@ fun BlockingTransactions.getSentTxsByAddress(address: String): ServiceOuterClass
  */
 suspend fun CoroutineTransactions.getSentTxsByAddress(address: String): ServiceOuterClass.GetTxsEventResponse =
     getTxsEvent(
-        ServiceOuterClass.GetTxsEventRequest.newBuilder()
+        ServiceOuterClass.GetTxsEventRequest
+            .newBuilder()
             .addEvents("message.sender='$address'")
-            .build()
+            .build(),
     )
 
 /**
@@ -66,9 +78,10 @@ suspend fun CoroutineTransactions.getSentTxsByAddress(address: String): ServiceO
  */
 fun BlockingTransactions.getReceivedTxsByAddress(address: String): ServiceOuterClass.GetTxsEventResponse =
     getTxsEvent(
-        ServiceOuterClass.GetTxsEventRequest.newBuilder()
+        ServiceOuterClass.GetTxsEventRequest
+            .newBuilder()
             .addEvents("transfer.recipient='$address'")
-            .build()
+            .build(),
     )
 
 /**
@@ -81,7 +94,8 @@ fun BlockingTransactions.getReceivedTxsByAddress(address: String): ServiceOuterC
  */
 suspend fun CoroutineTransactions.getReceivedTxsByAddress(address: String): ServiceOuterClass.GetTxsEventResponse =
     getTxsEvent(
-        ServiceOuterClass.GetTxsEventRequest.newBuilder()
+        ServiceOuterClass.GetTxsEventRequest
+            .newBuilder()
             .addEvents("transfer.recipient='$address'")
-            .build()
+            .build(),
     )
