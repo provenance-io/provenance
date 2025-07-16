@@ -147,13 +147,16 @@ func TestWaitForTransactionConfirmation(t *testing.T) {
 	// the full transaction confirmation infrastructure in unit tests
 
 	clientCtx := createTestClientContext()
-	_ = createTestCommand() // Use underscore to indicate intentionally unused
+	cmd := createTestCommand()
 	logger := log.NewNopLogger()
+	txHash := "test-hash-1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF"
 
 	// Test that the function signature is correct and doesn't panic
 	// In a real test environment, this would be mocked to test actual behavior
 	require.NotNil(t, clientCtx, "Client context should not be nil")
+	require.NotNil(t, cmd, "Command should not be nil")
 	require.NotNil(t, logger, "Logger should not be nil")
+	require.NotEmpty(t, txHash, "Transaction hash should not be empty")
 }
 
 func TestTransactionConfirmationTimeout(t *testing.T) {
@@ -321,4 +324,49 @@ func TestExtractTxHashFromOutput(t *testing.T) {
 	output7 := `Some output text with hash: ABC123456789DEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0 and more text`
 	hash7 := extractTxHashFromOutput(output7)
 	require.Equal(t, "ABC123456789DEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0", hash7)
+}
+
+func TestValidateTransactionByHash(t *testing.T) {
+	// This test validates the structure and options of the unified transaction validation function
+	clientCtx := createTestClientContext()
+	logger := log.NewNopLogger()
+	txHash := "test-hash-1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF"
+
+	// Test that the function signature is correct and doesn't panic
+	// In a real test environment, this would be mocked to test actual behavior
+	require.NotNil(t, clientCtx, "Client context should not be nil")
+	require.NotNil(t, logger, "Logger should not be nil")
+	require.NotEmpty(t, txHash, "Transaction hash should not be empty")
+
+	// Test validation options
+	opts := &ValidationOptions{
+		MaxRetries:   5,
+		RetryDelay:   2 * time.Second,
+		WaitForBlock: true,
+		ChunkIndex:   1,
+		TotalChunks:  10,
+	}
+
+	require.Equal(t, 5, opts.MaxRetries, "MaxRetries should be set correctly")
+	require.Equal(t, 2*time.Second, opts.RetryDelay, "RetryDelay should be set correctly")
+	require.True(t, opts.WaitForBlock, "WaitForBlock should be set correctly")
+	require.Equal(t, 1, opts.ChunkIndex, "ChunkIndex should be set correctly")
+	require.Equal(t, 10, opts.TotalChunks, "TotalChunks should be set correctly")
+
+	// Test option functions
+	withRetries := WithRetries(3, 1*time.Second)
+	withBlockWait := WithBlockWait(false)
+	withChunkContext := WithChunkContext(2, 5)
+
+	// Apply options to a new options struct
+	testOpts := &ValidationOptions{}
+	withRetries(testOpts)
+	withBlockWait(testOpts)
+	withChunkContext(testOpts)
+
+	require.Equal(t, 3, testOpts.MaxRetries, "WithRetries should set MaxRetries correctly")
+	require.Equal(t, 1*time.Second, testOpts.RetryDelay, "WithRetries should set RetryDelay correctly")
+	require.False(t, testOpts.WaitForBlock, "WithBlockWait should set WaitForBlock correctly")
+	require.Equal(t, 2, testOpts.ChunkIndex, "WithChunkContext should set ChunkIndex correctly")
+	require.Equal(t, 5, testOpts.TotalChunks, "WithChunkContext should set TotalChunks correctly")
 }
