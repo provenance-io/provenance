@@ -53,9 +53,8 @@ func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *
 		return 0, fmt.Errorf("failed to set message in tx builder: %w", err)
 	}
 
-	// Set a dummy fee and gas (will be overwritten by simulation)
+	// Set a dummy fee (will be overwritten by simulation)
 	txBuilder.SetFeeAmount([]sdk.Coin{sdk.NewInt64Coin("nhash", 1)})
-	txBuilder.SetGasLimit(2000000)
 
 	// Sign the transaction
 	err = tx.Sign(cmd.Context(), txFactory, clientCtx.GetFromName(), txBuilder, false)
@@ -74,7 +73,7 @@ func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *
 		context.Background(),
 		&flatfeestypes.QueryCalculateTxFeesRequest{
 			TxBytes:       txBytes,
-			GasAdjustment: 1.2, // 20% margin for gas estimation
+			GasAdjustment: 1.3, // 30% margin for gas estimation to balance accuracy and efficiency
 		},
 	)
 	if err != nil {
@@ -82,119 +81,6 @@ func simulateChunkGas(chunk *types.GenesisState, clientCtx client.Context, cmd *
 	}
 
 	return int(response.EstimatedGas), nil
-}
-
-// estimateGasCosts runs representative simulations to understand gas costs (for validation only)
-func estimateGasCosts(chunks []*types.GenesisState, clientCtx client.Context, cmd *cobra.Command, logger log.Logger) (*GasCosts, error) {
-	// Find a representative ledger to use for testing
-	// Only look at the first few chunks to avoid iterating through the entire 2GB dataset
-	var testLedger *types.LedgerToEntries
-	maxChunksToCheck := 3 // Only check first 3 chunks to find a representative ledger
-
-	logger.Info("Starting gas cost estimation for validation",
-		"total_chunks", len(chunks),
-		"max_chunks_to_check", maxChunksToCheck)
-
-	for i, chunk := range chunks {
-		if i >= maxChunksToCheck {
-			logger.Info("Stopped checking chunks early to avoid performance issues",
-				"chunks_checked", i,
-				"total_chunks", len(chunks))
-			break // Stop after checking first few chunks
-		}
-		for _, lte := range chunk.LedgerToEntries {
-			if lte.LedgerKey != nil && lte.Ledger != nil && len(lte.Entries) > 0 {
-				testLedger = &lte
-				logger.Info("Found representative ledger for gas estimation",
-					"chunk_index", i+1,
-					"ledger_entries_count", len(lte.Entries))
-				break
-			}
-		}
-		if testLedger != nil {
-			break
-		}
-	}
-
-	if testLedger == nil {
-		// If we still can't find a test ledger, use reasonable defaults
-		logger.Warn("No suitable test ledger found in first few chunks, using default gas costs")
-		return &GasCosts{
-			LedgerWithKeyGas: 100000,
-			EntryGas:         5000,
-		}, nil
-	}
-
-	// Simulation 1: LedgerKey + Ledger (no entries)
-	logger.Info("Running simulation 1: LedgerKey + Ledger (no entries)")
-	ledgerWithKey := &types.GenesisState{
-		LedgerToEntries: []types.LedgerToEntries{
-			{
-				LedgerKey: testLedger.LedgerKey,
-				Ledger:    testLedger.Ledger,
-				Entries:   []*types.LedgerEntry{},
-			},
-		},
-	}
-	ledgerWithKeyGas, err := simulateChunkGas(ledgerWithKey, clientCtx, cmd)
-	if err != nil {
-		return nil, fmt.Errorf("failed to simulate ledger with key: %w", err)
-	}
-
-	// Simulation 2: LedgerKey + Ledger + 1 Entry
-	logger.Info("Running simulation 2: LedgerKey + Ledger + 1 Entry")
-	ledgerWithEntry := &types.GenesisState{
-		LedgerToEntries: []types.LedgerToEntries{
-			{
-				LedgerKey: testLedger.LedgerKey,
-				Ledger:    testLedger.Ledger,
-				Entries:   []*types.LedgerEntry{testLedger.Entries[0]},
-			},
-		},
-	}
-	ledgerWithEntryGas, err := simulateChunkGas(ledgerWithEntry, clientCtx, cmd)
-	if err != nil {
-		return nil, fmt.Errorf("failed to simulate ledger with entry: %w", err)
-	}
-
-	// Calculate component costs
-	entryCost := ledgerWithEntryGas - ledgerWithKeyGas
-
-	// Run a third simulation with more entries to get a more accurate per-entry cost
-	numTestEntries := 10
-	var ledgerWithMoreEntriesGas int
-	if len(testLedger.Entries) >= numTestEntries {
-		logger.Info("Running simulation 3: LedgerKey + Ledger + multiple entries for better accuracy")
-		testEntries := testLedger.Entries[:numTestEntries]
-		ledgerWithMoreEntries := &types.GenesisState{
-			LedgerToEntries: []types.LedgerToEntries{
-				{
-					LedgerKey: testLedger.LedgerKey,
-					Ledger:    testLedger.Ledger,
-					Entries:   testEntries,
-				},
-			},
-		}
-
-		ledgerWithMoreEntriesGas, err = simulateChunkGas(ledgerWithMoreEntries, clientCtx, cmd)
-		if err != nil {
-			logger.Warn("Failed to simulate with more entries, using single entry cost", "error", err)
-		} else {
-			// Calculate per-entry cost from the larger sample
-			entryCost = (ledgerWithMoreEntriesGas - ledgerWithKeyGas) / numTestEntries
-		}
-	}
-
-	logger.Info("Gas cost calculation completed for validation",
-		"ledger_with_key_gas", ledgerWithKeyGas,
-		"ledger_with_entry_gas", ledgerWithEntryGas,
-		"ledger_with_more_entries_gas", ledgerWithMoreEntriesGas,
-		"calculated_entry_cost", entryCost)
-
-	return &GasCosts{
-		LedgerWithKeyGas: ledgerWithKeyGas,
-		EntryGas:         entryCost,
-	}, nil
 }
 
 // estimateChunkGasFromCosts estimates gas usage for a chunk using the cost model (for validation only)
@@ -208,11 +94,156 @@ func estimateChunkGasFromCosts(chunk *types.GenesisState, costs *GasCosts) int {
 				totalGas += len(lte.Entries) * costs.EntryGas
 			}
 		} else if lte.LedgerKey != nil && lte.Ledger == nil {
-			// Subsequent chunks: only entries (ledger already exists)
+			// Subsequent chunks: only key + entries (ledger already exists)
 			if len(lte.Entries) > 0 {
 				totalGas += len(lte.Entries) * costs.EntryGas
 			}
 		}
 	}
 	return totalGas
+}
+
+// EstimateGasCostsAccurately simulates two separate transactions to accurately calculate gas costs:
+// 1. X = A transaction with only ledger + key (no entries)
+// 2. Y = A transaction with ledger + key + entries
+// Then calculates: LedgerWithKeyGas = X, EntryGas = (Y - X) / num_entries
+// This is a more accurate way to calculate gas costs because it takes into account the fact that
+// the ledger + key is already in the database and only the entries need to be added.
+func EstimateGasCostsAccurately(chunk *types.GenesisState, clientCtx client.Context, cmd *cobra.Command, logger log.Logger) (*GasCosts, error) {
+	
+	if len(chunk.LedgerToEntries) == 0 {
+		return &GasCosts{
+			LedgerWithKeyGas: 70000,
+			EntryGas:         35000, // fallback
+		}, nil
+	}
+
+	// Create a chunk with only ledger + key (no entries)
+	ledgerOnlyChunk := &types.GenesisState{
+		LedgerToEntries: make([]types.LedgerToEntries, len(chunk.LedgerToEntries)),
+	}
+	for i, lte := range chunk.LedgerToEntries {
+		ledgerOnlyChunk.LedgerToEntries[i] = types.LedgerToEntries{
+			LedgerKey: lte.LedgerKey,
+			Ledger:    lte.Ledger,
+			Entries:   []*types.LedgerEntry{}, // Empty entries
+		}
+	}
+
+	// Simulate transaction with only ledger + key
+	logger.Info("Simulating gas for ledger + key only")
+	ledgerOnlyGas, err := simulateChunkGas(ledgerOnlyChunk, clientCtx, cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to simulate ledger-only gas: %w", err)
+	}
+	logger.Info("Simulated gas for ledger + key only", "gas", ledgerOnlyGas)
+
+	// Simulate transaction with ledger + key + entries
+	logger.Info("Simulating gas for ledger + key + entries")
+	fullChunkGas, err := simulateChunkGas(chunk, clientCtx, cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to simulate full chunk gas: %w", err)
+	}
+	logger.Info("Simulated gas for ledger + key + entries", "gas", fullChunkGas)
+
+	// Calculate total entries in the chunk
+	totalEntries := 0
+	for _, lte := range chunk.LedgerToEntries {
+		totalEntries += len(lte.Entries)
+	}
+
+	if totalEntries == 0 {
+		// No entries, use ledger-only gas for both
+		return &GasCosts{
+			LedgerWithKeyGas: ledgerOnlyGas,
+			EntryGas:         35000, // fallback
+		}, nil
+	}
+
+	// Calculate per-entry gas cost
+	entryGas := (fullChunkGas - ledgerOnlyGas) / totalEntries
+
+	logger.Info("Accurate gas cost calculation",
+		"ledger_only_gas", ledgerOnlyGas,
+		"full_chunk_gas", fullChunkGas,
+		"total_entries", totalEntries,
+		"calculated_entry_gas", entryGas,
+		"calculated_ledger_with_key_gas", ledgerOnlyGas)
+
+	return &GasCosts{
+		LedgerWithKeyGas: ledgerOnlyGas,
+		EntryGas:         entryGas,
+	}, nil
+}
+
+// validateGasCosts tests the estimated gas costs against actual chunks to ensure accuracy
+func validateGasCosts(gasCosts *GasCosts, chunks []*types.GenesisState, clientCtx client.Context, cmd *cobra.Command, logger log.Logger) error {
+	logger.Info("Validating gas cost estimates against actual chunks")
+
+	// Test against a few representative chunks
+	maxValidationChunks := 3
+	validationErrors := 0
+
+	for i, chunk := range chunks {
+		if i >= maxValidationChunks {
+			break
+		}
+
+		// Skip empty chunks
+		if len(chunk.LedgerToEntries) == 0 {
+			continue
+		}
+
+		// Estimate gas using our cost model
+		estimatedGas := estimateChunkGasFromCosts(chunk, gasCosts)
+
+		// Simulate actual gas usage
+		actualGas, err := simulateChunkGas(chunk, clientCtx, cmd)
+		if err != nil {
+			logger.Warn("Failed to validate chunk", "chunk_index", i+1, "error", err)
+			continue
+		}
+
+		// Calculate accuracy
+		accuracy := float64(estimatedGas) / float64(actualGas)
+		errorPercent := (float64(estimatedGas-actualGas) / float64(actualGas)) * 100
+
+		logger.Info("Gas cost validation result",
+			"chunk_index", i+1,
+			"estimated_gas", estimatedGas,
+			"actual_gas", actualGas,
+			"accuracy", accuracy,
+			"error_percent", errorPercent,
+			"ledger_count", len(chunk.LedgerToEntries),
+			"total_entries", countTotalEntries(chunk))
+
+		// Check if estimate is significantly off (more than 20% error)
+		if accuracy < 0.8 || accuracy > 1.2 {
+			validationErrors++
+			logger.Warn("Gas estimate significantly off",
+				"chunk_index", i+1,
+				"estimated_gas", estimatedGas,
+				"actual_gas", actualGas,
+				"error_percent", errorPercent)
+		}
+	}
+
+	if validationErrors > 0 {
+		logger.Warn("Gas cost validation found significant errors",
+			"validation_errors", validationErrors,
+			"chunks_tested", maxValidationChunks)
+		return fmt.Errorf("gas cost estimates have significant errors in %d/%d test chunks", validationErrors, maxValidationChunks)
+	}
+
+	logger.Info("Gas cost validation passed", "chunks_tested", maxValidationChunks)
+	return nil
+}
+
+// countTotalEntries counts the total number of entries in a chunk
+func countTotalEntries(chunk *types.GenesisState) int {
+	total := 0
+	for _, lte := range chunk.LedgerToEntries {
+		total += len(lte.Entries)
+	}
+	return total
 }

@@ -597,7 +597,7 @@ func TestResumeFunctionality(t *testing.T) {
 	defer tmpFile.Close()
 
 	// Create test data with multiple chunks
-	testData := createTestGenesisData(10) // Larger dataset to ensure multiple chunks
+	testData := createTestGenesisData(50) // Much larger dataset to ensure multiple chunks
 
 	// Write test data to file
 	encoder := json.NewEncoder(tmpFile)
@@ -606,7 +606,7 @@ func TestResumeFunctionality(t *testing.T) {
 
 	// Test streaming processor
 	config := DefaultChunkConfig()
-	config.MaxChunkSizeBytes = 1000 // Small chunk size to ensure multiple chunks
+	config.MaxChunkSizeBytes = 500 // Very small chunk size to ensure multiple chunks
 	processor := NewStreamingGenesisProcessor(config, log.NewNopLogger())
 
 	chunkedState, err := processor.ProcessFile(tmpFile.Name())
@@ -713,7 +713,7 @@ func TestCorrelationIDTracking(t *testing.T) {
 	defer tmpFile.Close()
 
 	// Create test data
-	testData := createTestGenesisData(20) // Larger dataset to ensure multiple chunks
+	testData := createTestGenesisData(100) // Much larger dataset to ensure multiple chunks
 
 	// Write test data to file
 	encoder := json.NewEncoder(tmpFile)
@@ -722,7 +722,7 @@ func TestCorrelationIDTracking(t *testing.T) {
 
 	// Test 1: First processing run
 	config1 := DefaultChunkConfig()
-	config1.MaxChunkSizeBytes = 1000 // Small chunk size to ensure multiple chunks
+	config1.MaxChunkSizeBytes = 500 // Very small chunk size to ensure multiple chunks
 	processor1 := NewStreamingGenesisProcessor(config1, log.NewNopLogger())
 
 	chunkedState1, err := processor1.ProcessFile(tmpFile.Name())

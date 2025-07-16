@@ -24,6 +24,13 @@ func DefaultChunkConfig() ChunkConfig {
 	}
 }
 
+// GetEffectiveGasLimit returns the effective gas limit for chunking with safety margin
+func (c ChunkConfig) GetEffectiveGasLimit() int {
+	// Use a 200k safety margin to balance safety with efficiency
+	// This accounts for gas estimation inaccuracies while allowing larger chunks
+	return c.MaxGasPerTx - 200000
+}
+
 // ChunkedGenesisState represents a chunked version of GenesisState
 type ChunkedGenesisState struct {
 	ImportID     string
@@ -55,6 +62,7 @@ type LocalBulkImportStatus struct {
 	UpdatedAt                   string `json:"updated_at"`
 	Status                      string `json:"status"` // "pending", "in_progress", "completed", "failed"
 	ErrorMessage                string `json:"error_message,omitempty"`
+	TotalChunks                 int    `json:"total_chunks"` // Total number of chunks for this import
 	TotalLedgers                int    `json:"total_ledgers"`
 	TotalEntries                int    `json:"total_entries"`
 	CompletedLedgers            int    `json:"completed_ledgers"`

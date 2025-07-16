@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -87,40 +86,6 @@ func getCorrelationIDRangeFromChunk(chunk *types.GenesisState) (string, string) 
 		}
 	}
 	return firstID, lastID
-}
-
-// checkCorrelationIDExists checks if a correlation ID exists on-chain by querying the ledger
-
-// checkTransactionAlreadyProcessed checks if a transaction was already processed by querying the blockchain
-func checkTransactionAlreadyProcessed(clientCtx client.Context, txHash string, logger log.Logger) (bool, error) {
-	if txHash == "" {
-		return false, fmt.Errorf("failed to query transaction is empty")
-	}
-
-	// Query the transaction by hash using the correct API
-	// Convert hash to lowercase and decode from hex string to bytes
-	hashLower := strings.ToLower(txHash)
-	hashBytes, err := hex.DecodeString(hashLower)
-	if err != nil {
-		return false, fmt.Errorf("failed to decode transaction hash %s: %w", txHash, err)
-	}
-	resp, err := clientCtx.Client.Tx(context.Background(), hashBytes, false)
-	if err != nil {
-		// If transaction not found, it wasn't processed
-		if strings.Contains(err.Error(), "not found") {
-			return false, err
-		}
-		return false, fmt.Errorf("failed to query transaction %s: %w", txHash, err)
-	}
-
-	// Check if transaction was successful
-	if resp.TxResult.Code == 0 {
-		logger.Info("Transaction already processed successfully", "tx_hash", txHash)
-		return true, nil
-	}
-
-	logger.Info("Transaction found but failed", "tx_hash", txHash, "code", resp.TxResult.Code)
-	return false, nil
 }
 
 // findNextCorrelationIDAfter scans a genesis file to find the next correlation ID after the given one
@@ -387,6 +352,9 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 			// Add import-id flag support
 			userImportID, _ := cmd.Flags().GetString("import-id")
 
+			// // Get validate-tx flag
+			// validateTxEnabled, _ := cmd.Flags().GetBool("validate-tx")
+
 			// Determine import ID behavior:
 			// - If --import-id is provided: use it (resume if status exists, fresh start if not)
 			// - If no --import-id: always start fresh with auto-generated import ID
@@ -476,7 +444,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 							logger.Info("Last chunk was unconfirmed, checking if it was actually processed",
 								"last_tx_hash", status.LastAttemptedChunk.TransactionHash)
 
-							processed, err := checkTransactionAlreadyProcessed(clientCtx, status.LastAttemptedChunk.TransactionHash, logger)
+							processed, err := validateTransactionByHash(clientCtx, status.LastAttemptedChunk.TransactionHash, logger)
 							if err != nil {
 								logger.Warn("Failed to check transaction status, proceeding anyway", "error", err)
 							}
@@ -587,8 +555,9 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				// Use stored flat fee info if available
 				if status.FlatFeeInfo != nil {
 					flatFeeInfo = status.FlatFeeInfo
-					logger.Info("Using stored flat fee info for resume")
-					logFlatFeeInfo(flatFeeInfo, logger)
+					logger.Info("Using stored flat fee info for resume",
+						"msg_type", status.FlatFeeInfo.MsgType,
+						"fee_amount", status.FlatFeeInfo.FeeAmount.String())
 				}
 			} else {
 				// --- Initial gas estimation by streaming in just enough data for CalculateTxFees ---
@@ -599,44 +568,91 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					return fmt.Errorf("failed to open file for initial gas estimation: %w", err)
 				}
 				defer streamingProcessor.Close()
-				// Get the first chunk (could be just the first ledger or a few entries)
-				minimalChunk, err := streamingProcessor.NextChunk()
+
+				// Use fallback gas costs for initial chunking to ensure we get a reasonable minimal chunk
+				fallbackGasCosts := &GasCosts{
+					LedgerWithKeyGas: 70000,
+					EntryGas:         100000,
+				}
+
+				// Get the first chunk using gas limits to ensure it's not too large
+				minimalChunk, err := streamingProcessor.NextChunkWithGasLimit(fallbackGasCosts)
 				if err != nil {
 					return fmt.Errorf("failed to get minimal chunk for gas estimation: %w", err)
 				}
-				// Simulate gas for this minimal chunk
-				gasSim, err := simulateChunkGas(minimalChunk, clientCtx, cmd)
-				if err != nil {
-					logger.Warn("Failed to simulate gas for minimal chunk, using fallback values", "error", err)
-					gasCosts = &GasCosts{
-						LedgerWithKeyGas: 100000,
-						EntryGas:         5000,
-					}
-				} else {
-					// Use the simulated gas as a baseline for the first chunk
-					// For simplicity, assign all gas to LedgerWithKeyGas if only one ledger, or split if possible
+
+				// Continue getting chunks until we find one with 1 ledger entry that has 1 ledger and 50+ entries
+				for {
 					ledgerCount := len(minimalChunk.LedgerToEntries)
 					entryCount := 0
 					for _, lte := range minimalChunk.LedgerToEntries {
 						entryCount += len(lte.Entries)
 					}
-					if ledgerCount > 0 && entryCount > 0 {
-						// Estimate per-entry cost
-						perEntry := gasSim / entryCount
-						gasCosts = &GasCosts{
-							LedgerWithKeyGas: gasSim - (perEntry * entryCount),
-							EntryGas:         perEntry,
-						}
-					} else {
-						gasCosts = &GasCosts{
-							LedgerWithKeyGas: gasSim,
-							EntryGas:         5000, // fallback
-						}
+
+					// Check if this chunk meets our criteria: 1 ledger entry with 1 ledger and 50+ entries
+					if ledgerCount == 1 && entryCount >= 50 {
+						logger.Info("Found suitable chunk for gas estimation",
+							"ledger_count", ledgerCount,
+							"entry_count", entryCount)
+						break
 					}
+
+					// Get the next chunk
+					nextChunk, err := streamingProcessor.NextChunkWithGasLimit(fallbackGasCosts)
+					if err == io.EOF {
+						logger.Warn("Reached end of file without finding suitable chunk, using current chunk")
+						break
+					}
+					if err != nil {
+						logger.Warn("Failed to get next chunk for gas estimation, using current chunk", "error", err)
+						break
+					}
+
+					minimalChunk = nextChunk
+					logger.Info("Trying next chunk for gas estimation",
+						"ledger_count", ledgerCount,
+						"entry_count", entryCount)
+				}
+
+				// Simulate gas for this minimal chunk
+				gasCosts, err = EstimateGasCostsAccurately(minimalChunk, clientCtx, cmd, logger)
+				if err != nil {
+					logger.Warn("Failed to estimate gas costs accurately, using fallback values", "error", err)
+					gasCosts = fallbackGasCosts
 				}
 				logger.Info("Initial gas costs estimated from minimal chunk",
 					"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
 					"entry_gas", gasCosts.EntryGas)
+
+				// Validate gas costs against actual chunks if possible
+				logger.Info("Validating gas cost estimates")
+				validationProcessor := NewStreamingChunkProcessor(config, logger)
+				err = validationProcessor.OpenFile(genesisStateFile, "")
+				if err == nil {
+					defer validationProcessor.Close()
+
+					// Collect a few chunks for validation
+					var validationChunks []*types.GenesisState
+					for i := 0; i < 3; i++ {
+						chunk, err := validationProcessor.NextChunkWithGasLimit(gasCosts)
+						if err == io.EOF {
+							break
+						}
+						if err != nil {
+							logger.Warn("Failed to get chunk for validation", "error", err)
+							break
+						}
+						validationChunks = append(validationChunks, chunk)
+					}
+
+					if len(validationChunks) > 0 {
+						err = validateGasCosts(gasCosts, validationChunks, clientCtx, cmd, logger)
+						if err != nil {
+							logger.Warn("Gas cost validation failed, but continuing with estimates", "error", err)
+						}
+					}
+				}
+
 				// Optionally, store these in the status file for future resumes
 				if status != nil {
 					status.GasCosts = gasCosts
@@ -773,7 +789,12 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				// Get gas estimate for this chunk using the pre-estimated gas costs
 				gas := estimateChunkGasFromCosts(chunk, gasCosts)
 				chunkGas := uint64(gas)
-				logger.Info("Using estimated gas costs for chunk validation", "chunk_index", chunkIndex, "gas", chunkGas)
+				effectiveGasLimit := config.GetEffectiveGasLimit()
+				logger.Info("Using estimated gas costs for chunk validation",
+					"chunk_index", chunkIndex,
+					"gas", chunkGas,
+					"effective_gas_limit", effectiveGasLimit,
+					"gas_margin", config.MaxGasPerTx-effectiveGasLimit)
 
 				// Store gas costs and flat fee info in status for future use (only on first chunk)
 				if status.GasCosts == nil {
@@ -823,39 +844,42 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 					GenesisState: chunk,
 				}
 
-				// Check if this chunk was already processed (for resume safety)
-				if isResume && status.LastAttemptedChunk != nil {
-					lastChunk := status.LastAttemptedChunk
-					if lastChunk.Confirmed {
-						// Last chunk was confirmed, we can continue from the next chunk
-						logger.Info("Last chunk was confirmed, continuing from next chunk",
-							"last_first_correlation_id", lastChunk.FirstCorrelationID,
-							"last_last_correlation_id", lastChunk.LastCorrelationID,
-							"last_tx_hash", lastChunk.TransactionHash)
-					} else if lastChunk.TransactionHash != "" {
-						// Last chunk was sent but not confirmed - check if it actually succeeded
-						logger.Info("Checking if last chunk was actually processed",
-							"last_first_correlation_id", lastChunk.FirstCorrelationID,
-							"last_last_correlation_id", lastChunk.LastCorrelationID,
-							"last_tx_hash", lastChunk.TransactionHash)
+				// // Check if this chunk was already processed (for resume safety)
+				// if isResume && status.LastAttemptedChunk != nil {
+				// 	lastChunk := status.LastAttemptedChunk
+				// 	if lastChunk.Confirmed {
+				// 		// Last chunk was confirmed, we can continue from the next chunk
+				// 		logger.Info("Last chunk was confirmed, continuing from next chunk",
+				// 			"last_first_correlation_id", lastChunk.FirstCorrelationID,
+				// 			"last_last_correlation_id", lastChunk.LastCorrelationID,
+				// 			"last_tx_hash", lastChunk.TransactionHash)
+				// 	} else if lastChunk.TransactionHash != "" {
+				// 		// Last chunk was sent but not confirmed - check if it actually succeeded
+				// 		logger.Info("Checking if last chunk was actually processed",
+				// 			"last_first_correlation_id", lastChunk.FirstCorrelationID,
+				// 			"last_last_correlation_id", lastChunk.LastCorrelationID,
+				// 			"last_tx_hash", lastChunk.TransactionHash)
 
-						processed, err := checkTransactionAlreadyProcessed(clientCtx, lastChunk.TransactionHash, logger)
-						if err != nil {
-							logger.Info("Transaction indexing disabled or unavailable, proceeding with resume", "tx_hash", lastChunk.TransactionHash)
-						} else if processed {
-							// The transaction actually succeeded, mark it as confirmed
-							logger.Info("Last chunk was actually processed successfully, marking as confirmed",
-								"last_tx_hash", lastChunk.TransactionHash)
-							status.LastAttemptedChunk.Confirmed = true
-							status.UpdatedAt = time.Now().Format(time.RFC3339)
-							_ = writeLocalBulkImportStatus(status)
-						} else {
-							// The transaction really failed, we can retry this chunk
-							logger.Info("Last chunk was not processed, will retry",
-								"last_tx_hash", lastChunk.TransactionHash)
-						}
-					}
-				}
+				// 		processed, err := validateTransactionByHash(clientCtx, lastChunk.TransactionHash, logger)
+				// 		if err != nil {
+				// 			if validateTxEnabled {
+				// 				return fmt.Errorf("failed to validate transaction: %w", err)
+				// 			}
+				// 			logger.Info("Transaction indexing disabled or unavailable, proceeding with resume", "tx_hash", lastChunk.TransactionHash)
+				// 		} else if processed {
+				// 			// The transaction actually succeeded, mark it as confirmed
+				// 			logger.Info("Last chunk was actually processed successfully, marking as confirmed",
+				// 				"last_tx_hash", lastChunk.TransactionHash)
+				// 			status.LastAttemptedChunk.Confirmed = true
+				// 			status.UpdatedAt = time.Now().Format(time.RFC3339)
+				// 			_ = writeLocalBulkImportStatus(status)
+				// 		} else {
+				// 			// The transaction really failed, we can retry this chunk
+				// 			logger.Info("Last chunk was not processed, will retry",
+				// 				"last_tx_hash", lastChunk.TransactionHash)
+				// 		}
+				// 	}
+				// }
 
 				// Broadcast transaction and check its status
 				txHash, err := broadcastAndCheckTx(clientCtx, cmd, msg, chunkIndex, logger, flatFeeInfo)
@@ -897,7 +921,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				}
 
 				// Wait for transaction confirmation
-				err = waitForTransactionConfirmation(clientCtx, cmd, chunkIndex-1, 0, logger) // chunkIndex-1 because waitForTransactionConfirmation expects 0-based index
+				err = waitForTransactionConfirmation(clientCtx, cmd, chunkIndex-1, 0, logger, txHash) // chunkIndex-1 because waitForTransactionConfirmation expects 0-based index
 				if err != nil {
 					status.Status = "failed"
 					status.ErrorMessage = fmt.Sprintf("failed to wait for transaction confirmation for chunk %d: %v", chunkIndex, err)
@@ -959,6 +983,7 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 	}
 
 	cmd.Flags().String("import-id", "", "Explicit import ID to use for status tracking (advanced)")
+	// cmd.Flags().Bool("validate-tx", false, "Enable transaction validation during resume (checks if transactions were actually processed)")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
