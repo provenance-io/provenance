@@ -57,7 +57,7 @@ if ! [ -d ./proto ]; then
   ec=1
 fi
 if ! [ -d ./legacy_protos ]; then
-  printf 'Directory not found: ./proto\n' >&2
+  printf 'Directory not found: ./legacy_protos\n' >&2
   ec=1
 fi
 if ! [ -d ./third_party ]; then
