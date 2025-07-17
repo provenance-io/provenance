@@ -7,6 +7,7 @@ if [ "$1" == "" ]; then
 fi
 
 PROTO_DIR=proto
+LEGACY_PROTO_DIR=legacy_protos
 
 dir="$(pwd)"
 zip="${1}"
@@ -34,7 +35,7 @@ done
 
 # Include all provenance protos in the final zipball.
 cd "${dir}" || exit 1
-find "${PROTO_DIR}" -name \*.proto -print0 | while read -rd $'\0' d; do
+find "${PROTO_DIR}" "${LEGACY_PROTO_DIR}" -name \*.proto -print0 | while read -rd $'\0' d; do
 	echo -en " * Adding ${lite_blue}internal${off} protos ${yellow}${d}${off} ... "
 	if find "${d}" -name \*.proto | zip "${zip}" -@ >/dev/null; then
     echo -e "[${green}OK${off}]"
