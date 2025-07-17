@@ -4,9 +4,6 @@
 
 ## Table of Contents
 
-- [cosmwasm/wasm/v1beta1/msg_execute_contract.proto](#cosmwasm_wasm_v1beta1_msg_execute_contract-proto)
-    - [MsgExecuteContract](#cosmwasm-wasm-v1beta1-MsgExecuteContract)
-  
 - [cosmos/quarantine/v1beta1/tx.proto](#cosmos_quarantine_v1beta1_tx-proto)
     - [MsgAccept](#cosmos-quarantine-v1beta1-MsgAccept)
     - [MsgAcceptResponse](#cosmos-quarantine-v1beta1-MsgAcceptResponse)
@@ -887,41 +884,10 @@
 - [provenance/hold/v1/genesis.proto](#provenance_hold_v1_genesis-proto)
     - [GenesisState](#provenance-hold-v1-GenesisState)
   
+- [cosmwasm/wasm/v1beta1/msg_execute_contract.proto](#cosmwasm_wasm_v1beta1_msg_execute_contract-proto)
+    - [MsgExecuteContract](#cosmwasm-wasm-v1beta1-MsgExecuteContract)
+  
 - [Scalar Value Types](#scalar-value-types)
-
-
-
-<a name="cosmwasm_wasm_v1beta1_msg_execute_contract-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmwasm/wasm/v1beta1/msg_execute_contract.proto
-
-
-
-<a name="cosmwasm-wasm-v1beta1-MsgExecuteContract"></a>
-
-### MsgExecuteContract
-MsgExecuteContract defines a message to execute a smart contract.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  |  |
-| `contract` | [string](#string) |  |  |
-| `msg` | [bytes](#bytes) |  |  |
-| `funds` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
 
 
 
@@ -13055,6 +13021,40 @@ GenesisState defines the attribute module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `holds` | [AccountHold](#provenance-hold-v1-AccountHold) | repeated | holds defines the funds on hold at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmwasm_wasm_v1beta1_msg_execute_contract-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmwasm/wasm/v1beta1/msg_execute_contract.proto
+
+
+
+<a name="cosmwasm-wasm-v1beta1-MsgExecuteContract"></a>
+
+### MsgExecuteContract
+MsgExecuteContract defines a message to execute a smart contract.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `contract` | [string](#string) |  |  |
+| `msg` | [bytes](#bytes) |  |  |
+| `funds` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
 
 
 

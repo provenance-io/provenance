@@ -4,6 +4,7 @@ if [ "$1" = '-v' ] || [ "$1" = '--verbose' ]; then
   VERBOSE=1
 fi
 proto_dir='./proto'
+legacy_proto_dir='./legacy_protos'
 temp_dir='./tmp-swagger-gen'
 temp_file="$temp_dir/swagger-new.yaml"
 template_file='./proto/buf.gen.swagger.yaml'
@@ -13,7 +14,7 @@ output_file='./client/docs/swagger-ui/swagger.yaml'
 set -eo pipefail
 
 mkdir -p "$temp_dir"
-proto_files=$( find "$proto_dir" -type f -name '*.proto' -print0 | xargs -0 grep -El '^service +[^ ]+ +\{' )
+proto_files=$( find "$proto_dir" "$legacy_proto_dir" -type f -name '*.proto' -print0 | xargs -0 grep -El '^service +[^ ]+ +\{' )
 for file in $proto_files; do
   [ -n "$VERBOSE" ] && printf 'Generating swagger file for [%s].\n' "$file"
   buf generate --template "$template_file" "$file"
