@@ -64,5 +64,5 @@ message RegistryBulkUpdate {
 
 message RegistryBulkUpdateEntry {
   RegistryKey           key   = 1;
-  repeated RegistryRole roles = 2;
+  repeated RegistryEntry entries = 2;
 }
