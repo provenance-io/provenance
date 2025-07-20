@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/provenance-io/provenance/x/name/types"
@@ -8,6 +10,7 @@ import (
 
 // InitGenesis creates the initial genesis state for the name module.
 func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
+	// Set module parameters
 	k.SetParams(ctx, data.Params)
 	for _, record := range data.Bindings {
 		addr, err := sdk.AccAddressFromBech32(record.Address)
@@ -22,16 +25,22 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 // ExportGenesis exports the current keeper state of the name module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	// Get module parameters
 	params := k.GetParams(ctx)
-	// Genesis state data structure.
-	records := types.NameRecords{}
-	// Callback func that adds records to genesis state.
-	appendToRecords := func(record types.NameRecord) error {
+	// Collect all name records
+	records := make(types.NameRecords, 0)
+
+	rng := (&collections.Range[[]byte]{}).
+		StartInclusive(types.NameKeyPrefix).
+		EndExclusive(storetypes.PrefixEndBytes(types.NameKeyPrefix))
+
+	// Iterate through all name records
+	err := k.NameRecords.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
 		records = append(records, record)
-		return nil
-	}
-	// Collect and return genesis state.
-	if err := k.IterateRecords(ctx, types.NameKeyPrefix, appendToRecords); err != nil {
+		return false, nil
+	})
+
+	if err != nil {
 		panic(err)
 	}
 	return types.NewGenesisState(params, records)
