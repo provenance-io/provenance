@@ -3,11 +3,10 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/store/prefix"
-
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -36,37 +35,51 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 	return &types.QueryResolveResponse{Address: record.Address, Restricted: record.Restricted}, nil
 }
 
-// ReverseLookup gets all names bound to an address.
+// ReverseLookup gets all names bound to an address with proper pagination
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	names := make([]string, 0)
-	store := ctx.KVStore(k.storeKey)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, types.ErrInvalidAddress
 	}
-	key, err := types.GetAddressKeyPrefix(accAddr)
+
+	// Get the prefix for the address
+	addrPrefix, err := types.GetAddressKeyPrefix(accAddr)
 	if err != nil {
 		return nil, types.ErrInvalidAddress
 	}
-	nameStore := prefix.NewStore(store, key)
-	pageRes, err := query.FilteredPaginate(nameStore, request.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		var record types.NameRecord
-		err = k.cdc.Unmarshal(value, &record)
-		if err != nil {
-			return false, err
+
+	// Create a range for the prefix
+	rng := (&collections.Range[[]byte]{}).
+		StartInclusive(addrPrefix).
+		EndExclusive(storetypes.PrefixEndBytes(addrPrefix))
+
+	var names []string
+	var nextKey []byte
+
+	// Iterate through address index with pagination
+	err = k.AddrIndex.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
+		// Handle pagination
+		if request.Pagination != nil {
+			// Check if we've reached the limit
+			if uint64(len(names)) >= request.Pagination.Limit {
+				nextKey = key
+				return true, nil // Stop iteration
+			}
 		}
-		if record.Address != request.Address {
-			return false, nil
-		}
-		if accumulate {
-			names = append(names, record.Name)
-		}
-		return true, nil
+
+		names = append(names, record.Name)
+		return false, nil
 	})
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Build pagination response
+	pageRes := &query.PageResponse{
+		NextKey: nextKey,
+		Total:   uint64(len(names)),
 	}
 
 	return &types.QueryReverseLookupResponse{Name: names, Pagination: pageRes}, nil
