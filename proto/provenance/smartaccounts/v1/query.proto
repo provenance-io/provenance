@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package provenance.smartaccounts.v1;
+
+import "google/api/annotations.proto";
+import "provenance/smartaccounts/v1/provenanceaccount.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
+
+// Query defines the Query service for the x/accounts module.
+service Query {
+  // AccountQuery runs a query to retrieve the state object of a smart account.
+  rpc SmartAccount(AccountQueryRequest) returns (QuerySmartAccountResponse) {
+    option (google.api.http).get = "/provenance/smartaccount/v1/account";
+  };
+  // Params queries all parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/smartaccount/v1/params";
+  }
+}
+
+// AccountQueryPubKeyRequest is the request type for the Query/AccountQuery RPC
+message AccountQueryRequest {
+  // address defines the account to be queried. this is the base account address.
+  string address = 1;
+}
+
+// AccountQueryResponse is the response type for the Query/AccountQuery RPC
+message QuerySmartAccountResponse {
+  // provenance account is the smart account associated with the account.
+  ProvenanceAccount provenanceaccount = 1;
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1;
+}

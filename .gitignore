@@ -38,6 +38,7 @@ profile.iws
 *.iml
 *.ipr
 *.iws
+.run
 
 # Tools make target marker
 tools-stamp
@@ -55,3 +56,5 @@ proto/gen/
 
 # act (local GitHub workflow runner: https://github.com/nektos/act)
 .secrets
+
+

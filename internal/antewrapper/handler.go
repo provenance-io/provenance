@@ -4,6 +4,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	circuitante "cosmossdk.io/x/circuit/ante"
 	txsigning "cosmossdk.io/x/tx/signing"
+	smartaccountkeeper "github.com/provenance-io/provenance/x/smartaccounts/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -25,6 +26,7 @@ type HandlerOptions struct {
 	CircuitKeeper          circuitante.CircuitBreaker
 	TxSigningHandlerMap    *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	SmartAccountKeeper     smartaccountkeeper.Keeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -49,7 +51,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
 		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
-		NewTxGasLimitDecorator(),
 		NewMinGasPricesDecorator(),
 		NewMsgFeesDecorator(options.MsgFeesKeeper),
 		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
@@ -61,7 +62,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
-		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap),
+		//cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap),
+		NewProvenanceSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap, options.SmartAccountKeeper),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 

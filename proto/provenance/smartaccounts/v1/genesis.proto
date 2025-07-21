@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package provenance.smartaccounts.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
+
+import "provenance/smartaccounts/v1/provenanceaccount.proto";
+import "gogoproto/gogo.proto";
+
+// GenesisState defines the accounts' module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+  // A collection of smart accounts to create on start
+  repeated ProvenanceAccount accounts = 2 [(gogoproto.nullable) = false];
+}
