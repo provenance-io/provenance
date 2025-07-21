@@ -76,7 +76,7 @@ enum CredentialType {
 message Credential {
   BaseCredential base_credential = 1 [(gogoproto.embed) = true];
   // authenticator is the authenticator for the credential.
-  oneof          authenticator {
+  oneof authenticator {
     Fido2Authenticator   fido2_authenticator   = 2;
     K256Authenticator    k256_authenticator    = 3;
     SessionAuthenticator session_authenticator = 4;

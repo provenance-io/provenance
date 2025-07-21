@@ -7,8 +7,8 @@ option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
 // PublicKeyData represents the public key data for WebAuthn credentials.
 message PublicKeyData {
   bytes public_key = 1; // Decode the results to int by default.
-  int64  key_type   = 2; // The type of key created. Should be OKP, EC2, ( RSA not supported).
-  int64  algorithm  = 3; // A COSEAlgorithmIdentifier for the algorithm used to derive the key signature.
+  int64 key_type   = 2; // The type of key created. Should be OKP, EC2, ( RSA not supported).
+  int64 algorithm  = 3; // A COSEAlgorithmIdentifier for the algorithm used to derive the key signature.
 }
 // EC2PublicKeyData represents the EC2 public key data for WebAuthn credentials.
 message EC2PublicKeyData {
