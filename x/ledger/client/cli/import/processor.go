@@ -23,11 +23,6 @@ type StreamingChunkProcessor struct {
 	decoder *json.Decoder
 	reader  *bufio.Reader
 
-	// Current chunk state
-	currentChunk *types.GenesisState
-	ledgerCount  int
-	entryCount   int
-
 	// Resume state
 	skipUntilFound          bool
 	foundStartCorrelationID bool
@@ -35,6 +30,10 @@ type StreamingChunkProcessor struct {
 
 	// End of stream flag
 	atEnd bool
+
+	// New state for partial lte processing
+	inProgressLTE        *types.LedgerToEntries		// If non-nil, we're in the middle of splitting an lte
+	inProgressLTEEntryIndex int						// Index of the next entry to process in partialLTE
 }
 
 // NewStreamingChunkProcessor creates a new streaming chunk processor
@@ -120,11 +119,6 @@ func (p *StreamingChunkProcessor) initializeJSONParsing() error {
 				return fmt.Errorf("expected array start, got %v", token)
 			}
 
-			// Initialize current chunk
-			p.currentChunk = &types.GenesisState{
-				LedgerToEntries: []types.LedgerToEntries{},
-			}
-
 			return nil
 		} else {
 			// Skip unknown fields
@@ -143,128 +137,114 @@ func (p *StreamingChunkProcessor) NextChunkWithGasLimit(gasCosts *GasCosts) (*ty
 		return nil, io.EOF
 	}
 
-	// Process ledger entries until we have a complete chunk
-	for p.decoder.More() {
-		var lte types.LedgerToEntries
-		if err := p.decoder.Decode(&lte); err != nil {
-			return nil, fmt.Errorf("failed to decode LedgerToEntries: %w", err)
-		}
-
-		// Validate the ledger entry
-		if err := p.validateLedgerToEntries(&lte); err != nil {
-			return nil, fmt.Errorf("validation failed: %w", err)
-		}
-
-		// Handle resume functionality - skip until we find the start correlation ID
-		if p.skipUntilFound {
-			// Check if any entry in this ledger has the start correlation ID
-			for _, entry := range lte.Entries {
-				if entry.CorrelationId == p.startFromCorrelationID {
-					p.foundStartCorrelationID = true
-					p.skipUntilFound = false
-					break
-				}
+	maxGasPerChunk := p.config.GetEffectiveGasLimit()
+	maxTxSize := p.config.MaxTxSizeBytes
+	candidateChunk := &types.GenesisState{
+		LedgerToEntries: []types.LedgerToEntries{},
+	}
+	
+	for {
+		startEntry := 0
+		// Determine processingLTE
+		// If we have an LTE from last time, continue processing it
+		// Otherwise, get the next LTE	
+		if p.inProgressLTE != nil {
+			startEntry = p.inProgressLTEEntryIndex
+		} else {
+			// Get the next LTE and store it in inProgressLTE
+			if !p.decoder.More() {
+				p.atEnd = true
+				break
+			}
+			if err := p.decoder.Decode(&p.inProgressLTE); err != nil {
+				return nil, fmt.Errorf("failed to decode LedgerToEntries: %w", err)
 			}
 
-			if !p.foundStartCorrelationID {
-				// Skip this entire ledger entry
-				continue
-			} else {
-				// We found the start correlation ID, but we need to filter out entries before and including it
-				var filteredEntries []*types.LedgerEntry
-				startFound := false
+			// Validate the ledger entry
+			if err := p.validateLedgerToEntries(p.inProgressLTE); err != nil {
+				return nil, fmt.Errorf("validation failed: %w", err)
+			}
 
-				for _, entry := range lte.Entries {
-					if !startFound && entry.CorrelationId == p.startFromCorrelationID {
-						startFound = true
-						// Skip this entry (the last processed one) and continue to the next
-						continue
-					}
-					if startFound {
-						filteredEntries = append(filteredEntries, entry)
+			// Handle resume functionality - skip until we find the start correlation ID
+			if p.skipUntilFound {
+				for i, entry := range p.inProgressLTE.Entries {
+					if entry.CorrelationId == p.startFromCorrelationID {
+						p.foundStartCorrelationID = true
+						p.skipUntilFound = false
+						startEntry = i + 1 // skip the found entry, start at next
+						break
 					}
 				}
-
-				// Update the ledger entry with filtered entries
-				lte.Entries = filteredEntries
+				if !p.foundStartCorrelationID {
+					continue // skip this entire lte
+				}
 			}
 		}
 
-		// Check gas limit BEFORE adding the entry to the chunk
+		candidateLTE := types.LedgerToEntries{
+			LedgerKey: p.inProgressLTE.LedgerKey,
+			Ledger:    nil, // assume not the first LTE so no ledger object for now
+			Entries:   []*types.LedgerEntry{},
+		}
+		
+		// If this is a new LTE, try to add set the ledger object
+		if startEntry == 0 {
+			candidateLTE.Ledger = p.inProgressLTE.Ledger // Only the first LTE has the ledger object
+		}
+
+		// Add the LTE (with no entries) to the chunk first to see if it fits
+		tempChunk := &types.GenesisState{
+			LedgerToEntries: append(append([]types.LedgerToEntries{}, candidateChunk.LedgerToEntries...), candidateLTE),
+		}
+		gas := 0
 		if gasCosts != nil {
-			// Create a temporary chunk with the new entry to estimate gas
-			tempChunk := &types.GenesisState{
-				LedgerToEntries: append(p.currentChunk.LedgerToEntries, lte),
-			}
-			estimatedGas := estimateChunkGasFromCosts(tempChunk, gasCosts)
-			maxGasPerChunk := p.config.GetEffectiveGasLimit()
-
-			if estimatedGas > maxGasPerChunk {
-				// Return the current chunk without adding the new entry
-				if len(p.currentChunk.LedgerToEntries) > 0 {
-					chunkToReturn := p.currentChunk
-					// Start a new chunk with the current entry
-					p.currentChunk = &types.GenesisState{
-						LedgerToEntries: []types.LedgerToEntries{lte},
-					}
-					return chunkToReturn, nil
-				}
+			gas = estimateChunkGasFromCosts(tempChunk, gasCosts)
+		}
+		size := getChunkSizeBytes(tempChunk)
+		if (gasCosts != nil && gas > maxGasPerChunk) || size > maxTxSize {
+			// Ledger+key (no entries) do not fit, return current chunk and start a new one
+			if len(candidateChunk.LedgerToEntries) > 0 {
+				p.inProgressLTEEntryIndex = startEntry
+				return candidateChunk, nil
+			} else {
+				return nil, fmt.Errorf("ledger object too large to fit in chunk (ledgerKey=%v)", candidateLTE.LedgerKey)
 			}
 		}
-
-		// Add to current chunk
-		p.currentChunk.LedgerToEntries = append(p.currentChunk.LedgerToEntries, lte)
-
-		// Check if we should start a new chunk based on transaction size limit
-		chunkSize := getChunkSizeBytes(p.currentChunk)
-		if chunkSize > p.config.MaxTxSizeBytes {
-			// Remove the last entry and return the current chunk
-			p.currentChunk.LedgerToEntries = p.currentChunk.LedgerToEntries[:len(p.currentChunk.LedgerToEntries)-1]
-
-			// Create the chunk to return
-			chunkToReturn := p.currentChunk
-
-			// Start a new chunk with the current entry
-			p.currentChunk = &types.GenesisState{
-				LedgerToEntries: []types.LedgerToEntries{lte},
+		
+		entries := p.inProgressLTE.Entries
+		for i := startEntry; i < len(entries); i++ {
+			tempLTE := candidateLTE
+			tempLTE.Entries = append(tempLTE.Entries, entries[i])
+			
+			testChunk := &types.GenesisState{
+				LedgerToEntries: append(append([]types.LedgerToEntries{}, candidateChunk.LedgerToEntries...), tempLTE),
 			}
-
-			// Update stats
-			p.stats.TotalLedgers++
-			p.ledgerCount++
-			if lte.Entries != nil {
-				p.stats.TotalEntries += len(lte.Entries)
-				p.entryCount += len(lte.Entries)
+			gas := 0
+			if gasCosts != nil {
+				gas = estimateChunkGasFromCosts(testChunk, gasCosts)
 			}
-
-			return chunkToReturn, nil
+			size := getChunkSizeBytes(testChunk)
+			// Chunk is too large, return candidate chunk and save state for next time
+			if (gasCosts != nil && gas > maxGasPerChunk) || size > maxTxSize {
+				p.inProgressLTEEntryIndex = i
+				return tempChunk, nil
+			}
+			candidateLTE = tempLTE
+			tempChunk = testChunk
+			p.stats.TotalEntries++
 		}
 
-		// Update stats
+		// Finished this lte
+		candidateChunk = tempChunk
+		p.inProgressLTE = nil
+		p.inProgressLTEEntryIndex = 0
 		p.stats.TotalLedgers++
-		p.ledgerCount++
-		if lte.Entries != nil {
-			p.stats.TotalEntries += len(lte.Entries)
-			p.entryCount += len(lte.Entries)
-		}
-
-		// Periodic progress log
-		if p.ledgerCount%1000 == 0 {
-			p.logger.Debug("StreamingChunkProcessor: progress", "ledger_count", p.ledgerCount, "entry_count", p.entryCount)
-		}
 	}
 
-	// We've reached the end of the array
-	p.atEnd = true
-
-	// Return the final chunk if it has data
-	if len(p.currentChunk.LedgerToEntries) > 0 {
-		finalChunk := p.currentChunk
-		p.currentChunk = nil // Clear to prevent reuse
-		return finalChunk, nil
+	if len(candidateChunk.LedgerToEntries) == 0 {
+		return nil, io.EOF
 	}
-
-	return nil, io.EOF
+	return candidateChunk, nil
 }
 
 // GetStats returns the current import statistics

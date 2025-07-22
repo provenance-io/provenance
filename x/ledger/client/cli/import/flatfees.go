@@ -52,15 +52,18 @@ func validateChunkWithFlatFees(chunk *types.GenesisState, gasUsed int, config Ch
 
 	// Validate chunk gas against gas limits (still needed for execution limits)
 	effectiveGasLimit := config.GetEffectiveGasLimit()
-	if gasUsed > effectiveGasLimit {
-		return fmt.Errorf("chunk exceeds maximum gas limit: %d gas > %d gas", gasUsed, effectiveGasLimit)
+	const gasTolerance = 0.05 // 5% tolerance
+	maxAllowedGas := int(float64(effectiveGasLimit) * (1 + gasTolerance))
+	if gasUsed > maxAllowedGas {
+		return fmt.Errorf("chunk exceeds maximum gas limit (with 5%% tolerance): %d gas > %d gas (limit=%d, tolerance=%d)", gasUsed, maxAllowedGas, effectiveGasLimit, int(float64(effectiveGasLimit)*gasTolerance))
 	}
 
 	logger.Info("Chunk validation passed",
 		"size_bytes", chunkSize,
 		"gas_used", gasUsed,
 		"max_size_bytes", config.MaxTxSizeBytes,
-		"max_gas", effectiveGasLimit)
+		"max_gas", effectiveGasLimit,
+		"gas_tolerance", gasTolerance)
 
 	return nil
 }

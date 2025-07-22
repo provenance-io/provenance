@@ -572,84 +572,83 @@ $ provenanced tx ledger chunked-bulk-import genesis.json 500000 --from mykey`,
 				// Use fallback gas costs for initial chunking to ensure we get a reasonable minimal chunk
 				fallbackGasCosts := &GasCosts{
 					LedgerWithKeyGas: 70000,
-					EntryGas:         100000,
+					EntryGas:         20000,
 				}
 
 				// Get the first chunk using gas limits to ensure it's not too large
-				minimalChunk, err := streamingProcessor.NextChunkWithGasLimit(fallbackGasCosts)
-				if err != nil {
-					return fmt.Errorf("failed to get minimal chunk for gas estimation: %w", err)
-				}
-
-				// Continue getting chunks until we find one with 1 ledger entry that has 1 ledger and 50+ entries
+				var minimalChunk *types.GenesisState
 				for {
-					ledgerCount := len(minimalChunk.LedgerToEntries)
-					entryCount := 0
-					for _, lte := range minimalChunk.LedgerToEntries {
-						entryCount += len(lte.Entries)
-					}
-
-					// Check if this chunk meets our criteria: 1 ledger entry with 1 ledger and 50+ entries
-					if ledgerCount == 1 && entryCount >= 50 {
-						logger.Info("Found suitable chunk for gas estimation",
-							"ledger_count", ledgerCount,
-							"entry_count", entryCount)
-						break
-					}
-
-					// Get the next chunk
-					nextChunk, err := streamingProcessor.NextChunkWithGasLimit(fallbackGasCosts)
+					candidateChunk, err := streamingProcessor.NextChunkWithGasLimit(fallbackGasCosts)
 					if err == io.EOF {
-						logger.Warn("Reached end of file without finding suitable chunk, using current chunk")
+						logger.Warn("Reached end of file without finding suitable full-lte chunk, using last candidate if available")
 						break
 					}
 					if err != nil {
-						logger.Warn("Failed to get next chunk for gas estimation, using current chunk", "error", err)
+						logger.Warn("Failed to get next chunk for gas estimation, using last candidate if available", "error", err)
 						break
 					}
 
-					minimalChunk = nextChunk
-					logger.Info("Trying next chunk for gas estimation",
-						"ledger_count", ledgerCount,
-						"entry_count", entryCount)
+					// Check if all ltes in the chunk are full (i.e., not partial)
+					allFull := true
+					for _, lte := range candidateChunk.LedgerToEntries {
+						if len(lte.Entries) == 0 {
+							allFull = false
+							break
+						}
+					}
+					if allFull {
+						minimalChunk = candidateChunk
+						break
+					}
+					// Otherwise, skip this chunk and try the next
 				}
 
-				// Simulate gas for this minimal chunk
-				gasCosts, err = EstimateGasCostsAccurately(minimalChunk, clientCtx, cmd, logger)
-				if err != nil {
-					logger.Warn("Failed to estimate gas costs accurately, using fallback values", "error", err)
+				if minimalChunk == nil {
+					logger.Warn("No suitable full-lte chunk found for gas estimation, using fallback values")
 					gasCosts = fallbackGasCosts
+				} else {
+					// Simulate gas for this minimal chunk
+					gasCosts, err = EstimateGasCostsAccurately(minimalChunk, clientCtx, cmd, logger)
+					if err != nil {
+						logger.Warn("Failed to estimate gas costs accurately, using fallback values", "error", err)
+						gasCosts = fallbackGasCosts
+					}
+					logger.Info("Initial gas costs estimated from minimal chunk",
+						"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
+						"entry_gas", gasCosts.EntryGas)
 				}
-				logger.Info("Initial gas costs estimated from minimal chunk",
-					"ledger_with_key_gas", gasCosts.LedgerWithKeyGas,
-					"entry_gas", gasCosts.EntryGas)
 
 				// Validate gas costs against actual chunks if possible
 				logger.Info("Validating gas cost estimates")
-				validationProcessor := NewStreamingChunkProcessor(config, logger)
-				err = validationProcessor.OpenFile(genesisStateFile, "")
-				if err == nil {
-					defer validationProcessor.Close()
-
-					// Collect a few chunks for validation
-					var validationChunks []*types.GenesisState
-					for i := 0; i < 3; i++ {
-						chunk, err := validationProcessor.NextChunkWithGasLimit(gasCosts)
-						if err == io.EOF {
-							break
-						}
-						if err != nil {
-							logger.Warn("Failed to get chunk for validation", "error", err)
-							break
-						}
-						validationChunks = append(validationChunks, chunk)
+				// Do NOT reopen the file; continue streaming from the current position
+				var validationChunks []*types.GenesisState
+				for i := 0; i < 3; {
+					chunk, err := streamingProcessor.NextChunkWithGasLimit(gasCosts)
+					if err == io.EOF {
+						break
 					}
-
-					if len(validationChunks) > 0 {
-						err = validateGasCosts(gasCosts, validationChunks, clientCtx, cmd, logger)
-						if err != nil {
-							logger.Warn("Gas cost validation failed, but continuing with estimates", "error", err)
+					if err != nil {
+						logger.Warn("Failed to get chunk for validation", "error", err)
+						break
+					}
+					// Only use chunks where all ltes have Ledger != nil
+					allHaveLedger := true
+					for _, lte := range chunk.LedgerToEntries {
+						if lte.Ledger == nil {
+							allHaveLedger = false
+							break
 						}
+					}
+					if allHaveLedger {
+						validationChunks = append(validationChunks, chunk)
+						i++ // Only increment if we found a valid chunk
+					}
+					// Otherwise, skip this chunk and try the next
+				}
+				if len(validationChunks) > 0 {
+					err = validateGasCosts(gasCosts, validationChunks, clientCtx, cmd, logger)
+					if err != nil {
+						logger.Warn("Gas cost validation failed, but continuing with estimates", "error", err)
 					}
 				}
 
