@@ -8,7 +8,6 @@ config/
 data/
 .idea/
 *.swp
-utils/
 .blockade
 blockade.yaml
 *.sock
