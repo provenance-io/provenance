@@ -95,95 +95,6 @@ func (m *MsgRegisterFido2Credential) GetUserIdentifier() string {
 	return ""
 }
 
-// Moves to smart contract authentication only.
-type MsgMigrateToSmartAccountAuthentication struct {
-	// sender is the address of the sender of this message.
-	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-}
-
-func (m *MsgMigrateToSmartAccountAuthentication) Reset() {
-	*m = MsgMigrateToSmartAccountAuthentication{}
-}
-func (m *MsgMigrateToSmartAccountAuthentication) String() string { return proto.CompactTextString(m) }
-func (*MsgMigrateToSmartAccountAuthentication) ProtoMessage()    {}
-func (*MsgMigrateToSmartAccountAuthentication) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{1}
-}
-func (m *MsgMigrateToSmartAccountAuthentication) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgMigrateToSmartAccountAuthentication) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgMigrateToSmartAccountAuthentication.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgMigrateToSmartAccountAuthentication) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgMigrateToSmartAccountAuthentication.Merge(m, src)
-}
-func (m *MsgMigrateToSmartAccountAuthentication) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgMigrateToSmartAccountAuthentication) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgMigrateToSmartAccountAuthentication.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgMigrateToSmartAccountAuthentication proto.InternalMessageInfo
-
-func (m *MsgMigrateToSmartAccountAuthentication) GetSender() string {
-	if m != nil {
-		return m.Sender
-	}
-	return ""
-}
-
-// MsgUpdateToSmartAccountAuthenticationOnlyResponse defines the response structure for executing a
-type MsgUpdateToSmartAccountAuthenticationOnlyResponse struct {
-}
-
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) Reset() {
-	*m = MsgUpdateToSmartAccountAuthenticationOnlyResponse{}
-}
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) String() string {
-	return proto.CompactTextString(m)
-}
-func (*MsgUpdateToSmartAccountAuthenticationOnlyResponse) ProtoMessage() {}
-func (*MsgUpdateToSmartAccountAuthenticationOnlyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{2}
-}
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUpdateToSmartAccountAuthenticationOnlyResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateToSmartAccountAuthenticationOnlyResponse.Merge(m, src)
-}
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateToSmartAccountAuthenticationOnlyResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUpdateToSmartAccountAuthenticationOnlyResponse proto.InternalMessageInfo
-
 // MsgDeleteCredential defines a method for deleting a credential.
 type MsgDeleteCredential struct {
 	// sender is the address of the sender of this message.
@@ -196,7 +107,7 @@ func (m *MsgDeleteCredential) Reset()         { *m = MsgDeleteCredential{} }
 func (m *MsgDeleteCredential) String() string { return proto.CompactTextString(m) }
 func (*MsgDeleteCredential) ProtoMessage()    {}
 func (*MsgDeleteCredential) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{3}
+	return fileDescriptor_61894182d7e375a2, []int{1}
 }
 func (m *MsgDeleteCredential) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -249,7 +160,7 @@ func (m *MsgDeleteCredentialResponse) Reset()         { *m = MsgDeleteCredential
 func (m *MsgDeleteCredentialResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDeleteCredentialResponse) ProtoMessage()    {}
 func (*MsgDeleteCredentialResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{4}
+	return fileDescriptor_61894182d7e375a2, []int{2}
 }
 func (m *MsgDeleteCredentialResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -296,7 +207,7 @@ func (m *MsgDeleteAccount) Reset()         { *m = MsgDeleteAccount{} }
 func (m *MsgDeleteAccount) String() string { return proto.CompactTextString(m) }
 func (*MsgDeleteAccount) ProtoMessage()    {}
 func (*MsgDeleteAccount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{5}
+	return fileDescriptor_61894182d7e375a2, []int{3}
 }
 func (m *MsgDeleteAccount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -347,7 +258,7 @@ func (m *MsgDeleteAccountResponse) Reset()         { *m = MsgDeleteAccountRespon
 func (m *MsgDeleteAccountResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDeleteAccountResponse) ProtoMessage()    {}
 func (*MsgDeleteAccountResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{6}
+	return fileDescriptor_61894182d7e375a2, []int{4}
 }
 func (m *MsgDeleteAccountResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -388,7 +299,7 @@ func (m *MsgRegisterCosmosCredential) Reset()         { *m = MsgRegisterCosmosCr
 func (m *MsgRegisterCosmosCredential) String() string { return proto.CompactTextString(m) }
 func (*MsgRegisterCosmosCredential) ProtoMessage()    {}
 func (*MsgRegisterCosmosCredential) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{7}
+	return fileDescriptor_61894182d7e375a2, []int{5}
 }
 func (m *MsgRegisterCosmosCredential) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -446,7 +357,7 @@ func (m *MsgRegisterFido2CredentialResponse) Reset()         { *m = MsgRegisterF
 func (m *MsgRegisterFido2CredentialResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgRegisterFido2CredentialResponse) ProtoMessage()    {}
 func (*MsgRegisterFido2CredentialResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{8}
+	return fileDescriptor_61894182d7e375a2, []int{6}
 }
 func (m *MsgRegisterFido2CredentialResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -498,7 +409,7 @@ func (m *MsgRegisterCosmosCredentialResponse) Reset()         { *m = MsgRegister
 func (m *MsgRegisterCosmosCredentialResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgRegisterCosmosCredentialResponse) ProtoMessage()    {}
 func (*MsgRegisterCosmosCredentialResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{9}
+	return fileDescriptor_61894182d7e375a2, []int{7}
 }
 func (m *MsgRegisterCosmosCredentialResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -550,7 +461,7 @@ func (m *MsgUpdateParams) Reset()         { *m = MsgUpdateParams{} }
 func (m *MsgUpdateParams) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateParams) ProtoMessage()    {}
 func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{10}
+	return fileDescriptor_61894182d7e375a2, []int{8}
 }
 func (m *MsgUpdateParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -604,7 +515,7 @@ func (m *MsgUpdateParamsResponse) Reset()         { *m = MsgUpdateParamsResponse
 func (m *MsgUpdateParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateParamsResponse) ProtoMessage()    {}
 func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_61894182d7e375a2, []int{11}
+	return fileDescriptor_61894182d7e375a2, []int{9}
 }
 func (m *MsgUpdateParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -635,8 +546,6 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgRegisterFido2Credential)(nil), "provenance.smartaccounts.v1.MsgRegisterFido2Credential")
-	proto.RegisterType((*MsgMigrateToSmartAccountAuthentication)(nil), "provenance.smartaccounts.v1.MsgMigrateToSmartAccountAuthentication")
-	proto.RegisterType((*MsgUpdateToSmartAccountAuthenticationOnlyResponse)(nil), "provenance.smartaccounts.v1.MsgUpdateToSmartAccountAuthenticationOnlyResponse")
 	proto.RegisterType((*MsgDeleteCredential)(nil), "provenance.smartaccounts.v1.MsgDeleteCredential")
 	proto.RegisterType((*MsgDeleteCredentialResponse)(nil), "provenance.smartaccounts.v1.MsgDeleteCredentialResponse")
 	proto.RegisterType((*MsgDeleteAccount)(nil), "provenance.smartaccounts.v1.MsgDeleteAccount")
@@ -653,53 +562,49 @@ func init() {
 }
 
 var fileDescriptor_61894182d7e375a2 = []byte{
-	// 727 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0xcf, 0x4f, 0xd4, 0x40,
-	0x14, 0xde, 0x11, 0x58, 0xc3, 0x60, 0xf8, 0x51, 0x48, 0x28, 0x25, 0x59, 0x4d, 0x31, 0x68, 0x10,
-	0x5a, 0x01, 0xa3, 0xc8, 0x45, 0x17, 0x8c, 0x89, 0x26, 0x8b, 0xa4, 0xe8, 0xc5, 0xc4, 0x6c, 0xba,
-	0xed, 0x30, 0x34, 0x6c, 0x3b, 0xcd, 0xcc, 0x94, 0xb0, 0x17, 0xa3, 0x1e, 0x3d, 0x99, 0x98, 0x78,
-	0xf2, 0x8f, 0xe0, 0xa0, 0x47, 0xef, 0x1c, 0x89, 0x27, 0x4f, 0xc6, 0xc0, 0x81, 0xa3, 0xff, 0x82,
-	0x69, 0x3b, 0x6d, 0xd9, 0xca, 0xfe, 0x60, 0xb9, 0x75, 0xde, 0x7b, 0xdf, 0x7b, 0xdf, 0xfb, 0x3a,
-	0xef, 0xb5, 0xf0, 0xa6, 0x4f, 0xc9, 0x1e, 0xf2, 0x4c, 0xcf, 0x42, 0x3a, 0x73, 0x4d, 0xca, 0x4d,
-	0xcb, 0x22, 0x81, 0xc7, 0x99, 0xbe, 0xb7, 0xa8, 0xf3, 0x7d, 0xcd, 0xa7, 0x84, 0x13, 0x69, 0x3a,
-	0x8b, 0xd2, 0x9a, 0xa2, 0xb4, 0xbd, 0x45, 0x65, 0xd2, 0x22, 0xcc, 0x25, 0x4c, 0x77, 0x19, 0x0e,
-	0x41, 0x2e, 0xc3, 0x31, 0x4a, 0x99, 0xc0, 0x04, 0x93, 0xe8, 0x51, 0x0f, 0x9f, 0x84, 0x75, 0x2a,
-	0x0e, 0xaf, 0xc6, 0x8e, 0xf8, 0x90, 0xb8, 0x30, 0x21, 0xb8, 0x8e, 0xf4, 0xe8, 0x54, 0x0b, 0xb6,
-	0x75, 0xd3, 0x6b, 0x08, 0xd7, 0x72, 0x3b, 0x9e, 0x99, 0x4f, 0x58, 0x63, 0x90, 0xfa, 0x1d, 0x40,
-	0xa5, 0xc2, 0xb0, 0x81, 0xb0, 0xc3, 0x38, 0xa2, 0x4f, 0x1d, 0x9b, 0x2c, 0xad, 0x53, 0x64, 0x23,
-	0x8f, 0x3b, 0x66, 0x5d, 0xba, 0x0b, 0x8b, 0x0c, 0x79, 0x36, 0xa2, 0x32, 0xb8, 0x01, 0x6e, 0x0f,
-	0xae, 0xc9, 0x3f, 0xbf, 0x2d, 0x4c, 0x08, 0x42, 0x65, 0xdb, 0xa6, 0x88, 0xb1, 0x2d, 0x4e, 0x1d,
-	0x0f, 0x1b, 0x22, 0x4e, 0xd2, 0xe1, 0x38, 0xf2, 0x2c, 0x62, 0x23, 0xbb, 0x6a, 0x72, 0x8e, 0x18,
-	0x37, 0xb9, 0x43, 0x3c, 0xf9, 0x4a, 0x08, 0x37, 0x24, 0xe1, 0x2a, 0x67, 0x1e, 0xe9, 0x16, 0x1c,
-	0x09, 0x18, 0xa2, 0x55, 0x27, 0xaa, 0xb9, 0xed, 0x20, 0x2a, 0xf7, 0x45, 0xc1, 0xc3, 0xa1, 0xf9,
-	0x59, 0x6a, 0x5d, 0x1d, 0xfa, 0x70, 0x7a, 0x30, 0x27, 0xca, 0xa8, 0x18, 0xce, 0x56, 0x18, 0xae,
-	0x38, 0x98, 0x9a, 0x1c, 0xbd, 0x24, 0x5b, 0x61, 0xbf, 0xe5, 0xb8, 0xb3, 0x72, 0xc0, 0x77, 0x42,
-	0x90, 0x15, 0xe7, 0xbf, 0x70, 0x0b, 0xcd, 0x85, 0x96, 0xe1, 0x62, 0x85, 0xe1, 0x57, 0xbe, 0xdd,
-	0xa1, 0xce, 0x0b, 0xaf, 0xde, 0x30, 0x10, 0xf3, 0x89, 0xc7, 0x90, 0xfa, 0x1e, 0xc0, 0xf1, 0x0a,
-	0xc3, 0x4f, 0x50, 0x1d, 0x71, 0x74, 0x29, 0x39, 0xef, 0xc0, 0x31, 0x2b, 0xc5, 0x57, 0xbd, 0xc0,
-	0xad, 0x21, 0x1a, 0x89, 0xd9, 0x6f, 0x8c, 0x66, 0x8e, 0x8d, 0xc8, 0xde, 0x4c, 0xfc, 0x39, 0x9c,
-	0x3e, 0x87, 0x42, 0x42, 0xf1, 0xfc, 0xc4, 0xe0, 0xfc, 0xc4, 0xea, 0x2e, 0x1c, 0x4d, 0x73, 0x89,
-	0xee, 0x7b, 0xe8, 0x45, 0x86, 0x57, 0xcd, 0xd8, 0x21, 0xae, 0x43, 0x72, 0x6c, 0x26, 0xae, 0x40,
-	0x39, 0x5f, 0x2c, 0x15, 0xf6, 0x23, 0x88, 0xba, 0x4a, 0xae, 0xeb, 0x7a, 0x54, 0xee, 0x52, 0x02,
-	0xcf, 0xc3, 0xa2, 0x1f, 0xd4, 0x76, 0x51, 0x23, 0xe2, 0x34, 0xb4, 0x34, 0xa1, 0xc5, 0x13, 0xa6,
-	0x25, 0x13, 0xa6, 0x95, 0xbd, 0x86, 0x21, 0x62, 0x9a, 0x89, 0x1e, 0x00, 0xa8, 0xb6, 0x9e, 0x9d,
-	0x9e, 0x94, 0x96, 0xde, 0x40, 0x29, 0x1b, 0xd5, 0xaa, 0x98, 0x55, 0x41, 0x4d, 0xd3, 0xda, 0xec,
-	0x18, 0x6d, 0x33, 0xf5, 0x25, 0xa2, 0x8d, 0xf9, 0x79, 0x93, 0x6a, 0xc0, 0x99, 0x36, 0xf2, 0xf5,
-	0x76, 0x39, 0xbe, 0x02, 0x38, 0x92, 0x8e, 0xc8, 0xa6, 0x49, 0x4d, 0x97, 0x49, 0xf7, 0xe1, 0xa0,
-	0x19, 0xf0, 0x1d, 0x42, 0x1d, 0xde, 0xe8, 0xf8, 0x2a, 0xb2, 0x50, 0xa9, 0x0c, 0x8b, 0x7e, 0x94,
-	0x41, 0xb4, 0x3c, 0xd3, 0xbe, 0xe5, 0x28, 0x74, 0xad, 0xff, 0xf0, 0xf7, 0xf5, 0x82, 0x21, 0x80,
-	0xab, 0xc3, 0xe1, 0x2b, 0xca, 0x52, 0xaa, 0x53, 0x70, 0x32, 0xc7, 0x2e, 0x69, 0x73, 0xe9, 0xef,
-	0x00, 0xec, 0xab, 0x30, 0x2c, 0x51, 0x78, 0xad, 0x89, 0xfd, 0x7c, 0xdb, 0xaa, 0xb9, 0x6c, 0xca,
-	0xbd, 0x8b, 0x44, 0xa7, 0x12, 0x7f, 0x06, 0x70, 0xb2, 0xd5, 0xd6, 0x7d, 0xd0, 0x29, 0x63, 0x0b,
-	0xa0, 0xf2, 0xa8, 0x47, 0x60, 0xca, 0xea, 0x07, 0x80, 0xb3, 0xdd, 0xed, 0x3a, 0x69, 0xbd, 0x53,
-	0xad, 0x2e, 0x96, 0xb3, 0xb2, 0xd1, 0x9d, 0x76, 0xdd, 0x2e, 0x5e, 0xe9, 0x0b, 0x80, 0x72, 0xcb,
-	0xe5, 0xb0, 0xd2, 0xad, 0x3a, 0x79, 0xa4, 0xf2, 0xb8, 0x57, 0x64, 0x4a, 0xec, 0x2d, 0x1c, 0xfd,
-	0xff, 0x6b, 0xd0, 0x29, 0x6b, 0x1e, 0xa1, 0xac, 0x5c, 0x14, 0x91, 0xd4, 0x57, 0x06, 0xde, 0x9d,
-	0x1e, 0xcc, 0x81, 0xb5, 0xad, 0xc3, 0xe3, 0x12, 0x38, 0x3a, 0x2e, 0x81, 0x3f, 0xc7, 0x25, 0xf0,
-	0xe9, 0xa4, 0x54, 0x38, 0x3a, 0x29, 0x15, 0x7e, 0x9d, 0x94, 0x0a, 0xaf, 0x1f, 0x62, 0x87, 0xef,
-	0x04, 0x35, 0xcd, 0x22, 0xee, 0x99, 0x9f, 0x85, 0x05, 0x87, 0x9c, 0x39, 0xe9, 0xfb, 0xb9, 0x1f,
-	0x0b, 0xde, 0xf0, 0x11, 0xab, 0x15, 0xa3, 0x55, 0xb9, 0xfc, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x7a,
-	0xa1, 0xd0, 0x78, 0x29, 0x09, 0x00, 0x00,
+	// 663 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xcf, 0x4f, 0xd4, 0x40,
+	0x14, 0xde, 0x11, 0x5c, 0xc3, 0x60, 0xf8, 0x51, 0x48, 0x28, 0x25, 0x59, 0x4d, 0x31, 0xd1, 0x20,
+	0xb4, 0x02, 0x46, 0x91, 0x8b, 0x2e, 0x18, 0x13, 0x4d, 0xd6, 0x90, 0x12, 0x2f, 0x26, 0x66, 0xd3,
+	0x6d, 0x1f, 0x43, 0x03, 0xed, 0x34, 0x33, 0x53, 0xc2, 0x5e, 0x8c, 0x7a, 0xf4, 0x64, 0x62, 0xe2,
+	0xc9, 0xff, 0x41, 0x0e, 0xfa, 0x3f, 0x70, 0x24, 0x9e, 0x3c, 0x19, 0x03, 0x07, 0xfe, 0x0d, 0xb3,
+	0xed, 0xb4, 0x65, 0x2b, 0xbb, 0x2b, 0xcb, 0xad, 0xf3, 0xde, 0xf7, 0x7d, 0xef, 0x9b, 0x37, 0x6f,
+	0xa6, 0xf8, 0x56, 0xc8, 0xe8, 0x1e, 0x04, 0x76, 0xe0, 0x80, 0xc9, 0x7d, 0x9b, 0x09, 0xdb, 0x71,
+	0x68, 0x14, 0x08, 0x6e, 0xee, 0x2d, 0x9a, 0x62, 0xdf, 0x08, 0x19, 0x15, 0x54, 0x99, 0xc9, 0x51,
+	0x46, 0x1b, 0xca, 0xd8, 0x5b, 0xd4, 0xa6, 0x1c, 0xca, 0x7d, 0xca, 0x4d, 0x9f, 0x93, 0x16, 0xc9,
+	0xe7, 0x24, 0x61, 0x69, 0x93, 0x84, 0x12, 0x1a, 0x7f, 0x9a, 0xad, 0x2f, 0x19, 0x9d, 0x4e, 0xe0,
+	0xf5, 0x24, 0x91, 0x2c, 0xd2, 0x14, 0xa1, 0x94, 0xec, 0x82, 0x19, 0xaf, 0x1a, 0xd1, 0x96, 0x69,
+	0x07, 0x4d, 0x99, 0x5a, 0xee, 0xe6, 0x33, 0xcf, 0xc9, 0x68, 0x42, 0xd2, 0x7f, 0x20, 0xac, 0xd5,
+	0x38, 0xb1, 0x80, 0x78, 0x5c, 0x00, 0x7b, 0xe6, 0xb9, 0x74, 0x69, 0x9d, 0x81, 0x0b, 0x81, 0xf0,
+	0xec, 0x5d, 0xe5, 0x1e, 0x2e, 0x73, 0x08, 0x5c, 0x60, 0x2a, 0xba, 0x89, 0xee, 0x0c, 0xad, 0xa9,
+	0x3f, 0xbf, 0x2f, 0x4c, 0x4a, 0x43, 0x55, 0xd7, 0x65, 0xc0, 0xf9, 0xa6, 0x60, 0x5e, 0x40, 0x2c,
+	0x89, 0x53, 0x4c, 0x3c, 0x01, 0x81, 0x43, 0x5d, 0x70, 0xeb, 0xb6, 0x10, 0xc0, 0x85, 0x2d, 0x3c,
+	0x1a, 0xa8, 0x57, 0x5a, 0x74, 0x4b, 0x91, 0xa9, 0x6a, 0x9e, 0x51, 0x6e, 0xe3, 0xd1, 0x88, 0x03,
+	0xab, 0x7b, 0x71, 0xcd, 0x2d, 0x0f, 0x98, 0x3a, 0x10, 0x83, 0x47, 0x5a, 0xe1, 0xe7, 0x59, 0x74,
+	0x75, 0xf8, 0xc3, 0xe9, 0xc1, 0x9c, 0x2c, 0xa3, 0xbf, 0x47, 0x78, 0xa2, 0xc6, 0xc9, 0x53, 0xd8,
+	0x05, 0x01, 0x97, 0x32, 0x7c, 0x17, 0x8f, 0x3b, 0x19, 0xbf, 0x1e, 0x44, 0x7e, 0x03, 0x58, 0x6c,
+	0x77, 0xd0, 0x1a, 0xcb, 0x13, 0x2f, 0xe3, 0x78, 0xbb, 0x87, 0x17, 0x78, 0xe6, 0x1c, 0x0b, 0x16,
+	0xf0, 0x90, 0x06, 0x1c, 0xce, 0x17, 0x46, 0xe7, 0x0b, 0xeb, 0x3b, 0x78, 0x2c, 0xd3, 0xaa, 0x26,
+	0x27, 0xd4, 0xc7, 0x5e, 0x54, 0x7c, 0xcd, 0x4e, 0x12, 0xb2, 0xe1, 0xe9, 0xb2, 0xdd, 0xb8, 0x86,
+	0xd5, 0x62, 0xb1, 0xd4, 0xb5, 0xfe, 0x11, 0xc5, 0xbb, 0x4a, 0x07, 0x62, 0x3d, 0x2e, 0x77, 0xa9,
+	0x06, 0xcf, 0xe3, 0x72, 0x18, 0x35, 0x76, 0xa0, 0x19, 0x7b, 0x1a, 0x5e, 0x9a, 0x34, 0x92, 0x19,
+	0x36, 0xd2, 0x19, 0x36, 0xaa, 0x41, 0xd3, 0x92, 0x98, 0x76, 0xa3, 0x07, 0x08, 0xeb, 0x9d, 0xa7,
+	0xb3, 0xaf, 0x4e, 0x2b, 0x6f, 0xb0, 0x92, 0x5f, 0x86, 0xba, 0xbc, 0x0d, 0xd2, 0x9a, 0x61, 0x74,
+	0xb9, 0xc5, 0xc6, 0x46, 0x96, 0x4b, 0x9b, 0x36, 0x1e, 0x16, 0x43, 0xba, 0x85, 0x67, 0xbb, 0xb4,
+	0xaf, 0xbf, 0xe1, 0xf8, 0x8a, 0xf0, 0x68, 0x8d, 0x93, 0x57, 0xa1, 0x6b, 0x0b, 0xd8, 0xb0, 0x99,
+	0xed, 0x73, 0xe5, 0x01, 0x1e, 0xb2, 0x23, 0xb1, 0x4d, 0x99, 0x27, 0x9a, 0x3d, 0x8f, 0x22, 0x87,
+	0x2a, 0x55, 0x5c, 0x0e, 0x63, 0x05, 0xb9, 0xe5, 0xd9, 0xee, 0x5b, 0x8e, 0xa1, 0x6b, 0x83, 0x87,
+	0xbf, 0x6f, 0x94, 0x2c, 0x49, 0x5c, 0x1d, 0x69, 0x1d, 0x51, 0x2e, 0xa9, 0x4f, 0xe3, 0xa9, 0x82,
+	0xbb, 0x74, 0x9b, 0x4b, 0xdf, 0x06, 0xf1, 0x40, 0x8d, 0x13, 0x85, 0xe1, 0xeb, 0x6d, 0xee, 0xe7,
+	0xbb, 0x56, 0x2d, 0xa8, 0x69, 0xf7, 0x2f, 0x82, 0xce, 0x5a, 0xfc, 0x19, 0xe1, 0xa9, 0x4e, 0xef,
+	0xda, 0xc3, 0x5e, 0x8a, 0x1d, 0x88, 0xda, 0xe3, 0x3e, 0x89, 0x99, 0xab, 0x2f, 0x08, 0xab, 0x1d,
+	0x2f, 0xd7, 0xca, 0xff, 0xaa, 0x17, 0x99, 0xda, 0x93, 0x7e, 0x99, 0x99, 0xb1, 0xb7, 0x78, 0xec,
+	0xdf, 0xd7, 0xb4, 0x97, 0x6a, 0x91, 0xa1, 0xad, 0x5c, 0x94, 0x91, 0xd6, 0xd7, 0xae, 0xbe, 0x3b,
+	0x3d, 0x98, 0x43, 0x6b, 0x9b, 0x87, 0xc7, 0x15, 0x74, 0x74, 0x5c, 0x41, 0x7f, 0x8e, 0x2b, 0xe8,
+	0xd3, 0x49, 0xa5, 0x74, 0x74, 0x52, 0x29, 0xfd, 0x3a, 0xa9, 0x94, 0x5e, 0x3f, 0x22, 0x9e, 0xd8,
+	0x8e, 0x1a, 0x86, 0x43, 0xfd, 0x33, 0xbf, 0xb3, 0x05, 0x8f, 0x9e, 0x59, 0x99, 0xfb, 0x85, 0x5f,
+	0x9f, 0x68, 0x86, 0xc0, 0x1b, 0xe5, 0xf8, 0xa9, 0x59, 0xfe, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xdd,
+	0x5e, 0xcf, 0x9b, 0xcb, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -714,14 +619,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// UpdateParams defines a governance operation for updating the parameters.
-	//
-	// Since: cosmos-sdk 0.47
+	// UpdateParams defines a governance operation for updating the parameters for smart account module only.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// RegisterFido2Credential defines a method for registering a Fido2 credential.
 	RegisterFido2Credential(ctx context.Context, in *MsgRegisterFido2Credential, opts ...grpc.CallOption) (*MsgRegisterFido2CredentialResponse, error)
 	// UpdateToSmartAccountAuthenticationOnly defines a method for updating to smart account authentication only.
-	UpdateToSmartAccountAuthenticationOnly(ctx context.Context, in *MsgMigrateToSmartAccountAuthentication, opts ...grpc.CallOption) (*MsgUpdateToSmartAccountAuthenticationOnlyResponse, error)
 	// RegisterCosmosCredential defines a method for registering a Cosmos credential.
 	RegisterCosmosCredential(ctx context.Context, in *MsgRegisterCosmosCredential, opts ...grpc.CallOption) (*MsgRegisterCosmosCredentialResponse, error)
 	// DeleteCredential defines a method for deleting a credential.
@@ -754,15 +656,6 @@ func (c *msgClient) RegisterFido2Credential(ctx context.Context, in *MsgRegister
 	return out, nil
 }
 
-func (c *msgClient) UpdateToSmartAccountAuthenticationOnly(ctx context.Context, in *MsgMigrateToSmartAccountAuthentication, opts ...grpc.CallOption) (*MsgUpdateToSmartAccountAuthenticationOnlyResponse, error) {
-	out := new(MsgUpdateToSmartAccountAuthenticationOnlyResponse)
-	err := c.cc.Invoke(ctx, "/provenance.smartaccounts.v1.Msg/UpdateToSmartAccountAuthenticationOnly", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) RegisterCosmosCredential(ctx context.Context, in *MsgRegisterCosmosCredential, opts ...grpc.CallOption) (*MsgRegisterCosmosCredentialResponse, error) {
 	out := new(MsgRegisterCosmosCredentialResponse)
 	err := c.cc.Invoke(ctx, "/provenance.smartaccounts.v1.Msg/RegisterCosmosCredential", in, out, opts...)
@@ -783,14 +676,11 @@ func (c *msgClient) DeleteCredential(ctx context.Context, in *MsgDeleteCredentia
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// UpdateParams defines a governance operation for updating the parameters.
-	//
-	// Since: cosmos-sdk 0.47
+	// UpdateParams defines a governance operation for updating the parameters for smart account module only.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// RegisterFido2Credential defines a method for registering a Fido2 credential.
 	RegisterFido2Credential(context.Context, *MsgRegisterFido2Credential) (*MsgRegisterFido2CredentialResponse, error)
 	// UpdateToSmartAccountAuthenticationOnly defines a method for updating to smart account authentication only.
-	UpdateToSmartAccountAuthenticationOnly(context.Context, *MsgMigrateToSmartAccountAuthentication) (*MsgUpdateToSmartAccountAuthenticationOnlyResponse, error)
 	// RegisterCosmosCredential defines a method for registering a Cosmos credential.
 	RegisterCosmosCredential(context.Context, *MsgRegisterCosmosCredential) (*MsgRegisterCosmosCredentialResponse, error)
 	// DeleteCredential defines a method for deleting a credential.
@@ -806,9 +696,6 @@ func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateP
 }
 func (*UnimplementedMsgServer) RegisterFido2Credential(ctx context.Context, req *MsgRegisterFido2Credential) (*MsgRegisterFido2CredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterFido2Credential not implemented")
-}
-func (*UnimplementedMsgServer) UpdateToSmartAccountAuthenticationOnly(ctx context.Context, req *MsgMigrateToSmartAccountAuthentication) (*MsgUpdateToSmartAccountAuthenticationOnlyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateToSmartAccountAuthenticationOnly not implemented")
 }
 func (*UnimplementedMsgServer) RegisterCosmosCredential(ctx context.Context, req *MsgRegisterCosmosCredential) (*MsgRegisterCosmosCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterCosmosCredential not implemented")
@@ -853,24 +740,6 @@ func _Msg_RegisterFido2Credential_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).RegisterFido2Credential(ctx, req.(*MsgRegisterFido2Credential))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_UpdateToSmartAccountAuthenticationOnly_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgMigrateToSmartAccountAuthentication)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UpdateToSmartAccountAuthenticationOnly(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.smartaccounts.v1.Msg/UpdateToSmartAccountAuthenticationOnly",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateToSmartAccountAuthenticationOnly(ctx, req.(*MsgMigrateToSmartAccountAuthentication))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -923,10 +792,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterFido2Credential",
 			Handler:    _Msg_RegisterFido2Credential_Handler,
-		},
-		{
-			MethodName: "UpdateToSmartAccountAuthenticationOnly",
-			Handler:    _Msg_UpdateToSmartAccountAuthenticationOnly_Handler,
 		},
 		{
 			MethodName: "RegisterCosmosCredential",
@@ -982,59 +847,6 @@ func (m *MsgRegisterFido2Credential) MarshalToSizedBuffer(dAtA []byte) (int, err
 		i--
 		dAtA[i] = 0xa
 	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgMigrateToSmartAccountAuthentication) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgMigrateToSmartAccountAuthentication) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgMigrateToSmartAccountAuthentication) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Sender) > 0 {
-		i -= len(m.Sender)
-		copy(dAtA[i:], m.Sender)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -1366,28 +1178,6 @@ func (m *MsgRegisterFido2Credential) Size() (n int) {
 	return n
 }
 
-func (m *MsgMigrateToSmartAccountAuthentication) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Sender)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgDeleteCredential) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1642,138 +1432,6 @@ func (m *MsgRegisterFido2Credential) Unmarshal(dAtA []byte) error {
 			}
 			m.UserIdentifier = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgMigrateToSmartAccountAuthentication) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgMigrateToSmartAccountAuthentication: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgMigrateToSmartAccountAuthentication: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Sender = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUpdateToSmartAccountAuthenticationOnlyResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateToSmartAccountAuthenticationOnlyResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateToSmartAccountAuthenticationOnlyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

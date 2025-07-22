@@ -12,8 +12,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 
 	registry.RegisterImplementations((*proto.Message)(nil),
-		&AccountQueryRequest{},
-		&AccountQueryResponse{},
+		&SmartAccountQueryRequest{},
+		&SmartAccountQueryResponse{},
 	)
 	registry.RegisterImplementations((*proto.Message)(nil),
 		&EC2PublicKeyData{},

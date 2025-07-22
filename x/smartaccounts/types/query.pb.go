@@ -28,24 +28,24 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// AccountQueryPubKeyRequest is the request type for the Query/AccountQuery RPC
-type AccountQueryRequest struct {
+// SmartAccountQueryRequest is the request type for the Query/AccountQuery RPC
+type SmartAccountQueryRequest struct {
 	// address defines the account to be queried. this is the base account address.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (m *AccountQueryRequest) Reset()         { *m = AccountQueryRequest{} }
-func (m *AccountQueryRequest) String() string { return proto.CompactTextString(m) }
-func (*AccountQueryRequest) ProtoMessage()    {}
-func (*AccountQueryRequest) Descriptor() ([]byte, []int) {
+func (m *SmartAccountQueryRequest) Reset()         { *m = SmartAccountQueryRequest{} }
+func (m *SmartAccountQueryRequest) String() string { return proto.CompactTextString(m) }
+func (*SmartAccountQueryRequest) ProtoMessage()    {}
+func (*SmartAccountQueryRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_75e576d25a6d4cb5, []int{0}
 }
-func (m *AccountQueryRequest) XXX_Unmarshal(b []byte) error {
+func (m *SmartAccountQueryRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AccountQueryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SmartAccountQueryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AccountQueryRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SmartAccountQueryRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -55,43 +55,43 @@ func (m *AccountQueryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *AccountQueryRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccountQueryRequest.Merge(m, src)
+func (m *SmartAccountQueryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SmartAccountQueryRequest.Merge(m, src)
 }
-func (m *AccountQueryRequest) XXX_Size() int {
+func (m *SmartAccountQueryRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *AccountQueryRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_AccountQueryRequest.DiscardUnknown(m)
+func (m *SmartAccountQueryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SmartAccountQueryRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AccountQueryRequest proto.InternalMessageInfo
+var xxx_messageInfo_SmartAccountQueryRequest proto.InternalMessageInfo
 
-func (m *AccountQueryRequest) GetAddress() string {
+func (m *SmartAccountQueryRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-// AccountQueryResponse is the response type for the Query/AccountQuery RPC
-type QuerySmartAccountResponse struct {
+// SmartAccountQueryResponse is the response type for the Query/AccountQuery RPC
+type SmartAccountQueryResponse struct {
 	// provenance account is the smart account associated with the account.
 	Provenanceaccount *ProvenanceAccount `protobuf:"bytes,1,opt,name=provenanceaccount,proto3" json:"provenanceaccount,omitempty"`
 }
 
-func (m *QuerySmartAccountResponse) Reset()         { *m = QuerySmartAccountResponse{} }
-func (m *QuerySmartAccountResponse) String() string { return proto.CompactTextString(m) }
-func (*QuerySmartAccountResponse) ProtoMessage()    {}
-func (*QuerySmartAccountResponse) Descriptor() ([]byte, []int) {
+func (m *SmartAccountQueryResponse) Reset()         { *m = SmartAccountQueryResponse{} }
+func (m *SmartAccountQueryResponse) String() string { return proto.CompactTextString(m) }
+func (*SmartAccountQueryResponse) ProtoMessage()    {}
+func (*SmartAccountQueryResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_75e576d25a6d4cb5, []int{1}
 }
-func (m *QuerySmartAccountResponse) XXX_Unmarshal(b []byte) error {
+func (m *SmartAccountQueryResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QuerySmartAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SmartAccountQueryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QuerySmartAccountResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SmartAccountQueryResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -101,19 +101,19 @@ func (m *QuerySmartAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QuerySmartAccountResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QuerySmartAccountResponse.Merge(m, src)
+func (m *SmartAccountQueryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SmartAccountQueryResponse.Merge(m, src)
 }
-func (m *QuerySmartAccountResponse) XXX_Size() int {
+func (m *SmartAccountQueryResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QuerySmartAccountResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QuerySmartAccountResponse.DiscardUnknown(m)
+func (m *SmartAccountQueryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SmartAccountQueryResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QuerySmartAccountResponse proto.InternalMessageInfo
+var xxx_messageInfo_SmartAccountQueryResponse proto.InternalMessageInfo
 
-func (m *QuerySmartAccountResponse) GetProvenanceaccount() *ProvenanceAccount {
+func (m *SmartAccountQueryResponse) GetProvenanceaccount() *ProvenanceAccount {
 	if m != nil {
 		return m.Provenanceaccount
 	}
@@ -204,8 +204,8 @@ func (m *QueryParamsResponse) GetParams() *Params {
 }
 
 func init() {
-	proto.RegisterType((*AccountQueryRequest)(nil), "provenance.smartaccounts.v1.AccountQueryRequest")
-	proto.RegisterType((*QuerySmartAccountResponse)(nil), "provenance.smartaccounts.v1.QuerySmartAccountResponse")
+	proto.RegisterType((*SmartAccountQueryRequest)(nil), "provenance.smartaccounts.v1.SmartAccountQueryRequest")
+	proto.RegisterType((*SmartAccountQueryResponse)(nil), "provenance.smartaccounts.v1.SmartAccountQueryResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "provenance.smartaccounts.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.smartaccounts.v1.QueryParamsResponse")
 }
@@ -215,30 +215,30 @@ func init() {
 }
 
 var fileDescriptor_75e576d25a6d4cb5 = []byte{
-	// 366 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xcf, 0x4e, 0xc2, 0x30,
-	0x1c, 0xa6, 0x24, 0x62, 0xac, 0x5e, 0x2c, 0x1e, 0x70, 0x9a, 0xc5, 0x0c, 0x8d, 0x46, 0x63, 0xcb,
-	0x9f, 0xc4, 0xc4, 0x78, 0xd2, 0x27, 0xc0, 0x71, 0x33, 0x5e, 0xca, 0x68, 0x70, 0x89, 0xb4, 0x63,
-	0xed, 0x88, 0x5c, 0x7d, 0x02, 0x13, 0x0f, 0x3e, 0x81, 0xef, 0xa2, 0x37, 0x12, 0x2f, 0x1e, 0x0d,
-	0xf8, 0x20, 0x86, 0xae, 0x08, 0x88, 0x54, 0x6f, 0xdb, 0xd7, 0xdf, 0xf7, 0xe7, 0xf7, 0xb5, 0x70,
-	0x3f, 0x8a, 0x45, 0x97, 0x71, 0xca, 0x03, 0x46, 0x64, 0x9b, 0xc6, 0x8a, 0x06, 0x81, 0x48, 0xb8,
-	0x92, 0xa4, 0x5b, 0x26, 0x9d, 0x84, 0xc5, 0x3d, 0x1c, 0xc5, 0x42, 0x09, 0xb4, 0x35, 0x19, 0xc4,
-	0x33, 0x83, 0xb8, 0x5b, 0x76, 0xb6, 0x5b, 0x42, 0xb4, 0x6e, 0x19, 0xa1, 0x51, 0x48, 0x28, 0xe7,
-	0x42, 0x51, 0x15, 0x0a, 0x2e, 0x53, 0xaa, 0x53, 0xb5, 0x79, 0x4c, 0xce, 0x0c, 0x9a, 0x92, 0x3c,
-	0x02, 0xf3, 0xe7, 0x29, 0x70, 0x39, 0x4a, 0xe1, 0xb3, 0x4e, 0xc2, 0xa4, 0x42, 0x05, 0xb8, 0x4c,
-	0x9b, 0xcd, 0x98, 0x49, 0x59, 0x00, 0x3b, 0xe0, 0x60, 0xc5, 0x1f, 0xff, 0x7a, 0x3d, 0xb8, 0xa9,
-	0x27, 0xeb, 0x23, 0x07, 0x43, 0xf5, 0x99, 0x8c, 0x04, 0x97, 0x0c, 0x5d, 0xc3, 0xf5, 0x39, 0x23,
-	0x2d, 0xb0, 0x5a, 0xc1, 0xd8, 0xb2, 0x19, 0xae, 0x7d, 0x9f, 0x8d, 0x25, 0xe7, 0x85, 0xbc, 0x0d,
-	0x88, 0xb4, 0x75, 0x8d, 0xc6, 0xb4, 0x2d, 0x4d, 0x54, 0xcf, 0x87, 0xf9, 0x19, 0xd4, 0x44, 0x39,
-	0x83, 0xb9, 0x48, 0x23, 0xc6, 0xbf, 0x68, 0xf7, 0x4f, 0xc9, 0x86, 0x52, 0x79, 0xcd, 0xc2, 0x25,
-	0x2d, 0x8a, 0x9e, 0x01, 0x5c, 0x9b, 0x5e, 0x15, 0x95, 0xac, 0x3a, 0xbf, 0x74, 0xe9, 0x9c, 0x58,
-	0x19, 0x0b, 0xcb, 0xf4, 0x8e, 0xee, 0xdf, 0x3e, 0x1f, 0xb3, 0x7b, 0xa8, 0x48, 0x16, 0x5c, 0xec,
-	0xe8, 0x5e, 0xcd, 0x27, 0x7a, 0x02, 0x30, 0x97, 0x2e, 0x81, 0xc8, 0xdf, 0x7e, 0x33, 0x0d, 0x3a,
-	0xa5, 0xff, 0x13, 0x4c, 0xb4, 0x43, 0x1d, 0x6d, 0x17, 0x79, 0xb6, 0x68, 0x69, 0x97, 0x17, 0xf5,
-	0x97, 0x81, 0x0b, 0xfa, 0x03, 0x17, 0x7c, 0x0c, 0x5c, 0xf0, 0x30, 0x74, 0x33, 0xfd, 0xa1, 0x9b,
-	0x79, 0x1f, 0xba, 0x99, 0xab, 0xd3, 0x56, 0xa8, 0x6e, 0x92, 0x06, 0x0e, 0x44, 0x7b, 0x4a, 0xe7,
-	0x38, 0x14, 0xd3, 0xaa, 0x77, 0x3f, 0xde, 0xb2, 0xea, 0x45, 0x4c, 0x36, 0x72, 0xfa, 0xf5, 0x56,
-	0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xf0, 0x17, 0x76, 0x3c, 0x58, 0x03, 0x00, 0x00,
+	// 364 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0xcf, 0x4e, 0xfa, 0x30,
+	0x1c, 0xa7, 0x24, 0x3f, 0x7e, 0xb1, 0x9e, 0xa8, 0x1e, 0x70, 0x9a, 0xc5, 0x0c, 0x8d, 0x46, 0x63,
+	0x2b, 0xa0, 0x26, 0xc6, 0x93, 0x3e, 0x01, 0x8e, 0x9b, 0xf1, 0x52, 0x46, 0x83, 0x4b, 0xa4, 0x1d,
+	0x6b, 0x47, 0xe4, 0xea, 0x13, 0x98, 0x78, 0xf0, 0x31, 0x7c, 0x0d, 0x8f, 0x24, 0x5c, 0x3c, 0x1a,
+	0xf0, 0x41, 0x0c, 0x6b, 0x15, 0x70, 0xd2, 0xe8, 0x6d, 0xfb, 0xf4, 0xfb, 0xf9, 0xf7, 0x6d, 0xe1,
+	0x4e, 0x14, 0x8b, 0x1e, 0xe3, 0x94, 0x07, 0x8c, 0xc8, 0x0e, 0x8d, 0x15, 0x0d, 0x02, 0x91, 0x70,
+	0x25, 0x49, 0xaf, 0x42, 0xba, 0x09, 0x8b, 0xfb, 0x38, 0x8a, 0x85, 0x12, 0x68, 0x7d, 0x3a, 0x88,
+	0xe7, 0x06, 0x71, 0xaf, 0xe2, 0x6c, 0xb4, 0x85, 0x68, 0xdf, 0x32, 0x42, 0xa3, 0x90, 0x50, 0xce,
+	0x85, 0xa2, 0x2a, 0x14, 0x5c, 0x6a, 0xaa, 0x53, 0xb3, 0x79, 0x4c, 0xcf, 0x0c, 0xaa, 0x49, 0xde,
+	0x11, 0x2c, 0x35, 0x26, 0xb3, 0xe7, 0x1a, 0xbd, 0x9c, 0x44, 0xf1, 0x59, 0x37, 0x61, 0x52, 0xa1,
+	0x12, 0xfc, 0x4f, 0x5b, 0xad, 0x98, 0x49, 0x59, 0x02, 0x9b, 0x60, 0x77, 0xc9, 0xff, 0xfc, 0xf5,
+	0xfa, 0x70, 0xed, 0x07, 0x96, 0x8c, 0x04, 0x97, 0x0c, 0x5d, 0xc3, 0x62, 0xc6, 0x2d, 0x15, 0x58,
+	0xae, 0x62, 0x6c, 0xa9, 0x87, 0xeb, 0x5f, 0x67, 0x46, 0xd7, 0xcf, 0x0a, 0x79, 0xab, 0x10, 0xa5,
+	0x76, 0x75, 0x1a, 0xd3, 0x8e, 0x34, 0x51, 0x3d, 0x1f, 0xae, 0xcc, 0xa1, 0x26, 0xca, 0x19, 0x2c,
+	0x44, 0x29, 0x62, 0xfc, 0xcb, 0x76, 0x7f, 0x4d, 0x36, 0x94, 0xea, 0x30, 0x0f, 0xff, 0xa5, 0xa2,
+	0xe8, 0x19, 0xc0, 0x62, 0xa6, 0x2f, 0x3a, 0xb6, 0x8a, 0x2d, 0xda, 0xaa, 0x73, 0xf2, 0x57, 0x9a,
+	0xee, 0xe2, 0xed, 0xdf, 0x0f, 0xdf, 0x1f, 0xf3, 0xdb, 0xa8, 0x4c, 0x16, 0xdc, 0xf3, 0xe4, 0x9a,
+	0xcd, 0x27, 0x7a, 0x02, 0xb0, 0xa0, 0xeb, 0x20, 0x62, 0xf5, 0xcb, 0xee, 0xd2, 0x39, 0xfc, 0x3d,
+	0xc1, 0x44, 0xdb, 0x4b, 0xa3, 0x6d, 0x21, 0xcf, 0x16, 0x4d, 0x6f, 0xf5, 0xa2, 0xf1, 0x32, 0x72,
+	0xc1, 0x60, 0xe4, 0x82, 0xb7, 0x91, 0x0b, 0x1e, 0xc6, 0x6e, 0x6e, 0x30, 0x76, 0x73, 0xaf, 0x63,
+	0x37, 0x77, 0x75, 0xda, 0x0e, 0xd5, 0x4d, 0xd2, 0xc4, 0x81, 0xe8, 0xcc, 0xe8, 0x1c, 0x84, 0x62,
+	0x56, 0xf5, 0xee, 0xdb, 0xd3, 0x56, 0xfd, 0x88, 0xc9, 0x66, 0x21, 0x7d, 0xcc, 0xb5, 0x8f, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x6c, 0xc0, 0xff, 0x75, 0x67, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -253,8 +253,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// AccountQuery runs a query to retrieve the state object of a smart account.
-	SmartAccount(ctx context.Context, in *AccountQueryRequest, opts ...grpc.CallOption) (*QuerySmartAccountResponse, error)
+	// SmartAccountQuery runs a query to retrieve the state object of a smart account.
+	SmartAccountQuery(ctx context.Context, in *SmartAccountQueryRequest, opts ...grpc.CallOption) (*SmartAccountQueryResponse, error)
 	// Params queries all parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
@@ -267,9 +267,9 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) SmartAccount(ctx context.Context, in *AccountQueryRequest, opts ...grpc.CallOption) (*QuerySmartAccountResponse, error) {
-	out := new(QuerySmartAccountResponse)
-	err := c.cc.Invoke(ctx, "/provenance.smartaccounts.v1.Query/SmartAccount", in, out, opts...)
+func (c *queryClient) SmartAccountQuery(ctx context.Context, in *SmartAccountQueryRequest, opts ...grpc.CallOption) (*SmartAccountQueryResponse, error) {
+	out := new(SmartAccountQueryResponse)
+	err := c.cc.Invoke(ctx, "/provenance.smartaccounts.v1.Query/SmartAccountQuery", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -287,8 +287,8 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// AccountQuery runs a query to retrieve the state object of a smart account.
-	SmartAccount(context.Context, *AccountQueryRequest) (*QuerySmartAccountResponse, error)
+	// SmartAccountQuery runs a query to retrieve the state object of a smart account.
+	SmartAccountQuery(context.Context, *SmartAccountQueryRequest) (*SmartAccountQueryResponse, error)
 	// Params queries all parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
@@ -297,8 +297,8 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) SmartAccount(ctx context.Context, req *AccountQueryRequest) (*QuerySmartAccountResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SmartAccount not implemented")
+func (*UnimplementedQueryServer) SmartAccountQuery(ctx context.Context, req *SmartAccountQueryRequest) (*SmartAccountQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SmartAccountQuery not implemented")
 }
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -308,20 +308,20 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_SmartAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccountQueryRequest)
+func _Query_SmartAccountQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SmartAccountQueryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).SmartAccount(ctx, in)
+		return srv.(QueryServer).SmartAccountQuery(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.smartaccounts.v1.Query/SmartAccount",
+		FullMethod: "/provenance.smartaccounts.v1.Query/SmartAccountQuery",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).SmartAccount(ctx, req.(*AccountQueryRequest))
+		return srv.(QueryServer).SmartAccountQuery(ctx, req.(*SmartAccountQueryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -350,8 +350,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SmartAccount",
-			Handler:    _Query_SmartAccount_Handler,
+			MethodName: "SmartAccountQuery",
+			Handler:    _Query_SmartAccountQuery_Handler,
 		},
 		{
 			MethodName: "Params",
@@ -362,7 +362,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "provenance/smartaccounts/v1/query.proto",
 }
 
-func (m *AccountQueryRequest) Marshal() (dAtA []byte, err error) {
+func (m *SmartAccountQueryRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -372,12 +372,12 @@ func (m *AccountQueryRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AccountQueryRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *SmartAccountQueryRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AccountQueryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SmartAccountQueryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -392,7 +392,7 @@ func (m *AccountQueryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QuerySmartAccountResponse) Marshal() (dAtA []byte, err error) {
+func (m *SmartAccountQueryResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -402,12 +402,12 @@ func (m *QuerySmartAccountResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QuerySmartAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *SmartAccountQueryResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QuerySmartAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SmartAccountQueryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -496,7 +496,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *AccountQueryRequest) Size() (n int) {
+func (m *SmartAccountQueryRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -509,7 +509,7 @@ func (m *AccountQueryRequest) Size() (n int) {
 	return n
 }
 
-func (m *QuerySmartAccountResponse) Size() (n int) {
+func (m *SmartAccountQueryResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -550,7 +550,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AccountQueryRequest) Unmarshal(dAtA []byte) error {
+func (m *SmartAccountQueryRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -573,10 +573,10 @@ func (m *AccountQueryRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AccountQueryRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: SmartAccountQueryRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AccountQueryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SmartAccountQueryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -632,7 +632,7 @@ func (m *AccountQueryRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QuerySmartAccountResponse) Unmarshal(dAtA []byte) error {
+func (m *SmartAccountQueryResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -655,10 +655,10 @@ func (m *QuerySmartAccountResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QuerySmartAccountResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: SmartAccountQueryResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QuerySmartAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SmartAccountQueryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

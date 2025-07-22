@@ -15,7 +15,6 @@ var (
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParams)(nil),
 	(*MsgRegisterFido2Credential)(nil),
-	(*MsgMigrateToSmartAccountAuthentication)(nil),
 	(*MsgRegisterCosmosCredential)(nil),
 	(*MsgDeleteCredential)(nil),
 	(*MsgDeleteAccount)(nil),

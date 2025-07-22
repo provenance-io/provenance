@@ -407,8 +407,3 @@ func HasDuplicateCredentialIdK256(credentials []*types.Credential, pubKey *codec
 	}
 	return false
 }
-
-func (m MsgServer) UpdateToSmartAccountAuthenticationOnly(ctx context.Context, authentication *types.MsgMigrateToSmartAccountAuthentication) (*types.MsgMigrateToSmartAccountAuthenticationResponse, error) {
-	// intentionally keep this to panic till we decide if we want to allow this
-	panic("implement me")
-}

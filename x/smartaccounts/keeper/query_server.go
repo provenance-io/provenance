@@ -12,7 +12,7 @@ type Querier struct {
 	Keeper
 }
 
-func (keeper Keeper) SmartAccount(ctx context.Context, request *types.AccountQueryRequest) (*types.AccountQueryResponse, error) {
+func (keeper Keeper) SmartAccount(ctx context.Context, request *types.SmartAccountQueryRequest) (*types.SmartAccountQueryResponse, error) {
 	address, err := keeper.addressCodec.StringToBytes(request.Address)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func (keeper Keeper) SmartAccount(ctx context.Context, request *types.AccountQue
 	if err != nil {
 		return nil, err
 	}
-	return &types.AccountQueryResponse{
+	return &types.SmartAccountQueryResponse{
 		Provenanceaccount: &account,
 	}, nil
 }

@@ -14,15 +14,11 @@ option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // UpdateParams defines a governance operation for updating the parameters.
-  //
-  // Since: cosmos-sdk 0.47
+  // UpdateParams defines a governance operation for updating the parameters for smart account module only.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
   // RegisterFido2Credential defines a method for registering a Fido2 credential.
   rpc RegisterFido2Credential(MsgRegisterFido2Credential) returns (MsgRegisterFido2CredentialResponse);
   // UpdateToSmartAccountAuthenticationOnly defines a method for updating to smart account authentication only.
-  rpc UpdateToSmartAccountAuthenticationOnly(MsgMigrateToSmartAccountAuthentication)
-      returns (MsgUpdateToSmartAccountAuthenticationOnlyResponse);
   // RegisterCosmosCredential defines a method for registering a Cosmos credential.
   rpc RegisterCosmosCredential(MsgRegisterCosmosCredential) returns (MsgRegisterCosmosCredentialResponse);
   // DeleteCredential defines a method for deleting a credential.
@@ -41,16 +37,7 @@ message MsgRegisterFido2Credential {
   // This is the fido2 user identifier for the authenticator.
   string user_identifier = 3;
 }
-// Moves to smart contract authentication only.
-message MsgMigrateToSmartAccountAuthentication {
-  option (cosmos.msg.v1.signer) = "sender";
 
-  // sender is the address of the sender of this message.
-  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-
-// MsgUpdateToSmartAccountAuthenticationOnlyResponse defines the response structure for executing a
-message MsgUpdateToSmartAccountAuthenticationOnlyResponse {}
 // MsgDeleteCredential defines a method for deleting a credential.
 message MsgDeleteCredential {
   option (cosmos.msg.v1.signer) = "sender";
