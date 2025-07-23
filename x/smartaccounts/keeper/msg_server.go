@@ -182,7 +182,6 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 		}
 		return resp, err
 	}
-
 }
 
 // HasDuplicateCredentialId checks if a credential ID already exists in the provided list of credentials
@@ -316,7 +315,6 @@ func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgR
 		} else {
 			return nil, err
 		}
-
 	}
 	// For existing account, create a new credential
 	baseCredential := &types.BaseCredential{
