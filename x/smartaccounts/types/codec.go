@@ -13,7 +13,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 	registry.RegisterImplementations((*proto.Message)(nil),
 		&SmartAccountQueryRequest{},
-		&SmartAccountQueryResponse{},
+		&SmartAccountResponse{},
 	)
 	registry.RegisterImplementations((*proto.Message)(nil),
 		&EC2PublicKeyData{},

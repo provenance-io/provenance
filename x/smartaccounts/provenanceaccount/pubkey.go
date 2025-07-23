@@ -2,21 +2,18 @@ package provenanceaccount
 
 import (
 	"fmt"
-	"strings"
-
-	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-
-	"github.com/provenance-io/provenance/x/smartaccounts/transaction"
+	// decred library was already a dependency in cosmos-sdk
+	dcrdsecp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 )
 
 // this file implements a general mechanism to plugin public keys to a baseaccount
 
 // PubKey defines a generic pubkey.
 type PubKey interface {
-	transaction.Msg
+	sdk.Msg
 	VerifySignature(msg, sig []byte) bool
 }
 
@@ -32,8 +29,10 @@ type pubKeyImpl struct {
 
 func WithSecp256K1PubKey() Option {
 	return WithPubKeyWithValidationFunc(func(pt *secp256k1.PubKey) error {
-		_, err := dcrd_secp256k1.ParsePubKey(pt.Key)
-		return err
+		if _, err := dcrdsecp256k1.ParsePubKey(pt.Key); err != nil {
+			return fmt.Errorf("invalid secp256k1 public key: %w", err)
+		}
+		return nil
 	})
 }
 
@@ -64,12 +63,4 @@ func WithPubKeyWithValidationFunc[T any, PT PubKeyG[T]](validateFn func(PT) erro
 	return func(a *ProvenanceSmartAccountHandler) {
 		a.SupportedPubKeys[gogoproto.MessageName(PT(new(T)))] = pkImpl
 	}
-}
-
-func nameFromTypeURL(url string) string {
-	name := url
-	if i := strings.LastIndexByte(url, '/'); i >= 0 {
-		name = name[i+len("/"):]
-	}
-	return name
 }
