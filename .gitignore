@@ -38,6 +38,7 @@ profile.iws
 *.ipr
 *.iws
 .run
+qodana.yaml
 
 # Tools make target marker
 tools-stamp
