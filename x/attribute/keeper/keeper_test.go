@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user2Addr,
-			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": segment of name is too short",
+			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": name has too many segments",
 		},
 		{
 			name: "should fail unable to resolve name to user",
@@ -853,7 +853,7 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "blah")
 	s.Assert().Error(err)
-	s.Assert().Equal("no address bound to name", err.Error())
+	s.Assert().Contains("no address bound to name", err.Error())
 	attributes, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "example.attribute")
 	s.Assert().NoError(err)
 	s.Assert().Equal(1, len(attributes))

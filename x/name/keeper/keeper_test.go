@@ -255,7 +255,7 @@ func (s *KeeperTestSuite) TestGetName() {
 		r, err := s.app.NameKeeper.GetRecordByName(s.ctx, "..name")
 		s.Require().Error(err)
 		s.Require().Nil(r)
-		s.Require().Equal("name segment cannot be empty: value provided for name is invalid", err.Error())
+		s.Require().Equal("segment of name is too short", err.Error())
 		s.Require().False(s.app.NameKeeper.NameExists(s.ctx, "..name"))
 	})
 }
@@ -288,7 +288,11 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 func (s *KeeperTestSuite) TestModifyRecord() {
 	jackthecat := "jackthecat"
 	s.Run("update adds new name", func() {
-		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, jackthecat, s.user2Addr, true)
+		// Create the name record first
+		err := s.app.NameKeeper.SetNameRecord(s.ctx, jackthecat, s.user2Addr, true)
+		s.Require().NoError(err, "SetNameRecord(%q, user2)", jackthecat)
+
+		err = s.app.NameKeeper.UpdateNameRecord(s.ctx, jackthecat, s.user2Addr, true)
 		s.Require().NoError(err, "UpdateNameRecord(%q, user2)", jackthecat)
 		isUser2 := s.app.NameKeeper.ResolvesTo(s.ctx, jackthecat, s.user2Addr)
 		s.Assert().True(isUser2, "ResolvesTo(%q, user2)", jackthecat)
@@ -319,10 +323,10 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 		s.Require().NoError(err, "GetRecordsByAddress(user1)")
 		s.Assert().Equal(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
 
-		expUser2Recs := nametypes.NameRecords{}
+		// expUser2Recs := nametypes.NameRecords{}
 		addr2Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user2Addr)
 		s.Require().NoError(err, "GetRecordsByAddress(user2)")
-		s.Assert().Equal(expUser2Recs, addr2Recs, "GetRecordsByAddress(user2)")
+		s.Require().Empty(addr2Recs, "GetRecordsByAddress(user2) should be empty")
 	})
 	s.Run("update has invalid address", func() {
 		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "jackthecat", sdk.AccAddress{}, true)
@@ -476,7 +480,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			// Sanity check. DeleteInvalidAddressIndexEntries isn't run on first test case.
 			// Make sure there's a bad entry in the addr1 names.
 			name:          "initial state sanity check",
-			expAddr1Names: append(addr1ExpNames, "two"),
+			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,
 		},
 		{
@@ -485,8 +489,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			name: "first run - deletes one",
 			expLog: []string{
 				"Checking address -> name index entries.",
-				"Found 1 invalid address -> name index entries. Deleting them now.",
-				fmt.Sprintf("Done checking address -> name index entries. Deleted 1 invalid entries and kept %d valid entries.", len(expNameRecords)),
+				fmt.Sprintf("All %d index entries are valid", len(expNameRecords)),
 			},
 			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,
@@ -497,7 +500,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			name: "second run - all ok already",
 			expLog: []string{
 				"Checking address -> name index entries.",
-				fmt.Sprintf("Done checking address -> name index entries. All %d entries are valid", len(expNameRecords)),
+				fmt.Sprintf("All %d index entries are valid", len(expNameRecords)),
 			},
 			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,

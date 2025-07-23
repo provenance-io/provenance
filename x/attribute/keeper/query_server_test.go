@@ -14,12 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type QueryServerTestSuite struct {
@@ -44,6 +44,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(true)
 	s.app.AccountKeeper.Params.Set(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
+	s.app.NameKeeper.SetParams(s.ctx, nametypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.AttributeKeeper)
