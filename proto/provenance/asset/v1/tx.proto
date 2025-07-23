@@ -61,8 +61,8 @@ message MsgCreatePool {
 
   // pool defines the pool to be created.
   cosmos.base.v1beta1.Coin pool         = 1;
-  // nfts defines the list of NFTs to be included in the pool.
-  repeated Nft             nfts         = 2;
+  // assets defines the list of assets by keys to be included in the pool.
+  repeated AssetKey        assets       = 2;
   // from_address defines the address of the message sender.
   string                   from_address = 3;
 }
@@ -76,8 +76,8 @@ message MsgCreateTokenization {
 
   // denom defines the denomination for the tokenization.
   cosmos.base.v1beta1.Coin denom        = 1 [(gogoproto.nullable) = false];
-  // nft defines the NFT to be tokenized.
-  Nft                      nft          = 2;
+  // asset defines the asset by key to be tokenized.
+  AssetKey                 asset         = 2;
   // from_address defines the address of the message sender.
   string                   from_address = 3;
 }

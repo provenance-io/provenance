@@ -129,14 +129,14 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 				return fmt.Errorf("invalid pool %s", args[0])
 			}
 
-			var nfts []*types.Nft
-			nftEntries := strings.Split(args[1], ";")
-			for _, entry := range nftEntries {
+			var assets []*types.AssetKey
+			assetEntries := strings.Split(args[1], ";")
+			for _, entry := range assetEntries {
 				parts := strings.Split(entry, ",")
 				if len(parts) != 2 {
 					return fmt.Errorf("invalid nft format: %s, expected class-id,asset-id", entry)
 				}
-				nfts = append(nfts, &types.Nft{
+				assets = append(assets, &types.AssetKey{
 					ClassId: strings.TrimSpace(parts[0]),
 					Id:      strings.TrimSpace(parts[1]),
 				})
@@ -144,7 +144,7 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 
 			msg := &types.MsgCreatePool{
 				Pool:        &pool,
-				Nfts:        nfts,
+				Assets:        assets,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
@@ -175,14 +175,14 @@ func GetCmdCreateTokenization() *cobra.Command {
 				return fmt.Errorf("invalid coin %s", args[0])
 			}
 
-			nft := &types.Nft{
+			asset := &types.AssetKey{
 				ClassId: args[1],
 				Id:      args[2],
 			}
 
 			msg := &types.MsgCreateTokenization{
 				Denom:       coin,
-				Nft:         nft,
+				Asset:         asset,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 

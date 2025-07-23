@@ -14,15 +14,13 @@ const (
 
 	// Attribute keys
 	AttributeKeyAssetClassId   string = "asset_class_id"
+	AttributeKeyAssetCount       string = "asset_count"
 	AttributeKeyAssetId        string = "asset_id"
 	AttributeKeyAssetName      string = "asset_name"
 	AttributeKeyAssetSymbol    string = "asset_symbol"
 	AttributeKeyOwner          string = "owner"
 	AttributeKeyPoolDenom      string = "pool_denom"
 	AttributeKeyPoolAmount     string = "pool_amount"
-	AttributeKeyNftCount       string = "nft_count"
-	AttributeKeyNftClassId     string = "nft_class_id"
-	AttributeKeyNftId          string = "nft_id"
 	AttributeKeyTokenizationDenom string = "tokenization_denom"
 	AttributeKeySecuritizationId string = "securitization_id"
 	AttributeKeyTrancheCount   string = "tranche_count"

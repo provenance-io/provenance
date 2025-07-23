@@ -213,7 +213,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 			Denom:  "pooltoken",
 			Amount: sdkmath.NewInt(1000),
 		},
-		Nfts: []*types.Nft{
+		Assets: []*types.AssetKey{
 			{
 				ClassId: "asset-class-3",
 				Id:      "asset-pool-1",
@@ -242,9 +242,9 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
 	s.Require().Equal("1000", poolAmountAttr.Value)
 	
-	nftCountAttr := s.findAttributeByKey(event, types.AttributeKeyNftCount)
-	s.Require().NotNil(nftCountAttr, "nft_count attribute should be present")
-	s.Require().Equal("2", nftCountAttr.Value)
+	assetCountAttr := s.findAttributeByKey(event, types.AttributeKeyAssetCount)
+	s.Require().NotNil(assetCountAttr, "asset_count attribute should be present")
+	s.Require().Equal("2", assetCountAttr.Value)
 	
 	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
@@ -286,7 +286,7 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	
 	msg := &types.MsgCreateTokenization{
 		Denom: sdk.NewCoin("tokenization", sdkmath.NewInt(500)),
-		Nft: &types.Nft{
+		Asset: &types.AssetKey{
 			ClassId: "asset-class-token",
 			Id:      "asset-token-1",
 		},
@@ -309,13 +309,13 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
 	s.Require().Equal("500", poolAmountAttr.Value)
 	
-	nftClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyNftClassId)
-	s.Require().NotNil(nftClassIdAttr, "nft_class_id attribute should be present")
-	s.Require().Equal("asset-class-token", nftClassIdAttr.Value)
+	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassId)
+	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
+	s.Require().Equal("asset-class-token", assetClassIdAttr.Value)
 	
-	nftIdAttr := s.findAttributeByKey(event, types.AttributeKeyNftId)
-	s.Require().NotNil(nftIdAttr, "nft_id attribute should be present")
-	s.Require().Equal("asset-token-1", nftIdAttr.Value)
+	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetId)
+	s.Require().NotNil(assetIdAttr, "asset_id attribute should be present")
+	s.Require().Equal("asset-token-1", assetIdAttr.Value)
 	
 	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
@@ -381,7 +381,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			Denom:  "pool1",
 			Amount: sdkmath.NewInt(1000),
 		},
-		Nfts: []*types.Nft{
+		Assets: []*types.AssetKey{
 			{
 				ClassId: "asset-class-sec",
 				Id:      "asset-sec-1",
@@ -397,7 +397,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			Denom:  "pool2",
 			Amount: sdkmath.NewInt(2000),
 		},
-		Nfts: []*types.Nft{
+		Assets: []*types.AssetKey{
 			{
 				ClassId: "asset-class-sec",
 				Id:      "asset-sec-2",

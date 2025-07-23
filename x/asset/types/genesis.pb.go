@@ -23,8 +23,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// GenesisState defines the asset module's genesis state.
 type GenesisState struct {
-	Asset        []Asset      `protobuf:"bytes,1,rep,name=asset,proto3" json:"asset"`
+	// asset defines the list of assets in the genesis state.
+	Asset []Asset `protobuf:"bytes,1,rep,name=asset,proto3" json:"asset"`
+	// asset_classes defines the list of asset classes in the genesis state.
 	AssetClasses []AssetClass `protobuf:"bytes,2,rep,name=asset_classes,json=assetClasses,proto3" json:"asset_classes"`
 }
 
