@@ -172,9 +172,15 @@ import (
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
+	"github.com/provenance-io/provenance/x/quarantine"
+	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
+	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
 	"github.com/provenance-io/provenance/x/registry"
 	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
 	registrymodule "github.com/provenance-io/provenance/x/registry/module"
+	"github.com/provenance-io/provenance/x/sanction"
+	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
+	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -203,10 +209,10 @@ var (
 		assettypes.ModuleName:     nil,
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName:      {authtypes.Burner},
-		triggertypes.ModuleName:  nil,
-		oracletypes.ModuleName:   nil,
-		metadatatypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		wasmtypes.ModuleName:      {authtypes.Burner},
+		triggertypes.ModuleName:   nil,
+		oracletypes.ModuleName:    nil,
+		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
 		nft.ModuleName:           nil,
 	}
 )
@@ -214,13 +220,6 @@ var (
 var (
 	_ runtime.AppI            = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
-)
-
-// These are some values defined in the params module that we still need so that
-// the params module can be deleted. But I don't want the imports, so they're copied here.
-// TODO[viridian]: Delete these params constants after the upgrade.
-const (
-	paramsName = "params" // = paramstypes.ModuleName
 )
 
 // WasmWrapper allows us to use namespacing in the config file
@@ -268,6 +267,8 @@ type App struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	MsgFeesKeeper         msgfeeskeeper.Keeper
+	QuarantineKeeper      quarantinekeeper.Keeper
+	SanctionKeeper        sanctionkeeper.Keeper
 	TriggerKeeper         triggerkeeper.Keeper
 	OracleKeeper          oraclekeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
@@ -389,6 +390,8 @@ func New(
 		nametypes.StoreKey,
 		msgfeestypes.StoreKey,
 		wasmtypes.StoreKey,
+		quarantine.StoreKey,
+		sanction.StoreKey,
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
@@ -575,6 +578,7 @@ func New(
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
+		authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins.
 		authtypes.NewModuleAddress(govtypes.ModuleName),            // Allow restricted coins in deposits.
 		authtypes.NewModuleAddress(distrtypes.ModuleName),          // Allow fee denoms to be restricted coins.
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
@@ -699,6 +703,15 @@ func New(
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper)
 
+	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
+	for mName := range maccPerms {
+		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
+	}
+	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
+	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
+		app.BankKeeper, &app.GovKeeper,
+		govAuthority, unsanctionableAddrs)
+
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
@@ -709,7 +722,8 @@ func New(
 
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
-	app.GovKeeper = *govKeeper
+
+	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(app.SanctionKeeper))
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -732,6 +746,8 @@ func New(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
+
+	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	/****  Module Options ****/
 
@@ -769,13 +785,15 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
-		// TODO[wasm]: Delete or uncomment: wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), nil),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), nil),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		registrymodule.NewAppModule(appCodec, app.RegistryKeeper),
 		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -847,9 +865,12 @@ func New(
 	// can do so safely.
 	moduleGenesisOrder := []string{
 		capabilitytypes.ModuleName, // Must be first.
+
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+
 		markertypes.ModuleName,
+
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -865,6 +886,9 @@ func New(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
+
+		quarantine.ModuleName,
+		sanction.ModuleName,
 		nft.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
@@ -875,13 +899,14 @@ func New(
 		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
 		assettypes.ModuleName,
+		
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
 		icatypes.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName, // must be after ibctransfer.
+		wasmtypes.ModuleName, // must be after ibctransfer.
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
 	}
@@ -907,6 +932,8 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
@@ -919,7 +946,7 @@ func New(
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		icqtypes.ModuleName,
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName,
+		wasmtypes.ModuleName,
 
 		attributetypes.ModuleName,
 		markertypes.ModuleName,
@@ -951,7 +978,7 @@ func New(
 
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName: provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, pioMessageRouter),
+		wasmtypes.ModuleName: provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, pioMessageRouter),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.mm.Modules, overrideModules)
 
