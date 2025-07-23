@@ -3,8 +3,9 @@ package provenance.asset.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
-import "provenance/asset/v1/asset.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
+import "provenance/asset/v1/asset.proto";
 
 // Query defines the gRPC querier service for the asset module.
 service Query {
@@ -28,21 +29,33 @@ service Query {
 message QueryListAssets {
   // address defines the address to query assets for.
   string address = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryListAssetsResponse is the response type for the ListAssets RPC method.
 message QueryListAssetsResponse {
   // assets defines the list of assets.
   repeated Asset assets = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryListAssetClasses is the request type for the ListAssetClasses RPC method.
-message QueryListAssetClasses {}
+message QueryListAssetClasses {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
 
 // QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
 message QueryListAssetClassesResponse {
   // assetClasses defines the list of asset classes.
   repeated AssetClass assetClasses = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryGetClass is the request type for the GetClass RPC method.

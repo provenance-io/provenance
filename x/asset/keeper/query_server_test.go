@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/types"
@@ -16,8 +17,8 @@ import (
 
 type QueryServerTestSuite struct {
 	suite.Suite
-	app *app.App
-	ctx sdk.Context
+	app       *app.App
+	ctx       sdk.Context
 	user1Addr sdk.AccAddress
 	user2Addr sdk.AccAddress
 }
@@ -29,18 +30,18 @@ func TestQueryServerTestSuite(t *testing.T) {
 func (s *QueryServerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
-	
+
 	// Create two test users
 	priv1 := secp256k1.GenPrivKey()
 	s.user1Addr = sdk.AccAddress(priv1.PubKey().Address())
-	
+
 	priv2 := secp256k1.GenPrivKey()
 	s.user2Addr = sdk.AccAddress(priv2.PubKey().Address())
 }
 
 func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
-	
+
 	// Create asset class 1
 	assetClassMsg1 := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
@@ -56,7 +57,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	}
 	_, err := msgServer.CreateAssetClass(s.ctx, assetClassMsg1)
 	s.Require().NoError(err)
-	
+
 	// Create asset class 2
 	assetClassMsg2 := &types.MsgCreateAssetClass{
 		AssetClass: &types.AssetClass{
@@ -71,7 +72,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	}
 	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg2)
 	s.Require().NoError(err)
-	
+
 	// Create assets for user1
 	asset1Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
@@ -85,7 +86,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
 	s.Require().NoError(err)
-	
+
 	asset2Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-1",
@@ -98,7 +99,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
 	s.Require().NoError(err)
-	
+
 	asset3Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
 			ClassId: "asset-class-2",
@@ -110,7 +111,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset3Msg)
 	s.Require().NoError(err)
-	
+
 	// Create assets for user2
 	asset4Msg := &types.MsgCreateAsset{
 		Asset: &types.Asset{
@@ -127,9 +128,9 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 
 func (s *QueryServerTestSuite) TestListAssets() {
 	s.setupAssetClassAndAssets()
-	
+
 	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
-	
+
 	tests := []struct {
 		name          string
 		address       string
@@ -160,40 +161,40 @@ func (s *QueryServerTestSuite) TestListAssets() {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			req := &types.QueryListAssets{
 				Address: tc.address,
 			}
-			
+
 			resp, err := queryServer.ListAssets(sdk.WrapSDKContext(s.ctx), req)
-			
+
 			if tc.expectError {
 				s.Require().Error(err)
 				return
 			}
-			
+
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
 			s.Require().Len(resp.Assets, tc.expectedCount)
-			
+
 			// Verify asset details for user1
 			if tc.address == s.user1Addr.String() {
 				s.Require().Len(resp.Assets, 3)
-				
+
 				// Check that all assets belong to user1
 				for _, asset := range resp.Assets {
 					// Verify the asset exists in the NFT keeper and belongs to user1
 					owner := s.app.NFTKeeper.GetOwner(s.ctx, asset.ClassId, asset.Id)
 					s.Require().Equal(s.user1Addr.String(), owner.String())
 				}
-				
+
 				// Verify specific asset details
 				foundAsset1 := false
 				foundAsset2 := false
 				foundAsset3 := false
-				
+
 				for _, asset := range resp.Assets {
 					if asset.Id == "asset-1" {
 						foundAsset1 = true
@@ -215,12 +216,12 @@ func (s *QueryServerTestSuite) TestListAssets() {
 						s.Require().Equal("", asset.Data) // No data for this asset
 					}
 				}
-				
+
 				s.Require().True(foundAsset1, "Asset 1 not found")
 				s.Require().True(foundAsset2, "Asset 2 not found")
 				s.Require().True(foundAsset3, "Asset 3 not found")
 			}
-			
+
 			// Verify asset details for user2
 			if tc.address == s.user2Addr.String() {
 				s.Require().Len(resp.Assets, 1)
@@ -236,20 +237,20 @@ func (s *QueryServerTestSuite) TestListAssets() {
 
 func (s *QueryServerTestSuite) TestListAssetClasses() {
 	s.setupAssetClassAndAssets()
-	
+
 	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
-	
+
 	req := &types.QueryListAssetClasses{}
 	resp, err := queryServer.ListAssetClasses(sdk.WrapSDKContext(s.ctx), req)
-	
+
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
 	s.Require().Len(resp.AssetClasses, 2)
-	
+
 	// Verify asset class details
 	foundClass1 := false
 	foundClass2 := false
-	
+
 	for _, assetClass := range resp.AssetClasses {
 		if assetClass.Id == "asset-class-1" {
 			foundClass1 = true
@@ -269,16 +270,16 @@ func (s *QueryServerTestSuite) TestListAssetClasses() {
 			s.Require().Equal("", assetClass.Data) // No data for this class
 		}
 	}
-	
+
 	s.Require().True(foundClass1, "Asset class 1 not found")
 	s.Require().True(foundClass2, "Asset class 2 not found")
 }
 
 func (s *QueryServerTestSuite) TestGetClass() {
 	s.setupAssetClassAndAssets()
-	
+
 	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
-	
+
 	tests := []struct {
 		name        string
 		classId     string
@@ -300,28 +301,28 @@ func (s *QueryServerTestSuite) TestGetClass() {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			req := &types.QueryGetClass{
 				Id: tc.classId,
 			}
-			
+
 			resp, err := queryServer.GetClass(sdk.WrapSDKContext(s.ctx), req)
-			
+
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), "class not found")
 				return
 			}
-			
+
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
 			s.Require().NotNil(resp.AssetClass)
-			
+
 			assetClass := resp.AssetClass
 			s.Require().Equal(tc.classId, assetClass.Id)
-			
+
 			if tc.classId == "asset-class-1" {
 				s.Require().Equal("AssetClass1", assetClass.Name)
 				s.Require().Equal("AC1", assetClass.Symbol)
@@ -343,13 +344,13 @@ func (s *QueryServerTestSuite) TestGetClass() {
 
 func (s *QueryServerTestSuite) TestListAssetsEmptyState() {
 	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
-	
+
 	req := &types.QueryListAssets{
 		Address: s.user1Addr.String(),
 	}
-	
+
 	resp, err := queryServer.ListAssets(sdk.WrapSDKContext(s.ctx), req)
-	
+
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
 	s.Require().Len(resp.Assets, 0)
@@ -357,11 +358,389 @@ func (s *QueryServerTestSuite) TestListAssetsEmptyState() {
 
 func (s *QueryServerTestSuite) TestListAssetClassesEmptyState() {
 	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
-	
+
 	req := &types.QueryListAssetClasses{}
 	resp, err := queryServer.ListAssetClasses(sdk.WrapSDKContext(s.ctx), req)
-	
+
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
 	s.Require().Len(resp.AssetClasses, 0)
+}
+
+func (s *QueryServerTestSuite) TestListAssetsWithPagination() {
+	s.setupAssetClassAndAssets()
+
+	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
+
+	tests := []struct {
+		name          string
+		address       string
+		pagination    *query.PageRequest
+		expectedCount int
+		expectedTotal uint64
+		expectError   bool
+	}{
+		{
+			name:          "list assets with limit 2",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Limit: 2},
+			expectedCount: 2,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "list assets with offset 1 and limit 2",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Offset: 1, Limit: 2},
+			expectedCount: 2,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "list assets with offset 2 and limit 5",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Offset: 2, Limit: 5},
+			expectedCount: 1,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "list assets with offset beyond total count",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Offset: 10, Limit: 5},
+			expectedCount: 0,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "list assets with large limit",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Limit: 100},
+			expectedCount: 3,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "list assets for user2 with pagination",
+			address:       s.user2Addr.String(),
+			pagination:    &query.PageRequest{Limit: 5},
+			expectedCount: 1,
+			expectedTotal: 1,
+			expectError:   false,
+		},
+		{
+			name:          "list assets without pagination",
+			address:       s.user1Addr.String(),
+			pagination:    nil,
+			expectedCount: 3,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			req := &types.QueryListAssets{
+				Address:    tc.address,
+				Pagination: tc.pagination,
+			}
+
+			resp, err := queryServer.ListAssets(sdk.WrapSDKContext(s.ctx), req)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Len(resp.Assets, tc.expectedCount)
+			s.Require().NotNil(resp.Pagination)
+			s.Require().Equal(tc.expectedTotal, resp.Pagination.Total)
+
+			// Verify that all returned assets belong to the requested address
+			for _, asset := range resp.Assets {
+				owner := s.app.NFTKeeper.GetOwner(s.ctx, asset.ClassId, asset.Id)
+				s.Require().Equal(tc.address, owner.String())
+			}
+		})
+	}
+}
+
+func (s *QueryServerTestSuite) TestListAssetClassesWithPagination() {
+	s.setupAssetClassAndAssets()
+
+	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
+
+	tests := []struct {
+		name          string
+		pagination    *query.PageRequest
+		expectedCount int
+		expectedTotal uint64
+		expectError   bool
+	}{
+		{
+			name:          "list asset classes with limit 1",
+			pagination:    &query.PageRequest{Limit: 1},
+			expectedCount: 1,
+			expectedTotal: 2,
+			expectError:   false,
+		},
+		{
+			name:          "list asset classes with offset 1 and limit 1",
+			pagination:    &query.PageRequest{Offset: 1, Limit: 1},
+			expectedCount: 1,
+			expectedTotal: 2,
+			expectError:   false,
+		},
+		{
+			name:          "list asset classes with offset 0 and limit 5",
+			pagination:    &query.PageRequest{Offset: 0, Limit: 5},
+			expectedCount: 2,
+			expectedTotal: 2,
+			expectError:   false,
+		},
+		{
+			name:          "list asset classes with offset beyond total count",
+			pagination:    &query.PageRequest{Offset: 10, Limit: 5},
+			expectedCount: 0,
+			expectedTotal: 2,
+			expectError:   false,
+		},
+		{
+			name:          "list asset classes with large limit",
+			pagination:    &query.PageRequest{Limit: 100},
+			expectedCount: 2,
+			expectedTotal: 2,
+			expectError:   false,
+		},
+		{
+			name:          "list asset classes without pagination",
+			pagination:    nil,
+			expectedCount: 2,
+			expectedTotal: 2,
+			expectError:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			req := &types.QueryListAssetClasses{
+				Pagination: tc.pagination,
+			}
+
+			resp, err := queryServer.ListAssetClasses(sdk.WrapSDKContext(s.ctx), req)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Len(resp.AssetClasses, tc.expectedCount)
+			s.Require().NotNil(resp.Pagination)
+			s.Require().Equal(tc.expectedTotal, resp.Pagination.Total)
+
+			// Verify that returned asset classes are valid
+			for _, assetClass := range resp.AssetClasses {
+				s.Require().NotEmpty(assetClass.Id)
+				s.Require().NotEmpty(assetClass.Name)
+				s.Require().NotEmpty(assetClass.Symbol)
+			}
+		})
+	}
+}
+
+func (s *QueryServerTestSuite) TestListAssetsPaginationEdgeCases() {
+	s.setupAssetClassAndAssets()
+
+	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
+
+	tests := []struct {
+		name          string
+		address       string
+		pagination    *query.PageRequest
+		expectedCount int
+		expectError   bool
+	}{
+		{
+			name:          "list assets with zero limit",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Limit: 0},
+			expectedCount: 0,
+			expectError:   false,
+		},
+		{
+			name:          "list assets with zero offset",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Offset: 0, Limit: 2},
+			expectedCount: 2,
+			expectError:   false,
+		},
+		{
+			name:          "list assets with offset equal to total count",
+			address:       s.user1Addr.String(),
+			pagination:    &query.PageRequest{Offset: 3, Limit: 5},
+			expectedCount: 0,
+			expectError:   false,
+		},
+		{
+			name:          "list assets for empty address with pagination",
+			address:       "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			pagination:    &query.PageRequest{Limit: 5},
+			expectedCount: 0,
+			expectError:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			req := &types.QueryListAssets{
+				Address:    tc.address,
+				Pagination: tc.pagination,
+			}
+
+			resp, err := queryServer.ListAssets(sdk.WrapSDKContext(s.ctx), req)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Len(resp.Assets, tc.expectedCount)
+			s.Require().NotNil(resp.Pagination)
+		})
+	}
+}
+
+func (s *QueryServerTestSuite) TestListAssetClassesPaginationEdgeCases() {
+	s.setupAssetClassAndAssets()
+
+	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
+
+	tests := []struct {
+		name          string
+		pagination    *query.PageRequest
+		expectedCount int
+		expectError   bool
+	}{
+		{
+			name:          "list asset classes with zero limit",
+			pagination:    &query.PageRequest{Limit: 0},
+			expectedCount: 0,
+			expectError:   false,
+		},
+		{
+			name:          "list asset classes with zero offset",
+			pagination:    &query.PageRequest{Offset: 0, Limit: 1},
+			expectedCount: 1,
+			expectError:   false,
+		},
+		{
+			name:          "list asset classes with offset equal to total count",
+			pagination:    &query.PageRequest{Offset: 2, Limit: 5},
+			expectedCount: 0,
+			expectError:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			req := &types.QueryListAssetClasses{
+				Pagination: tc.pagination,
+			}
+
+			resp, err := queryServer.ListAssetClasses(sdk.WrapSDKContext(s.ctx), req)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Len(resp.AssetClasses, tc.expectedCount)
+			s.Require().NotNil(resp.Pagination)
+		})
+	}
+}
+
+func (s *QueryServerTestSuite) TestListAssetsPaginationConsistency() {
+	s.setupAssetClassAndAssets()
+
+	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
+
+	// Test that pagination returns consistent results
+	req1 := &types.QueryListAssets{
+		Address:    s.user1Addr.String(),
+		Pagination: &query.PageRequest{Limit: 1},
+	}
+
+	req2 := &types.QueryListAssets{
+		Address:    s.user1Addr.String(),
+		Pagination: &query.PageRequest{Offset: 1, Limit: 1},
+	}
+
+	req3 := &types.QueryListAssets{
+		Address:    s.user1Addr.String(),
+		Pagination: &query.PageRequest{Offset: 2, Limit: 1},
+	}
+
+	resp1, err := queryServer.ListAssets(sdk.WrapSDKContext(s.ctx), req1)
+	s.Require().NoError(err)
+	s.Require().Len(resp1.Assets, 1)
+
+	resp2, err := queryServer.ListAssets(sdk.WrapSDKContext(s.ctx), req2)
+	s.Require().NoError(err)
+	s.Require().Len(resp2.Assets, 1)
+
+	resp3, err := queryServer.ListAssets(sdk.WrapSDKContext(s.ctx), req3)
+	s.Require().NoError(err)
+	s.Require().Len(resp3.Assets, 1)
+
+	// Verify that all three responses have different assets
+	assetIds := make(map[string]bool)
+	assetIds[resp1.Assets[0].Id] = true
+	assetIds[resp2.Assets[0].Id] = true
+	assetIds[resp3.Assets[0].Id] = true
+
+	s.Require().Len(assetIds, 3, "All three paginated responses should return different assets")
+
+	// Verify total counts are consistent
+	s.Require().Equal(uint64(3), resp1.Pagination.Total)
+	s.Require().Equal(uint64(3), resp2.Pagination.Total)
+	s.Require().Equal(uint64(3), resp3.Pagination.Total)
+}
+
+func (s *QueryServerTestSuite) TestListAssetClassesPaginationConsistency() {
+	s.setupAssetClassAndAssets()
+
+	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
+
+	// Test that pagination returns consistent results
+	req1 := &types.QueryListAssetClasses{
+		Pagination: &query.PageRequest{Limit: 1},
+	}
+
+	req2 := &types.QueryListAssetClasses{
+		Pagination: &query.PageRequest{Offset: 1, Limit: 1},
+	}
+
+	resp1, err := queryServer.ListAssetClasses(sdk.WrapSDKContext(s.ctx), req1)
+	s.Require().NoError(err)
+	s.Require().Len(resp1.AssetClasses, 1)
+
+	resp2, err := queryServer.ListAssetClasses(sdk.WrapSDKContext(s.ctx), req2)
+	s.Require().NoError(err)
+	s.Require().Len(resp2.AssetClasses, 1)
+
+	// Verify that the two responses have different asset classes
+	s.Require().NotEqual(resp1.AssetClasses[0].Id, resp2.AssetClasses[0].Id, "Pagination should return different asset classes")
+
+	// Verify total counts are consistent
+	s.Require().Equal(uint64(2), resp1.Pagination.Total)
+	s.Require().Equal(uint64(2), resp2.Pagination.Total)
 }
