@@ -36,6 +36,7 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 }
 
 // ReverseLookup gets all names bound to an address with proper pagination
+// ReverseLookup gets all names bound to an address with proper pagination
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
@@ -50,25 +51,33 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 	}
 
 	// Create a range for the prefix
-	rng := (&collections.Range[[]byte]{}).
-		StartInclusive(addrPrefix).
-		EndExclusive(storetypes.PrefixEndBytes(addrPrefix))
+	rng := new(collections.Range[[]byte])
+	rng = rng.StartInclusive(addrPrefix)
+	rng = rng.EndExclusive(storetypes.PrefixEndBytes(addrPrefix))
+
+	// Handle pagination start key
+	if request.Pagination != nil && len(request.Pagination.Key) > 0 {
+		rng = rng.StartInclusive(request.Pagination.Key)
+	}
 
 	var names []string
 	var nextKey []byte
+	limit := query.DefaultLimit
+	if request.Pagination != nil {
+		limit = int(request.Pagination.Limit)
+	}
 
 	// Iterate through address index with pagination
+	count := 0
 	err = k.AddrIndex.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
-		// Handle pagination
-		if request.Pagination != nil {
-			// Check if we've reached the limit
-			if uint64(len(names)) >= request.Pagination.Limit {
-				nextKey = key
-				return true, nil // Stop iteration
-			}
+		// Break if we've reached the limit
+		if count >= limit {
+			nextKey = key
+			return true, nil // Stop iteration
 		}
 
 		names = append(names, record.Name)
+		count++
 		return false, nil
 	})
 
@@ -79,7 +88,6 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 	// Build pagination response
 	pageRes := &query.PageResponse{
 		NextKey: nextKey,
-		Total:   uint64(len(names)),
 	}
 
 	return &types.QueryReverseLookupResponse{Name: names, Pagination: pageRes}, nil
