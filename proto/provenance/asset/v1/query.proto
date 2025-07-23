@@ -6,36 +6,53 @@ option go_package = "github.com/provenance-io/provenance/x/asset/types";
 import "provenance/asset/v1/asset.proto";
 import "google/api/annotations.proto";
 
+// Query defines the gRPC querier service for the asset module.
 service Query {
+  // ListAssets queries all assets for a given address.
   rpc ListAssets(QueryListAssets) returns (QueryListAssetsResponse) {
     option (google.api.http).get = "/provenance/asset/v1/asset";
   }
 
+  // ListAssetClasses queries all asset classes.
   rpc ListAssetClasses(QueryListAssetClasses) returns (QueryListAssetClassesResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class";
   }
 
+  // GetClass queries a specific asset class by its ID.
   rpc GetClass(QueryGetClass) returns (QueryGetClassResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class/{id}";
   }
 }
 
-message QueryListAssetClassesResponse {
-  repeated AssetClass assetClasses = 1;
+// QueryListAssets is the request type for the ListAssets RPC method.
+message QueryListAssets {
+  // address defines the address to query assets for.
+  string address = 1;
 }
-message QueryGetClassResponse {
-  AssetClass assetClass = 1;
-}
+
+// QueryListAssetsResponse is the response type for the ListAssets RPC method.
 message QueryListAssetsResponse {
+  // assets defines the list of assets.
   repeated Asset assets = 1;
 }
 
+// QueryListAssetClasses is the request type for the ListAssetClasses RPC method.
 message QueryListAssetClasses {}
 
+// QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
+message QueryListAssetClassesResponse {
+  // assetClasses defines the list of asset classes.
+  repeated AssetClass assetClasses = 1;
+}
+
+// QueryGetClass is the request type for the GetClass RPC method.
 message QueryGetClass {
+  // id defines the unique identifier of the asset class to query.
   string id = 1;
 }
 
-message QueryListAssets {
-  string address = 1;
+// QueryGetClassResponse is the response type for the GetClass RPC method.
+message QueryGetClassResponse {
+  // assetClass defines the requested asset class.
+  AssetClass assetClass = 1;
 }
