@@ -3,18 +3,19 @@ package keeper
 import (
 	"bytes"
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"net/url"
+
+	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
-	"io"
-	"net/url"
 )
 
 // compile-time check
@@ -116,7 +117,6 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 	}
 	existingAcc, lookupErr := k.LookupAccountByAddress(sdkCtx, creator)
 	if lookupErr != nil && errors.Is(lookupErr, types.ErrSmartAccountDoesNotExist) {
-
 		hasDuplicate := HasDuplicateCredentialId(existingAcc.Credentials, fido2Authenticator.Id)
 		if hasDuplicate {
 			return nil, fmt.Errorf("credential already exists")

@@ -3,8 +3,9 @@ package keeper
 import (
 	"context"
 	"fmt"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"strings"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"cosmossdk.io/log"
 
@@ -161,7 +162,7 @@ func (k Keeper) Init(ctx context.Context, msg *smartaccounttypes.MsgInit) (*smar
 	}
 
 	// Check if the number of credentials exceeds the maximum allowed
-	if uint32(len(msg.Credentials)) > params.MaxCredentialAllowed {
+	if len(msg.Credentials) > int(params.MaxCredentialAllowed) {
 		return nil, fmt.Errorf("maximum number of credentials (%d) exceeded", params.MaxCredentialAllowed)
 	}
 
@@ -246,7 +247,6 @@ func (k Keeper) verifyPubKey(ctx context.Context, anyPk *codectypes.Any) error {
 		return fmt.Errorf("unable to validate pubkey: %w", err)
 	}
 	return nil
-
 }
 
 func (k Keeper) SaveAccountDetails(ctx context.Context, acc *smartaccounttypes.ProvenanceAccount, address sdk.AccAddress) (*smartaccounttypes.ProvenanceAccount, error) {
