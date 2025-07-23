@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"encoding/json"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -56,10 +57,10 @@ func (a AppModule) InitGenesis(ctx sdk.Context, marshaler codec.JSONCodec, messa
 	return nil
 }
 
-func (am AppModule) GetQueryCmd() *cobra.Command {
+func (a AppModule) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
-func (am AppModule) GetTxCmd() *cobra.Command {
+func (a AppModule) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
@@ -79,14 +80,14 @@ func NewAppModule(
 }
 
 // IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
-func (am AppModule) IsOnePerModuleType() {
+func (a AppModule) IsOnePerModuleType() {
 }
 
-func (am AppModule) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessage {
-	return am.cdc.MustMarshalJSON(keeper.DefaultGenesisState())
+func (a AppModule) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessage {
+	return a.cdc.MustMarshalJSON(keeper.DefaultGenesisState())
 }
 
-func (am AppModule) ValidateGenesis(marshaler codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (a AppModule) ValidateGenesis(marshaler codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
 	var data types.GenesisState
 	err := marshaler.UnmarshalJSON(message, &data)
 	if err != nil {
@@ -99,8 +100,8 @@ func (am AppModule) ValidateGenesis(marshaler codec.JSONCodec, config client.TxE
 	return nil
 }
 
-func (am AppModule) ExportGenesis(ctx sdk.Context, marshaler codec.JSONCodec) json.RawMessage {
-	gs, err := am.smartaccountkeeper.ExportGenesis(ctx)
+func (a AppModule) ExportGenesis(ctx sdk.Context, marshaler codec.JSONCodec) json.RawMessage {
+	gs, err := a.smartaccountkeeper.ExportGenesis(ctx)
 	if err != nil {
 		return nil
 	}
@@ -108,9 +109,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, marshaler codec.JSONCodec) js
 }
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.smartaccountkeeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.smartaccountkeeper)
+func (a AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.smartaccountkeeper))
+	types.RegisterQueryServer(cfg.QueryServer(), a.smartaccountkeeper)
 }
 
 type AppModuleBasic struct {

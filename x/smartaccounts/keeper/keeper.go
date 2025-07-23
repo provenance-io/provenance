@@ -318,7 +318,7 @@ func (k Keeper) AddSmartAccountCredential(ctx context.Context, credential *types
 	}
 
 	// Check if adding a new credential exceeds the maximum allowed
-	if uint32(len(smartAccount.Credentials)+1) > params.MaxCredentialAllowed {
+	if len(smartAccount.Credentials)+1 > int(params.MaxCredentialAllowed) {
 		return nil, 0, fmt.Errorf("maximum number of credentials (%d) exceeded", params.MaxCredentialAllowed)
 	}
 
