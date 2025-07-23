@@ -10,7 +10,7 @@ option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
 // Query defines the Query service for the x/accounts module.
 service Query {
   // SmartAccountQuery runs a query to retrieve the state object of a smart account.
-  rpc SmartAccountQuery(SmartAccountQueryRequest) returns (SmartAccountQueryResponse) {
+  rpc SmartAccount(SmartAccountQueryRequest) returns (SmartAccountQueryResponse) {
     option (google.api.http).get = "/provenance/smartaccount/v1/account";
   };
   // Params queries all parameters of the module.

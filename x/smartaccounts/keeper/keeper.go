@@ -122,14 +122,6 @@ type Keeper struct {
 	SmartAccountParams collections.Item[types.Params]
 }
 
-func (k Keeper) SmartAccountQuery(ctx context.Context, request *types.SmartAccountQueryRequest) (*types.SmartAccountQueryResponse, error) {
-	account, err := k.LookupAccountByAddress(ctx, sdk.AccAddress(request.Address))
-	if err != nil {
-		return nil, err
-	}
-	return &types.SmartAccountQueryResponse{Provenanceaccount: &account}, nil
-}
-
 func (k Keeper) NextCredentialNumber(
 	ctx context.Context,
 ) (credentialNumber uint64, err error) {

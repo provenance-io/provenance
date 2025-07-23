@@ -48,7 +48,7 @@ func QueryAccountByAddressCmd() *cobra.Command {
 			address := strings.ToLower(strings.TrimSpace(args[0]))
 			smartAccount := &types.SmartAccountQueryRequest{Address: address}
 
-			res, err := queryClient.SmartAccountQuery(context.Background(), smartAccount)
+			res, err := queryClient.SmartAccount(context.Background(), smartAccount)
 			if err != nil {
 				return err
 			}

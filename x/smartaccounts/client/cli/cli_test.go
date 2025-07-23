@@ -177,7 +177,7 @@ func (s *IntegrationTestSuite) TestSmartAccountQueryFlow() {
 	s.Require().NoError(err)
 
 	// Parse the response and verify the account exists
-	var response types.AccountQueryResponse
+	var response types.SmartAccountQueryResponse
 	err = s.cfg.Codec.UnmarshalJSON(responseFromExec.Bytes(), &response)
 	s.Require().NoError(err)
 

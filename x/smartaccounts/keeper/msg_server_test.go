@@ -154,7 +154,7 @@ func (s *TestSuite) TestRegisterFido2Credential(t *testing.T) {
 	assertions.True(resultCred, "Expected EventFido2CredentialAdd was not found in response.\n    Expected: %+v\n", expectedCredEvent)
 
 	// Fetch the smart account using the query server
-	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.AccountQueryRequest{Address: addr.String()})
+	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.SmartAccountQueryRequest{Address: addr.String()})
 	assertions.NoError(err, "should be able to fetch the smart account")
 	account := queryResp.Provenanceaccount
 	assertions.Equal(addr.String(), account.Address, "account address should match")
@@ -229,7 +229,7 @@ func (s *TestSuite) TestRegisterFido2MultipleCredential(t *testing.T) {
 	assertions.True(resultCred, "Expected EventFido2CredentialAdd was not found in response.\n    Expected: %+v\n", expectedCredEvent)
 
 	// Fetch the smart account using the query server(now it should have two credentials)
-	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.AccountQueryRequest{Address: addr.String()})
+	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.SmartAccountQueryRequest{Address: addr.String()})
 	assertions.NoError(err, "should be able to fetch the smart account")
 	account := queryResp.Provenanceaccount
 	assertions.Equal(addr.String(), account.Address, "account address should match")
@@ -280,7 +280,7 @@ func (s *TestSuite) TestRegisterFido2DuplicateCredential(t *testing.T) {
 	assertions.Nil(resp, "response should be nil")
 
 	// Fetch the smart account using the query server(now it should have two credentials)
-	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.AccountQueryRequest{Address: addr.String()})
+	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.SmartAccountQueryRequest{Address: addr.String()})
 	assertions.NoError(err, "should be able to fetch the smart account")
 	account := queryResp.Provenanceaccount
 	assertions.Equal(addr.String(), account.Address, "account address should match")
@@ -337,7 +337,7 @@ func (s *TestSuite) TestRegisterFido2MaxCredentialCheck(t *testing.T) {
 	assertions.Equal(uint64(1), resp.CredentialNumber, "credential number should match")
 
 	// Fetch the smart account using the query server(now it should have two credentials)
-	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.AccountQueryRequest{Address: addr.String()})
+	queryResp, err := s.queryServer.SmartAccount(s.ctx, &types.SmartAccountQueryRequest{Address: addr.String()})
 	assertions.NoError(err, "should be able to fetch the smart account")
 	account := queryResp.Provenanceaccount
 	assertions.Equal(addr.String(), account.Address, "account address should match")
@@ -504,7 +504,7 @@ func (s *TestSuite) TestRegisterFido2CredentialWithBadBase64(t *testing.T) {
 		"error should be of type ErrParseCredential")
 
 	// Verify no account was created
-	_, err = s.queryServer.SmartAccount(s.ctx, &types.AccountQueryRequest{Address: addr.String()})
+	_, err = s.queryServer.SmartAccount(s.ctx, &types.SmartAccountQueryRequest{Address: addr.String()})
 	assertions.Error(err, "no smart account should be created")
 	assertions.Contains(err.Error(), "smart account does not exist")
 }
@@ -533,7 +533,7 @@ func (s *TestSuite) TestRegisterCosmosCredentialDuplicate(t *testing.T) {
 	assertions.Equal(uint64(0), resp.CredentialNumber, "First credential should have number 0")
 
 	// Verify account was created with the credential
-	accountResp, err := s.queryServer.SmartAccount(s.ctx, &types.AccountQueryRequest{Address: addr.String()})
+	accountResp, err := s.queryServer.SmartAccount(s.ctx, &types.SmartAccountQueryRequest{Address: addr.String()})
 	require.NoError(err)
 	require.NotNil(accountResp)
 
@@ -564,7 +564,7 @@ func (s *TestSuite) TestRegisterCosmosCredentialDuplicate(t *testing.T) {
 	assertions.Equal(uint64(1), resp2.CredentialNumber, "Second credential should have number 1")
 
 	// Verify the account now has two credentials
-	accountResp2, err := s.queryServer.SmartAccount(s.ctx, &types.AccountQueryRequest{Address: addr.String()})
+	accountResp2, err := s.queryServer.SmartAccount(s.ctx, &types.SmartAccountQueryRequest{Address: addr.String()})
 	require.NoError(err)
 	assertions.Equal(2, len(accountResp2.Provenanceaccount.Credentials))
 

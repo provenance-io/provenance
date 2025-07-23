@@ -9,7 +9,7 @@ import (
 func DefaultParams() Params {
 	return Params{
 		// enabled by default
-		Enabled:              false,
+		Enabled:              true,
 		MaxCredentialAllowed: 10, // Set default max credentials per account
 	}
 }
