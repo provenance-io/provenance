@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
-	smartaccounttypes "github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 
 var (
@@ -40,7 +39,7 @@ func NewSmartAccountIndexes(sb *collections.SchemaBuilder) SmartAccountsIndexes 
 	return SmartAccountsIndexes{
 		Address: indexes.NewUnique(
 			sb, types.SmartAccountNumberStoreKeyPrefix, "smart_account_by_number", sdk.AccAddressKey, sdk.AccAddressKey,
-			func(addr sdk.AccAddress, v smartaccounttypes.ProvenanceAccount) (sdk.AccAddress, error) {
+			func(addr sdk.AccAddress, v types.ProvenanceAccount) (sdk.AccAddress, error) {
 				return addr, nil
 			},
 		),
@@ -66,7 +65,7 @@ func NewKeeper(
 		Schema:             collections.Schema{},
 		CredentialNumber:   collections.NewSequence(sb, CredentialNumberKey, "credential_number"),
 		SmartAccountNumber: collections.NewSequence(sb, SmartAccountNumberKey, "smart_account_number"),
-		SmartAccounts:      collections.NewIndexedMap(sb, SmartAccountStatePrefix, "smart_accounts", sdk.AccAddressKey, codec.CollValue[smartaccounttypes.ProvenanceAccount](cdc), NewSmartAccountIndexes(sb)),
+		SmartAccounts:      collections.NewIndexedMap(sb, SmartAccountStatePrefix, "smart_accounts", sdk.AccAddressKey, codec.CollValue[types.ProvenanceAccount](cdc), NewSmartAccountIndexes(sb)),
 		AccountKeeper:      accountKeeper,
 		authority:          authority,
 		SmartAccountParams: collections.NewItem(sb, ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -92,11 +91,11 @@ func NewKeeper(
 
 type SmartAccountsIndexes struct {
 	// Address is a unique index that indexes accounts by their address.
-	Address *indexes.Unique[sdk.AccAddress, sdk.AccAddress, smartaccounttypes.ProvenanceAccount]
+	Address *indexes.Unique[sdk.AccAddress, sdk.AccAddress, types.ProvenanceAccount]
 }
 
-func (a SmartAccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, smartaccounttypes.ProvenanceAccount] {
-	return []collections.Index[sdk.AccAddress, smartaccounttypes.ProvenanceAccount]{
+func (a SmartAccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, types.ProvenanceAccount] {
+	return []collections.Index[sdk.AccAddress, types.ProvenanceAccount]{
 		a.Address,
 	}
 }
@@ -116,19 +115,19 @@ type Keeper struct {
 	HandlerMap   *signing.HandlerMap
 
 	provenanceAccount *provenanceaccount.ProvenanceSmartAccountHandler // for now there is only one implementation, keeping it simple for now
-	SmartAccounts     *collections.IndexedMap[sdk.AccAddress, smartaccounttypes.ProvenanceAccount, SmartAccountsIndexes]
+	SmartAccounts     *collections.IndexedMap[sdk.AccAddress, types.ProvenanceAccount, SmartAccountsIndexes]
 	AccountKeeper     accountkeeper.AccountKeeper
 
 	authority          string
 	SmartAccountParams collections.Item[types.Params]
 }
 
-func (k Keeper) SmartAccountQuery(ctx context.Context, request *smartaccounttypes.SmartAccountQueryRequest) (*smartaccounttypes.SmartAccountQueryResponse, error) {
+func (k Keeper) SmartAccountQuery(ctx context.Context, request *types.SmartAccountQueryRequest) (*types.SmartAccountQueryResponse, error) {
 	account, err := k.LookupAccountByAddress(ctx, sdk.AccAddress(request.Address))
 	if err != nil {
 		return nil, err
 	}
-	return &smartaccounttypes.SmartAccountQueryResponse{Provenanceaccount: &account}, nil
+	return &types.SmartAccountQueryResponse{Provenanceaccount: &account}, nil
 }
 
 func (k Keeper) NextCredentialNumber(
@@ -154,7 +153,7 @@ func (k Keeper) NextSmartAccountNumber(
 }
 
 // Init called when initializing the provenance smart account for the first time.
-func (k Keeper) Init(ctx context.Context, msg *smartaccounttypes.MsgInit) (*smartaccounttypes.ProvenanceAccount, error) {
+func (k Keeper) Init(ctx context.Context, msg *types.MsgInit) (*types.ProvenanceAccount, error) {
 	// Get module params to check max credentials allowed
 	params, err := k.GetParams(ctx)
 	if err != nil {
@@ -208,7 +207,7 @@ func (k Keeper) Init(ctx context.Context, msg *smartaccounttypes.MsgInit) (*smar
 	}
 
 	// Create account using the NewProvenanceAccount helper
-	acc := smartaccounttypes.NewProvenanceAccount(
+	acc := types.NewProvenanceAccount(
 		baseAccount,
 		nextNumber,
 		validCredentials,
@@ -249,7 +248,7 @@ func (k Keeper) verifyPubKey(ctx context.Context, anyPk *codectypes.Any) error {
 	return nil
 }
 
-func (k Keeper) SaveAccountDetails(ctx context.Context, acc *smartaccounttypes.ProvenanceAccount, address sdk.AccAddress) (*smartaccounttypes.ProvenanceAccount, error) {
+func (k Keeper) SaveAccountDetails(ctx context.Context, acc *types.ProvenanceAccount, address sdk.AccAddress) (*types.ProvenanceAccount, error) {
 	// Set the account in the store
 	err := k.SmartAccounts.Set(ctx, address, *acc)
 	if err != nil {
@@ -260,27 +259,27 @@ func (k Keeper) SaveAccountDetails(ctx context.Context, acc *smartaccounttypes.P
 }
 
 // LookupAccountByAddress looks up an account by its address.
-func (k Keeper) LookupAccountByAddress(ctx context.Context, address sdk.AccAddress) (smartaccounttypes.ProvenanceAccount, error) {
+func (k Keeper) LookupAccountByAddress(ctx context.Context, address sdk.AccAddress) (types.ProvenanceAccount, error) {
 	// Check if the account exists
 	exists, err := k.SmartAccounts.Has(ctx, address)
 	if err != nil {
-		return smartaccounttypes.ProvenanceAccount{}, err
+		return types.ProvenanceAccount{}, err
 	}
 	if !exists {
-		return smartaccounttypes.ProvenanceAccount{}, smartaccounttypes.ErrSmartAccountDoesNotExist
+		return types.ProvenanceAccount{}, types.ErrSmartAccountDoesNotExist
 	}
 	// Retrieve the account details directly using the address
 	account, err := k.SmartAccounts.Get(ctx, address)
 	if err != nil {
-		return smartaccounttypes.ProvenanceAccount{}, err
+		return types.ProvenanceAccount{}, err
 	}
 	return account, nil
 }
 
 // IterateSmartAccounts iterates over all the stored smart accounts and performs a callback function.
 // Stops iteration when callback returns true.
-func (k Keeper) IterateSmartAccounts(ctx context.Context, cb func(smartAccounts smartaccounttypes.ProvenanceAccount) (stop bool)) {
-	err := k.SmartAccounts.Walk(ctx, nil, func(_ sdk.AccAddress, value smartaccounttypes.ProvenanceAccount) (bool, error) {
+func (k Keeper) IterateSmartAccounts(ctx context.Context, cb func(smartAccounts types.ProvenanceAccount) (stop bool)) {
+	err := k.SmartAccounts.Walk(ctx, nil, func(_ sdk.AccAddress, value types.ProvenanceAccount) (bool, error) {
 		return cb(value), nil
 	})
 	if err != nil {
@@ -289,8 +288,8 @@ func (k Keeper) IterateSmartAccounts(ctx context.Context, cb func(smartAccounts 
 }
 
 // GetAllSmartAccounts returns all accounts in the smartaccountKeeper.
-func (k Keeper) GetAllSmartAccounts(ctx context.Context) (accounts []smartaccounttypes.ProvenanceAccount) {
-	k.IterateSmartAccounts(ctx, func(acc smartaccounttypes.ProvenanceAccount) (stop bool) {
+func (k Keeper) GetAllSmartAccounts(ctx context.Context) (accounts []types.ProvenanceAccount) {
+	k.IterateSmartAccounts(ctx, func(acc types.ProvenanceAccount) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
 	})
@@ -298,7 +297,7 @@ func (k Keeper) GetAllSmartAccounts(ctx context.Context) (accounts []smartaccoun
 	return accounts
 }
 
-func (keeper Keeper) GetParams(c context.Context) (*smartaccounttypes.Params, error) {
+func (keeper Keeper) GetParams(c context.Context) (*types.Params, error) {
 	p, err := keeper.SmartAccountParams.Get(c)
 	if err != nil {
 		return nil, err
@@ -377,7 +376,7 @@ func (k Keeper) DeleteCredential(ctx context.Context, smartAccount *types.Proven
 	return deletedCredential, nil
 }
 
-func removeCredentialByNumber(credentials []*smartaccounttypes.Credential, credNumber uint64) ([]*smartaccounttypes.Credential, *smartaccounttypes.Credential) {
+func removeCredentialByNumber(credentials []*types.Credential, credNumber uint64) ([]*types.Credential, *types.Credential) {
 	result := make([]*types.Credential, 0, len(credentials))
 	var deletedCredential *types.Credential
 	for _, cred := range credentials {
