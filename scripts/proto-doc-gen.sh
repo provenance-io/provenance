@@ -56,10 +56,6 @@ if ! [ -d ./proto ]; then
   printf 'Directory not found: ./proto\n' >&2
   ec=1
 fi
-if ! [ -d ./legacy_protos ]; then
-  printf 'Directory not found: ./legacy_protos\n' >&2
-  ec=1
-fi
 if ! [ -d ./third_party ]; then
   printf 'Directory not found: ./third_party\n' >&2
   ec=1
@@ -77,8 +73,7 @@ fi
 # Generate the docs/proto-docs.md file.
 protoc \
   -I "proto" \
-  -I "legacy_protos" \
   -I "third_party/proto" \
   --doc_out=./docs \
   --doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
-  $( find "proto" "legacy_protos" -name '*.proto' )
+  $( find "proto" -name '*.proto' )

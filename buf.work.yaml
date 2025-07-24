@@ -1,5 +1,4 @@
 version: v1
 directories:
   - proto
-  - legacy_protos
   - third_party/proto

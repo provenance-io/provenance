@@ -539,7 +539,14 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check proto-doc-gen
+proto-legacy:
+	protoc \
+		--proto_path=legacy_protos \
+		--proto_path=third_party/proto \
+		--gogo_out=paths=source_relative:legacy_protos \
+		legacy_protos/cosmwasm/wasm/v1beta1/msg_execute_contract.proto
+
+.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check proto-doc-gen proto-legacy
 
 
 ##############################

@@ -11,7 +11,7 @@ if [ "$1" = '-v' ] || [ "$1" = '--verbose' ]; then
 fi
 
 # Find all of our proto files that have our go_package name.
-proto_files=$( find ./proto ./legacy_protos -type f -name '*.proto' -print0 | xargs -0 grep -l 'option go_package.*provenance' )
+proto_files=$( find ./proto -type f -name '*.proto' -print0 | xargs -0 grep -l 'option go_package.*provenance' )
 for file in $proto_files; do
   [ "$VERBOSE" ] && printf 'Generating proto code for %s\n' "$file"
   buf generate --template proto/buf.gen.gogo.yaml "$file"
