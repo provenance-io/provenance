@@ -24,6 +24,7 @@ import (
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	types "github.com/provenance-io/provenance/x/name/types"
 )
 
 type KeeperTestSuite struct {
@@ -659,4 +660,47 @@ func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
+	name := "testing.pb"
+	addr := s.user1Addr
+	restrict := false
+
+	// 1. Store NameRecord and AddrIndex
+	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restrict)
+	s.Require().NoError(err)
+
+	// 2. Get normalized name and keys
+	normalized, err := s.app.NameKeeper.Normalize(s.ctx, name)
+	s.Require().NoError(err)
+
+	nameKey, err := types.GetNameKeyPrefix(normalized)
+	s.Require().NoError(err)
+
+	addrPrefix, err := types.GetAddressKeyPrefix(addr)
+	s.Require().NoError(err)
+
+	addrIndexKey := append(addrPrefix, nameKey...)
+
+	// 3. Fetch NameRecord from NameRecords map
+	recordByName, err := s.app.NameKeeper.NameRecords.Get(s.ctx, nameKey)
+	s.Require().NoError(err)
+	s.Require().NotNil(recordByName)
+
+	// 4. Fetch NameRecord from AddrIndex map
+	recordByAddr, err := s.app.NameKeeper.AddrIndex.Get(s.ctx, addrIndexKey)
+	s.Require().NoError(err)
+	s.Require().NotNil(recordByAddr)
+
+	// 5. Check both are equal
+	s.Require().Equal(recordByName, recordByAddr, "NameRecord and AddrIndex values should be equal")
+
+	// 6. Verify key lengths
+	fmt.Printf("NameKey (NameRecords) length: %d\n", len(nameKey))
+	fmt.Printf("AddrIndexKey (AddrIndex) length: %d\n", len(addrIndexKey))
+
+	// 7. Optionally print hex or binary for visual comparison
+	fmt.Printf("NameKey bytes: %X\n", nameKey)
+	fmt.Printf("AddrIndexKey bytes: %X\n", addrIndexKey)
 }
