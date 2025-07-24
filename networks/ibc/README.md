@@ -81,7 +81,7 @@ sending account `tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd` to our receiving acc
 `tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`.
 
 ```
-./build/provenanced -t --home ./build/ibc0-0/ tx ibc-transfer transfer transfer channel-0 tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y 500nhash --from tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd --gas auto --gas-prices 1905nhash --gas-adjustment 1.5 --chain-id testing --node http://localhost:26657 -y
+./build/provenanced -t --home ./build/ibc0-0/ tx ibc-transfer transfer transfer channel-0 tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y 500nhash --from tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd --gas auto --gas-prices 1nhash --chain-id testing --node http://localhost:26657 -y
 ```
 
 4. Lastly, let's check the balances for the receiving account on container ibc1-0. You should see the 500nhash sent
