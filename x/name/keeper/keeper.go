@@ -2,12 +2,10 @@ package keeper
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"cosmossdk.io/collections"
-	collectioncodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -34,83 +32,6 @@ type Keeper struct {
 	AddrIndex   collections.Map[[]byte, types.NameRecord] // key: 0x05 + addr + name key
 }
 
-// RawBytesKey implements collections.KeyCodec[[]byte] for raw byte slices.
-type RawBytesKey struct {
-	// This explicit assertion will now pass once all methods are implemented.
-	_ collectioncodec.KeyCodec[[]byte]
-}
-
-// Ensure RawBytesKey implements collectioncodec.KeyCodec[[]byte] at compile time.
-var _ collectioncodec.KeyCodec[[]byte] = RawBytesKey{}
-
-// Encode writes the key bytes into the provided buffer.
-// Returns the number of bytes written and an error if any.
-func (r RawBytesKey) Encode(buffer []byte, key []byte) (int, error) {
-	if len(buffer) < len(key) {
-		return 0, fmt.Errorf("buffer too small (%d bytes) for key of size %d", len(buffer), len(key))
-	}
-	n := copy(buffer, key)
-	return n, nil
-}
-
-// Decode reads from the provided bytes buffer to decode the key.
-// Returns the number of bytes read, the decoded key, and an error.
-func (r RawBytesKey) Decode(buffer []byte) (int, []byte, error) {
-	// For raw bytes, the decoded key is simply the buffer itself,
-	// and we consume all of it.
-	return len(buffer), buffer, nil
-}
-
-// Size returns the buffer size needed to encode the key.
-func (r RawBytesKey) Size(key []byte) int {
-	return len(key)
-}
-
-// EncodeJSON encodes the byte slice key into its JSON representation.
-// For raw bytes, it's common to represent them as a JSON string.
-func (r RawBytesKey) EncodeJSON(key []byte) ([]byte, error) {
-	return json.Marshal(string(key))
-}
-
-// DecodeJSON decodes the JSON representation back into a byte slice.
-func (r RawBytesKey) DecodeJSON(b []byte) ([]byte, error) {
-	var s string
-	if err := json.Unmarshal(b, &s); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON into string: %w", err)
-	}
-	return []byte(s), nil
-}
-
-// Stringify returns a human-readable string representation of the key.
-func (r RawBytesKey) Stringify(key []byte) string {
-	return string(key)
-}
-
-// KeyType returns a string identifier for this key type.
-func (r RawBytesKey) KeyType() string {
-	return "rawbytes"
-}
-
-// --- NEWLY REQUIRED METHODS FOR DecodeNonTerminal ERROR ---
-
-// EncodeNonTerminal writes the non-terminal key bytes into the provided buffer.
-// For RawBytesKey, it behaves identically to Encode.
-func (r RawBytesKey) EncodeNonTerminal(buffer []byte, key []byte) (int, error) {
-	return r.Encode(buffer, key)
-}
-
-// DecodeNonTerminal reads from the provided bytes buffer to decode the non-terminal key.
-// For RawBytesKey, it behaves identically to Decode.
-func (r RawBytesKey) DecodeNonTerminal(buffer []byte) (int, []byte, error) {
-	return r.Decode(buffer)
-}
-
-// SizeNonTerminal returns the buffer size needed to encode a non-terminal key.
-// For RawBytesKey, it behaves identically to Size.
-func (r RawBytesKey) SizeNonTerminal(key []byte) int {
-	return r.Size(key)
-}
-
 // NewKeeper returns a name keeper. It handles:
 // - managing a hierarchy of names
 // - enforcing permissions for name creation/deletion
@@ -121,14 +42,14 @@ func NewKeeper(
 	storeService store.KVStoreService,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
-	var rawBytesKeyCodec collectioncodec.KeyCodec[[]byte] = RawBytesKey{}
 	k := Keeper{
 		cdc:         cdc,
 		authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		NameRecords: collections.NewMap(sb, collections.NewPrefix(types.NameKeyPrefix), "names", rawBytesKeyCodec, codec.CollValue[types.NameRecord](cdc)),
-		AddrIndex:   collections.NewMap(sb, collections.NewPrefix(types.AddressKeyPrefix), "addr_index", rawBytesKeyCodec, codec.CollValue[types.NameRecord](cdc)),
+		NameRecords: collections.NewMap(sb, collections.NewPrefix(types.NameKeyPrefix), "names", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
+		AddrIndex:   collections.NewMap(sb, collections.NewPrefix(types.AddressKeyPrefix), "addr_index", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
 		ParamsStore: collections.NewItem(sb, types.NameParamStoreKey, "params", codec.CollValue[types.Params](cdc)),
 	}
+
 	schema, err := sb.Build()
 	if err != nil {
 		panic(fmt.Sprintf("name module schema build failed: %v", err))

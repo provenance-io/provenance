@@ -2,9 +2,11 @@ package types
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -103,4 +105,66 @@ func GetAddressKeySuffix(addr sdk.AccAddress, nameKeySuffix []byte) ([]byte, err
 	key = append(key, address.MustLengthPrefix(addr)...)
 	key = append(key, nameKeySuffix...)
 	return key, nil
+}
+
+type rawBytesKeyCodec struct{}
+
+// RawBytesKey is a codec for []byte keys without any length prefixing or transformation.
+var RawBytesKey codec.KeyCodec[[]byte] = rawBytesKeyCodec{}
+
+// Encode writes the raw bytes to the buffer.
+// It expects the buffer to be at least len(key).
+func (r rawBytesKeyCodec) Encode(buffer []byte, key []byte) (int, error) {
+	if len(buffer) < len(key) {
+		return 0, fmt.Errorf("buffer too small")
+	}
+	copy(buffer, key)
+	return len(key), nil
+}
+
+// Decode reads the full slice as the key.
+func (rawBytesKeyCodec) Decode(buffer []byte) (int, []byte, error) {
+	return len(buffer), buffer, nil
+}
+
+// Size returns the exact size of the key.
+func (rawBytesKeyCodec) Size(key []byte) int {
+	return len(key)
+}
+
+// EncodeJSON encodes key to JSON (just as a base64 or raw array).
+func (rawBytesKeyCodec) EncodeJSON(value []byte) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+// DecodeJSON decodes key from JSON.
+func (rawBytesKeyCodec) DecodeJSON(b []byte) ([]byte, error) {
+	var result []byte
+	err := json.Unmarshal(b, &result)
+	return result, err
+}
+
+// Stringify returns a readable representation of the key.
+func (rawBytesKeyCodec) Stringify(key []byte) string {
+	return string(key)
+}
+
+// KeyType returns the type name for this codec.
+func (rawBytesKeyCodec) KeyType() string {
+	return "rawbytes"
+}
+
+// EncodeNonTerminal is used in composite keys and behaves the same as Encode here.
+func (rawBytesKeyCodec) EncodeNonTerminal(buffer []byte, key []byte) (int, error) {
+	return rawBytesKeyCodec{}.Encode(buffer, key)
+}
+
+// DecodeNonTerminal behaves the same as Decode here.
+func (rawBytesKeyCodec) DecodeNonTerminal(buffer []byte) (int, []byte, error) {
+	return rawBytesKeyCodec{}.Decode(buffer)
+}
+
+// SizeNonTerminal behaves the same as Size.
+func (rawBytesKeyCodec) SizeNonTerminal(key []byte) int {
+	return len(key)
 }
