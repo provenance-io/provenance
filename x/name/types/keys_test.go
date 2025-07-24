@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"testing"
@@ -116,4 +117,57 @@ func mustHexDecode(h string) []byte {
 		panic(err)
 	}
 	return result
+}
+
+func (s *NameKeyTestSuite) TestRawBytesKeyCodec() {
+	tests := []struct {
+		name string
+		key  []byte
+	}{
+		{"empty key", []byte{}},
+		{"single byte", []byte{0x01}},
+		{"short key", []byte("short")},
+		{"20 byte key", bytes.Repeat([]byte{0xAB}, 20)},
+		{"32 byte key", bytes.Repeat([]byte{0xCD}, 32)},
+		{"random key", []byte{0x01, 0x02, 0x03, 0x04, 0x05}},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			buffer := make([]byte, RawBytesKey.Size(tc.key))
+			n, err := RawBytesKey.Encode(buffer, tc.key)
+			s.Require().NoError(err)
+			s.Equal(len(tc.key), n, "encode returned length")
+			s.True(bytes.Equal(tc.key, buffer[:n]), "encoded value should match input")
+
+			// Decode back
+			read, out, err := RawBytesKey.Decode(buffer[:n])
+			s.Require().NoError(err)
+			s.Equal(n, read, "decode should read full encoded length")
+			s.True(bytes.Equal(tc.key, out), "decoded value should match input")
+
+			// EncodeNonTerminal
+			buffer = make([]byte, RawBytesKey.SizeNonTerminal(tc.key))
+			n2, err := RawBytesKey.EncodeNonTerminal(buffer, tc.key)
+			s.Require().NoError(err)
+			s.Equal(n2, len(tc.key), "non-terminal encode length")
+			s.True(bytes.Equal(tc.key, buffer[:n2]), "non-terminal encode matches input")
+
+			read2, out2, err := RawBytesKey.DecodeNonTerminal(buffer[:n2])
+			s.Require().NoError(err)
+			s.Equal(read2, n2, "non-terminal decode read length")
+			s.True(bytes.Equal(tc.key, out2), "non-terminal decode matches input")
+
+			// JSON encode/decode
+			jsonVal, err := RawBytesKey.EncodeJSON(tc.key)
+			s.Require().NoError(err)
+
+			outJSON, err := RawBytesKey.DecodeJSON(jsonVal)
+			s.Require().NoError(err)
+			s.True(bytes.Equal(tc.key, outJSON), "json roundtrip should match")
+
+			// Stringify
+			s.Equal(string(tc.key), RawBytesKey.Stringify(tc.key))
+		})
+	}
 }
