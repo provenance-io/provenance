@@ -10,10 +10,7 @@ import (
 )
 
 var (
-	PubKeyPrefix      = collections.NewPrefix(0)
-	PubKeyTypePrefix  = collections.NewPrefix(1)
-	SequencePrefix    = collections.NewPrefix(2)
-	CredentialsPrefix = collections.NewPrefix(3)
+	PubKeyTypePrefix = collections.NewPrefix(1)
 )
 
 type Option func(a *ProvenanceSmartAccountHandler)
@@ -38,13 +35,10 @@ func NewProvenanceAccountHandler(accountCreationDependencies AccountCreatorDepen
 	// Initialize the SchemaBuilder
 	schemaBuilder := collections.NewSchemaBuilder(accountCreationDependencies.StoreService)
 	acc := &ProvenanceSmartAccountHandler{
-		//PubKey:           collections.NewItem(schemaBuilder, PubKeyPrefix, "pub_key_bytes", collections.BytesValue),
-		PubKeyType: collections.NewItem(schemaBuilder, PubKeyTypePrefix, "pub_key_type", collections.StringValue),
-		//Sequence:         collections.NewSequence(schemaBuilder, SequencePrefix, "sequence"),
+		PubKeyType:       collections.NewItem(schemaBuilder, PubKeyTypePrefix, "pub_key_type", collections.StringValue),
 		AddrCodec:        accountCreationDependencies.AddressCodec,
 		SupportedPubKeys: map[string]pubKeyImpl{},
 		signingHandlers:  handlerMap,
-		//Credentials:      collections.NewMap(schemaBuilder, CredentialsPrefix, "credentials", collections.BytesKey, codec.CollValue[smartaccounttypes.Credential](accountCreationDependencies.Cdc)),
 	}
 
 	// Apply the WithSecp256K1PubKey option directly

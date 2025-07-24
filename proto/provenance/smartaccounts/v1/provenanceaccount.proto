@@ -134,6 +134,7 @@ message Fido2Authenticator {
 message K256Authenticator {}
 
 // Only valid for the duration of the session, public key for now is only k256 based.
+// This is NOT IMPLEMENTED right now, but should be implemented for Session level credentials.
 message SessionAuthenticator {
   /// block height at which it is invalidated
   int64 end_session_height = 1;
