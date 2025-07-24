@@ -10,13 +10,11 @@ import io.provenance.msgfees.v1.QueryGrpcKt.QueryCoroutineStub as CoroutineMsgFe
  *
  * @return A list of [MsgFee]
  */
-fun BlockingMsgFees.getAllMsgFees(): List<MsgFee> =
-    queryAllMsgFees(QueryAllMsgFeesRequest.getDefaultInstance()).msgFeesList
+fun BlockingMsgFees.getAllMsgFees(): List<MsgFee> = queryAllMsgFees(QueryAllMsgFeesRequest.getDefaultInstance()).msgFeesList
 
 /**
  * Get a coin balance in the account at the supplied address.
  *
  * @return A list of [MsgFee]
  */
-suspend fun CoroutineMsgFees.getAllMsgFees(): List<MsgFee> =
-    queryAllMsgFees(QueryAllMsgFeesRequest.getDefaultInstance()).msgFeesList
+suspend fun CoroutineMsgFees.getAllMsgFees(): List<MsgFee> = queryAllMsgFees(QueryAllMsgFeesRequest.getDefaultInstance()).msgFeesList

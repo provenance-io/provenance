@@ -14,8 +14,7 @@ import io.provenance.name.v1.QueryGrpcKt.QueryCoroutineStub as CoroutineNames
  * @param name The name to look up.
  * @return The bech32 address of the name.
  */
-fun BlockingNames.resolveAddressForName(name: String): String =
-    resolve(QueryResolveRequest.newBuilder().setName(name).build()).address
+fun BlockingNames.resolveAddressForName(name: String): String = resolve(QueryResolveRequest.newBuilder().setName(name).build()).address
 
 /**
  * Resolve a name to an address.
@@ -45,10 +44,11 @@ fun BlockingNames.getAllNames(address: String): List<String> {
     do {
         val results =
             reverseLookup(
-                QueryReverseLookupRequest.newBuilder()
+                QueryReverseLookupRequest
+                    .newBuilder()
                     .setAddress(address)
                     .setPagination(paginationBuilder(offset, limit))
-                    .build()
+                    .build(),
             )
         total = results.pagination?.total ?: results.nameCount.toLong()
         offset += limit
@@ -75,10 +75,11 @@ suspend fun CoroutineNames.getAllNames(address: String): List<String> {
     do {
         val results =
             reverseLookup(
-                QueryReverseLookupRequest.newBuilder()
+                QueryReverseLookupRequest
+                    .newBuilder()
                     .setAddress(address)
                     .setPagination(paginationBuilder(offset, limit))
-                    .build()
+                    .build(),
             )
         total = results.pagination?.total ?: results.nameCount.toLong()
         offset += limit

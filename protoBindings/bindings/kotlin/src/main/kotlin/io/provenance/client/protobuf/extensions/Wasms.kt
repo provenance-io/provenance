@@ -23,8 +23,9 @@ fun BlockingWasms.queryWasm(request: QueryOuterClass.QuerySmartContractStateRequ
  *  @param request
  *  @return [QueryOuterClass.QuerySmartContractStateResponse].
  */
-suspend fun CoroutineWasms.queryWasm(request: QueryOuterClass.QuerySmartContractStateRequest): QueryOuterClass.QuerySmartContractStateResponse =
-    smartContractState(request)
+suspend fun CoroutineWasms.queryWasm(
+    request: QueryOuterClass.QuerySmartContractStateRequest,
+): QueryOuterClass.QuerySmartContractStateResponse = smartContractState(request)
 
 /**
  * Get contract information.
@@ -67,8 +68,9 @@ fun BlockingWasms.getContractHistory(request: QueryOuterClass.QueryContractHisto
  * @param request
  * @return [QueryOuterClass.QueryContractHistoryResponse].
  */
-suspend fun CoroutineWasms.getContractHistory(request: QueryOuterClass.QueryContractHistoryRequest): QueryOuterClass.QueryContractHistoryResponse =
-    contractHistory(request)
+suspend fun CoroutineWasms.getContractHistory(
+    request: QueryOuterClass.QueryContractHistoryRequest,
+): QueryOuterClass.QueryContractHistoryResponse = contractHistory(request)
 
 /**
  * Get contracts by code.
@@ -89,8 +91,9 @@ fun BlockingWasms.getContractsByCode(request: QueryOuterClass.QueryContractsByCo
  * @param request
  * @Return [QueryOuterClass.QueryContractsByCodeResponse].
  */
-suspend fun CoroutineWasms.getContractsByCode(request: QueryOuterClass.QueryContractsByCodeRequest): QueryOuterClass.QueryContractsByCodeResponse =
-    contractsByCode(request)
+suspend fun CoroutineWasms.getContractsByCode(
+    request: QueryOuterClass.QueryContractsByCodeRequest,
+): QueryOuterClass.QueryContractsByCodeResponse = contractsByCode(request)
 
 /**
  * Get code.
