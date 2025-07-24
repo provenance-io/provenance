@@ -396,14 +396,12 @@
     - [MsgDeleteAccountResponse](#provenance-smartaccounts-v1-MsgDeleteAccountResponse)
     - [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential)
     - [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse)
-    - [MsgMigrateToSmartAccountAuthentication](#provenance-smartaccounts-v1-MsgMigrateToSmartAccountAuthentication)
     - [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential)
     - [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse)
     - [MsgRegisterFido2Credential](#provenance-smartaccounts-v1-MsgRegisterFido2Credential)
     - [MsgRegisterFido2CredentialResponse](#provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse)
     - [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams)
     - [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse)
-    - [MsgUpdateToSmartAccountAuthenticationOnlyResponse](#provenance-smartaccounts-v1-MsgUpdateToSmartAccountAuthenticationOnlyResponse)
   
     - [Msg](#provenance-smartaccounts-v1-Msg)
   
@@ -427,10 +425,10 @@
     - [CredentialType](#provenance-smartaccounts-v1-CredentialType)
   
 - [provenance/smartaccounts/v1/query.proto](#provenance_smartaccounts_v1_query-proto)
-    - [AccountQueryRequest](#provenance-smartaccounts-v1-AccountQueryRequest)
     - [QueryParamsRequest](#provenance-smartaccounts-v1-QueryParamsRequest)
     - [QueryParamsResponse](#provenance-smartaccounts-v1-QueryParamsResponse)
-    - [QuerySmartAccountResponse](#provenance-smartaccounts-v1-QuerySmartAccountResponse)
+    - [SmartAccountQueryRequest](#provenance-smartaccounts-v1-SmartAccountQueryRequest)
+    - [SmartAccountResponse](#provenance-smartaccounts-v1-SmartAccountResponse)
   
     - [Query](#provenance-smartaccounts-v1-Query)
   
@@ -6277,21 +6275,6 @@ MsgDeleteCredentialResponse defines the response structure for executing a
 
 
 
-<a name="provenance-smartaccounts-v1-MsgMigrateToSmartAccountAuthentication"></a>
-
-### MsgMigrateToSmartAccountAuthentication
-Moves to smart contract authentication only.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
-
-
-
-
-
-
 <a name="provenance-smartaccounts-v1-MsgRegisterCosmosCredential"></a>
 
 ### MsgRegisterCosmosCredential
@@ -6387,16 +6370,6 @@ Since: cosmos-sdk 0.47
 
 
 
-
-<a name="provenance-smartaccounts-v1-MsgUpdateToSmartAccountAuthenticationOnlyResponse"></a>
-
-### MsgUpdateToSmartAccountAuthenticationOnlyResponse
-MsgUpdateToSmartAccountAuthenticationOnlyResponse defines the response structure for executing a
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6411,10 +6384,9 @@ Msg defines the Msg service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `UpdateParams` | [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams) | [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse) | UpdateParams defines a governance operation for updating the parameters.<br>Since: cosmos-sdk 0.47 |
+| `UpdateParams` | [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams) | [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse) | UpdateParams defines a governance operation for updating the parameters for smart account module only. |
 | `RegisterFido2Credential` | [MsgRegisterFido2Credential](#provenance-smartaccounts-v1-MsgRegisterFido2Credential) | [MsgRegisterFido2CredentialResponse](#provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse) | RegisterFido2Credential defines a method for registering a Fido2 credential. |
-| `UpdateToSmartAccountAuthenticationOnly` | [MsgMigrateToSmartAccountAuthentication](#provenance-smartaccounts-v1-MsgMigrateToSmartAccountAuthentication) | [MsgUpdateToSmartAccountAuthenticationOnlyResponse](#provenance-smartaccounts-v1-MsgUpdateToSmartAccountAuthenticationOnlyResponse) | UpdateToSmartAccountAuthenticationOnly defines a method for updating to smart account authentication only. |
-| `RegisterCosmosCredential` | [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential) | [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse) | RegisterCosmosCredential defines a method for registering a Cosmos credential. |
+| `RegisterCosmosCredential` | [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential) | [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse) | UpdateToSmartAccountAuthenticationOnly defines a method for updating to smart account authentication only. RegisterCosmosCredential defines a method for registering a Cosmos credential. |
 | `DeleteCredential` | [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential) | [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse) | DeleteCredential defines a method for deleting a credential. |
 
  <!-- end services -->
@@ -6646,6 +6618,7 @@ ProvenanceAccount is a Type Of Smart Account assumes presence of a BaseAccount.
 
 ### SessionAuthenticator
 Only valid for the duration of the session, public key for now is only k256 based.
+This is NOT IMPLEMENTED right now, but should be implemented for Session level credentials.
 
 
 | Field | Type | Label | Description |
@@ -6690,21 +6663,6 @@ Enum for credential type
 
 
 
-<a name="provenance-smartaccounts-v1-AccountQueryRequest"></a>
-
-### AccountQueryRequest
-AccountQueryPubKeyRequest is the request type for the Query/AccountQuery RPC
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address defines the account to be queried. this is the base account address. |
-
-
-
-
-
-
 <a name="provenance-smartaccounts-v1-QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -6730,10 +6688,25 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 
 
-<a name="provenance-smartaccounts-v1-QuerySmartAccountResponse"></a>
+<a name="provenance-smartaccounts-v1-SmartAccountQueryRequest"></a>
 
-### QuerySmartAccountResponse
-AccountQueryResponse is the response type for the Query/AccountQuery RPC
+### SmartAccountQueryRequest
+SmartAccountQueryRequest is the request type for the Query/AccountQuery RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the account to be queried. this is the base account address. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-SmartAccountResponse"></a>
+
+### SmartAccountResponse
+SmartAccountQueryResponse is the response type for the Query/AccountQuery RPC
 
 
 | Field | Type | Label | Description |
@@ -6758,7 +6731,7 @@ Query defines the Query service for the x/accounts module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `SmartAccount` | [AccountQueryRequest](#provenance-smartaccounts-v1-AccountQueryRequest) | [QuerySmartAccountResponse](#provenance-smartaccounts-v1-QuerySmartAccountResponse) | AccountQuery runs a query to retrieve the state object of a smart account. |
+| `SmartAccount` | [SmartAccountQueryRequest](#provenance-smartaccounts-v1-SmartAccountQueryRequest) | [SmartAccountResponse](#provenance-smartaccounts-v1-SmartAccountResponse) | SmartAccountQuery runs a query to retrieve the state object of a smart account. |
 | `Params` | [QueryParamsRequest](#provenance-smartaccounts-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-smartaccounts-v1-QueryParamsResponse) | Params queries all parameters of the module. |
 
  <!-- end services -->

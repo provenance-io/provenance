@@ -550,6 +550,7 @@ func (m *K256Authenticator) XXX_DiscardUnknown() {
 var xxx_messageInfo_K256Authenticator proto.InternalMessageInfo
 
 // Only valid for the duration of the session, public key for now is only k256 based.
+// This is NOT IMPLEMENTED right now, but should be implemented for Session level credentials.
 type SessionAuthenticator struct {
 	// / block height at which it is invalidated
 	EndSessionHeight int64 `protobuf:"varint,1,opt,name=end_session_height,json=endSessionHeight,proto3" json:"end_session_height,omitempty"`
