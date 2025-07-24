@@ -381,6 +381,14 @@ func removeCredentialByNumber(credentials []*types.Credential, credNumber uint64
 	return result, deletedCredential
 }
 
+func (k Keeper) IsSmartAccountsEnabled(ctx context.Context) (bool, error) {
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return false, err
+	}
+	return params.Enabled, nil
+}
+
 func nameFromTypeURL(url string) string {
 	name := url
 	if i := strings.LastIndexByte(url, '/'); i >= 0 {

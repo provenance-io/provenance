@@ -155,7 +155,7 @@ func (svd ProvenanceSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk
 			}
 
 			// Standard verification failed. Check if smart account verification should be attempted.
-			shouldAttemptSmartAccountVerification := ShouldSkipSmartAccountVerification(tx.GetMsgs())
+			shouldAttemptSmartAccountVerification := svd.ShouldSkipSmartAccountVerification(ctx, tx.GetMsgs())
 
 			if shouldAttemptSmartAccountVerification {
 				// verifySmartAccountSignature will return the original error if it's not a smart account,
@@ -186,7 +186,12 @@ func (svd ProvenanceSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk
 // ShouldSkipSmartAccountVerification checks if the transaction contains messages which should skip smart account verification.
 // returns true if all messages are allowed to be authenticated by a smart account.
 // returns false if any message is not allowed to be authenticated by a smart account.
-func ShouldSkipSmartAccountVerification(msgs []sdk.Msg) (shouldSkipSmartAccountVerification bool) {
+func (svd ProvenanceSigVerificationDecorator) ShouldSkipSmartAccountVerification(ctx sdk.Context, msgs []sdk.Msg) (shouldSkipSmartAccountVerification bool) {
+	enabled, err := svd.smartaccountkeeper.IsSmartAccountsEnabled(ctx)
+	if err != nil || !enabled {
+		return false
+	}
+
 	for _, msg := range msgs {
 		switch msg.(type) {
 		case

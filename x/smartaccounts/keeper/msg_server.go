@@ -38,6 +38,10 @@ func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRegisterFido2Credential) (*types.MsgRegisterFido2CredentialResponse, error) {
+	if enabled, err := m.keeper.IsSmartAccountsEnabled(ctx); err != nil || !enabled {
+		return nil, types.ErrSmartAccountsNotEnabled
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	k := m.keeper
 	ak := k.AccountKeeper
@@ -258,6 +262,10 @@ func ParseAndValidateAttestation(msg *types.MsgRegisterFido2Credential) (*protoc
 }
 
 func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgRegisterCosmosCredential) (*types.MsgRegisterCosmosCredentialResponse, error) {
+	if enabled, err := m.keeper.IsSmartAccountsEnabled(ctx); err != nil || !enabled {
+		return nil, types.ErrSmartAccountsNotEnabled
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Convert the sender address string to AccAddress
 	addr, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -352,6 +360,10 @@ func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgR
 }
 
 func (m MsgServer) DeleteCredential(ctx context.Context, deleteCredential *types.MsgDeleteCredential) (*types.MsgDeleteCredentialResponse, error) {
+	if enabled, err := m.keeper.IsSmartAccountsEnabled(ctx); err != nil || !enabled {
+		return nil, types.ErrSmartAccountsNotEnabled
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	invoker, err := m.keeper.addressCodec.StringToBytes(deleteCredential.Sender)
 	if err != nil {
