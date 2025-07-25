@@ -581,7 +581,7 @@ func New(
 	hooksTransferModule := ibchooks.NewIBCMiddleware(app.RateLimitMiddleware, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
-	app.NameKeeper = namekeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[nametypes.StoreKey]))
+	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey], runtime.NewKVStoreService(keys[nametypes.StoreKey]))
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.AccountKeeper, &app.NameKeeper,

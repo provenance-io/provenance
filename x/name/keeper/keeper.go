@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,7 +20,8 @@ import (
 
 // Keeper defines the name module Keeper
 type Keeper struct {
-
+	// Key to access the key-value store from sdk.Context.
+	storeKey storetypes.StoreKey
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
@@ -39,17 +41,18 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec,
+	key storetypes.StoreKey,
 	storeService store.KVStoreService,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
 		cdc:         cdc,
+		storeKey:    key,
 		authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		NameRecords: collections.NewMap(sb, collections.NewPrefix(types.NameKeyPrefix), "names", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
 		AddrIndex:   collections.NewMap(sb, collections.NewPrefix(types.AddressKeyPrefix), "addr_index", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
 		ParamsStore: collections.NewItem(sb, types.NameParamStoreKey, "params", codec.CollValue[types.Params](cdc)),
 	}
-
 	schema, err := sb.Build()
 	if err != nil {
 		panic(fmt.Sprintf("name module schema build failed: %v", err))
@@ -225,16 +228,16 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 	return &namerecord, nil
 }
 
-// func getNameRecord(ctx sdk.Context, keeper Keeper, key []byte) (record *types.NameRecord, err error) {
-// 	store := ctx.KVStore(keeper.storeKey)
-// 	if !store.Has(key) {
-// 		return nil, types.ErrNameNotBound
-// 	}
-// 	bz := store.Get(key)
-// 	record = &types.NameRecord{}
-// 	err = keeper.cdc.Unmarshal(bz, record)
-// 	return record, err
-// }
+func getNameRecord(ctx sdk.Context, keeper Keeper, key []byte) (record *types.NameRecord, err error) {
+	store := ctx.KVStore(keeper.storeKey)
+	if !store.Has(key) {
+		return nil, types.ErrNameNotBound
+	}
+	bz := store.Get(key)
+	record = &types.NameRecord{}
+	err = keeper.cdc.Unmarshal(bz, record)
+	return record, err
+}
 
 // NameExists returns true if store contains a record for the given name.
 func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
