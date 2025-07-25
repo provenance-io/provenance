@@ -68,7 +68,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (s *IntegrationGRPCTestSuite) SetupSuite() {
-	pioconfig.SetProvenanceConfig("atom", 0)
+	pioconfig.SetProvConfig("atom")
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("accountKey"))
 	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)

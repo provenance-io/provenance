@@ -4,6 +4,9 @@
 
 ## Table of Contents
 
+- [cosmwasm/wasm/v1beta1/msg_execute_contract.proto](#cosmwasm_wasm_v1beta1_msg_execute_contract-proto)
+    - [MsgExecuteContract](#cosmwasm-wasm-v1beta1-MsgExecuteContract)
+  
 - [cosmos/quarantine/v1beta1/tx.proto](#cosmos_quarantine_v1beta1_tx-proto)
     - [MsgAccept](#cosmos-quarantine-v1beta1-MsgAccept)
     - [MsgAcceptResponse](#cosmos-quarantine-v1beta1-MsgAcceptResponse)
@@ -125,6 +128,8 @@
     - [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse)
+    - [MsgMarketTransferCommitmentRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentRequest)
+    - [MsgMarketTransferCommitmentResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentResponse)
     - [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsRequest)
     - [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsResponse)
     - [MsgMarketUpdateAcceptingOrdersRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingOrdersRequest)
@@ -480,26 +485,11 @@
     - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest)
     - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse)
   
-    - [Msg](#provenance-msgfees-v1-Msg)
-  
 - [provenance/msgfees/v1/query.proto](#provenance_msgfees_v1_query-proto)
     - [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest)
     - [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse)
-    - [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest)
-    - [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse)
-    - [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest)
-    - [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse)
   
     - [Query](#provenance-msgfees-v1-Query)
-  
-- [provenance/msgfees/v1/genesis.proto](#provenance_msgfees_v1_genesis-proto)
-    - [GenesisState](#provenance-msgfees-v1-GenesisState)
-  
-- [provenance/msgfees/v1/msgfees.proto](#provenance_msgfees_v1_msgfees-proto)
-    - [EventMsgFee](#provenance-msgfees-v1-EventMsgFee)
-    - [EventMsgFees](#provenance-msgfees-v1-EventMsgFees)
-    - [MsgFee](#provenance-msgfees-v1-MsgFee)
-    - [Params](#provenance-msgfees-v1-Params)
   
 - [provenance/msgfees/v1/proposals.proto](#provenance_msgfees_v1_proposals-proto)
     - [AddMsgFeeProposal](#provenance-msgfees-v1-AddMsgFeeProposal)
@@ -507,6 +497,36 @@
     - [UpdateConversionFeeDenomProposal](#provenance-msgfees-v1-UpdateConversionFeeDenomProposal)
     - [UpdateMsgFeeProposal](#provenance-msgfees-v1-UpdateMsgFeeProposal)
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
+  
+- [provenance/flatfees/v1/tx.proto](#provenance_flatfees_v1_tx-proto)
+    - [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest)
+    - [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse)
+    - [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest)
+    - [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse)
+    - [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest)
+    - [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse)
+  
+    - [Msg](#provenance-flatfees-v1-Msg)
+  
+- [provenance/flatfees/v1/flatfees.proto](#provenance_flatfees_v1_flatfees-proto)
+    - [ConversionFactor](#provenance-flatfees-v1-ConversionFactor)
+    - [MsgFee](#provenance-flatfees-v1-MsgFee)
+    - [Params](#provenance-flatfees-v1-Params)
+  
+- [provenance/flatfees/v1/query.proto](#provenance_flatfees_v1_query-proto)
+    - [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest)
+    - [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse)
+    - [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest)
+    - [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse)
+    - [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest)
+    - [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse)
+    - [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest)
+    - [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse)
+  
+    - [Query](#provenance-flatfees-v1-Query)
+  
+- [provenance/flatfees/v1/genesis.proto](#provenance_flatfees_v1_genesis-proto)
+    - [GenesisState](#provenance-flatfees-v1-GenesisState)
   
 - [provenance/oracle/v1/tx.proto](#provenance_oracle_v1_tx-proto)
     - [MsgSendQueryOracleRequest](#provenance-oracle-v1-MsgSendQueryOracleRequest)
@@ -641,6 +661,8 @@
     - [MsgMintResponse](#provenance-marker-v1-MsgMintResponse)
     - [MsgRemoveAdministratorProposalRequest](#provenance-marker-v1-MsgRemoveAdministratorProposalRequest)
     - [MsgRemoveAdministratorProposalResponse](#provenance-marker-v1-MsgRemoveAdministratorProposalResponse)
+    - [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest)
+    - [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse)
     - [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest)
     - [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse)
     - [MsgSetAdministratorProposalRequest](#provenance-marker-v1-MsgSetAdministratorProposalRequest)
@@ -729,6 +751,7 @@
   
 - [provenance/marker/v1/authz.proto](#provenance_marker_v1_authz-proto)
     - [MarkerTransferAuthorization](#provenance-marker-v1-MarkerTransferAuthorization)
+    - [MultiAuthorization](#provenance-marker-v1-MultiAuthorization)
   
 - [provenance/marker/v1/genesis.proto](#provenance_marker_v1_genesis-proto)
     - [DenySendAddress](#provenance-marker-v1-DenySendAddress)
@@ -991,9 +1014,16 @@
     - [GenesisState](#provenance-metadata-v1-GenesisState)
     - [MarkerNetAssetValues](#provenance-metadata-v1-MarkerNetAssetValues)
   
+- [provenance/hold/v1/tx.proto](#provenance_hold_v1_tx-proto)
+    - [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest)
+    - [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse)
+  
+    - [Msg](#provenance-hold-v1-Msg)
+  
 - [provenance/hold/v1/events.proto](#provenance_hold_v1_events-proto)
     - [EventHoldAdded](#provenance-hold-v1-EventHoldAdded)
     - [EventHoldReleased](#provenance-hold-v1-EventHoldReleased)
+    - [EventVestingAccountUnlocked](#provenance-hold-v1-EventVestingAccountUnlocked)
   
 - [provenance/hold/v1/hold.proto](#provenance_hold_v1_hold-proto)
     - [AccountHold](#provenance-hold-v1-AccountHold)
@@ -1010,6 +1040,40 @@
     - [GenesisState](#provenance-hold-v1-GenesisState)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="cosmwasm_wasm_v1beta1_msg_execute_contract-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmwasm/wasm/v1beta1/msg_execute_contract.proto
+
+
+
+<a name="cosmwasm-wasm-v1beta1-MsgExecuteContract"></a>
+
+### MsgExecuteContract
+MsgExecuteContract defines a message to execute a smart contract.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `contract` | [string](#string) |  |  |
+| `msg` | [bytes](#bytes) |  |  |
+| `funds` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 
@@ -2552,6 +2616,36 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 
 
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentRequest"></a>
+
+### MsgMarketTransferCommitmentRequest
+MsgMarketTransferCommitmentRequest is a request message for the MarketTransferCommitment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this transfer. |
+| `account` | [string](#string) |  | account is the Bech32 address string of the account receiving the transferred funds. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | amount to transfer. |
+| `current_market_id` | [uint32](#uint32) |  | current_market_id is the numerical identifier of the market where the funds are currently committed and are being released from. |
+| `new_market_id` | [uint32](#uint32) |  | new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentResponse"></a>
+
+### MsgMarketTransferCommitmentResponse
+MsgMarketTransferCommitmentResponse is a response message for the MarketTransferCommitment endpoint.
+
+
+
+
+
+
 <a name="provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsRequest"></a>
 
 ### MsgMarketUpdateAcceptingCommitmentsRequest
@@ -2845,6 +2939,7 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketSettle` | [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. |
 | `MarketCommitmentSettle` | [MsgMarketCommitmentSettleRequest](#provenance-exchange-v1-MsgMarketCommitmentSettleRequest) | [MsgMarketCommitmentSettleResponse](#provenance-exchange-v1-MsgMarketCommitmentSettleResponse) | MarketCommitmentSettle is a market endpoint to transfer committed funds. |
 | `MarketReleaseCommitments` | [MsgMarketReleaseCommitmentsRequest](#provenance-exchange-v1-MsgMarketReleaseCommitmentsRequest) | [MsgMarketReleaseCommitmentsResponse](#provenance-exchange-v1-MsgMarketReleaseCommitmentsResponse) | MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s). |
+| `MarketTransferCommitment` | [MsgMarketTransferCommitmentRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentRequest) | [MsgMarketTransferCommitmentResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentResponse) | MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another. |
 | `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance-exchange-v1-MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance-exchange-v1-MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance-exchange-v1-MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance-exchange-v1-MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance-exchange-v1-MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. |
@@ -3681,6 +3776,7 @@ QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitm
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `account` | [string](#string) |  | account is the bech32 address string of the account with the commitments. |
+| `denom` | [string](#string) |  | denom is an optional denom that, if provided, limits the results to just that denom. |
 
 
 
@@ -4381,7 +4477,7 @@ Query is the service for exchange module's query endpoints.
 | `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance-exchange-v1-QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance-exchange-v1-QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. |
 | `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance-exchange-v1-QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance-exchange-v1-QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. |
 | `GetCommitment` | [QueryGetCommitmentRequest](#provenance-exchange-v1-QueryGetCommitmentRequest) | [QueryGetCommitmentResponse](#provenance-exchange-v1-QueryGetCommitmentResponse) | GetCommitment gets the funds in an account that are committed to the market. |
-| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. |
+| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. Optionally, you can filter the results for a specific denomination using the `denom` query parameter. |
 | `GetMarketCommitments` | [QueryGetMarketCommitmentsRequest](#provenance-exchange-v1-QueryGetMarketCommitmentsRequest) | [QueryGetMarketCommitmentsResponse](#provenance-exchange-v1-QueryGetMarketCommitmentsResponse) | GetMarketCommitments gets all the funds committed to a market from any account. |
 | `GetAllCommitments` | [QueryGetAllCommitmentsRequest](#provenance-exchange-v1-QueryGetAllCommitmentsRequest) | [QueryGetAllCommitmentsResponse](#provenance-exchange-v1-QueryGetAllCommitmentsResponse) | GetAllCommitments gets all fund committed to any market from any account. |
 | `GetMarket` | [QueryGetMarketRequest](#provenance-exchange-v1-QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance-exchange-v1-QueryGetMarketResponse) | GetMarket returns all the information and details about a market. |
@@ -6070,12 +6166,13 @@ EventTriggerExecuted is an event for when a trigger is executed.
 
 ### GasLimit
 GasLimit defines the trigger module's grouping of a trigger and a gas limit
+Deprecated: The GasLimit type is no longer used since we use flat fees.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. |
-| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
+| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. Deprecated: The GasLimit type is no longer used since we use flat fees. |
+| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. Deprecated: The GasLimit type is no longer used since we use flat fees. |
 
 
 
@@ -6093,7 +6190,7 @@ GenesisState defines the trigger module's genesis state.
 | `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
 | `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
 | `triggers` | [Trigger](#provenance-trigger-v1-Trigger) | repeated | Triggers to initially start with. |
-| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. |
+| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. Deprecated: We no longer need to keep track of gas limits since we use flat fees. |
 | `queued_triggers` | [QueuedTrigger](#provenance-trigger-v1-QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
 
 
@@ -6245,6 +6342,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -6390,6 +6488,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `update_attribute_type` | [AttributeType](#provenance-attribute-v1-AttributeType) |  | The update attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -6477,6 +6576,7 @@ Attribute holds a typed key/value structure for data associated with an account
 | `attribute_type` | [AttributeType](#provenance-attribute-v1-AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -7315,6 +7415,9 @@ Asset defines the asset.
 
 ### MsgAddMsgFeeProposalRequest
 AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7344,6 +7447,9 @@ MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
 
 ### MsgAssessCustomMsgFeeRequest
 MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7373,6 +7479,9 @@ MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 ### MsgRemoveMsgFeeProposalRequest
 RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7399,6 +7508,9 @@ MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateConversionFeeDenomProposalRequest
 UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7425,6 +7537,9 @@ MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeD
 
 ### MsgUpdateMsgFeeProposalRequest
 UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7454,6 +7569,9 @@ MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateNhashPerUsdMilProposalRequest
 UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7481,21 +7599,6 @@ MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProp
 
  <!-- end HasExtensions -->
 
-
-<a name="provenance-msgfees-v1-Msg"></a>
-
-### Msg
-Msg defines the msgfees Msg service.
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance-msgfees-v1-MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance-msgfees-v1-MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts |
-| `AddMsgFeeProposal` | [MsgAddMsgFeeProposalRequest](#provenance-msgfees-v1-MsgAddMsgFeeProposalRequest) | [MsgAddMsgFeeProposalResponse](#provenance-msgfees-v1-MsgAddMsgFeeProposalResponse) | AddMsgFeeProposal defines a governance proposal to add additional msg based fee |
-| `UpdateMsgFeeProposal` | [MsgUpdateMsgFeeProposalRequest](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalRequest) | [MsgUpdateMsgFeeProposalResponse](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalResponse) | UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee |
-| `RemoveMsgFeeProposal` | [MsgRemoveMsgFeeProposalRequest](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalRequest) | [MsgRemoveMsgFeeProposalResponse](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalResponse) | RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee |
-| `UpdateNhashPerUsdMilProposal` | [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest) | [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse) | UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param |
-| `UpdateConversionFeeDenomProposal` | [MsgUpdateConversionFeeDenomProposalRequest](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalRequest) | [MsgUpdateConversionFeeDenomProposalResponse](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalResponse) | UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom |
-
  <!-- end services -->
 
 
@@ -7511,13 +7614,15 @@ Msg defines the msgfees Msg service.
 
 ### CalculateTxFeesRequest
 CalculateTxFeesRequest is the request type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
-| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
-| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
+| `default_base_denom` | [string](#string) |  | default_base_denom used to be the denom used for gas fees. Deprecated: This field is now ignored. The fees will be in the appropriate denomination(s) automatically. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation. This only affects the returned gas (since the fee is flat). |
 
 
 
@@ -7528,69 +7633,15 @@ CalculateTxFeesRequest is the request type for the Query RPC method.
 
 ### CalculateTxFeesResponse
 CalculateTxFeesResponse is the response type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees |
+| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees Deprecated: This field will always be empty |
 | `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg fees + gas fee) note: the gas fee is calculated with the floor gas price module param. |
 | `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesRequest"></a>
-
-### QueryAllMsgFeesRequest
-QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesResponse"></a>
-
-### QueryAllMsgFeesResponse
-response for querying all msg's with fees associated with them
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines the parameters of the module. |
 
 
 
@@ -7606,129 +7657,11 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 <a name="provenance-msgfees-v1-Query"></a>
 
 ### Query
-Query defines the gRPC querier service for marker module.
+Query defines the gRPC querier service for msgfees module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `Params` | [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse) | Params queries the parameters for x/msgfees |
-| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. |
-| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. |
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_genesis-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/genesis.proto
-
-
-
-<a name="provenance-msgfees-v1-GenesisState"></a>
-
-### GenesisState
-GenesisState contains a set of msg fees, persisted from the store
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines all the parameters of the module. |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_msgfees-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/msgfees.proto
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFee"></a>
-
-### EventMsgFee
-EventMsgFee final event property for msg fee on type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type` | [string](#string) |  |  |
-| `count` | [string](#string) |  |  |
-| `total` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFees"></a>
-
-### EventMsgFees
-EventMsgFees event emitted with summary of msg fees
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [EventMsgFee](#provenance-msgfees-v1-EventMsgFee) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-MsgFee"></a>
-
-### MsgFee
-MsgFee is the core of what gets stored on the blockchain to define a msg-based fee.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message with the added fee, e.g. "/cosmos.bank.v1beta1.MsgSend". |
-| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional_fee is the extra fee that is required for the given message type (can be in any denom). |
-| `recipient` | [string](#string) |  | recipient is an option address that will receive a portion of the additional fee. There can only be a recipient if the recipient_basis_points is not zero. |
-| `recipient_basis_points` | [uint32](#uint32) |  | recipient_basis_points is an optional portion of the additional fee to be sent to the recipient. Must be between 0 and 10,000 (inclusive).<br>If there is a recipient, this must not be zero. If there is not a recipient, this must be zero.<br>The recipient will receive additional_fee * recipient_basis_points / 10,000. The fee collector will receive the rest, i.e. additional_fee * (10,000 - recipient_basis_points) / 10,000. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-Params"></a>
-
-### Params
-Params defines the set of params for the msgfees module.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.<br>Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil<br>Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
-| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
+| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module. This query endpoint will be removed in a future release. |
 
  <!-- end services -->
 
@@ -7841,6 +7774,361 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 | `title` | [string](#string) |  | proposal title |
 | `description` | [string](#string) |  | proposal description |
 | `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/tx.proto
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorRequest"></a>
+
+### MsgUpdateConversionFactorRequest
+MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the new conversion factor that should be used. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorResponse"></a>
+
+### MsgUpdateConversionFactorResponse
+MsgUpdateConversionFactorResponse is the response for the UpdateConversionFactor governance endpoint.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesRequest"></a>
+
+### MsgUpdateMsgFeesRequest
+MsgUpdateMsgFeesRequest is the request for the UpdateMsgFees governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `to_set` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | to_set is the list of msg fees to create and/or update. |
+| `to_unset` | [string](#string) | repeated | to_unset is the list of msg-type-urls that should have their msg fee entries deleted (they'll go back to using the default cost). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesResponse"></a>
+
+### MsgUpdateMsgFeesResponse
+MsgUpdateMsgFeesResponse is the response for the UpdateMsgFees governance endpoint.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateParamsRequest"></a>
+
+### MsgUpdateParamsRequest
+MsgUpdateParamsRequest is the request for the UpdateParams governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params are the new param values to set. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateParamsResponse"></a>
+
+### MsgUpdateParamsResponse
+MsgUpdateParamsResponse is the response for the UpdateParams governance endpoint.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-flatfees-v1-Msg"></a>
+
+### Msg
+Msg defines the flatfees Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UpdateParams` | [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse) | UpdateParams is a governance endpoint for updating the x/flatfees params. |
+| `UpdateConversionFactor` | [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest) | [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse) | UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params. |
+| `UpdateMsgFees` | [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest) | [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse) | UpdateMsgFees is a governance endpoint for updating fees for specific msgs. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_flatfees-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/flatfees.proto
+
+
+
+<a name="provenance-flatfees-v1-ConversionFactor"></a>
+
+### ConversionFactor
+ConversionFactor equates the values of two coins in different denominations.
+It is used to determine how much of the fee denomination is due.
+actual cost = defined cost * converted_amount / definition_amount (truncated to an integer).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount. This cannot have an amount of zero. If this has the same denomination as the converted_amount, then the amounts must also be equal. The denom of this field should be the same as the default cost, e.g. musd. |
+| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denomination equal to the definition_amount. If this is zero, all msgs will be free. If this has the same denomination as the definition_amount, then the amounts must also be equal. The denom of this field should be the fee denom, e.g. nhash. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgFee"></a>
+
+### MsgFee
+MsgFee defines the cost to use a specific message type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. It should have the same denomination as the default cost and as the conversion factor's definition_amount, e.g. musdc. Any other denomination will be charged as defined. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-Params"></a>
+
+### Params
+Params defines the set of params for the flatfees module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. The denom used here should be the same as used to define the specific msg costs. The recommended denom is musd. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. The definition_amount should have the same denom as the default cost. The denom of the converted amount should be the denom that fees are paid in, e.g. nhash. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/query.proto
+
+
+
+<a name="provenance-flatfees-v1-QueryAllMsgFeesRequest"></a>
+
+### QueryAllMsgFeesRequest
+QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the request. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryAllMsgFeesResponse"></a>
+
+### QueryAllMsgFeesResponse
+QueryAllMsgFeesResponse is the response type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees contains the requested information. |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination parameters of the response. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesRequest"></a>
+
+### QueryCalculateTxFeesRequest
+QueryCalculateTxFeesRequest is the request type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is a multiplier applied to the gas used while simulating the tx. This only affects the estimated gas (since the fee is flat). The default is 1.0. Valid range is 0.0 (exclusive) to 10.0 (inclusive). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesResponse"></a>
+
+### QueryCalculateTxFeesResponse
+QueryCalculateTxFeesResponse is the response type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees is the amount of fees needed for the Tx. |
+| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the Tx. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeRequest"></a>
+
+### QueryMsgFeeRequest
+QueryMsgFeeRequest is the request type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeResponse"></a>
+
+### QueryMsgFeeResponse
+QueryMsgFeeResponse is the response type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fee` | [MsgFee](#provenance-flatfees-v1-MsgFee) |  | msg_fee is the requested entry. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Params query.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Params query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines the parameters of the x/flatfees module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-flatfees-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for flatfees module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `Params` | [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse) | Params returns the parameters for the x/flatfees module. |
+| `AllMsgFees` | [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse) | AllMsgFees returns info on all msg types that have a customized msg fee. |
+| `MsgFee` | [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest) | [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse) | MsgFee will return information about what it will cost to execute a given msg type. If the provided msg type does not have a specific fee defined, the default is returned. |
+| `CalculateTxFees` | [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest) | [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and fees. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/genesis.proto
+
+
+
+<a name="provenance-flatfees-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of the flat fees module data, persisted from the store.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines all the parameters of the module. |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the fees defined for specific msg types. |
 
 
 
@@ -9342,6 +9630,7 @@ MsgMintRequest defines the Msg/Mint request type
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `administrator` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  | recipient is the optional address to receive the newly minted funds. |
 
 
 
@@ -9379,6 +9668,33 @@ MsgRemoveAdministratorProposalRequest defines the Msg/RemoveAdministratorProposa
 
 ### MsgRemoveAdministratorProposalResponse
 MsgRemoveAdministratorProposalResponse defines the Msg/RemoveAdministratorProposal response type
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgRevokeGrantAllowanceRequest"></a>
+
+### MsgRevokeGrantAllowanceRequest
+MsgRevokeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  | address of the grantee whose allowance is being revoked. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgRevokeGrantAllowanceResponse"></a>
+
+### MsgRevokeGrantAllowanceResponse
+MsgRevokeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
 
 
 
@@ -9784,6 +10100,7 @@ Msg defines the Marker Msg service.
 | `WithdrawEscrowProposal` | [MsgWithdrawEscrowProposalRequest](#provenance-marker-v1-MsgWithdrawEscrowProposalRequest) | [MsgWithdrawEscrowProposalResponse](#provenance-marker-v1-MsgWithdrawEscrowProposalResponse) | WithdrawEscrowProposal is a governance proposal to withdraw escrow coins from a marker |
 | `SetDenomMetadataProposal` | [MsgSetDenomMetadataProposalRequest](#provenance-marker-v1-MsgSetDenomMetadataProposalRequest) | [MsgSetDenomMetadataProposalResponse](#provenance-marker-v1-MsgSetDenomMetadataProposalResponse) | SetDenomMetadataProposal is a governance proposal to set marker metadata |
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-marker-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-marker-v1-MsgUpdateParamsResponse) | UpdateParams is a governance proposal endpoint for updating the marker module's params. |
+| `RevokeGrantAllowance` | [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest) | [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse) | RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee. |
 
  <!-- end services -->
 
@@ -10638,6 +10955,23 @@ a marker transfer on behalf of the granter's account.
 | ----- | ---- | ----- | ----------- |
 | `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | transfer_limit is the total amount the grantee can transfer |
 | `allow_list` | [string](#string) | repeated | allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the granter. If omitted, any recipient is allowed. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MultiAuthorization"></a>
+
+### MultiAuthorization
+MultiAuthorization lets you combine several authorizations.
+All sub-authorizations must accept the message for it to be allowed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | The message type this authorization is for. |
+| `sub_authorizations` | [google.protobuf.Any](#google-protobuf-Any) | repeated | A list of sub-authorizations that must all accept the message. sub_authorizations: a list of authorizations (minimum 2, maximum 10). |
 
 
 
@@ -14601,6 +14935,58 @@ MarkerNetAssetValues defines the net asset values for a scope
 
 
 
+<a name="provenance_hold_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/tx.proto
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsRequest"></a>
+
+### MsgUnlockVestingAccountsRequest
+MsgUnlockVestingAccountsRequest defines the request for unlocking vesting accounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that can execute this message (governance module account) |
+| `addresses` | [string](#string) | repeated | addresses is the list of vesting account addresses to convert back to base accounts |
+
+
+
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsResponse"></a>
+
+### MsgUnlockVestingAccountsResponse
+MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-hold-v1-Msg"></a>
+
+### Msg
+Msg defines the hold Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UnlockVestingAccounts` | [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest) | [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse) | UnlockVestingAccounts unlocks one or more vesting accounts. |
+
+ <!-- end services -->
+
+
+
 <a name="provenance_hold_v1_events-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -14635,6 +15021,21 @@ EventHoldReleased is an event indicating that some funds were released from hold
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
 | `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
+
+
+
+
+
+
+<a name="provenance-hold-v1-EventVestingAccountUnlocked"></a>
+
+### EventVestingAccountUnlocked
+EventUnlockVestingAccounts is an event indicating that a vesting account has been unlocked.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
 
 
 

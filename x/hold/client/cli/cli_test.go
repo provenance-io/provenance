@@ -3,16 +3,16 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/cosmos/gogoproto/proto"
-
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -21,10 +21,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/client/cli"
@@ -82,7 +85,7 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("mota", 0)
+	pioconfig.SetProvConfig("mota")
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
 	s.cfg.ChainID = antewrapper.SimAppChainID
@@ -543,6 +546,186 @@ func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 		s.Run(tc.name, func() {
 			actual := queries.GetSpendableBalances(s.T(), s.testnet, tc.addr.String())
 			s.Assert().Equal(tc.exp.String(), actual.String(), "spendable balances")
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestGetCmdUnlockVestingAccounts() {
+	fromAddr := s.testnet.Validators[0].Address.String()
+	fee := sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()
+	validDeposit := "10000000stake"
+	validAddresses := []string{
+		s.addr1.String(),
+		s.addr2.String(),
+	}
+	validAddressCSV := strings.Join(validAddresses, ",")
+
+	// Valid file with addresses
+	tmpDir := s.T().TempDir()
+	validFilePath := filepath.Join(tmpDir, "addresses-valid.txt")
+	var data strings.Builder
+	for _, addr := range validAddresses {
+		data.WriteString(addr)
+		data.WriteByte('\n')
+	}
+	err := os.WriteFile(validFilePath, []byte(data.String()), 0644)
+	s.Require().NoError(err, "WriteFile(%q, ...)", validFilePath)
+
+	// Empty address file
+	emptyFilePath := filepath.Join(tmpDir, "addresses-empty.txt")
+	err = os.WriteFile(emptyFilePath, []byte(""), 0644)
+	s.Require().NoError(err, "WriteFile(%q, ...)", emptyFilePath)
+
+	noSuchFilePath := filepath.Join(tmpDir, "addresses-does-not-exist.txt")
+
+	testCases := []struct {
+		name    string
+		args    []string
+		expCode uint32
+		expErr  string
+	}{
+		{
+			name: "happy path via --addresses",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=Unlock Accounts",
+				"--summary=Unlocking via addresses",
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+		},
+		{
+			name: "happy path via --addresses-file",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=Unlock from file",
+				"--summary=Valid address file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, validFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+		},
+		{
+			name: "fail: missing deposit",
+			args: []string{
+				// Missing deposit flag intentionally
+				"--title=Missing Deposit",
+				"--summary=No deposit provided",
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+			expCode: 16,
+		},
+		{
+			name: "fail: duplicate addresses",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "10000000stake"),
+				"--title=Dupes",
+				"--summary=Same address twice",
+				"--addresses=cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv,cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expCode: 12,
+			expErr:  "duplicate address \"cosmos1vdkxjhm5v4ehghmpv3j8yetnwd0nzh6l4kazlv\" at addresses[0] and [1]: invalid request",
+		},
+		{
+			name: "fail: missing addresses and file (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=MissingAddresses",
+				"--summary=Nothing provided",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expErr: "addresses list cannot be empty: invalid request",
+		},
+		{
+			name: "happy path: both flag and file provided",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=Unlock from file",
+				"--summary=Valid address file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, validFilePath),
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, s.addr3.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, "json"),
+			},
+		},
+		{
+			name: "fail: same address in both flag and file provided (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=BothProvided",
+				"--summary=Both flags provided",
+				fmt.Sprintf("--%s=%s", cli.FlagAddresses, validAddressCSV),
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, validFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expErr: "duplicate address \"" + validAddresses[0] + "\" at addresses[0] and [2]: invalid request",
+		},
+		{
+			name: "fail: empty address file (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=EmptyFile",
+				"--summary=Empty address file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, emptyFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expErr: "no addresses found in file: " + emptyFilePath,
+		},
+		{
+			name: "fail: file does not exist",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=NoSuchFile",
+				"--summary=Missing file",
+				fmt.Sprintf("--%s=%s", cli.FlagAddressesFile, noSuchFilePath),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expErr: "open " + noSuchFilePath + ": no such file or directory",
+		},
+		{
+			name: "fail: invalid address format (CLI error)",
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, validDeposit),
+				"--title=InvalidAddress",
+				"--summary=Invalid address format",
+				"--addresses=invalid-address-format",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
+				"--yes", "--broadcast-mode=sync",
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee),
+			},
+			expErr: "invalid addresses[0] \"invalid-address-format\": decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdUnlockVestingAccounts()
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpCode(tc.expCode).
+				WithExpErrMsg(tc.expErr).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }

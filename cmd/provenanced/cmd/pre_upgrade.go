@@ -12,6 +12,7 @@ import (
 
 	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 var (
@@ -23,7 +24,7 @@ var (
 // starting a node after an upgrade. Anyone not using cosmovisor should manually
 // run this after swapping executables and before restarting the node.
 func GetPreUpgradeCmd() *cobra.Command {
-	// https://docs.cosmos.network/main/building-apps/app-upgrade#pre-upgrade-handling
+	// https://docs.cosmos.network/main/build/building-apps/app-upgrade#pre-upgrade-handling
 	// The exit code meanings are dictated by cosmovisor.
 	cmd := &cobra.Command{
 		Use:   "pre-upgrade", // cosmovisor requires it to be this.
@@ -84,6 +85,12 @@ func UpdateConfig(cmd *cobra.Command) error {
 	if clientCfg.BroadcastMode == "block" {
 		cmd.Printf("Updating the broadcast_mode config value to \"sync\" (from %q, which is no longer an option).\n", clientCfg.BroadcastMode)
 		clientCfg.BroadcastMode = "sync"
+	}
+
+	piocfg := pioconfig.GetProvConfig()
+	if appCfg.MinGasPrices != piocfg.ProvMinGasPrices {
+		cmd.Printf("Updating the minimum-gas-prices config value to %q (from %q, to accommodate flat fees).\n", piocfg.ProvMinGasPrices, appCfg.MinGasPrices)
+		appCfg.MinGasPrices = piocfg.ProvMinGasPrices
 	}
 
 	return SafeSaveConfigs(cmd, appCfg, cmtCfg, clientCfg, true)

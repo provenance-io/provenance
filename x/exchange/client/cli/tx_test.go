@@ -23,8 +23,8 @@ var (
 	invReqCode = sdkerrors.ErrInvalidRequest.ABCICode()
 	// invSigCode is the TxResponse code for an ErrInvalidSigner.
 	invSigCode = govtypes.ErrInvalidSigner.ABCICode()
-	// insFeeCode is the TxResponse code for an ErrInsufficientFunds.
-	insFeeCode = sdkerrors.ErrInsufficientFunds.ABCICode()
+	// insFeeCode is the TxResponse code for an ErrInsufficientFee.
+	insFeeCode = sdkerrors.ErrInsufficientFee.ABCICode()
 )
 
 func (s *CmdTestSuite) TestCmdTxCreateAsk() {
@@ -523,9 +523,10 @@ func (s *CmdTestSuite) TestCmdTxMarketCommitmentSettle() {
 				return args, fups
 			},
 			args: []string{"market-settle-commitments", "--from", s.addr1.String()},
-			expInRawLog: []string{"insufficient funds",
-				"negative balance after sending coins to accounts and fee collector",
-				"remainingFees: \"10stake\", sentCoins: \"82nhash\"",
+			expInRawLog: []string{
+				"fee required: \"82nhash\"",
+				"fee provided: \"10stake\"",
+				"insufficient fee",
 			},
 			expectedCode: insFeeCode,
 		},
@@ -641,7 +642,52 @@ func (s *CmdTestSuite) TestCmdTxMarketReleaseCommitments() {
 		})
 	}
 }
+func (s *CmdTestSuite) TestCmdTxMarketTransferCommitments() {
+	tests := []txCmdTestCase{
+		{
+			name: "no current market id",
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
+				"--amount", "10peach", "--new-market", "3"},
+			expInErr: []string{"required flag(s) \"current-market\" not set"},
+		},
+		{
+			name: "no new market id",
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
+				"--amount", "10peach", "--current-market", "3"},
+			expInErr: []string{"required flag(s) \"new-market\" not set"},
+		},
+		{
+			name: "no account",
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(),
+				"--amount", "10peach", "--current-market", "3", "--new-market", "4"},
+			expInErr: []string{"required flag(s) \"account\" not set"},
+		},
+		{
+			name: "no amount",
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
+				"--current-market", "3", "--new-market", "4"},
+			expInErr: []string{"required flag(s) \"amount\" not set"},
+		},
+		{
+			name: "invalid amount",
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
+				"--amount", "nil", "--current-market", "3", "--new-market", "4"},
+			expInErr: []string{`error parsing --amount as coins: invalid coin expression: "nil"`},
+		},
+		{
+			name: "same market id",
+			args: []string{"market-transfer-commitment", "--from", s.addr1.String(), "--account", s.addr3.String(),
+				"--amount", "10peach", "--current-market", "4", "--new-market", "4"},
+			expInErr: []string{`invalid new market id: cannot be the same as current market id`},
+		},
+	}
 
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 func (s *CmdTestSuite) TestCmdTxMarketSetOrderExternalID() {
 	tests := []txCmdTestCase{
 		{
@@ -1141,8 +1187,11 @@ func (s *CmdTestSuite) TestCmdTxCreatePayment() {
 				"--target", s.addr2.String(), "--external-id", "also_oopsies",
 			},
 			addedFees: s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount / 2),
-			expInRawLog: []string{"insufficient funds",
-				"negative balance after sending coins to accounts and fee collector"},
+			expInRawLog: []string{
+				"fee required: \"10000000000nhash\"",
+				"fee provided: \"5000000000nhash,10stake\"",
+				"insufficient fee",
+			},
 			expectedCode: insFeeCode,
 		},
 		{

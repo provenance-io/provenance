@@ -21,6 +21,12 @@ func (k Keeper) WithBankKeeper(bk hold.BankKeeper) Keeper {
 	return k
 }
 
+// WithBankKeeper returns a new keeper that uses the provided account keeper for unit tests.
+func (k Keeper) WithAccountKeeper(ak hold.AccountKeeper) Keeper {
+	k.accountKeeper = ak
+	return k
+}
+
 // GetStoreKey exposes this keeper's storekey for unit tests.
 func (k Keeper) GetStoreKey() storetypes.StoreKey {
 	return k.storeKey
@@ -29,4 +35,9 @@ func (k Keeper) GetStoreKey() storetypes.StoreKey {
 // SetHoldCoinAmount exposes this keeper's setHoldCoinAmount function for unit tests.
 func (k Keeper) SetHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
 	return k.setHoldCoinAmount(store, addr, denom, amount)
+}
+
+// GetSpendableForDenoms exposes this keeper's getSpendableForDenoms function for unit tests.
+func (k Keeper) GetSpendableForDenoms(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) sdk.Coins {
+	return k.getSpendableForDenoms(ctx, addr, funds)
 }

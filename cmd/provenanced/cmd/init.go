@@ -66,7 +66,6 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd.Flags().BoolP(FlagRecover, "r", false, "Interactive key recovery from mnemonic")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "Overwrite the genesis.json file")
 	cmd.Flags().String(provconfig.CustomDenomFlag, "", "Custom denom, optional")
-	cmd.Flags().Int64(provconfig.CustomMsgFeeFloorPriceFlag, 0, "Custom msg fee floor price, optional")
 	cmd.Flags().Duration(FlagTimeoutCommit, 0, "The consensus.timeout_commit value to start with (default is 5s for mainnet or testnet, 1s otherwise)")
 	return cmd
 }
@@ -111,7 +110,7 @@ func Init(
 	}
 
 	// Set a few things in the configs.
-	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+	appConfig.MinGasPrices = pioconfig.GetProvConfig().ProvMinGasPrices
 
 	cmtConfig.Moniker = moniker
 	if len(chainID) == 0 {
@@ -191,6 +190,8 @@ func createAndExportGenesisFile(
 	// Note: The extra enclosures in here are just a defensive measure to hopefully help prevent
 	// things from one section from being used in another when they're copy/pasted around.
 
+	provCfg := pioconfig.GetProvConfig()
+
 	// Set the mint parameters
 	{
 		moduleName := minttypes.ModuleName
@@ -198,7 +199,7 @@ func createAndExportGenesisFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
 		mintGenState.Minter.Inflation = sdkmath.LegacyZeroDec()
 		mintGenState.Minter.AnnualProvisions = sdkmath.LegacyOneDec()
-		mintGenState.Params.MintDenom = pioconfig.GetProvenanceConfig().BondDenom
+		mintGenState.Params.MintDenom = provCfg.BondDenom
 		mintGenState.Params.InflationMax = sdkmath.LegacyZeroDec()
 		mintGenState.Params.InflationMin = sdkmath.LegacyZeroDec()
 		mintGenState.Params.InflationRateChange = sdkmath.LegacyOneDec()
@@ -212,7 +213,7 @@ func createAndExportGenesisFile(
 		moduleName := stakingtypes.ModuleName
 		var stakeGenState stakingtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakeGenState)
-		stakeGenState.Params.BondDenom = pioconfig.GetProvenanceConfig().BondDenom
+		stakeGenState.Params.BondDenom = provCfg.BondDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakeGenState)
 	}
 
@@ -221,7 +222,7 @@ func createAndExportGenesisFile(
 		moduleName := crisistypes.ModuleName
 		var crisisGenState crisistypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &crisisGenState)
-		crisisGenState.ConstantFee.Denom = pioconfig.GetProvenanceConfig().FeeDenom
+		crisisGenState.ConstantFee.Denom = provCfg.FeeDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&crisisGenState)
 	}
 
@@ -230,7 +231,7 @@ func createAndExportGenesisFile(
 		moduleName := govtypes.ModuleName
 		var govGenState govtypesv1.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, minDeposit))
+		govGenState.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(provCfg.BondDenom, minDeposit))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 

@@ -2,7 +2,10 @@ package cli_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -25,6 +28,7 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -33,7 +37,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
@@ -77,7 +80,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
@@ -126,6 +128,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			bal(markertypes.MustGetMarkerAddress("propcoin"), coin(1000, "propcoin")),
 			bal(markertypes.MustGetMarkerAddress("authzhotdog"), coin(800, "authzhotdog")),
 			bal(markertypes.MustGetMarkerAddress("grantcoin"), coin(5000, s.cfg.BondDenom)),
+			bal(markertypes.MustGetMarkerAddress("revokegrantcoin"), coin(5000, "revokegrantcoin")),
 		)
 
 		return bankGenState
@@ -241,6 +244,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				AllowGovernanceControl: true,
 				Supply:                 sdkmath.NewInt(0),
 				Denom:                  "grantcoin",
+				AllowForcedTransfer:    false,
+				AccessControl: []markertypes.AccessGrant{
+					*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{
+						markertypes.Access_Admin, markertypes.Access_Deposit, markertypes.Access_Withdraw,
+					}),
+				},
+			},
+			{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       markertypes.MustGetMarkerAddress("revokegrantcoin").String(),
+					AccountNumber: 170,
+					Sequence:      0,
+				},
+				Status:                 markertypes.StatusActive,
+				SupplyFixed:            false,
+				MarkerType:             markertypes.MarkerType_Coin,
+				AllowGovernanceControl: true,
+				Supply:                 sdkmath.NewInt(0),
+				Denom:                  "revokegrantcoin",
 				AllowForcedTransfer:    false,
 				AccessControl: []markertypes.AccessGrant{
 					*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{
@@ -697,30 +719,6 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"mint supply",
-			markercli.GetCmdMint(),
-			[]string{
-				"100hotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"burn supply",
-			markercli.GetCmdBurn(),
-			[]string{
-				"100hotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
 			"finalize",
 			markercli.GetCmdFinalize(),
 			[]string{
@@ -737,6 +735,45 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetCmdActivate(),
 			[]string{
 				"hotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"mint supply",
+			markercli.GetCmdMint(),
+			[]string{
+				"100hotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"mint supply with recipient",
+			markercli.GetCmdMint(),
+			[]string{
+				"50hotdog",
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"burn supply",
+			markercli.GetCmdBurn(),
+			[]string{
+				"100hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -1557,10 +1594,9 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 		expInRawLog string
 	}{
 		{
-			name:        "invalid denom",
-			args:        argsWStdFlags("x", "true"),
-			expCode:     12,
-			expInRawLog: "invalid denom: x",
+			name:   "invalid denom",
+			args:   argsWStdFlags("x", "true"),
+			expErr: "invalid denom: x",
 		},
 		{
 			name:   "invalid bool",
@@ -2661,4 +2697,293 @@ func (s *IntegrationTestSuite) TestPayingWithFeegrant() {
 		}
 		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 	})
+}
+
+func (s *IntegrationTestSuite) TestRevokeFeegrant() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+	granter := s.accountAddresses[0].String() // marker admin
+	grantee := s.accountAddresses[2].String()
+
+	// Step 1: Setup - Create a feegrant
+	setupOK := s.Run("Create a feegrant to revoke", func() {
+		cmd := markercli.GetCmdFeeGrant()
+		args := []string{
+			"revokegrantcoin",
+			granter,
+			grantee,
+			fmt.Sprintf("--%s=%s", markercli.FlagSpendLimit, sdk.NewInt64Coin(s.cfg.BondDenom, 5000)),
+			fmt.Sprintf("--%s=%s", markercli.FlagExpiration, getFormattedExpiration(oneYear)),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		}
+		resp := testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+		s.Require().Equal(uint32(0), resp.Code, "Feegrant creation should succeed")
+	})
+	// Step 2: Revoke the feegrant
+	s.Run("Revoke the feegrant", func() {
+		if !setupOK {
+			s.T().Skip("Skipping due to setup failure.")
+		}
+		cmd := markercli.GetCmdRevokeFeeGrant()
+		args := []string{
+			"revokegrantcoin",
+			granter,
+			grantee,
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		}
+		resp := testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+		s.Require().Equal(uint32(0), resp.Code, "Feegrant revoke should succeed")
+	})
+
+}
+func (s *IntegrationTestSuite) TestGrantMultiAuthz() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+
+	granter := s.accountAddresses[1].String()
+	grantee := s.accountAddresses[2].String()
+
+	auth1 := authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
+	auth2 := authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
+	auths := []authz.Authorization{auth1, auth2}
+	authsJSON := s.toJSONArray(auths)
+
+	tmpDir := s.T().TempDir()
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectedErr  string
+		expectedCode uint32
+	}{
+		{
+			name: "success - inline json",
+			args: []string{
+				grantee,
+				"/cosmos.bank.v1beta1.MsgSend",
+				string(authsJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+		},
+		{
+			name: "success - file input",
+			args: func() []string {
+				filePath := filepath.Join(tmpDir, "auths.json")
+				require.NoError(s.T(), os.WriteFile(filePath, authsJSON, 0644))
+				return []string{
+					grantee,
+					"/cosmos.bank.v1beta1.MsgSend",
+					"@" + filePath,
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				}
+			}(),
+		},
+		{
+			name: "success - stdin input",
+			args: func() []string {
+				// Backup and replace os.Stdin
+				origStdin := os.Stdin
+				r, w, _ := os.Pipe()
+				os.Stdin = r
+				s.T().Cleanup(func() { os.Stdin = origStdin })
+
+				// Write authzJSON to the pipe
+				go func() {
+					defer w.Close()
+					w.Write(authsJSON)
+				}()
+
+				return []string{
+					grantee,
+					"/cosmos.bank.v1beta1.MsgSend",
+					"-",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				}
+			}()},
+		{
+			name: "fail - invalid grantee address",
+			args: []string{
+				"invalid-address",
+				"/type",
+				"[]",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "invalid grantee address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "fail - empty msg type",
+			args: []string{
+				grantee,
+				"",
+				"[]",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "msg-type-url cannot be empty",
+		},
+		{
+			name: "fail - invalid json",
+			args: []string{
+				grantee,
+				"/type",
+				"{invalid}",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "invalid JSON format for authorizations",
+		},
+		{
+			name: "fail - too many authorizations",
+			args: []string{
+				grantee,
+				"/type",
+				fmt.Sprintf(`[%s]`, strings.Repeat(`{}`, 11)),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			},
+			expectedErr: "invalid JSON format for authorizations",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetGrantMultiAuthzCmd()
+			tc.args = append(tc.args,
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			)
+
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectedErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestRevokeMultiAuthz() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+
+	auth1 := authz.NewGenericAuthorization("/provenance.marker.v1.MsgTransfer")
+	auths := []authz.Authorization{auth1, auth1}
+	authsJSON := s.toJSONArray(auths)
+
+	granter := s.accountAddresses[1]
+	grantee := s.accountAddresses[2]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectedErr  string
+		expectedCode uint32
+	}{
+		{
+			name: "fail - invalid grantee address",
+			args: []string{
+				"invalid-address",
+				"/type",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "fail - empty msg type",
+			args: []string{
+				grantee.String(),
+				"",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "invalid action type, ",
+		},
+		{
+			name: "fail - missing required args",
+			args: []string{
+				grantee.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "accepts 2 arg(s), received 1",
+		},
+		{
+			name: "fail - grantee and granter are same",
+			args: []string{
+				granter.String(),
+				"/provenance.marker.v1.MsgTransfer",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+			},
+			expectedErr: "invalid action type, /provenance.marker.v1.MsgTransfer",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// For success case, create the grant first.
+			if tc.name == "success - valid revocation" {
+				grantArgs := []string{
+					grantee.String(),
+					"/provenance.marker.v1.MsgTransfer",
+					fmt.Sprintf("@%s", s.writeAuthzJSON(string(authsJSON))),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				}
+				testcli.NewTxExecutor(markercli.GetGrantMultiAuthzCmd(), grantArgs).
+					WithExpCode(0).
+					Execute(s.T(), s.testnet)
+			}
+
+			cmd := markercli.GetCmdRevokeAuthorization()
+			tc.args = append(tc.args,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granter.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			)
+
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectedErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+type authzJSON struct {
+	Type string `json:"@type"`
+	Msg  string `json:"msg"`
+}
+
+func (s *IntegrationTestSuite) toJSONArray(auths []authz.Authorization) []byte {
+	var result []authzJSON
+	for _, a := range auths {
+		if g, ok := a.(*authz.GenericAuthorization); ok {
+			result = append(result, authzJSON{
+				Type: "/cosmos.authz.v1beta1.GenericAuthorization",
+				Msg:  g.Msg,
+			})
+		}
+	}
+	bz, err := json.Marshal(result)
+	require.NoError(s.T(), err, "json.Marshal")
+	return bz
+}
+func (s *IntegrationTestSuite) writeAuthzJSON(jsonData string) string {
+	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("authz-%d.json", time.Now().UnixNano()))
+	if err := os.WriteFile(tmpFile, []byte(jsonData), 0600); err != nil {
+		s.T().Fatalf("failed to write temp authz JSON file: %v", err)
+	}
+	return tmpFile
 }
