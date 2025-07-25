@@ -392,8 +392,6 @@
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
   
 - [provenance/smartaccounts/v1/tx.proto](#provenance_smartaccounts_v1_tx-proto)
-    - [MsgDeleteAccount](#provenance-smartaccounts-v1-MsgDeleteAccount)
-    - [MsgDeleteAccountResponse](#provenance-smartaccounts-v1-MsgDeleteAccountResponse)
     - [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential)
     - [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse)
     - [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential)
@@ -6218,32 +6216,6 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 
 
 
-<a name="provenance-smartaccounts-v1-MsgDeleteAccount"></a>
-
-### MsgDeleteAccount
-delete smart account for whatever reason.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
-| `address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-MsgDeleteAccountResponse"></a>
-
-### MsgDeleteAccountResponse
-MsgDeleteAccountResponse defines the response structure for executing a
-
-
-
-
-
-
 <a name="provenance-smartaccounts-v1-MsgDeleteCredential"></a>
 
 ### MsgDeleteCredential
@@ -6386,7 +6358,7 @@ Msg defines the Msg service.
 | ----------- | ------------ | ------------- | ------------|
 | `UpdateParams` | [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams) | [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse) | UpdateParams defines a governance operation for updating the parameters for smart account module only. |
 | `RegisterFido2Credential` | [MsgRegisterFido2Credential](#provenance-smartaccounts-v1-MsgRegisterFido2Credential) | [MsgRegisterFido2CredentialResponse](#provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse) | RegisterFido2Credential defines a method for registering a Fido2 credential. |
-| `RegisterCosmosCredential` | [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential) | [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse) | UpdateToSmartAccountAuthenticationOnly defines a method for updating to smart account authentication only. RegisterCosmosCredential defines a method for registering a Cosmos credential. |
+| `RegisterCosmosCredential` | [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential) | [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse) | RegisterCosmosCredential defines a method for registering a Cosmos credential. |
 | `DeleteCredential` | [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential) | [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse) | DeleteCredential defines a method for deleting a credential. |
 
  <!-- end services -->

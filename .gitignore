@@ -37,7 +37,7 @@ profile.iws
 *.iml
 *.ipr
 *.iws
-.run
+.run/
 qodana.yaml
 
 # Tools make target marker

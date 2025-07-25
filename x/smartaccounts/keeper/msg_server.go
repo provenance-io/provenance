@@ -65,7 +65,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 
 	anyPubKey, err := types.ParsePublicKey(attestationPubKey)
 	if err != nil {
-		return nil, fmt.Errorf("pare public key failed %v", err)
+		return nil, fmt.Errorf("parse public key failed %w", err)
 	}
 	// check rp id is same
 	// check and set the rpid
