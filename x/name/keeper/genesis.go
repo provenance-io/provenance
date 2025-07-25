@@ -21,6 +21,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 	}
+
 }
 
 // ExportGenesis exports the current keeper state of the name module.
