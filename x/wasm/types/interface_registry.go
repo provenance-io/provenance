@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	v1beta1 "github.com/provenance-io/provenance/x/wasm"
+	v1beta1 "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1"
 )
 
 var _ codectypes.InterfaceRegistry = &WasmInterfaceRegistry{}
