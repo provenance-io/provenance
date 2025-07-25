@@ -363,26 +363,11 @@
     - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest)
     - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse)
   
-    - [Msg](#provenance-msgfees-v1-Msg)
-  
 - [provenance/msgfees/v1/query.proto](#provenance_msgfees_v1_query-proto)
     - [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest)
     - [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse)
-    - [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest)
-    - [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse)
-    - [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest)
-    - [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse)
   
     - [Query](#provenance-msgfees-v1-Query)
-  
-- [provenance/msgfees/v1/genesis.proto](#provenance_msgfees_v1_genesis-proto)
-    - [GenesisState](#provenance-msgfees-v1-GenesisState)
-  
-- [provenance/msgfees/v1/msgfees.proto](#provenance_msgfees_v1_msgfees-proto)
-    - [EventMsgFee](#provenance-msgfees-v1-EventMsgFee)
-    - [EventMsgFees](#provenance-msgfees-v1-EventMsgFees)
-    - [MsgFee](#provenance-msgfees-v1-MsgFee)
-    - [Params](#provenance-msgfees-v1-Params)
   
 - [provenance/msgfees/v1/proposals.proto](#provenance_msgfees_v1_proposals-proto)
     - [AddMsgFeeProposal](#provenance-msgfees-v1-AddMsgFeeProposal)
@@ -391,52 +376,35 @@
     - [UpdateMsgFeeProposal](#provenance-msgfees-v1-UpdateMsgFeeProposal)
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
   
-- [provenance/smartaccounts/v1/tx.proto](#provenance_smartaccounts_v1_tx-proto)
-    - [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential)
-    - [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse)
-    - [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential)
-    - [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse)
-    - [MsgRegisterFido2Credential](#provenance-smartaccounts-v1-MsgRegisterFido2Credential)
-    - [MsgRegisterFido2CredentialResponse](#provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse)
-    - [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams)
-    - [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse)
+- [provenance/flatfees/v1/tx.proto](#provenance_flatfees_v1_tx-proto)
+    - [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest)
+    - [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse)
+    - [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest)
+    - [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse)
+    - [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest)
+    - [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse)
   
-    - [Msg](#provenance-smartaccounts-v1-Msg)
+    - [Msg](#provenance-flatfees-v1-Msg)
   
-- [provenance/smartaccounts/v1/events.proto](#provenance_smartaccounts_v1_events-proto)
-    - [EventCosmosCredentialAdd](#provenance-smartaccounts-v1-EventCosmosCredentialAdd)
-    - [EventCredentialDelete](#provenance-smartaccounts-v1-EventCredentialDelete)
-    - [EventFido2CredentialAdd](#provenance-smartaccounts-v1-EventFido2CredentialAdd)
-    - [EventSmartAccountInit](#provenance-smartaccounts-v1-EventSmartAccountInit)
+- [provenance/flatfees/v1/flatfees.proto](#provenance_flatfees_v1_flatfees-proto)
+    - [ConversionFactor](#provenance-flatfees-v1-ConversionFactor)
+    - [MsgFee](#provenance-flatfees-v1-MsgFee)
+    - [Params](#provenance-flatfees-v1-Params)
   
-- [provenance/smartaccounts/v1/provenanceaccount.proto](#provenance_smartaccounts_v1_provenanceaccount-proto)
-    - [BaseCredential](#provenance-smartaccounts-v1-BaseCredential)
-    - [Credential](#provenance-smartaccounts-v1-Credential)
-    - [Fido2Authenticator](#provenance-smartaccounts-v1-Fido2Authenticator)
-    - [K256Authenticator](#provenance-smartaccounts-v1-K256Authenticator)
-    - [MsgInit](#provenance-smartaccounts-v1-MsgInit)
-    - [MsgInitResponse](#provenance-smartaccounts-v1-MsgInitResponse)
-    - [Params](#provenance-smartaccounts-v1-Params)
-    - [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount)
-    - [SessionAuthenticator](#provenance-smartaccounts-v1-SessionAuthenticator)
+- [provenance/flatfees/v1/query.proto](#provenance_flatfees_v1_query-proto)
+    - [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest)
+    - [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse)
+    - [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest)
+    - [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse)
+    - [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest)
+    - [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse)
+    - [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest)
+    - [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse)
   
-    - [CredentialType](#provenance-smartaccounts-v1-CredentialType)
+    - [Query](#provenance-flatfees-v1-Query)
   
-- [provenance/smartaccounts/v1/query.proto](#provenance_smartaccounts_v1_query-proto)
-    - [QueryParamsRequest](#provenance-smartaccounts-v1-QueryParamsRequest)
-    - [QueryParamsResponse](#provenance-smartaccounts-v1-QueryParamsResponse)
-    - [SmartAccountQueryRequest](#provenance-smartaccounts-v1-SmartAccountQueryRequest)
-    - [SmartAccountResponse](#provenance-smartaccounts-v1-SmartAccountResponse)
-  
-    - [Query](#provenance-smartaccounts-v1-Query)
-  
-- [provenance/smartaccounts/v1/genesis.proto](#provenance_smartaccounts_v1_genesis-proto)
-    - [GenesisState](#provenance-smartaccounts-v1-GenesisState)
-  
-- [provenance/smartaccounts/v1/webauthn_key_types.proto](#provenance_smartaccounts_v1_webauthn_key_types-proto)
-    - [EC2PublicKeyData](#provenance-smartaccounts-v1-EC2PublicKeyData)
-    - [EdDSAPublicKeyData](#provenance-smartaccounts-v1-EdDSAPublicKeyData)
-    - [PublicKeyData](#provenance-smartaccounts-v1-PublicKeyData)
+- [provenance/flatfees/v1/genesis.proto](#provenance_flatfees_v1_genesis-proto)
+    - [GenesisState](#provenance-flatfees-v1-GenesisState)
   
 - [provenance/oracle/v1/tx.proto](#provenance_oracle_v1_tx-proto)
     - [MsgSendQueryOracleRequest](#provenance-oracle-v1-MsgSendQueryOracleRequest)
@@ -4801,12 +4769,13 @@ EventTriggerExecuted is an event for when a trigger is executed.
 
 ### GasLimit
 GasLimit defines the trigger module's grouping of a trigger and a gas limit
+Deprecated: The GasLimit type is no longer used since we use flat fees.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. |
-| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
+| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. Deprecated: The GasLimit type is no longer used since we use flat fees. |
+| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. Deprecated: The GasLimit type is no longer used since we use flat fees. |
 
 
 
@@ -4824,7 +4793,7 @@ GenesisState defines the trigger module's genesis state.
 | `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
 | `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
 | `triggers` | [Trigger](#provenance-trigger-v1-Trigger) | repeated | Triggers to initially start with. |
-| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. |
+| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. Deprecated: We no longer need to keep track of gas limits since we use flat fees. |
 | `queued_triggers` | [QueuedTrigger](#provenance-trigger-v1-QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
 
 
@@ -5668,6 +5637,9 @@ GenesisState defines the attribute module's genesis state.
 
 ### MsgAddMsgFeeProposalRequest
 AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5697,6 +5669,9 @@ MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
 
 ### MsgAssessCustomMsgFeeRequest
 MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5726,6 +5701,9 @@ MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 ### MsgRemoveMsgFeeProposalRequest
 RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5752,6 +5730,9 @@ MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateConversionFeeDenomProposalRequest
 UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5778,6 +5759,9 @@ MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeD
 
 ### MsgUpdateMsgFeeProposalRequest
 UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5807,6 +5791,9 @@ MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateNhashPerUsdMilProposalRequest
 UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -5834,21 +5821,6 @@ MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProp
 
  <!-- end HasExtensions -->
 
-
-<a name="provenance-msgfees-v1-Msg"></a>
-
-### Msg
-Msg defines the msgfees Msg service.
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance-msgfees-v1-MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance-msgfees-v1-MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts |
-| `AddMsgFeeProposal` | [MsgAddMsgFeeProposalRequest](#provenance-msgfees-v1-MsgAddMsgFeeProposalRequest) | [MsgAddMsgFeeProposalResponse](#provenance-msgfees-v1-MsgAddMsgFeeProposalResponse) | AddMsgFeeProposal defines a governance proposal to add additional msg based fee |
-| `UpdateMsgFeeProposal` | [MsgUpdateMsgFeeProposalRequest](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalRequest) | [MsgUpdateMsgFeeProposalResponse](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalResponse) | UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee |
-| `RemoveMsgFeeProposal` | [MsgRemoveMsgFeeProposalRequest](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalRequest) | [MsgRemoveMsgFeeProposalResponse](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalResponse) | RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee |
-| `UpdateNhashPerUsdMilProposal` | [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest) | [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse) | UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param |
-| `UpdateConversionFeeDenomProposal` | [MsgUpdateConversionFeeDenomProposalRequest](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalRequest) | [MsgUpdateConversionFeeDenomProposalResponse](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalResponse) | UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom |
-
  <!-- end services -->
 
 
@@ -5864,13 +5836,15 @@ Msg defines the msgfees Msg service.
 
 ### CalculateTxFeesRequest
 CalculateTxFeesRequest is the request type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
-| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
-| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
+| `default_base_denom` | [string](#string) |  | default_base_denom used to be the denom used for gas fees. Deprecated: This field is now ignored. The fees will be in the appropriate denomination(s) automatically. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation. This only affects the returned gas (since the fee is flat). |
 
 
 
@@ -5881,69 +5855,15 @@ CalculateTxFeesRequest is the request type for the Query RPC method.
 
 ### CalculateTxFeesResponse
 CalculateTxFeesResponse is the response type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees |
+| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees Deprecated: This field will always be empty |
 | `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg fees + gas fee) note: the gas fee is calculated with the floor gas price module param. |
 | `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesRequest"></a>
-
-### QueryAllMsgFeesRequest
-QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesResponse"></a>
-
-### QueryAllMsgFeesResponse
-response for querying all msg's with fees associated with them
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines the parameters of the module. |
 
 
 
@@ -5959,129 +5879,11 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 <a name="provenance-msgfees-v1-Query"></a>
 
 ### Query
-Query defines the gRPC querier service for marker module.
+Query defines the gRPC querier service for msgfees module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `Params` | [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse) | Params queries the parameters for x/msgfees |
-| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. |
-| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. |
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_genesis-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/genesis.proto
-
-
-
-<a name="provenance-msgfees-v1-GenesisState"></a>
-
-### GenesisState
-GenesisState contains a set of msg fees, persisted from the store
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines all the parameters of the module. |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_msgfees-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/msgfees.proto
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFee"></a>
-
-### EventMsgFee
-EventMsgFee final event property for msg fee on type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type` | [string](#string) |  |  |
-| `count` | [string](#string) |  |  |
-| `total` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFees"></a>
-
-### EventMsgFees
-EventMsgFees event emitted with summary of msg fees
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [EventMsgFee](#provenance-msgfees-v1-EventMsgFee) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-MsgFee"></a>
-
-### MsgFee
-MsgFee is the core of what gets stored on the blockchain to define a msg-based fee.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message with the added fee, e.g. "/cosmos.bank.v1beta1.MsgSend". |
-| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional_fee is the extra fee that is required for the given message type (can be in any denom). |
-| `recipient` | [string](#string) |  | recipient is an option address that will receive a portion of the additional fee. There can only be a recipient if the recipient_basis_points is not zero. |
-| `recipient_basis_points` | [uint32](#uint32) |  | recipient_basis_points is an optional portion of the additional fee to be sent to the recipient. Must be between 0 and 10,000 (inclusive).<br>If there is a recipient, this must not be zero. If there is not a recipient, this must be zero.<br>The recipient will receive additional_fee * recipient_basis_points / 10,000. The fee collector will receive the rest, i.e. additional_fee * (10,000 - recipient_basis_points) / 10,000. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-Params"></a>
-
-### Params
-Params defines the set of params for the msgfees module.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.<br>Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil<br>Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
-| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
+| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module. This query endpoint will be removed in a future release. |
 
  <!-- end services -->
 
@@ -6209,134 +6011,86 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 
 
 
-<a name="provenance_smartaccounts_v1_tx-proto"></a>
+<a name="provenance_flatfees_v1_tx-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/smartaccounts/v1/tx.proto
+## provenance/flatfees/v1/tx.proto
 
 
 
-<a name="provenance-smartaccounts-v1-MsgDeleteCredential"></a>
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorRequest"></a>
 
-### MsgDeleteCredential
-MsgDeleteCredential defines a method for deleting a credential.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
-| `credential_number` | [uint64](#uint64) |  | credential number is the credential number assigned to the credential in the provenance smart account module. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-MsgDeleteCredentialResponse"></a>
-
-### MsgDeleteCredentialResponse
-MsgDeleteCredentialResponse defines the response structure for executing a
+### MsgUpdateConversionFactorRequest
+MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor governance endpoint.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `credential_number` | [uint64](#uint64) |  | credential_number is the credential number that was deleted. |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the new conversion factor that should be used. |
 
 
 
 
 
 
-<a name="provenance-smartaccounts-v1-MsgRegisterCosmosCredential"></a>
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorResponse"></a>
 
-### MsgRegisterCosmosCredential
-MsgRegisterCosmosCredential defines a method for registering a Cosmos credential.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
-| `pubkey` | [google.protobuf.Any](#google-protobuf-Any) |  | pubkey for which the secp256k1 keypair being registered. |
+### MsgUpdateConversionFactorResponse
+MsgUpdateConversionFactorResponse is the response for the UpdateConversionFactor governance endpoint.
 
 
 
 
 
 
-<a name="provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse"></a>
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesRequest"></a>
 
-### MsgRegisterCosmosCredentialResponse
-MsgRegisterCosmosCredentialResponse defines the response structure for executing a
+### MsgUpdateMsgFeesRequest
+MsgUpdateMsgFeesRequest is the request for the UpdateMsgFees governance endpoint.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `credential_number` | [uint64](#uint64) |  |  |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `to_set` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | to_set is the list of msg fees to create and/or update. |
+| `to_unset` | [string](#string) | repeated | to_unset is the list of msg-type-urls that should have their msg fee entries deleted (they'll go back to using the default cost). |
 
 
 
 
 
 
-<a name="provenance-smartaccounts-v1-MsgRegisterFido2Credential"></a>
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesResponse"></a>
 
-### MsgRegisterFido2Credential
-MsgRegisterFido2Credential is used to initialize a provenance smart account with fido2 credentials.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
-| `encoded_attestation` | [string](#string) |  |  |
-| `user_identifier` | [string](#string) |  | You must store the user ID separately when initiating registration and retrieve it later. This is the fido2 user identifier for the authenticator. |
+### MsgUpdateMsgFeesResponse
+MsgUpdateMsgFeesResponse is the response for the UpdateMsgFees governance endpoint.
 
 
 
 
 
 
-<a name="provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse"></a>
+<a name="provenance-flatfees-v1-MsgUpdateParamsRequest"></a>
 
-### MsgRegisterFido2CredentialResponse
-MsgRegisterFido2CredentialResponse is returned after successfully registering a WebAuthn credential.
-It contains information about the newly registered credential and the associated smart account.
+### MsgUpdateParamsRequest
+MsgUpdateParamsRequest is the request for the UpdateParams governance endpoint.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `credential_number` | [uint64](#uint64) |  | credential_number is a globally unique identifier assigned to the newly registered credential. This number can be used in future operations like credential deletion. |
-| `provenance_account` | [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount) |  | provenanceaccount contains the full smart account data after the registration, including all credentials associated with the account and its current state. |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params are the new param values to set. |
 
 
 
 
 
 
-<a name="provenance-smartaccounts-v1-MsgUpdateParams"></a>
-
-### MsgUpdateParams
-MsgUpdateParams is the Msg/UpdateParams request type.
-
-Since: cosmos-sdk 0.47
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address of the governance account. |
-| `params` | [Params](#provenance-smartaccounts-v1-Params) |  | params defines the parameters to update.<br>NOTE: All parameters must be supplied. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-MsgUpdateParamsResponse"></a>
+<a name="provenance-flatfees-v1-MsgUpdateParamsResponse"></a>
 
 ### MsgUpdateParamsResponse
-MsgUpdateParamsResponse defines the response structure for executing a
-MsgUpdateParams message.
-
-Since: cosmos-sdk 0.47
+MsgUpdateParamsResponse is the response for the UpdateParams governance endpoint.
 
 
 
@@ -6349,276 +6103,78 @@ Since: cosmos-sdk 0.47
  <!-- end HasExtensions -->
 
 
-<a name="provenance-smartaccounts-v1-Msg"></a>
+<a name="provenance-flatfees-v1-Msg"></a>
 
 ### Msg
-Msg defines the Msg service.
+Msg defines the flatfees Msg service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `UpdateParams` | [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams) | [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse) | UpdateParams defines a governance operation for updating the parameters for smart account module only. |
-| `RegisterFido2Credential` | [MsgRegisterFido2Credential](#provenance-smartaccounts-v1-MsgRegisterFido2Credential) | [MsgRegisterFido2CredentialResponse](#provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse) | RegisterFido2Credential defines a method for registering a Fido2 credential. |
-| `RegisterCosmosCredential` | [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential) | [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse) | RegisterCosmosCredential defines a method for registering a Cosmos credential. |
-| `DeleteCredential` | [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential) | [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse) | DeleteCredential defines a method for deleting a credential. |
+| `UpdateParams` | [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse) | UpdateParams is a governance endpoint for updating the x/flatfees params. |
+| `UpdateConversionFactor` | [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest) | [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse) | UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params. |
+| `UpdateMsgFees` | [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest) | [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse) | UpdateMsgFees is a governance endpoint for updating fees for specific msgs. |
 
  <!-- end services -->
 
 
 
-<a name="provenance_smartaccounts_v1_events-proto"></a>
+<a name="provenance_flatfees_v1_flatfees-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/smartaccounts/v1/events.proto
+## provenance/flatfees/v1/flatfees.proto
 
 
 
-<a name="provenance-smartaccounts-v1-EventCosmosCredentialAdd"></a>
+<a name="provenance-flatfees-v1-ConversionFactor"></a>
 
-### EventCosmosCredentialAdd
-Event emitted when a Cosmos credential is added to a smart account
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `credential_number` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-EventCredentialDelete"></a>
-
-### EventCredentialDelete
-Event emitted when a credential is deleted from a smart account
+### ConversionFactor
+ConversionFactor equates the values of two coins in different denominations.
+It is used to determine how much of the fee denomination is due.
+actual cost = defined cost * converted_amount / definition_amount (truncated to an integer).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `credential_number` | [uint64](#uint64) |  |  |
+| `definition_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount. This cannot have an amount of zero. If this has the same denomination as the converted_amount, then the amounts must also be equal. The denom of this field should be the same as the default cost, e.g. musd. |
+| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denomination equal to the definition_amount. If this is zero, all msgs will be free. If this has the same denomination as the definition_amount, then the amounts must also be equal. The denom of this field should be the fee denom, e.g. nhash. |
 
 
 
 
 
 
-<a name="provenance-smartaccounts-v1-EventFido2CredentialAdd"></a>
+<a name="provenance-flatfees-v1-MsgFee"></a>
 
-### EventFido2CredentialAdd
-Event emitted when a WebAuthn credential is added to a smart account
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `credential_number` | [uint64](#uint64) |  |  |
-| `credential_id` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-EventSmartAccountInit"></a>
-
-### EventSmartAccountInit
-Events
+### MsgFee
+MsgFee defines the cost to use a specific message type.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `credential_count` | [uint32](#uint32) |  |  |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. It should have the same denomination as the default cost and as the conversion factor's definition_amount, e.g. musdc. Any other denomination will be charged as defined. |
 
 
 
 
 
- <!-- end messages -->
 
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_smartaccounts_v1_provenanceaccount-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/smartaccounts/v1/provenanceaccount.proto
-
-
-
-<a name="provenance-smartaccounts-v1-BaseCredential"></a>
-
-### BaseCredential
-Credential message
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `credential_number` | [uint64](#uint64) |  | assigned globally unique in order of creation (like BaseAccount.account_number) |
-| `public_key` | [google.protobuf.Any](#google-protobuf-Any) |  | this is the public key of the credential The public key portion of a Relying Party-specific credential key pair, generated by an authenticator and returned to a Relying Party at registration time (see also public key credential). The private key portion of the credential key pair is known as the credential private key. Note that in the case of self attestation, the credential key pair is also used as the attestation key pair, see self attestation for details. |
-| `variant` | [CredentialType](#provenance-smartaccounts-v1-CredentialType) |  | see CredentialType enum |
-| `create_time` | [int64](#int64) |  | Seconds since UNIX epoch timestamp |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-Credential"></a>
-
-### Credential
-Credential is a credential that can be used to authenticate a smart account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `base_credential` | [BaseCredential](#provenance-smartaccounts-v1-BaseCredential) |  |  |
-| `fido2_authenticator` | [Fido2Authenticator](#provenance-smartaccounts-v1-Fido2Authenticator) |  |  |
-| `k256_authenticator` | [K256Authenticator](#provenance-smartaccounts-v1-K256Authenticator) |  |  |
-| `session_authenticator` | [SessionAuthenticator](#provenance-smartaccounts-v1-SessionAuthenticator) |  |  |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-Fido2Authenticator"></a>
-
-### Fido2Authenticator
-Fido2Authenticator is a Fido2 authenticator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  | A probabilistically-unique byte sequence identifying a public key credential source and its authentication assertions. The credential id (from the id attribute) is the base64url encoding of the data contained in the [[identifier]] internal slot. |
-| `username` | [string](#string) |  | this is the username of the credential |
-| `aaguid` | [bytes](#bytes) |  | Note on why to store aaGuid The AAGUID itself doesn’t directly identify a user but could potentially be used to infer the device type or model. Storing the AAGUID is not mandatory but is useful for enforcing security policies, auditing, and accessing device metadata. because of privacy, for now store it. |
-| `credential_creation_response` | [string](#string) |  | This is the response returned by the browser after a WebAuthn credential is created using navigator.credentials.create(). base64 encoded string |
-| `rp_id` | [string](#string) |  | store the rp id |
-| `rp_origin` | [string](#string) |  | store the rp origin |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-K256Authenticator"></a>
-
-### K256Authenticator
-K256Authenticator is a K256 authenticator.
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-MsgInit"></a>
-
-### MsgInit
-MsgInit is used to initialize a provenance account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
-| `credentials` | [Credential](#provenance-smartaccounts-v1-Credential) | repeated | list of credential types supported by the account at least one has to be provided. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-MsgInitResponse"></a>
-
-### MsgInitResponse
-MsgInitResponse is the response returned after smart account initialization.
-For now, This is empty.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `account_address` | [string](#string) |  | account_address is the address of the newly created account. |
-| `sequence` | [uint64](#uint64) |  | sequence is the current sequence of the account. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-Params"></a>
+<a name="provenance-flatfees-v1-Params"></a>
 
 ### Params
-Params defines the set of module parameters.
+Params defines the set of params for the flatfees module.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `enabled` | [bool](#bool) |  | check if the smart account module is enabled. |
-| `max_credential_allowed` | [uint32](#uint32) |  | max_credential_allowed is the max number of smart credentials allowed per base account. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-ProvenanceAccount"></a>
-
-### ProvenanceAccount
-ProvenanceAccount is a Type Of Smart Account assumes presence of a BaseAccount.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `base_account` | [cosmos.auth.v1beta1.BaseAccount](#cosmos-auth-v1beta1-BaseAccount) |  | address is the address of the account. This will be the same as the base account based on discussion on Jan30th, 2025. string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"]; Makes inheritance explicit Provides access to BaseAccount fields (account_number, sequence, etc.) Follows Cosmos SDK conventions Simplifies implementation of account interfaces |
-| `smart_account_number` | [uint64](#uint64) |  | smart_account_number is the global sequence number. |
-| `credentials` | [Credential](#provenance-smartaccounts-v1-Credential) | repeated | list of credential types supported by the account |
-| `is_smart_account_only_authentication` | [bool](#bool) |  | set to false but if set to true only smart account authentication is allowed. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-SessionAuthenticator"></a>
-
-### SessionAuthenticator
-Only valid for the duration of the session, public key for now is only k256 based.
-This is NOT IMPLEMENTED right now, but should be implemented for Session level credentials.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `end_session_height` | [int64](#int64) |  | block height at which it is invalidated |
-| `timed_out` | [bool](#bool) |  | seconds component of block consensus timestamp |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. The denom used here should be the same as used to define the specific msg costs. The recommended denom is musd. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. The definition_amount should have the same denom as the default cost. The denom of the converted amount should be the denom that fees are paid in, e.g. nhash. |
 
 
 
 
 
  <!-- end messages -->
-
-
-<a name="provenance-smartaccounts-v1-CredentialType"></a>
-
-### CredentialType
-Enum for credential type
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| `CREDENTIAL_TYPE_UNSPECIFIED` | `0` | Unspecified credential type |
-| `CREDENTIAL_TYPE_ED25519` | `1` | ED25519 credential type |
-| `CREDENTIAL_TYPE_K256` | `2` | K256 credential type, this will the usual cosmos credential |
-| `CREDENTIAL_TYPE_P256` | `3` | P256 credential type |
-| `CREDENTIAL_TYPE_WEBAUTHN` | `4` | WebAuthn credential type |
-| `CREDENTIAL_TYPE_WEBAUTHN_UV` | `5` | WebAuthn with UV credential type |
-
 
  <!-- end enums -->
 
@@ -6628,62 +6184,128 @@ Enum for credential type
 
 
 
-<a name="provenance_smartaccounts_v1_query-proto"></a>
+<a name="provenance_flatfees_v1_query-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/smartaccounts/v1/query.proto
+## provenance/flatfees/v1/query.proto
 
 
 
-<a name="provenance-smartaccounts-v1-QueryParamsRequest"></a>
+<a name="provenance-flatfees-v1-QueryAllMsgFeesRequest"></a>
+
+### QueryAllMsgFeesRequest
+QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the request. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryAllMsgFeesResponse"></a>
+
+### QueryAllMsgFeesResponse
+QueryAllMsgFeesResponse is the response type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees contains the requested information. |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination parameters of the response. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesRequest"></a>
+
+### QueryCalculateTxFeesRequest
+QueryCalculateTxFeesRequest is the request type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is a multiplier applied to the gas used while simulating the tx. This only affects the estimated gas (since the fee is flat). The default is 1.0. Valid range is 0.0 (exclusive) to 10.0 (inclusive). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesResponse"></a>
+
+### QueryCalculateTxFeesResponse
+QueryCalculateTxFeesResponse is the response type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees is the amount of fees needed for the Tx. |
+| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the Tx. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeRequest"></a>
+
+### QueryMsgFeeRequest
+QueryMsgFeeRequest is the request type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeResponse"></a>
+
+### QueryMsgFeeResponse
+QueryMsgFeeResponse is the response type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fee` | [MsgFee](#provenance-flatfees-v1-MsgFee) |  | msg_fee is the requested entry. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryParamsRequest"></a>
 
 ### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
+QueryParamsRequest is the request type for the Params query.
 
 
 
 
 
 
-<a name="provenance-smartaccounts-v1-QueryParamsResponse"></a>
+<a name="provenance-flatfees-v1-QueryParamsResponse"></a>
 
 ### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
+QueryParamsResponse is the response type for the Params query.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-smartaccounts-v1-Params) |  | params defines the parameters of the module. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-SmartAccountQueryRequest"></a>
-
-### SmartAccountQueryRequest
-SmartAccountQueryRequest is the request type for the Query/AccountQuery RPC
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address defines the account to be queried. this is the base account address. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-SmartAccountResponse"></a>
-
-### SmartAccountResponse
-SmartAccountQueryResponse is the response type for the Query/AccountQuery RPC
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `provenanceaccount` | [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount) |  | provenance account is the smart account associated with the account. |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines the parameters of the x/flatfees module. |
 
 
 
@@ -6696,105 +6318,39 @@ SmartAccountQueryResponse is the response type for the Query/AccountQuery RPC
  <!-- end HasExtensions -->
 
 
-<a name="provenance-smartaccounts-v1-Query"></a>
+<a name="provenance-flatfees-v1-Query"></a>
 
 ### Query
-Query defines the Query service for the x/accounts module.
+Query defines the gRPC querier service for flatfees module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `SmartAccount` | [SmartAccountQueryRequest](#provenance-smartaccounts-v1-SmartAccountQueryRequest) | [SmartAccountResponse](#provenance-smartaccounts-v1-SmartAccountResponse) | SmartAccountQuery runs a query to retrieve the state object of a smart account. |
-| `Params` | [QueryParamsRequest](#provenance-smartaccounts-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-smartaccounts-v1-QueryParamsResponse) | Params queries all parameters of the module. |
+| `Params` | [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse) | Params returns the parameters for the x/flatfees module. |
+| `AllMsgFees` | [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse) | AllMsgFees returns info on all msg types that have a customized msg fee. |
+| `MsgFee` | [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest) | [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse) | MsgFee will return information about what it will cost to execute a given msg type. If the provided msg type does not have a specific fee defined, the default is returned. |
+| `CalculateTxFees` | [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest) | [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and fees. |
 
  <!-- end services -->
 
 
 
-<a name="provenance_smartaccounts_v1_genesis-proto"></a>
+<a name="provenance_flatfees_v1_genesis-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/smartaccounts/v1/genesis.proto
+## provenance/flatfees/v1/genesis.proto
 
 
 
-<a name="provenance-smartaccounts-v1-GenesisState"></a>
+<a name="provenance-flatfees-v1-GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the accounts' module's genesis state.
+GenesisState contains a set of the flat fees module data, persisted from the store.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-smartaccounts-v1-Params) |  | params defines all the parameters of the module. |
-| `accounts` | [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount) | repeated | A collection of smart accounts to create on start |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_smartaccounts_v1_webauthn_key_types-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/smartaccounts/v1/webauthn_key_types.proto
-
-
-
-<a name="provenance-smartaccounts-v1-EC2PublicKeyData"></a>
-
-### EC2PublicKeyData
-EC2PublicKeyData represents the EC2 public key data for WebAuthn credentials.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `public_key_data` | [PublicKeyData](#provenance-smartaccounts-v1-PublicKeyData) |  | Embedding PublicKeyData |
-| `curve` | [int64](#int64) |  | Curve: If the key type is EC2, the curve on which we derive the signature from. |
-| `x_coord` | [bytes](#bytes) |  | XCoord: A byte string 32 bytes in length that holds the x coordinate of the key. |
-| `y_coord` | [bytes](#bytes) |  | YCoord: A byte string 32 bytes in length that holds the y coordinate of the key. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-EdDSAPublicKeyData"></a>
-
-### EdDSAPublicKeyData
-EdDSAPublicKeyData represents the EdDSA public key data for WebAuthn credentials.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `public_key_data` | [PublicKeyData](#provenance-smartaccounts-v1-PublicKeyData) |  | Embedding PublicKeyData |
-| `curve` | [int64](#int64) |  | Curve: Curve for OKP |
-| `x_coord` | [bytes](#bytes) |  | XCoord: A byte string that holds the x coordinate of the key. |
-
-
-
-
-
-
-<a name="provenance-smartaccounts-v1-PublicKeyData"></a>
-
-### PublicKeyData
-PublicKeyData represents the public key data for WebAuthn credentials.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `public_key` | [bytes](#bytes) |  | Decode the results to int by default. |
-| `key_type` | [int64](#int64) |  | The type of key created. Should be OKP, EC2, ( RSA not supported). |
-| `algorithm` | [int64](#int64) |  | A COSEAlgorithmIdentifier for the algorithm used to derive the key signature. |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines all the parameters of the module. |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the fees defined for specific msg types. |
 
 
 

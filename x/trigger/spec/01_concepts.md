@@ -9,7 +9,7 @@ The trigger module allows users to delay the execution of a message until an eve
 <!-- TOC -->
   - [Trigger](#trigger)
   - [Actions](#actions)
-  - [Gas Payment](#gas-payment)
+  - [Payment](#payment)
   - [Block Event](#block-event)
     - [Transaction Event](#transaction-event)
     - [Block Height Events](#block-height-events)
@@ -24,11 +24,11 @@ A `Trigger` is an address owned object that registers to a `Block Event`, and th
 
 ## Actions
 
-`Actions` are one or more messages that should be invoked. Every `Action` follows the same rules as a sdk message and requires purchased gas to run. See the `Gas Payment` section for more information.
+`Actions` are one or more `Msg`s that should be invoked. Every `Action` follows the same rules as a `Msg`. See the [Payment](#payment) section for more information.
 
-## Gas Payment
+## Payment
 
-Gas is vital in running the `Actions`, and in order to simplify the system as much as possible we leave it up to the user to calculate gas usage. When a user creates a `Trigger` they are required to purchase gas for the transaction AND the `Actions`. The remaining gas that is not used by the creation transaction will be rolled into a gas meter for the `Actions`. These `Actions` will only run and update state if their is enough allocated gas.
+The fee required to create a trigger is the sum of the `Msg` fee for the `MsgCreateTriggerRequest` plus the `Msg` fee for each of the `Actions`. This total is the amount of fees to include in the `Tx`.
 
 ## Block Event
 
