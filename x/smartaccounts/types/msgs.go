@@ -55,10 +55,10 @@ func (msg *MsgRegisterFido2Credential) ValidateBasic() error {
 		return errors.Wrap(err, "invalid sender address")
 	}
 	if len(msg.EncodedAttestation) == 0 {
-		return fmt.Errorf("encoded attestation cannot be empty")
+		return errors.New("encoded attestation cannot be empty")
 	}
 	if len(msg.UserIdentifier) == 0 {
-		return fmt.Errorf("user identifier cannot be empty")
+		return errors.New("user identifier cannot be empty")
 	}
 	return nil
 }
