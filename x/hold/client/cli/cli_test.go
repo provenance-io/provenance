@@ -85,7 +85,7 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("mota", 0)
+	pioconfig.SetProvConfig("mota")
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
 	s.cfg.ChainID = antewrapper.SimAppChainID

@@ -44,7 +44,6 @@ import (
 
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 // DefaultConsensusParams defines the default consensus params used in SimApp testing.
@@ -75,10 +74,6 @@ type SetupOptions struct {
 
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint, chainID string) (*App, GenesisState) {
 	db := dbm.NewMemDB()
-	// set default config if not set by the flow
-	if len(pioconfig.GetProvenanceConfig().FeeDenom) == 0 {
-		pioconfig.SetProvenanceConfig("", 0)
-	}
 
 	appOpts := simtestutil.AppOptionsMap{
 		flags.FlagHome:            t.TempDir(),
@@ -144,7 +139,6 @@ func BufferedInfoLoggerMaker(buffer *bytes.Buffer) LoggerMakerFn {
 // NewAppWithCustomOptions initializes a new SimApp with custom options.
 func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *App {
 	t.Helper()
-	pioconfig.SetProvenanceConfig("", 0)
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
