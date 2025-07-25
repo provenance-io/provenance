@@ -15,8 +15,6 @@ The following environment variables control the behavior of this script:
                         Default: provenanced
   DENOM --------------- The denomination to use as the utility token.
                         Default: nhash
-  MIN_FLOOR_PRICE ----- The minimum floor gas price that validators are allowed to set.
-                        Default: 1905
   PIO_TESTNET --------- Whether this is a testnet setup.
                         Default: true
   PIO_KEYRING_BACKEND - The keyring backend type to use for the new validator's keys.
@@ -44,7 +42,6 @@ done
 PIO_HOME="${PIO_HOME:-$HOME/.provenance}"
 PROV_CMD=${PROV_CMD:-provenanced}
 DENOM="${DENOM:-${PIO_CUSTOM_DENOM:-nhash}}"
-MIN_FLOOR_PRICE="${MIN_FLOOR_PRICE:-1905}"
 PIO_TESTNET="${PIO_TESTNET:-true}"
 PIO_KEYRING_BACKEND="${PIO_KEYRING_BACKEND:-test}"
 PIO_CHAIN_ID="${PIO_CHAIN_ID:-testing}"
@@ -69,7 +66,6 @@ if [ -n "$VERBOSE" ]; then
         PIO_HOME "$PIO_HOME" \
         PROV_CMD "$PROV_CMD" \
         DENOM "$DENOM" \
-        MIN_FLOOR_PRICE "$MIN_FLOOR_PRICE" \
         PIO_TESTNET "$PIO_TESTNET" \
         PIO_KEYRING_BACKEND "$PIO_KEYRING_BACKEND" \
         PIO_CHAIN_ID "$PIO_CHAIN_ID" \
@@ -90,14 +86,13 @@ $PROV_CMD genesis add-marker "100000000000000000000$DENOM" \
     --access mint,burn,admin,withdraw,deposit \
     $arg_keyring \
     --activate
-$PROV_CMD genesis add-msg-fee /provenance.name.v1.MsgBindNameRequest "10000000000$DENOM"
-$PROV_CMD genesis add-msg-fee /provenance.marker.v1.MsgAddMarkerRequest "100000000000$DENOM"
-$PROV_CMD genesis add-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "10000000000$DENOM"
-$PROV_CMD genesis add-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000$DENOM"
-$PROV_CMD genesis add-custom-floor "${MIN_FLOOR_PRICE}${DENOM}"
+$PROV_CMD genesis set-params-flatfees 150musd "25musd=1000000000$DENOM"
+$PROV_CMD genesis add-msg-fee /provenance.name.v1.MsgBindNameRequest "250musd"
+$PROV_CMD genesis add-msg-fee /provenance.marker.v1.MsgAddMarkerRequest "2500musd"
+$PROV_CMD genesis add-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "250musd"
+$PROV_CMD genesis add-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "1000musd"
 $PROV_CMD genesis add-default-market --denom "$DENOM"
 $PROV_CMD genesis collect-gentxs
-$PROV_CMD config set minimum-gas-prices "${MIN_FLOOR_PRICE}${DENOM}"
 set +ex
 
 [ -n "$VERBOSE" ] && printf '\nProvenance Blockchain initialized at: %s\n' "$PIO_HOME"

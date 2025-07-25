@@ -24,6 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgExecuteContract defines a message to execute a smart contract.
 type MsgExecuteContract struct {
 	Sender   string       `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	Contract string       `protobuf:"bytes,2,opt,name=contract,proto3" json:"contract,omitempty"`

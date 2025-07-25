@@ -98,6 +98,20 @@ type cmdResult struct {
 	ExitCode int
 }
 
+func (r *cmdResult) LogStd(t *testing.T) {
+	if len(r.Stdout) == 0 {
+		t.Logf("Nothing printed to stdout.")
+	} else {
+		t.Logf("stdout:\n%s", r.Stdout)
+	}
+
+	if len(r.Stderr) == 0 {
+		t.Logf("Nothing printed to stderr.")
+	} else {
+		t.Logf("stderr:\n%s", r.Stderr)
+	}
+}
+
 func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	// Ensure the keyring backend doesn't get changed when we run this command.
 	t.Setenv("PIO_TESTNET", "false")
@@ -136,24 +150,15 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	t.Logf("exit code: %d", rv.ExitCode)
 
 	rv.Stdout = outBuf.String()
-	if len(rv.Stdout) == 0 {
-		t.Logf("Nothing printed to stdout.")
-	} else {
-		t.Logf("stdout:\n%s", rv.Stdout)
-	}
-
 	rv.Stderr = errBuf.String()
-	if len(rv.Stderr) == 0 {
-		t.Logf("Nothing printed to stderr.")
-	} else {
-		t.Logf("stderr:\n%s", rv.Stderr)
-	}
 
 	return rv
 }
 
 func executePreUpgradeCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
-	return executeRootCmd(t, home, append([]string{"pre-upgrade"}, cmdArgs...)...)
+	rv := executeRootCmd(t, home, append([]string{"pre-upgrade"}, cmdArgs...)...)
+	rv.LogStd(t)
+	return rv
 }
 
 // assertContainsAll asserts that all of the expected entries are substrings of the actual.
@@ -218,7 +223,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 	defer sdk.SetAddrCacheEnabled(origCache)
 	sdk.SetAddrCacheEnabled(false)
 
-	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.SetProvConfig("") // Undo any config changes done in any other tests before.
 	encodingConfig := app.MakeTestEncodingConfig(t)
 	cdc := encodingConfig.Marshaler
 
@@ -272,6 +277,8 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	successMsg := "pre-upgrade successful"
 	updatingBlocksyncMsg := "Updating the broadcast_mode config value to \"sync\" (from \"block\", which is no longer an option)."
+	updatingMinGasPricesMsgStart := "Updating the minimum-gas-prices config value to \"0nhash\""
+	updatingMinGasPricesMsg := updatingMinGasPricesMsgStart + " (from \"1906nhash\", to accommodate flat fees)."
 
 	tests := []struct {
 		name         string
@@ -484,6 +491,64 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expInStdout:  []string{successMsg},
 			expAppCfg:    appCfgD,
 			expCmtCfg:    cmtCfgT,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "packed config min-gas-prices changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "1906nhash"
+				home, success := newHomePacked(t, "packed_min-gas-prices", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{updatingMinGasPricesMsg, successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "packed config min-gas-prices not changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "0nhash"
+				home, success := newHomePacked(t, "packed_min-gas-prices-ok", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expNot:       []string{updatingMinGasPricesMsgStart},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "unpacked config min-gas-prices changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "1906nhash"
+				home, success := newHome(t, "unpacked_min-gas-prices", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{updatingMinGasPricesMsg, successMsg},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
+			expClientCfg: clientCfgD,
+		},
+		{
+			name: "unpacked config min-gas-prices not changed",
+			setup: func(t *testing.T) (string, func(), bool) {
+				appCfg := config.DefaultAppConfig()
+				appCfg.MinGasPrices = "0nhash"
+				home, success := newHome(t, "unpacked_min-gas-prices-ok", appCfg, cmtCfgD, clientCfgD)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expNot:       []string{updatingMinGasPricesMsgStart},
+			expAppCfg:    appCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 	}

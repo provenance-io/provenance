@@ -68,11 +68,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 				s.NoError(err, "should add trigger to event listener store in RegisterTrigger")
 				s.Equal(tc.trigger, listener, "should be correct trigger that is stored in RegisterTrigger")
 
-				gasLimit := int(s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.trigger.Id))
-				s.Equal(tc.expected, gasLimit, "should store correct gas limit in RegisterTrigger")
-
 				s.app.TriggerKeeper.UnregisterTrigger(s.ctx, trigger)
-				s.app.TriggerKeeper.RemoveGasLimit(s.ctx, tc.trigger.Id)
 			} else {
 				s.PanicsWithValue(*tc.panic, func() {
 					s.app.TriggerKeeper.RegisterTrigger(s.ctx, tc.trigger)
