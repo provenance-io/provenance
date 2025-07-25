@@ -8,7 +8,6 @@ fi
 
 PROTO_DIR=proto
 
-
 dir="$(pwd)"
 zip="${1}"
 

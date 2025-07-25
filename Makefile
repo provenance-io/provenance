@@ -544,7 +544,7 @@ proto-legacy:
 		-v $(PWD):/workspace \
 		--workdir /workspace \
 		ghcr.io/cosmos/proto-builder:0.15.1 \
-		buf generate --template proto/buf.gen.legacy.yaml legacy_protos
+		buf generate --template legacy_protos/buf.gen.legacy.yaml legacy_protos
 
 .PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check proto-doc-gen proto-legacy
 
