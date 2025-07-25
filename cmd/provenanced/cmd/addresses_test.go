@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
@@ -71,7 +68,7 @@ func TestMetaaddressTestSuite(t *testing.T) {
 }
 
 func (s *MetaaddressTestSuite) TestAddMetaAddressDecoder() {
-	command := cmd.AddMetaAddressDecoder()
+	cmdMaker := cmd.AddMetaAddressDecoder
 
 	tests := []struct {
 		name     string
@@ -151,29 +148,33 @@ func (s *MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 	}
 
 	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
+		s.Run(tc.name, func() {
+			command := cmdMaker()
+			var b bytes.Buffer
+			command.SetOut(&b)
+			command.SetErr(&b)
 			command.SetArgs(tc.args)
-			b := bytes.NewBufferString("")
-			command.SetOut(b)
-			command.SetErr(b)
 			err := command.Execute()
+
+			outStr := b.String()
+			ok := true
 			if len(tc.err) > 0 {
-				require.EqualErrorf(t, err, tc.err, "%s - expected error", command.Name())
+				ok = s.Assert().EqualErrorf(err, tc.err, "%s - expected error: %s", command.Name(), tc.err)
 			} else {
-				require.NoErrorf(t, err, "%s - unexpected error", command.Name())
-				out, err := io.ReadAll(b)
-				require.NoError(t, err, "%s - unexpected buffer read error", command.Name())
-				outStr := string(out)
+				s.Require().NoErrorf(err, "%s - unexpected error", command.Name())
 				for _, str := range tc.inResult {
-					assert.Containsf(t, outStr, str, "%s - expected value to be in output", command.Name())
+					ok = s.Assert().Containsf(outStr, str, "%s - expected value to be in output", command.Name()) && ok
 				}
+			}
+			if !ok {
+				s.T().Logf("Command output:\n%s", outStr)
 			}
 		})
 	}
 }
 
 func (s *MetaaddressTestSuite) TestAddMetaAddressEncoder() {
-	command := cmd.AddMetaAddressEncoder()
+	cmdMaker := cmd.AddMetaAddressEncoder
 
 	tests := []struct {
 		name     string
@@ -366,22 +367,26 @@ func (s *MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 	}
 
 	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
+		s.Run(tc.name, func() {
+			command := cmdMaker()
+			var b bytes.Buffer
+			command.SetOut(&b)
+			command.SetErr(&b)
 			command.SetArgs(tc.args)
-			b := bytes.NewBufferString("")
-			command.SetOut(b)
-			command.SetErr(b)
 			err := command.Execute()
+
+			outStr := b.String()
+			ok := true
 			if len(tc.err) > 0 {
-				require.EqualErrorf(t, err, tc.err, "%s - expected error", command.Name())
+				ok = s.Assert().EqualErrorf(err, tc.err, "%s - expected error: %s", command.Name(), tc.err)
 			} else {
-				require.NoErrorf(t, err, "%s - unexpected error", command.Name())
-				out, err := io.ReadAll(b)
-				require.NoError(t, err, "%s - unexpected buffer read error", command.Name())
-				outStr := string(out)
+				s.Require().NoErrorf(err, "%s - unexpected error", command.Name())
 				for _, str := range tc.inResult {
-					assert.Containsf(t, outStr, str, "%s - expected value to be in output", command.Name())
+					ok = s.Assert().Containsf(outStr, str, "%s - expected value to be in output", command.Name()) && ok
 				}
+			}
+			if !ok {
+				s.T().Logf("Command output:\n%s", outStr)
 			}
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -36,6 +37,34 @@ import (
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
+
+// discardStdOutErr sets os.Stdout and os.Stderr to /dev/null and returns a function that resets them.
+func discardStdOutErr(t *testing.T) func() {
+	origStdout, origStderr := os.Stdout, os.Stderr
+
+	devNull, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0755)
+	require.NoError(t, err, "setup: os.Open(os.DevNull)")
+
+	os.Stdout, os.Stderr = devNull, devNull
+	return func() {
+		if origStdout != nil {
+			os.Stdout = origStdout
+			origStdout = nil
+		}
+		if origStderr != nil {
+			os.Stderr = origStderr
+			origStderr = nil
+		}
+	}
+}
+
+func quietlyExecInitCmd(t *testing.T, bm module.BasicManager, home string, cdc codec.Codec) {
+	resetStd := discardStdOutErr(t)
+	defer resetStd() // In case ExecInitCmd panics.
+	err := genutiltest.ExecInitCmd(bm, home, cdc)
+	resetStd() // We want it back for test stuff.
+	require.NoError(t, err, "setup: ExecInitCmd")
+}
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
 	origCache := sdk.IsAddrCacheEnabled()
@@ -72,7 +101,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			expectErrMsg:    "",
 		},
 		{
-			name:            "invalid fee",
+			name:            "msg type without leading slash",
 			msgType:         "provenance.name.v1.MsgBindNameRequest",
 			fee:             "1000jackthecat",
 			msgFeeFloorCoin: "0vspn",
@@ -87,8 +116,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
-			require.NoError(t, err)
+			quietlyExecInitCmd(t, testMbm, home, appCodec)
 
 			serverCtx := server.NewContext(viper.New(), cfg, logger)
 			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home)
@@ -318,8 +346,7 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 			home := t.TempDir()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
-			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
-			require.NoError(t, err, "setup: ExecInitCmd")
+			quietlyExecInitCmd(t, testMbm, home, cdc)
 
 			// Update the new genesis file to have the exchange genesis
 			// state and just the accounts defined by this test case.
@@ -380,6 +407,8 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 
 			cmd := provenancecmd.AddGenesisDefaultMarketCmd(home)
 			cmd.SetArgs(tc.args)
+			cmd.SetOut(io.Discard)
+			cmd.SetErr(io.Discard)
 
 			// Run it!
 			err = cmd.ExecuteContext(ctx)
@@ -658,8 +687,7 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 			home := t.TempDir()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
-			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
-			require.NoError(t, err, "setup: ExecInitCmd")
+			quietlyExecInitCmd(t, testMbm, home, cdc)
 
 			// Update the new genesis file to have the exchange genesis state defined by this test case.
 			genFile := cfg.GenesisFile()
@@ -691,6 +719,8 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 
 			cmd := provenancecmd.AddGenesisCustomMarketCmd(home)
 			cmd.SetArgs(tc.args)
+			cmd.SetOut(io.Discard)
+			cmd.SetErr(io.Discard)
 
 			// Run it!
 			err = cmd.ExecuteContext(ctx)

@@ -98,6 +98,20 @@ type cmdResult struct {
 	ExitCode int
 }
 
+func (r *cmdResult) LogStd(t *testing.T) {
+	if len(r.Stdout) == 0 {
+		t.Logf("Nothing printed to stdout.")
+	} else {
+		t.Logf("stdout:\n%s", r.Stdout)
+	}
+
+	if len(r.Stderr) == 0 {
+		t.Logf("Nothing printed to stderr.")
+	} else {
+		t.Logf("stderr:\n%s", r.Stderr)
+	}
+}
+
 func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	// Ensure the keyring backend doesn't get changed when we run this command.
 	t.Setenv("PIO_TESTNET", "false")
@@ -136,24 +150,15 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	t.Logf("exit code: %d", rv.ExitCode)
 
 	rv.Stdout = outBuf.String()
-	if len(rv.Stdout) == 0 {
-		t.Logf("Nothing printed to stdout.")
-	} else {
-		t.Logf("stdout:\n%s", rv.Stdout)
-	}
-
 	rv.Stderr = errBuf.String()
-	if len(rv.Stderr) == 0 {
-		t.Logf("Nothing printed to stderr.")
-	} else {
-		t.Logf("stderr:\n%s", rv.Stderr)
-	}
 
 	return rv
 }
 
 func executePreUpgradeCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
-	return executeRootCmd(t, home, append([]string{"pre-upgrade"}, cmdArgs...)...)
+	rv := executeRootCmd(t, home, append([]string{"pre-upgrade"}, cmdArgs...)...)
+	rv.LogStd(t)
+	return rv
 }
 
 // assertContainsAll asserts that all of the expected entries are substrings of the actual.
