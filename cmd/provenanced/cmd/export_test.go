@@ -10,4 +10,6 @@ var (
 	AddMarketsToAppState = addMarketsToAppState
 	// GetNextAvailableMarketID is a test-only exposure of getNextAvailableMarketID.
 	GetNextAvailableMarketID = getNextAvailableMarketID
+	// TestnetCmd is a test-only exposure of testnetCmd.
+	TestnetCmd = testnetCmd
 )
