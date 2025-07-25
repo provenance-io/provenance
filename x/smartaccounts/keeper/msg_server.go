@@ -51,7 +51,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 	}
 	baseAcc := ak.GetAccount(sdkCtx, creator)
 	if baseAcc == nil {
-		// this should never happen, since the signer is sender at least for the first time.
+		// this should never happen, since the signer is sender at least for the first time
 		return nil, fmt.Errorf("base account does not exist")
 	}
 	// Step 2: Parse the attestation object
@@ -68,7 +68,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 		return nil, fmt.Errorf("pare public key failed %v", err)
 	}
 	// check rp id is same
-	//check and set the rpid
+	// check and set the rpid
 	rpid, err := url.Parse(response.Response.CollectedClientData.Origin)
 	if err != nil {
 		return resp, fmt.Errorf("failed to parse rp id: %w", err)
@@ -140,7 +140,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 
 		// After successful initialization, emit event
 		errFromEventManager := sdkCtx.EventManager().EmitTypedEvent(
-			types.NewEventSmartAccountInit(smartAccount.Address, uint32(len(smartAccount.Credentials))),
+			types.NewEventSmartAccountInit(smartAccount.Address, uint32(len(smartAccount.Credentials))), //gosec:G115
 		)
 		if errFromEventManager != nil {
 			return nil, errFromEventManager
@@ -158,7 +158,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 		}
 		return resp, nil
 	} else {
-		//account exists
+		// account exists
 		// check for duplicate credential
 		hasDuplicate := HasDuplicateCredentialId(existingAcc.Credentials, fido2Authenticator.Id)
 		if hasDuplicate {
@@ -225,19 +225,19 @@ func ParseAndValidateAttestation(msg *types.MsgRegisterFido2Credential) (*protoc
 		return nil, types.ErrParseCredential.Wrapf("failed to decode base64 client data JSON: %v", err)
 	}
 	body := io.NopCloser(bytes.NewReader(rawAttestationObject))
-	//Generating an Attestation Object
-	//attestationFormat
-	//An attestation statement format.
+	// Generating an Attestation Object
+	// attestationFormat
+	// An attestation statement format.
 	//	authData
-	//A byte array containing authenticator data.
+	// A byte array containing authenticator data.
 	//	hash
-	//The hash of the serialized client data.
+	// The hash of the serialized client data.
 	//	the authenticator MUST:
-	//Let attStmt be the result of running attestationFormat ’s signing procedure given authData and hash .
+	// Let attStmt be the result of running attestationFormat ’s signing procedure given authData and hash .
 	//	Let fmt be attestationFormat ’s attestation statement format identifier
-	//Return the attestation object as a CBOR map with the following syntax, filled in with variables initialized by this algorithm:
-	//1
-	//attObj = { authData: bytes, $$attStmtType } attStmtTemplate = ( fmt: text, attStmt: { * tstr => any } ; Map is filled in by each concrete attStmtType ) ; Every attestation statement format must have the above fields attStmtTemplate .within $$attStmtType
+	// Return the attestation object as a CBOR map with the following syntax, filled in with variables initialized by this algorithm:
+	// 1
+	// attObj = { authData: bytes, $$attStmtType } attStmtTemplate = ( fmt: text, attStmt: { * tstr => any } ; Map is filled in by each concrete attStmtType ) ; Every attestation statement format must have the above fields attStmtTemplate .within $$attStmtType
 	credentialCreationResp, err := protocol.ParseCredentialCreationResponseBody(body)
 	if err != nil {
 		return nil, types.ErrParseCredential.Wrapf("failed to parse credential creation response: %v", err)
@@ -380,12 +380,14 @@ func (m MsgServer) DeleteCredential(ctx context.Context, deleteCredential *types
 	}
 
 	// After successful deletion, emit event
-	sdkCtx.EventManager().EmitTypedEvent(
+	if err := sdkCtx.EventManager().EmitTypedEvent(
 		types.NewEventCredentialDelete(
 			smartAccount.Address,
 			credentialDeleted.CredentialNumber,
 		),
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgDeleteCredentialResponse{
 		CredentialNumber: credentialDeleted.CredentialNumber,
