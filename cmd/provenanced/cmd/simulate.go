@@ -1,69 +1,42 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
-	"github.com/provenance-io/provenance/x/msgfees/types"
-)
-
-const (
-	flagDefaultDenom = "default-denom"
+	flatfeescli "github.com/provenance-io/provenance/x/flatfees/client/cli"
 )
 
 func GetCmdPioSimulateTx() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "simulate [msg_tx_json_file]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Simulate transaction and return estimated costs with possible msg fees.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			theTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
-			if err != nil {
-				return err
-			}
-			txBytes, err := clientCtx.TxConfig.TxEncoder()(theTx)
-			if err != nil {
-				return err
-			}
+	// This command is the same as the one for the flatfees CalculateTxFees query.
+	// However, we want this one named "simulate". So, if it's not, we put the current name in the aliases
+	// remove "simulate" from the aliases, and then update the use to have the name "simulate".
+	cmd := flatfeescli.NewCmdCalculateTxFees()
 
-			defaultDenom, err := cmd.Flags().GetString(flagDefaultDenom)
-			if err != nil {
-				return err
-			}
-
-			gasAdustment, err := cmd.Flags().GetFloat64(flags.FlagGasAdjustment)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			var response *types.CalculateTxFeesResponse
-			if response, err = queryClient.CalculateTxFees(
-				context.Background(),
-				&types.CalculateTxFeesRequest{
-					TxBytes:          txBytes,
-					DefaultBaseDenom: defaultDenom,
-					GasAdjustment:    float32(gasAdustment),
-				},
-			); err != nil {
-				fmt.Printf("failed to calculate fees: %s\n", err.Error())
-				return nil
-			}
-			return clientCtx.PrintProto(response)
-		},
+	// If it's already called "simulate", there's nothing more we need to do here.
+	origName := cmd.Name()
+	newName := "simulate"
+	if origName == newName {
+		return cmd
 	}
-	cmd.Flags().String(flagDefaultDenom, "nhash", "Denom used for gas costs")
-	flags.AddTxFlagsToCmd(cmd)
+
+	// Update the use line to have the new name with the same use string.
+	cmd.Use = newName + strings.TrimPrefix(cmd.Use, origName)
+
+	// If "simulate" is in the alias list, replace it with the original command name.
+	for i, alias := range cmd.Aliases {
+		if alias == newName {
+			cmd.Aliases[i] = origName
+			return cmd
+		}
+	}
+
+	// If "simulate" wasn't in the alias list, make the original command name as the first alias.
+	newAliases := make([]string, len(cmd.Aliases)+1)
+	newAliases[0] = origName
+	copy(newAliases[1:], cmd.Aliases)
+	cmd.Aliases = newAliases
+
 	return cmd
 }

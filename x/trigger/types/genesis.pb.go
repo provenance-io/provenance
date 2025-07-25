@@ -32,6 +32,7 @@ type GenesisState struct {
 	// Triggers to initially start with.
 	Triggers []Trigger `protobuf:"bytes,3,rep,name=triggers,proto3" json:"triggers"`
 	// Maximum amount of gas that the triggers can use.
+	// Deprecated: We no longer need to keep track of gas limits since we use flat fees.
 	GasLimits []GasLimit `protobuf:"bytes,4,rep,name=gas_limits,json=gasLimits,proto3" json:"gas_limits"`
 	// Triggers to initially start with in the queue.
 	QueuedTriggers []QueuedTrigger `protobuf:"bytes,5,rep,name=queued_triggers,json=queuedTriggers,proto3" json:"queued_triggers"`
@@ -71,10 +72,13 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
 // GasLimit defines the trigger module's grouping of a trigger and a gas limit
+// Deprecated: The GasLimit type is no longer used since we use flat fees.
 type GasLimit struct {
 	// The identifier of the trigger this GasLimit belongs to.
+	// Deprecated: The GasLimit type is no longer used since we use flat fees.
 	TriggerId uint64 `protobuf:"varint,1,opt,name=trigger_id,json=triggerId,proto3" json:"trigger_id,omitempty"`
 	// The maximum amount of gas that the trigger can use.
+	// Deprecated: The GasLimit type is no longer used since we use flat fees.
 	Amount uint64 `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 

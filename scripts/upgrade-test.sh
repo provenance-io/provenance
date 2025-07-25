@@ -7,9 +7,9 @@
 #   PIO_KEYRING_BACKEND:  Default: test
 #   PROV:  The provenanced executable. Default: build/provenanced
 #   DEPOSIT:  The --deposit amount for the upgrade gov proposal. Default: 10000000nhash
-#   GAS_PRICES:  The --gas-prices amount for the tx commands. Default: 1905nhash
+#   GAS_PRICES:  The --gas-prices amount for the tx commands. Default: 1nhash
 #   GAS:  The --gas amount for the tx commands. Default: auto
-#   GAS_ADJUSTMENT:  The --gas-adjustment amount for tx commands. Only used for --gas=auto. Default: 1.5
+#   GAS_ADJUSTMENT:  The --gas-adjustment amount for tx commands. Only used for --gas=auto. Default: 1
 #   HEIGHT_PLUS:  The number of blocks in the future to do the upgrade (must happen after voting ends). Default: 40
 
 if [[ -z "$1" ]]; then
@@ -29,9 +29,9 @@ export PIO_CHAIN_ID="${PIO_CHAIN_ID:-testing}"
 export PIO_KEYRING_BACKEND="${PIO_KEYRING_BACKEND:-test}"
 prov="${PROV:-build/provenanced}"
 deposit="${DEPOSIT:-10000000nhash}"
-gasPrices="${GAS_PRICES:-1905nhash}"
+gasPrices="${GAS_PRICES:-1nhash}"
 gas="${GAS:-auto}"
-gasAdj="${GAS_ADJUSTMENT:-1.6}"
+gasAdj="${GAS_ADJUSTMENT:-1}"
 gasArgs="--gas-prices=$gasPrices --gas=$gas"
 if [ "$gas" == 'auto' ]; then
     gasArgs="$gasArgs --gas-adjustment=$gasAdj"

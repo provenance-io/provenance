@@ -41,7 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountAddr = addr
 	s.accountStr = s.accountAddr.String()
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("atom", 0)
+	pioconfig.SetProvConfig("atom")
 
 	cfg := testutil.DefaultTestNetworkConfig()
 

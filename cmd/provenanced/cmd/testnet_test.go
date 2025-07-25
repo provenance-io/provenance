@@ -23,7 +23,6 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -36,7 +35,6 @@ func Test_TestnetCmd(t *testing.T) {
 	defer sdk.SetAddrCacheEnabled(origCache)
 	sdk.SetAddrCacheEnabled(false)
 	home := t.TempDir()
-	pioconfig.SetProvenanceConfig("", 0)
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(home))

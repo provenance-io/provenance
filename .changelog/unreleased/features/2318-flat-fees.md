@@ -1,0 +1,6 @@
+* Charge fees based only on `Msg` type (and not gas) [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
+  Gas is still monitored to prevent DDOS and is still limited to 4,000,000 per transaction and 60,000,000 per block.
+* Create the `x/flatfees` module for managing the costs of msgs [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
+* We now use a custom `app.Simulate` method when simulating a Tx [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
+  It reports the `gas_wanted` as the amount of nhash required in the fee (instead of the actual gas wanted). When simulating (e.g. using `--gas auto`), users should always use `1nhash` for the gas prices, and the default gas multiplier of `1.0`. This will cause existing/standard clients to set the fee to `gas-wanted` * `gas-prides` * `gas-multiplier` which will equal the required fee. The `CalculateTxFees` query in the flatfees module can also be used to simulate a tx and it explicitly returns the required fee (as well as actual gas used). The `gas_wanted` provided with a Tx is now largely ignored since the existing/standard clients will set it to the amount of fee, which will usually be more than the max tx gas.
+* Create the `bouvardia` upgrade for getting us to `v1.26.0` [PR 2318](https://github.com/provenance-io/provenance/pull/2318).

@@ -18,7 +18,6 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	ibchookscli "github.com/provenance-io/provenance/x/ibchooks/client/cli"
@@ -40,7 +39,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
