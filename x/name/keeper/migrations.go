@@ -16,7 +16,7 @@ func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
 }
 
-func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 
 	store := ctx.KVStore(m.keeper.storeKey)
 
