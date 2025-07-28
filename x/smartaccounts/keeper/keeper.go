@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -155,7 +156,7 @@ func (k Keeper) Init(ctx context.Context, msg *types.MsgInit) (*types.Provenance
 
 	// Check if the number of credentials exceeds the maximum allowed
 	if len(msg.Credentials) == 0 {
-		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "at least one credential must be provided")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "at least one credential must be provided")
 	}
 	if len(msg.Credentials) > int(params.MaxCredentialAllowed) {
 		return nil, fmt.Errorf("maximum number of credentials (%d) exceeded", params.MaxCredentialAllowed)

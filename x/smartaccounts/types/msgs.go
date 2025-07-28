@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -17,7 +18,6 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgRegisterFido2Credential)(nil),
 	(*MsgRegisterCosmosCredential)(nil),
 	(*MsgDeleteCredential)(nil),
-	(*MsgDeleteAccount)(nil),
 }
 
 // NewMsgUpdateParams creates new instance of MsgUpdateParams
@@ -54,11 +54,11 @@ func (msg *MsgRegisterFido2Credential) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return errors.Wrap(err, "invalid sender address")
 	}
-	if len(msg.EncodedAttestation) == 0 {
-		return errors.New("encoded attestation cannot be empty")
+	if msg.EncodedAttestation == "" {
+		return errors.Wrap(sdkerrors.ErrInvalidRequest, "encoded attestation cannot be empty")
 	}
-	if len(msg.UserIdentifier) == 0 {
-		return errors.New("user identifier cannot be empty")
+	if msg.UserIdentifier == "" {
+		return errors.Wrap(sdkerrors.ErrInvalidRequest, "user identifier cannot be empty")
 	}
 	return nil
 }
