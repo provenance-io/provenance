@@ -124,7 +124,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	// Register migration
 	migrator := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 2, migrator.Migrate2to3); err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 2, migrator.MigrateKVToCollections2to3); err != nil {
 		panic(fmt.Sprintf("failed to register migration for %s: %v", types.ModuleName, err))
 	}
 }

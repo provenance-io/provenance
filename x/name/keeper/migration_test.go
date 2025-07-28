@@ -83,7 +83,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	migrator := keeper.NewMigrator(newKeeper)
 
 	// Run migration
-	err := migrator.Migrate2to3(s.ctx)
+	err := migrator.MigrateKVToCollections2to3(s.ctx)
 	s.Require().NoError(err)
 
 	// Verify params
