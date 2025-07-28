@@ -8,7 +8,6 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -18,6 +17,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -84,6 +84,20 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			return vm, nil
+		},
+	},
+	"name_module_collections_migration_v2_to_v3": {
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			// Create the Migrator using the app's NameKeeper
+			migrator := namekeeper.NewMigrator(app.NameKeeper)
+
+			// Call the method on the migrator
+			if err := migrator.MigrateKVToCollections2to3(ctx); err != nil {
+				return nil, err
+			}
+
+			// Continue with regular module migrations
+			return app.mm.RunMigrations(ctx, app.configurator, vm)
 		},
 	},
 }
