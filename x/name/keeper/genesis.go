@@ -3,6 +3,7 @@ package keeper
 import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/provenance-io/provenance/x/name/types"
@@ -21,7 +22,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 	}
-
 }
 
 // ExportGenesis exports the current keeper state of the name module.
