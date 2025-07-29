@@ -75,38 +75,6 @@ func ValidateAddress(address sdk.AccAddress) error {
 	return sdk.VerifyAddressFormat(address)
 }
 
-// GetNameKeySuffix returns the name key suffix (hash part only)
-func GetNameKeySuffix(name string) ([]byte, error) {
-	normalized := NormalizeName(name)
-	if strings.TrimSpace(normalized) == "" {
-		return nil, fmt.Errorf("name can not be empty: %w", ErrNameInvalid)
-	}
-
-	comps := strings.Split(normalized, ".")
-	hsh := sha256.New()
-	for i := len(comps) - 1; i >= 0; i-- {
-		comp := strings.TrimSpace(comps[i])
-		if len(comp) == 0 {
-			return nil, fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid)
-		}
-		if _, err := hsh.Write([]byte(comp)); err != nil {
-			return nil, err
-		}
-	}
-	return hsh.Sum(nil), nil
-}
-
-// GetAddressKeySuffix returns the address key suffix
-func GetAddressKeySuffix(addr sdk.AccAddress, nameKeySuffix []byte) ([]byte, error) {
-	if err := sdk.VerifyAddressFormat(addr); err != nil {
-		return nil, err
-	}
-	key := make([]byte, 0, len(addr)+1+len(nameKeySuffix))
-	key = append(key, address.MustLengthPrefix(addr)...)
-	key = append(key, nameKeySuffix...)
-	return key, nil
-}
-
 type rawBytesKeyCodec struct{}
 
 // RawBytesKey is a codec for []byte keys without any length prefixing or transformation.
