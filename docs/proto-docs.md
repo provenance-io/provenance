@@ -310,8 +310,8 @@
     - [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency)
   
 - [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
-    - [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest)
-    - [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse)
+    - [QueryLedgerBalancesAsOfRequest](#provenance-ledger-v1-QueryLedgerBalancesAsOfRequest)
+    - [QueryLedgerBalancesAsOfResponse](#provenance-ledger-v1-QueryLedgerBalancesAsOfResponse)
     - [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest)
     - [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse)
     - [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest)
@@ -326,10 +326,10 @@
     - [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse)
     - [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest)
     - [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse)
-    - [QuerySettlementsByCorrelationIdRequest](#provenance-ledger-v1-QuerySettlementsByCorrelationIdRequest)
-    - [QuerySettlementsByCorrelationIdResponse](#provenance-ledger-v1-QuerySettlementsByCorrelationIdResponse)
-    - [QuerySettlementsRequest](#provenance-ledger-v1-QuerySettlementsRequest)
-    - [QuerySettlementsResponse](#provenance-ledger-v1-QuerySettlementsResponse)
+    - [QueryLedgerSettlementsByCorrelationIdRequest](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIdRequest)
+    - [QueryLedgerSettlementsByCorrelationIdResponse](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIdResponse)
+    - [QueryLedgerSettlementsRequest](#provenance-ledger-v1-QueryLedgerSettlementsRequest)
+    - [QueryLedgerSettlementsResponse](#provenance-ledger-v1-QueryLedgerSettlementsResponse)
   
     - [Query](#provenance-ledger-v1-Query)
   
@@ -5267,10 +5267,10 @@ Payment frequencies for loan repayments
 
 
 
-<a name="provenance-ledger-v1-QueryBalancesAsOfRequest"></a>
+<a name="provenance-ledger-v1-QueryLedgerBalancesAsOfRequest"></a>
 
-### QueryBalancesAsOfRequest
-QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
+### QueryLedgerBalancesAsOfRequest
+
 
 
 | Field | Type | Label | Description |
@@ -5283,10 +5283,10 @@ QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC m
 
 
 
-<a name="provenance-ledger-v1-QueryBalancesAsOfResponse"></a>
+<a name="provenance-ledger-v1-QueryLedgerBalancesAsOfResponse"></a>
 
-### QueryBalancesAsOfResponse
-QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
+### QueryLedgerBalancesAsOfResponse
+
 
 
 | Field | Type | Label | Description |
@@ -5509,9 +5509,9 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
-<a name="provenance-ledger-v1-QuerySettlementsByCorrelationIdRequest"></a>
+<a name="provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIdRequest"></a>
 
-### QuerySettlementsByCorrelationIdRequest
+### QueryLedgerSettlementsByCorrelationIdRequest
 
 
 
@@ -5525,9 +5525,9 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
-<a name="provenance-ledger-v1-QuerySettlementsByCorrelationIdResponse"></a>
+<a name="provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIdResponse"></a>
 
-### QuerySettlementsByCorrelationIdResponse
+### QueryLedgerSettlementsByCorrelationIdResponse
 
 
 
@@ -5540,9 +5540,9 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
-<a name="provenance-ledger-v1-QuerySettlementsRequest"></a>
+<a name="provenance-ledger-v1-QueryLedgerSettlementsRequest"></a>
 
-### QuerySettlementsRequest
+### QueryLedgerSettlementsRequest
 
 
 
@@ -5555,9 +5555,9 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 
 
-<a name="provenance-ledger-v1-QuerySettlementsResponse"></a>
+<a name="provenance-ledger-v1-QueryLedgerSettlementsResponse"></a>
 
-### QuerySettlementsResponse
+### QueryLedgerSettlementsResponse
 
 
 
@@ -5583,16 +5583,16 @@ Query defines the gRPC querier service for ledger module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `ClassQuery` | [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest) | [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse) | Ledger Class Queries *************************************************************** |
-| `ClassEntryTypesQuery` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) |  |
-| `ClassStatusTypesQuery` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) |  |
-| `ClassBucketTypesQuery` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) |  |
-| `LedgerQuery` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) | Ledger Queries *************************************************************** |
-| `EntriesQuery` | [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest) | [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse) |  |
-| `LedgerEntryQuery` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
-| `BalancesAsOfQuery` | [QueryBalancesAsOfRequest](#provenance-ledger-v1-QueryBalancesAsOfRequest) | [QueryBalancesAsOfResponse](#provenance-ledger-v1-QueryBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
-| `SettlementsQuery` | [QuerySettlementsRequest](#provenance-ledger-v1-QuerySettlementsRequest) | [QuerySettlementsResponse](#provenance-ledger-v1-QuerySettlementsResponse) | get all settlements for a ledger |
-| `SettlementsByCorrelationIdQuery` | [QuerySettlementsByCorrelationIdRequest](#provenance-ledger-v1-QuerySettlementsByCorrelationIdRequest) | [QuerySettlementsByCorrelationIdResponse](#provenance-ledger-v1-QuerySettlementsByCorrelationIdResponse) | get settlements by correlation id |
+| `LedgerClass` | [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest) | [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse) | Returns the ledger class for a given ledger class id |
+| `LedgerClassEntryTypes` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) | Returns the entry types for a given ledger class id |
+| `LedgerClassStatusTypes` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) | Returns the status types for a given ledger class id |
+| `LedgerClassBucketTypes` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) | Returns the bucket types for a given ledger class id |
+| `Ledger` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) | Returns the ledger for a given ledger key |
+| `LedgerEntries` | [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest) | [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse) | Returns the entries for a given ledger key |
+| `LedgerEntry` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | GetLedgerEntry returns a specific ledger entry for an NFT |
+| `LedgerBalancesAsOf` | [QueryLedgerBalancesAsOfRequest](#provenance-ledger-v1-QueryLedgerBalancesAsOfRequest) | [QueryLedgerBalancesAsOfResponse](#provenance-ledger-v1-QueryLedgerBalancesAsOfResponse) | GetBalancesAsOf returns the balances for a specific NFT as of a given date |
+| `LedgerSettlements` | [QueryLedgerSettlementsRequest](#provenance-ledger-v1-QueryLedgerSettlementsRequest) | [QueryLedgerSettlementsResponse](#provenance-ledger-v1-QueryLedgerSettlementsResponse) | get all settlements for a ledger |
+| `LedgerSettlementsByCorrelationId` | [QueryLedgerSettlementsByCorrelationIdRequest](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIdRequest) | [QueryLedgerSettlementsByCorrelationIdResponse](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIdResponse) | get settlements by correlation id |
 
  <!-- end services -->
 

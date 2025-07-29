@@ -72,7 +72,7 @@ func GetConfigCmd() *cobra.Command {
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			l, err := queryClient.LedgerQuery(context.Background(), &req)
+			l, err := queryClient.Ledger(context.Background(), &req)
 			if err != nil {
 				return err
 			}
@@ -130,7 +130,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					},
 				}
 
-				config, err := queryClient.LedgerQuery(context.Background(), &req)
+				config, err := queryClient.Ledger(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -146,7 +146,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					},
 				}
 
-				l, err := queryClient.EntriesQuery(context.Background(), &req)
+				l, err := queryClient.LedgerEntries(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -159,7 +159,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					LedgerClassId: ledgerClassId,
 				}
 
-				types, err := queryClient.ClassEntryTypesQuery(context.Background(), &req)
+				types, err := queryClient.LedgerClassEntryTypes(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -174,7 +174,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					LedgerClassId: ledgerClassId,
 				}
 
-				types, err := queryClient.ClassBucketTypesQuery(context.Background(), &req)
+				types, err := queryClient.LedgerClassBucketTypes(context.Background(), &req)
 				if err != nil {
 					return nil
 				}
@@ -265,7 +265,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			res, err := queryClient.BalancesAsOfQuery(cmd.Context(), &ledger.QueryBalancesAsOfRequest{
+			res, err := queryClient.LedgerBalancesAsOf(cmd.Context(), &ledger.QueryLedgerBalancesAsOfRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassId,
 					NftId:        nftId,
@@ -310,7 +310,7 @@ func GetLedgerClassEntryTypesCmd() *cobra.Command {
 				LedgerClassId: ledgerClassId,
 			}
 
-			resp, err := queryClient.ClassEntryTypesQuery(context.Background(), &req)
+			resp, err := queryClient.LedgerClassEntryTypes(context.Background(), &req)
 			if err != nil {
 				return err
 			}
@@ -343,7 +343,7 @@ func GetLedgerClassStatusTypesCmd() *cobra.Command {
 				LedgerClassId: ledgerClassId,
 			}
 
-			resp, err := queryClient.ClassStatusTypesQuery(context.Background(), &req)
+			resp, err := queryClient.LedgerClassStatusTypes(context.Background(), &req)
 			if err != nil {
 				return err
 			}
@@ -375,7 +375,7 @@ func GetLedgerClassBucketTypesCmd() *cobra.Command {
 				LedgerClassId: ledgerClassId,
 			}
 
-			resp, err := queryClient.ClassBucketTypesQuery(context.Background(), &req)
+			resp, err := queryClient.LedgerClassBucketTypes(context.Background(), &req)
 			if err != nil {
 				return err
 			}
@@ -408,7 +408,7 @@ func GetLedgerClassCmd() *cobra.Command {
 				LedgerClassId: ledgerClassId,
 			}
 
-			resp, err := queryClient.ClassQuery(context.Background(), &req)
+			resp, err := queryClient.LedgerClass(context.Background(), &req)
 			if err != nil {
 				return err
 			}
@@ -437,7 +437,7 @@ func GetAllSettlementsCmd() *cobra.Command {
 			nftId := args[1]
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			res, err := queryClient.SettlementsQuery(cmd.Context(), &ledger.QuerySettlementsRequest{
+			res, err := queryClient.LedgerSettlements(cmd.Context(), &ledger.QueryLedgerSettlementsRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassId,
 					NftId:        nftId,
@@ -472,7 +472,7 @@ func GetSettlementsByCorrelationIdCmd() *cobra.Command {
 			correlationId := args[2]
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			res, err := queryClient.SettlementsByCorrelationIdQuery(cmd.Context(), &ledger.QuerySettlementsByCorrelationIdRequest{
+			res, err := queryClient.LedgerSettlementsByCorrelationId(cmd.Context(), &ledger.QueryLedgerSettlementsByCorrelationIdRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassId,
 					NftId:        nftId,

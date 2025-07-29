@@ -12,59 +12,91 @@ import "provenance/ledger/v1/ledger_settlement.proto";
 
 // Query defines the gRPC querier service for ledger module.
 service Query {
-  /*****************************************************************
-    Ledger Class Queries
-  *****************************************************************/
-  rpc ClassQuery(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
+  // Returns the ledger class for a given ledger class id
+  rpc LedgerClass(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}";
   }
 
-  rpc ClassEntryTypesQuery(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
+  // Returns the entry types for a given ledger class id
+  rpc LedgerClassEntryTypes(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/entry_types";
   }
 
-  rpc ClassStatusTypesQuery(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
+  // Returns the status types for a given ledger class id
+  rpc LedgerClassStatusTypes(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/status_types";
   }
 
-  rpc ClassBucketTypesQuery(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
+  // Returns the bucket types for a given ledger class id
+  rpc LedgerClassBucketTypes(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/bucket_types";
   }
 
-  /*****************************************************************
-    Ledger Queries
-  *****************************************************************/
-  rpc LedgerQuery(QueryLedgerRequest) returns (QueryLedgerResponse) {
+  // Returns the ledger for a given ledger key
+  rpc Ledger(QueryLedgerRequest) returns (QueryLedgerResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
 
-  rpc EntriesQuery(QueryLedgerEntriesRequest) returns (QueryLedgerEntriesResponse) {
+  // Returns the entries for a given ledger key
+  rpc LedgerEntries(QueryLedgerEntriesRequest) returns (QueryLedgerEntriesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/entries/{key.asset_class_id}/{key.nft_id}";
   }
 
   // GetLedgerEntry returns a specific ledger entry for an NFT
-  rpc LedgerEntryQuery(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
+  rpc LedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/entry/{correlation_id}";
   }
 
   // GetBalancesAsOf returns the balances for a specific NFT as of a given date
-  rpc BalancesAsOfQuery(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
+  rpc LedgerBalancesAsOf(QueryLedgerBalancesAsOfRequest) returns (QueryLedgerBalancesAsOfResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/balances/{as_of_date}";
   }
 
   // get all settlements for a ledger
-  rpc SettlementsQuery(QuerySettlementsRequest) returns (QuerySettlementsResponse) {
+  rpc LedgerSettlements(QueryLedgerSettlementsRequest) returns (QueryLedgerSettlementsResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements";
   }
 
   // get settlements by correlation id
-  rpc SettlementsByCorrelationIdQuery(QuerySettlementsByCorrelationIdRequest)
-      returns (QuerySettlementsByCorrelationIdResponse) {
+  rpc LedgerSettlementsByCorrelationId(QueryLedgerSettlementsByCorrelationIdRequest)
+      returns (QueryLedgerSettlementsByCorrelationIdResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements/{correlation_id}";
   }
+}
+
+message QueryLedgerClassRequest {
+  string ledger_class_id = 1;
+}
+
+message QueryLedgerClassResponse {
+  LedgerClass ledger_class = 1;
+}
+
+message QueryLedgerClassEntryTypesRequest {
+  string ledger_class_id = 1;
+}
+
+message QueryLedgerClassEntryTypesResponse {
+  repeated LedgerClassEntryType entry_types = 1;
+}
+
+message QueryLedgerClassStatusTypesRequest {
+  string ledger_class_id = 1;
+}
+
+message QueryLedgerClassStatusTypesResponse {
+  repeated LedgerClassStatusType status_types = 1;
+}
+
+message QueryLedgerClassBucketTypesRequest {
+  string ledger_class_id = 1;
+}
+
+message QueryLedgerClassBucketTypesResponse {
+  repeated LedgerClassBucketType bucket_types = 1;
 }
 
 message QueryLedgerRequest {
@@ -92,64 +124,30 @@ message QueryLedgerEntryResponse {
   LedgerEntry entry = 1;
 }
 
-// QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
-message QueryBalancesAsOfRequest {
+message QueryLedgerBalancesAsOfRequest {
   LedgerKey key = 1;
 
   // Format: YYYY-MM-DD
   string as_of_date = 2;
 }
 
-// QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
-message QueryBalancesAsOfResponse {
+message QueryLedgerBalancesAsOfResponse {
   BucketBalances bucket_balances = 1;
 }
 
-message QueryLedgerClassEntryTypesRequest {
-  string ledger_class_id = 1;
-}
-
-message QueryLedgerClassEntryTypesResponse {
-  repeated LedgerClassEntryType entry_types = 1;
-}
-
-message QueryLedgerClassStatusTypesRequest {
-  string ledger_class_id = 1;
-}
-
-message QueryLedgerClassStatusTypesResponse {
-  repeated LedgerClassStatusType status_types = 1;
-}
-
-message QueryLedgerClassBucketTypesRequest {
-  string ledger_class_id = 1;
-}
-
-message QueryLedgerClassBucketTypesResponse {
-  repeated LedgerClassBucketType bucket_types = 1;
-}
-
-message QueryLedgerClassRequest {
-  string ledger_class_id = 1;
-}
-
-message QueryLedgerClassResponse {
-  LedgerClass ledger_class = 1;
-}
-
-message QuerySettlementsRequest {
+message QueryLedgerSettlementsRequest {
   LedgerKey key = 1;
 }
 
-message QuerySettlementsResponse {
+message QueryLedgerSettlementsResponse {
   repeated StoredSettlementInstructions settlements = 1;
 }
 
-message QuerySettlementsByCorrelationIdRequest {
+message QueryLedgerSettlementsByCorrelationIdRequest {
   LedgerKey key            = 1;
   string    correlation_id = 2;
 }
 
-message QuerySettlementsByCorrelationIdResponse {
+message QueryLedgerSettlementsByCorrelationIdResponse {
   StoredSettlementInstructions settlement = 1;
 }

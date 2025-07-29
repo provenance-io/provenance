@@ -22,7 +22,7 @@ func NewLedgerQueryServer(k ViewKeeper, sk FundTransferKeeper) LedgerQueryServer
 	}
 }
 
-func (qs LedgerQueryServer) LedgerQuery(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
+func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	l, err := qs.k.GetLedger(ctx, req.Key)
@@ -41,7 +41,7 @@ func (qs LedgerQueryServer) LedgerQuery(goCtx context.Context, req *ledger.Query
 	return &resp, nil
 }
 
-func (qs LedgerQueryServer) EntriesQuery(goCtx context.Context, req *ledger.QueryLedgerEntriesRequest) (*ledger.QueryLedgerEntriesResponse, error) {
+func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *ledger.QueryLedgerEntriesRequest) (*ledger.QueryLedgerEntriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	entries, err := qs.k.ListLedgerEntries(ctx, req.Key)
@@ -64,7 +64,7 @@ func (qs LedgerQueryServer) EntriesQuery(goCtx context.Context, req *ledger.Quer
 }
 
 // GetBalancesAsOf returns the balances for a specific NFT as of a given date
-func (qs LedgerQueryServer) BalancesAsOfQuery(ctx context.Context, req *ledger.QueryBalancesAsOfRequest) (*ledger.QueryBalancesAsOfResponse, error) {
+func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *ledger.QueryLedgerBalancesAsOfRequest) (*ledger.QueryLedgerBalancesAsOfResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -88,13 +88,13 @@ func (qs LedgerQueryServer) BalancesAsOfQuery(ctx context.Context, req *ledger.Q
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "balances")
 	}
 
-	return &ledger.QueryBalancesAsOfResponse{
+	return &ledger.QueryLedgerBalancesAsOfResponse{
 		BucketBalances: balances,
 	}, nil
 }
 
 // GetLedgerEntry returns a specific ledger entry for an NFT
-func (qs LedgerQueryServer) LedgerEntryQuery(ctx context.Context, req *ledger.QueryLedgerEntryRequest) (*ledger.QueryLedgerEntryResponse, error) {
+func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *ledger.QueryLedgerEntryRequest) (*ledger.QueryLedgerEntryResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -117,7 +117,7 @@ func (qs LedgerQueryServer) LedgerEntryQuery(ctx context.Context, req *ledger.Qu
 	}, nil
 }
 
-func (qs LedgerQueryServer) ClassEntryTypesQuery(ctx context.Context, req *ledger.QueryLedgerClassEntryTypesRequest) (*ledger.QueryLedgerClassEntryTypesResponse, error) {
+func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *ledger.QueryLedgerClassEntryTypesRequest) (*ledger.QueryLedgerClassEntryTypesResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -132,7 +132,7 @@ func (qs LedgerQueryServer) ClassEntryTypesQuery(ctx context.Context, req *ledge
 	}, nil
 }
 
-func (qs LedgerQueryServer) ClassStatusTypesQuery(ctx context.Context, req *ledger.QueryLedgerClassStatusTypesRequest) (*ledger.QueryLedgerClassStatusTypesResponse, error) {
+func (qs LedgerQueryServer) LedgerClassStatusTypes(ctx context.Context, req *ledger.QueryLedgerClassStatusTypesRequest) (*ledger.QueryLedgerClassStatusTypesResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -147,7 +147,7 @@ func (qs LedgerQueryServer) ClassStatusTypesQuery(ctx context.Context, req *ledg
 	}, nil
 }
 
-func (qs LedgerQueryServer) ClassBucketTypesQuery(ctx context.Context, req *ledger.QueryLedgerClassBucketTypesRequest) (*ledger.QueryLedgerClassBucketTypesResponse, error) {
+func (qs LedgerQueryServer) LedgerClassBucketTypes(ctx context.Context, req *ledger.QueryLedgerClassBucketTypesRequest) (*ledger.QueryLedgerClassBucketTypesResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -162,7 +162,7 @@ func (qs LedgerQueryServer) ClassBucketTypesQuery(ctx context.Context, req *ledg
 	}, nil
 }
 
-func (qs LedgerQueryServer) ClassQuery(ctx context.Context, req *ledger.QueryLedgerClassRequest) (*ledger.QueryLedgerClassResponse, error) {
+func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *ledger.QueryLedgerClassRequest) (*ledger.QueryLedgerClassResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -177,7 +177,7 @@ func (qs LedgerQueryServer) ClassQuery(ctx context.Context, req *ledger.QueryLed
 	}, nil
 }
 
-func (qs LedgerQueryServer) SettlementsQuery(ctx context.Context, req *ledger.QuerySettlementsRequest) (*ledger.QuerySettlementsResponse, error) {
+func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *ledger.QueryLedgerSettlementsRequest) (*ledger.QueryLedgerSettlementsResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -193,12 +193,12 @@ func (qs LedgerQueryServer) SettlementsQuery(ctx context.Context, req *ledger.Qu
 		return nil, err
 	}
 
-	return &ledger.QuerySettlementsResponse{
+	return &ledger.QueryLedgerSettlementsResponse{
 		Settlements: settlements,
 	}, nil
 }
 
-func (qs LedgerQueryServer) SettlementsByCorrelationIdQuery(ctx context.Context, req *ledger.QuerySettlementsByCorrelationIdRequest) (*ledger.QuerySettlementsByCorrelationIdResponse, error) {
+func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context, req *ledger.QueryLedgerSettlementsByCorrelationIdRequest) (*ledger.QueryLedgerSettlementsByCorrelationIdResponse, error) {
 	if req == nil {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
 	}
@@ -214,7 +214,7 @@ func (qs LedgerQueryServer) SettlementsByCorrelationIdQuery(ctx context.Context,
 		return nil, err
 	}
 
-	return &ledger.QuerySettlementsByCorrelationIdResponse{
+	return &ledger.QueryLedgerSettlementsByCorrelationIdResponse{
 		Settlement: settlement,
 	}, nil
 }
