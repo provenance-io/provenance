@@ -11,7 +11,7 @@ var _ sdk.AccountI = (*ProvenanceAccount)(nil)
 
 func (pa ProvenanceAccount) ValidateBasic() error {
 	if pa.Address == "" {
-		return fmt.Errorf("base Account has to be set")
+		return fmt.Errorf("base account has to be set")
 	}
 	return nil
 }

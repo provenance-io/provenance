@@ -36,9 +36,10 @@ func (p Params) Validate() error {
 
 // NewParams creates a new parameter object
 func NewParams(
-	enable bool,
+	enable bool, maxCredentialAllowed uint32,
 ) Params {
 	return Params{
-		Enabled: enable,
+		Enabled:              enable,
+		MaxCredentialAllowed: maxCredentialAllowed,
 	}
 }
