@@ -95,7 +95,7 @@ func (s *TestSuite) ConfigureTest() {
 		MaintainerAddress: s.addr1.String(),
 		Denom:             s.bondDenom,
 	}
-	s.keeper.CreateLedgerClass(s.ctx, s.addr1, s.validLedgerClass)
+	s.keeper.AddLedgerClass(s.ctx, s.addr1, s.validLedgerClass)
 
 	s.keeper.AddClassEntryType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          1,
@@ -160,7 +160,7 @@ func (s *TestSuite) TestNonExistentDenom() {
 		MaintainerAddress: s.addr1.String(),
 		Denom:             "non-existent-denom",
 	}
-	err := s.keeper.CreateLedgerClass(s.ctx, s.addr1, ledgerClass)
+	err := s.keeper.AddLedgerClass(s.ctx, s.addr1, ledgerClass)
 	s.Require().Error(err, "CreateLedgerClass error")
 	s.Require().Contains(err.Error(), "denom doesn't have a supply", "CreateLedgerClass error")
 }
@@ -202,7 +202,7 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, s.addr2, ledger)
+	err := s.keeper.AddLedger(s.ctx, s.addr2, ledger)
 	s.Require().Error(err, "CreateLedger error")
 	s.Require().Contains(err.Error(), "unauthorized", "CreateLedger error")
 
@@ -215,7 +215,7 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 	err = s.registryKeeper.CreateRegistry(s.ctx, s.addr1, registryKey, []registry.RolesEntry{})
 	s.Require().NoError(err, "CreateRegistry error")
 
-	err = s.keeper.CreateLedger(s.ctx, s.addr2, ledger)
+	err = s.keeper.AddLedger(s.ctx, s.addr2, ledger)
 	s.Require().Error(err, "CreateLedger error")
 
 	// Grant a role of servicer to the s.addr2 so that it can create the ledger
@@ -228,7 +228,7 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 	s.Require().True(hasRole, "HasRole error")
 
 	// Verify that the s.addr2 can create the ledger as the servicer
-	err = s.keeper.CreateLedger(s.ctx, s.addr2, ledger)
+	err = s.keeper.AddLedger(s.ctx, s.addr2, ledger)
 	s.Require().NoError(err, "CreateLedger error")
 }
 
@@ -263,7 +263,7 @@ func (s *TestSuite) TestCreateLedgerClass() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.CreateLedgerClass(s.ctx, s.addr1, tc.ledgerClass)
+			err := s.keeper.AddLedgerClass(s.ctx, s.addr1, tc.ledgerClass)
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "CreateLedgerClass error")
 			} else {
@@ -324,7 +324,7 @@ func (s *TestSuite) TestCreateLedger() {
 			// Clear events before each test
 			s.ctx.EventManager().Events()
 
-			err := s.keeper.CreateLedger(s.ctx, s.addr1, tc.ledger)
+			err := s.keeper.AddLedger(s.ctx, s.addr1, tc.ledger)
 
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "CreateLedger error")
@@ -374,7 +374,7 @@ func (s *TestSuite) TestGetLedger() {
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
-	err := s.keeper.CreateLedger(s.ctx, s.addr1, validLedger)
+	err := s.keeper.AddLedger(s.ctx, s.addr1, validLedger)
 	s.Require().NoError(err, "CreateLedger error")
 
 	tests := []struct {
@@ -442,7 +442,7 @@ func (s *TestSuite) TestGetLedgerEntry() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	expErr := ledger.ErrCodeNotFound
@@ -537,7 +537,7 @@ func (s *TestSuite) TestAppendEntry() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Test cases
@@ -748,7 +748,7 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create test entries with the same effective date but different sequence numbers
@@ -887,7 +887,7 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create a test entry
@@ -966,7 +966,7 @@ func (s *TestSuite) TestGetBalances() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.CreateLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create a test entry

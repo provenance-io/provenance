@@ -105,7 +105,7 @@ func TestExportGenesis(t *testing.T) {
 	}
 
 	// Create the ledger class
-	err = keeper.CreateLedgerClass(ctx, maintainerAddr, ledgerClass)
+	err = keeper.AddLedgerClass(ctx, maintainerAddr, ledgerClass)
 	require.NoError(t, err)
 
 	// Add some status types
@@ -123,7 +123,7 @@ func TestExportGenesis(t *testing.T) {
 		LedgerClassId: ledgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
-	err = keeper.CreateLedger(ctx, maintainerAddr, ledgerObj)
+	err = keeper.AddLedger(ctx, maintainerAddr, ledgerObj)
 	require.NoError(t, err)
 
 	// Export genesis
