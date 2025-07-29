@@ -18,7 +18,7 @@ func DefaultParams() Params {
 func (p Params) String() string {
 	bz, err := json.Marshal(p)
 	if err != nil {
-		panic(err)
+		return "{}"
 	}
 
 	return string(bz)
