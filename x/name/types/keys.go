@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
