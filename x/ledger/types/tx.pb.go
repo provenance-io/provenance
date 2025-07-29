@@ -283,14 +283,14 @@ func (m *MsgUpdateInterestRateRequest) GetInterestDayCountConvention() DayCountC
 	if m != nil {
 		return m.InterestDayCountConvention
 	}
-	return LEDGER_DAY_COUNT_UNSPECIFIED
+	return LEDGER_DAY_COUNT_CONVENTION_UNSPECIFIED
 }
 
 func (m *MsgUpdateInterestRateRequest) GetInterestAccrualMethod() InterestAccrualMethod {
 	if m != nil {
 		return m.InterestAccrualMethod
 	}
-	return LEDGER_ACCRUAL_UNSPECIFIED
+	return LEDGER_INTEREST_ACCRUAL_METHOD_UNSPECIFIED
 }
 
 // MsgUpdateInterestRateResponse

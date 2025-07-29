@@ -5047,7 +5047,8 @@ Ledger defines an servicing ledger for an asset.
 <a name="provenance-ledger-v1-LedgerBucketAmount"></a>
 
 ### LedgerBucketAmount
-
+LedgerBucketAmount is the amount applied to a bucket. Applications to a bucket increase or
+decrease the balance of the bucket.
 
 
 | Field | Type | Label | Description |
@@ -5136,7 +5137,7 @@ These status types are used to track the status of underlying loan throughout th
 <a name="provenance-ledger-v1-LedgerEntry"></a>
 
 ### LedgerEntry
-LedgerEntry
+LedgerEntry is an single entry in the ledger. An entry would be a payment, disbursement, adjustment, etc...
 
 
 | Field | Type | Label | Description |
@@ -5144,7 +5145,7 @@ LedgerEntry
 | `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
 | `reverses_correlation_id` | [string](#string) |  | If this entry reverses another entry, the correlation id of the entry it reverses |
 | `is_void` | [bool](#bool) |  | If true, this entry is a void and should not be included in the ledger balance calculations |
-| `sequence` | [uint32](#uint32) |  | The NFT address that this ledger entry pertains to Sequence number of the ledger entry (less than 100) This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
+| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100). This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
 | `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id |
 | `posted_date` | [int32](#int32) |  | Posted date days since epoch |
 | `effective_date` | [int32](#int32) |  | Effective date days since epoch |
@@ -5214,13 +5215,13 @@ Day Count Conventions used in interest calculations
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `LEDGER_DAY_COUNT_UNSPECIFIED` | `0` | Unspecified day count convention. |
-| `LEDGER_DAY_COUNT_ACTUAL_365` | `1` | Actual/365: Uses the actual number of days in the period with a fixed denominator of 365 (or sometimes 365.25 to adjust for leap years). |
-| `LEDGER_DAY_COUNT_ACTUAL_360` | `2` | Actual/360: Uses the actual number of days in the period but divides by 360. |
-| `LEDGER_DAY_COUNT_THIRTY_360` | `3` | 30/360: Assumes each month has 30 days and the year has 360 days. |
-| `LEDGER_DAY_COUNT_ACTUAL_ACTUAL` | `4` | Actual/Actual: Uses the actual number of days in the period and the actual days in the year (365 or 366, depending on the year). |
-| `LEDGER_DAY_COUNT_DAYS_365` | `5` | 365/365: Always uses 365 days in the denominator regardless of leap years. |
-| `LEDGER_DAY_COUNT_DAYS_360` | `6` | 360/360: Always uses 360 days in both the numerator and denominator. |
+| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention. |
+| `DAY_COUNT_CONVENTION_ACTUAL_365` | `1` | Actual/365: Uses the actual number of days in the period with a fixed denominator of 365 (or sometimes 365.25 to adjust for leap years). |
+| `DAY_COUNT_CONVENTION_ACTUAL_360` | `2` | Actual/360: Uses the actual number of days in the period but divides by 360. |
+| `DAY_COUNT_CONVENTION_THIRTY_360` | `3` | 30/360: Assumes each month has 30 days and the year has 360 days. |
+| `DAY_COUNT_CONVENTION_ACTUAL_ACTUAL` | `4` | Actual/Actual: Uses the actual number of days in the period and the actual days in the year (365 or 366, depending on the year). |
+| `DAY_COUNT_CONVENTION_DAYS_365` | `5` | 365/365: Always uses 365 days in the denominator regardless of leap years. |
+| `DAY_COUNT_CONVENTION_DAYS_360` | `6` | 360/360: Always uses 360 days in both the numerator and denominator. |
 
 
 
@@ -5231,14 +5232,14 @@ Interest Accrual Methods describing how interest is calculated over time
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `LEDGER_ACCRUAL_UNSPECIFIED` | `0` | Unspecified interest accrual method. |
-| `LEDGER_ACCRUAL_SIMPLE_INTEREST` | `1` | Simple Interest: Calculated only on the principal amount. |
-| `LEDGER_ACCRUAL_COMPOUND_INTEREST` | `2` | Compound Interest: Calculated on both the principal and on previously accumulated interest. |
-| `LEDGER_ACCRUAL_DAILY_COMPOUNDING` | `3` | Daily Compounding: Interest is compounded on a daily basis. |
-| `LEDGER_ACCRUAL_MONTHLY_COMPOUNDING` | `4` | Monthly Compounding: Interest is compounded each month. |
-| `LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING` | `5` | Quarterly Compounding: Interest is compounded every quarter. |
-| `LEDGER_ACCRUAL_ANNUAL_COMPOUNDING` | `6` | Annually Compounding: Interest is compounded once per year. |
-| `LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING` | `7` | Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously. |
+| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method. |
+| `INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST` | `1` | Simple Interest: Calculated only on the principal amount. |
+| `INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST` | `2` | Compound Interest: Calculated on both the principal and on previously accumulated interest. |
+| `INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING` | `3` | Daily Compounding: Interest is compounded on a daily basis. |
+| `INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING` | `4` | Monthly Compounding: Interest is compounded each month. |
+| `INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING` | `5` | Quarterly Compounding: Interest is compounded every quarter. |
+| `INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING` | `6` | Annually Compounding: Interest is compounded once per year. |
+| `INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING` | `7` | Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously. |
 
 
 
@@ -5249,12 +5250,12 @@ Payment frequencies for loan repayments
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency. |
-| `LEDGER_PAYMENT_FREQUENCY_DAILY` | `1` | Daily payments. |
-| `LEDGER_PAYMENT_FREQUENCY_WEEKLY` | `2` | Weekly or biweekly payments. |
-| `LEDGER_PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
-| `LEDGER_PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
-| `LEDGER_PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
+| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency. |
+| `PAYMENT_FREQUENCY_DAILY` | `1` | Daily payments. |
+| `PAYMENT_FREQUENCY_WEEKLY` | `2` | Weekly or biweekly payments. |
+| `PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
+| `PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
+| `PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
 
 
  <!-- end enums -->

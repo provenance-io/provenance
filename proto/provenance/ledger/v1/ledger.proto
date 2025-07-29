@@ -124,10 +124,9 @@ message LedgerEntry {
   // If true, this entry is a void and should not be included in the ledger balance calculations
   bool is_void = 3 [(gogoproto.jsontag) = "isVoid,omitempty"];
 
-  // The NFT address that this ledger entry pertains to
-  // Sequence number of the ledger entry (less than 100)
-  // This field is used to maintain the correct order of entries when multiple entries
-  // share the same effective date. Entries are sorted first by effective date, then by sequence.
+  // Sequence number of the ledger entry (less than 100). This field is used to maintain the correct
+  // order of entries when multiple entries share the same effective date. Entries are sorted first
+  // by effective date, then by sequence.
   uint32 sequence = 4 [(gogoproto.jsontag) = "sequence,omitempty"];
 
   // The type of ledger entry specified by the LedgerClassEntryType.id
@@ -154,6 +153,8 @@ message LedgerEntry {
   repeated BucketBalance balance_amounts = 11 [(gogoproto.jsontag) = "balanceAmounts,omitempty"];
 }
 
+// LedgerBucketAmount is the amount applied to a bucket. Applications to a bucket increase or
+// decrease the balance of the bucket.
 message LedgerBucketAmount {
   // The bucket type specified by the LedgerClassBucketType.id
   int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
@@ -201,27 +202,28 @@ enum DayCountConvention {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified day count convention.
-  LEDGER_DAY_COUNT_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_UNSPECIFIED"];
+  DAY_COUNT_CONVENTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_CONVENTION_UNSPECIFIED"];
 
   // Actual/365: Uses the actual number of days in the period with a fixed denominator of 365
   // (or sometimes 365.25 to adjust for leap years).
-  LEDGER_DAY_COUNT_ACTUAL_365 = 1 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_ACTUAL_365"];
+  DAY_COUNT_CONVENTION_ACTUAL_365 = 1 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_CONVENTION_ACTUAL_365"];
 
   // Actual/360: Uses the actual number of days in the period but divides by 360.
-  LEDGER_DAY_COUNT_ACTUAL_360 = 2 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_ACTUAL_360"];
+  DAY_COUNT_CONVENTION_ACTUAL_360 = 2 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_CONVENTION_ACTUAL_360"];
 
   // 30/360: Assumes each month has 30 days and the year has 360 days.
-  LEDGER_DAY_COUNT_THIRTY_360 = 3 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_THIRTY_360"];
+  DAY_COUNT_CONVENTION_THIRTY_360 = 3 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_CONVENTION_THIRTY_360"];
 
   // Actual/Actual: Uses the actual number of days in the period and the actual days in the year
   // (365 or 366, depending on the year).
-  LEDGER_DAY_COUNT_ACTUAL_ACTUAL = 4 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_ACTUAL_ACTUAL"];
+  DAY_COUNT_CONVENTION_ACTUAL_ACTUAL = 4
+      [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_CONVENTION_ACTUAL_ACTUAL"];
 
   // 365/365: Always uses 365 days in the denominator regardless of leap years.
-  LEDGER_DAY_COUNT_DAYS_365 = 5 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_DAYS_365"];
+  DAY_COUNT_CONVENTION_DAYS_365 = 5 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_CONVENTION_DAYS_365"];
 
   // 360/360: Always uses 360 days in both the numerator and denominator.
-  LEDGER_DAY_COUNT_DAYS_360 = 6 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_DAYS_360"];
+  DAY_COUNT_CONVENTION_DAYS_360 = 6 [(gogoproto.enumvalue_customname) = "LEDGER_DAY_COUNT_CONVENTION_DAYS_360"];
 }
 
 // Interest Accrual Methods describing how interest is calculated over time
@@ -230,29 +232,36 @@ enum InterestAccrualMethod {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified interest accrual method.
-  LEDGER_ACCRUAL_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_UNSPECIFIED"];
+  INTEREST_ACCRUAL_METHOD_UNSPECIFIED = 0
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_UNSPECIFIED"];
 
   // Simple Interest: Calculated only on the principal amount.
-  LEDGER_ACCRUAL_SIMPLE_INTEREST = 1 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_SIMPLE_INTEREST"];
+  INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST = 1
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST"];
 
   // Compound Interest: Calculated on both the principal and on previously accumulated interest.
-  LEDGER_ACCRUAL_COMPOUND_INTEREST = 2 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_COMPOUND_INTEREST"];
+  INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST = 2
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST"];
 
   // Daily Compounding: Interest is compounded on a daily basis.
-  LEDGER_ACCRUAL_DAILY_COMPOUNDING = 3 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_DAILY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING = 3
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING"];
 
   // Monthly Compounding: Interest is compounded each month.
-  LEDGER_ACCRUAL_MONTHLY_COMPOUNDING = 4 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_MONTHLY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING = 4
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING"];
 
   // Quarterly Compounding: Interest is compounded every quarter.
-  LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING = 5 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_QUARTERLY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING = 5
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING"];
 
   // Annually Compounding: Interest is compounded once per year.
-  LEDGER_ACCRUAL_ANNUAL_COMPOUNDING = 6 [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_ANNUAL_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING = 6
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING"];
 
   // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
-  LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING = 7
-      [(gogoproto.enumvalue_customname) = "LEDGER_ACCRUAL_CONTINUOUS_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7
+      [(gogoproto.enumvalue_customname) = "LEDGER_INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING"];
 }
 
 // Payment frequencies for loan repayments
@@ -261,20 +270,20 @@ enum PaymentFrequency {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified payment frequency.
-  LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED"];
+  PAYMENT_FREQUENCY_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED"];
 
   // Daily payments.
-  LEDGER_PAYMENT_FREQUENCY_DAILY = 1 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_DAILY"];
+  PAYMENT_FREQUENCY_DAILY = 1 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_DAILY"];
 
   // Weekly or biweekly payments.
-  LEDGER_PAYMENT_FREQUENCY_WEEKLY = 2 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_WEEKLY"];
+  PAYMENT_FREQUENCY_WEEKLY = 2 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_WEEKLY"];
 
   // Monthly payments (most common for consumer loans and mortgages).
-  LEDGER_PAYMENT_FREQUENCY_MONTHLY = 3 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_MONTHLY"];
+  PAYMENT_FREQUENCY_MONTHLY = 3 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_MONTHLY"];
 
   // Quarterly payments.
-  LEDGER_PAYMENT_FREQUENCY_QUARTERLY = 4 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_QUARTERLY"];
+  PAYMENT_FREQUENCY_QUARTERLY = 4 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_QUARTERLY"];
 
   // Annual payments.
-  LEDGER_PAYMENT_FREQUENCY_ANNUALLY = 5 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_ANNUALLY"];
+  PAYMENT_FREQUENCY_ANNUALLY = 5 [(gogoproto.enumvalue_customname) = "LEDGER_PAYMENT_FREQUENCY_ANNUALLY"];
 }
