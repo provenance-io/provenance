@@ -43,9 +43,6 @@ message SettlementInstruction {
 
   // Optional memo or note for the transaction
   string memo = 4;
-
-  // The minimum block height or timestamp for settlement
-  int64 settlement_block = 5;
 }
 
 // Used as the stored version of settlement instructions against a ledger key and entry correlation id.

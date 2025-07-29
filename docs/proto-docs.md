@@ -5634,7 +5634,6 @@ SettlementInstruction represents blockchain-specific settlement instructions
 | `recipient_address` | [string](#string) |  | The recipient's blockchain address |
 | `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
 | `memo` | [string](#string) |  | Optional memo or note for the transaction |
-| `settlement_block` | [int64](#int64) |  | The minimum block height or timestamp for settlement |
 
 
 
