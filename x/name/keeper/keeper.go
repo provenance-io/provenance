@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -316,7 +316,6 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 
 // IterateRecords iterates over all the stored name records and passes them to a callback function.
 func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(record types.NameRecord) error) error {
-
 	rng := (&collections.Range[[]byte]{}).
 		StartInclusive(prefix).
 		EndExclusive(storetypes.PrefixEndBytes(prefix))
@@ -327,7 +326,6 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 		}
 		return false, nil
 	})
-
 }
 
 // Normalize returns a name is storage format.
@@ -380,7 +378,7 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 	if isModifiable {
 		existing, err := k.NameRecords.Get(ctx, key)
 		if err == nil && existing.Address != addr.String() {
-			//Remove old address index
+			// Remove old address index
 			oldAddr, err := sdk.AccAddressFromBech32(existing.Address)
 			if err != nil {
 				return err
