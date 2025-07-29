@@ -6,36 +6,48 @@ option go_package = "github.com/provenance-io/provenance/x/asset/types";
 import "provenance/asset/v1/asset.proto";
 import "google/api/annotations.proto";
 
+// Query defines the gRPC querier service for asset module
 service Query {
+  // ListAssets returns a list of assets
   rpc ListAssets(QueryListAssets) returns (QueryListAssetsResponse) {
     option (google.api.http).get = "/provenance/asset/v1/asset";
   }
 
+  // ListAssetClasses returns a list of asset classes
   rpc ListAssetClasses(QueryListAssetClasses) returns (QueryListAssetClassesResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class";
   }
 
+  // GetClass returns a specific asset class by ID
   rpc GetClass(QueryGetClass) returns (QueryGetClassResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class/{id}";
   }
 }
 
+// QueryListAssetClassesResponse
 message QueryListAssetClassesResponse {
-  repeated AssetClass assetClasses = 1;
+  repeated AssetClass asset_classes = 1;
 }
+
+// QueryGetClassResponse
 message QueryGetClassResponse {
-  AssetClass assetClass = 1;
+  AssetClass asset_class = 1;
 }
+
+// QueryListAssetsResponse
 message QueryListAssetsResponse {
   repeated Asset assets = 1;
 }
 
+// QueryListAssetClasses
 message QueryListAssetClasses {}
 
+// QueryGetClass
 message QueryGetClass {
   string id = 1;
 }
 
+// QueryListAssets
 message QueryListAssets {
   string address = 1;
 }

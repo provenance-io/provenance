@@ -3,6 +3,7 @@ package provenance.asset.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
+// AssetClass defines the classification of assets
 message AssetClass {
   // id defines the unique identifier of the asset classification, similar to the contract address of ERC721
   string id = 1;
@@ -44,6 +45,7 @@ message Asset {
   string data = 5;
 }
 
+// Nft defines a non-fungible token
 message Nft {
   string class_id = 1;
   string id       = 2;

@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/asset/types";
 import "gogoproto/gogo.proto";
 import "provenance/asset/v1/asset.proto";
 
+// GenesisState defines the asset module's genesis state
 message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;

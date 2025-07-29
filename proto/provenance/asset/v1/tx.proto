@@ -7,22 +7,28 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "provenance/asset/v1/asset.proto";
-import "provenance/ledger/v1/ledger.proto";
 
+// Msg defines the asset module's message service
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
+  // CreateAsset creates a new asset
   rpc CreateAsset(MsgCreateAsset) returns (MsgCreateAssetResponse);
 
+  // CreateAssetClass creates a new asset class
   rpc CreateAssetClass(MsgCreateAssetClass) returns (MsgCreateAssetClassResponse);
 
+  // CreatePool creates a new pool
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
+  // CreateTokenization creates a new tokenization
   rpc CreateTokenization(MsgCreateTokenization) returns (MsgCreateTokenizationResponse);
 
+  // CreateSecuritization creates a new securitization
   rpc CreateSecuritization(MsgCreateSecuritization) returns (MsgCreateSecuritizationResponse);
 }
 
+// MsgCreateAsset
 message MsgCreateAsset {
   option (cosmos.msg.v1.signer) = "from_address";
 
@@ -30,8 +36,10 @@ message MsgCreateAsset {
   string from_address = 2;
 }
 
+// MsgCreateAssetResponse
 message MsgCreateAssetResponse {}
 
+// MsgCreateAssetClass
 message MsgCreateAssetClass {
   option (cosmos.msg.v1.signer) = "from_address";
 
@@ -39,8 +47,10 @@ message MsgCreateAssetClass {
   string     from_address = 2;
 }
 
+// MsgCreateAssetClassResponse
 message MsgCreateAssetClassResponse {}
 
+// MsgCreatePool
 message MsgCreatePool {
   option (cosmos.msg.v1.signer) = "from_address";
 
@@ -49,8 +59,10 @@ message MsgCreatePool {
   string                   from_address = 3;
 }
 
+// MsgCreatePoolResponse
 message MsgCreatePoolResponse {}
 
+// MsgCreateTokenization
 message MsgCreateTokenization {
   option (cosmos.msg.v1.signer) = "from_address";
 
@@ -59,8 +71,10 @@ message MsgCreateTokenization {
   string                   from_address = 3;
 }
 
+// MsgCreateTokenizationResponse
 message MsgCreateTokenizationResponse {}
 
+// MsgCreateSecuritization
 message MsgCreateSecuritization {
   option (cosmos.msg.v1.signer) = "from_address";
 
@@ -70,4 +84,5 @@ message MsgCreateSecuritization {
   string                            from_address = 4;
 }
 
+// MsgCreateSecuritizationResponse
 message MsgCreateSecuritizationResponse {}
