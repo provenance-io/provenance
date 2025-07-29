@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	v1beta1 "github.com/provenance-io/provenance/x/wasm"
+	v1beta1 "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1"
 )
 
 func Test_InterfaceRegistry_RegisterImplementations(t *testing.T) {
