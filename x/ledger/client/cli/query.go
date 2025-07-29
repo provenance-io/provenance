@@ -35,7 +35,7 @@ func CmdQuery() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	queryCmd.AddCommand(
-		GetConfigCmd(),
+		GetCmd(),
 		GetLedgerEntriesCmd(),
 		GetBalancesAsOfCmd(),
 		GetLedgerClassEntryTypesCmd(),
@@ -50,12 +50,12 @@ func CmdQuery() *cobra.Command {
 	return queryCmd
 }
 
-// GetAttributeParamsCmd returns the command handler for name parameter querying.
-func GetConfigCmd() *cobra.Command {
+// Get a ledger's base information
+func GetCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "config <asset_class_id> <nft_id>",
-		Short:   "Query the ledger for the specified nft id",
-		Example: fmt.Sprintf(`$ %s query attribute params`, version.AppName),
+		Use:     "get <asset_class_id> <nft_id>",
+		Short:   "Query the ledger for the specified asset class and nft id",
+		Example: fmt.Sprintf(`$ %s query ledger get class-123 nft-123`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
