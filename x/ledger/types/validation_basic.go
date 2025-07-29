@@ -3,6 +3,7 @@
 package types
 
 import (
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +19,11 @@ func ValidateLedgerClassBasic(l *LedgerClass) error {
 	// Verify that the ledger class id is less than 50 characters
 	if len(l.LedgerClassId) > 50 {
 		return NewLedgerCodedError(ErrCodeInvalidField, "ledger_class_id", "must be less than 50 characters")
+	}
+
+	// Verify that the ledger class only contains alphanumeric and dashes
+	if !regexp.MustCompile(`^[a-zA-Z0-9-]+$`).MatchString(l.LedgerClassId) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger_class_id", "must only contain alphanumeric and dashes")
 	}
 
 	if emptyString(&l.AssetClassId) {
