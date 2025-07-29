@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	types "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -76,5 +78,4 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 	ctx.Logger().Info(fmt.Sprintf("Migrated %d address index records.", addrCount))
 	ctx.Logger().Info("Name module migration to collections (v2 to v3) completed successfully.")
 	return nil
-
 }
