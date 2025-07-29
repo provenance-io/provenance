@@ -102,7 +102,7 @@ message QueryBalancesAsOfRequest {
 
 // QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
 message QueryBalancesAsOfResponse {
-  Balances balances = 1;
+  BucketBalances bucket_balances = 1;
 }
 
 message QueryLedgerClassEntryTypesRequest {

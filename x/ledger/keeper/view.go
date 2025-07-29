@@ -22,7 +22,7 @@ type ViewKeeper interface {
 	HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool
 	ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error)
 	GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error)
-	GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.Balances, error)
+	GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.BucketBalances, error)
 	GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error)
 	GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error)
 	GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error)
@@ -251,7 +251,7 @@ func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKe
 }
 
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
-func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.Balances, error) {
+func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.BucketBalances, error) {
 	// Validate the key
 	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
@@ -295,7 +295,7 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 		return bucketBalancesList[i].BucketTypeId < bucketBalancesList[j].BucketTypeId
 	})
 
-	return &ledger.Balances{
+	return &ledger.BucketBalances{
 		BucketBalances: bucketBalancesList,
 	}, nil
 }

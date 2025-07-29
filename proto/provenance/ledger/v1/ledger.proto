@@ -40,6 +40,8 @@ message LedgerClassEntryType {
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
+// LedgerClassStatusType defines the status types for a ledger class.
+// These status types are used to track the status of underlying loan throughout the loan life cycle.
 message LedgerClassStatusType {
   // Unique ID for the status type (eg. 1, 2, 3, etc.)
   int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
@@ -53,6 +55,7 @@ message LedgerClassStatusType {
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
+// LedgerKey is used as the unique key for an asset's ledger in the keeper.
 message LedgerKey {
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
@@ -63,7 +66,7 @@ message LedgerKey {
   string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
 }
 
-// Ledger
+// Ledger defines an servicing ledger for an asset.
 message Ledger {
   LedgerKey key = 1 [(gogoproto.jsontag) = "key,omitempty"];
 
@@ -165,7 +168,7 @@ message LedgerBucketAmount {
 }
 
 // Balances represents the current balances for principal, interest, and other amounts
-message Balances {
+message BucketBalances {
   repeated BucketBalance bucket_balances = 1 [(gogoproto.jsontag) = "bucketBalances,omitempty"];
 }
 

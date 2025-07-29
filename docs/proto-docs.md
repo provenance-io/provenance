@@ -292,8 +292,8 @@
     - [Msg](#provenance-ledger-v1-Msg)
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
-    - [Balances](#provenance-ledger-v1-Balances)
     - [BucketBalance](#provenance-ledger-v1-BucketBalance)
+    - [BucketBalances](#provenance-ledger-v1-BucketBalances)
     - [Ledger](#provenance-ledger-v1-Ledger)
     - [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount)
     - [LedgerClass](#provenance-ledger-v1-LedgerClass)
@@ -4989,21 +4989,6 @@ Msg defines the attribute module Msg service.
 
 
 
-<a name="provenance-ledger-v1-Balances"></a>
-
-### Balances
-Balances represents the current balances for principal, interest, and other amounts
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated |  |
-
-
-
-
-
-
 <a name="provenance-ledger-v1-BucketBalance"></a>
 
 ### BucketBalance
@@ -5020,10 +5005,25 @@ Balances represents the current balances for principal, interest, and other amou
 
 
 
+<a name="provenance-ledger-v1-BucketBalances"></a>
+
+### BucketBalances
+Balances represents the current balances for principal, interest, and other amounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated |  |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-Ledger"></a>
 
 ### Ledger
-Ledger
+Ledger defines an servicing ledger for an asset.
 
 
 | Field | Type | Label | Description |
@@ -5118,7 +5118,8 @@ for minimal data storage while providing a human readable description of the ent
 <a name="provenance-ledger-v1-LedgerClassStatusType"></a>
 
 ### LedgerClassStatusType
-
+LedgerClassStatusType defines the status types for a ledger class.
+These status types are used to track the status of underlying loan throughout the loan life cycle.
 
 
 | Field | Type | Label | Description |
@@ -5159,7 +5160,7 @@ LedgerEntry
 <a name="provenance-ledger-v1-LedgerKey"></a>
 
 ### LedgerKey
-
+LedgerKey is used as the unique key for an asset's ledger in the keeper.
 
 
 | Field | Type | Label | Description |
@@ -5295,7 +5296,7 @@ QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `balances` | [Balances](#provenance-ledger-v1-Balances) |  |  |
+| `bucket_balances` | [BucketBalances](#provenance-ledger-v1-BucketBalances) |  |  |
 
 
 

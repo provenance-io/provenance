@@ -89,7 +89,7 @@ func (qs LedgerQueryServer) BalancesAsOfQuery(ctx context.Context, req *ledger.Q
 	}
 
 	return &ledger.QueryBalancesAsOfResponse{
-		Balances: balances,
+		BucketBalances: balances,
 	}, nil
 }
 
