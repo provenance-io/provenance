@@ -7,6 +7,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -89,7 +90,14 @@ func GetConfigCmd() *cobra.Command {
 				PaymentFrequency:           l.Ledger.PaymentFrequency,
 			}
 
-			return clientCtx.PrintProto(&plainText)
+			// PRint the struct as json
+			json, err := json.MarshalIndent(plainText, "", "  ")
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(json))
+
+			return nil
 		},
 	}
 
@@ -220,7 +228,13 @@ func GetLedgerEntriesCmd() *cobra.Command {
 				Entries: plainTextEntries,
 			}
 
-			return clientCtx.PrintProto(&plainTextResponse)
+			json, err := json.MarshalIndent(plainTextResponse, "", "  ")
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(json))
+
+			return nil
 		},
 	}
 
@@ -262,7 +276,13 @@ func GetBalancesAsOfCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintProto(res)
+			json, err := json.MarshalIndent(res, "", "  ")
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(json))
+
+			return nil
 		},
 	}
 

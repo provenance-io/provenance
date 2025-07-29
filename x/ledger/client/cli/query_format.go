@@ -4,8 +4,6 @@
 package cli
 
 import (
-	"fmt"
-
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -61,32 +59,4 @@ type LedgerBucketAmountPlainText struct {
 // QueryLedgerEntryResponsePlainText represents the response for ledger entries query in plain text format
 type QueryLedgerEntryResponsePlainText struct {
 	Entries []*LedgerEntryPlainText `json:"entries,omitempty"`
-}
-
-// ProtoMessage methods to make structs compatible with clientCtx.PrintProto
-func (m *LedgerPlainText) ProtoMessage() {}
-func (m *LedgerPlainText) Reset()        { *m = LedgerPlainText{} }
-func (m *LedgerPlainText) String() string {
-	return fmt.Sprintf("LedgerPlainText{Key:%v, Status:%s, NextPmtDate:%s, NextPmtAmt:%s, InterestRate:%s, MaturityDate:%s, InterestDayCountConvention:%v, InterestAccrualMethod:%v, PaymentFrequency:%v}",
-		m.Key, m.Status, m.NextPmtDate, m.NextPmtAmt, m.InterestRate, m.MaturityDate, m.InterestDayCountConvention, m.InterestAccrualMethod, m.PaymentFrequency)
-}
-
-func (m *LedgerEntryPlainText) ProtoMessage() {}
-func (m *LedgerEntryPlainText) Reset()        { *m = LedgerEntryPlainText{} }
-func (m *LedgerEntryPlainText) String() string {
-	return fmt.Sprintf("LedgerEntryPlainText{CorrelationId:%s, Sequence:%d, Type:%v, PostedDate:%s, EffectiveDate:%s, TotalAmt:%s, AppliedAmounts:%v}",
-		m.CorrelationId, m.Sequence, m.Type, m.PostedDate, m.EffectiveDate, m.TotalAmt, m.AppliedAmounts)
-}
-
-func (m *LedgerBucketAmountPlainText) ProtoMessage() {}
-func (m *LedgerBucketAmountPlainText) Reset()        { *m = LedgerBucketAmountPlainText{} }
-func (m *LedgerBucketAmountPlainText) String() string {
-	return fmt.Sprintf("LedgerBucketAmountPlainText{Bucket:%v, AppliedAmt:%s, BalanceAmt:%s}",
-		m.Bucket, m.AppliedAmt, m.BalanceAmt)
-}
-
-func (m *QueryLedgerEntryResponsePlainText) ProtoMessage() {}
-func (m *QueryLedgerEntryResponsePlainText) Reset()        { *m = QueryLedgerEntryResponsePlainText{} }
-func (m *QueryLedgerEntryResponsePlainText) String() string {
-	return fmt.Sprintf("QueryLedgerEntryResponsePlainText{Entries:%v}", m.Entries)
 }
