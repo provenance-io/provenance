@@ -37,7 +37,7 @@ func QueryAccountByAddressCmd() *cobra.Command {
 		Short:   "Returns the smart account for the address provided.",
 		Args:    cobra.ExactArgs(1),
 		Aliases: []string{"a"},
-		Example: fmt.Sprintf(`%[1]s q smartaccount address`, version.AppName),
+		Example: fmt.Sprintf(`%[1]s q smartaccount address <address>`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
