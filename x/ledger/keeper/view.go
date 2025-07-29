@@ -7,116 +7,10 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
-	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
-
-var _ ViewKeeper = (*BaseViewKeeper)(nil)
-
-type ViewKeeper interface {
-	GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error)
-	HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool
-	ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error)
-	GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error)
-	GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.BucketBalances, error)
-	GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error)
-	GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error)
-	GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error)
-	GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error)
-}
-
-type BaseViewKeeper struct {
-	cdc      codec.BinaryCodec
-	storeKey storetypes.StoreKey
-	schema   collections.Schema
-
-	Ledgers                     collections.Map[string, ledger.Ledger]
-	LedgerEntries               collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
-	FundTransfersWithSettlement collections.Map[collections.Pair[string, string], ledger.StoredSettlementInstructions]
-
-	// LedgerClasses stores the configuration of all ledgers for a given class of asset.
-	LedgerClasses          collections.Map[string, ledger.LedgerClass]
-	LedgerClassEntryTypes  collections.Map[collections.Pair[string, int32], ledger.LedgerClassEntryType]
-	LedgerClassStatusTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassStatusType]
-	LedgerClassBucketTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassBucketType]
-
-	RegistryKeeper RegistryKeeper
-}
-
-func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, registryKeeper RegistryKeeper) BaseViewKeeper {
-	sb := collections.NewSchemaBuilder(storeService)
-
-	lk := BaseViewKeeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-
-		Ledgers: collections.NewMap(
-			sb,
-			collections.NewPrefix(ledgerPrefix),
-			"ledger",
-			collections.StringKey,
-			codec.CollValue[ledger.Ledger](cdc),
-		),
-		LedgerEntries: collections.NewMap(
-			sb,
-			collections.NewPrefix(entriesPrefix),
-			"ledger_entries",
-			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
-			codec.CollValue[ledger.LedgerEntry](cdc),
-		),
-		FundTransfersWithSettlement: collections.NewMap(
-			sb,
-			collections.NewPrefix(fundTransfersWithSettlementPrefix),
-			"settlement_instructions",
-			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
-			codec.CollValue[ledger.StoredSettlementInstructions](cdc),
-		),
-
-		// Ledger Class configuration data
-		LedgerClasses: collections.NewMap(
-			sb,
-			collections.NewPrefix(ledgerClassesPrefix),
-			"ledger_classes",
-			collections.StringKey,
-			codec.CollValue[ledger.LedgerClass](cdc),
-		),
-		LedgerClassEntryTypes: collections.NewMap(
-			sb,
-			collections.NewPrefix(ledgerClassEntryTypesPrefix),
-			"ledger_class_entry_types",
-			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
-			codec.CollValue[ledger.LedgerClassEntryType](cdc),
-		),
-		LedgerClassStatusTypes: collections.NewMap(
-			sb,
-			collections.NewPrefix(ledgerClassStatusTypesPrefix),
-			"ledger_class_status_types",
-			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
-			codec.CollValue[ledger.LedgerClassStatusType](cdc),
-		),
-		LedgerClassBucketTypes: collections.NewMap(
-			sb,
-			collections.NewPrefix(ledgerClassBucketTypesPrefix),
-			"ledger_class_bucket_types",
-			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
-			codec.CollValue[ledger.LedgerClassBucketType](cdc),
-		),
-
-		RegistryKeeper: registryKeeper,
-	}
-	// Build and set the schema
-	schema, err := sb.Build()
-	if err != nil {
-		panic(err)
-	}
-	lk.schema = schema
-
-	return lk
-}
 
 // GetLedger retrieves a ledger by its NFT address.
 //
@@ -133,7 +27,7 @@ func NewBaseViewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stor
 //   - Returns (nil, err) if an error occurs during retrieval
 //   - Returns (&ledger, nil) if the ledger is found successfully
 //   - The returned ledger will have its NftAddress field set to the provided nftAddress
-func (k BaseViewKeeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error) {
+func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error) {
 	// Validate the key
 	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
@@ -162,7 +56,7 @@ func (k BaseViewKeeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledg
 	return &l, nil
 }
 
-func (k BaseViewKeeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
+func (k Keeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
 	// Validate the key
 	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
@@ -178,7 +72,7 @@ func (k BaseViewKeeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
 	return has
 }
 
-func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error) {
+func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error) {
 	// Validate the key
 	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
@@ -220,7 +114,7 @@ func (k BaseViewKeeper) ListLedgerEntries(ctx context.Context, key *ledger.Ledge
 }
 
 // GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
-func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
+func (k Keeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
 	// Validate the key
 	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
@@ -251,7 +145,7 @@ func (k BaseViewKeeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKe
 }
 
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
-func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.BucketBalances, error) {
+func (k Keeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.BucketBalances, error) {
 	// Validate the key
 	err := ledger.ValidateLedgerKeyBasic(key)
 	if err != nil {
@@ -300,7 +194,7 @@ func (k BaseViewKeeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerK
 	}, nil
 }
 
-func (k BaseViewKeeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error) {
+func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error) {
 	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
 	if err != nil {
 		return nil, err
@@ -308,7 +202,7 @@ func (k BaseViewKeeper) GetLedgerClass(ctx context.Context, ledgerClassId string
 	return &ledgerClass, nil
 }
 
-func (k BaseViewKeeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error) {
+func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error) {
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 	iter, err := k.LedgerClassEntryTypes.Iterate(ctx, prefix)
 	if err != nil {
@@ -337,7 +231,7 @@ func SliceToMap[T any, K comparable](list []T, keyFn func(T) K) map[K]T {
 	return result
 }
 
-func (k BaseViewKeeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error) {
+func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error) {
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 	iter, err := k.LedgerClassStatusTypes.Iterate(ctx, prefix)
 	if err != nil {
@@ -356,7 +250,7 @@ func (k BaseViewKeeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerCla
 	return statusTypes, nil
 }
 
-func (k BaseViewKeeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error) {
+func (k Keeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error) {
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 	iter, err := k.LedgerClassBucketTypes.Iterate(ctx, prefix)
 	if err != nil {

@@ -28,7 +28,7 @@ type TestSuite struct {
 
 	app            *app.App
 	ctx            sdk.Context
-	keeper         keeper.BaseKeeper
+	keeper         keeper.Keeper
 	bankKeeper     bankkeeper.Keeper
 	nftKeeper      nftkeeper.Keeper
 	registryKeeper registrykeeper.RegistryKeeper

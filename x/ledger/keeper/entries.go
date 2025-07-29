@@ -12,20 +12,8 @@ import (
 	"github.com/provenance-io/provenance/x/registry"
 )
 
-var _ EntriesKeeper = (*BaseEntriesKeeper)(nil)
-
-type EntriesKeeper interface {
-	AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error
-	UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, bucketBalances []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error
-}
-
-type BaseEntriesKeeper struct {
-	BaseViewKeeper
-	RegistryKeeper
-}
-
 // SetValue stores a value with a given key.
-func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error {
+func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error {
 	// Need to resolve the ledger class for validation purposes
 	ledger, err := k.GetLedger(ctx, ledgerKey)
 	if err != nil {
@@ -35,7 +23,7 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
-	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: ledgerKey.AssetClassId,
 		NftId:        ledgerKey.NftId,
 	}); err != nil {
@@ -81,14 +69,14 @@ func (k BaseEntriesKeeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccA
 	return nil
 }
 
-func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
+func (k Keeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Validate the key
 	err := types.ValidateLedgerKeyBasic(ledgerKey)
 	if err != nil {
 		return err
 	}
 
-	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
+	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: ledgerKey.AssetClassId,
 		NftId:        ledgerKey.NftId,
 	}); err != nil {
@@ -136,7 +124,7 @@ func (k BaseEntriesKeeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sd
 	return nil
 }
 
-func (k BaseEntriesKeeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry, le *types.LedgerEntry) error {
+func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry, le *types.LedgerEntry) error {
 	// Find entries with the same effective date
 	var sameDateEntries []types.LedgerEntry
 	for _, entry := range entries {

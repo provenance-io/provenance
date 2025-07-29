@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,17 +14,24 @@ import (
 	"github.com/provenance-io/provenance/x/registry"
 )
 
-var _ Keeper = (*BaseKeeper)(nil)
-
-type Keeper interface {
-}
-
 // Keeper defines the mymodule keeper.
-type BaseKeeper struct {
-	BaseViewKeeper
-	BaseConfigKeeper
-	BaseEntriesKeeper
-	BaseFundTransferKeeper
+type Keeper struct {
+	cdc      codec.BinaryCodec
+	storeKey storetypes.StoreKey
+	schema   collections.Schema
+
+	Ledgers                     collections.Map[string, ledger.Ledger]
+	LedgerEntries               collections.Map[collections.Pair[string, string], ledger.LedgerEntry]
+	FundTransfersWithSettlement collections.Map[collections.Pair[string, string], ledger.StoredSettlementInstructions]
+
+	// LedgerClasses stores the configuration of all ledgers for a given class of asset.
+	LedgerClasses          collections.Map[string, ledger.LedgerClass]
+	LedgerClassEntryTypes  collections.Map[collections.Pair[string, int32], ledger.LedgerClassEntryType]
+	LedgerClassStatusTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassStatusType]
+	LedgerClassBucketTypes collections.Map[collections.Pair[string, int32], ledger.LedgerClassBucketType]
+
+	BankKeeper
+	RegistryKeeper
 }
 
 var (
@@ -42,24 +50,76 @@ const (
 	settlementHrp = "settlement"
 )
 
-// NewKeeper returns a new mymodule Keeper.
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper BankKeeper, registryKeeper RegistryKeeper) BaseKeeper {
-	viewKeeper := NewBaseViewKeeper(cdc, storeKey, storeService, registryKeeper)
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper BankKeeper, registryKeeper RegistryKeeper) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
 
-	return BaseKeeper{
-		BaseViewKeeper: viewKeeper,
-		BaseConfigKeeper: BaseConfigKeeper{
-			BaseViewKeeper: viewKeeper,
-			BankKeeper:     bankKeeper,
-		},
-		BaseEntriesKeeper: BaseEntriesKeeper{
-			BaseViewKeeper: viewKeeper,
-		},
-		BaseFundTransferKeeper: BaseFundTransferKeeper{
-			BankKeeper:     bankKeeper,
-			BaseViewKeeper: viewKeeper,
-		},
+	lk := Keeper{
+		cdc:      cdc,
+		storeKey: storeKey,
+
+		Ledgers: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerPrefix),
+			"ledger",
+			collections.StringKey,
+			codec.CollValue[ledger.Ledger](cdc),
+		),
+		LedgerEntries: collections.NewMap(
+			sb,
+			collections.NewPrefix(entriesPrefix),
+			"ledger_entries",
+			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
+			codec.CollValue[ledger.LedgerEntry](cdc),
+		),
+		FundTransfersWithSettlement: collections.NewMap(
+			sb,
+			collections.NewPrefix(fundTransfersWithSettlementPrefix),
+			"settlement_instructions",
+			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
+			codec.CollValue[ledger.StoredSettlementInstructions](cdc),
+		),
+
+		// Ledger Class configuration data
+		LedgerClasses: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassesPrefix),
+			"ledger_classes",
+			collections.StringKey,
+			codec.CollValue[ledger.LedgerClass](cdc),
+		),
+		LedgerClassEntryTypes: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassEntryTypesPrefix),
+			"ledger_class_entry_types",
+			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
+			codec.CollValue[ledger.LedgerClassEntryType](cdc),
+		),
+		LedgerClassStatusTypes: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassStatusTypesPrefix),
+			"ledger_class_status_types",
+			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
+			codec.CollValue[ledger.LedgerClassStatusType](cdc),
+		),
+		LedgerClassBucketTypes: collections.NewMap(
+			sb,
+			collections.NewPrefix(ledgerClassBucketTypesPrefix),
+			"ledger_class_bucket_types",
+			collections.PairKeyCodec(collections.StringKey, collections.Int32Key),
+			codec.CollValue[ledger.LedgerClassBucketType](cdc),
+		),
+
+		BankKeeper:     bankKeeper,
+		RegistryKeeper: registryKeeper,
 	}
+	// Build and set the schema
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	lk.schema = schema
+
+	return lk
 }
 
 // Combine the asset class id and nft id into a bech32 string.
@@ -171,10 +231,9 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 	return false, nil
 }
 
-// BulkImportLedgerData imports ledger data from genesis state
-// This function assumes that ledger classes, status types, entry types, and bucket types
-// are already created before calling this function.
-func (k BaseKeeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddress, genesisState ledger.GenesisState) error {
+// BulkImportLedgerData imports ledger data from genesis state. This function assumes that ledger classes, status
+// types, entry types, and bucket types are already created before calling this function.
+func (k Keeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddress, genesisState ledger.GenesisState) error {
 	ctx.Logger().Info("Starting bulk import of ledger data",
 		"ledger_to_entries", len(genesisState.LedgerToEntries))
 

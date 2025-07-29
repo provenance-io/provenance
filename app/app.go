@@ -286,7 +286,7 @@ type App struct {
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
 	RegistryKeeper  registrykeeper.RegistryKeeper
-	LedgerKeeper    ledgerkeeper.BaseKeeper
+	LedgerKeeper    ledgerkeeper.Keeper
 	ExchangeKeeper  exchangekeeper.Keeper
 	WasmKeeper      *wasmkeeper.Keeper
 	ContractKeeper  *wasmkeeper.PermissionedKeeper

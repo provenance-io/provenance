@@ -18,7 +18,7 @@ type Keeper struct {
 	storeKey       storetypes.StoreKey
 	nftKeeper      types.NFTKeeper
 	router         baseapp.MessageRouter
-	ledgerKeeper   ledgerkeeper.BaseKeeper
+	ledgerKeeper   ledgerkeeper.Keeper
 	registryKeeper types.BaseRegistryKeeper
 	markerKeeper   markerkeeper.Keeper
 }
@@ -29,7 +29,7 @@ func NewKeeper(
 	key storetypes.StoreKey,
 	nftKeeper types.NFTKeeper,
 	router baseapp.MessageRouter,
-	ledgerKeeper ledgerkeeper.BaseKeeper,
+	ledgerKeeper ledgerkeeper.Keeper,
 	registryKeeper types.BaseRegistryKeeper,
 	markerKeeper markerkeeper.Keeper,
 ) Keeper {

@@ -7,7 +7,7 @@ import (
 
 // ExportGenesis exports the current keeper state of the ledger module.
 // This exports data in the format that matches test.json for bulk import.
-func (k BaseViewKeeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 	state := &ledger.GenesisState{}
 
 	// Group ledgers and entries by ledger key to create LedgerToEntries

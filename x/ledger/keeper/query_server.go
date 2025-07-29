@@ -11,14 +11,12 @@ import (
 var _ ledger.QueryServer = LedgerQueryServer{}
 
 type LedgerQueryServer struct {
-	k  ViewKeeper
-	sk FundTransferKeeper
+	k Keeper
 }
 
-func NewLedgerQueryServer(k ViewKeeper, sk FundTransferKeeper) LedgerQueryServer {
+func NewLedgerQueryServer(k Keeper) LedgerQueryServer {
 	return LedgerQueryServer{
-		k:  k,
-		sk: sk,
+		k: k,
 	}
 }
 
@@ -188,7 +186,7 @@ func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *ledger.Q
 		return nil, err
 	}
 
-	settlements, err := qs.sk.GetAllSettlements(ctx, keyStr)
+	settlements, err := qs.k.GetAllSettlements(ctx, keyStr)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +207,7 @@ func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context
 		return nil, err
 	}
 
-	settlement, err := qs.sk.GetSettlements(ctx, keyStr, req.CorrelationId)
+	settlement, err := qs.k.GetSettlements(ctx, keyStr, req.CorrelationId)
 	if err != nil {
 		return nil, err
 	}
