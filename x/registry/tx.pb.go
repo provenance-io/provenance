@@ -30,7 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgRegisterNFT represents a message to register a new NFT
+// MsgRegisterNFT
 type MsgRegisterNFT struct {
 	// authority is the address that is authorized to register addresses
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -131,7 +131,7 @@ func (m *MsgRegisterNFTResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterNFTResponse proto.InternalMessageInfo
 
-// MsgGrantRole represents a message to grant a role to an address
+// MsgGrantRole
 type MsgGrantRole struct {
 	// authority is the address that is authorized to grant the role
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -204,7 +204,7 @@ func (m *MsgGrantRole) GetAddresses() []string {
 	return nil
 }
 
-// MsgGrantRoleResponse defines the response for GrantRole
+// MsgGrantRoleResponse
 type MsgGrantRoleResponse struct {
 }
 
@@ -241,7 +241,7 @@ func (m *MsgGrantRoleResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGrantRoleResponse proto.InternalMessageInfo
 
-// MsgRevokeRole represents a message to revoke a role from an address
+// MsgRevokeRole
 type MsgRevokeRole struct {
 	// authority is the address that is authorized to revoke the role
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -314,7 +314,7 @@ func (m *MsgRevokeRole) GetAddresses() []string {
 	return nil
 }
 
-// MsgRevokeRoleResponse defines the response for RevokeRole
+// MsgRevokeRoleResponse
 type MsgRevokeRoleResponse struct {
 }
 
@@ -351,7 +351,7 @@ func (m *MsgRevokeRoleResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRevokeRoleResponse proto.InternalMessageInfo
 
-// MsgUnregisterNFT represents a message to unregister an NFT from the registry
+// MsgUnregisterNFT
 type MsgUnregisterNFT struct {
 	// authority is the address that is authorized to remove addresses
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -406,7 +406,7 @@ func (m *MsgUnregisterNFT) GetKey() *RegistryKey {
 	return nil
 }
 
-// MsgUnregisterNFTResponse defines the response for UnregisterNFT
+// MsgUnregisterNFTResponse
 type MsgUnregisterNFTResponse struct {
 }
 

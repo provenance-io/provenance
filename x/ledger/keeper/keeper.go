@@ -215,7 +215,7 @@ func (k BaseKeeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccA
 
 		// Create the ledger only if it doesn't already exist
 		if ledgerToEntries.Ledger != nil && !k.HasLedger(ctx, ledgerToEntries.Ledger.Key) {
-			if err := k.CreateLedger(ctx, maintainerAddr, *ledgerToEntries.Ledger); err != nil {
+			if err := k.AddLedger(ctx, maintainerAddr, *ledgerToEntries.Ledger); err != nil {
 				return fmt.Errorf("failed to create ledger: %w", err)
 			}
 			ctx.Logger().Info("Created ledger", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)

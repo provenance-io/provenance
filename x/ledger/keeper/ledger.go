@@ -13,12 +13,12 @@ import (
 var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
-	CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error
+	AddLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error
 	AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error
 	AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error
 	AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error
 
-	CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error
+	AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error
 
 	UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, statusTypeId int32) error
 	UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error
@@ -31,7 +31,7 @@ type BaseConfigKeeper struct {
 	BankKeeper
 }
 
-func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error {
+func (k BaseConfigKeeper) AddLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error {
 	if err := types.ValidateLedgerClassBasic(&l); err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func (k BaseConfigKeeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAdd
 	return false
 }
 
-func (k BaseConfigKeeper) CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error {
+func (k BaseConfigKeeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error {
 	if err := types.ValidateLedgerBasic(&l); err != nil {
 		return err
 	}

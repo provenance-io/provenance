@@ -28,6 +28,367 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryLedgerClassRequest
+type QueryLedgerClassRequest struct {
+	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
+}
+
+func (m *QueryLedgerClassRequest) Reset()         { *m = QueryLedgerClassRequest{} }
+func (m *QueryLedgerClassRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassRequest) ProtoMessage()    {}
+func (*QueryLedgerClassRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{0}
+}
+func (m *QueryLedgerClassRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassRequest.Merge(m, src)
+}
+func (m *QueryLedgerClassRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassRequest proto.InternalMessageInfo
+
+func (m *QueryLedgerClassRequest) GetLedgerClassId() string {
+	if m != nil {
+		return m.LedgerClassId
+	}
+	return ""
+}
+
+// QueryLedgerClassResponse
+type QueryLedgerClassResponse struct {
+	LedgerClass *LedgerClass `protobuf:"bytes,1,opt,name=ledger_class,json=ledgerClass,proto3" json:"ledger_class,omitempty"`
+}
+
+func (m *QueryLedgerClassResponse) Reset()         { *m = QueryLedgerClassResponse{} }
+func (m *QueryLedgerClassResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassResponse) ProtoMessage()    {}
+func (*QueryLedgerClassResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{1}
+}
+func (m *QueryLedgerClassResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassResponse.Merge(m, src)
+}
+func (m *QueryLedgerClassResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassResponse proto.InternalMessageInfo
+
+func (m *QueryLedgerClassResponse) GetLedgerClass() *LedgerClass {
+	if m != nil {
+		return m.LedgerClass
+	}
+	return nil
+}
+
+// QueryLedgerClassEntryTypesRequest
+type QueryLedgerClassEntryTypesRequest struct {
+	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
+}
+
+func (m *QueryLedgerClassEntryTypesRequest) Reset()         { *m = QueryLedgerClassEntryTypesRequest{} }
+func (m *QueryLedgerClassEntryTypesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassEntryTypesRequest) ProtoMessage()    {}
+func (*QueryLedgerClassEntryTypesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{2}
+}
+func (m *QueryLedgerClassEntryTypesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassEntryTypesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassEntryTypesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassEntryTypesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassEntryTypesRequest.Merge(m, src)
+}
+func (m *QueryLedgerClassEntryTypesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassEntryTypesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassEntryTypesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassEntryTypesRequest proto.InternalMessageInfo
+
+func (m *QueryLedgerClassEntryTypesRequest) GetLedgerClassId() string {
+	if m != nil {
+		return m.LedgerClassId
+	}
+	return ""
+}
+
+// QueryLedgerClassEntryTypesResponse
+type QueryLedgerClassEntryTypesResponse struct {
+	EntryTypes []*LedgerClassEntryType `protobuf:"bytes,1,rep,name=entry_types,json=entryTypes,proto3" json:"entry_types,omitempty"`
+}
+
+func (m *QueryLedgerClassEntryTypesResponse) Reset()         { *m = QueryLedgerClassEntryTypesResponse{} }
+func (m *QueryLedgerClassEntryTypesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassEntryTypesResponse) ProtoMessage()    {}
+func (*QueryLedgerClassEntryTypesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{3}
+}
+func (m *QueryLedgerClassEntryTypesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassEntryTypesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassEntryTypesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassEntryTypesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassEntryTypesResponse.Merge(m, src)
+}
+func (m *QueryLedgerClassEntryTypesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassEntryTypesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassEntryTypesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassEntryTypesResponse proto.InternalMessageInfo
+
+func (m *QueryLedgerClassEntryTypesResponse) GetEntryTypes() []*LedgerClassEntryType {
+	if m != nil {
+		return m.EntryTypes
+	}
+	return nil
+}
+
+// QueryLedgerClassStatusTypesRequest
+type QueryLedgerClassStatusTypesRequest struct {
+	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
+}
+
+func (m *QueryLedgerClassStatusTypesRequest) Reset()         { *m = QueryLedgerClassStatusTypesRequest{} }
+func (m *QueryLedgerClassStatusTypesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassStatusTypesRequest) ProtoMessage()    {}
+func (*QueryLedgerClassStatusTypesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{4}
+}
+func (m *QueryLedgerClassStatusTypesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassStatusTypesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassStatusTypesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassStatusTypesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassStatusTypesRequest.Merge(m, src)
+}
+func (m *QueryLedgerClassStatusTypesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassStatusTypesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassStatusTypesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassStatusTypesRequest proto.InternalMessageInfo
+
+func (m *QueryLedgerClassStatusTypesRequest) GetLedgerClassId() string {
+	if m != nil {
+		return m.LedgerClassId
+	}
+	return ""
+}
+
+// QueryLedgerClassStatusTypesResponse
+type QueryLedgerClassStatusTypesResponse struct {
+	StatusTypes []*LedgerClassStatusType `protobuf:"bytes,1,rep,name=status_types,json=statusTypes,proto3" json:"status_types,omitempty"`
+}
+
+func (m *QueryLedgerClassStatusTypesResponse) Reset()         { *m = QueryLedgerClassStatusTypesResponse{} }
+func (m *QueryLedgerClassStatusTypesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassStatusTypesResponse) ProtoMessage()    {}
+func (*QueryLedgerClassStatusTypesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{5}
+}
+func (m *QueryLedgerClassStatusTypesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassStatusTypesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassStatusTypesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassStatusTypesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassStatusTypesResponse.Merge(m, src)
+}
+func (m *QueryLedgerClassStatusTypesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassStatusTypesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassStatusTypesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassStatusTypesResponse proto.InternalMessageInfo
+
+func (m *QueryLedgerClassStatusTypesResponse) GetStatusTypes() []*LedgerClassStatusType {
+	if m != nil {
+		return m.StatusTypes
+	}
+	return nil
+}
+
+// QueryLedgerClassBucketTypesRequest
+type QueryLedgerClassBucketTypesRequest struct {
+	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
+}
+
+func (m *QueryLedgerClassBucketTypesRequest) Reset()         { *m = QueryLedgerClassBucketTypesRequest{} }
+func (m *QueryLedgerClassBucketTypesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassBucketTypesRequest) ProtoMessage()    {}
+func (*QueryLedgerClassBucketTypesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{6}
+}
+func (m *QueryLedgerClassBucketTypesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassBucketTypesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassBucketTypesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassBucketTypesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassBucketTypesRequest.Merge(m, src)
+}
+func (m *QueryLedgerClassBucketTypesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassBucketTypesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassBucketTypesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassBucketTypesRequest proto.InternalMessageInfo
+
+func (m *QueryLedgerClassBucketTypesRequest) GetLedgerClassId() string {
+	if m != nil {
+		return m.LedgerClassId
+	}
+	return ""
+}
+
+// QueryLedgerClassBucketTypesResponse
+type QueryLedgerClassBucketTypesResponse struct {
+	BucketTypes []*LedgerClassBucketType `protobuf:"bytes,1,rep,name=bucket_types,json=bucketTypes,proto3" json:"bucket_types,omitempty"`
+}
+
+func (m *QueryLedgerClassBucketTypesResponse) Reset()         { *m = QueryLedgerClassBucketTypesResponse{} }
+func (m *QueryLedgerClassBucketTypesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLedgerClassBucketTypesResponse) ProtoMessage()    {}
+func (*QueryLedgerClassBucketTypesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7955b82df44e45aa, []int{7}
+}
+func (m *QueryLedgerClassBucketTypesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLedgerClassBucketTypesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLedgerClassBucketTypesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLedgerClassBucketTypesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLedgerClassBucketTypesResponse.Merge(m, src)
+}
+func (m *QueryLedgerClassBucketTypesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLedgerClassBucketTypesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLedgerClassBucketTypesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLedgerClassBucketTypesResponse proto.InternalMessageInfo
+
+func (m *QueryLedgerClassBucketTypesResponse) GetBucketTypes() []*LedgerClassBucketType {
+	if m != nil {
+		return m.BucketTypes
+	}
+	return nil
+}
+
+// QueryLedgerRequest
 type QueryLedgerRequest struct {
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
@@ -36,7 +397,7 @@ func (m *QueryLedgerRequest) Reset()         { *m = QueryLedgerRequest{} }
 func (m *QueryLedgerRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerRequest) ProtoMessage()    {}
 func (*QueryLedgerRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{0}
+	return fileDescriptor_7955b82df44e45aa, []int{8}
 }
 func (m *QueryLedgerRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -72,6 +433,7 @@ func (m *QueryLedgerRequest) GetKey() *LedgerKey {
 	return nil
 }
 
+// QueryLedgerResponse
 type QueryLedgerResponse struct {
 	Ledger *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
 }
@@ -80,7 +442,7 @@ func (m *QueryLedgerResponse) Reset()         { *m = QueryLedgerResponse{} }
 func (m *QueryLedgerResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerResponse) ProtoMessage()    {}
 func (*QueryLedgerResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{1}
+	return fileDescriptor_7955b82df44e45aa, []int{9}
 }
 func (m *QueryLedgerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -116,6 +478,7 @@ func (m *QueryLedgerResponse) GetLedger() *Ledger {
 	return nil
 }
 
+// QueryLedgerEntriesRequest
 type QueryLedgerEntriesRequest struct {
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
@@ -124,7 +487,7 @@ func (m *QueryLedgerEntriesRequest) Reset()         { *m = QueryLedgerEntriesReq
 func (m *QueryLedgerEntriesRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerEntriesRequest) ProtoMessage()    {}
 func (*QueryLedgerEntriesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{2}
+	return fileDescriptor_7955b82df44e45aa, []int{10}
 }
 func (m *QueryLedgerEntriesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -160,6 +523,7 @@ func (m *QueryLedgerEntriesRequest) GetKey() *LedgerKey {
 	return nil
 }
 
+// QueryLedgerEntriesResponse
 type QueryLedgerEntriesResponse struct {
 	Entries []*LedgerEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
 }
@@ -168,7 +532,7 @@ func (m *QueryLedgerEntriesResponse) Reset()         { *m = QueryLedgerEntriesRe
 func (m *QueryLedgerEntriesResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerEntriesResponse) ProtoMessage()    {}
 func (*QueryLedgerEntriesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{3}
+	return fileDescriptor_7955b82df44e45aa, []int{11}
 }
 func (m *QueryLedgerEntriesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -204,6 +568,7 @@ func (m *QueryLedgerEntriesResponse) GetEntries() []*LedgerEntry {
 	return nil
 }
 
+// QueryLedgerEntryRequest
 type QueryLedgerEntryRequest struct {
 	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	CorrelationId string     `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
@@ -213,7 +578,7 @@ func (m *QueryLedgerEntryRequest) Reset()         { *m = QueryLedgerEntryRequest
 func (m *QueryLedgerEntryRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerEntryRequest) ProtoMessage()    {}
 func (*QueryLedgerEntryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{4}
+	return fileDescriptor_7955b82df44e45aa, []int{12}
 }
 func (m *QueryLedgerEntryRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -256,6 +621,7 @@ func (m *QueryLedgerEntryRequest) GetCorrelationId() string {
 	return ""
 }
 
+// QueryLedgerEntryResponse
 type QueryLedgerEntryResponse struct {
 	Entry *LedgerEntry `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry,omitempty"`
 }
@@ -264,7 +630,7 @@ func (m *QueryLedgerEntryResponse) Reset()         { *m = QueryLedgerEntryRespon
 func (m *QueryLedgerEntryResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerEntryResponse) ProtoMessage()    {}
 func (*QueryLedgerEntryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{5}
+	return fileDescriptor_7955b82df44e45aa, []int{13}
 }
 func (m *QueryLedgerEntryResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -300,6 +666,7 @@ func (m *QueryLedgerEntryResponse) GetEntry() *LedgerEntry {
 	return nil
 }
 
+// QueryLedgerBalancesAsOfRequest
 type QueryLedgerBalancesAsOfRequest struct {
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	// Format: YYYY-MM-DD
@@ -310,7 +677,7 @@ func (m *QueryLedgerBalancesAsOfRequest) Reset()         { *m = QueryLedgerBalan
 func (m *QueryLedgerBalancesAsOfRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerBalancesAsOfRequest) ProtoMessage()    {}
 func (*QueryLedgerBalancesAsOfRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{6}
+	return fileDescriptor_7955b82df44e45aa, []int{14}
 }
 func (m *QueryLedgerBalancesAsOfRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -353,6 +720,7 @@ func (m *QueryLedgerBalancesAsOfRequest) GetAsOfDate() string {
 	return ""
 }
 
+// QueryLedgerBalancesAsOfResponse
 type QueryLedgerBalancesAsOfResponse struct {
 	BucketBalances *BucketBalances `protobuf:"bytes,1,opt,name=bucket_balances,json=bucketBalances,proto3" json:"bucket_balances,omitempty"`
 }
@@ -361,7 +729,7 @@ func (m *QueryLedgerBalancesAsOfResponse) Reset()         { *m = QueryLedgerBala
 func (m *QueryLedgerBalancesAsOfResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryLedgerBalancesAsOfResponse) ProtoMessage()    {}
 func (*QueryLedgerBalancesAsOfResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{7}
+	return fileDescriptor_7955b82df44e45aa, []int{15}
 }
 func (m *QueryLedgerBalancesAsOfResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -397,358 +765,7 @@ func (m *QueryLedgerBalancesAsOfResponse) GetBucketBalances() *BucketBalances {
 	return nil
 }
 
-type QueryLedgerClassEntryTypesRequest struct {
-	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
-}
-
-func (m *QueryLedgerClassEntryTypesRequest) Reset()         { *m = QueryLedgerClassEntryTypesRequest{} }
-func (m *QueryLedgerClassEntryTypesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassEntryTypesRequest) ProtoMessage()    {}
-func (*QueryLedgerClassEntryTypesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{8}
-}
-func (m *QueryLedgerClassEntryTypesRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassEntryTypesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassEntryTypesRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassEntryTypesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassEntryTypesRequest.Merge(m, src)
-}
-func (m *QueryLedgerClassEntryTypesRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassEntryTypesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassEntryTypesRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassEntryTypesRequest proto.InternalMessageInfo
-
-func (m *QueryLedgerClassEntryTypesRequest) GetLedgerClassId() string {
-	if m != nil {
-		return m.LedgerClassId
-	}
-	return ""
-}
-
-type QueryLedgerClassEntryTypesResponse struct {
-	EntryTypes []*LedgerClassEntryType `protobuf:"bytes,1,rep,name=entry_types,json=entryTypes,proto3" json:"entry_types,omitempty"`
-}
-
-func (m *QueryLedgerClassEntryTypesResponse) Reset()         { *m = QueryLedgerClassEntryTypesResponse{} }
-func (m *QueryLedgerClassEntryTypesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassEntryTypesResponse) ProtoMessage()    {}
-func (*QueryLedgerClassEntryTypesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{9}
-}
-func (m *QueryLedgerClassEntryTypesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassEntryTypesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassEntryTypesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassEntryTypesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassEntryTypesResponse.Merge(m, src)
-}
-func (m *QueryLedgerClassEntryTypesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassEntryTypesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassEntryTypesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassEntryTypesResponse proto.InternalMessageInfo
-
-func (m *QueryLedgerClassEntryTypesResponse) GetEntryTypes() []*LedgerClassEntryType {
-	if m != nil {
-		return m.EntryTypes
-	}
-	return nil
-}
-
-type QueryLedgerClassStatusTypesRequest struct {
-	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
-}
-
-func (m *QueryLedgerClassStatusTypesRequest) Reset()         { *m = QueryLedgerClassStatusTypesRequest{} }
-func (m *QueryLedgerClassStatusTypesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassStatusTypesRequest) ProtoMessage()    {}
-func (*QueryLedgerClassStatusTypesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{10}
-}
-func (m *QueryLedgerClassStatusTypesRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassStatusTypesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassStatusTypesRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassStatusTypesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassStatusTypesRequest.Merge(m, src)
-}
-func (m *QueryLedgerClassStatusTypesRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassStatusTypesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassStatusTypesRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassStatusTypesRequest proto.InternalMessageInfo
-
-func (m *QueryLedgerClassStatusTypesRequest) GetLedgerClassId() string {
-	if m != nil {
-		return m.LedgerClassId
-	}
-	return ""
-}
-
-type QueryLedgerClassStatusTypesResponse struct {
-	StatusTypes []*LedgerClassStatusType `protobuf:"bytes,1,rep,name=status_types,json=statusTypes,proto3" json:"status_types,omitempty"`
-}
-
-func (m *QueryLedgerClassStatusTypesResponse) Reset()         { *m = QueryLedgerClassStatusTypesResponse{} }
-func (m *QueryLedgerClassStatusTypesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassStatusTypesResponse) ProtoMessage()    {}
-func (*QueryLedgerClassStatusTypesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{11}
-}
-func (m *QueryLedgerClassStatusTypesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassStatusTypesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassStatusTypesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassStatusTypesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassStatusTypesResponse.Merge(m, src)
-}
-func (m *QueryLedgerClassStatusTypesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassStatusTypesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassStatusTypesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassStatusTypesResponse proto.InternalMessageInfo
-
-func (m *QueryLedgerClassStatusTypesResponse) GetStatusTypes() []*LedgerClassStatusType {
-	if m != nil {
-		return m.StatusTypes
-	}
-	return nil
-}
-
-type QueryLedgerClassBucketTypesRequest struct {
-	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
-}
-
-func (m *QueryLedgerClassBucketTypesRequest) Reset()         { *m = QueryLedgerClassBucketTypesRequest{} }
-func (m *QueryLedgerClassBucketTypesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassBucketTypesRequest) ProtoMessage()    {}
-func (*QueryLedgerClassBucketTypesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{12}
-}
-func (m *QueryLedgerClassBucketTypesRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassBucketTypesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassBucketTypesRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassBucketTypesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassBucketTypesRequest.Merge(m, src)
-}
-func (m *QueryLedgerClassBucketTypesRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassBucketTypesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassBucketTypesRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassBucketTypesRequest proto.InternalMessageInfo
-
-func (m *QueryLedgerClassBucketTypesRequest) GetLedgerClassId() string {
-	if m != nil {
-		return m.LedgerClassId
-	}
-	return ""
-}
-
-type QueryLedgerClassBucketTypesResponse struct {
-	BucketTypes []*LedgerClassBucketType `protobuf:"bytes,1,rep,name=bucket_types,json=bucketTypes,proto3" json:"bucket_types,omitempty"`
-}
-
-func (m *QueryLedgerClassBucketTypesResponse) Reset()         { *m = QueryLedgerClassBucketTypesResponse{} }
-func (m *QueryLedgerClassBucketTypesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassBucketTypesResponse) ProtoMessage()    {}
-func (*QueryLedgerClassBucketTypesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{13}
-}
-func (m *QueryLedgerClassBucketTypesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassBucketTypesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassBucketTypesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassBucketTypesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassBucketTypesResponse.Merge(m, src)
-}
-func (m *QueryLedgerClassBucketTypesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassBucketTypesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassBucketTypesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassBucketTypesResponse proto.InternalMessageInfo
-
-func (m *QueryLedgerClassBucketTypesResponse) GetBucketTypes() []*LedgerClassBucketType {
-	if m != nil {
-		return m.BucketTypes
-	}
-	return nil
-}
-
-type QueryLedgerClassRequest struct {
-	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
-}
-
-func (m *QueryLedgerClassRequest) Reset()         { *m = QueryLedgerClassRequest{} }
-func (m *QueryLedgerClassRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassRequest) ProtoMessage()    {}
-func (*QueryLedgerClassRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{14}
-}
-func (m *QueryLedgerClassRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassRequest.Merge(m, src)
-}
-func (m *QueryLedgerClassRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassRequest proto.InternalMessageInfo
-
-func (m *QueryLedgerClassRequest) GetLedgerClassId() string {
-	if m != nil {
-		return m.LedgerClassId
-	}
-	return ""
-}
-
-type QueryLedgerClassResponse struct {
-	LedgerClass *LedgerClass `protobuf:"bytes,1,opt,name=ledger_class,json=ledgerClass,proto3" json:"ledger_class,omitempty"`
-}
-
-func (m *QueryLedgerClassResponse) Reset()         { *m = QueryLedgerClassResponse{} }
-func (m *QueryLedgerClassResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryLedgerClassResponse) ProtoMessage()    {}
-func (*QueryLedgerClassResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7955b82df44e45aa, []int{15}
-}
-func (m *QueryLedgerClassResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryLedgerClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryLedgerClassResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryLedgerClassResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLedgerClassResponse.Merge(m, src)
-}
-func (m *QueryLedgerClassResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryLedgerClassResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLedgerClassResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryLedgerClassResponse proto.InternalMessageInfo
-
-func (m *QueryLedgerClassResponse) GetLedgerClass() *LedgerClass {
-	if m != nil {
-		return m.LedgerClass
-	}
-	return nil
-}
-
+// QueryLedgerSettlementsRequest
 type QueryLedgerSettlementsRequest struct {
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
@@ -793,6 +810,7 @@ func (m *QueryLedgerSettlementsRequest) GetKey() *LedgerKey {
 	return nil
 }
 
+// QueryLedgerSettlementsResponse
 type QueryLedgerSettlementsResponse struct {
 	Settlements []*StoredSettlementInstructions `protobuf:"bytes,1,rep,name=settlements,proto3" json:"settlements,omitempty"`
 }
@@ -837,6 +855,7 @@ func (m *QueryLedgerSettlementsResponse) GetSettlements() []*StoredSettlementIns
 	return nil
 }
 
+// QueryLedgerSettlementsByCorrelationIdRequest
 type QueryLedgerSettlementsByCorrelationIdRequest struct {
 	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	CorrelationId string     `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
@@ -893,6 +912,7 @@ func (m *QueryLedgerSettlementsByCorrelationIdRequest) GetCorrelationId() string
 	return ""
 }
 
+// QueryLedgerSettlementsByCorrelationIdResponse
 type QueryLedgerSettlementsByCorrelationIdResponse struct {
 	Settlement *StoredSettlementInstructions `protobuf:"bytes,1,opt,name=settlement,proto3" json:"settlement,omitempty"`
 }
@@ -942,6 +962,14 @@ func (m *QueryLedgerSettlementsByCorrelationIdResponse) GetSettlement() *StoredS
 }
 
 func init() {
+	proto.RegisterType((*QueryLedgerClassRequest)(nil), "provenance.ledger.v1.QueryLedgerClassRequest")
+	proto.RegisterType((*QueryLedgerClassResponse)(nil), "provenance.ledger.v1.QueryLedgerClassResponse")
+	proto.RegisterType((*QueryLedgerClassEntryTypesRequest)(nil), "provenance.ledger.v1.QueryLedgerClassEntryTypesRequest")
+	proto.RegisterType((*QueryLedgerClassEntryTypesResponse)(nil), "provenance.ledger.v1.QueryLedgerClassEntryTypesResponse")
+	proto.RegisterType((*QueryLedgerClassStatusTypesRequest)(nil), "provenance.ledger.v1.QueryLedgerClassStatusTypesRequest")
+	proto.RegisterType((*QueryLedgerClassStatusTypesResponse)(nil), "provenance.ledger.v1.QueryLedgerClassStatusTypesResponse")
+	proto.RegisterType((*QueryLedgerClassBucketTypesRequest)(nil), "provenance.ledger.v1.QueryLedgerClassBucketTypesRequest")
+	proto.RegisterType((*QueryLedgerClassBucketTypesResponse)(nil), "provenance.ledger.v1.QueryLedgerClassBucketTypesResponse")
 	proto.RegisterType((*QueryLedgerRequest)(nil), "provenance.ledger.v1.QueryLedgerRequest")
 	proto.RegisterType((*QueryLedgerResponse)(nil), "provenance.ledger.v1.QueryLedgerResponse")
 	proto.RegisterType((*QueryLedgerEntriesRequest)(nil), "provenance.ledger.v1.QueryLedgerEntriesRequest")
@@ -950,14 +978,6 @@ func init() {
 	proto.RegisterType((*QueryLedgerEntryResponse)(nil), "provenance.ledger.v1.QueryLedgerEntryResponse")
 	proto.RegisterType((*QueryLedgerBalancesAsOfRequest)(nil), "provenance.ledger.v1.QueryLedgerBalancesAsOfRequest")
 	proto.RegisterType((*QueryLedgerBalancesAsOfResponse)(nil), "provenance.ledger.v1.QueryLedgerBalancesAsOfResponse")
-	proto.RegisterType((*QueryLedgerClassEntryTypesRequest)(nil), "provenance.ledger.v1.QueryLedgerClassEntryTypesRequest")
-	proto.RegisterType((*QueryLedgerClassEntryTypesResponse)(nil), "provenance.ledger.v1.QueryLedgerClassEntryTypesResponse")
-	proto.RegisterType((*QueryLedgerClassStatusTypesRequest)(nil), "provenance.ledger.v1.QueryLedgerClassStatusTypesRequest")
-	proto.RegisterType((*QueryLedgerClassStatusTypesResponse)(nil), "provenance.ledger.v1.QueryLedgerClassStatusTypesResponse")
-	proto.RegisterType((*QueryLedgerClassBucketTypesRequest)(nil), "provenance.ledger.v1.QueryLedgerClassBucketTypesRequest")
-	proto.RegisterType((*QueryLedgerClassBucketTypesResponse)(nil), "provenance.ledger.v1.QueryLedgerClassBucketTypesResponse")
-	proto.RegisterType((*QueryLedgerClassRequest)(nil), "provenance.ledger.v1.QueryLedgerClassRequest")
-	proto.RegisterType((*QueryLedgerClassResponse)(nil), "provenance.ledger.v1.QueryLedgerClassResponse")
 	proto.RegisterType((*QueryLedgerSettlementsRequest)(nil), "provenance.ledger.v1.QueryLedgerSettlementsRequest")
 	proto.RegisterType((*QueryLedgerSettlementsResponse)(nil), "provenance.ledger.v1.QueryLedgerSettlementsResponse")
 	proto.RegisterType((*QueryLedgerSettlementsByCorrelationIdRequest)(nil), "provenance.ledger.v1.QueryLedgerSettlementsByCorrelationIdRequest")
@@ -967,71 +987,71 @@ func init() {
 func init() { proto.RegisterFile("provenance/ledger/v1/query.proto", fileDescriptor_7955b82df44e45aa) }
 
 var fileDescriptor_7955b82df44e45aa = []byte{
-	// 1015 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0xdd, 0x6e, 0x1b, 0x45,
-	0x14, 0xce, 0xa4, 0x6a, 0x80, 0xe3, 0xfe, 0xc0, 0xf0, 0xd3, 0xb0, 0x0a, 0xae, 0x33, 0xfc, 0x28,
-	0x40, 0xb3, 0x4b, 0xdc, 0x54, 0xa5, 0x14, 0x01, 0x71, 0x0a, 0x55, 0x48, 0x68, 0x61, 0x13, 0x40,
-	0xfc, 0x54, 0x66, 0x6d, 0x8f, 0xcd, 0x2a, 0xee, 0xae, 0xb3, 0x33, 0x8e, 0x58, 0x45, 0xb9, 0x81,
-	0x1b, 0x2e, 0x2b, 0xf1, 0x08, 0x15, 0x4f, 0xc1, 0x0b, 0x20, 0x21, 0xa4, 0x02, 0x37, 0xdc, 0x81,
-	0x12, 0x1e, 0x04, 0xed, 0xec, 0x38, 0x3b, 0x9b, 0x9d, 0xd8, 0xbb, 0x76, 0x7b, 0x99, 0xd9, 0x73,
-	0xbe, 0xf3, 0x7d, 0x67, 0xe7, 0x7c, 0x7b, 0x62, 0xa8, 0xf4, 0x02, 0x7f, 0x97, 0x7a, 0x8e, 0xd7,
-	0xa4, 0x56, 0x97, 0xb6, 0x3a, 0x34, 0xb0, 0x76, 0x97, 0xac, 0x9d, 0x3e, 0x0d, 0x42, 0xb3, 0x17,
-	0xf8, 0xdc, 0xc7, 0xcf, 0x24, 0x11, 0x66, 0x1c, 0x61, 0xee, 0x2e, 0x19, 0x73, 0x1d, 0xdf, 0xef,
-	0x74, 0xa9, 0xe5, 0xf4, 0x5c, 0xcb, 0xf1, 0x3c, 0x9f, 0x3b, 0xdc, 0xf5, 0x3d, 0x16, 0xe7, 0x18,
-	0xf3, 0x5a, 0x54, 0x99, 0x1d, 0x87, 0x5c, 0x1a, 0x12, 0x52, 0x67, 0x94, 0xf3, 0x2e, 0xbd, 0x4b,
-	0x3d, 0x1e, 0x47, 0x93, 0x9b, 0x80, 0x3f, 0x89, 0x38, 0x6d, 0x88, 0xe7, 0x36, 0xdd, 0xe9, 0x53,
-	0xc6, 0xf1, 0x12, 0x9c, 0xda, 0xa6, 0xe1, 0x2c, 0xaa, 0xa0, 0x85, 0x52, 0xf5, 0xa2, 0xa9, 0x23,
-	0x6a, 0xc6, 0x19, 0xeb, 0x34, 0xb4, 0xa3, 0x58, 0xb2, 0x0e, 0x4f, 0xa7, 0x80, 0x58, 0xcf, 0xf7,
-	0x18, 0xc5, 0xcb, 0x30, 0x13, 0xa7, 0x48, 0xb0, 0xb9, 0x61, 0x60, 0xb6, 0x8c, 0x25, 0xb7, 0xe0,
-	0x79, 0x05, 0xec, 0x7d, 0x8f, 0x07, 0x2e, 0x65, 0x13, 0x90, 0xfb, 0x02, 0x0c, 0x1d, 0x9e, 0xe4,
-	0x78, 0x1d, 0x1e, 0xa3, 0xf1, 0xd1, 0x2c, 0xaa, 0x9c, 0x5a, 0x28, 0x55, 0xe7, 0x87, 0x81, 0x46,
-	0xd9, 0xa1, 0x3d, 0xc8, 0x20, 0x0c, 0x2e, 0x1c, 0x83, 0x0e, 0xc7, 0x27, 0x8a, 0x5f, 0x86, 0x73,
-	0x4d, 0x3f, 0x08, 0x68, 0x57, 0xbc, 0xf5, 0xba, 0xdb, 0x9a, 0x9d, 0xae, 0xa0, 0x85, 0x27, 0xec,
-	0xb3, 0xca, 0xe9, 0x5a, 0x8b, 0x6c, 0xc2, 0x6c, 0xb6, 0xa8, 0x54, 0x73, 0x15, 0x4e, 0x47, 0xdc,
-	0x06, 0x75, 0x73, 0x68, 0x89, 0xe3, 0xc9, 0x0e, 0x94, 0x15, 0xd0, 0x9a, 0xd3, 0x8d, 0x52, 0xd8,
-	0x0a, 0xbb, 0xdd, 0x9e, 0x40, 0xd0, 0x1c, 0x80, 0xc3, 0xea, 0x7e, 0xbb, 0xde, 0x72, 0x38, 0x95,
-	0x62, 0x1e, 0x77, 0xd8, 0xed, 0xf6, 0x0d, 0x87, 0x53, 0xd2, 0x83, 0x8b, 0x27, 0x96, 0x94, 0x72,
-	0x3e, 0x82, 0xf3, 0x8d, 0x7e, 0x73, 0x9b, 0xf2, 0x7a, 0x43, 0x3e, 0x96, 0xf5, 0x5f, 0xd2, 0xd7,
-	0xaf, 0x89, 0xe0, 0x01, 0x94, 0x7d, 0xae, 0x91, 0xfa, 0x9b, 0xac, 0xc3, 0xbc, 0x52, 0x71, 0xb5,
-	0xeb, 0x30, 0x26, 0x9a, 0xb0, 0x15, 0xf6, 0x92, 0x1b, 0xf6, 0x0a, 0x9c, 0x97, 0xf3, 0xd2, 0x8c,
-	0x02, 0xa2, 0xd7, 0x80, 0xe2, 0xd7, 0xd0, 0x4d, 0xd2, 0xd6, 0x5a, 0x64, 0x07, 0xc8, 0x30, 0x30,
-	0xa9, 0x60, 0x1d, 0x4a, 0xa2, 0xc1, 0x75, 0x1e, 0x1d, 0xcb, 0x2b, 0xf6, 0xda, 0xb0, 0xee, 0xa5,
-	0x91, 0x6c, 0xa0, 0x47, 0xa0, 0x64, 0x23, 0x5b, 0x72, 0x93, 0x3b, 0xbc, 0xcf, 0xc6, 0x12, 0xd0,
-	0x87, 0x17, 0x87, 0xa2, 0x49, 0x05, 0xb7, 0xe0, 0x0c, 0x13, 0xc7, 0x29, 0x09, 0xaf, 0x8f, 0x94,
-	0x90, 0x60, 0xd9, 0x25, 0x96, 0xe0, 0xea, 0x44, 0xc4, 0xaf, 0xed, 0x61, 0x89, 0x48, 0xa1, 0x25,
-	0x22, 0xe4, 0x45, 0x2a, 0x26, 0x22, 0xc1, 0xb2, 0x4b, 0x8d, 0x04, 0x97, 0xac, 0xa4, 0x06, 0x5f,
-	0x84, 0x16, 0x65, 0xfe, 0x4d, 0x6a, 0x8c, 0x25, 0x84, 0xa4, 0x7b, 0x03, 0xce, 0xa8, 0x18, 0x79,
-	0xa6, 0x39, 0x06, 0x28, 0x29, 0x35, 0x88, 0x0d, 0x2f, 0x28, 0x15, 0x36, 0x8f, 0xdc, 0x7f, 0x12,
-	0x33, 0xdd, 0x4d, 0xf9, 0x44, 0x0a, 0x53, 0x72, 0xdf, 0x82, 0x52, 0xf2, 0xa1, 0x19, 0x74, 0xba,
-	0xaa, 0x07, 0xdf, 0xe4, 0x7e, 0x40, 0x5b, 0x09, 0xca, 0x9a, 0xc7, 0x78, 0xd0, 0x6f, 0x8a, 0x8f,
-	0x9e, 0xad, 0xc2, 0x90, 0x1f, 0x11, 0x5c, 0xd2, 0x17, 0xae, 0x85, 0xab, 0xaa, 0x3d, 0x3e, 0x7a,
-	0xff, 0xfd, 0x01, 0xc1, 0x62, 0x4e, 0x2a, 0xb2, 0x25, 0x36, 0x40, 0xa2, 0x45, 0x52, 0x1a, 0xa7,
-	0x23, 0x0a, 0x4a, 0xf5, 0xfe, 0x93, 0x70, 0x5a, 0xb0, 0xc0, 0xf7, 0x11, 0x94, 0x94, 0x3b, 0x80,
-	0x17, 0xf5, 0xc8, 0x27, 0xdc, 0x57, 0xc3, 0xcc, 0x1b, 0x1e, 0x8b, 0x21, 0x57, 0xbe, 0xff, 0xeb,
-	0xbf, 0x9f, 0xa6, 0x2d, 0xbc, 0x68, 0x69, 0x77, 0x0d, 0x71, 0x61, 0xad, 0xbd, 0x63, 0x23, 0xb0,
-	0x8f, 0x7f, 0x47, 0xf0, 0xac, 0xd6, 0x2a, 0xf1, 0xd5, 0x7c, 0x04, 0x32, 0x4e, 0x6d, 0xbc, 0x59,
-	0x3c, 0x51, 0x6a, 0x58, 0x11, 0x1a, 0xae, 0xe3, 0x6b, 0x85, 0x34, 0x58, 0x8a, 0x93, 0xe3, 0x3f,
-	0x10, 0x3c, 0xa7, 0x77, 0x4e, 0x9c, 0x93, 0x57, 0xd6, 0xba, 0x8d, 0x6b, 0x63, 0x64, 0x4a, 0x49,
-	0x35, 0x21, 0xe9, 0x6d, 0xfc, 0x56, 0x31, 0x49, 0xaa, 0xb5, 0x1f, 0xd7, 0xa4, 0x18, 0x69, 0x5e,
-	0x4d, 0x59, 0x27, 0xcf, 0xab, 0x49, 0xe3, 0xda, 0xe3, 0x6a, 0x52, 0x9d, 0x1e, 0xff, 0x8c, 0x60,
-	0x26, 0x2e, 0x83, 0x17, 0x46, 0x32, 0x19, 0x70, 0x7e, 0x35, 0x47, 0xa4, 0xe4, 0xf8, 0x81, 0xe0,
-	0xf8, 0x1e, 0x7e, 0xe7, 0x04, 0x8e, 0xbe, 0xd7, 0x76, 0x3b, 0xd6, 0xde, 0x36, 0x0d, 0x4d, 0x87,
-	0x31, 0xca, 0x15, 0x9e, 0xe2, 0xd0, 0x6b, 0x73, 0x31, 0x1f, 0xbf, 0x20, 0x38, 0x9b, 0xda, 0x50,
-	0xb1, 0x35, 0x92, 0x44, 0x7a, 0x37, 0x36, 0xde, 0xc8, 0x9f, 0x20, 0xc9, 0xdf, 0x14, 0xe4, 0x57,
-	0xf0, 0xbb, 0x7a, 0xf2, 0x72, 0xcd, 0xcd, 0xc1, 0xfe, 0xb7, 0x23, 0x0f, 0x12, 0xd3, 0x96, 0xc3,
-	0x83, 0xd4, 0x65, 0x39, 0x87, 0x07, 0xa5, 0xd6, 0x5c, 0x72, 0x47, 0xf0, 0xfe, 0x1c, 0x7f, 0x6a,
-	0x0d, 0xf9, 0x7f, 0x67, 0x34, 0xed, 0x78, 0xa0, 0xad, 0xbd, 0xb4, 0xeb, 0xef, 0xe3, 0x7f, 0x10,
-	0xe0, 0xec, 0x56, 0x8a, 0x97, 0x47, 0xb2, 0xd4, 0xec, 0xcd, 0xc6, 0x95, 0x82, 0x59, 0x52, 0xe2,
-	0xd7, 0x42, 0xe2, 0x67, 0x78, 0x6b, 0x42, 0x89, 0x83, 0xc5, 0xd9, 0xda, 0x4b, 0x56, 0xf1, 0x7d,
-	0xfc, 0x27, 0x82, 0xa7, 0x32, 0x9f, 0x2f, 0x7c, 0x79, 0x24, 0xd5, 0xec, 0x12, 0x61, 0x2c, 0x17,
-	0x4b, 0x92, 0xf2, 0x6c, 0x21, 0x6f, 0x03, 0x7f, 0x38, 0xa1, 0x3c, 0x65, 0x47, 0xc0, 0xf7, 0xa6,
-	0xa1, 0x32, 0xea, 0x9b, 0x8c, 0x6b, 0x45, 0xe8, 0xea, 0x77, 0x0b, 0x63, 0x75, 0x22, 0x0c, 0xd9,
-	0x81, 0xa6, 0xe8, 0xc0, 0x1d, 0xfc, 0xd5, 0xc3, 0xeb, 0x40, 0xe6, 0x26, 0xd7, 0x3a, 0xbf, 0x1e,
-	0x94, 0xd1, 0x83, 0x83, 0x32, 0xfa, 0xf7, 0xa0, 0x8c, 0xee, 0x1d, 0x96, 0xa7, 0x1e, 0x1c, 0x96,
-	0xa7, 0xfe, 0x3e, 0x2c, 0x4f, 0xc1, 0x05, 0xd7, 0xd7, 0xaa, 0xf8, 0x18, 0x7d, 0x59, 0xed, 0xb8,
-	0xfc, 0xdb, 0x7e, 0xc3, 0x6c, 0xfa, 0x77, 0x15, 0x6e, 0x8b, 0xae, 0xaf, 0x32, 0xfd, 0x6e, 0xc0,
-	0x50, 0xd8, 0x6c, 0x63, 0x46, 0xfc, 0xa2, 0x70, 0xf9, 0xff, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf1,
-	0x72, 0xfd, 0xe2, 0xfa, 0x10, 0x00, 0x00,
+	// 1014 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0x6d, 0x6f, 0x1b, 0x45,
+	0x10, 0xce, 0xa6, 0x6a, 0x80, 0x71, 0x5f, 0x60, 0x79, 0x69, 0x38, 0x05, 0x37, 0x59, 0x5e, 0x14,
+	0xa0, 0xb9, 0x23, 0x6e, 0xaa, 0x52, 0x8a, 0x80, 0x38, 0x85, 0x2a, 0x24, 0xb4, 0x70, 0x09, 0x20,
+	0x5e, 0x2a, 0x73, 0xb6, 0xd7, 0xe6, 0x14, 0xf7, 0xce, 0xb9, 0x5d, 0x47, 0x58, 0x51, 0xbe, 0xc0,
+	0x17, 0x3e, 0x56, 0xe2, 0x27, 0x54, 0xfc, 0x0a, 0xfe, 0x00, 0x12, 0x42, 0x2a, 0xf0, 0x85, 0x6f,
+	0xa0, 0x84, 0x1f, 0x82, 0x6e, 0x6f, 0xed, 0xdb, 0xcb, 0x6d, 0x7c, 0x77, 0x76, 0xfb, 0x31, 0x73,
+	0x33, 0xcf, 0x3c, 0xcf, 0x68, 0x76, 0x66, 0x62, 0x98, 0xef, 0x06, 0xfe, 0x1e, 0xf5, 0x1c, 0xaf,
+	0x41, 0xad, 0x0e, 0x6d, 0xb6, 0x69, 0x60, 0xed, 0x2d, 0x5b, 0xbb, 0x3d, 0x1a, 0xf4, 0xcd, 0x6e,
+	0xe0, 0x73, 0x1f, 0x3f, 0x13, 0x7b, 0x98, 0x91, 0x87, 0xb9, 0xb7, 0x6c, 0xcc, 0xb5, 0x7d, 0xbf,
+	0xdd, 0xa1, 0x96, 0xd3, 0x75, 0x2d, 0xc7, 0xf3, 0x7c, 0xee, 0x70, 0xd7, 0xf7, 0x58, 0x14, 0x63,
+	0x2c, 0x68, 0x51, 0x65, 0x74, 0xe4, 0x72, 0x69, 0x84, 0x4b, 0x8d, 0x51, 0xce, 0x3b, 0xf4, 0x2e,
+	0xf5, 0x78, 0xe4, 0x4d, 0x56, 0xe1, 0xc2, 0x27, 0x21, 0xa7, 0x4d, 0xf1, 0x7d, 0xad, 0xe3, 0x30,
+	0x66, 0xd3, 0xdd, 0x1e, 0x65, 0x1c, 0xbf, 0x02, 0xe7, 0x65, 0x54, 0x23, 0x34, 0xd7, 0xdc, 0xe6,
+	0x2c, 0x9a, 0x47, 0x8b, 0x4f, 0xd8, 0x67, 0x3b, 0xb1, 0xf3, 0x7a, 0x93, 0x7c, 0x03, 0xb3, 0x69,
+	0x08, 0xd6, 0xf5, 0x3d, 0x46, 0xf1, 0x0d, 0x38, 0xa3, 0x62, 0x08, 0x80, 0x52, 0x65, 0xc1, 0xd4,
+	0x49, 0x37, 0x55, 0x80, 0x92, 0x92, 0x83, 0x6c, 0xc0, 0xc2, 0xf1, 0x0c, 0xef, 0x7b, 0x3c, 0xe8,
+	0x6f, 0xf7, 0xbb, 0xb4, 0x30, 0xdd, 0x5d, 0x20, 0xa3, 0xc0, 0x24, 0xf1, 0x0d, 0x28, 0xd1, 0xd0,
+	0x5a, 0xe3, 0xa1, 0x79, 0x16, 0xcd, 0x9f, 0x5a, 0x2c, 0x55, 0x5e, 0xcb, 0xe4, 0x3d, 0x44, 0xb2,
+	0x81, 0x0e, 0x41, 0xc9, 0x66, 0x3a, 0xe5, 0x16, 0x77, 0x78, 0x8f, 0x8d, 0x25, 0xa0, 0x07, 0x2f,
+	0x8e, 0x44, 0x93, 0x0a, 0x6e, 0xc1, 0x19, 0x26, 0xcc, 0x09, 0x09, 0xaf, 0x67, 0x4a, 0x88, 0xb1,
+	0xec, 0x12, 0x8b, 0x71, 0x75, 0x22, 0xaa, 0xbd, 0xc6, 0x0e, 0xe5, 0x0f, 0x4b, 0x44, 0x02, 0x2d,
+	0x16, 0x51, 0x17, 0xe6, 0x82, 0x22, 0x62, 0x2c, 0xbb, 0x54, 0x8f, 0x71, 0xc9, 0x4d, 0xc0, 0x4a,
+	0xda, 0x01, 0xe9, 0x65, 0x38, 0xb5, 0x43, 0xfb, 0xb2, 0x39, 0x2f, 0x8e, 0x02, 0xdf, 0xa0, 0x7d,
+	0x3b, 0xf4, 0x25, 0x1b, 0xf0, 0x74, 0x02, 0x48, 0xf2, 0x5d, 0x81, 0x99, 0x28, 0x44, 0x82, 0xcd,
+	0x8d, 0x02, 0xb3, 0xa5, 0x2f, 0xb9, 0x05, 0xcf, 0x2b, 0x60, 0x61, 0x0f, 0xb9, 0x71, 0x45, 0xc7,
+	0x20, 0xf7, 0x05, 0x18, 0x3a, 0x3c, 0xc9, 0xf1, 0x3a, 0x3c, 0x46, 0x23, 0x93, 0x2c, 0xe7, 0xc8,
+	0xe7, 0x28, 0x3a, 0xda, 0x1e, 0x44, 0x10, 0x96, 0x98, 0x17, 0xd1, 0xc7, 0xb1, 0x89, 0xe2, 0x97,
+	0xe1, 0x5c, 0xc3, 0x0f, 0x02, 0xda, 0x11, 0x43, 0x2e, 0x6c, 0x96, 0xe9, 0xa8, 0x59, 0x14, 0xeb,
+	0x7a, 0x93, 0x6c, 0x25, 0x26, 0x8c, 0x4c, 0x2a, 0xd5, 0x5c, 0x85, 0xd3, 0xe2, 0xa5, 0xe5, 0x19,
+	0x2d, 0x51, 0x64, 0xe4, 0x4f, 0x76, 0xa1, 0xac, 0x80, 0x56, 0x9d, 0x4e, 0x18, 0xc2, 0x56, 0xd9,
+	0xed, 0xd6, 0x04, 0x82, 0xe6, 0x00, 0x1c, 0x56, 0xf3, 0x5b, 0xb5, 0xa6, 0xc3, 0xa9, 0x14, 0xf3,
+	0xb8, 0xc3, 0x6e, 0xb7, 0x6e, 0x38, 0x9c, 0x92, 0x2e, 0x5c, 0x3c, 0x31, 0xa5, 0x94, 0xf3, 0x11,
+	0x9c, 0x97, 0x0d, 0x5f, 0x97, 0x9f, 0x65, 0xfe, 0x97, 0xf4, 0xf9, 0xa3, 0x46, 0x1f, 0x40, 0xd9,
+	0xe7, 0xea, 0x89, 0xbf, 0x89, 0x0d, 0x2f, 0x28, 0x19, 0xb7, 0x86, 0xd3, 0x7f, 0x92, 0xee, 0xda,
+	0x4b, 0x14, 0x2e, 0x81, 0x29, 0x45, 0x6c, 0x43, 0x29, 0x5e, 0x34, 0x83, 0x2e, 0xab, 0xe8, 0xc1,
+	0xb7, 0xb8, 0x1f, 0xd0, 0x66, 0x8c, 0xb2, 0xee, 0x31, 0x1e, 0xf4, 0x1a, 0x62, 0xe9, 0xd9, 0x2a,
+	0x0c, 0xf9, 0x11, 0xc1, 0x25, 0x7d, 0xe2, 0x6a, 0x7f, 0x4d, 0xed, 0x97, 0x47, 0xdf, 0x90, 0x3f,
+	0x20, 0x58, 0xca, 0x49, 0x45, 0x96, 0xc4, 0x06, 0x88, 0xb5, 0x48, 0x4a, 0xe3, 0x54, 0x44, 0x41,
+	0xa9, 0xdc, 0x7f, 0x12, 0x4e, 0x0b, 0x16, 0xf8, 0x3e, 0x82, 0x92, 0x32, 0xfd, 0xf0, 0x92, 0x1e,
+	0xf9, 0x84, 0x4d, 0x6f, 0x98, 0x79, 0xdd, 0x23, 0x31, 0xe4, 0xca, 0xf7, 0x7f, 0xfd, 0xf7, 0xd3,
+	0xb4, 0x85, 0x97, 0x2c, 0xed, 0xad, 0x21, 0x26, 0xbf, 0xb5, 0x7f, 0x6c, 0x0f, 0x1c, 0xe0, 0xdf,
+	0x11, 0x3c, 0xab, 0xdd, 0xba, 0xf8, 0x6a, 0x3e, 0x02, 0xa9, 0xa5, 0x6f, 0xbc, 0x59, 0x3c, 0x50,
+	0x6a, 0x58, 0x15, 0x1a, 0xae, 0xe3, 0x6b, 0x85, 0x34, 0x58, 0xca, 0x51, 0x80, 0xff, 0x40, 0xf0,
+	0x9c, 0x7e, 0x09, 0xe3, 0x9c, 0xbc, 0xd2, 0x57, 0x80, 0x71, 0x6d, 0x8c, 0x48, 0x29, 0xa9, 0x2a,
+	0x24, 0xbd, 0x8d, 0xdf, 0x2a, 0x26, 0x49, 0xbd, 0x12, 0x8e, 0x6b, 0x52, 0x76, 0x72, 0x5e, 0x4d,
+	0xe9, 0xa3, 0x20, 0xaf, 0x26, 0xcd, 0x01, 0x30, 0xae, 0x26, 0xf5, 0x68, 0xc0, 0x3f, 0x23, 0x98,
+	0x89, 0xd2, 0xe0, 0xc5, 0x4c, 0x26, 0x03, 0xce, 0xaf, 0xe6, 0xf0, 0x94, 0x1c, 0x3f, 0x10, 0x1c,
+	0xdf, 0xc3, 0xef, 0x9c, 0xc0, 0xd1, 0xf7, 0x5a, 0x6e, 0xdb, 0xda, 0xdf, 0xa1, 0x7d, 0xd3, 0x61,
+	0x8c, 0x72, 0x85, 0xa7, 0x30, 0x7a, 0x2d, 0x2e, 0xde, 0xc7, 0x2f, 0x08, 0xce, 0x26, 0x56, 0x36,
+	0xb6, 0x32, 0x49, 0x24, 0x8f, 0x05, 0xe3, 0x8d, 0xfc, 0x01, 0x92, 0xfc, 0x4d, 0x41, 0x7e, 0x15,
+	0xbf, 0xab, 0x27, 0x2f, 0xf7, 0x7e, 0x0e, 0xf6, 0xbf, 0x0d, 0x67, 0x90, 0x78, 0x6d, 0x39, 0x66,
+	0x90, 0x7a, 0x3d, 0xe4, 0x98, 0x41, 0x89, 0xbd, 0x4f, 0xee, 0x08, 0xde, 0x9f, 0xe3, 0x4f, 0xad,
+	0x11, 0xff, 0xef, 0x64, 0xd3, 0x8e, 0x1e, 0xb4, 0xb5, 0x9f, 0x9c, 0xfa, 0x07, 0xf8, 0x1f, 0x04,
+	0x38, 0xbd, 0xa6, 0xf1, 0x4a, 0x26, 0x4b, 0xcd, 0x21, 0x61, 0x5c, 0x29, 0x18, 0x25, 0x25, 0x7e,
+	0x2d, 0x24, 0x7e, 0x86, 0xb7, 0x27, 0x94, 0x38, 0xb8, 0x24, 0xac, 0xfd, 0xf8, 0x36, 0x39, 0xc0,
+	0x7f, 0x22, 0x78, 0x2a, 0xb5, 0xbe, 0xf0, 0xe5, 0x4c, 0xaa, 0xe9, 0x23, 0xc2, 0x58, 0x29, 0x16,
+	0x24, 0xe5, 0xd9, 0x42, 0xde, 0x26, 0xfe, 0x70, 0x42, 0x79, 0xca, 0x8d, 0x80, 0xef, 0x4d, 0xc3,
+	0x7c, 0xd6, 0x4e, 0xc6, 0xd5, 0x22, 0x74, 0xf5, 0xb7, 0x85, 0xb1, 0x36, 0x11, 0x86, 0xac, 0x40,
+	0x43, 0x54, 0xe0, 0x0e, 0xfe, 0xea, 0xe1, 0x55, 0x20, 0xd5, 0xc9, 0xd5, 0xf6, 0xaf, 0x87, 0x65,
+	0xf4, 0xe0, 0xb0, 0x8c, 0xfe, 0x3d, 0x2c, 0xa3, 0x7b, 0x47, 0xe5, 0xa9, 0x07, 0x47, 0xe5, 0xa9,
+	0xbf, 0x8f, 0xca, 0x53, 0x70, 0xc1, 0xf5, 0xb5, 0x2a, 0x3e, 0x46, 0x5f, 0x56, 0xda, 0x2e, 0xff,
+	0xb6, 0x57, 0x37, 0x1b, 0xfe, 0x5d, 0x85, 0xdb, 0x92, 0xeb, 0xab, 0x4c, 0xbf, 0x1b, 0x30, 0x14,
+	0x63, 0xb6, 0x3e, 0x23, 0x7e, 0x51, 0xb8, 0xfc, 0x7f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe4, 0x22,
+	0x17, 0x5e, 0xfa, 0x10, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1046,25 +1066,25 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Returns the ledger class for a given ledger class id
+	// LedgerClass returns the ledger class for a given ledger class id
 	LedgerClass(ctx context.Context, in *QueryLedgerClassRequest, opts ...grpc.CallOption) (*QueryLedgerClassResponse, error)
-	// Returns the entry types for a given ledger class id
+	// LedgerClassEntryTypes returns the entry types for a given ledger class id
 	LedgerClassEntryTypes(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error)
-	// Returns the status types for a given ledger class id
+	// LedgerClassStatusTypes returns the status types for a given ledger class id
 	LedgerClassStatusTypes(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error)
-	// Returns the bucket types for a given ledger class id
+	// LedgerClassBucketTypes returns the bucket types for a given ledger class id
 	LedgerClassBucketTypes(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error)
-	// Returns the ledger for a given ledger key
+	// Ledger returns the ledger for a given ledger key
 	Ledger(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
-	// Returns the entries for a given ledger key
+	// LedgerEntries returns the entries for a given ledger key
 	LedgerEntries(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error)
-	// GetLedgerEntry returns a specific ledger entry for an NFT
+	// LedgerEntry returns a specific ledger entry for an NFT
 	LedgerEntry(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
-	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
+	// LedgerBalancesAsOf returns the balances for a specific NFT as of a given date
 	LedgerBalancesAsOf(ctx context.Context, in *QueryLedgerBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryLedgerBalancesAsOfResponse, error)
-	// get all settlements for a ledger
+	// LedgerSettlements returns all settlements for a ledger
 	LedgerSettlements(ctx context.Context, in *QueryLedgerSettlementsRequest, opts ...grpc.CallOption) (*QueryLedgerSettlementsResponse, error)
-	// get settlements by correlation id
+	// LedgerSettlementsByCorrelationId returns settlements by correlation id
 	LedgerSettlementsByCorrelationId(ctx context.Context, in *QueryLedgerSettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QueryLedgerSettlementsByCorrelationIdResponse, error)
 }
 
@@ -1168,25 +1188,25 @@ func (c *queryClient) LedgerSettlementsByCorrelationId(ctx context.Context, in *
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Returns the ledger class for a given ledger class id
+	// LedgerClass returns the ledger class for a given ledger class id
 	LedgerClass(context.Context, *QueryLedgerClassRequest) (*QueryLedgerClassResponse, error)
-	// Returns the entry types for a given ledger class id
+	// LedgerClassEntryTypes returns the entry types for a given ledger class id
 	LedgerClassEntryTypes(context.Context, *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error)
-	// Returns the status types for a given ledger class id
+	// LedgerClassStatusTypes returns the status types for a given ledger class id
 	LedgerClassStatusTypes(context.Context, *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error)
-	// Returns the bucket types for a given ledger class id
+	// LedgerClassBucketTypes returns the bucket types for a given ledger class id
 	LedgerClassBucketTypes(context.Context, *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error)
-	// Returns the ledger for a given ledger key
+	// Ledger returns the ledger for a given ledger key
 	Ledger(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
-	// Returns the entries for a given ledger key
+	// LedgerEntries returns the entries for a given ledger key
 	LedgerEntries(context.Context, *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error)
-	// GetLedgerEntry returns a specific ledger entry for an NFT
+	// LedgerEntry returns a specific ledger entry for an NFT
 	LedgerEntry(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
-	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
+	// LedgerBalancesAsOf returns the balances for a specific NFT as of a given date
 	LedgerBalancesAsOf(context.Context, *QueryLedgerBalancesAsOfRequest) (*QueryLedgerBalancesAsOfResponse, error)
-	// get all settlements for a ledger
+	// LedgerSettlements returns all settlements for a ledger
 	LedgerSettlements(context.Context, *QueryLedgerSettlementsRequest) (*QueryLedgerSettlementsResponse, error)
-	// get settlements by correlation id
+	// LedgerSettlementsByCorrelationId returns settlements by correlation id
 	LedgerSettlementsByCorrelationId(context.Context, *QueryLedgerSettlementsByCorrelationIdRequest) (*QueryLedgerSettlementsByCorrelationIdResponse, error)
 }
 
@@ -1457,6 +1477,272 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provenance/ledger/v1/query.proto",
+}
+
+func (m *QueryLedgerClassRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.LedgerClassId) > 0 {
+		i -= len(m.LedgerClassId)
+		copy(dAtA[i:], m.LedgerClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerClassResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.LedgerClass != nil {
+		{
+			size, err := m.LedgerClass.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerClassEntryTypesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassEntryTypesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassEntryTypesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.LedgerClassId) > 0 {
+		i -= len(m.LedgerClassId)
+		copy(dAtA[i:], m.LedgerClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerClassEntryTypesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassEntryTypesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassEntryTypesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.EntryTypes) > 0 {
+		for iNdEx := len(m.EntryTypes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.EntryTypes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerClassStatusTypesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassStatusTypesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassStatusTypesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.LedgerClassId) > 0 {
+		i -= len(m.LedgerClassId)
+		copy(dAtA[i:], m.LedgerClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerClassStatusTypesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassStatusTypesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassStatusTypesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.StatusTypes) > 0 {
+		for iNdEx := len(m.StatusTypes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.StatusTypes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerClassBucketTypesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassBucketTypesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassBucketTypesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.LedgerClassId) > 0 {
+		i -= len(m.LedgerClassId)
+		copy(dAtA[i:], m.LedgerClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLedgerClassBucketTypesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLedgerClassBucketTypesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLedgerClassBucketTypesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BucketTypes) > 0 {
+		for iNdEx := len(m.BucketTypes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BucketTypes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *QueryLedgerRequest) Marshal() (dAtA []byte, err error) {
@@ -1755,272 +2041,6 @@ func (m *QueryLedgerBalancesAsOfResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryLedgerClassEntryTypesRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassEntryTypesRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassEntryTypesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.LedgerClassId) > 0 {
-		i -= len(m.LedgerClassId)
-		copy(dAtA[i:], m.LedgerClassId)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerClassEntryTypesResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassEntryTypesResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassEntryTypesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.EntryTypes) > 0 {
-		for iNdEx := len(m.EntryTypes) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.EntryTypes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerClassStatusTypesRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassStatusTypesRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassStatusTypesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.LedgerClassId) > 0 {
-		i -= len(m.LedgerClassId)
-		copy(dAtA[i:], m.LedgerClassId)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerClassStatusTypesResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassStatusTypesResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassStatusTypesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.StatusTypes) > 0 {
-		for iNdEx := len(m.StatusTypes) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.StatusTypes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerClassBucketTypesRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassBucketTypesRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassBucketTypesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.LedgerClassId) > 0 {
-		i -= len(m.LedgerClassId)
-		copy(dAtA[i:], m.LedgerClassId)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerClassBucketTypesResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassBucketTypesResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassBucketTypesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.BucketTypes) > 0 {
-		for iNdEx := len(m.BucketTypes) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.BucketTypes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerClassRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.LedgerClassId) > 0 {
-		i -= len(m.LedgerClassId)
-		copy(dAtA[i:], m.LedgerClassId)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.LedgerClassId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryLedgerClassResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryLedgerClassResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryLedgerClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.LedgerClass != nil {
-		{
-			size, err := m.LedgerClass.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *QueryLedgerSettlementsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2181,6 +2201,116 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueryLedgerClassRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.LedgerClassId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerClassResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.LedgerClass != nil {
+		l = m.LedgerClass.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerClassEntryTypesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.LedgerClassId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerClassEntryTypesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.EntryTypes) > 0 {
+		for _, e := range m.EntryTypes {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryLedgerClassStatusTypesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.LedgerClassId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerClassStatusTypesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.StatusTypes) > 0 {
+		for _, e := range m.StatusTypes {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryLedgerClassBucketTypesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.LedgerClassId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLedgerClassBucketTypesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.BucketTypes) > 0 {
+		for _, e := range m.BucketTypes {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *QueryLedgerRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2295,116 +2425,6 @@ func (m *QueryLedgerBalancesAsOfResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryLedgerClassEntryTypesRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.LedgerClassId)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryLedgerClassEntryTypesResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.EntryTypes) > 0 {
-		for _, e := range m.EntryTypes {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueryLedgerClassStatusTypesRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.LedgerClassId)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryLedgerClassStatusTypesResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.StatusTypes) > 0 {
-		for _, e := range m.StatusTypes {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueryLedgerClassBucketTypesRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.LedgerClassId)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryLedgerClassBucketTypesResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.BucketTypes) > 0 {
-		for _, e := range m.BucketTypes {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueryLedgerClassRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.LedgerClassId)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryLedgerClassResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.LedgerClass != nil {
-		l = m.LedgerClass.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *QueryLedgerSettlementsRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2468,6 +2488,672 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryLedgerClassRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerClassResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClass", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.LedgerClass == nil {
+				m.LedgerClass = &LedgerClass{}
+			}
+			if err := m.LedgerClass.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerClassEntryTypesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassEntryTypesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassEntryTypesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerClassEntryTypesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassEntryTypesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassEntryTypesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EntryTypes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EntryTypes = append(m.EntryTypes, &LedgerClassEntryType{})
+			if err := m.EntryTypes[len(m.EntryTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerClassStatusTypesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassStatusTypesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassStatusTypesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerClassStatusTypesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassStatusTypesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassStatusTypesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StatusTypes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StatusTypes = append(m.StatusTypes, &LedgerClassStatusType{})
+			if err := m.StatusTypes[len(m.StatusTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerClassBucketTypesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassBucketTypesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassBucketTypesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLedgerClassBucketTypesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLedgerClassBucketTypesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLedgerClassBucketTypesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BucketTypes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BucketTypes = append(m.BucketTypes, &LedgerClassBucketType{})
+			if err := m.BucketTypes[len(m.BucketTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *QueryLedgerRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -3195,672 +3881,6 @@ func (m *QueryLedgerBalancesAsOfResponse) Unmarshal(dAtA []byte) error {
 				m.BucketBalances = &BucketBalances{}
 			}
 			if err := m.BucketBalances.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassEntryTypesRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassEntryTypesRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassEntryTypesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassEntryTypesResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassEntryTypesResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassEntryTypesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EntryTypes", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.EntryTypes = append(m.EntryTypes, &LedgerClassEntryType{})
-			if err := m.EntryTypes[len(m.EntryTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassStatusTypesRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassStatusTypesRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassStatusTypesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassStatusTypesResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassStatusTypesResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassStatusTypesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StatusTypes", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.StatusTypes = append(m.StatusTypes, &LedgerClassStatusType{})
-			if err := m.StatusTypes[len(m.StatusTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassBucketTypesRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassBucketTypesRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassBucketTypesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassBucketTypesResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassBucketTypesResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassBucketTypesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BucketTypes", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BucketTypes = append(m.BucketTypes, &LedgerClassBucketType{})
-			if err := m.BucketTypes[len(m.BucketTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryLedgerClassResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLedgerClassResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLedgerClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClass", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.LedgerClass == nil {
-				m.LedgerClass = &LedgerClass{}
-			}
-			if err := m.LedgerClass.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

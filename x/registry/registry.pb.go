@@ -72,6 +72,7 @@ func (RegistryRole) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_2fa7a0b4d34d0208, []int{0}
 }
 
+// RegistryKey defines the key for registry entries
 type RegistryKey struct {
 	// Identifier for the nft that this ledger is linked to.
 	// This could be a `x/metadata` scope id or an `x/nft` nft id.
@@ -183,6 +184,7 @@ func (m *RegistryEntry) GetRoles() []RolesEntry {
 	return nil
 }
 
+// RolesEntry represents a role and the addresses that can perform that role
 type RolesEntry struct {
 	Role RegistryRole `protobuf:"varint,1,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
 	// addresses is the list of blockchain addresses that can perform this role
@@ -282,6 +284,7 @@ func (m *GenesisState) GetEntries() []RegistryEntry {
 	return nil
 }
 
+// RegistryBulkUpdate represents a bulk update to the registry
 type RegistryBulkUpdate struct {
 	Entries []RegistryBulkUpdateEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries"`
 }
@@ -326,6 +329,7 @@ func (m *RegistryBulkUpdate) GetEntries() []RegistryBulkUpdateEntry {
 	return nil
 }
 
+// RegistryBulkUpdateEntry represents a single entry in a bulk update
 type RegistryBulkUpdateEntry struct {
 	Key   *RegistryKey   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Roles []RegistryRole `protobuf:"varint,2,rep,packed,name=roles,proto3,enum=provenance.registry.v1.RegistryRole" json:"roles,omitempty"`

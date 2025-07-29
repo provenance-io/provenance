@@ -23,31 +23,31 @@ service Query {
   }
 }
 
-// QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method
+// QueryGetRegistryRequest
 message QueryGetRegistryRequest {
-  // key is the key to query
+  // key of the registry entry to query
   RegistryKey key = 1;
 }
 
-// QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method
+// QueryGetRegistryResponse
 message QueryGetRegistryResponse {
-  // entry is the registry entry for the requested key
+  // registry entry for the requested key
   RegistryEntry registry = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryHasRoleRequest is the request type for the Query/HasRole RPC method
+// QueryHasRoleRequest
 message QueryHasRoleRequest {
-  // key is the key to query
+  // key of the registry entry to query
   RegistryKey key = 1;
 
-  // address is the address to query
+  // address of the account we're checking for the role
   string address = 2;
 
-  // role is the role to query
+  // role we're checking for
   RegistryRole role = 3;
 }
 
-// QueryHasRoleResponse is the response type for the Query/HasRole RPC method
+// QueryHasRoleResponse
 message QueryHasRoleResponse {
   // has_role is true if the address has the role for the given key
   bool has_role = 1;

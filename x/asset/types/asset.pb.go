@@ -22,6 +22,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// AssetClass defines the classification of assets
 type AssetClass struct {
 	// id defines the unique identifier of the asset classification, similar to the contract address of ERC721
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -203,6 +204,7 @@ func (m *Asset) GetData() string {
 	return ""
 }
 
+// Nft defines a non-fungible token
 type Nft struct {
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
 	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`

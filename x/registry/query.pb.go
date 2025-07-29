@@ -29,9 +29,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method
+// QueryGetRegistryRequest
 type QueryGetRegistryRequest struct {
-	// key is the key to query
+	// key of the registry entry to query
 	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -75,9 +75,9 @@ func (m *QueryGetRegistryRequest) GetKey() *RegistryKey {
 	return nil
 }
 
-// QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method
+// QueryGetRegistryResponse
 type QueryGetRegistryResponse struct {
-	// entry is the registry entry for the requested key
+	// registry entry for the requested key
 	Registry RegistryEntry `protobuf:"bytes,1,opt,name=registry,proto3" json:"registry"`
 }
 
@@ -121,13 +121,13 @@ func (m *QueryGetRegistryResponse) GetRegistry() RegistryEntry {
 	return RegistryEntry{}
 }
 
-// QueryHasRoleRequest is the request type for the Query/HasRole RPC method
+// QueryHasRoleRequest
 type QueryHasRoleRequest struct {
-	// key is the key to query
+	// key of the registry entry to query
 	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// address is the address to query
+	// address of the account we're checking for the role
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	// role is the role to query
+	// role we're checking for
 	Role RegistryRole `protobuf:"varint,3,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
 }
 
@@ -185,7 +185,7 @@ func (m *QueryHasRoleRequest) GetRole() RegistryRole {
 	return RegistryRole_REGISTRY_ROLE_UNSPECIFIED
 }
 
-// QueryHasRoleResponse is the response type for the Query/HasRole RPC method
+// QueryHasRoleResponse
 type QueryHasRoleResponse struct {
 	// has_role is true if the address has the role for the given key
 	HasRole bool `protobuf:"varint,1,opt,name=has_role,json=hasRole,proto3" json:"has_role,omitempty"`

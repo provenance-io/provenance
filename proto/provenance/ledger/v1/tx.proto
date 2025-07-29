@@ -74,10 +74,10 @@ message MsgUpdateStatusRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger key of the ledger whose status is being updated
-  LedgerKey key       = 1;
+  LedgerKey key = 1;
 
   // The authority/signer that is updating the status
-  string    authority = 2;
+  string authority = 2;
 
   // The new status type id of the ledger
   int32 status_type_id = 3;
@@ -91,13 +91,19 @@ message MsgUpdateInterestRateRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger key of the ledger whose interest rate is being updated
-  LedgerKey key       = 1;
+  LedgerKey key = 1;
 
   // The authority/signer that is updating the interest rate
-  string    authority = 2;
+  string authority = 2;
 
   // The new interest rate of the ledger
   int32 interest_rate = 3;
+
+  // The new interest day count convention of the ledger
+  DayCountConvention interest_day_count_convention = 4;
+
+  // The new interest accrual method of the ledger
+  InterestAccrualMethod interest_accrual_method = 5;
 }
 
 // MsgUpdateInterestRateResponse
@@ -108,16 +114,19 @@ message MsgUpdatePaymentRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger key of the ledger whose payment is being updated
-  LedgerKey key       = 1;
+  LedgerKey key = 1;
 
   // The authority/signer that is updating the payment
-  string    authority = 2;
+  string authority = 2;
 
   // The new next payment amount of the ledger
   int64 next_pmt_amt = 3;
 
   // The new next payment date in days since epoch
   int32 next_pmt_date = 4;
+
+  // The new payment frequency of the ledger
+  PaymentFrequency payment_frequency = 5;
 }
 
 // MsgUpdatePaymentResponse
@@ -128,13 +137,13 @@ message MsgUpdateMaturityDateRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger key of the ledger whose maturity date is being updated
-  LedgerKey key       = 1;
+  LedgerKey key = 1;
 
   // The authority/signer that is updating the maturity date
-  string    authority = 2;
+  string authority = 2;
 
   // The new maturity date in days since epoch
-  int32     maturity_date = 3;
+  int32 maturity_date = 3;
 }
 
 // MsgUpdateMaturityDateResponse
@@ -145,13 +154,13 @@ message MsgAppendRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger key of the ledger whose entries are being appended
-  LedgerKey key       = 1;
+  LedgerKey key = 1;
 
   // The entries to append to the ledger
-  repeated LedgerEntry entries   = 2;
+  repeated LedgerEntry entries = 2;
 
   // The authority/signer that is appending the entries
-  string               authority = 3;
+  string authority = 3;
 }
 
 // MsgAppendResponse
@@ -162,10 +171,10 @@ message MsgUpdateBalancesRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger key of the ledger whose balances are being updated
-  LedgerKey key       = 1;
+  LedgerKey key = 1;
 
   // The authority/signer that is updating the balances
-  string    authority = 2;
+  string authority = 2;
 
   // The correlation id of the ledger entry
   string correlation_id = 3;
@@ -186,7 +195,7 @@ message MsgTransferFundsWithSettlementRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The authority/signer that is transferring the funds
-  string                              authority = 1;
+  string authority = 1;
 
   // The transfers to be made
   repeated FundTransferWithSettlement transfers = 2;
@@ -200,10 +209,10 @@ message MsgDestroyRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger key of the ledger to destroy
-  LedgerKey key       = 1;
+  LedgerKey key = 1;
 
   // The authority/signer that is destroying the ledger
-  string    authority = 2;
+  string authority = 2;
 }
 
 // MsgDestroyResponse represents the response from destroying a ledger
@@ -217,7 +226,7 @@ message MsgCreateLedgerClassRequest {
   LedgerClass ledger_class = 1;
 
   // The authority/signer that is creating the ledger class
-  string      authority    = 2;
+  string authority = 2;
 }
 
 // MsgCreateLedgerClassResponse represents the response from creating a ledger class
@@ -228,13 +237,13 @@ message MsgAddLedgerClassStatusTypeRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger class id to add the status type to
-  string                ledger_class_id = 1;
+  string ledger_class_id = 1;
 
   // The status type to add to the ledger class
-  LedgerClassStatusType status_type     = 2;
+  LedgerClassStatusType status_type = 2;
 
   // The authority/signer that is adding the status type
-  string                authority       = 3;
+  string authority = 3;
 }
 
 // MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type
@@ -245,13 +254,13 @@ message MsgAddLedgerClassEntryTypeRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger class id to add the entry type to
-  string                ledger_class_id = 1;
+  string ledger_class_id = 1;
 
   // The entry type to add to the ledger class
-  LedgerClassEntryType entry_type      = 2;
+  LedgerClassEntryType entry_type = 2;
 
   // The authority/signer that is adding the entry type
-  string                authority       = 3;
+  string authority = 3;
 }
 
 // MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type
@@ -262,13 +271,13 @@ message MsgAddLedgerClassBucketTypeRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Ledger class id to add the bucket type to
-  string                ledger_class_id = 1;
+  string ledger_class_id = 1;
 
   // The bucket type to add to the ledger class
-  LedgerClassBucketType bucket_type     = 2;
+  LedgerClassBucketType bucket_type = 2;
 
   // The authority/signer that is adding the bucket type
-  string                authority       = 3;
+  string authority = 3;
 }
 
 // MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type
@@ -279,7 +288,7 @@ message MsgBulkImportRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The authority/signer that is bulk importing the ledger data
-  string       authority     = 1;
+  string authority = 1;
 
   // The genesis state to bulk import
   GenesisState genesis_state = 2;

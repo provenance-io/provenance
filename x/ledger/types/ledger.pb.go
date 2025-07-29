@@ -842,6 +842,7 @@ func (m *BucketBalances) GetBucketBalances() []*BucketBalance {
 	return nil
 }
 
+// BucketBalance represents the balance for a specific bucket type
 type BucketBalance struct {
 	// The bucket type specified by the LedgerClassBucketType.id
 	BucketTypeId int32 `protobuf:"varint,1,opt,name=bucket_type_id,json=bucketTypeId,proto3" json:"bucketTypeId,omitempty"`
@@ -934,6 +935,7 @@ func (m *Ledgers) GetLedgerToEntries() []*LedgerToEntries {
 	return nil
 }
 
+// LedgerToEntries represents a ledger with its associated entries
 type LedgerToEntries struct {
 	LedgerKey *LedgerKey     `protobuf:"bytes,1,opt,name=ledger_key,json=ledgerKey,proto3" json:"ledgerKey,omitempty"`
 	Ledger    *Ledger        `protobuf:"bytes,2,opt,name=ledger,proto3" json:"ledger,omitempty"`
