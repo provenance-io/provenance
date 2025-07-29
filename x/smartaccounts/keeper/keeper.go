@@ -275,23 +275,23 @@ func (k Keeper) LookupAccountByAddress(ctx context.Context, address sdk.AccAddre
 
 // IterateSmartAccounts iterates over all the stored smart accounts and performs a callback function.
 // Stops iteration when callback returns true.
-func (k Keeper) IterateSmartAccounts(ctx context.Context, cb func(smartAccounts types.ProvenanceAccount) (stop bool)) {
-	err := k.SmartAccounts.Walk(ctx, nil, func(_ sdk.AccAddress, value types.ProvenanceAccount) (bool, error) {
+func (k Keeper) IterateSmartAccounts(ctx context.Context, cb func(smartAccounts types.ProvenanceAccount) (stop bool)) error {
+	return k.SmartAccounts.Walk(ctx, nil, func(_ sdk.AccAddress, value types.ProvenanceAccount) (bool, error) {
 		return cb(value), nil
 	})
-	if err != nil {
-		panic(err)
-	}
 }
 
 // GetAllSmartAccounts returns all accounts in the smartaccountKeeper.
-func (k Keeper) GetAllSmartAccounts(ctx context.Context) (accounts []types.ProvenanceAccount) {
-	k.IterateSmartAccounts(ctx, func(acc types.ProvenanceAccount) (stop bool) {
+func (k Keeper) GetAllSmartAccounts(ctx context.Context) ([]types.ProvenanceAccount, error) {
+	var accounts []types.ProvenanceAccount
+	err := k.IterateSmartAccounts(ctx, func(acc types.ProvenanceAccount) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
 	})
-
-	return accounts
+	if err != nil {
+		return nil, err
+	}
+	return accounts, nil
 }
 
 func (keeper Keeper) GetParams(c context.Context) (*types.Params, error) {

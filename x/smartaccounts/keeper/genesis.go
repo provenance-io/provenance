@@ -36,7 +36,9 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		return false
 	}
 
-	k.IterateSmartAccounts(ctx, appendToSmartAccounts)
+	if err := k.IterateSmartAccounts(ctx, appendToSmartAccounts); err != nil {
+		panic(err)
+	}
 	return NewGenesisState(*params, smartAccounts), nil
 }
 
