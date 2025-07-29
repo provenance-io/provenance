@@ -11,20 +11,25 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "provenance/ledger/v1/ledger.proto";
 
-// FlowStatus represents the current status of a flow
+// FundingTransferStatus represents the current status of a flow
 enum FundingTransferStatus {
+  // Unspecified funding transfer status
   FUNDING_TRANSFER_STATUS_UNSPECIFIED = 0;
+  // Pending funding transfer status
   FUNDING_TRANSFER_STATUS_PENDING     = 1;
+  // Processing funding transfer status
   FUNDING_TRANSFER_STATUS_PROCESSING  = 2;
+  // Completed funding transfer status
   FUNDING_TRANSFER_STATUS_COMPLETED   = 3;
+  // Failed funding transfer status
   FUNDING_TRANSFER_STATUS_FAILED      = 4;
 }
 
-// FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
+// FundTransferWithSettlement represents a fund transfer with settlement instructions
 message FundTransferWithSettlement {
   LedgerKey                      key                         = 1;
   string                         ledger_entry_correlation_id = 2;
-  repeated SettlementInstruction settlementInstructions      = 3;
+  repeated SettlementInstruction settlement_instructions     = 3;
 }
 
 // SettlementInstruction represents blockchain-specific settlement instructions
@@ -45,7 +50,7 @@ message SettlementInstruction {
   string memo = 4;
 }
 
-// Used as the stored version of settlement instructions against a ledger key and entry correlation id.
+// StoredSettlementInstructions is used as the stored version of settlement instructions against a ledger key and entry correlation id.
 message StoredSettlementInstructions {
-  repeated SettlementInstruction settlementInstructions = 1;
+  repeated SettlementInstruction settlement_instructions = 1;
 }
