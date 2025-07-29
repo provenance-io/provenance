@@ -44,8 +44,8 @@ message LedgerClassStatusType {
   // Unique ID for the status type (eg. 1, 2, 3, etc.)
   int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
-  // Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY""CLOSED",
-  // "CANCELLED", "SUSPENDED", "OTHER")
+  // Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY",
+  // "CLOSED", "CANCELLED", "SUSPENDED", "OTHER")
   string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 
   // Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy",
