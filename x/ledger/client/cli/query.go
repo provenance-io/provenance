@@ -56,6 +56,7 @@ func GetCmd() *cobra.Command {
 		Use:     "get <asset_class_id> <nft_id>",
 		Short:   "Query the ledger for the specified asset class and nft id",
 		Example: fmt.Sprintf(`$ %s query ledger get class-123 nft-123`, version.AppName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -111,7 +112,8 @@ func GetLedgerEntriesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "entries <asset_class_id> <nft_id>",
 		Short:   "Query the ledger for the specified nft address",
-		Example: fmt.Sprintf(`$ %s query attribute params`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query ledger entries class-123 nft-123`, version.AppName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -245,9 +247,10 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 func GetBalancesAsOfCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "balances <asset_class_id> <nft_id> <as_of_date>",
-		Short: "Query balances for an NFT as of a specific date",
-		Args:  cobra.ExactArgs(3),
+		Use:     "balances <asset_class_id> <nft_id> <as_of_date>",
+		Short:   "Query balances for an NFT as of a specific date",
+		Example: fmt.Sprintf(`$ %s query ledger balances class-123 nft-123 2024-01-01`, version.AppName),
+		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -295,7 +298,7 @@ func GetLedgerClassEntryTypesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "entry-types <ledger_class_id>",
 		Short:   "Query the ledger class entry types for the specified ledger class",
-		Example: fmt.Sprintf(`$ %s query ledger entry-types pb1a2b3c4...`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query ledger entry-types class-123`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -328,7 +331,7 @@ func GetLedgerClassStatusTypesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "status-types <ledger_class_id>",
 		Short:   "Query the ledger class status types for the specified ledger class",
-		Example: fmt.Sprintf(`$ %s query ledger status-types pb1a2b3c4...`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query ledger status-types class-123`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -360,7 +363,7 @@ func GetLedgerClassBucketTypesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "bucket-types <ledger_class_id>",
 		Short:   "Query the ledger class bucket types for the specified ledger class",
-		Example: fmt.Sprintf(`$ %s query ledger bucket-types pb1a2b3c4...`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query ledger bucket-types class-123`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -393,7 +396,7 @@ func GetLedgerClassCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "class <ledger_class_id>",
 		Short:   "Query the ledger class for the specified ledger class",
-		Example: fmt.Sprintf(`$ %s query ledger class pb1a2b3c4...`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query ledger class class-123`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -425,7 +428,7 @@ func GetAllSettlementsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "settlements <asset_class_id> <nft_id>",
 		Short:   "Query all settlements for an NFT",
-		Example: fmt.Sprintf(`$ %s query ledger settlements pb1a2b3c4... nft-123`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query ledger settlements class-123 nft-123`, version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -459,7 +462,7 @@ func GetSettlementsByCorrelationIdCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "settlement <asset_class_id> <nft_id> <correlation_id>",
 		Short:   "Query settlements for an NFT by correlation ID",
-		Example: fmt.Sprintf(`$ %s query ledger settlement pb1a2b3c4... nft-123 correlation-456`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query ledger settlement class-123 nft-123 correlation-456`, version.AppName),
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
