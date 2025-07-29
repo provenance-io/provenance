@@ -103,11 +103,6 @@ func (s *TestSuite) InitWithEmptyCredentials(t *testing.T) {
 		Key: pubKeyv.Key,
 	}
 
-	//accountNum := s.app.AccountKeeper.NextAccountNumber(s.ctx)
-	//// Create and set the base account before initializing the smart account
-	//baseAcc := authtypes.NewBaseAccount(sdk.AccAddress(pubKey.Address()), pubKey, accountNum, 0)
-	//s.app.AccountKeeper.SetAccount(s.ctx, baseAcc)
-
 	// Use the helper function
 	s.createBaseAccount(pubKey)
 	msg := &smartaccounttypes.MsgInit{
@@ -116,9 +111,8 @@ func (s *TestSuite) InitWithEmptyCredentials(t *testing.T) {
 	}
 
 	resp, err := s.keeper.Init(s.ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Equal(t, 0, len(resp.Credentials))
+	require.Error(t, err)
+	require.Nil(t, resp)
 }
 
 // simulates using a secp256k1 public key to create a smart account
