@@ -113,7 +113,7 @@ message LedgerClassBucketType {
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
-// LedgerEntry
+// LedgerEntry is an single entry in the ledger. An entry would be a payment, disbursement, adjustment, etc...
 message LedgerEntry {
   // Correlation ID for tracking ledger entries with external systems (max 50 characters)
   string correlation_id = 1 [(gogoproto.jsontag) = "correlationId,omitempty"];
