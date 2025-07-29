@@ -44,7 +44,8 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> [status_type_id] [next_pmt_date] [next_pmt_amt] [interest_rate] [maturity_date]",
+		// TODO: Update optional fields to use flags instead of positional arguments
+		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> <status_type_id> [next_pmt_date] [next_pmt_amt] [interest_rate] [maturity_date]",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
 		Example: `$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" "IN_REPAYMENT" "2024-12-31" "1000.00" "0.05" "2025-12-31" --from mykey
@@ -131,6 +132,8 @@ func CmdDestroy() *cobra.Command {
 
 			assetClassId := args[0]
 			nftId := args[1]
+
+			// TODO: remove this check and let the server validate the nft_id
 			if nftId == "" {
 				return fmt.Errorf("invalid <nft_id>")
 			}
@@ -151,68 +154,68 @@ func CmdDestroy() *cobra.Command {
 	return cmd
 }
 
-// CmdAppendJson creates a new ledger entry from a JSON file
+// CmdAppend creates a new ledger entry from a JSON file
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "append <asset_class_id> <nft_id> <json>",
 		Aliases: []string{"aj"},
 		Short:   "Append ledger entries from a JSON file",
 		Example: `$ provenanced tx ledger append pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 'json' --from mykey
-		where the json is formatted as follows:
-		[
+where the json is formatted as follows:
+[
+	{
+		"correlation_id": "entry1",
+		"reverses_correlation_id": "",
+		"is_void": false,
+		"sequence": 1,
+		"entry_type_id": 1,
+		"posted_date": 19665,
+		"effective_date": 19665,
+		"total_amt": "80000",
+		"applied_amounts": [
 			{
-				"correlation_id": "entry1",
-				"reverses_correlation_id": "",
-				"is_void": false,
-				"sequence": 1,
-				"entry_type_id": 1,
-				"posted_date": 19665,
-				"effective_date": 19665,
-				"total_amt": "80000",
-				"applied_amounts": [
-					{
-						"bucket_type_id": 1,
-						"applied_amt": "80000"
-					}
-				],
-				"balance_amounts": [
-					{
-						"bucket_type_id": 1,
-						"balance_amt": "80000"
-					}
-				]
-			},
+				"bucket_type_id": 1,
+				"applied_amt": "80000"
+			}
+		],
+		"balance_amounts": [
 			{
-				"correlation_id": "entry2",
-				"reverses_correlation_id": "",
-				"is_void": false,
-				"sequence": 1,
-				"entry_type_id": 2,
-				"posted_date": 19700,
-				"effective_date": 19700,
-				"total_amt": "1000",
-				"applied_amounts": [
-					{
-						"bucket_type_id": 1,
-						"applied_amt": "400"
-					},
-					{
-						"bucket_type_id": 2,
-						"applied_amt": "600"
-					}
-				],
-				"balance_amounts": [
-					{
-						"bucket_type_id": 1,
-						"balance_amt": "76600"
-					},
-					{
-						"bucket_type_id": 2,
-						"balance_amt": "0"
-					}
-				]
+				"bucket_type_id": 1,
+				"balance_amt": "80000"
 			}
 		]
+	},
+	{
+		"correlation_id": "entry2",
+		"reverses_correlation_id": "",
+		"is_void": false,
+		"sequence": 1,
+		"entry_type_id": 2,
+		"posted_date": 19700,
+		"effective_date": 19700,
+		"total_amt": "1000",
+		"applied_amounts": [
+			{
+				"bucket_type_id": 1,
+				"applied_amt": "400"
+			},
+			{
+				"bucket_type_id": 2,
+				"applied_amt": "600"
+			}
+		],
+		"balance_amounts": [
+			{
+				"bucket_type_id": 1,
+				"balance_amt": "76600"
+			},
+			{
+				"bucket_type_id": 2,
+				"balance_amt": "0"
+			}
+		]
+	}
+]
 		`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -223,10 +226,13 @@ func CmdAppend() *cobra.Command {
 
 			assetClassId := args[0]
 			nftId := args[1]
+
+			// TODO: remove this check and let the server validate the nft_id
 			if nftId == "" {
 				return fmt.Errorf("invalid <nft_id>")
 			}
 
+			// TODO read this from a file and update the example
 			jsonData := args[2]
 
 			var entries []*ledger.LedgerEntry
@@ -235,6 +241,7 @@ func CmdAppend() *cobra.Command {
 			}
 
 			// Validate entries
+			// TODO: move this to the server
 			for _, entry := range entries {
 				if entry.Sequence >= 100 {
 					return fmt.Errorf("sequence must be less than 100")
@@ -420,7 +427,7 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 // CmdTransferFundsWithSettlement returns the command for transferring funds with settlement instructions
 func CmdTransferFundsWithSettlement() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "xfer [transfers-json]",
+		Use:   "xfer <transfers-json>",
 		Short: "Submit a fund transfer with settlement instructions (ledger module)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -429,6 +436,7 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 				return err
 			}
 
+			// TODO: read this from a file and update the example
 			jsonStr := args[0]
 
 			var transfers []ledger.FundTransferWithSettlement

@@ -297,7 +297,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 func GetLedgerClassEntryTypesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "entry-types <ledger_class_id>",
-		Short:   "Query the ledger class entry types for the specified ledger class",
+		Short:   "Query the entry types for the specified ledger class",
 		Example: fmt.Sprintf(`$ %s query ledger entry-types class-123`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
