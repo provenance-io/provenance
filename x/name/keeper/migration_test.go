@@ -37,18 +37,14 @@ func (s *MigrationTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
 
-	// Use proper interface registry for types
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	s.cdc = codec.NewProtoCodec(interfaceRegistry)
 
-	// Set up old-style store data
 	store := s.ctx.KVStore(storeKey)
 
-	// Setup legacy parameters
 	params := types.DefaultParams()
 	store.Set(types.NameParamStoreKey, s.cdc.MustMarshal(&params))
 
-	// Setup legacy name record
 	name := "test.provenance"
 	nameKey, err := types.GetNameKeyPrefix(name)
 	s.Require().NoError(err)
@@ -60,7 +56,6 @@ func (s *MigrationTestSuite) SetupTest() {
 	}
 	store.Set(nameKey, s.cdc.MustMarshal(&record))
 
-	// Setup legacy address index
 	addrPrefix, err := types.GetAddressKeyPrefix(s.user1Addr)
 	s.Require().NoError(err)
 
@@ -79,19 +74,16 @@ func (s *MigrationTestSuite) TestMigration() {
 		runtime.NewKVStoreService(storeKey),
 	)
 
-	// Create migrator
 	migrator := keeper.NewMigrator(newKeeper)
 
 	// Run migration
 	err := migrator.MigrateKVToCollections2to3(s.ctx)
 	s.Require().NoError(err)
 
-	// Verify params
 	params, err := newKeeper.ParamsStore.Get(s.ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(types.DefaultParams(), params)
 
-	// Verify name record exists
 	name := "test.provenance"
 	nameKey, err := types.GetNameKeyPrefix(name)
 	s.Require().NoError(err)
@@ -100,12 +92,10 @@ func (s *MigrationTestSuite) TestMigration() {
 	s.Require().NoError(err)
 	s.Require().Equal(name, record.Name)
 
-	// Lookup via public API
 	recordPtr, err := newKeeper.GetRecordByName(s.ctx, name)
 	s.Require().NoError(err)
 	s.Require().Equal(name, recordPtr.Name)
 
-	// Verify address index
 	addr, err := sdk.AccAddressFromBech32(s.user1)
 	s.Require().NoError(err)
 
@@ -117,7 +107,6 @@ func (s *MigrationTestSuite) TestMigration() {
 	s.Require().NoError(err)
 	s.Require().Equal(*recordPtr, indexRecord)
 
-	// Reverse lookup
 	records, err := newKeeper.GetRecordsByAddress(s.ctx, addr)
 	s.Require().NoError(err)
 	s.Require().Len(records, 1)

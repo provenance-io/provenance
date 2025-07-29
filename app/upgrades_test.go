@@ -1061,6 +1061,17 @@ func (s *UpgradeTestSuite) TestDaisy() {
 	}
 	s.AssertUpgradeHandlerLogs("daisy", expInLog, nil)
 }
+func (s *UpgradeTestSuite) TestCollectionsmigration() {
+	expInLog := []string{
+		"INF Migrating name module from KV store to collections (v2 to v3)...",
+		"INF Migrated name module parameters to collections store.",
+		"INF Migrating name records...",
+		"INF Migrated 1 name records.",
+		"INF Migrated 1 address index records.",
+		"INF Name module migration to collections (v2 to v3) completed successfully.",
+	}
+	s.AssertUpgradeHandlerLogs("collectionsmigration", expInLog, nil)
+}
 
 // wrappedWasmMsgSrvr is a wasmtypes.MsgServer that lets us inject an error to return from StoreCode.
 type wrappedWasmMsgSrvr struct {
