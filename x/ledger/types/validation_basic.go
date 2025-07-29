@@ -15,6 +15,11 @@ func ValidateLedgerClassBasic(l *LedgerClass) error {
 		return NewLedgerCodedError(ErrCodeMissingField, "ledger_class_id")
 	}
 
+	// Verify that the ledger class id is less than 50 characters
+	if len(l.LedgerClassId) > 50 {
+		return NewLedgerCodedError(ErrCodeInvalidField, "ledger_class_id", "must be less than 50 characters")
+	}
+
 	if emptyString(&l.AssetClassId) {
 		return NewLedgerCodedError(ErrCodeMissingField, "asset_class_id")
 	}
