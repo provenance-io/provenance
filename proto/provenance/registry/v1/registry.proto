@@ -26,6 +26,7 @@ enum RegistryRole {
   REGISTRY_ROLE_ORIGINATOR = 6;
 }
 
+// RegistryKey defines the key for registry entries
 message RegistryKey {
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
@@ -45,6 +46,7 @@ message RegistryEntry {
   repeated RolesEntry roles = 2 [(gogoproto.nullable) = false];
 }
 
+// RolesEntry represents a role and the addresses that can perform that role
 message RolesEntry {
   RegistryRole role = 1;
 
@@ -58,10 +60,12 @@ message GenesisState {
   repeated RegistryEntry entries = 1 [(gogoproto.nullable) = false];
 }
 
+// RegistryBulkUpdate represents a bulk update to the registry
 message RegistryBulkUpdate {
   repeated RegistryBulkUpdateEntry entries = 1 [(gogoproto.nullable) = false];
 }
 
+// RegistryBulkUpdateEntry represents a single entry in a bulk update
 message RegistryBulkUpdateEntry {
   RegistryKey           key   = 1;
   repeated RegistryRole roles = 2;

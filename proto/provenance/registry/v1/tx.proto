@@ -27,7 +27,7 @@ service Msg {
   rpc UnregisterNFT(MsgUnregisterNFT) returns (MsgUnregisterNFTResponse);
 }
 
-// MsgRegisterNFT represents a message to register a new NFT
+// MsgRegisterNFT
 message MsgRegisterNFT {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -44,7 +44,7 @@ message MsgRegisterNFT {
 // MsgRegisterNFTResponse defines the response for RegisterNFT
 message MsgRegisterNFTResponse {}
 
-// MsgGrantRole represents a message to grant a role to an address
+// MsgGrantRole
 message MsgGrantRole {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -61,10 +61,10 @@ message MsgGrantRole {
   repeated string addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgGrantRoleResponse defines the response for GrantRole
+// MsgGrantRoleResponse
 message MsgGrantRoleResponse {}
 
-// MsgRevokeRole represents a message to revoke a role from an address
+// MsgRevokeRole
 message MsgRevokeRole {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -81,10 +81,10 @@ message MsgRevokeRole {
   repeated string addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgRevokeRoleResponse defines the response for RevokeRole
+// MsgRevokeRoleResponse
 message MsgRevokeRoleResponse {}
 
-// MsgUnregisterNFT represents a message to unregister an NFT from the registry
+// MsgUnregisterNFT
 message MsgUnregisterNFT {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -95,5 +95,5 @@ message MsgUnregisterNFT {
   RegistryKey key = 2;
 }
 
-// MsgUnregisterNFTResponse defines the response for UnregisterNFT
+// MsgUnregisterNFTResponse
 message MsgUnregisterNFTResponse {}

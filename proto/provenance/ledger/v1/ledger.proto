@@ -173,6 +173,7 @@ message BucketBalances {
   repeated BucketBalance bucket_balances = 1 [(gogoproto.jsontag) = "bucketBalances,omitempty"];
 }
 
+// BucketBalance represents the balance for a specific bucket type
 message BucketBalance {
   // The bucket type specified by the LedgerClassBucketType.id
   int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
@@ -190,6 +191,8 @@ message BucketBalance {
 message Ledgers {
   repeated LedgerToEntries ledger_to_entries = 1 [(gogoproto.jsontag) = "ledgerToEntries,omitempty"];
 }
+
+// LedgerToEntries represents a ledger with its associated entries
 message LedgerToEntries {
   LedgerKey            ledger_key = 1 [(gogoproto.jsontag) = "ledgerKey,omitempty"];
   Ledger               ledger     = 2 [(gogoproto.jsontag) = "ledger,omitempty"];
