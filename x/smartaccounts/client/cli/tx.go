@@ -41,9 +41,10 @@ func NewTxCmd() *cobra.Command {
 }
 
 const (
-	FlagSender         = "sender"
-	FlagAttestation    = "encodedAttestation"
-	FlagUserIdentifier = "user-identifier"
+	FlagSender               = "sender"
+	FlagAttestation          = "encodedAttestation"
+	FlagUserIdentifier       = "user-identifier"
+	FlagMaxCredentialAllowed = "max-credential-allowed"
 )
 
 // AddWebAuthnCredentialFlags adds the flags needed when registering a WebAuthn credential.
@@ -95,10 +96,10 @@ This assumes a base account being present already.`),
 // MsgUpdateParams returns a CLI command handler for creating a MsgUpdateParams transaction.
 func MsgUpdateParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-params [enable]",
-		Short: "Update the params via governance proposal",
-		Long:  "Submit an update smart account params via governance proposal along with an initial deposit. For now only thing that can be changed if it is enabled or not",
-		Args:  cobra.ExactArgs(1),
+		Use:   "update-params [enable] [max-credential-allowed]",
+		Short: "Update the smart account module params via governance proposal",
+		Long:  "Submit a governance proposal to update smart account params. Both <enable> and <max-credential-allowed> are required.",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -112,10 +113,16 @@ func MsgUpdateParams() *cobra.Command {
 				return err
 			}
 
+			maxCreds64, err := strconv.ParseUint(args[1], 10, 32)
+			if err != nil {
+				return err
+			}
+
 			msg := &types.MsgUpdateParams{
 				Authority: authority,
 				Params: types.Params{
-					Enabled: enabled,
+					Enabled:              enabled,
+					MaxCredentialAllowed: uint32(maxCreds64),
 				},
 			}
 
