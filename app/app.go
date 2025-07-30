@@ -98,7 +98,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramprops "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	paramprops "github.com/cosmos/cosmos-sdk/x/params/types/proposal" //nolint:depguard // Need this here to register old types.
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
