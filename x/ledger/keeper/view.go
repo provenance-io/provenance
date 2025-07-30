@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"slices"
-	"sort"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -155,9 +154,15 @@ func (k Keeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOf
 		bucketBalancesList = append(bucketBalancesList, balance)
 	}
 
-	// Not sure this really helps sort anything since the id's are arbitrary, but at least we're consistent.
-	sort.Slice(bucketBalancesList, func(i, j int) bool {
-		return bucketBalancesList[i].BucketTypeId < bucketBalancesList[j].BucketTypeId
+	// Sort by bucket type id to be consistent.
+	slices.SortFunc(bucketBalancesList, func(a, b *ledger.BucketBalance) int {
+		if a.BucketTypeId < b.BucketTypeId {
+			return -1
+		}
+		if a.BucketTypeId > b.BucketTypeId {
+			return 1
+		}
+		return 0
 	})
 
 	return &ledger.BucketBalances{
@@ -168,9 +173,23 @@ func (k Keeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOf
 func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error) {
 	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &ledgerClass, nil
+}
+
+func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error) {
+	ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
+	if err != nil {
+		return nil, err
+	}
+	if ledgerClass == nil {
+		return nil, types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger class")
+	}
+	return ledgerClass, nil
 }
 
 func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error) {
@@ -186,14 +205,6 @@ func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId stri
 	}
 
 	return entryTypes, nil
-}
-
-func SliceToMap[T any, K comparable](list []T, keyFn func(T) K) map[K]T {
-	result := make(map[K]T, len(list))
-	for _, item := range list {
-		result[keyFn(item)] = item
-	}
-	return result
 }
 
 func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error) {

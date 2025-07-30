@@ -105,13 +105,11 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	}
 
 	// Get the ledger class and verify that the asset class id matches
-	ledgerClass, err := k.GetLedgerClass(ctx, l.LedgerClassId)
+	ledgerClass, err := k.RequireGetLedgerClass(ctx, l.LedgerClassId)
 	if err != nil {
 		return err
 	}
-	if ledgerClass == nil {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
-	}
+
 	if ledgerClass.AssetClassId != l.Key.AssetClassId {
 		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "ledger class", "ledger class not allowed for asset class id")
 	}

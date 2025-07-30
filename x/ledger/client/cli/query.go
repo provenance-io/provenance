@@ -20,7 +20,6 @@ import (
 
 	chunkimport "github.com/provenance-io/provenance/x/ledger/client/cli/import"
 	"github.com/provenance-io/provenance/x/ledger/helper"
-	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -166,7 +165,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					return nil
 				}
 
-				return keeper.SliceToMap(types.EntryTypes, func(t *ledger.LedgerClassEntryType) int32 {
+				return sliceToMap(types.EntryTypes, func(t *ledger.LedgerClassEntryType) int32 {
 					return t.Id
 				})
 			}
@@ -181,7 +180,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					return nil
 				}
 
-				return keeper.SliceToMap(types.BucketTypes, func(t *ledger.LedgerClassBucketType) int32 {
+				return sliceToMap(types.BucketTypes, func(t *ledger.LedgerClassBucketType) int32 {
 					return t.Id
 				})
 			}

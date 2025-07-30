@@ -8,6 +8,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
@@ -207,12 +208,9 @@ func (k Keeper) BulkImportLedgerData(ctx sdk.Context, genesisState ledger.Genesi
 		}
 
 		// Get the maintainer address from the ledger class
-		ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
+		_, err := k.RequireGetLedgerClass(ctx, ledgerClassId)
 		if err != nil {
-			return fmt.Errorf("failed to get ledger class %s: %w", ledgerClassId, err)
-		}
-		if ledgerClass == nil {
-			return fmt.Errorf("ledger class %s not found - ensure it is created before bulk import", ledgerClassId)
+			return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger class", fmt.Sprintf("failed to get ledger class %s: %w", ledgerClassId, err))
 		}
 
 		// Create the ledger only if it doesn't already exist
