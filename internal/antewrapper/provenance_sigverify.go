@@ -98,19 +98,16 @@ func (svd ProvenanceSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk
 	}
 
 	for i, sig := range sigs {
-
 		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
-
 		// retrieve pubkey
 		// assumption is that should always be set even for a smart account
 		pubKey := acc.GetPubKey()
 		if !simulate && pubKey == nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
-
 		// Check account sequence number.
 		// Should still be same for smart accounts
 		if sig.Sequence != acc.GetSequence() {

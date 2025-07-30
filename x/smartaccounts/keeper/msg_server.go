@@ -195,14 +195,14 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 }
 
 // HasDuplicateCredentialID checks if a credential ID already exists in the provided list of credentials
-func HasDuplicateCredentialID(credentials []*types.Credential, credentialId string) bool {
+func HasDuplicateCredentialID(credentials []*types.Credential, credentialID string) bool {
 	for _, cred := range credentials {
 		if cred.GetVariant() == types.CredentialType_CREDENTIAL_TYPE_WEBAUTHN || cred.GetVariant() == types.CredentialType_CREDENTIAL_TYPE_WEBAUTHN_UV {
 			fidoCredentialWrapper, ok := cred.GetAuthenticator().(*types.Credential_Fido2Authenticator)
 			if !ok {
 				continue
 			}
-			if fidoCredentialWrapper.Fido2Authenticator.Id == credentialId {
+			if fidoCredentialWrapper.Fido2Authenticator.Id == credentialID {
 				return true
 			}
 		}

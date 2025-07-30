@@ -10,8 +10,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/client/v2/autocli"
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -83,21 +81,17 @@ func NewAppModule(
 func (a AppModule) IsOnePerModuleType() {
 }
 
-func (a AppModule) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessage {
+func (a AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 	return a.cdc.MustMarshalJSON(keeper.DefaultGenesisState())
 }
 
-func (a AppModule) ValidateGenesis(marshaler codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (a AppModule) ValidateGenesis(marshaler codec.JSONCodec, _ client.TxEncodingConfig, message json.RawMessage) error {
 	var data types.GenesisState
 	err := marshaler.UnmarshalJSON(message, &data)
 	if err != nil {
 		return err
 	}
-	if err := data.Params.Validate(); err != nil {
-		return errorsmod.Wrap(err, "params")
-	}
-	// TODO Add validation logic for gs here, x/accounts has nothing
-	return nil
+	return data.ValidateBasic()
 }
 
 func (a AppModule) ExportGenesis(ctx sdk.Context, marshaler codec.JSONCodec) json.RawMessage {
@@ -122,7 +116,7 @@ func (a AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-func (a AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+func (a AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
 func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {

@@ -61,7 +61,7 @@ type WeightedOpsArgs struct {
 	Bankkeeper         bankkeeper.Keeper
 }
 
-func SimulateMsgRegisterCosmosCredential(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
+func SimulateMsgRegisterCosmosCredential(_ keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -102,7 +102,7 @@ func SimulateMsgRegisterWebAuthnAccount(k keeper.Keeper, args *WeightedOpsArgs) 
 // Dispatch handles the common logic for simulation operation execution
 func Dispatch(
 	r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	simState module.SimulationState, sender simtypes.Account, chainID string,
+	simState module.SimulationState, sender simtypes.Account, _ string,
 	msg sdk.Msg, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, comment string,
 ) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	msgType := sdk.MsgTypeURL(msg)

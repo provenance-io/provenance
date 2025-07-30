@@ -83,7 +83,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			}
 		} else {
 			// Create WebAuthn credential with EC2 public key
-			ec2PubKey := GenRandomEC2PublicKey(simState.Rand)
+			ec2PubKey := GenRandomEC2PublicKey()
 			ec2PubKeyAny, _ := codectypes.NewAnyWithValue(ec2PubKey)
 
 			credentials[i] = &types.Credential{
@@ -184,8 +184,7 @@ func GenRandomFido2Authenticator(r *rand.Rand) *types.Fido2Authenticator {
 }
 
 // GenRandomEC2PublicKey generates random EC2 public key data for WebAuthn
-// GenRandomEC2PublicKey generates random EC2 public key data for WebAuthn
-func GenRandomEC2PublicKey(r *rand.Rand) *types.EC2PublicKeyData {
+func GenRandomEC2PublicKey() *types.EC2PublicKeyData {
 	// Use cosmos/crypto/secp256r1 to generate a proper P-256 key
 	privKey, err := secp256r1.GenPrivKey()
 	if err != nil {
