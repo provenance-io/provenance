@@ -2,8 +2,6 @@ package cli
 
 import (
 	"encoding/base64"
-	"fmt"
-	"math"
 	"strconv"
 	"strings"
 
@@ -112,19 +110,17 @@ func MsgUpdateParams() *cobra.Command {
 				return err
 			}
 
-			maxCreds64, err := strconv.ParseUint(args[1], 10, 64)
+			maxCreds32, err := strconv.ParseUint(args[1], 10, 32)
 			if err != nil {
 				return err
 			}
-			if maxCreds64 > math.MaxUint32 {
-				return fmt.Errorf("max-credential-allowed value %d exceeds maximum uint32", maxCreds64)
-			}
 
+			// gosec is complaining but this should ensure strconv.ParseUint(args[1], 10, 32) no overflow
 			msg := &types.MsgUpdateParams{
 				Authority: authority,
 				Params: types.Params{
 					Enabled:              enabled,
-					MaxCredentialAllowed: uint32(maxCreds64),
+					MaxCredentialAllowed: uint32(maxCreds32), //nolint:gosec // disable G115
 				},
 			}
 

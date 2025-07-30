@@ -144,10 +144,6 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 
 		// After successful initialization, emit event
 		numCreds := len(smartAccount.Credentials)
-		// highly improbably but gosec is making me do it
-		//if numCreds > math.MaxUint32 {
-		//	return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
-		//}
 		errFromEventManager := sdkCtx.EventManager().EmitTypedEvent(
 			types.NewEventSmartAccountInit(smartAccount.Address, uint64(numCreds)),
 		)
@@ -312,9 +308,6 @@ func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgR
 
 			// After successful initialization, emit event
 			numCreds := len(smartAccountResponse.Credentials)
-			//if numCreds > math.MaxUint32 {
-			//	return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
-			//}
 			err = sdkCtx.EventManager().EmitTypedEvent(
 				types.NewEventSmartAccountInit(smartAccountResponse.Address, uint64(numCreds)),
 			)

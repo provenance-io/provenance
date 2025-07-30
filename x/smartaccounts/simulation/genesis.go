@@ -17,14 +17,15 @@ import (
 )
 
 // Simulation parameter constants
-const (
-	MaxCredentialAllowed = "max_credential_allowed" //gosec:G101
+var (
+	MaxCredentialAllowed = "max_credential_allowed" // #nosec G101
 	Enabled              = "enabled"
 )
 
 // GenMaxCredentialAllowed randomized MaxCredentialAllowed
 func GenMaxCredentialAllowed(r *rand.Rand) uint32 {
-	return uint32(uint64(r.Intn(20) + 1)) // Random number between 1 and 20
+	// The result of r.Intn(20) + 1 is always between 1 and 20, which safely fits in a uint32.
+	return uint32(r.Intn(20) + 1)
 }
 
 // GenEnabled returns a randomized Enabled parameter

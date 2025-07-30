@@ -39,7 +39,7 @@ func NewSmartAccountIndexes(sb *collections.SchemaBuilder) SmartAccountsIndexes 
 	return SmartAccountsIndexes{
 		Address: indexes.NewUnique(
 			sb, types.SmartAccountNumberStoreKeyPrefix, "smart_account_by_number", sdk.AccAddressKey, sdk.AccAddressKey,
-			func(addr sdk.AccAddress, v types.ProvenanceAccount) (sdk.AccAddress, error) {
+			func(addr sdk.AccAddress, _ types.ProvenanceAccount) (sdk.AccAddress, error) {
 				return addr, nil
 			},
 		),

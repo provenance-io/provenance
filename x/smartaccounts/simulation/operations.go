@@ -21,12 +21,6 @@ import (
 	"github.com/provenance-io/provenance/x/smartaccounts/utils"
 )
 
-// Simulation operation weights constants
-const (
-	OpWeightMsgCreateSmartAccount       = "op_weight_msg_create_smart_account"
-	OpWeightMsgRegisterCosmosCredential = "op_weight_msg_register_cosmos_credential"
-)
-
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	simState module.SimulationState,

@@ -7,8 +7,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
-	"net/url"
 	"strings"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -150,44 +148,45 @@ func ParsePublicKey(attestationPubKey []byte) (*sdktypes.Any, error) {
 }
 
 // MakeNewFidoCredential creates a new FIDO2 Credential object.
-func MakeNewFidoCredential(ctx sdk.Context, credentialRequestResponsesJson string, username string, clientId string) (*Credential, error) {
-	body := io.NopCloser(bytes.NewReader([]byte(credentialRequestResponsesJson)))
-	actualParsedCredentialCreationResponseBody, err := protocol.ParseCredentialCreationResponseBody(body)
-	if err != nil {
-		return nil, err
-	}
-	rpid, err := url.Parse(actualParsedCredentialCreationResponseBody.Response.CollectedClientData.Origin)
-	if err != nil {
-		return nil, err
-	}
-	anyPubKey, err := ParsePublicKey(actualParsedCredentialCreationResponseBody.Response.AttestationObject.AuthData.AttData.CredentialPublicKey)
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-
-	// Create base credential with only the base fields
-	baseCredential := &BaseCredential{
-		PublicKey: anyPubKey,
-		Variant:   CredentialType_CREDENTIAL_TYPE_WEBAUTHN_UV,
-		// Set credential_number and create_time as needed
-		CreateTime: ctx.BlockTime().Unix(),
-	}
-
-	// Create FidoCredential with the FIDO-specific fields
-	fido2Authenticator := &Fido2Authenticator{
-		Id:                         actualParsedCredentialCreationResponseBody.ID,
-		Username:                   username,
-		Aaguid:                     actualParsedCredentialCreationResponseBody.Response.AttestationObject.AuthData.AttData.AAGUID,
-		CredentialCreationResponse: base64.RawURLEncoding.EncodeToString([]byte(credentialRequestResponsesJson)),
-		RpId:                       rpid.Hostname(),
-		RpOrigin:                   actualParsedCredentialCreationResponseBody.Response.CollectedClientData.Origin,
-	}
-
-	credential := &Credential{
-		BaseCredential: baseCredential,
-		Authenticator: &Credential_Fido2Authenticator{
-			Fido2Authenticator: fido2Authenticator,
-		},
-	}
-	return credential, nil
-}
+// Keeping this around as a comment for reference.
+// func MakeNewFidoCredential(ctx sdk.Context, credentialRequestResponsesJson string, username string) (*Credential, error) {
+//	body := io.NopCloser(bytes.NewReader([]byte(credentialRequestResponsesJson)))
+//	actualParsedCredentialCreationResponseBody, err := protocol.ParseCredentialCreationResponseBody(body)
+//	if err != nil {
+//		return nil, err
+//	}
+//	rpid, err := url.Parse(actualParsedCredentialCreationResponseBody.Response.CollectedClientData.Origin)
+//	if err != nil {
+//		return nil, err
+//	}
+//	anyPubKey, err := ParsePublicKey(actualParsedCredentialCreationResponseBody.Response.AttestationObject.AuthData.AttData.CredentialPublicKey)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	// Create base credential with only the base fields
+//	baseCredential := &BaseCredential{
+//		PublicKey: anyPubKey,
+//		Variant:   CredentialType_CREDENTIAL_TYPE_WEBAUTHN_UV,
+//		// Set credential_number and create_time as needed
+//		CreateTime: ctx.BlockTime().Unix(),
+//	}
+//
+//	// Create FidoCredential with the FIDO-specific fields
+//	fido2Authenticator := &Fido2Authenticator{
+//		Id:                         actualParsedCredentialCreationResponseBody.ID,
+//		Username:                   username,
+//		Aaguid:                     actualParsedCredentialCreationResponseBody.Response.AttestationObject.AuthData.AttData.AAGUID,
+//		CredentialCreationResponse: base64.RawURLEncoding.EncodeToString([]byte(credentialRequestResponsesJson)),
+//		RpId:                       rpid.Hostname(),
+//		RpOrigin:                   actualParsedCredentialCreationResponseBody.Response.CollectedClientData.Origin,
+//	}
+//
+//	credential := &Credential{
+//		BaseCredential: baseCredential,
+//		Authenticator: &Credential_Fido2Authenticator{
+//			Fido2Authenticator: fido2Authenticator,
+//		},
+//	}
+//	return credential, nil
+//}
