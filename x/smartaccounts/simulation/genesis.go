@@ -18,7 +18,7 @@ import (
 
 // Simulation parameter constants
 const (
-	MaxCredentialAllowed = "max_credential_allowed"
+	MaxCredentialAllowed = "max_credential_allowed" //gosec:G101
 	Enabled              = "enabled"
 )
 
@@ -99,7 +99,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		}
 	}
 
-	//Create a simple K256 credential
+			// Create a simple K256 credential
 	credPubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey(simState.Rand))
 
 	credential := types.Credential{

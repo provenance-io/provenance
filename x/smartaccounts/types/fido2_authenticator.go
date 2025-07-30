@@ -77,12 +77,18 @@ func (authenticator *Fido2Authenticator) VerifySignature(ctx sdk.Context, _ Cred
 	//		"signature":"MEUCIBtIVOQxzFYdyWQyxaLR0tik1TnuPhGVhXVSNgFwLmN5AiEAnxXdCq0UeAVGWxOaFcjBZ_mEZoXqNboY5IkQDdlWZYc",
 	//		"userHandle":"0ToAAAAAAAAAAA"}
 	//	}
-	//`,
+	//	}`,
 	// Example challenge
-	//expectedChallenge := "REbD5j1tq8h226bQ_vk2ROrToE2CyeuJ3faBTKhfnQk"
+	// expectedChallenge := "REbD5j1tq8h226bQ_vk2ROrToE2CyeuJ3faBTKhfnQk"
 
 	// Encode the challenge using base64 URL encoding
-	//encodedChallenge := base64.RawURLEncoding.EncodeToString([]byte(expectedChallenge))
+	// encodedChallenge := base64.RawURLEncoding.EncodeToString([]byte(expectedChallenge))
+	// typecast to ECDSA public key from any cred.GetPublicKey()
+	// Example challenge
+	// expectedChallenge := "REbD5j1tq8h226bQ_vk2ROrToE2CyeuJ3faBTKhfnQk"
+
+	// Encode the challenge using base64 URL encoding
+	// encodedChallenge := base64.RawURLEncoding.EncodeToString([]byte(expectedChallenge))
 	// typecast to ECDSA public key from any cred.GetPublicKey()
 	attestationPubKey := actual.Response.AttestationObject.AuthData.AttData.CredentialPublicKey
 	// The Verify method signature changed in go-webauthn v0.13.0, adding the `verifyUserPresence` parameter.

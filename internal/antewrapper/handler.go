@@ -61,7 +61,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
-		//cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap),
 		NewProvenanceSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap, options.SmartAccountKeeper),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 	}

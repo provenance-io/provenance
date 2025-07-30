@@ -2,6 +2,8 @@ package cli
 
 import (
 	"encoding/base64"
+	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -17,8 +19,6 @@ import (
 	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
 )
-
-// !NOTE: Must enable in module.go (disabled in favor of autocli.go)
 
 // NewTxCmd returns a root CLI command handler for certain modules
 // transaction commands.
@@ -41,10 +41,9 @@ func NewTxCmd() *cobra.Command {
 }
 
 const (
-	FlagSender               = "sender"
-	FlagAttestation          = "encodedAttestation"
-	FlagUserIdentifier       = "user-identifier"
-	FlagMaxCredentialAllowed = "max-credential-allowed"
+	FlagSender         = "sender"
+	FlagAttestation    = "encodedAttestation" //gosec:G101
+	FlagUserIdentifier = "user-identifier"
 )
 
 // AddWebAuthnCredentialFlags adds the flags needed when registering a WebAuthn credential.
@@ -113,9 +112,12 @@ func MsgUpdateParams() *cobra.Command {
 				return err
 			}
 
-			maxCreds64, err := strconv.ParseUint(args[1], 10, 32)
+			maxCreds64, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
+			}
+			if maxCreds64 > math.MaxUint32 {
+				return fmt.Errorf("max-credential-allowed value %d exceeds maximum uint32", maxCreds64)
 			}
 
 			msg := &types.MsgUpdateParams{

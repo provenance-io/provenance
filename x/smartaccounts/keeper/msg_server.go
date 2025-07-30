@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/url"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -106,10 +107,10 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 	fido2Authenticator := &types.Fido2Authenticator{
 		Id: response.ID,
 		// this is the user id used by the authenticator to prompt the user for a signature.
-		//Where Is the User ID?
-		//The user ID is provided during registration inside the PublicKeyCredentialCreationOptions.User.ID.
-		//However, it is NOT returned in the CredentialCreationResponse after registration.
-		//You must store the user ID separately when initiating registration and retrieve it later.
+		// Where Is the User ID?
+		// The user ID is provided during registration inside the PublicKeyCredentialCreationOptions.User.ID.
+		// However, it is NOT returned in the CredentialCreationResponse after registration.
+		// You must store the user ID separately when initiating registration and retrieve it later.
 		Username:                   msg.UserIdentifier,
 		Aaguid:                     response.Response.AttestationObject.AuthData.AttData.AAGUID,
 		CredentialCreationResponse: msg.EncodedAttestation,
@@ -142,8 +143,13 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 		}
 
 		// After successful initialization, emit event
+		numCreds := len(smartAccount.Credentials)
+		// highly improbably but gosec is making me do it
+		if numCreds > math.MaxUint32 {
+			return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
+		}
 		errFromEventManager := sdkCtx.EventManager().EmitTypedEvent(
-			types.NewEventSmartAccountInit(smartAccount.Address, uint32(len(smartAccount.Credentials))), //gosec:G115
+			types.NewEventSmartAccountInit(smartAccount.Address, uint32(numCreds)),
 		)
 		if errFromEventManager != nil {
 			return nil, errFromEventManager
@@ -178,11 +184,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 
 		// After successful registration, emit typed event
 		err = sdkCtx.EventManager().EmitTypedEvent(
-			&types.EventFido2CredentialAdd{
-				Address:          msg.Sender,
-				CredentialNumber: credentialNumberAdded,
-				CredentialId:     fido2Authenticator.Id,
-			},
+			types.NewEventFido2CredentialAdd(msg.Sender, credentialNumberAdded, fido2Authenticator.Id),
 		)
 		if err != nil {
 			return nil, err
@@ -304,8 +306,12 @@ func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgR
 			}
 
 			// After successful initialization, emit event
+			numCreds := len(smartAccountResponse.Credentials)
+			if numCreds > math.MaxUint32 {
+				return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
+			}
 			err = sdkCtx.EventManager().EmitTypedEvent(
-				types.NewEventSmartAccountInit(smartAccountResponse.Address, uint32(len(smartAccountResponse.Credentials))),
+				types.NewEventSmartAccountInit(smartAccountResponse.Address, uint32(numCreds)),
 			)
 			if err != nil {
 				return nil, err
