@@ -7,14 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
-	"github.com/provenance-io/provenance/x/registry"
 )
 
 func (k Keeper) AddLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error {
-	if err := types.ValidateLedgerClassBasic(&l); err != nil {
-		return err
-	}
-
 	hasAssetClass := k.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
 		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "asset_class_id", "asset_class doesn't exist")
@@ -96,8 +91,6 @@ func (k Keeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddres
 }
 
 func (k Keeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error {
-	// Bucket type validation is performed at the message level in ValidateBasic()
-
 	// Check if the ledger class exists
 	ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
 	if err != nil {
@@ -145,14 +138,7 @@ func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr sdk.AccA
 }
 
 func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error {
-	if err := types.ValidateLedgerBasic(&l); err != nil {
-		return err
-	}
-
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: l.Key.AssetClassId,
-		NftId:        l.Key.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(l.Key.AssetClassId, l.Key.NftId)); err != nil {
 		return err
 	}
 
@@ -219,10 +205,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types
 }
 
 func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, statusTypeId int32) error {
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: lk.AssetClassId,
-		NftId:        lk.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
 		return err
 	}
 
@@ -247,11 +230,6 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress
 	// Update the ledger status
 	ledger.StatusTypeId = statusTypeId
 
-	// Validate ledger basic fields
-	if err := types.ValidateLedgerBasic(ledger); err != nil {
-		return err
-	}
-
 	keyStr, err := LedgerKeyToString(ledger.Key)
 	if err != nil {
 		return err
@@ -266,10 +244,7 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress
 }
 
 func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: lk.AssetClassId,
-		NftId:        lk.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
 		return err
 	}
 
@@ -287,11 +262,6 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccA
 	ledger.InterestDayCountConvention = interestDayCountConvention
 	ledger.InterestAccrualMethod = interestAccrualMethod
 
-	// Validate ledger basic fields
-	if err := types.ValidateLedgerBasic(ledger); err != nil {
-		return err
-	}
-
 	keyStr, err := LedgerKeyToString(ledger.Key)
 	if err != nil {
 		return err
@@ -307,10 +277,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccA
 }
 
 func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: lk.AssetClassId,
-		NftId:        lk.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
 		return err
 	}
 
@@ -328,11 +295,6 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddres
 	ledger.NextPmtDate = nextPmtDate
 	ledger.PaymentFrequency = paymentFrequency
 
-	// Validate ledger basic fields
-	if err := types.ValidateLedgerBasic(ledger); err != nil {
-		return err
-	}
-
 	keyStr, err := LedgerKeyToString(ledger.Key)
 	if err != nil {
 		return err
@@ -348,10 +310,7 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddres
 }
 
 func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, maturityDate int32) error {
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: lk.AssetClassId,
-		NftId:        lk.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
 		return err
 	}
 
@@ -366,11 +325,6 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccA
 
 	// Update the ledger maturity date
 	ledger.MaturityDate = maturityDate
-
-	// Validate ledger basic fields
-	if err := types.ValidateLedgerBasic(ledger); err != nil {
-		return err
-	}
 
 	keyStr, err := LedgerKeyToString(ledger.Key)
 	if err != nil {
@@ -399,10 +353,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 
 // DestroyLedger removes a ledger from the store by NFT address
 func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey) error {
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: lk.AssetClassId,
-		NftId:        lk.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
 		return err
 	}
 
@@ -415,7 +366,6 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk 
 		return err
 	}
 
-	// Validate the authority to destroy the ledger
 	// TODO: verify against registry
 
 	// Remove the ledger from the store

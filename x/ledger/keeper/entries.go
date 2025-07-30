@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/types"
-	"github.com/provenance-io/provenance/x/registry"
 )
 
 // SetValue stores a value with a given key.
@@ -23,10 +22,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, led
 		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: ledgerKey.AssetClassId,
-		NftId:        ledgerKey.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(ledgerKey.AssetClassId, ledgerKey.NftId)); err != nil {
 		return err
 	}
 
@@ -36,14 +32,11 @@ func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, led
 		return err
 	}
 
+	blockTimeDays := helper.DaysSinceEpoch(ctx.BlockTime().UTC())
 	for _, le := range entries {
-		if err := types.ValidateLedgerEntryBasic(le); err != nil {
-			return err
-		}
-
-		// Validate dates
-		if err := validateEntryDates(le, ctx); err != nil {
-			return err
+		// Check if posted date is in the future
+		if le.PostedDate > blockTimeDays {
+			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "cannot be in the future")
 		}
 
 		// Validate amounts
@@ -70,16 +63,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, led
 }
 
 func (k Keeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
-	// Validate the key
-	err := types.ValidateLedgerKeyBasic(ledgerKey)
-	if err != nil {
-		return err
-	}
-
-	if err := RequireAuthority(ctx, k.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
-		AssetClassId: ledgerKey.AssetClassId,
-		NftId:        ledgerKey.NftId,
-	}); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(ledgerKey.AssetClassId, ledgerKey.NftId)); err != nil {
 		return err
 	}
 
@@ -96,13 +80,6 @@ func (k Keeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddres
 	// Validate the applied amounts
 	if err := validateEntryAmounts(existingEntry.TotalAmt, appliedAmounts); err != nil {
 		return fmt.Errorf("applied amounts for correlation id %s: %w", correlationId, err)
-	}
-
-	// Validate the bucket balances
-	for _, bb := range balanceAmounts {
-		if err := types.ValidateBucketBalance(bb); err != nil {
-			return err
-		}
 	}
 
 	// Update the entry with the new applied amounts
@@ -179,22 +156,6 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 		ledgerKey,
 		le.CorrelationId,
 	))
-
-	return nil
-}
-
-// validateEntryDates checks if the dates are valid
-func validateEntryDates(le *types.LedgerEntry, ctx sdk.Context) error {
-	blockTimeDays := helper.DaysSinceEpoch(ctx.BlockTime().UTC())
-
-	if le.PostedDate <= 0 {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "is not a valid date")
-	}
-
-	// Check if posted date is in the future
-	if le.PostedDate > blockTimeDays {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "cannot be in the future")
-	}
 
 	return nil
 }

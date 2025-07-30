@@ -15,10 +15,6 @@ import (
 func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := types.ValidateFundTransferWithSettlementBasic(transfer); err != nil {
-		return err
-	}
-
 	// print the transfer key as json
 	transferKeyJSON, err := json.MarshalIndent(transfer, "", "  ")
 	if err != nil {

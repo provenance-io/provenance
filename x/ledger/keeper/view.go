@@ -28,12 +28,6 @@ import (
 //   - Returns (&ledger, nil) if the ledger is found successfully
 //   - The returned ledger will have its NftAddress field set to the provided nftAddress
 func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error) {
-	// Validate the key
-	err := ledger.ValidateLedgerKeyBasic(key)
-	if err != nil {
-		return nil, err
-	}
-
 	keyStr, err := LedgerKeyToString(key)
 	if err != nil {
 		return nil, err
@@ -57,12 +51,6 @@ func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledge
 }
 
 func (k Keeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
-	// Validate the key
-	err := ledger.ValidateLedgerKeyBasic(key)
-	if err != nil {
-		return false
-	}
-
 	keyStr, err := LedgerKeyToString(key)
 	if err != nil {
 		return false
@@ -73,12 +61,6 @@ func (k Keeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
 }
 
 func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error) {
-	// Validate the key
-	err := ledger.ValidateLedgerKeyBasic(key)
-	if err != nil {
-		return nil, err
-	}
-
 	keyStr, err := LedgerKeyToString(key)
 	if err != nil {
 		return nil, err
@@ -115,18 +97,8 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([
 
 // GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
 func (k Keeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
-	// Validate the key
-	err := ledger.ValidateLedgerKeyBasic(key)
-	if err != nil {
-		return nil, err
-	}
-
 	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), key) {
 		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger")
-	}
-
-	if !ledger.IsCorrelationIDValid(correlationID) {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "correlation_id")
 	}
 
 	entries, err := k.ListLedgerEntries(ctx, key)
@@ -146,12 +118,6 @@ func (k Keeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, corre
 
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
 func (k Keeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.BucketBalances, error) {
-	// Validate the key
-	err := ledger.ValidateLedgerKeyBasic(key)
-	if err != nil {
-		return nil, err
-	}
-
 	asOfDateInt := helper.DaysSinceEpoch(asOfDate.UTC())
 
 	// Get all ledger entries for this NFT

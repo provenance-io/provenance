@@ -122,6 +122,20 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 	return lk
 }
 
+func NewLedgerKey(assetClassId string, nftId string) *ledger.LedgerKey {
+	return &ledger.LedgerKey{
+		AssetClassId: assetClassId,
+		NftId:        nftId,
+	}
+}
+
+func NewRegistryKey(assetClassId string, nftId string) *registry.RegistryKey {
+	return &registry.RegistryKey{
+		AssetClassId: assetClassId,
+		NftId:        nftId,
+	}
+}
+
 // Combine the asset class id and nft id into a bech32 string.
 // Using bech32 here just allows us a readable identifier for the ledger.
 func LedgerKeyToString(key *ledger.LedgerKey) (*string, error) {
@@ -156,8 +170,8 @@ func StringToLedgerKey(s string) (*ledger.LedgerKey, error) {
 	}, nil
 }
 
-func RequireAuthority(ctx sdk.Context, rk RegistryKeeper, addr string, key *registry.RegistryKey) error {
-	has, err := assertAuthority(ctx, rk, addr, key)
+func (k Keeper) RequireAuthority(ctx sdk.Context, addr string, key *registry.RegistryKey) error {
+	has, err := assertAuthority(ctx, k.RegistryKeeper, addr, key)
 	if err != nil {
 		return err
 	}
@@ -185,10 +199,7 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 		return false, err
 	}
 
-	lk := &ledger.LedgerKey{
-		AssetClassId: rk.AssetClassId,
-		NftId:        rk.NftId,
-	}
+	lk := NewLedgerKey(rk.AssetClassId, rk.NftId)
 
 	if registryEntry == nil {
 		err = assertOwner(ctx, k, authorityAddr, lk)
