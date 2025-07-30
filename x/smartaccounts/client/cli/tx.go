@@ -61,7 +61,7 @@ This command allows you to register WebAuthn credentials for a smart account.
 You need to provide the sender address, encoded attestation, and user identifier.
 This assumes a base account being present already.`),
 		Example: strings.TrimSpace(`$ appd tx smartaccounts add-credentials --sender=<sender_address> --encodedAttestation=<encoded_attestation> --user-identifier=<user_identifier>`),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

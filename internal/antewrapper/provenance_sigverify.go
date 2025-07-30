@@ -1,12 +1,13 @@
 package antewrapper
 
 import (
-	"cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	errorsmod "cosmossdk.io/errors"
-	txsigning "cosmossdk.io/x/tx/signing"
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	errorsmod "cosmossdk.io/errors"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -248,7 +249,7 @@ func VerifySignature(
 			// Get the K256Authenticator from the oneof field
 			k256CredentialWrapper, ok := cred.GetAuthenticator().(*smartaccounttypes.Credential_K256Authenticator)
 			if !ok || k256CredentialWrapper == nil {
-				return errorsmod.Wrapf(smartaccounttypes.ErrParseCredential, "Failed to get K256 Authenticator from credential")
+				return errorsmod.Wrapf(smartaccounttypes.ErrParseCredential, "failed to get K256 Authenticator from credential")
 			}
 			// Access the actual K256Authenticator object
 			k256Authenticator := k256CredentialWrapper.K256Authenticator
@@ -261,7 +262,7 @@ func VerifySignature(
 			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "unsupported credential type: %v", cred.BaseCredential.Variant)
 		}
 	default:
-		return fmt.Errorf("multisig not supported yet.")
+		return fmt.Errorf("multisig not supported yet")
 	}
 }
 

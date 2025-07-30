@@ -125,7 +125,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 	existingAcc, lookupErr := k.LookupAccountByAddress(sdkCtx, creator)
 	// smart account doesn't exists
 	if lookupErr != nil && errors.Is(lookupErr, types.ErrSmartAccountDoesNotExist) {
-		hasDuplicate := HasDuplicateCredentialId(existingAcc.Credentials, fido2Authenticator.Id)
+		hasDuplicate := HasDuplicateCredentialID(existingAcc.Credentials, fido2Authenticator.Id)
 		if hasDuplicate {
 			return nil, fmt.Errorf("credential already exists")
 		}
@@ -171,7 +171,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 
 	// account exists
 	// check for duplicate credential
-	hasDuplicate := HasDuplicateCredentialId(existingAcc.Credentials, fido2Authenticator.Id)
+	hasDuplicate := HasDuplicateCredentialID(existingAcc.Credentials, fido2Authenticator.Id)
 	if hasDuplicate {
 		return nil, errorsmod.Wrap(types.ErrDuplicateCredential, "credential already exists")
 	}
@@ -194,8 +194,8 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 	return resp, err
 }
 
-// HasDuplicateCredentialId checks if a credential ID already exists in the provided list of credentials
-func HasDuplicateCredentialId(credentials []*types.Credential, credentialId string) bool {
+// HasDuplicateCredentialID checks if a credential ID already exists in the provided list of credentials
+func HasDuplicateCredentialID(credentials []*types.Credential, credentialId string) bool {
 	for _, cred := range credentials {
 		if cred.GetVariant() == types.CredentialType_CREDENTIAL_TYPE_WEBAUTHN || cred.GetVariant() == types.CredentialType_CREDENTIAL_TYPE_WEBAUTHN_UV {
 			fidoCredentialWrapper, ok := cred.GetAuthenticator().(*types.Credential_Fido2Authenticator)
@@ -210,14 +210,14 @@ func HasDuplicateCredentialId(credentials []*types.Credential, credentialId stri
 	return false
 }
 
-func GetAddedCredentialNumber(credentials []*types.Credential, credentialId string) uint64 {
+func GetAddedCredentialNumber(credentials []*types.Credential, credentialID string) uint64 {
 	for _, cred := range credentials {
 		if cred.GetVariant() == types.CredentialType_CREDENTIAL_TYPE_WEBAUTHN || cred.GetVariant() == types.CredentialType_CREDENTIAL_TYPE_WEBAUTHN_UV {
 			fidoCredentialWrapper, ok := cred.GetAuthenticator().(*types.Credential_Fido2Authenticator)
 			if !ok {
 				continue
 			}
-			if fidoCredentialWrapper.Fido2Authenticator.Id == credentialId {
+			if fidoCredentialWrapper.Fido2Authenticator.Id == credentialID {
 				return cred.CredentialNumber
 			}
 		}
@@ -327,9 +327,8 @@ func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgR
 			return &types.MsgRegisterCosmosCredentialResponse{
 				CredentialNumber: 0,
 			}, nil
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 	// For existing account, create a new credential
 	baseCredential := &types.BaseCredential{
@@ -342,7 +341,7 @@ func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgR
 	}
 
 	// check for duplicate credential
-	hasDuplicate := HasDuplicateCredentialIdK256(smartAccount.Credentials, credential.BaseCredential.PublicKey)
+	hasDuplicate := HasDuplicateCredentialIDK256(smartAccount.Credentials, credential.BaseCredential.PublicKey)
 	if hasDuplicate {
 		return nil, errorsmod.Wrap(types.ErrDuplicateCredential, "credential already exists")
 	}
@@ -401,9 +400,9 @@ func (m MsgServer) DeleteCredential(ctx context.Context, deleteCredential *types
 	}, nil
 }
 
-// HasDuplicateCredentialIdK256 checks if the same secp256k1 public key already exists
+// HasDuplicateCredentialIDK256 checks if the same secp256k1 public key already exists
 // in the provided list of credentials
-func HasDuplicateCredentialIdK256(credentials []*types.Credential, pubKey *codectypes.Any) bool {
+func HasDuplicateCredentialIDK256(credentials []*types.Credential, pubKey *codectypes.Any) bool {
 	if pubKey == nil {
 		return false
 	}

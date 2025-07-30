@@ -53,7 +53,7 @@ func NewKeeper(
 	handlerMap *signing.HandlerMap,
 	accountKeeper accountkeeper.AccountKeeper,
 	authority string,
-	logger log.Logger,
+	_ log.Logger, // keeping this for now
 ) Keeper {
 	if addressCodec == nil {
 		panic(fmt.Errorf("addressCodec cannot be nil passed to New SmartAccountKeeper"))

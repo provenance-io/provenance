@@ -25,7 +25,7 @@ var (
 // GenMaxCredentialAllowed randomized MaxCredentialAllowed
 func GenMaxCredentialAllowed(r *rand.Rand) uint32 {
 	// The result of r.Intn(20) + 1 is always between 1 and 20, which safely fits in a uint32.
-	return uint32(r.Intn(20) + 1)
+	return uint32(r.Int31n(20) + 1)
 }
 
 // GenEnabled returns a randomized Enabled parameter
