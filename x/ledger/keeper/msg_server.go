@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -168,9 +167,6 @@ func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest
 // CreateLedgerClass handles the MsgCreateLedgerClassRequest message
 func (k *MsgServer) CreateLedgerClass(goCtx context.Context, req *ledger.MsgCreateLedgerClassRequest) (*ledger.MsgCreateLedgerClassResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if req == nil {
-		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
-	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
 	if err != nil {
@@ -189,10 +185,6 @@ func (k *MsgServer) CreateLedgerClass(goCtx context.Context, req *ledger.MsgCrea
 func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *ledger.MsgAddLedgerClassStatusTypeRequest) (*ledger.MsgAddLedgerClassStatusTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if req == nil {
-		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
 	if err != nil {
 		return nil, err
@@ -209,10 +201,6 @@ func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *ledger.
 // AddLedgerClassEntryType handles the MsgAddLedgerClassEntryTypeRequest message
 func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *ledger.MsgAddLedgerClassEntryTypeRequest) (*ledger.MsgAddLedgerClassEntryTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if req == nil {
-		return nil, types.NewLedgerCodedError(types.ErrCodeInvalidField, "request", "request is nil")
-	}
 
 	authority, err := sdk.AccAddressFromBech32(req.Authority)
 	if err != nil {
