@@ -10,6 +10,7 @@ on:
       - "Makefile"
       - "gon.json"
       - "scripts/**"
+      - "protoBindings/**"
       - ".github/workflows/release.yml"
   push:
     tags:
