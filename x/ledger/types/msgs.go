@@ -119,6 +119,9 @@ func (m *MsgAppendRequest) ValidateBasic() error {
 			return err
 		}
 
+		if err := validateEntryAmounts(entry.TotalAmt, entry.AppliedAmounts); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -142,6 +145,10 @@ func (m *MsgUpdateBalancesRequest) ValidateBasic() error {
 
 	for _, balanceAmount := range m.BalanceAmounts {
 		if err := validateBucketBalance(balanceAmount); err != nil {
+			return err
+		}
+
+		if err := validateEntryAmounts(balanceAmount.BalanceAmt, m.AppliedAmounts); err != nil {
 			return err
 		}
 	}
@@ -336,6 +343,21 @@ func validateLedgerEntryBasic(e *LedgerEntry) error {
 	// Validate amounts are non-negative
 	if e.TotalAmt.LT(math.NewInt(0)) {
 		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "must be a non-negative integer")
+	}
+
+	return nil
+}
+
+// validateEntryAmounts checks if the amounts are valid
+func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*LedgerBucketAmount) error {
+	// Check if total amount matches sum of applied amounts
+	totalApplied := math.NewInt(0)
+	for _, applied := range appliedAmounts {
+		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
+	}
+
+	if !totalAmt.Equal(totalApplied) {
+		return NewLedgerCodedError(ErrCodeInvalidField, "total_amt", "total amount must equal sum of abs(applied amounts)")
 	}
 
 	return nil

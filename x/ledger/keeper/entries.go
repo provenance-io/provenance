@@ -1,11 +1,9 @@
 package keeper
 
 import (
-	"fmt"
 	"sort"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/types"
@@ -39,11 +37,6 @@ func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, led
 			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "cannot be in the future")
 		}
 
-		// Validate amounts
-		if err := validateEntryAmounts(le.TotalAmt, le.AppliedAmounts); err != nil {
-			return fmt.Errorf("correlation id %s: %w", le.CorrelationId, err)
-		}
-
 		// Validate that the LedgerClassEntryType exists
 		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.LedgerClassId, le.EntryTypeId))
 		if err != nil {
@@ -75,11 +68,6 @@ func (k Keeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddres
 
 	if existingEntry == nil {
 		return types.NewLedgerCodedError(types.ErrCodeNotFound, "entry")
-	}
-
-	// Validate the applied amounts
-	if err := validateEntryAmounts(existingEntry.TotalAmt, appliedAmounts); err != nil {
-		return fmt.Errorf("applied amounts for correlation id %s: %w", correlationId, err)
 	}
 
 	// Update the entry with the new applied amounts
@@ -156,21 +144,6 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 		ledgerKey,
 		le.CorrelationId,
 	))
-
-	return nil
-}
-
-// validateEntryAmounts checks if the amounts are valid
-func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*types.LedgerBucketAmount) error {
-	// Check if total amount matches sum of applied amounts
-	totalApplied := math.NewInt(0)
-	for _, applied := range appliedAmounts {
-		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
-	}
-
-	if !totalAmt.Equal(totalApplied) {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "total_amt", "total amount must equal sum of abs(applied amounts)")
-	}
 
 	return nil
 }
