@@ -7,7 +7,6 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "provenance/asset/v1/asset.proto";
-import "provenance/ledger/v1/ledger.proto";
 
 // Msg defines the asset module's message service.
 service Msg {
@@ -34,7 +33,7 @@ message MsgCreateAsset {
   option (cosmos.msg.v1.signer) = "from_address";
 
   // asset defines the asset to be created.
-  Asset  asset        = 1;
+  Asset asset = 1;
   // from_address defines the address of the message sender.
   string from_address = 2;
 }
@@ -47,9 +46,9 @@ message MsgCreateAssetClass {
   option (cosmos.msg.v1.signer) = "from_address";
 
   // asset_class defines the asset class to be created.
-  AssetClass asset_class  = 1;
+  AssetClass asset_class = 1;
   // from_address defines the address of the message sender.
-  string     from_address = 2;
+  string from_address = 2;
 }
 
 // MsgCreateAssetClassResponse is the response type for the CreateAssetClass RPC method.
@@ -60,11 +59,11 @@ message MsgCreatePool {
   option (cosmos.msg.v1.signer) = "from_address";
 
   // pool defines the pool to be created.
-  cosmos.base.v1beta1.Coin pool         = 1;
+  cosmos.base.v1beta1.Coin pool = 1;
   // assets defines the list of assets by keys to be included in the pool.
-  repeated AssetKey        assets       = 2;
+  repeated AssetKey assets = 2;
   // from_address defines the address of the message sender.
-  string                   from_address = 3;
+  string from_address = 3;
 }
 
 // MsgCreatePoolResponse is the response type for the CreatePool RPC method.
@@ -75,11 +74,11 @@ message MsgCreateTokenization {
   option (cosmos.msg.v1.signer) = "from_address";
 
   // denom defines the denomination for the tokenization.
-  cosmos.base.v1beta1.Coin denom        = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin denom = 1 [(gogoproto.nullable) = false];
   // asset defines the asset by key to be tokenized.
-  AssetKey                 asset         = 2;
+  AssetKey asset = 2;
   // from_address defines the address of the message sender.
-  string                   from_address = 3;
+  string from_address = 3;
 }
 
 // MsgCreateTokenizationResponse is the response type for the CreateTokenization RPC method.
@@ -90,13 +89,13 @@ message MsgCreateSecuritization {
   option (cosmos.msg.v1.signer) = "from_address";
 
   // id defines the unique identifier for the securitization.
-  string          id                             = 1;
+  string id = 1;
   // pools defines the list of pool identifiers to be included in the securitization.
-  repeated string pools                          = 2;
+  repeated string pools = 2;
   // tranches defines the list of tranches for the securitization.
-  repeated cosmos.base.v1beta1.Coin tranches     = 3;
+  repeated cosmos.base.v1beta1.Coin tranches = 3;
   // from_address defines the address of the message sender.
-  string                            from_address = 4;
+  string from_address = 4;
 }
 
 // MsgCreateSecuritizationResponse is the response type for the CreateSecuritization RPC method.

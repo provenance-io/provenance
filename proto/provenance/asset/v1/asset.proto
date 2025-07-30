@@ -50,5 +50,5 @@ message AssetKey {
   // class_id associated with the asset, similar to the contract address of ERC721.
   string class_id = 1;
   // id is a unique identifier of the asset.
-  string id       = 2;
+  string id = 2;
 }

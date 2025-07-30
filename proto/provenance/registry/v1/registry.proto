@@ -63,6 +63,6 @@ message RegistryBulkUpdate {
 }
 
 message RegistryBulkUpdateEntry {
-  RegistryKey           key   = 1;
+  RegistryKey            key     = 1;
   repeated RegistryEntry entries = 2;
 }

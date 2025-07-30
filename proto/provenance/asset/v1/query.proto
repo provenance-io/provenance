@@ -51,8 +51,8 @@ message QueryListAssetClasses {
 
 // QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
 message QueryListAssetClassesResponse {
-  // assetClasses defines the list of asset classes.
-  repeated AssetClass assetClasses = 1;
+  // asset_classes defines the list of asset classes.
+  repeated AssetClass asset_classes = 1;
 
   // pagination is the resulting pagination parameters.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
@@ -66,6 +66,6 @@ message QueryGetClass {
 
 // QueryGetClassResponse is the response type for the GetClass RPC method.
 message QueryGetClassResponse {
-  // assetClass defines the requested asset class.
-  AssetClass assetClass = 1;
+  // asset_class defines the requested asset class.
+  AssetClass asset_class = 1;
 }
