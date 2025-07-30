@@ -78,20 +78,14 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([
 
 	// Get all entries for the ledger.
 	prefix := collections.NewPrefixedPairRange[string, string](keyStr)
-	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
+
+	entries := make([]*ledger.LedgerEntry, 0)
+	err := k.LedgerEntries.Walk(ctx, prefix, func(key collections.Pair[string, string], value ledger.LedgerEntry) (stop bool, err error) {
+		entries = append(entries, &value)
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
-	}
-	defer iter.Close()
-
-	// Iterate through all entries for the ledger.
-	var entries []*ledger.LedgerEntry
-	for ; iter.Valid(); iter.Next() {
-		le, err := iter.Value()
-		if err != nil {
-			return nil, err
-		}
-		entries = append(entries, &le)
 	}
 
 	// Sort the entries by effective date and sequence number.
@@ -104,23 +98,15 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([
 
 // GetLedgerEntry retrieves a ledger entry by its correlation ID for a specific NFT address
 func (k Keeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
-	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), key) {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger")
-	}
-
-	entries, err := k.ListLedgerEntries(ctx, key)
+	ledgerEntry, err := k.LedgerEntries.Get(ctx, collections.Join(key.String(), correlationID))
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
-	for _, entry := range entries {
-		if entry.CorrelationId == correlationID {
-			return entry, nil
-		}
-	}
-
-	// If we get here, the entry was not found
-	return nil, nil
+	return &ledgerEntry, nil
 }
 
 func (k Keeper) RequireGetLedgerEntry(ctx sdk.Context, lk *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
@@ -189,20 +175,14 @@ func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledg
 
 func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error) {
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
-	iter, err := k.LedgerClassEntryTypes.Iterate(ctx, prefix)
-	if err != nil {
-		return nil, err
-	}
-	defer iter.Close()
 
 	entryTypes := make([]*ledger.LedgerClassEntryType, 0)
-	for ; iter.Valid(); iter.Next() {
-		entryType, err := iter.Value()
-		if err != nil {
-			return nil, err
-		}
-
-		entryTypes = append(entryTypes, &entryType)
+	err := k.LedgerClassEntryTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value ledger.LedgerClassEntryType) (stop bool, err error) {
+		entryTypes = append(entryTypes, &value)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return entryTypes, nil
@@ -218,38 +198,30 @@ func SliceToMap[T any, K comparable](list []T, keyFn func(T) K) map[K]T {
 
 func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error) {
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
-	iter, err := k.LedgerClassStatusTypes.Iterate(ctx, prefix)
+
+	statusTypes := make([]*ledger.LedgerClassStatusType, 0)
+	err := k.LedgerClassStatusTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value ledger.LedgerClassStatusType) (stop bool, err error) {
+		statusTypes = append(statusTypes, &value)
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	defer iter.Close()
 
-	statusTypes := make([]*ledger.LedgerClassStatusType, 0)
-	for ; iter.Valid(); iter.Next() {
-		statusType, err := iter.Value()
-		if err != nil {
-			return nil, err
-		}
-		statusTypes = append(statusTypes, &statusType)
-	}
 	return statusTypes, nil
 }
 
 func (k Keeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error) {
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
-	iter, err := k.LedgerClassBucketTypes.Iterate(ctx, prefix)
+
+	bucketTypes := make([]*ledger.LedgerClassBucketType, 0)
+	err := k.LedgerClassBucketTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value ledger.LedgerClassBucketType) (stop bool, err error) {
+		bucketTypes = append(bucketTypes, &value)
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	defer iter.Close()
 
-	bucketTypes := make([]*ledger.LedgerClassBucketType, 0)
-	for ; iter.Valid(); iter.Next() {
-		bucketType, err := iter.Value()
-		if err != nil {
-			return nil, err
-		}
-		bucketTypes = append(bucketTypes, &bucketType)
-	}
 	return bucketTypes, nil
 }
