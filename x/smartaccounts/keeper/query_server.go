@@ -8,11 +8,7 @@ import (
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 
-var _ types.QueryServer = Querier{}
-
-type Querier struct {
-	Keeper
-}
+var _ types.QueryServer = Keeper{}
 
 func (keeper Keeper) SmartAccount(ctx context.Context, request *types.SmartAccountQueryRequest) (*types.SmartAccountResponse, error) {
 	address, err := keeper.addressCodec.StringToBytes(request.Address)
@@ -37,8 +33,4 @@ func (keeper Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*ty
 	}
 
 	return &types.QueryParamsResponse{Params: &p}, nil
-}
-
-func NewQuerier(keeper Keeper) Querier {
-	return Querier{Keeper: keeper}
 }

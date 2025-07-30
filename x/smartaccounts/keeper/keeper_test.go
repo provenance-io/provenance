@@ -69,7 +69,7 @@ func (s *TestSuite) SetupTest(t *testing.T) {
 	require.NoError(t, err)
 
 	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
-	s.queryServer = keeper.NewQuerier(s.keeper)
+	s.queryServer = s.keeper
 }
 
 func TestKeeper(t *testing.T) {
