@@ -10,17 +10,9 @@ import (
 )
 
 // SetValue stores a value with a given key.
-func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error {
-	// Need to resolve the ledger class for validation purposes
-	ledger, err := k.GetLedger(ctx, ledgerKey)
+func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error {
+	ledger, err := k.RequireGetLedger(ctx, ledgerKey)
 	if err != nil {
-		return err
-	}
-	if ledger == nil {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
-	}
-
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), ledgerKey.ToRegistryKey()); err != nil {
 		return err
 	}
 
@@ -55,11 +47,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, led
 	return nil
 }
 
-func (k Keeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), ledgerKey.ToRegistryKey()); err != nil {
-		return err
-	}
-
+func (k Keeper) UpdateEntryBalances(ctx sdk.Context, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Get the existing entry
 	existingEntry, err := k.GetLedgerEntry(ctx, ledgerKey, correlationId)
 	if err != nil {

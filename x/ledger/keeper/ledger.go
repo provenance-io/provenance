@@ -7,7 +7,7 @@ import (
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
-func (k Keeper) AddLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error {
+func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
 	hasAssetClass := k.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
 		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "asset_class_id", "asset_class doesn't exist")
@@ -17,8 +17,9 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l
 	if err != nil {
 		return err
 	}
+
 	if has {
-		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class")
+		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class entry type")
 	}
 
 	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
@@ -26,50 +27,33 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l
 		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "denom", "denom doesn't have a supply")
 	}
 
-	// Validate that the maintainer in the ledger class is the same as the maintainer address
-	// We force them to be the same for now so that a ledger class isn't locked out.
-	if l.MaintainerAddress != maintainerAddr.String() {
-		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
-	}
-
 	// Insert the ledger class
-	err = k.LedgerClasses.Set(ctx, l.LedgerClassId, l)
-	if err != nil {
+	if err := k.LedgerClasses.Set(ctx, l.LedgerClassId, l); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error {
-	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr.String(), ledgerClassId) {
-		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
-	}
-
+func (k Keeper) AddClassEntryType(ctx sdk.Context, ledgerClassId string, l types.LedgerClassEntryType) error {
 	key := collections.Join(ledgerClassId, l.Id)
 
 	has, err := k.LedgerClassEntryTypes.Has(ctx, key)
 	if err != nil {
 		return err
 	}
-
 	if has {
 		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class entry type")
 	}
 
-	err = k.LedgerClassEntryTypes.Set(ctx, key, l)
-	if err != nil {
+	if err := k.LedgerClassEntryTypes.Set(ctx, key, l); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error {
-	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr.String(), ledgerClassId) {
-		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
-	}
-
+func (k Keeper) AddClassStatusType(ctx sdk.Context, ledgerClassId string, l types.LedgerClassStatusType) error {
 	key := collections.Join(ledgerClassId, l.Id)
 
 	has, err := k.LedgerClassStatusTypes.Has(ctx, key)
@@ -81,30 +65,18 @@ func (k Keeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddres
 		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class status type")
 	}
 
-	err = k.LedgerClassStatusTypes.Set(ctx, key, l)
-	if err != nil {
+	if err := k.LedgerClassStatusTypes.Set(ctx, key, l); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (k Keeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error {
-	// Check if the ledger class exists
-	ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
-	if err != nil {
-		return err
-	}
-	if ledgerClass == nil {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger class")
-	}
-
-	// Check if the maintainer address matches
-	if ledgerClass.MaintainerAddress != maintainerAddr.String() {
-		return types.NewLedgerCodedError(types.ErrCodeUnauthorized, "maintainer")
-	}
+func (k Keeper) AddClassBucketType(ctx sdk.Context, ledgerClassId string, l types.LedgerClassBucketType) error {
+	key := collections.Join(ledgerClassId, l.Id)
 
 	// Check if the bucket type already exists
-	has, err := k.LedgerClassBucketTypes.Has(ctx, collections.Join(ledgerClassId, l.Id))
+	has, err := k.LedgerClassBucketTypes.Has(ctx, key)
 	if err != nil {
 		return err
 	}
@@ -113,8 +85,7 @@ func (k Keeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddres
 	}
 
 	// Add the bucket type
-	err = k.LedgerClassBucketTypes.Set(ctx, collections.Join(ledgerClassId, l.Id), l)
-	if err != nil {
+	if err = k.LedgerClassBucketTypes.Set(ctx, key, l); err != nil {
 		return err
 	}
 
@@ -127,11 +98,7 @@ func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, 
 	return err == nil && ledgerClass.MaintainerAddress == maintainerAddr
 }
 
-func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), l.Key.ToRegistryKey()); err != nil {
-		return err
-	}
-
+func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	// Do not allow creating a duplicate ledger
 	if k.HasLedger(ctx, l.Key) {
 		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger")
@@ -183,19 +150,14 @@ func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types
 	l.Key = nil
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, keyStr, l)
-	if err != nil {
+	if err := k.Ledgers.Set(ctx, keyStr, l); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, statusTypeId int32) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
-		return err
-	}
-
+func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusTypeId int32) error {
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
@@ -216,19 +178,14 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress
 	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, keyStr, *ledger)
-	if err != nil {
+	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
-		return err
-	}
-
+func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
@@ -242,19 +199,14 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccA
 	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, keyStr, *ledger)
-	if err != nil {
+	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
-		return err
-	}
-
+func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
@@ -268,19 +220,14 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddres
 	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, keyStr, *ledger)
-	if err != nil {
+	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, maturityDate int32) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
-		return err
-	}
-
+func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, maturityDate int32) error {
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
@@ -292,8 +239,7 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccA
 	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, keyStr, *ledger)
-	if err != nil {
+	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
@@ -312,11 +258,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 }
 
 // DestroyLedger removes a ledger from the store by NFT address
-func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
-		return err
-	}
-
+func (k Keeper) DestroyLedger(ctx sdk.Context, lk *ledger.LedgerKey) error {
 	if !k.HasLedger(ctx, lk) {
 		return ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "ledger", "ledger doesn't exist")
 	}
@@ -324,8 +266,7 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk 
 	keyStr := lk.String()
 
 	// Remove the ledger from the store
-	err := k.Ledgers.Remove(ctx, keyStr)
-	if err != nil {
+	if err := k.Ledgers.Remove(ctx, keyStr); err != nil {
 		return err
 	}
 
@@ -349,8 +290,7 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk 
 
 	// Remove the ledger entries
 	for _, key := range keysToRemove {
-		err = k.LedgerEntries.Remove(ctx, key)
-		if err != nil {
+		if err := k.LedgerEntries.Remove(ctx, key); err != nil {
 			return err
 		}
 	}

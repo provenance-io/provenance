@@ -42,6 +42,11 @@ func (m *MsgCreateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateStatusRequest
 func (m *MsgUpdateStatusRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if err := validateLedgerKeyBasic(m.Key); err != nil {
 		return err
 	}
@@ -55,6 +60,11 @@ func (m *MsgUpdateStatusRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateInterestRateRequest
 func (m *MsgUpdateInterestRateRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if err := validateLedgerKeyBasic(m.Key); err != nil {
 		return err
 	}
@@ -74,6 +84,11 @@ func (m *MsgUpdateInterestRateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdatePaymentRequest
 func (m *MsgUpdatePaymentRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if err := validateLedgerKeyBasic(m.Key); err != nil {
 		return err
 	}
@@ -93,6 +108,11 @@ func (m *MsgUpdatePaymentRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateMaturityDateRequest
 func (m *MsgUpdateMaturityDateRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if err := validateLedgerKeyBasic(m.Key); err != nil {
 		return err
 	}
@@ -106,6 +126,11 @@ func (m *MsgUpdateMaturityDateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAppendRequest
 func (m *MsgAppendRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if err := validateLedgerKeyBasic(m.Key); err != nil {
 		return err
 	}
@@ -129,6 +154,11 @@ func (m *MsgAppendRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateBalancesRequest
 func (m *MsgUpdateBalancesRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if err := validateLedgerKeyBasic(m.Key); err != nil {
 		return err
 	}
@@ -158,6 +188,11 @@ func (m *MsgUpdateBalancesRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgTransferFundsWithSettlementRequest
 func (m *MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if len(m.Transfers) == 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("transfers cannot be empty")
 	}
@@ -173,6 +208,11 @@ func (m *MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgDestroyRequest
 func (m *MsgDestroyRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if err := validateLedgerKeyBasic(m.Key); err != nil {
 		return err
 	}
@@ -182,6 +222,17 @@ func (m *MsgDestroyRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateLedgerClassRequest
 func (m *MsgCreateLedgerClassRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
+	// Validate that the maintainer in the ledger class is the same as the maintainer address.
+	// We force them to be the same for now so that a ledger class isn't locked out.
+	if m.LedgerClass.MaintainerAddress != m.Authority {
+		return NewLedgerCodedError(ErrCodeUnauthorized, "maintainer address is not the same as the authority")
+	}
+
 	if err := validateLedgerClassBasic(m.LedgerClass); err != nil {
 		return err
 	}
@@ -191,6 +242,11 @@ func (m *MsgCreateLedgerClassRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassStatusTypeRequest
 func (m *MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if m.LedgerClassId == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
 	}
@@ -203,6 +259,11 @@ func (m *MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassEntryTypeRequest
 func (m *MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if m.LedgerClassId == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
 	}
@@ -215,6 +276,11 @@ func (m *MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassBucketTypeRequest
 func (m *MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
+	}
+
 	if m.LedgerClassId == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
 	}
@@ -227,9 +293,11 @@ func (m *MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgBulkImportRequest
 func (m *MsgBulkImportRequest) ValidateBasic() error {
-	if m.Authority == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("authority cannot be empty")
+	_, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		return err
 	}
+
 	if m.GenesisState == nil {
 		return sdkerrors.ErrInvalidRequest.Wrap("genesis state cannot be nil")
 	}

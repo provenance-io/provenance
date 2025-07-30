@@ -182,13 +182,12 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 // TODO move this to init genesis.
 // BulkImportLedgerData imports ledger data from genesis state. This function assumes that ledger classes, status
 // types, entry types, and bucket types are already created before calling this function.
-func (k Keeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddress, genesisState ledger.GenesisState) error {
+func (k Keeper) BulkImportLedgerData(ctx sdk.Context, genesisState ledger.GenesisState) error {
 	ctx.Logger().Info("Starting bulk import of ledger data",
 		"ledger_to_entries", len(genesisState.LedgerToEntries))
 
 	// Import ledgers and their entries
 	for _, ledgerToEntries := range genesisState.LedgerToEntries {
-		var maintainerAddr sdk.AccAddress
 		var ledgerClassId string
 
 		// Determine the ledger class ID and get maintainer address
@@ -216,14 +215,9 @@ func (k Keeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddre
 			return fmt.Errorf("ledger class %s not found - ensure it is created before bulk import", ledgerClassId)
 		}
 
-		maintainerAddr, err = sdk.AccAddressFromBech32(ledgerClass.MaintainerAddress)
-		if err != nil {
-			return fmt.Errorf("invalid maintainer address %s: %w", ledgerClass.MaintainerAddress, err)
-		}
-
 		// Create the ledger only if it doesn't already exist
 		if ledgerToEntries.Ledger != nil && !k.HasLedger(ctx, ledgerToEntries.Ledger.Key) {
-			if err := k.AddLedger(ctx, maintainerAddr, *ledgerToEntries.Ledger); err != nil {
+			if err := k.AddLedger(ctx, *ledgerToEntries.Ledger); err != nil {
 				return fmt.Errorf("failed to create ledger: %w", err)
 			}
 			ctx.Logger().Info("Created ledger", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)
@@ -243,7 +237,7 @@ func (k Keeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddre
 				entries[i] = entry
 			}
 
-			if err := k.AppendEntries(ctx, maintainerAddr, ledgerToEntries.LedgerKey, entries); err != nil {
+			if err := k.AppendEntries(ctx, ledgerToEntries.LedgerKey, entries); err != nil {
 				return fmt.Errorf("failed to append entries for ledger key %s: %w", ledgerToEntries.LedgerKey.NftId, err)
 			}
 			ctx.Logger().Info("Added ledger entries", "ledger_key", ledgerToEntries.LedgerKey.NftId, "count", len(entries))
