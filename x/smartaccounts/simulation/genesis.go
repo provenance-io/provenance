@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"math/rand"
 	"strconv"
-	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -78,7 +77,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 					CredentialNumber: uint64(i),
 					PublicKey:        credPubKey,
 					Variant:          types.CredentialType_CREDENTIAL_TYPE_K256,
-					CreateTime:       simState.Rand.Int63n(time.Now().Unix()),
+					CreateTime:       simState.Rand.Int63n(simState.GenTimestamp.Unix()),
 				},
 			}
 		} else {
@@ -108,7 +107,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			CredentialNumber: 1,
 			PublicKey:        credPubKey,
 			Variant:          types.CredentialType_CREDENTIAL_TYPE_K256,
-			CreateTime:       simState.Rand.Int63n(time.Now().Unix()-172800) + 172800, // Random time in last 2 days
+			CreateTime:       simState.Rand.Int63n(simState.GenTimestamp.Unix()-172800) + 172800, // Random time in last 2 days
 		},
 	}
 
