@@ -80,7 +80,7 @@ func SimulateMsgRegisterCosmosCredential(_ keeper.Keeper, args *WeightedOpsArgs)
 	}
 }
 
-func SimulateMsgRegisterWebAuthnAccount(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
+func SimulateMsgRegisterWebAuthnAccount(_ keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

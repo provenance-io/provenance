@@ -218,7 +218,7 @@ func (k Keeper) Init(ctx context.Context, msg *types.MsgInit) (*types.Provenance
 	return account, nil
 }
 
-func (k Keeper) verifyPubKey(ctx context.Context, anyPk *codectypes.Any) error {
+func (k Keeper) verifyPubKey(_ context.Context, anyPk *codectypes.Any) error {
 	if k.provenanceAccount == nil {
 		return fmt.Errorf("provenanceAccount handler not initialized")
 	}
