@@ -3,6 +3,8 @@ package simulation
 import (
 	"encoding/base64"
 	"fmt"
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -12,11 +14,11 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/smartaccounts/keeper"
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
 	"github.com/provenance-io/provenance/x/smartaccounts/utils"
-	"math/rand"
 )
 
 // Simulation operation weights constants

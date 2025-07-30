@@ -4,10 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/provenance-io/provenance/x/smartaccounts/simulation"
 	"github.com/spf13/cobra"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -20,9 +17,12 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/provenance-io/provenance/x/smartaccounts/client/cli"
 	"github.com/provenance-io/provenance/x/smartaccounts/keeper"
+	"github.com/provenance-io/provenance/x/smartaccounts/simulation"
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 

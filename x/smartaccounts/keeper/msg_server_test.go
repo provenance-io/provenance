@@ -3,17 +3,20 @@ package keeper_test
 import (
 	"encoding/base64"
 	"errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/gogo/protobuf/proto"
-	"github.com/provenance-io/provenance/x/smartaccounts/utils"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
-	"github.com/stretchr/testify/require"
+	"github.com/provenance-io/provenance/x/smartaccounts/utils"
 )
 
 func TestMsgServer(t *testing.T) {

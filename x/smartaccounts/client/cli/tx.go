@@ -2,19 +2,19 @@ package cli
 
 import (
 	"encoding/base64"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"strconv"
 	"strings"
-
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/provenance-io/provenance/internal/provcli"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 

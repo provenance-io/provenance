@@ -5,7 +5,9 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+
 	smartaccounttypes "github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 

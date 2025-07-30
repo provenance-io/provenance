@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"math/big"
 
+	// decred library was already a dependency in cosmos-sdk
+	dcrdsecp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	smartaccounttypes "github.com/provenance-io/provenance/x/smartaccounts/types"
 
-	// decred library was already a dependency in cosmos-sdk
-	dcrdsecp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	smartaccounttypes "github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 
 // this file implements a general mechanism to plugin public keys to a baseaccount

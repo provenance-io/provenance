@@ -3,31 +3,32 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/gogoproto/proto"
-	testcli "github.com/provenance-io/provenance/testutil/cli"
-	"github.com/provenance-io/provenance/x/smartaccounts/client/cli"
-	"github.com/provenance-io/provenance/x/smartaccounts/types"
-	"github.com/provenance-io/provenance/x/smartaccounts/utils"
-	"github.com/spf13/cobra"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
+
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
+	"github.com/provenance-io/provenance/x/smartaccounts/client/cli"
+	"github.com/provenance-io/provenance/x/smartaccounts/types"
+	"github.com/provenance-io/provenance/x/smartaccounts/utils"
 )
 
 type IntegrationTestSuite struct {

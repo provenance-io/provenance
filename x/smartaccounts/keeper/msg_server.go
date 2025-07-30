@@ -10,11 +10,14 @@ import (
 	"io"
 	"net/url"
 
+	"github.com/go-webauthn/webauthn/protocol"
+
 	errorsmod "cosmossdk.io/errors"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/go-webauthn/webauthn/protocol"
+
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 

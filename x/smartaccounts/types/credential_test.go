@@ -6,14 +6,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/go-webauthn/webauthn/protocol"
-	"github.com/stretchr/testify/require"
 	"io"
 	"log"
 	"net/url"
 	"testing"
+
+	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var attestation = map[string]string{

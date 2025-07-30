@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 

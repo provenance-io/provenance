@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/provenance-io/provenance/x/smartaccounts/types"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	"github.com/provenance-io/provenance/x/smartaccounts/types"
 )
 
 // GetQueryCmd is the top-level command for smart account CLI queries.

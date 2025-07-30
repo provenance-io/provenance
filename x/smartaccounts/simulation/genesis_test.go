@@ -1,18 +1,20 @@
 package simulation_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"math/rand"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/stretchr/testify/require"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/x/smartaccounts/simulation"
 	"github.com/provenance-io/provenance/x/smartaccounts/types"
