@@ -28,13 +28,10 @@ import (
 //   - Returns (&ledger, nil) if the ledger is found successfully
 //   - The returned ledger will have its NftAddress field set to the provided nftAddress
 func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error) {
-	keyStr, err := LedgerKeyToString(key)
-	if err != nil {
-		return nil, err
-	}
+	keyStr := key.String()
 
 	// Lookup the NFT address in the ledger
-	l, err := k.Ledgers.Get(ctx, *keyStr)
+	l, err := k.Ledgers.Get(ctx, keyStr)
 	if err != nil {
 		// Eat the not found error as it is expected, and return nil.
 		if errors.Is(err, collections.ErrNotFound) {
@@ -51,20 +48,14 @@ func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledge
 }
 
 func (k Keeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
-	keyStr, err := LedgerKeyToString(key)
-	if err != nil {
-		return false
-	}
+	keyStr := key.String()
 
-	has, _ := k.Ledgers.Has(ctx, *keyStr)
+	has, _ := k.Ledgers.Has(ctx, keyStr)
 	return has
 }
 
 func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([]*ledger.LedgerEntry, error) {
-	keyStr, err := LedgerKeyToString(key)
-	if err != nil {
-		return nil, err
-	}
+	keyStr := key.String()
 
 	// Garbage in, garbage out.
 	if !k.HasLedger(sdk.UnwrapSDKContext(ctx), key) {
@@ -72,7 +63,7 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([
 	}
 
 	// Get all entries for the ledger.
-	prefix := collections.NewPrefixedPairRange[string, string](*keyStr)
+	prefix := collections.NewPrefixedPairRange[string, string](keyStr)
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
 	if err != nil {
 		return nil, err

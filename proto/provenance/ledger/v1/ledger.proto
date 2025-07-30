@@ -57,6 +57,9 @@ message LedgerClassStatusType {
 
 // LedgerKey is used as the unique key for an asset's ledger in the keeper.
 message LedgerKey {
+  // disable stringer
+  option (gogoproto.goproto_stringer) = false;
+
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
   // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.

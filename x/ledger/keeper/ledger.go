@@ -184,10 +184,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types
 
 	// We omit the nftAddress out of the data we store intentionally as
 	// a minor optimization since it is also our data key.
-	keyStr, err := LedgerKeyToString(l.Key)
-	if err != nil {
-		return err
-	}
+	keyStr := l.Key.String()
 
 	// Emit the ledger created event
 	ctx.EventManager().EmitEvent(types.NewEventLedgerCreated(l.Key))
@@ -196,7 +193,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types
 	l.Key = nil
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, *keyStr, l)
+	err = k.Ledgers.Set(ctx, keyStr, l)
 	if err != nil {
 		return err
 	}
@@ -230,13 +227,10 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress
 	// Update the ledger status
 	ledger.StatusTypeId = statusTypeId
 
-	keyStr, err := LedgerKeyToString(ledger.Key)
-	if err != nil {
-		return err
-	}
+	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	err = k.Ledgers.Set(ctx, keyStr, *ledger)
 	if err != nil {
 		return err
 	}
@@ -262,13 +256,10 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccA
 	ledger.InterestDayCountConvention = interestDayCountConvention
 	ledger.InterestAccrualMethod = interestAccrualMethod
 
-	keyStr, err := LedgerKeyToString(ledger.Key)
-	if err != nil {
-		return err
-	}
+	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	err = k.Ledgers.Set(ctx, keyStr, *ledger)
 	if err != nil {
 		return err
 	}
@@ -295,13 +286,10 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddres
 	ledger.NextPmtDate = nextPmtDate
 	ledger.PaymentFrequency = paymentFrequency
 
-	keyStr, err := LedgerKeyToString(ledger.Key)
-	if err != nil {
-		return err
-	}
+	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	err = k.Ledgers.Set(ctx, keyStr, *ledger)
 	if err != nil {
 		return err
 	}
@@ -326,13 +314,10 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccA
 	// Update the ledger maturity date
 	ledger.MaturityDate = maturityDate
 
-	keyStr, err := LedgerKeyToString(ledger.Key)
-	if err != nil {
-		return err
-	}
+	keyStr := ledger.Key.String()
 
 	// Store the ledger
-	err = k.Ledgers.Set(ctx, *keyStr, *ledger)
+	err = k.Ledgers.Set(ctx, keyStr, *ledger)
 	if err != nil {
 		return err
 	}
@@ -361,20 +346,17 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk 
 		return ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "ledger", "ledger doesn't exist")
 	}
 
-	keyStr, err := LedgerKeyToString(lk)
-	if err != nil {
-		return err
-	}
+	keyStr := lk.String()
 
 	// TODO: verify against registry
 
 	// Remove the ledger from the store
-	err = k.Ledgers.Remove(ctx, *keyStr)
+	err := k.Ledgers.Remove(ctx, keyStr)
 	if err != nil {
 		return err
 	}
 
-	prefix := collections.NewPrefixedPairRange[string, string](*keyStr)
+	prefix := collections.NewPrefixedPairRange[string, string](keyStr)
 
 	iter, err := k.LedgerEntries.Iterate(ctx, prefix)
 	if err != nil {

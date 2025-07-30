@@ -41,12 +41,9 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 	}
 
 	// Store the transfer in the FundTransfersWithSettlement collection
-	keyStr, err := LedgerKeyToString(transfer.Key)
-	if err != nil {
-		return fmt.Errorf("failed to convert ledger key to string: %w", err)
-	}
+	keyStr := transfer.Key.String()
 
-	existingSettlements, err := k.GetSettlements(ctx, keyStr, transfer.LedgerEntryCorrelationId)
+	existingSettlements, err := k.GetSettlements(ctx, &keyStr, transfer.LedgerEntryCorrelationId)
 	if err != nil {
 		return err
 	}
@@ -73,7 +70,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 		existingSettlements.SettlementInstructions = append(existingSettlements.SettlementInstructions, inst)
 	}
 
-	sk := collections.Join(*keyStr, transfer.LedgerEntryCorrelationId)
+	sk := collections.Join(keyStr, transfer.LedgerEntryCorrelationId)
 	if err := k.FundTransfersWithSettlement.Set(ctx, sk, *existingSettlements); err != nil {
 		return fmt.Errorf("failed to store transfer: %w", err)
 	}
@@ -82,7 +79,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			"fund_transfer_with_settlement",
-			sdk.NewAttribute("ledger_key", *keyStr),
+			sdk.NewAttribute("ledger_key", keyStr),
 			sdk.NewAttribute("correlation_id", transfer.LedgerEntryCorrelationId),
 			// sdk.NewAttribute("total_amount", transfer.Amount.String()),
 			sdk.NewAttribute("num_instructions", fmt.Sprintf("%d", len(transfer.SettlementInstructions))),

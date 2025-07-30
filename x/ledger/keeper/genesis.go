@@ -31,21 +31,18 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 		}
 
 		// Reconstruct the ledger key from the storage key
-		ledgerKey, err := StringToLedgerKey(key)
+		ledgerKey, err := ledger.StringToLedgerKey(key)
 		if err != nil {
 			panic(err)
 		}
 
 		// Create ledger key string for grouping
-		ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
-		if err != nil {
-			panic(err)
-		}
+		ledgerKeyStr := ledgerKey.String()
 
 		// Restore the key to the ledger object
 		ledgerObj.Key = ledgerKey
 
-		ledgerToEntriesMap[*ledgerKeyStr] = &ledger.LedgerToEntries{
+		ledgerToEntriesMap[ledgerKeyStr] = &ledger.LedgerToEntries{
 			LedgerKey: ledgerKey,
 			Ledger:    &ledgerObj,
 			Entries:   []*ledger.LedgerEntry{},

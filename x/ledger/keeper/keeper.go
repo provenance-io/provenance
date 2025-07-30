@@ -2,14 +2,12 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
@@ -33,11 +31,6 @@ type Keeper struct {
 	BankKeeper
 	RegistryKeeper
 }
-
-const (
-	ledgerKeyHrp  = "ledger"
-	settlementHrp = "settlement"
-)
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper BankKeeper, registryKeeper RegistryKeeper) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
@@ -123,40 +116,6 @@ func NewRegistryKey(assetClassId string, nftId string) *registry.RegistryKey {
 		AssetClassId: assetClassId,
 		NftId:        nftId,
 	}
-}
-
-// Combine the asset class id and nft id into a bech32 string.
-// Using bech32 here just allows us a readable identifier for the ledger.
-func LedgerKeyToString(key *ledger.LedgerKey) (*string, error) {
-	joined := strings.Join([]string{key.AssetClassId, key.NftId}, ":")
-
-	b32, err := bech32.ConvertAndEncode(ledgerKeyHrp, []byte(joined))
-	if err != nil {
-		return nil, err
-	}
-
-	return &b32, nil
-}
-
-func StringToLedgerKey(s string) (*ledger.LedgerKey, error) {
-	hrp, b, err := bech32.DecodeAndConvert(s)
-	if err != nil {
-		return nil, err
-	}
-
-	if hrp != ledgerKeyHrp {
-		return nil, fmt.Errorf("invalid hrp: %s", hrp)
-	}
-
-	parts := strings.Split(string(b), ":")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid key: %s", s)
-	}
-
-	return &ledger.LedgerKey{
-		AssetClassId: parts[0],
-		NftId:        parts[1],
-	}, nil
 }
 
 func (k Keeper) RequireAuthority(ctx sdk.Context, addr string, key *registry.RegistryKey) error {

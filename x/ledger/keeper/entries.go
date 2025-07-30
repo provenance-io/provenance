@@ -76,12 +76,8 @@ func (k Keeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddres
 	// Update the entry with the new bucket balances
 	existingEntry.BalanceAmounts = balanceAmounts
 
-	ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
-	if err != nil {
-		return err
-	}
-
-	err = k.LedgerEntries.Set(ctx, collections.Join(*ledgerKeyStr, correlationId), *existingEntry)
+	ledgerKeyStr := ledgerKey.String()
+	err = k.LedgerEntries.Set(ctx, collections.Join(ledgerKeyStr, correlationId), *existingEntry)
 	if err != nil {
 		return err
 	}
@@ -104,10 +100,7 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 	}
 
 	// Get the string representation of the ledger key for use in k/v store
-	ledgerKeyStr, err := LedgerKeyToString(ledgerKey)
-	if err != nil {
-		return err
-	}
+	ledgerKeyStr := ledgerKey.String()
 
 	// If there are entries with the same date, check for sequence number conflicts
 	if len(sameDateEntries) > 0 {
@@ -124,7 +117,7 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 
 				// Update the sequence number of the existing entry
 				entry.Sequence++
-				key := collections.Join(*ledgerKeyStr, entry.CorrelationId)
+				key := collections.Join(ledgerKeyStr, entry.CorrelationId)
 				if err := k.LedgerEntries.Set(ctx, key, entry); err != nil {
 					return err
 				}
@@ -133,8 +126,8 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 	}
 
 	// Store the new entry
-	entryKey := collections.Join(*ledgerKeyStr, le.CorrelationId)
-	err = k.LedgerEntries.Set(ctx, entryKey, *le)
+	entryKey := collections.Join(ledgerKeyStr, le.CorrelationId)
+	err := k.LedgerEntries.Set(ctx, entryKey, *le)
 	if err != nil {
 		return err
 	}
