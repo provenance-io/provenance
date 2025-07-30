@@ -149,6 +149,7 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 
 	lk := NewLedgerKey(rk.AssetClassId, rk.NftId)
 
+	// If there is no registry entry, the authority is the owner.
 	if registryEntry == nil {
 		err = assertOwner(ctx, k, authorityAddr, lk)
 		if err != nil {
@@ -160,11 +161,8 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 
 	// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
 	// so that only the assigned servicer can append entries.
-	var servicerRegistered bool = false
 	for _, role := range registryEntry.Roles {
 		if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
-			// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
-			servicerRegistered = true
 			for _, address := range role.Addresses {
 				// Check if the authority is the servicer
 				if address == authorityAddr {
@@ -172,22 +170,20 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 				}
 			}
 
+			// Since there is a registered servicer, the owner is not authorized.
 			return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
 		}
 	}
 
-	if !servicerRegistered {
-		err = assertOwner(ctx, k, authorityAddr, lk)
-		if err != nil {
-			return false, err
-		}
-
+	// Since there isn't a registered servicer, let's see if the authority is the owner.
+	err = assertOwner(ctx, k, authorityAddr, lk)
+	if err == nil {
 		// The authority owns the asset, and there is no registered servicer
 		return true, nil
+
 	}
 
-	// Default to false if the authority is not the owner or servicer
-	return false, nil
+	return false, err
 }
 
 // BulkImportLedgerData imports ledger data from genesis state. This function assumes that ledger classes, status
