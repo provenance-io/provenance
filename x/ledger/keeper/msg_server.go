@@ -32,8 +32,7 @@ func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) 
 		return nil, err
 	}
 
-	resp := ledger.MsgAppendResponse{}
-	return &resp, nil
+	return &ledger.MsgAppendResponse{}, nil
 }
 
 func (k *MsgServer) UpdateBalances(goCtx context.Context, req *ledger.MsgUpdateBalancesRequest) (*ledger.MsgUpdateBalancesResponse, error) {
@@ -49,8 +48,7 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *ledger.MsgUpdateB
 		return nil, err
 	}
 
-	resp := ledger.MsgUpdateBalancesResponse{}
-	return &resp, nil
+	return &ledger.MsgUpdateBalancesResponse{}, nil
 }
 
 func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
@@ -66,8 +64,7 @@ func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) 
 		return nil, err
 	}
 
-	resp := ledger.MsgCreateResponse{}
-	return &resp, nil
+	return &ledger.MsgCreateResponse{}, nil
 }
 
 func (k *MsgServer) UpdateStatus(goCtx context.Context, req *ledger.MsgUpdateStatusRequest) (*ledger.MsgUpdateStatusResponse, error) {
@@ -83,8 +80,7 @@ func (k *MsgServer) UpdateStatus(goCtx context.Context, req *ledger.MsgUpdateSta
 		return nil, err
 	}
 
-	resp := ledger.MsgUpdateStatusResponse{}
-	return &resp, nil
+	return &ledger.MsgUpdateStatusResponse{}, nil
 }
 
 func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *ledger.MsgUpdateInterestRateRequest) (*ledger.MsgUpdateInterestRateResponse, error) {
@@ -100,8 +96,7 @@ func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *ledger.MsgUpd
 		return nil, err
 	}
 
-	resp := ledger.MsgUpdateInterestRateResponse{}
-	return &resp, nil
+	return &ledger.MsgUpdateInterestRateResponse{}, nil
 }
 
 func (k *MsgServer) UpdatePayment(goCtx context.Context, req *ledger.MsgUpdatePaymentRequest) (*ledger.MsgUpdatePaymentResponse, error) {
@@ -117,8 +112,7 @@ func (k *MsgServer) UpdatePayment(goCtx context.Context, req *ledger.MsgUpdatePa
 		return nil, err
 	}
 
-	resp := ledger.MsgUpdatePaymentResponse{}
-	return &resp, nil
+	return &ledger.MsgUpdatePaymentResponse{}, nil
 }
 
 func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *ledger.MsgUpdateMaturityDateRequest) (*ledger.MsgUpdateMaturityDateResponse, error) {
@@ -134,8 +128,7 @@ func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *ledger.MsgUpd
 		return nil, err
 	}
 
-	resp := ledger.MsgUpdateMaturityDateResponse{}
-	return &resp, nil
+	return &ledger.MsgUpdateMaturityDateResponse{}, nil
 }
 
 func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *ledger.MsgTransferFundsWithSettlementRequest) (*ledger.MsgTransferFundsWithSettlementResponse, error) {
@@ -153,8 +146,7 @@ func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *ledg
 		}
 	}
 
-	resp := ledger.MsgTransferFundsWithSettlementResponse{}
-	return &resp, nil
+	return &ledger.MsgTransferFundsWithSettlementResponse{}, nil
 }
 
 func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest) (*ledger.MsgDestroyResponse, error) {
@@ -170,8 +162,7 @@ func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest
 		return nil, err
 	}
 
-	resp := ledger.MsgDestroyResponse{}
-	return &resp, nil
+	return &ledger.MsgDestroyResponse{}, nil
 }
 
 // CreateLedgerClass handles the MsgCreateLedgerClassRequest message
@@ -250,8 +241,7 @@ func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *ledger.
 		return nil, err
 	}
 
-	resp := ledger.MsgAddLedgerClassBucketTypeResponse{}
-	return &resp, nil
+	return &ledger.MsgAddLedgerClassBucketTypeResponse{}, nil
 }
 
 func (k *MsgServer) BulkImport(goCtx context.Context, req *ledger.MsgBulkImportRequest) (*ledger.MsgBulkImportResponse, error) {
@@ -267,6 +257,5 @@ func (k *MsgServer) BulkImport(goCtx context.Context, req *ledger.MsgBulkImportR
 		return nil, err
 	}
 
-	resp := ledger.MsgBulkImportResponse{}
-	return &resp, nil
+	return &ledger.MsgBulkImportResponse{}, nil
 }
