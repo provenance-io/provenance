@@ -41,9 +41,11 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.CmdQuery()
 }
 
-// RegisterCodec registers the module's types. (In newer SDK versions, use RegisterLegacyAminoCodec.)
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	// Register any concrete types if needed.
+func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
+
+// Register the protobuf message types and services with the sdk.
+func (AppModuleBasic) RegisterInterfaces(registry types.InterfaceRegistry) {
+	ledger.RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for mymodule.
@@ -90,21 +92,14 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(genState)
 }
 
-// Satisfy the AppModule interface for now..
-func (AppModule) IsAppModule()                                {}
-func (AppModule) IsOnePerModuleType()                         {}
-func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
+// Satisfy the AppModule interface.
+func (AppModule) IsAppModule()        {}
+func (AppModule) IsOnePerModuleType() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
-
 	ledger.RegisterQueryServer(cfg.QueryServer(), keeper.NewLedgerQueryServer(am.keeper))
-}
-
-// Register the protobuf message types and services with the sdk.
-func (AppModule) RegisterInterfaces(registry types.InterfaceRegistry) {
-	ledger.RegisterInterfaces(registry)
 }
 
 func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
@@ -113,3 +108,6 @@ func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.Serv
 		panic(err)
 	}
 }
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
