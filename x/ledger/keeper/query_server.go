@@ -201,12 +201,12 @@ func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
-	settlement, err := qs.k.GetSettlements(ctx, &keyStr, req.CorrelationId)
+	settlements, err := qs.k.GetSettlements(ctx, &keyStr, req.CorrelationId)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ledger.QueryLedgerSettlementsByCorrelationIdResponse{
-		Settlement: settlement,
+		Settlements: settlements,
 	}, nil
 }

@@ -5533,7 +5533,7 @@ QueryLedgerSettlementsByCorrelationIdResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `settlement` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) |  |  |
+| `settlements` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) |  |  |
 
 
 

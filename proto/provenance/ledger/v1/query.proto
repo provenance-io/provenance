@@ -169,5 +169,5 @@ message QueryLedgerSettlementsByCorrelationIdRequest {
 
 // QueryLedgerSettlementsByCorrelationIdResponse
 message QueryLedgerSettlementsByCorrelationIdResponse {
-  StoredSettlementInstructions settlement = 1;
+  StoredSettlementInstructions settlements = 1;
 }
