@@ -323,8 +323,6 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk 
 
 	keyStr := lk.String()
 
-	// TODO: verify against registry
-
 	// Remove the ledger from the store
 	err := k.Ledgers.Remove(ctx, keyStr)
 	if err != nil {
