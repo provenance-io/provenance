@@ -39,7 +39,7 @@ object Versions {
 
     // Protobuf & gRPC
     const val Protobuf = "3.19.1"
-    const val Grpc = "1.40.1"
+    const val Grpc = "1.48.1"
     const val KotlinGrpc = "1.2.0"
 
     // Testing
