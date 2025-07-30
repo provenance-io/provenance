@@ -9,7 +9,10 @@ import cosmos.base.query.v1beta1.Pagination
  * @param limit Pagination limit
  * @return [Pagination.PageRequest.Builder]
  */
-fun paginationBuilder(offset: Int, limit: Int): Pagination.PageRequest.Builder =
+fun paginationBuilder(
+    offset: Int,
+    limit: Int,
+): Pagination.PageRequest.Builder =
     Pagination.PageRequest
         .newBuilder()
         .setOffset(offset.toLong())
