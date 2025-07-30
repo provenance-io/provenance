@@ -178,7 +178,7 @@ func (s *SimTestSuite) TestDispatch() {
 	sender := accounts[0]
 
 	// Generate random public key for credential
-	credPubKey, err := codectypes.NewAnyWithValue(simulation.GenRandomSecp256k1PubKey(r))
+	credPubKey, err := codectypes.NewAnyWithValue(simulation.GenRandomSecp256k1PubKey())
 	s.Require().NoError(err)
 
 	// Create the message

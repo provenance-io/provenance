@@ -28,7 +28,7 @@ func (keeper Keeper) SmartAccount(ctx context.Context, request *types.SmartAccou
 	}, nil
 }
 
-func (keeper Keeper) Params(c context.Context, request *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (keeper Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	p, err := keeper.SmartAccountParams.Get(ctx)

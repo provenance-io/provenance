@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"net/url"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -124,6 +123,7 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 		},
 	}
 	existingAcc, lookupErr := k.LookupAccountByAddress(sdkCtx, creator)
+	// smart account doesn't exists
 	if lookupErr != nil && errors.Is(lookupErr, types.ErrSmartAccountDoesNotExist) {
 		hasDuplicate := HasDuplicateCredentialId(existingAcc.Credentials, fido2Authenticator.Id)
 		if hasDuplicate {
@@ -145,11 +145,11 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 		// After successful initialization, emit event
 		numCreds := len(smartAccount.Credentials)
 		// highly improbably but gosec is making me do it
-		if numCreds > math.MaxUint32 {
-			return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
-		}
+		//if numCreds > math.MaxUint32 {
+		//	return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
+		//}
 		errFromEventManager := sdkCtx.EventManager().EmitTypedEvent(
-			types.NewEventSmartAccountInit(smartAccount.Address, uint32(numCreds)),
+			types.NewEventSmartAccountInit(smartAccount.Address, uint64(numCreds)),
 		)
 		if errFromEventManager != nil {
 			return nil, errFromEventManager
@@ -166,31 +166,36 @@ func (m MsgServer) RegisterFido2Credential(ctx context.Context, msg *types.MsgRe
 			return nil, errFromEventManager
 		}
 		return resp, nil
-	} else {
-		// account exists
-		// check for duplicate credential
-		hasDuplicate := HasDuplicateCredentialId(existingAcc.Credentials, fido2Authenticator.Id)
-		if hasDuplicate {
-			return nil, errorsmod.Wrap(types.ErrDuplicateCredential, "credential already exists")
-		}
-		smartAccount, credentialNumberAdded, errorAddingWebauthn := k.AddSmartAccountCredential(sdkCtx, credential, &existingAcc)
-		if errorAddingWebauthn != nil {
-			return nil, errorAddingWebauthn
-		}
-		resp = &types.MsgRegisterFido2CredentialResponse{
-			CredentialNumber:  credentialNumberAdded,
-			ProvenanceAccount: smartAccount,
-		}
-
-		// After successful registration, emit typed event
-		err = sdkCtx.EventManager().EmitTypedEvent(
-			types.NewEventFido2CredentialAdd(msg.Sender, credentialNumberAdded, fido2Authenticator.Id),
-		)
-		if err != nil {
-			return nil, err
-		}
-		return resp, err
 	}
+
+	// some other error
+	if lookupErr != nil {
+		return nil, lookupErr
+	}
+
+	// account exists
+	// check for duplicate credential
+	hasDuplicate := HasDuplicateCredentialId(existingAcc.Credentials, fido2Authenticator.Id)
+	if hasDuplicate {
+		return nil, errorsmod.Wrap(types.ErrDuplicateCredential, "credential already exists")
+	}
+	smartAccount, credentialNumberAdded, errorAddingWebauthn := k.AddSmartAccountCredential(sdkCtx, credential, &existingAcc)
+	if errorAddingWebauthn != nil {
+		return nil, errorAddingWebauthn
+	}
+	resp = &types.MsgRegisterFido2CredentialResponse{
+		CredentialNumber:  credentialNumberAdded,
+		ProvenanceAccount: smartAccount,
+	}
+
+	// After successful registration, emit typed event
+	err = sdkCtx.EventManager().EmitTypedEvent(
+		types.NewEventFido2CredentialAdd(msg.Sender, credentialNumberAdded, fido2Authenticator.Id),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
 }
 
 // HasDuplicateCredentialId checks if a credential ID already exists in the provided list of credentials
@@ -307,11 +312,11 @@ func (m MsgServer) RegisterCosmosCredential(ctx context.Context, msg *types.MsgR
 
 			// After successful initialization, emit event
 			numCreds := len(smartAccountResponse.Credentials)
-			if numCreds > math.MaxUint32 {
-				return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
-			}
+			//if numCreds > math.MaxUint32 {
+			//	return nil, fmt.Errorf("number of credentials %d exceeds max uint32", numCreds)
+			//}
 			err = sdkCtx.EventManager().EmitTypedEvent(
-				types.NewEventSmartAccountInit(smartAccountResponse.Address, uint32(numCreds)),
+				types.NewEventSmartAccountInit(smartAccountResponse.Address, uint64(numCreds)),
 			)
 			if err != nil {
 				return nil, err

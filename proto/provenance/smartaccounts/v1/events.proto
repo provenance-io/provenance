@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 // Events
 message EventSmartAccountInit {
   string address          = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  uint32 credential_count = 2;
+  uint64 credential_count = 2;
 }
 
 // Event emitted when a WebAuthn credential is added to a smart account

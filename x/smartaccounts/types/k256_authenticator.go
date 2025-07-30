@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (authenticator *K256Authenticator) VerifySignature(ctx sdk.Context, credential Credential, signBytes []byte, codec codec.Codec, signature []byte) error {
+func (authenticator *K256Authenticator) VerifySignature(_ sdk.Context, credential Credential, signBytes []byte, codec codec.Codec, signature []byte) error {
 	// Get the Any-wrapped public key
 	anyPubKey := credential.GetPublicKey()
 	if anyPubKey == nil {
@@ -23,8 +23,7 @@ func (authenticator *K256Authenticator) VerifySignature(ctx sdk.Context, credent
 	}
 
 	if !pubKey.VerifySignature(signBytes, signature) {
-		return nil
-	} else {
-		return errorsmod.Wrapf(ErrParseCredential, "Signature verification failed")
+		return errorsmod.Wrapf(ErrParseCredential, "signature verification failed")
 	}
+	return nil
 }

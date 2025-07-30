@@ -292,8 +292,8 @@ func (k Keeper) GetAllSmartAccounts(ctx context.Context) ([]types.ProvenanceAcco
 	return accounts, nil
 }
 
-func (keeper Keeper) GetParams(c context.Context) (*types.Params, error) {
-	p, err := keeper.SmartAccountParams.Get(c)
+func (k Keeper) GetParams(c context.Context) (*types.Params, error) {
+	p, err := k.SmartAccountParams.Get(c)
 	if err != nil {
 		return nil, err
 	}

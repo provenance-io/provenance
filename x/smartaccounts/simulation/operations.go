@@ -75,7 +75,7 @@ func SimulateMsgRegisterCosmosCredential(k keeper.Keeper, args *WeightedOpsArgs)
 		sender, _ := simtypes.RandomAcc(r, accs)
 
 		// Generate random public key for credential
-		credPubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey(r))
+		credPubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey())
 		// Create the message
 		msg := &types.MsgRegisterCosmosCredential{
 			Sender: sender.Address.String(),

@@ -52,7 +52,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	// Create a ProvenanceAccount struct directly instead of using JSON
 	// Generate random public key for account
-	pubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey(simState.Rand))
+	pubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey())
 	randAccount := simState.Accounts[simState.Rand.Intn(len(simState.Accounts))]
 	baseAccount := authtypes.BaseAccount{
 		Address:       randAccount.Address.String(),
@@ -71,7 +71,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 		if variant == 0 {
 			// Create K256 credential
-			credPubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey(simState.Rand))
+			credPubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey())
 			credentials[i] = &types.Credential{
 				BaseCredential: &types.BaseCredential{
 					CredentialNumber: uint64(i),
@@ -99,8 +99,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 		}
 	}
 
-			// Create a simple K256 credential
-	credPubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey(simState.Rand))
+	// Create a simple K256 credential
+	credPubKey, _ := codectypes.NewAnyWithValue(GenRandomSecp256k1PubKey())
 
 	credential := types.Credential{
 		BaseCredential: &types.BaseCredential{
@@ -130,7 +130,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 }
 
 // GenRandomSecp256k1PubKey generates a random secp256k1 public key for simulation purposes
-func GenRandomSecp256k1PubKey(r *rand.Rand) *secp256k1.PubKey {
+func GenRandomSecp256k1PubKey() *secp256k1.PubKey {
 	privKey := secp256k1.GenPrivKey()
 	return privKey.PubKey().(*secp256k1.PubKey)
 }

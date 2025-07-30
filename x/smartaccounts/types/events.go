@@ -1,7 +1,7 @@
 package types
 
 // NewEventSmartAccountInit creates a new smart account init event
-func NewEventSmartAccountInit(address string, credentialCount uint32) *EventSmartAccountInit {
+func NewEventSmartAccountInit(address string, credentialCount uint64) *EventSmartAccountInit {
 	return &EventSmartAccountInit{
 		Address:         address,
 		CredentialCount: credentialCount,
@@ -9,11 +9,11 @@ func NewEventSmartAccountInit(address string, credentialCount uint32) *EventSmar
 }
 
 // NewEventFido2CredentialAdd creates a new EventFido2CredentialAdd instance
-func NewEventFido2CredentialAdd(address string, credentialNumber uint64, credentialId string) *EventFido2CredentialAdd {
+func NewEventFido2CredentialAdd(address string, credentialNumber uint64, credentialID string) *EventFido2CredentialAdd {
 	return &EventFido2CredentialAdd{
 		Address:          address,
 		CredentialNumber: credentialNumber,
-		CredentialId:     credentialId,
+		CredentialId:     credentialID,
 	}
 }
 
