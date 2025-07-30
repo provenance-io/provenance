@@ -185,7 +185,7 @@ func (k Keeper) Init(ctx context.Context, msg *types.MsgInit) (*types.Provenance
 	}
 
 	// Process and validate credentials
-	var validCredentials []*types.Credential
+	validCredentials := make([]*types.Credential, 0, len(msg.Credentials))
 	for _, cred := range msg.Credentials {
 		credentialNumber, err := k.NextCredentialNumber(ctx)
 		if err != nil {
