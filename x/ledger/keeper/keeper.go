@@ -156,34 +156,34 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 		}
 
 		return true, nil
-	} else {
-		// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
-		// so that only the assigned servicer can append entries.
-		var servicerRegistered bool = false
-		for _, role := range registryEntry.Roles {
-			if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
-				// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
-				servicerRegistered = true
-				for _, address := range role.Addresses {
-					// Check if the authority is the servicer
-					if address == authorityAddr {
-						return true, nil
-					}
+	}
+
+	// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
+	// so that only the assigned servicer can append entries.
+	var servicerRegistered bool = false
+	for _, role := range registryEntry.Roles {
+		if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
+			// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
+			servicerRegistered = true
+			for _, address := range role.Addresses {
+				// Check if the authority is the servicer
+				if address == authorityAddr {
+					return true, nil
 				}
-
-				return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
-			}
-		}
-
-		if !servicerRegistered {
-			err = assertOwner(ctx, k, authorityAddr, lk)
-			if err != nil {
-				return false, err
 			}
 
-			// The authority owns the asset, and there is no registered servicer
-			return true, nil
+			return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
 		}
+	}
+
+	if !servicerRegistered {
+		err = assertOwner(ctx, k, authorityAddr, lk)
+		if err != nil {
+			return false, err
+		}
+
+		// The authority owns the asset, and there is no registered servicer
+		return true, nil
 	}
 
 	// Default to false if the authority is not the owner or servicer
