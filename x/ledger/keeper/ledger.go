@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/types"
@@ -126,19 +124,11 @@ func (k Keeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddres
 func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, ledgerClassId string) bool {
 	// Validate that the maintainerAddr is the same as the maintainer address in the ledger class
 	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
-	if err != nil {
-		return false
-	}
-
-	if ledgerClass.MaintainerAddress == maintainerAddr {
-		return true
-	}
-
-	return false
+	return err == nil && ledgerClass.MaintainerAddress == maintainerAddr
 }
 
 func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(l.Key.AssetClassId, l.Key.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), l.Key.ToRegistryKey()); err != nil {
 		return err
 	}
 
@@ -202,17 +192,13 @@ func (k Keeper) AddLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types
 }
 
 func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, statusTypeId int32) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
 		return err
 	}
 
-	// Get the ledger
-	ledger, err := k.GetLedger(ctx, lk)
+	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
-	}
-	if ledger == nil {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Validate that the status type id exists
@@ -234,21 +220,18 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress
 	if err != nil {
 		return err
 	}
-	return fmt.Errorf("not implemented")
+
+	return nil
 }
 
 func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
 		return err
 	}
 
-	// Get the ledger
-	ledger, err := k.GetLedger(ctx, lk)
+	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
-	}
-	if ledger == nil {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Update the ledger interest rate
@@ -268,17 +251,13 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccA
 }
 
 func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
 		return err
 	}
 
-	// Get the ledger
-	ledger, err := k.GetLedger(ctx, lk)
+	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
-	}
-	if ledger == nil {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Update the ledger payment
@@ -298,17 +277,13 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddres
 }
 
 func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, maturityDate int32) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
 		return err
 	}
 
-	// Get the ledger
-	ledger, err := k.GetLedger(ctx, lk)
+	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
 		return err
-	}
-	if ledger == nil {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
 	// Update the ledger maturity date
@@ -338,7 +313,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 
 // DestroyLedger removes a ledger from the store by NFT address
 func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *ledger.LedgerKey) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(lk.AssetClassId, lk.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), lk.ToRegistryKey()); err != nil {
 		return err
 	}
 

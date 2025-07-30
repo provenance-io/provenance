@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/helper"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -45,6 +46,18 @@ func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledge
 	// The NFT address isn't stored in the ledger, so we add it back in.
 	l.Key = key
 	return &l, nil
+}
+
+func (k Keeper) RequireGetLedger(ctx sdk.Context, lk *ledger.LedgerKey) (*ledger.Ledger, error) {
+	ledger, err := k.GetLedger(ctx, lk)
+	if err != nil {
+		return nil, err
+	}
+	if ledger == nil {
+		return nil, types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
+	}
+
+	return ledger, nil
 }
 
 func (k Keeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {

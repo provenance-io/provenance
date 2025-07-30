@@ -20,7 +20,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, led
 		return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(ledgerKey.AssetClassId, ledgerKey.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), ledgerKey.ToRegistryKey()); err != nil {
 		return err
 	}
 
@@ -56,7 +56,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, authorityAddr sdk.AccAddress, led
 }
 
 func (k Keeper) UpdateEntryBalances(ctx sdk.Context, authorityAddr sdk.AccAddress, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
-	if err := k.RequireAuthority(ctx, authorityAddr.String(), NewRegistryKey(ledgerKey.AssetClassId, ledgerKey.NftId)); err != nil {
+	if err := k.RequireAuthority(ctx, authorityAddr.String(), ledgerKey.ToRegistryKey()); err != nil {
 		return err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/provenance-io/provenance/x/registry"
 )
 
 const (
@@ -22,6 +23,13 @@ func (lk LedgerKey) String() string {
 	}
 
 	return b32
+}
+
+func (lk LedgerKey) ToRegistryKey() *registry.RegistryKey {
+	return &registry.RegistryKey{
+		AssetClassId: lk.AssetClassId,
+		NftId:        lk.NftId,
+	}
 }
 
 func StringToLedgerKey(s string) (*LedgerKey, error) {

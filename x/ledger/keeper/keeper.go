@@ -111,13 +111,6 @@ func NewLedgerKey(assetClassId string, nftId string) *ledger.LedgerKey {
 	}
 }
 
-func NewRegistryKey(assetClassId string, nftId string) *registry.RegistryKey {
-	return &registry.RegistryKey{
-		AssetClassId: assetClassId,
-		NftId:        nftId,
-	}
-}
-
 func (k Keeper) RequireAuthority(ctx sdk.Context, addr string, key *registry.RegistryKey) error {
 	has, err := assertAuthority(ctx, k.RegistryKeeper, addr, key)
 	if err != nil {
