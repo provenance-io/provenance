@@ -44,7 +44,7 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l
 }
 
 func (k Keeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error {
-	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
+	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr.String(), ledgerClassId) {
 		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
 
@@ -68,7 +68,7 @@ func (k Keeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress
 }
 
 func (k Keeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error {
-	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
+	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr.String(), ledgerClassId) {
 		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
 
@@ -123,14 +123,14 @@ func (k Keeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddres
 	return nil
 }
 
-func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string) bool {
+func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, ledgerClassId string) bool {
 	// Validate that the maintainerAddr is the same as the maintainer address in the ledger class
 	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
 	if err != nil {
 		return false
 	}
 
-	if ledgerClass.MaintainerAddress == maintainerAddr.String() {
+	if ledgerClass.MaintainerAddress == maintainerAddr {
 		return true
 	}
 

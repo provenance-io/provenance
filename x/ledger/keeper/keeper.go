@@ -186,6 +186,7 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 	return false, err
 }
 
+// TODO move this to init genesis.
 // BulkImportLedgerData imports ledger data from genesis state. This function assumes that ledger classes, status
 // types, entry types, and bucket types are already created before calling this function.
 func (k Keeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddress, genesisState ledger.GenesisState) error {
