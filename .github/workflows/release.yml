@@ -219,7 +219,7 @@ jobs:
   java_kotlin_release:
     needs:
       - build_init
-    if: needs.build_init.outputs.is_release == 'true'
+    #if: needs.build_init.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     name: Java/Kotlin Proto Publishing
     steps:
