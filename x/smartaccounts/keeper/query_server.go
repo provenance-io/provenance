@@ -10,12 +10,12 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-func (keeper Keeper) SmartAccount(ctx context.Context, request *types.SmartAccountQueryRequest) (*types.SmartAccountResponse, error) {
-	address, err := keeper.addressCodec.StringToBytes(request.Address)
+func (k Keeper) SmartAccount(ctx context.Context, request *types.SmartAccountQueryRequest) (*types.SmartAccountResponse, error) {
+	address, err := k.addressCodec.StringToBytes(request.Address)
 	if err != nil {
 		return nil, err
 	}
-	account, err := keeper.LookupAccountByAddress(ctx, address)
+	account, err := k.LookupAccountByAddress(ctx, address)
 	if err != nil {
 		return nil, err
 	}
@@ -24,10 +24,10 @@ func (keeper Keeper) SmartAccount(ctx context.Context, request *types.SmartAccou
 	}, nil
 }
 
-func (keeper Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	p, err := keeper.SmartAccountParams.Get(ctx)
+	p, err := k.SmartAccountParams.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

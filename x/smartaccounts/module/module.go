@@ -10,6 +10,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/client/v2/autocli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

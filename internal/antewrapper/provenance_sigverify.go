@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/anypb"
+
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -16,9 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	smartaccountkeeper "github.com/provenance-io/provenance/x/smartaccounts/keeper"
 	smartaccounttypes "github.com/provenance-io/provenance/x/smartaccounts/types"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (

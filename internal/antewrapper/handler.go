@@ -4,7 +4,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	circuitante "cosmossdk.io/x/circuit/ante"
 	txsigning "cosmossdk.io/x/tx/signing"
-	smartaccountkeeper "github.com/provenance-io/provenance/x/smartaccounts/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,6 +11,8 @@ import (
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
+	smartaccountkeeper "github.com/provenance-io/provenance/x/smartaccounts/keeper"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
