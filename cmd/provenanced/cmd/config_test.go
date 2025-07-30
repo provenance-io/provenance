@@ -58,7 +58,7 @@ func (s *ConfigTestSuite) SetupTest() {
 
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
-	pioconfig.SetProvenanceConfig("confcoin", 5)
+	pioconfig.SetProvConfig("confcoin")
 	provconfig.DefaultKeyringBackend = "os"
 
 	s.EncodingConfig = app.MakeTestEncodingConfig(s.T())
@@ -119,7 +119,7 @@ func (s *ConfigTestSuite) ensureConfigFiles() {
 	s.Require().NoError(terr, "extracting cometbft config")
 	clientConfig, cerr := provconfig.ExtractClientConfig(configCmd)
 	s.Require().NoError(cerr, "extracting client config")
-	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+	appConfig.MinGasPrices = pioconfig.GetProvConfig().ProvMinGasPrices
 	// And then save them.
 	provconfig.SaveConfigs(configCmd, appConfig, cmtConfig, clientConfig, false)
 }
@@ -280,7 +280,7 @@ iavl-disable-fastnode=true
 index-events=[]
 inter-block-cache=true
 min-retain-blocks=0
-minimum-gas-prices="5confcoin"
+minimum-gas-prices="0confcoin"
 pruning="default"
 pruning-interval="0"
 pruning-keep-recent="0"

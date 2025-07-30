@@ -3,11 +3,11 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"sort"
 
-	"golang.org/x/exp/constraints"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,54 +19,74 @@ import (
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/protocompat"
-	internalsdk "github.com/provenance-io/provenance/internal/sdk"
-	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
+
+// This file is basically a copy of the SDK's baseapp/msg_service_router.go file with the following modifications:
+//  - Different package and re-ordered imports plus a couple of our own.
+//  - We use the SDK's definition of MessageRouter, IMsgServiceRouter and MsgServiceHandler (and don't redefine them here).
+//  - We've named the struct PioMsgServiceRouter (from just MsgServiceRouter).
+//  - In registerMsgServiceHandler, at the start of the handler, we consume the msg.
+//  - We added the consumeMsgFees method.
 
 // PioMsgServiceRouter routes fully-qualified Msg service methods to their handler with additional fee processing of msgs.
 type PioMsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
-	routes            map[string]MsgServiceHandler
+	routes            map[string]baseapp.MsgServiceHandler
 	hybridHandlers    map[string]protocompat.Handler
-	msgFeesKeeper     msgfeeskeeper.Keeper
-	decoder           sdk.TxDecoder
 	circuitBreaker    baseapp.CircuitBreaker
 }
 
-var _ gogogrpc.Server = &PioMsgServiceRouter{}
-
-var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
+var (
+	_ baseapp.IMsgServiceRouter = (*PioMsgServiceRouter)(nil)
+	_ gogogrpc.Server           = (*PioMsgServiceRouter)(nil)
+)
 
 // NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
-func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
+func NewPioMsgServiceRouter() *PioMsgServiceRouter {
 	return &PioMsgServiceRouter{
-		routes:         map[string]MsgServiceHandler{},
-		hybridHandlers: map[string]protocompat.Handler{},
-		decoder:        decoder,
+		routes:         make(map[string]baseapp.MsgServiceHandler),
+		hybridHandlers: make(map[string]protocompat.Handler),
 	}
 }
-
-// MsgServiceHandler defines a function type which handles Msg service message.
-type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 func (msr *PioMsgServiceRouter) SetCircuit(cb baseapp.CircuitBreaker) {
 	msr.circuitBreaker = cb
 }
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
-func (msr *PioMsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
+func (msr *PioMsgServiceRouter) Handler(msg sdk.Msg) baseapp.MsgServiceHandler {
 	return msr.routes[sdk.MsgTypeURL(msg)]
 }
 
 // HandlerByTypeURL returns the MsgServiceHandler for a given query route path or nil
 // if not found.
-func (msr *PioMsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler {
+func (msr *PioMsgServiceRouter) HandlerByTypeURL(typeURL string) baseapp.MsgServiceHandler {
 	return msr.routes[typeURL]
 }
 
-// SetMsgFeesKeeper sets the msg based fee keeper for retrieving msg fees.
-func (msr *PioMsgServiceRouter) SetMsgFeesKeeper(msgFeesKeeper msgfeeskeeper.Keeper) {
-	msr.msgFeesKeeper = msgFeesKeeper
+// RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
+// service description, handler is an object which implements that gRPC service.
+//
+// This function PANICs:
+//   - if it is called before the service `Msg`s have been registered using
+//     RegisterInterfaces,
+//   - or if a service is being registered twice.
+func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+	// Adds a top-level query handler based on the gRPC service name.
+	for _, method := range sd.Methods {
+		err := msr.registerMsgServiceHandler(sd, method, handler)
+		if err != nil {
+			panic(err)
+		}
+		err = msr.registerHybridHandler(sd, method, handler)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (msr *PioMsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	return msr.hybridHandlers[msgName]
 }
 
 func (msr *PioMsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
@@ -100,7 +120,7 @@ func (msr *PioMsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, meth
 	return nil
 }
 
-func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) {
+func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
 	fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 	methodHandler := method.Handler
 
@@ -129,14 +149,12 @@ func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, 
 	// (`Server.RegisterService` interface restriction) we panic (at startup).
 	reqType, err := msr.interfaceRegistry.Resolve(requestTypeName)
 	if err != nil || reqType == nil {
-		panic(
-			fmt.Errorf(
-				"type_url %s has not been registered yet. "+
-					"Before calling RegisterService, you must register all interfaces by calling the `RegisterInterfaces` "+
-					"method on module.BasicManager. Each module should call `msgservice.RegisterMsgServiceDesc` inside its "+
-					"`RegisterInterfaces` method with the `_Msg_serviceDesc` generated by proto-gen",
-				requestTypeName,
-			),
+		return fmt.Errorf(
+			"type_url %s has not been registered yet. "+
+				"Before calling RegisterService, you must register all interfaces by calling the `RegisterInterfaces` "+
+				"method on module.BasicManager. Each module should call `msgservice.RegisterMsgServiceDesc` inside its "+
+				"`RegisterInterfaces` method with the `_Msg_serviceDesc` generated by proto-gen",
+			requestTypeName,
 		)
 	}
 
@@ -146,38 +164,34 @@ func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, 
 	// panic (at startup).
 	_, found := msr.routes[requestTypeName]
 	if found {
-		panic(
-			fmt.Errorf(
-				"msg service %s has already been registered. Please make sure to only register each service once. "+
-					"This usually means that there are conflicting modules registering the same msg service",
-				fqMethod,
-			),
+		return fmt.Errorf(
+			"msg service %s has already been registered. Please make sure to only register each service once. "+
+				"This usually means that there are conflicting modules registering the same msg service",
+			fqMethod,
 		)
 	}
 
-	msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
-		// provenance specific modification to msg service router that handles x/msgfee distribution
-		err := msr.consumeMsgFees(ctx, req)
-		if err != nil {
-			return nil, err
-		}
+	msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// Provenance specific modification to msg service router that handles x/flatfees.
+		msr.consumeMsgFees(ctx, msg)
+		// End of Provenanced specific modification.
 
-		// original sdk implementation of msg service router
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 			goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
-			return handler(goCtx, req)
+			return handler(goCtx, msg)
 		}
 
-		if err = internalsdk.ValidateBasic(req); err != nil {
-			return nil, err
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				return nil, err
+			}
 		}
 
 		if msr.circuitBreaker != nil {
-			msgURL := sdk.MsgTypeURL(req)
+			msgURL := sdk.MsgTypeURL(msg)
 
-			var isAllowed bool
-			isAllowed, err = msr.circuitBreaker.IsAllowed(ctx, msgURL)
+			isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
 			if err != nil {
 				return nil, err
 			}
@@ -196,33 +210,13 @@ func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, 
 
 		resMsg, ok := res.(proto.Message)
 		if !ok {
-			return nil, sdkerrors.ErrInvalidType.Wrapf("Expecting proto.Message, got %T", resMsg)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", res)
 		}
 
 		return sdk.WrapServiceResult(ctx, resMsg, err)
 	}
-}
 
-// RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
-// service description, handler is an object which implements that gRPC service.
-//
-// This function PANICs:
-//   - if it is called before the service `Msg`s have been registered using
-//     RegisterInterfaces,
-//   - or if a service is being registered twice.
-func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	// Adds a top-level query handler based on the gRPC service name.
-	for _, method := range sd.Methods {
-		msr.registerMsgServiceHandler(sd, method, handler)
-		err := msr.registerHybridHandler(sd, method, handler)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func (msr *PioMsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
-	return msr.hybridHandlers[msgName]
+	return nil
 }
 
 // SetInterfaceRegistry sets the interface registry for the router.
@@ -235,64 +229,14 @@ func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, 
 	return nil, nil
 }
 
-// consumeMsgFees consumes any message based fees for the provided req.
-func (msr *PioMsgServiceRouter) consumeMsgFees(ctx sdk.Context, req sdk.Msg) error {
-	feeGasMeter, err := antewrapper.GetFeeGasMeter(ctx)
-	if err != nil {
-		// The x/gov module calls the message service router for proposal messages that have passed.
-		// In such cases, the antehandler is not run, so the gas meter will not be a fee gas meter.
-		// But those messages were voted on and have passed, so they should be processed regardless of msg fees.
-		// So in here, if there's an error getting the fee gas meter, we skip all this msg fee consumption.
-		return nil
+// consumeMsgFees consumes any flat fees for the provided msg.
+func (msr *PioMsgServiceRouter) consumeMsgFees(ctx sdk.Context, msg sdk.Msg) {
+	// The x/gov module calls the message service router for proposal messages that have passed.
+	// In such cases, the antehandler is not run, so the gas meter will not be a fee gas meter.
+	// But those messages were voted on and have passed, so they should be processed regardless of msg fees.
+	// So in here, if there's an error getting the fee gas meter, we skip all this msg fee consumption.
+	gasMeter, _ := antewrapper.GetFlatFeeGasMeter(ctx)
+	if gasMeter != nil {
+		gasMeter.ConsumeMsg(msg)
 	}
-
-	tx, err := msr.decoder(ctx.TxBytes())
-	if err != nil {
-		panic(fmt.Errorf("error decoding txBytes: %w", err))
-	}
-
-	feeTx, err := antewrapper.GetFeeTx(tx)
-	if err != nil {
-		panic(err)
-	}
-
-	feeDist, err := msr.msgFeesKeeper.CalculateAdditionalFeesToBePaid(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if !feeDist.TotalAdditionalFees.IsZero() {
-		if !feeGasMeter.IsSimulate() {
-			err = antewrapper.EnsureSufficientFloorAndMsgFees(ctx,
-				feeTx.GetFee(), msr.msgFeesKeeper.GetFloorGasPrice(ctx),
-				ctx.GasMeter().Limit(), feeGasMeter.FeeConsumed().Add(feeDist.TotalAdditionalFees...))
-			if err != nil {
-				return err
-			}
-		}
-
-		msgTypeURL := sdk.MsgTypeURL(req)
-		// since AccessMsgFee is not always split 50/50 anymore, this fee can be nil when recipients are specified.
-		if feeDist.AdditionalModuleFees != nil {
-			feeGasMeter.ConsumeFee(feeDist.AdditionalModuleFees, msgTypeURL, "")
-		}
-		for _, recipient := range sortedKeys(feeDist.RecipientDistributions) {
-			coins := feeDist.RecipientDistributions[recipient]
-			feeGasMeter.ConsumeFee(coins, msgTypeURL, recipient)
-		}
-	}
-
-	return nil
-}
-
-// sortedKeys gets the keys of a map, sorts them and returns them as a slice.
-func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
-	keys := make([]K, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] < keys[j]
-	})
-	return keys
 }

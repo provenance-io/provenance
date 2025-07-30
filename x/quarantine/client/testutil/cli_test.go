@@ -15,7 +15,7 @@ import (
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 2

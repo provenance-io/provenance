@@ -258,7 +258,7 @@ func NewInputSpecificationSourceRecordID(recordID MetadataAddress) *InputSpecifi
 	return &InputSpecification_RecordId{RecordId: recordID}
 }
 
-// NewContractSpecificationSourceHash creates a new source (for a InputSpecification) with a hash
+// NewInputSpecificationSourceHash creates a new source (for a InputSpecification) with a hash
 func NewInputSpecificationSourceHash(hash string) *InputSpecification_Hash {
 	return &InputSpecification_Hash{Hash: hash}
 }

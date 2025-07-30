@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmwasm.wasm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1;legacy_protos";
+
+// MsgExecuteContract defines a message to execute a smart contract.
+message MsgExecuteContract {
+  string   sender                         = 1;
+  string   contract                       = 2;
+  bytes    msg                            = 3;
+  repeated cosmos.base.v1beta1.Coin funds = 4 [(gogoproto.nullable) = false];
+}

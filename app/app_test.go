@@ -33,7 +33,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	v1beta1 "github.com/provenance-io/provenance/x/wasm"
+	v1beta1 "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
