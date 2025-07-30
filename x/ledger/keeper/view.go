@@ -123,6 +123,18 @@ func (k Keeper) GetLedgerEntry(ctx context.Context, key *ledger.LedgerKey, corre
 	return nil, nil
 }
 
+func (k Keeper) RequireGetLedgerEntry(ctx sdk.Context, lk *ledger.LedgerKey, correlationID string) (*ledger.LedgerEntry, error) {
+	ledgerEntry, err := k.GetLedgerEntry(ctx, lk, correlationID)
+	if err != nil {
+		return nil, err
+	}
+	if ledgerEntry == nil {
+		return nil, types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger entry")
+	}
+
+	return ledgerEntry, nil
+}
+
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date
 func (k Keeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOfDate time.Time) (*ledger.BucketBalances, error) {
 	asOfDateInt := helper.DaysSinceEpoch(asOfDate.UTC())

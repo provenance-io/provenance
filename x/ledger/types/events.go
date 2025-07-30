@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	EventTypeLedgerCreated       = "ledger_created"
-	EventTypeLedgerConfigUpdated = "ledger_config_updated"
-	EventTypeLedgerEntryAdded    = "ledger_entry_added"
+	EventTypeLedgerCreated              = "ledger_created"
+	EventTypeLedgerConfigUpdated        = "ledger_config_updated"
+	EventTypeLedgerEntryAdded           = "ledger_entry_added"
+	EventTypeFundTransferWithSettlement = "fund_transfer_with_settlement"
 )
 
 // NewEventLedgerCreated creates a new EventLedgerCreated event
@@ -32,6 +33,15 @@ func NewEventLedgerUpdated(key *LedgerKey) sdk.Event {
 func NewEventLedgerEntryAdded(key *LedgerKey, correlationID string) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeLedgerEntryAdded,
+		sdk.NewAttribute("asset_class_id", key.AssetClassId),
+		sdk.NewAttribute("nft_id", key.NftId),
+		sdk.NewAttribute("correlation_id", correlationID),
+	)
+}
+
+func NewEventFundTransferWithSettlement(key *LedgerKey, correlationID string) sdk.Event {
+	return sdk.NewEvent(
+		EventTypeFundTransferWithSettlement,
 		sdk.NewAttribute("asset_class_id", key.AssetClassId),
 		sdk.NewAttribute("nft_id", key.NftId),
 		sdk.NewAttribute("correlation_id", correlationID),

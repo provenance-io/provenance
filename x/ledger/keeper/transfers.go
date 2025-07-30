@@ -2,9 +2,7 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,29 +13,10 @@ import (
 func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// print the transfer key as json
-	transferKeyJSON, err := json.MarshalIndent(transfer, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal transfer key to JSON: %w", err)
-	}
-	fmt.Println(string(transferKeyJSON))
-
-	// Get the ledger to ensure it exists
-	ledger, err := k.GetLedger(ctx, transfer.Key)
-	if err != nil {
-		return fmt.Errorf("failed to get ledger: %w", err)
-	}
-	if ledger == nil {
-		return errors.New("ledger not found")
-	}
-
 	// Validate that the ledger entry correlation id exists for the ledger
-	ledgerEntry, err := k.GetLedgerEntry(ctx, transfer.Key, transfer.LedgerEntryCorrelationId)
+	_, err := k.RequireGetLedgerEntry(ctx, transfer.Key, transfer.LedgerEntryCorrelationId)
 	if err != nil {
-		return fmt.Errorf("failed to get ledger entry: %w", err)
-	}
-	if ledgerEntry == nil {
-		return errors.New("ledger entry not found")
+		return err
 	}
 
 	// Store the transfer in the FundTransfersWithSettlement collection
@@ -56,11 +35,16 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 	for _, inst := range transfer.SettlementInstructions {
 		recipientAddr, err := sdk.AccAddressFromBech32(inst.RecipientAddress)
 		if err != nil {
-			return fmt.Errorf("failed to convert recipient address to bech32: %w", err)
+			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "recipient_address", "invalid recipient address")
+		}
+
+		// This has to be done prior to bank sends to avoid sending coins to a module account
+		if k.BankKeeper.BlockedAddr(ctx, recipientAddr) {
+			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "recipient_address", "bank blocked address")
 		}
 
 		if err := k.BankKeeper.SendCoins(ctx, authorityAddr, recipientAddr, sdk.NewCoins(inst.Amount)); err != nil {
-			return fmt.Errorf("failed to send coins: %w", err)
+			return types.NewLedgerCodedError(types.ErrCodeInternal, "bank", "failed to send coins")
 		}
 
 		// Set the xfer status to completed
@@ -72,39 +56,25 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 
 	sk := collections.Join(keyStr, transfer.LedgerEntryCorrelationId)
 	if err := k.FundTransfersWithSettlement.Set(ctx, sk, *existingSettlements); err != nil {
-		return fmt.Errorf("failed to store transfer: %w", err)
+		return types.NewLedgerCodedError(types.ErrCodeInternal, "fund_transfers_with_settlement", "failed to store transfer")
 	}
 
 	// Emit an event for the transfer
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			"fund_transfer_with_settlement",
-			sdk.NewAttribute("ledger_key", keyStr),
-			sdk.NewAttribute("correlation_id", transfer.LedgerEntryCorrelationId),
-			// sdk.NewAttribute("total_amount", transfer.Amount.String()),
-			sdk.NewAttribute("num_instructions", fmt.Sprintf("%d", len(transfer.SettlementInstructions))),
-		),
-	)
+	ctx.EventManager().EmitEvent(types.NewEventFundTransferWithSettlement(transfer.Key, transfer.LedgerEntryCorrelationId))
 
 	return nil
 }
 
 func (k Keeper) GetAllSettlements(ctx context.Context, keyStr *string) ([]*types.StoredSettlementInstructions, error) {
 	prefix := collections.NewPrefixedPairRange[string, string](*keyStr)
-	iter, err := k.FundTransfersWithSettlement.Iterate(ctx, prefix)
-	if err != nil {
-		return nil, err
-	}
-	defer iter.Close()
 
 	existingTransfers := make([]*types.StoredSettlementInstructions, 0)
-	for ; iter.Valid(); iter.Next() {
-		transfer, err := iter.Value()
-		if err != nil {
-			return nil, err
-		}
-
-		existingTransfers = append(existingTransfers, &transfer)
+	err := k.FundTransfersWithSettlement.Walk(ctx, prefix, func(key collections.Pair[string, string], value types.StoredSettlementInstructions) (stop bool, err error) {
+		existingTransfers = append(existingTransfers, &value)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return existingTransfers, nil

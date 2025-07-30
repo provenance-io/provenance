@@ -19,6 +19,7 @@ var ValidationMessages = map[string]string{
 	ErrCodeAlreadyExists: "%s already exists",
 	ErrCodeUnauthorized:  "unauthorized access (%s)",
 	ErrCodeNotFound:      "%s not found",
+	ErrCodeInternal:      "%s error: %s",
 }
 
 type LedgerCodedError struct {
