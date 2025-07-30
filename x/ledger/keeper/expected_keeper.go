@@ -14,7 +14,7 @@ type BankKeeper interface {
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	HasSupply(ctx context.Context, denom string) bool
-	BlockedAddr(ctx context.Context, addr sdk.AccAddress) bool
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 type RegistryKeeper interface {

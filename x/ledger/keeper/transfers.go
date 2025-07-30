@@ -39,7 +39,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 		}
 
 		// This has to be done prior to bank sends to avoid sending coins to a module account
-		if k.BankKeeper.BlockedAddr(ctx, recipientAddr) {
+		if k.BankKeeper.BlockedAddr(recipientAddr) {
 			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "recipient_address", "bank blocked address")
 		}
 

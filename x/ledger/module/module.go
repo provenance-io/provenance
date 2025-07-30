@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"cosmossdk.io/core/appmodule"
 	abci "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,6 +16,11 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/spf13/cobra"
+)
+
+var (
+	_ module.AppModuleBasic = (*AppModule)(nil)
+	_ appmodule.AppModule   = (*AppModule)(nil)
 )
 
 type AppModuleBasic struct {
