@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"slices"
 	"sort"
 	"time"
 
@@ -94,7 +95,9 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, key *ledger.LedgerKey) ([
 	}
 
 	// Sort the entries by effective date and sequence number.
-	sortLedgerEntries(entries)
+	slices.SortFunc(entries, func(a, b *ledger.LedgerEntry) int {
+		return a.Compare(b)
+	})
 
 	return entries, nil
 }

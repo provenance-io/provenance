@@ -25,6 +25,28 @@ func (lk LedgerKey) String() string {
 	return b32
 }
 
+// Implement Compare() for LedgerEntry
+func (a *LedgerEntry) Compare(b *LedgerEntry) int {
+	// First compare effective date (ISO8601 string)
+	if a.EffectiveDate < b.EffectiveDate {
+		return -1
+	}
+	if a.EffectiveDate > b.EffectiveDate {
+		return 1
+	}
+
+	// Then compare sequence number
+	if a.Sequence < b.Sequence {
+		return -1
+	}
+	if a.Sequence > b.Sequence {
+		return 1
+	}
+
+	// Equal
+	return 0
+}
+
 func (lk LedgerKey) ToRegistryKey() *registry.RegistryKey {
 	return &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
