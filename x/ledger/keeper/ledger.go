@@ -337,11 +337,18 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, lk 
 	}
 	defer iter.Close()
 
+	// Store the keys that we need to remove.
+	keysToRemove := make([]collections.Pair[string, string], 0)
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.Key()
 		if err != nil {
 			return err
 		}
+		keysToRemove = append(keysToRemove, key)
+	}
+
+	// Remove the ledger entries
+	for _, key := range keysToRemove {
 		err = k.LedgerEntries.Remove(ctx, key)
 		if err != nil {
 			return err
