@@ -1,10 +1,16 @@
-# State
+# Ledger State
 
-The Ledger module maintains several types of state to track financial activities and balances for assets (NFTs or Metadata Scopes).
+The Ledger module maintains several types of state to track financial activities and balances for assets (NFTs or Metadata Scopes). The state is organized into collections that store ledger classes, ledgers, entries, and balances.
 
-## State Structure
+<!-- TOC -->
+  - [Ledger Class](#ledger-class)
+  - [Ledger](#ledger)
+  - [Ledger Entries](#ledger-entries)
+  - [Balances](#balances)
+  - [State Storage](#state-storage)
 
-### Ledger Class
+## Ledger Class
+
 The module stores configuration information for each class of assets:
 
 ```protobuf
@@ -34,7 +40,8 @@ message LedgerClassBucketType {
 }
 ```
 
-### Ledger
+## Ledger
+
 The module stores ledger information for each asset:
 
 ```protobuf
@@ -49,12 +56,16 @@ message Ledger {
     int32 status_type_id = 3;        // Current status of the ledger
     int32 next_pmt_date = 4;         // Next payment date in epoch days
     int64 next_pmt_amt = 5;          // Next payment amount
-    int32 interest_rate = 6;         // Interest rate
+    int32 interest_rate = 6;         // Interest rate (10000000 = 10.000000%)
     int32 maturity_date = 7;         // Maturity date in epoch days
+    DayCountConvention interest_day_count_convention = 8;  // Day count convention
+    InterestAccrualMethod interest_accrual_method = 9;     // Interest accrual method
+    PaymentFrequency payment_frequency = 10;               // Payment frequency
 }
 ```
 
-### Ledger Entries
+## Ledger Entries
+
 Historical ledger entries are stored for each asset:
 
 ```protobuf
@@ -82,7 +93,8 @@ message BucketBalance {
 }
 ```
 
-### Balances
+## Balances
+
 Current balances for configured buckets:
 
 ```protobuf
@@ -96,92 +108,42 @@ message Balances {
 ### KV Store Structure
 The module uses the following collections for state storage:
 
-1. `LedgerClasses`: Stores ledger class configurations
-   - Prefix: "ledger_classes"
+1. **LedgerClasses**: Stores ledger class configurations
+   - Prefix: `"ledger_classes"`
    - Key: `ledger_class_id`
-   - Value: `LedgerClass` protobuf
+   - Value: `LedgerClass`
 
-2. `LedgerClassEntryTypes`: Stores entry type definitions
-   - Prefix: "ledger_class_entry_types"
+2. **LedgerClassEntryTypes**: Stores entry type configurations for each ledger class
+   - Prefix: `"ledger_class_entry_types"`
    - Key: `ledger_class_id + entry_type_id`
-   - Value: `LedgerClassEntryType` protobuf
+   - Value: `LedgerClassEntryType`
 
-3. `LedgerClassStatusTypes`: Stores status type definitions
-   - Prefix: "ledger_class_status_types"
+3. **LedgerClassStatusTypes**: Stores status type configurations for each ledger class
+   - Prefix: `"ledger_class_status_types"`
    - Key: `ledger_class_id + status_type_id`
-   - Value: `LedgerClassStatusType` protobuf
+   - Value: `LedgerClassStatusType`
 
-4. `LedgerClassBucketTypes`: Stores bucket type definitions
-   - Prefix: "ledger_class_bucket_types"
+4. **LedgerClassBucketTypes**: Stores bucket type configurations for each ledger class
+   - Prefix: `"ledger_class_bucket_types"`
    - Key: `ledger_class_id + bucket_type_id`
-   - Value: `LedgerClassBucketType` protobuf
+   - Value: `LedgerClassBucketType`
 
-5. `Ledgers`: Stores ledger configurations
-   - Prefix: "ledgers"
+5. **Ledgers**: Stores ledger information for each asset
+   - Prefix: `"ledgers"`
    - Key: `nft_id + asset_class_id`
-   - Value: `Ledger` protobuf
+   - Value: `Ledger`
 
-6. `LedgerEntries`: Stores ledger entries
-   - Prefix: "ledger_entries"
+6. **LedgerEntries**: Stores historical ledger entries for each asset
+   - Prefix: `"ledger_entries"`
    - Key: `nft_id + asset_class_id + correlation_id`
-   - Value: `LedgerEntry` protobuf
+   - Value: `LedgerEntry`
 
-7. `Balances`: Stores current balances
-   - Prefix: "ledger_balances"
+7. **LedgerBalances**: Stores current balances for each asset
+   - Prefix: `"ledger_balances"`
    - Key: `nft_id + asset_class_id`
-   - Value: `Balances` protobuf
+   - Value: `Balances`
 
-## State Transitions
-
-State transitions occur when:
-
-1. **Ledger Class Creation**
-   - New ledger class configuration is stored
-   - Entry types are defined
-   - Status types are defined
-   - Bucket types are defined
-   - Creation event is emitted
-
-2. **Ledger Creation**
-   - New ledger configuration is stored
-   - Initial balances are set
-   - Creation event is emitted
-
-3. **Entry Addition**
-   - New entry is stored with correlation ID
-   - Balances are updated
-   - Entry event is emitted
-
-4. **Balance Updates**
-   - Bucket balances are updated
-   - Balance update event is emitted
-
-5. **Configuration Changes**
-   - Payment schedule updates
-   - Interest rate updates
-   - Maturity date updates
-   - Status updates
-   - Configuration update event is emitted
-
-## State Access
-
-State can be accessed through:
-
-1. **Query Endpoints**
-   - Get ledger class configuration
-   - Get ledger configuration
-   - Get ledger entries
-   - Get current balances
-   - Filter and search entries
-
-2. **Transaction Handlers**
-   - Create ledger class
-   - Create ledger
-   - Add entries
-   - Update balances
-   - Modify configuration
-
-3. **Event System**
-   - Track state changes
-   - Monitor activities
-   - Maintain audit trail 
+8. **FundTransfersWithSettlement**: Stores fund transfer settlement instructions
+   - Prefix: `"fund_transfers_with_settlement"`
+   - Key: `nft_id + asset_class_id + correlation_id`
+   - Value: `StoredSettlementInstructions` 

@@ -15,7 +15,8 @@ const (
 // Combine the asset class id and nft id into a bech32 string.
 // Using bech32 here just allows us a readable identifier for the ledger.
 func (lk LedgerKey) String() string {
-	joined := strings.Join([]string{lk.AssetClassId, lk.NftId}, ":")
+	// Use null byte as delimiter
+	joined := lk.AssetClassId + "\x00" + lk.NftId
 
 	b32, err := bech32.ConvertAndEncode(ledgerKeyHrp, []byte(joined))
 	if err != nil {
@@ -23,6 +24,29 @@ func (lk LedgerKey) String() string {
 	}
 
 	return b32
+}
+
+// Convert a bech32 string to a LedgerKey.
+func StringToLedgerKey(s string) (*LedgerKey, error) {
+	hrp, b, err := bech32.DecodeAndConvert(s)
+	if err != nil {
+		return nil, err
+	}
+
+	if hrp != ledgerKeyHrp {
+		return nil, fmt.Errorf("invalid hrp: %s", hrp)
+	}
+
+	// Split by null byte delimiter
+	parts := strings.Split(string(b), "\x00")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid key: %s", s)
+	}
+
+	return &LedgerKey{
+		AssetClassId: parts[0],
+		NftId:        parts[1],
+	}, nil
 }
 
 // Implement Compare() for LedgerEntry
@@ -52,25 +76,4 @@ func (lk LedgerKey) ToRegistryKey() *registry.RegistryKey {
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
 	}
-}
-
-func StringToLedgerKey(s string) (*LedgerKey, error) {
-	hrp, b, err := bech32.DecodeAndConvert(s)
-	if err != nil {
-		return nil, err
-	}
-
-	if hrp != ledgerKeyHrp {
-		return nil, fmt.Errorf("invalid hrp: %s", hrp)
-	}
-
-	parts := strings.Split(string(b), ":")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid key: %s", s)
-	}
-
-	return &LedgerKey{
-		AssetClassId: parts[0],
-		NftId:        parts[1],
-	}, nil
 }

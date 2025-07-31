@@ -1,3 +1,21 @@
+// Package types provides error definitions and utilities for the ledger module.
+//
+// This file defines the error codes and error creation functions used throughout
+// the ledger module. It provides a centralized way to create consistent error
+// messages with proper error codes for the ledger module.
+//
+// Error codes are defined as constants and registered with the Cosmos SDK error
+// system. Each error type has a corresponding constructor function that wraps
+// the base error with additional context.
+//
+// Example usage:
+//
+//	err := NewErrCodeInvalidField("ledger_class_id", "must be a valid UUID")
+//	err := NewErrCodeMissingField("nft_id")
+//	err := NewErrCodeUnauthorized("insufficient permissions")
+//	err := NewErrCodeAlreadyExists("ledger_class_id")
+//	err := NewErrCodeNotFound("ledger")
+//	err := NewErrCodeInternal("unable to transfer funds")
 package types
 
 import (

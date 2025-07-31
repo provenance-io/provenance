@@ -1,4 +1,19 @@
-# Concepts
+# Ledger Concepts
+
+The ledger module manages financial tracking for NFTs and metadata scopes. There are several key concepts that define how financial activities are tracked and managed: ledger classes, ledgers, entries, and balance buckets. Each ledger has a unique identifier and maintains historical records of all financial activities.
+
+<!-- TOC -->
+- [Ledger Concepts](#ledger-concepts)
+  - [Ledger Class](#ledger-class)
+    - [Fields](#fields)
+  - [Ledger](#ledger)
+    - [Fields](#fields-1)
+  - [Ledger Entry](#ledger-entry)
+    - [Fields](#fields-2)
+  - [Balance Buckets](#balance-buckets)
+  - [Entry Types](#entry-types)
+  - [Status Types](#status-types)
+  - [Query System](#query-system)
 
 ## Ledger Class
 
@@ -20,8 +35,11 @@ A Ledger is the primary data structure that tracks financial activities for a sp
 - `status_type_id`: Current status of the ledger
 - `next_pmt_date`: Next scheduled payment date in epoch days
 - `next_pmt_amt`: Amount of the next scheduled payment
-- `interest_rate`: The interest rate applied to the ledger
+- `interest_rate`: The interest rate applied to the ledger (10000000 = 10.000000% - 6 decimal places)
 - `maturity_date`: The maturity date in epoch days
+- `interest_day_count_convention`: Day count convention for interest calculations
+- `interest_accrual_method`: Method used for interest accrual
+- `payment_frequency`: Frequency of scheduled payments
 
 ## Ledger Entry
 
