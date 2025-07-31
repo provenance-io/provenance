@@ -10,7 +10,7 @@ import (
 func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
 	hasAssetClass := k.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "asset_class_id", "asset_class doesn't exist")
+		return types.NewErrCodeInvalidField("asset_class_id", "asset_class doesn't exist")
 	}
 
 	has, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
@@ -19,12 +19,12 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
 	}
 
 	if has {
-		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class entry type")
+		return types.NewErrCodeAlreadyExists("ledger class entry type")
 	}
 
 	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
 	if !k.HasSupply(ctx, l.Denom) {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "denom", "denom doesn't have a supply")
+		return types.NewErrCodeInvalidField("denom", "denom doesn't have a supply")
 	}
 
 	// Insert the ledger class
@@ -43,7 +43,7 @@ func (k Keeper) AddClassEntryType(ctx sdk.Context, ledgerClassId string, l types
 		return err
 	}
 	if has {
-		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class entry type")
+		return types.NewErrCodeAlreadyExists("ledger class entry type")
 	}
 
 	if err := k.LedgerClassEntryTypes.Set(ctx, key, l); err != nil {
@@ -62,7 +62,7 @@ func (k Keeper) AddClassStatusType(ctx sdk.Context, ledgerClassId string, l type
 	}
 
 	if has {
-		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger class status type")
+		return types.NewErrCodeAlreadyExists("ledger class status type")
 	}
 
 	if err := k.LedgerClassStatusTypes.Set(ctx, key, l); err != nil {
@@ -81,7 +81,7 @@ func (k Keeper) AddClassBucketType(ctx sdk.Context, ledgerClassId string, l type
 		return err
 	}
 	if has {
-		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "bucket type")
+		return types.NewErrCodeAlreadyExists("bucket type")
 	}
 
 	// Add the bucket type
@@ -101,7 +101,7 @@ func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, 
 func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	// Do not allow creating a duplicate ledger
 	if k.HasLedger(ctx, l.Key) {
-		return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "ledger")
+		return types.NewErrCodeAlreadyExists("ledger")
 	}
 
 	// Get the ledger class and verify that the asset class id matches
@@ -111,7 +111,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	}
 
 	if ledgerClass.AssetClassId != l.Key.AssetClassId {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "ledger class", "ledger class not allowed for asset class id")
+		return types.NewErrCodeInvalidField("ledger class", "ledger class not allowed for asset class id")
 	}
 
 	// Validate that the LedgerClass exists
@@ -120,12 +120,12 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 		return err
 	}
 	if !hasLedgerClass {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "ledger class", "ledger class doesn't exist")
+		return types.NewErrCodeInvalidField("ledger class", "ledger class doesn't exist")
 	}
 
 	// Validate that the NFT exists
 	if !k.RegistryKeeper.HasNFT(ctx, &l.Key.AssetClassId, &l.Key.NftId) {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "nft")
+		return types.NewErrCodeNotFound("nft")
 	}
 
 	// Validate that the LedgerClassStatusType exists
@@ -134,7 +134,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 		return err
 	}
 	if !hasLedgerClassStatusType {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
+		return types.NewErrCodeInvalidField("status_type_id", "status type doesn't exist")
 	}
 
 	// We omit the nftAddress out of the data we store intentionally as
@@ -167,7 +167,7 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusT
 		return err
 	}
 	if !hasLedgerClassStatusType {
-		return types.NewLedgerCodedError(types.ErrCodeInvalidField, "status_type_id", "status type doesn't exist")
+		return types.NewErrCodeInvalidField("status_type_id", "status type doesn't exist")
 	}
 
 	// Update the ledger status
@@ -258,7 +258,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 // DestroyLedger removes a ledger from the store by NFT address
 func (k Keeper) DestroyLedger(ctx sdk.Context, lk *ledger.LedgerKey) error {
 	if !k.HasLedger(ctx, lk) {
-		return ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "ledger", "ledger doesn't exist")
+		return types.NewErrCodeInvalidField("ledger", "ledger doesn't exist")
 	}
 
 	keyStr := lk.String()

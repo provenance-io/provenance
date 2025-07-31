@@ -1,59 +1,49 @@
 package types
 
 import (
-	"fmt"
+	cerrs "cosmossdk.io/errors"
 )
+
+type ErrCode string
 
 const (
-	ErrCodeInvalidField  = "INVALID_FIELD"
-	ErrCodeMissingField  = "MISSING_FIELD"
-	ErrCodeUnauthorized  = "UNAUTHORIZED"
-	ErrCodeAlreadyExists = "ALREADY_EXISTS"
-	ErrCodeInternal      = "INTERNAL_ERROR"
-	ErrCodeNotFound      = "NOT_FOUND"
+	ErrCodeInvalidField  ErrCode = "INVALID_FIELD"
+	ErrCodeMissingField  ErrCode = "MISSING_FIELD"
+	ErrCodeUnauthorized  ErrCode = "UNAUTHORIZED"
+	ErrCodeAlreadyExists ErrCode = "ALREADY_EXISTS"
+	ErrCodeInternal      ErrCode = "INTERNAL_ERROR"
+	ErrCodeNotFound      ErrCode = "NOT_FOUND"
 )
 
-var ValidationMessages = map[string]string{
-	ErrCodeInvalidField:  "provided field(%s) value is invalid; %s",
-	ErrCodeMissingField:  "required field(%s) is missing or empty",
-	ErrCodeAlreadyExists: "%s already exists",
-	ErrCodeUnauthorized:  "unauthorized access (%s)",
-	ErrCodeNotFound:      "%s not found",
-	ErrCodeInternal:      "%s error: %s",
+var (
+	ErrInvalidField  = cerrs.Register(ModuleName, 1, "invalid field")
+	ErrMissingField  = cerrs.Register(ModuleName, 2, "missing field")
+	ErrUnauthorized  = cerrs.Register(ModuleName, 3, "unauthorized")
+	ErrAlreadyExists = cerrs.Register(ModuleName, 4, "already exists")
+	ErrInternal      = cerrs.Register(ModuleName, 5, "internal error")
+	ErrNotFound      = cerrs.Register(ModuleName, 6, "not found")
+)
+
+func NewErrCodeInvalidField(field, why string) error {
+	return cerrs.Wrapf(ErrInvalidField, "field %q is invalid: %s", field, why)
 }
 
-type LedgerCodedError struct {
-	Code    string
-	Message string
+func NewErrCodeMissingField(field string) error {
+	return cerrs.Wrapf(ErrMissingField, "required field %q is missing or empty", field)
 }
 
-func NewLedgerCodedError(code string, msgs ...string) *LedgerCodedError {
-	if len(msgs) == 0 {
-		return &LedgerCodedError{
-			Code:    code,
-			Message: "unknown error",
-		}
-	}
-
-	errMsg, exists := ValidationMessages[code]
-	if !exists {
-		errMsg = "unknown error"
-	}
-
-	// Convert []string to []interface{} for fmt.Sprintf
-	args := make([]interface{}, len(msgs))
-	for i, v := range msgs {
-		args[i] = v
-	}
-
-	errMsg = fmt.Sprintf(errMsg, args...)
-
-	return &LedgerCodedError{
-		Code:    code,
-		Message: errMsg,
-	}
+func NewErrCodeUnauthorized(why string) error {
+	return cerrs.Wrapf(ErrUnauthorized, "unauthorized access: %s", why)
 }
 
-func (e LedgerCodedError) Error() string {
-	return e.Code + ": " + e.Message
+func NewErrCodeAlreadyExists(field string) error {
+	return cerrs.Wrapf(ErrAlreadyExists, "%q already exists", field)
+}
+
+func NewErrCodeInternal(msg string) error {
+	return cerrs.Wrapf(ErrInternal, msg)
+}
+
+func NewErrCodeNotFound(key string) error {
+	return cerrs.Wrapf(ErrNotFound, "%q not found", key)
 }

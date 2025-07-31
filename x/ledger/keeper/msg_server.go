@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -168,7 +169,7 @@ func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *ledger.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized)
+		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
 	}
 
 	err := k.AddClassStatusType(ctx, req.LedgerClassId, *req.StatusType)
@@ -184,7 +185,7 @@ func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *ledger.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized)
+		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
 	}
 
 	if err := k.AddClassEntryType(ctx, req.LedgerClassId, *req.EntryType); err != nil {
@@ -199,7 +200,7 @@ func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *ledger.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized)
+		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
 	}
 
 	if err := k.AddClassBucketType(ctx, req.LedgerClassId, *req.BucketType); err != nil {

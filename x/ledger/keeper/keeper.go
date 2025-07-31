@@ -118,7 +118,7 @@ func (k Keeper) RequireAuthority(ctx sdk.Context, addr string, key *registry.Reg
 		return err
 	}
 	if !has {
-		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "authority is not the owner or servicer")
+		return types.NewErrCodeUnauthorized("authority is not the owner or servicer")
 	}
 	return nil
 }
@@ -127,7 +127,7 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledger
 	// Check if the authority has ownership of the NFT
 	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
 	if nftOwner == nil || nftOwner.String() != authorityAddr {
-		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, fmt.Sprintf("authority is not the nft owner (%s)", nftOwner.String()))
+		return types.NewErrCodeUnauthorized("authority is not the nft owner")
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 			}
 
 			// Since there is a registered servicer, the owner is not authorized.
-			return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
+			return false, types.NewErrCodeUnauthorized("owner is not theregistered servicer")
 		}
 	}
 
@@ -210,7 +210,7 @@ func (k Keeper) BulkImportLedgerData(ctx sdk.Context, genesisState ledger.Genesi
 		// Get the maintainer address from the ledger class
 		_, err := k.RequireGetLedgerClass(ctx, ledgerClassId)
 		if err != nil {
-			return types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger class", fmt.Sprintf("failed to get ledger class %s: %w", ledgerClassId, err))
+			return types.NewErrCodeNotFound("ledger_class")
 		}
 
 		// Create the ledger only if it doesn't already exist

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -29,7 +30,7 @@ func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *ledger.QueryLedge
 	}
 
 	if l == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger")
+		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
 	resp := ledger.QueryLedgerResponse{
@@ -48,7 +49,7 @@ func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *ledger.Que
 	}
 
 	if len(entries) == 0 {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger")
+		return nil, types.NewErrCodeNotFound("ledger entries")
 	}
 
 	resp := ledger.QueryLedgerEntriesResponse{}
@@ -63,18 +64,14 @@ func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *ledger.Que
 
 // GetBalancesAsOf returns the balances for a specific NFT as of a given date
 func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *ledger.QueryLedgerBalancesAsOfRequest) (*ledger.QueryLedgerBalancesAsOfResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger")
+		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
 	// Parse the date string
 	asOfDate, err := time.Parse("2006-01-02", req.AsOfDate)
 	if err != nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "as-of-date", "invalid date format")
+		return nil, types.NewErrCodeInvalidField("as-of-date", "invalid date format")
 	}
 
 	balances, err := qs.k.GetBalancesAsOf(ctx, req.Key, asOfDate)
@@ -83,7 +80,7 @@ func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *ledger.
 	}
 
 	if balances == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "balances")
+		return nil, types.NewErrCodeNotFound("balances")
 	}
 
 	return &ledger.QueryLedgerBalancesAsOfResponse{
@@ -93,12 +90,8 @@ func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *ledger.
 
 // GetLedgerEntry returns a specific ledger entry for an NFT
 func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *ledger.QueryLedgerEntryRequest) (*ledger.QueryLedgerEntryResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger")
+		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
 	entry, err := qs.k.GetLedgerEntry(ctx, req.Key, req.CorrelationId)
@@ -107,7 +100,7 @@ func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *ledger.QueryLe
 	}
 
 	if entry == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger entry")
+		return nil, types.NewErrCodeNotFound("ledger entry")
 	}
 
 	return &ledger.QueryLedgerEntryResponse{
@@ -116,10 +109,6 @@ func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *ledger.QueryLe
 }
 
 func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *ledger.QueryLedgerClassEntryTypesRequest) (*ledger.QueryLedgerClassEntryTypesResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	types, err := qs.k.GetLedgerClassEntryTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
@@ -131,10 +120,6 @@ func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *ledg
 }
 
 func (qs LedgerQueryServer) LedgerClassStatusTypes(ctx context.Context, req *ledger.QueryLedgerClassStatusTypesRequest) (*ledger.QueryLedgerClassStatusTypesResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	types, err := qs.k.GetLedgerClassStatusTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
@@ -146,10 +131,6 @@ func (qs LedgerQueryServer) LedgerClassStatusTypes(ctx context.Context, req *led
 }
 
 func (qs LedgerQueryServer) LedgerClassBucketTypes(ctx context.Context, req *ledger.QueryLedgerClassBucketTypesRequest) (*ledger.QueryLedgerClassBucketTypesResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	types, err := qs.k.GetLedgerClassBucketTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
@@ -161,10 +142,6 @@ func (qs LedgerQueryServer) LedgerClassBucketTypes(ctx context.Context, req *led
 }
 
 func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *ledger.QueryLedgerClassRequest) (*ledger.QueryLedgerClassResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	ledgerClass, err := qs.k.GetLedgerClass(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
@@ -176,10 +153,6 @@ func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *ledger.QueryLe
 }
 
 func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *ledger.QueryLedgerSettlementsRequest) (*ledger.QueryLedgerSettlementsResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
@@ -194,10 +167,6 @@ func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *ledger.Q
 }
 
 func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context, req *ledger.QueryLedgerSettlementsByCorrelationIdRequest) (*ledger.QueryLedgerSettlementsByCorrelationIdResponse, error) {
-	if req == nil {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeInvalidField, "request", "request is nil")
-	}
-
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 

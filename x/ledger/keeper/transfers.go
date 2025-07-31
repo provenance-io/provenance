@@ -35,16 +35,16 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 	for _, inst := range transfer.SettlementInstructions {
 		recipientAddr, err := sdk.AccAddressFromBech32(inst.RecipientAddress)
 		if err != nil {
-			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "recipient_address", "invalid recipient address")
+			return types.NewErrCodeInvalidField("recipient_address", "invalid recipient address")
 		}
 
 		// This has to be done prior to bank sends to avoid sending coins to a module account
 		if k.BankKeeper.BlockedAddr(recipientAddr) {
-			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "recipient_address", "bank blocked address")
+			return types.NewErrCodeInvalidField("recipient_address", "bank blocked address")
 		}
 
 		if err := k.BankKeeper.SendCoins(ctx, authorityAddr, recipientAddr, sdk.NewCoins(inst.Amount)); err != nil {
-			return types.NewLedgerCodedError(types.ErrCodeInternal, "bank", "failed to send coins")
+			return types.NewErrCodeInternal("bank failed to send coins")
 		}
 
 		// Set the xfer status to completed
@@ -56,7 +56,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 
 	sk := collections.Join(keyStr, transfer.LedgerEntryCorrelationId)
 	if err := k.FundTransfersWithSettlement.Set(ctx, sk, *existingSettlements); err != nil {
-		return types.NewLedgerCodedError(types.ErrCodeInternal, "fund_transfers_with_settlement", "failed to store transfer")
+		return types.NewErrCodeInternal("failed to store transfer")
 	}
 
 	// Emit an event for the transfer

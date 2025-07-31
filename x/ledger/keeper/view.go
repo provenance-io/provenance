@@ -54,7 +54,7 @@ func (k Keeper) RequireGetLedger(ctx sdk.Context, lk *ledger.LedgerKey) (*ledger
 		return nil, err
 	}
 	if ledger == nil {
-		return nil, types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger")
+		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
 	return ledger, nil
@@ -114,7 +114,7 @@ func (k Keeper) RequireGetLedgerEntry(ctx sdk.Context, lk *ledger.LedgerKey, cor
 		return nil, err
 	}
 	if ledgerEntry == nil {
-		return nil, types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger entry")
+		return nil, types.NewErrCodeNotFound("ledger entry")
 	}
 
 	return ledgerEntry, nil
@@ -130,7 +130,7 @@ func (k Keeper) GetBalancesAsOf(ctx context.Context, key *ledger.LedgerKey, asOf
 		return nil, err
 	}
 	if len(entries) == 0 {
-		return nil, ledger.NewLedgerCodedError(ledger.ErrCodeNotFound, "ledger entries")
+		return nil, types.NewErrCodeNotFound("ledger entries")
 	}
 
 	// Map of bucket name to list of bucket balances.
@@ -187,7 +187,7 @@ func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassId string)
 		return nil, err
 	}
 	if ledgerClass == nil {
-		return nil, types.NewLedgerCodedError(types.ErrCodeNotFound, "ledger class")
+		return nil, types.NewErrCodeNotFound("ledger class")
 	}
 	return ledgerClass, nil
 }

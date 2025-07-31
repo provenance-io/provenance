@@ -26,7 +26,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 	for _, le := range entries {
 		// Check if posted date is in the future
 		if le.PostedDate > blockTimeDays {
-			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "posted_date", "cannot be in the future")
+			return types.NewErrCodeInvalidField("posted_date", "cannot be in the future")
 		}
 
 		// Validate that the LedgerClassEntryType exists
@@ -35,7 +35,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 			return err
 		}
 		if !hasLedgerClassEntryType {
-			return types.NewLedgerCodedError(types.ErrCodeInvalidField, "entry_type_id", "entry type doesn't exist")
+			return types.NewErrCodeInvalidField("entry_type_id", "entry type doesn't exist")
 		}
 
 		err = k.saveEntry(ctx, ledgerKey, existingEntries, le)
@@ -55,7 +55,7 @@ func (k Keeper) UpdateEntryBalances(ctx sdk.Context, ledgerKey *types.LedgerKey,
 	}
 
 	if existingEntry == nil {
-		return types.NewLedgerCodedError(types.ErrCodeNotFound, "entry")
+		return types.NewErrCodeNotFound("entry")
 	}
 
 	// Update the entry with the new applied amounts
@@ -83,7 +83,7 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 
 		// If the entry's correlation id is already in the list, we need to error
 		if entry.CorrelationId == le.CorrelationId {
-			return types.NewLedgerCodedError(types.ErrCodeAlreadyExists, "correlation_id")
+			return types.NewErrCodeAlreadyExists("correlation_id")
 		}
 	}
 
