@@ -684,12 +684,12 @@ func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 	addrIndexKey := append(addrPrefix, nameKey...)
 
 	// 3. Fetch NameRecord from NameRecords map
-	recordByName, err := s.app.NameKeeper.NameRecords.Get(s.ctx, nameKey)
+	recordByName, err := s.app.NameKeeper.GetNameRecord(s.ctx, nameKey)
 	s.Require().NoError(err)
 	s.Require().NotNil(recordByName)
 
 	// 4. Fetch NameRecord from AddrIndex map
-	recordByAddr, err := s.app.NameKeeper.AddrIndex.Get(s.ctx, addrIndexKey)
+	recordByAddr, err := s.app.NameKeeper.GetAddrIndexRecord(s.ctx, addrIndexKey)
 	s.Require().NoError(err)
 	s.Require().NotNil(recordByAddr)
 
