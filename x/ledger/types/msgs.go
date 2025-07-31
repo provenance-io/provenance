@@ -4,12 +4,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/provenance-io/provenance/x/ledger/helper"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -43,11 +41,13 @@ func (m MsgCreateRequest) ValidateBasic() error {
 		return err
 	}
 
-	epochTime, _ := time.Parse("2006-01-02", "1970-01-01")
-	epoch := helper.DaysSinceEpoch(epochTime.UTC())
+	// Validate status_type_id is positive
+	if m.Ledger.StatusTypeId <= 0 {
+		return NewErrCodeInvalidField("status_type_id", "must be a positive integer")
+	}
 
 	// Validate next payment date format if provided
-	if m.Ledger.NextPmtDate < epoch {
+	if m.Ledger.NextPmtDate < 0 {
 		return NewErrCodeInvalidField("next_pmt_date", "must be after 1970-01-01")
 	}
 
@@ -56,24 +56,24 @@ func (m MsgCreateRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("next_pmt_amt", "must be a non-negative integer")
 	}
 
-	// Validate interest rate if provided
-	if m.Ledger.InterestRate < 0 {
-		return NewErrCodeInvalidField("interest_rate", "must be a non-negative integer")
+	// Validate interest rate if provided (reasonable bounds: 0-100000000 for 0-1000%)
+	if m.Ledger.InterestRate < 0 || m.Ledger.InterestRate > 100000000 {
+		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100000000 (0-1000%)")
 	}
 
 	// Validate maturity date format if provided
-	if m.Ledger.MaturityDate < epoch {
+	if m.Ledger.MaturityDate < 0 {
 		return NewErrCodeInvalidField("maturity_date", "must be after 1970-01-01")
 	}
 
+	// Upspecified is allowed here since it is ok to not have a day count convention or interest accrual
+	// method.
 	if _, ok := DayCountConvention_name[int32(m.Ledger.InterestDayCountConvention)]; !ok {
 		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest day count convention: %d", m.Ledger.InterestDayCountConvention)
 	}
-
 	if _, ok := InterestAccrualMethod_name[int32(m.Ledger.InterestAccrualMethod)]; !ok {
 		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest accrual method: %d", m.Ledger.InterestAccrualMethod)
 	}
-
 	if _, ok := PaymentFrequency_name[int32(m.Ledger.PaymentFrequency)]; !ok {
 		return sdkerrors.ErrInvalidRequest.Wrapf("invalid payment frequency: %d", m.Ledger.PaymentFrequency)
 	}
@@ -92,8 +92,8 @@ func (m MsgUpdateStatusRequest) ValidateBasic() error {
 		return err
 	}
 
-	if m.StatusTypeId == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("status type id cannot be zero")
+	if m.StatusTypeId <= 0 {
+		return sdkerrors.ErrInvalidRequest.Wrap("status type id must be a positive integer")
 	}
 
 	return nil
@@ -110,8 +110,9 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 		return err
 	}
 
-	if m.InterestRate < 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("interest rate cannot be negative")
+	// Validate interest rate bounds (reasonable bounds: 0-100000000 for 0-1000%)
+	if m.InterestRate < 0 || m.InterestRate > 100000000 {
+		return sdkerrors.ErrInvalidRequest.Wrap("interest rate must be between 0 and 100000000 (0-1000%)")
 	}
 
 	if _, ok := DayCountConvention_name[int32(m.InterestDayCountConvention)]; !ok {
@@ -136,11 +137,14 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 		return err
 	}
 
+	// Validate next payment amount bounds
 	if m.NextPmtAmt < 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("next payment amount cannot be negative")
 	}
-	if m.NextPmtDate == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("next payment date cannot be zero")
+
+	// Validate next payment date
+	if m.NextPmtDate <= 0 {
+		return sdkerrors.ErrInvalidRequest.Wrap("next payment date must be a positive integer")
 	}
 
 	if _, ok := PaymentFrequency_name[int32(m.PaymentFrequency)]; !ok {
@@ -161,8 +165,8 @@ func (m MsgUpdateMaturityDateRequest) ValidateBasic() error {
 		return err
 	}
 
-	if m.MaturityDate < 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("maturity date cannot be negative")
+	if m.MaturityDate <= 0 {
+		return sdkerrors.ErrInvalidRequest.Wrap("maturity date must be a positive integer")
 	}
 
 	return nil
@@ -188,6 +192,23 @@ func (m MsgAppendRequest) ValidateBasic() error {
 			return err
 		}
 
+		// Validate reverses_correlation_id if provided
+		if e.ReversesCorrelationId != "" {
+			if err := lenCheck("reverses_correlation_id", &e.ReversesCorrelationId, 1, 50); err != nil {
+				return err
+			}
+		}
+
+		// Validate sequence number (should be < 100 as per proto comment)
+		if e.Sequence >= 100 {
+			return NewErrCodeInvalidField("sequence", "must be less than 100")
+		}
+
+		// Validate entry_type_id is positive
+		if e.EntryTypeId <= 0 {
+			return NewErrCodeInvalidField("entry_type_id", "must be a positive integer")
+		}
+
 		if e.PostedDate <= 0 {
 			return NewErrCodeInvalidField("posted_date", "must be a valid integer")
 		}
@@ -200,6 +221,17 @@ func (m MsgAppendRequest) ValidateBasic() error {
 		if e.TotalAmt.LT(math.NewInt(0)) {
 			return NewErrCodeInvalidField("total_amt", "must be a non-negative integer")
 		}
+
+		// Validate applied_amounts
+		if len(e.AppliedAmounts) == 0 {
+			return NewErrCodeInvalidField("applied_amounts", "cannot be empty")
+		}
+
+		// for _, applied := range e.AppliedAmounts {
+		// 	if applied.BucketTypeId <= 0 {
+		// 		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
+		// 	}
+		// }
 
 		if err := validateEntryAmounts(e.TotalAmt, e.AppliedAmounts); err != nil {
 			return err
@@ -220,9 +252,10 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 		return err
 	}
 
-	if m.CorrelationId == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("correlation id cannot be empty")
+	if err := lenCheck("correlation_id", &m.CorrelationId, 1, 50); err != nil {
+		return err
 	}
+
 	if len(m.BalanceAmounts) == 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("balance amounts cannot be empty")
 	}
@@ -239,6 +272,13 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 			return err
 		}
 	}
+
+	// Validate applied_amounts bucket_type_ids
+	// for _, applied := range m.AppliedAmounts {
+	// 	if applied.BucketTypeId <= 0 {
+	// 		return NewErrCodeInvalidField("applied_amounts.bucket_type_id", "must be a positive integer")
+	// 	}
+	// }
 
 	return nil
 }
@@ -270,6 +310,11 @@ func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 				return NewErrCodeInvalidField("amount", "must be a non-negative integer")
 			}
 
+			// Validate amount has reasonable bounds
+			if si.Amount.Amount.GT(math.NewInt(1000000000000000)) { // 1 quadrillion as reasonable max
+				return NewErrCodeInvalidField("amount", "amount too large")
+			}
+
 			if si.Memo != "" {
 				if len(si.Memo) > 50 {
 					return NewErrCodeInvalidField("memo", "must be less than 50 characters")
@@ -278,6 +323,16 @@ func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 
 			if si.RecipientAddress == "" {
 				return NewErrCodeMissingField("recipient_address")
+			}
+
+			// Validate recipient address format
+			if _, err := sdk.AccAddressFromBech32(si.RecipientAddress); err != nil {
+				return NewErrCodeInvalidField("recipient_address", "must be a valid bech32 address")
+			}
+
+			// Validate status enum
+			if _, ok := FundingTransferStatus_name[int32(si.Status)]; !ok {
+				return NewErrCodeInvalidField("status", "invalid funding transfer status")
 			}
 		}
 	}
@@ -325,8 +380,18 @@ func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 		return err
 	}
 
+	// Validate asset_class_id format (should be a valid UUID or similar format)
+	if !regexp.MustCompile(`^[a-zA-Z0-9-]+$`).MatchString(m.LedgerClass.AssetClassId) {
+		return NewErrCodeInvalidField("asset_class_id", "must only contain alphanumeric and dashes")
+	}
+
 	if err := lenCheck("denom", &m.LedgerClass.Denom, 1, 128); err != nil {
 		return err
+	}
+
+	// Validate denom format (should be a valid coin denomination)
+	if !regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9/]{2,127}$`).MatchString(m.LedgerClass.Denom) {
+		return NewErrCodeInvalidField("denom", "must be a valid coin denomination")
 	}
 
 	maintainerAddress := m.LedgerClass.MaintainerAddress
@@ -348,15 +413,15 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if m.LedgerClassId == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
+	if err := lenCheck("ledger_class_id", &m.LedgerClassId, 1, 50); err != nil {
+		return err
 	}
 
 	if m.StatusType == nil {
 		return sdkerrors.ErrInvalidRequest.Wrap("status type cannot be nil")
 	}
 
-	if m.StatusType.Id < 0 {
+	if m.StatusType.Id <= 0 {
 		return NewErrCodeInvalidField("status_type_id", "must be a positive integer")
 	}
 
@@ -378,14 +443,15 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if m.LedgerClassId == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
+	if err := lenCheck("ledger_class_id", &m.LedgerClassId, 1, 50); err != nil {
+		return err
 	}
+
 	if m.EntryType == nil {
 		return sdkerrors.ErrInvalidRequest.Wrap("entry type cannot be nil")
 	}
 
-	if m.EntryType.Id < 0 {
+	if m.EntryType.Id <= 0 {
 		return NewErrCodeInvalidField("entry_type_id", "must be a positive integer")
 	}
 
@@ -407,14 +473,15 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if m.LedgerClassId == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
+	if err := lenCheck("ledger_class_id", &m.LedgerClassId, 1, 50); err != nil {
+		return err
 	}
+
 	if m.BucketType == nil {
 		return sdkerrors.ErrInvalidRequest.Wrap("bucket type cannot be nil")
 	}
 
-	if m.BucketType.Id < 0 {
+	if m.BucketType.Id <= 0 {
 		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
 	}
 
@@ -444,10 +511,16 @@ func (m MsgBulkImportRequest) ValidateBasic() error {
 }
 
 func validateLedgerKeyBasic(key *LedgerKey) error {
+	// Scope IDs have a max length of 40 characters.
+	// NFT IDs have a max length of 128 characters.
+	// We go with the max since the lookups of the scope/nft module lookups will limit the storage.
 	if err := lenCheck("nft_id", &key.NftId, 1, 128); err != nil {
 		return err
 	}
 
+	// Scope Spec IDs have a max length of 44 characters.
+	// Asset Class IDs have a max length of 128 characters.
+	// We go with the max since the lookups of the scope/nft module lookups will limit the storage.
 	if err := lenCheck("asset_class_id", &key.AssetClassId, 1, 128); err != nil {
 		return err
 	}
