@@ -32,7 +32,7 @@ var AllRequestMsgs = []sdk.Msg{
 // Note: Authority address validation is performed in the message server to avoid duplicate bech32 conversions.
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateRequest
-func (m *MsgCreateRequest) ValidateBasic() error {
+func (m MsgCreateRequest) ValidateBasic() error {
 	if err := validateLedgerBasic(m.Ledger); err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (m *MsgCreateRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateStatusRequest
-func (m *MsgUpdateStatusRequest) ValidateBasic() error {
+func (m MsgUpdateStatusRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (m *MsgUpdateStatusRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateInterestRateRequest
-func (m *MsgUpdateInterestRateRequest) ValidateBasic() error {
+func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func (m *MsgUpdateInterestRateRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdatePaymentRequest
-func (m *MsgUpdatePaymentRequest) ValidateBasic() error {
+func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func (m *MsgUpdatePaymentRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateMaturityDateRequest
-func (m *MsgUpdateMaturityDateRequest) ValidateBasic() error {
+func (m MsgUpdateMaturityDateRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func (m *MsgUpdateMaturityDateRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgAppendRequest
-func (m *MsgAppendRequest) ValidateBasic() error {
+func (m MsgAppendRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func (m *MsgAppendRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateBalancesRequest
-func (m *MsgUpdateBalancesRequest) ValidateBasic() error {
+func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func (m *MsgUpdateBalancesRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgTransferFundsWithSettlementRequest
-func (m *MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
+func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -207,7 +207,7 @@ func (m *MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgDestroyRequest
-func (m *MsgDestroyRequest) ValidateBasic() error {
+func (m MsgDestroyRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -221,7 +221,7 @@ func (m *MsgDestroyRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateLedgerClassRequest
-func (m *MsgCreateLedgerClassRequest) ValidateBasic() error {
+func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -241,7 +241,7 @@ func (m *MsgCreateLedgerClassRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassStatusTypeRequest
-func (m *MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
+func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -258,7 +258,7 @@ func (m *MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassEntryTypeRequest
-func (m *MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
+func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -275,7 +275,7 @@ func (m *MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassBucketTypeRequest
-func (m *MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
+func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
@@ -292,7 +292,7 @@ func (m *MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgBulkImportRequest
-func (m *MsgBulkImportRequest) ValidateBasic() error {
+func (m MsgBulkImportRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		return err
