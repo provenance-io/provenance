@@ -142,7 +142,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	keyStr := l.Key.String()
 
 	// Emit the ledger created event
-	ctx.EventManager().EmitEvent(types.NewEventLedgerCreated(l.Key))
+	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerCreated(l.Key))
 
 	// Empty out the key to avoid storing it in the ledger and the key field
 	l.Key = nil
@@ -292,6 +292,9 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, lk *ledger.LedgerKey) error {
 			return err
 		}
 	}
+
+	// Emit the ledger destroyed event
+	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerDestroyed(lk))
 
 	return nil
 }

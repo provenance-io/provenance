@@ -121,7 +121,7 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 	}
 
 	// Emit the ledger entry added event
-	ctx.EventManager().EmitEvent(types.NewEventLedgerEntryAdded(
+	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerEntryAdded(
 		ledgerKey,
 		le.CorrelationId,
 	))

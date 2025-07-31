@@ -1,0 +1,54 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+
+message EventLedgerCreated {
+  // asset class of the ledger
+  string asset_class_id = 1;
+
+  // nft id of the ledger (scope id or nft id)
+  string nft_id = 2;
+}
+
+message EventLedgerUpdated {
+  // asset class of the ledger
+  string asset_class_id = 1;
+
+  // nft id of the ledger (scope id or nft id)
+  string nft_id = 2;
+}
+
+message EventLedgerEntryAdded {
+  // asset class of the ledger
+  string asset_class_id = 1;
+
+  // nft id of the ledger (scope id or nft id)
+  string nft_id = 2;
+
+  // correlation id of the ledger entry
+  string correlation_id = 3;
+}
+
+message EventFundTransferWithSettlement {
+  // asset class of the ledger
+  string asset_class_id = 1;
+
+  // nft id of the ledger (scope id or nft id)
+  string nft_id = 2;
+
+  // correlation id of the ledger entry
+  string correlation_id = 3;
+}
+
+message EventLedgerDestroyed {
+  // asset class of the ledger
+  string asset_class_id = 1;
+
+  // nft id of the ledger (scope id or nft id)
+  string nft_id = 2;
+}

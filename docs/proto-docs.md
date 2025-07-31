@@ -291,6 +291,13 @@
   
     - [Msg](#provenance-ledger-v1-Msg)
   
+- [provenance/ledger/v1/events.proto](#provenance_ledger_v1_events-proto)
+    - [EventFundTransferWithSettlement](#provenance-ledger-v1-EventFundTransferWithSettlement)
+    - [EventLedgerCreated](#provenance-ledger-v1-EventLedgerCreated)
+    - [EventLedgerDestroyed](#provenance-ledger-v1-EventLedgerDestroyed)
+    - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
+    - [EventLedgerUpdated](#provenance-ledger-v1-EventLedgerUpdated)
+  
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
     - [BucketBalance](#provenance-ledger-v1-BucketBalance)
     - [BucketBalances](#provenance-ledger-v1-BucketBalances)
@@ -4971,6 +4978,104 @@ Msg defines the ledger module Msg service.
 | `AddLedgerClassEntryType` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | Add an entry type to a ledger class |
 | `AddLedgerClassBucketType` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | Add a bucket type to a ledger class |
 | `BulkImport` | [MsgBulkImportRequest](#provenance-ledger-v1-MsgBulkImportRequest) | [MsgBulkImportResponse](#provenance-ledger-v1-MsgBulkImportResponse) | Bulk import ledger data from genesis state |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/events.proto
+
+
+
+<a name="provenance-ledger-v1-EventFundTransferWithSettlement"></a>
+
+### EventFundTransferWithSettlement
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerCreated"></a>
+
+### EventLedgerCreated
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerDestroyed"></a>
+
+### EventLedgerDestroyed
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerEntryAdded"></a>
+
+### EventLedgerEntryAdded
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerUpdated"></a>
+
+### EventLedgerUpdated
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

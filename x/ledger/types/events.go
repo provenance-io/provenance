@@ -1,49 +1,38 @@
 package types
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	EventTypeLedgerCreated              = "ledger_created"
-	EventTypeLedgerConfigUpdated        = "ledger_config_updated"
-	EventTypeLedgerEntryAdded           = "ledger_entry_added"
-	EventTypeFundTransferWithSettlement = "fund_transfer_with_settlement"
-)
-
-// NewEventLedgerCreated creates a new EventLedgerCreated event
-func NewEventLedgerCreated(key *LedgerKey) sdk.Event {
-	return sdk.NewEvent(
-		EventTypeLedgerCreated,
-		sdk.NewAttribute("asset_class_id", key.AssetClassId),
-		sdk.NewAttribute("nft_id", key.NftId),
-	)
+func NewEventLedgerCreated(key *LedgerKey) *EventLedgerCreated {
+	return &EventLedgerCreated{
+		AssetClassId: key.AssetClassId,
+		NftId:        key.NftId,
+	}
 }
 
-// NewEventLedgerConfigUpdated creates a new EventLedgerConfigUpdated event
-func NewEventLedgerUpdated(key *LedgerKey) sdk.Event {
-	return sdk.NewEvent(
-		EventTypeLedgerConfigUpdated,
-		sdk.NewAttribute("asset_class_id", key.AssetClassId),
-		sdk.NewAttribute("nft_id", key.NftId),
-	)
+func NewEventLedgerUpdated(key *LedgerKey) *EventLedgerUpdated {
+	return &EventLedgerUpdated{
+		AssetClassId: key.AssetClassId,
+		NftId:        key.NftId,
+	}
 }
 
-// NewEventLedgerEntryAdded creates a new EventLedgerEntryAdded event
-func NewEventLedgerEntryAdded(key *LedgerKey, correlationID string) sdk.Event {
-	return sdk.NewEvent(
-		EventTypeLedgerEntryAdded,
-		sdk.NewAttribute("asset_class_id", key.AssetClassId),
-		sdk.NewAttribute("nft_id", key.NftId),
-		sdk.NewAttribute("correlation_id", correlationID),
-	)
+func NewEventLedgerEntryAdded(key *LedgerKey, correlationID string) *EventLedgerEntryAdded {
+	return &EventLedgerEntryAdded{
+		AssetClassId:  key.AssetClassId,
+		NftId:         key.NftId,
+		CorrelationId: correlationID,
+	}
 }
 
-func NewEventFundTransferWithSettlement(key *LedgerKey, correlationID string) sdk.Event {
-	return sdk.NewEvent(
-		EventTypeFundTransferWithSettlement,
-		sdk.NewAttribute("asset_class_id", key.AssetClassId),
-		sdk.NewAttribute("nft_id", key.NftId),
-		sdk.NewAttribute("correlation_id", correlationID),
-	)
+func NewEventFundTransferWithSettlement(key *LedgerKey, correlationID string) *EventFundTransferWithSettlement {
+	return &EventFundTransferWithSettlement{
+		AssetClassId:  key.AssetClassId,
+		NftId:         key.NftId,
+		CorrelationId: correlationID,
+	}
+}
+
+func NewEventLedgerDestroyed(key *LedgerKey) *EventLedgerDestroyed {
+	return &EventLedgerDestroyed{
+		AssetClassId: key.AssetClassId,
+		NftId:        key.NftId,
+	}
 }

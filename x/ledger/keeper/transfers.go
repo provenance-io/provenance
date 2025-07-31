@@ -60,7 +60,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 	}
 
 	// Emit an event for the transfer
-	ctx.EventManager().EmitEvent(types.NewEventFundTransferWithSettlement(transfer.Key, transfer.LedgerEntryCorrelationId))
+	ctx.EventManager().EmitTypedEvent(types.NewEventFundTransferWithSettlement(transfer.Key, transfer.LedgerEntryCorrelationId))
 
 	return nil
 }
