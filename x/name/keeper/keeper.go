@@ -26,12 +26,17 @@ type Keeper struct {
 	cdc codec.BinaryCodec
 
 	// the signing authority for the gov proposals
-	authority   string
-	Schema      collections.Schema
-	attrKeeper  types.AttributeKeeper
-	ParamsStore collections.Item[types.Params]
-	NameRecords collections.Map[[]byte, types.NameRecord] // key: 0x03 + hash(name)
-	AddrIndex   collections.Map[[]byte, types.NameRecord] // key: 0x05 + addr + name key
+	authority string
+
+	// Attribute keeper
+	attrKeeper types.AttributeKeeper
+
+	// Schema definition
+	Schema collections.Schema
+
+	addrIndex   collections.Map[[]byte, types.NameRecord] // key: 0x05 + addr + name key
+	nameRecords collections.Map[[]byte, types.NameRecord] // key: 0x03 + hash(name)
+	paramsStore collections.Item[types.Params]
 }
 
 // NewKeeper returns a name keeper. It handles:
@@ -49,9 +54,9 @@ func NewKeeper(
 		cdc:         cdc,
 		storeKey:    key,
 		authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		NameRecords: collections.NewMap(sb, collections.NewPrefix(types.NameKeyPrefix), "names", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
-		AddrIndex:   collections.NewMap(sb, collections.NewPrefix(types.AddressKeyPrefix), "addr_index", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
-		ParamsStore: collections.NewItem(sb, types.NameParamStoreKey, "params", codec.CollValue[types.Params](cdc)),
+		nameRecords: collections.NewMap(sb, collections.NewPrefix(types.NameKeyPrefix), "names", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
+		addrIndex:   collections.NewMap(sb, collections.NewPrefix(types.AddressKeyPrefix), "addr_index", types.RawBytesKey, codec.CollValue[types.NameRecord](cdc)),
+		paramsStore: collections.NewItem(sb, types.NameParamStoreKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -113,10 +118,10 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	}
 	nameKey, err := types.GetNameKeyPrefix(normalizedName)
 	if err != nil {
-		return types.ErrNameNotBound.Wrapf("failed to get name key prefix for name %q: %v", normalizedName, err)
+		return types.ErrNameNotBound.Wrapf("failed to get key for name %q: %v", normalizedName, err)
 	}
 	// Check if name already exists
-	exists, err := k.NameRecords.Has(ctx, nameKey)
+	exists, err := k.nameRecords.Has(ctx, nameKey)
 	if err != nil {
 		return err
 	}
@@ -130,7 +135,7 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	}
 
 	// Set name record
-	if err := k.NameRecords.Set(ctx, nameKey, record); err != nil {
+	if err := k.nameRecords.Set(ctx, nameKey, record); err != nil {
 		return err
 	}
 
@@ -140,7 +145,7 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 		return err
 	}
 	addrKey := append(addrPrefix, nameKey...)
-	if err := k.AddrIndex.Set(ctx, addrKey, record); err != nil {
+	if err := k.addrIndex.Set(ctx, addrKey, record); err != nil {
 		return err
 	}
 
@@ -166,7 +171,7 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	}
 
 	// Get existing record
-	existing, err := k.NameRecords.Get(ctx, nameKey)
+	existing, err := k.nameRecords.Get(ctx, nameKey)
 	if err != nil {
 		return err
 	}
@@ -181,7 +186,7 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 			return err
 		}
 		oldAddrKey := append(oldAddrPrefix, nameKey...)
-		if err := k.AddrIndex.Remove(ctx, oldAddrKey); err != nil {
+		if err := k.addrIndex.Remove(ctx, oldAddrKey); err != nil {
 			return err
 		}
 	}
@@ -192,7 +197,7 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	}
 
 	// Update name record
-	if err := k.NameRecords.Set(ctx, nameKey, record); err != nil {
+	if err := k.nameRecords.Set(ctx, nameKey, record); err != nil {
 		return err
 	}
 
@@ -202,7 +207,7 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 		return err
 	}
 	addrKey := append(addrPrefix, nameKey...)
-	if err := k.AddrIndex.Set(ctx, addrKey, record); err != nil {
+	if err := k.addrIndex.Set(ctx, addrKey, record); err != nil {
 		return err
 	}
 
@@ -221,7 +226,7 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 	if err != nil {
 		return nil, types.ErrNameNotBound.Wrapf("failed to get name key prefix for name %q: %v", normalizedName, err)
 	}
-	namerecord, err := k.NameRecords.Get(ctx, nameKey)
+	namerecord, err := k.nameRecords.Get(ctx, nameKey)
 	if err != nil {
 		return nil, types.ErrNameNotBound
 	}
@@ -249,7 +254,7 @@ func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
 	if err != nil {
 		return false
 	}
-	exists, _ := k.NameRecords.Has(ctx, nameKey)
+	exists, _ := k.nameRecords.Has(ctx, nameKey)
 	return exists
 }
 
@@ -260,7 +265,7 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 		return nil, err
 	}
 	var records []types.NameRecord
-	err = k.AddrIndex.Walk(ctx, nil, func(key []byte, record types.NameRecord) (bool, error) {
+	err = k.addrIndex.Walk(ctx, nil, func(key []byte, record types.NameRecord) (bool, error) {
 		if bytes.HasPrefix(key, addrPrefix) {
 			records = append(records, record)
 		}
@@ -284,7 +289,7 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 		return types.ErrNameNotBound.Wrapf("failed to get name key prefix for name %q: %v", normalizedName, err)
 	}
 
-	record, err := k.NameRecords.Get(ctx, nameKey)
+	record, err := k.nameRecords.Get(ctx, nameKey)
 	if err != nil {
 		return types.ErrNameNotBound
 	}
@@ -300,12 +305,12 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 		return err
 	}
 	addrKey := append(addrPrefix, nameKey...)
-	if err := k.AddrIndex.Remove(ctx, addrKey); err != nil {
+	if err := k.addrIndex.Remove(ctx, addrKey); err != nil {
 		return err
 	}
 
 	// Delete name record
-	if err := k.NameRecords.Remove(ctx, nameKey); err != nil {
+	if err := k.nameRecords.Remove(ctx, nameKey); err != nil {
 		return err
 	}
 
@@ -320,7 +325,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 		StartInclusive(prefix).
 		EndExclusive(storetypes.PrefixEndBytes(prefix))
 
-	return k.NameRecords.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
+	return k.nameRecords.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
 		if err := handle(record); err != nil {
 			return true, err
 		}
@@ -367,7 +372,7 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 	}
 
 	if !isModifiable {
-		exists, err := k.NameRecords.Has(ctx, key)
+		exists, err := k.nameRecords.Has(ctx, key)
 		if err != nil {
 			return err
 		}
@@ -376,7 +381,7 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 		}
 	}
 	if isModifiable {
-		existing, err := k.NameRecords.Get(ctx, key)
+		existing, err := k.nameRecords.Get(ctx, key)
 		if err == nil && existing.Address != addr.String() {
 			// Remove old address index
 			oldAddr, err := sdk.AccAddressFromBech32(existing.Address)
@@ -388,7 +393,7 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 				return err
 			}
 			oldAddrKey := append(oldAddrPrefix, key...)
-			if err := k.AddrIndex.Remove(ctx, oldAddrKey); err != nil {
+			if err := k.addrIndex.Remove(ctx, oldAddrKey); err != nil {
 				return err
 			}
 		}
@@ -398,7 +403,7 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 		return err
 	}
 	// Set name record
-	if err := k.NameRecords.Set(ctx, key, record); err != nil {
+	if err := k.nameRecords.Set(ctx, key, record); err != nil {
 		return err
 	}
 	// Set address index
@@ -407,7 +412,7 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 		return err
 	}
 	addrkey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
-	if err := k.AddrIndex.Set(ctx, addrkey, record); err != nil {
+	if err := k.addrIndex.Set(ctx, addrkey, record); err != nil {
 		return err
 	}
 
@@ -432,7 +437,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 		return key[nameKeyStart:]
 	}
 
-	err := k.AddrIndex.Walk(ctx, nil, func(key []byte, record types.NameRecord) (stop bool, err error) {
+	err := k.addrIndex.Walk(ctx, nil, func(key []byte, record types.NameRecord) (stop bool, err error) {
 		nameKey := extractNameKey(key)
 		if nameKey == nil {
 			toDelete = append(toDelete, key)
@@ -440,7 +445,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 		}
 
 		// Check if name record exists
-		exists, err := k.NameRecords.Has(ctx, nameKey)
+		exists, err := k.nameRecords.Has(ctx, nameKey)
 		if err != nil {
 			return true, err
 		}
@@ -450,7 +455,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 		}
 
 		// Check if index value matches name record
-		mainRecord, err := k.NameRecords.Get(ctx, nameKey)
+		mainRecord, err := k.nameRecords.Get(ctx, nameKey)
 		if err != nil {
 			return true, err
 		}
@@ -475,12 +480,20 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 
 	logger.Info(fmt.Sprintf("Found %d invalid entries, deleting", len(toDelete)))
 	for _, key := range toDelete {
-		if err := k.AddrIndex.Remove(ctx, key); err != nil {
+		if err := k.addrIndex.Remove(ctx, key); err != nil {
 			logger.Error("Failed to delete index entry", "key", key, "error", err)
 		}
 	}
 
 	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
+}
+
+func (k *Keeper) GetNameRecord(ctx sdk.Context, key []byte) (types.NameRecord, error) {
+	return k.nameRecords.Get(ctx, key)
+}
+
+func (k *Keeper) GetAddrIndexRecord(ctx sdk.Context, key []byte) (types.NameRecord, error) {
+	return k.addrIndex.Get(ctx, key)
 }
 
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
