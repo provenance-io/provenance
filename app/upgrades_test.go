@@ -1036,7 +1036,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 
 // Create strings with the log statements that start off the reusable upgrade functions.
 var (
-	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
+	LogMsgRunModuleMigrations = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
 	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
@@ -1056,6 +1056,7 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 func (s *UpgradeTestSuite) TestBouvardia() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		// "INF Migrating name module from KV store to collections (v2 to v3)...",
 		"INF Pruning expired consensus states for IBC.",
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
