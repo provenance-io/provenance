@@ -26,15 +26,20 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// FlowStatus represents the current status of a flow
+// FundingTransferStatus represents the current status of a funding transfer.
 type FundingTransferStatus int32
 
 const (
+	// Unspecified funding transfer status.
 	FundingTransferStatus_FUNDING_TRANSFER_STATUS_UNSPECIFIED FundingTransferStatus = 0
-	FundingTransferStatus_FUNDING_TRANSFER_STATUS_PENDING     FundingTransferStatus = 1
-	FundingTransferStatus_FUNDING_TRANSFER_STATUS_PROCESSING  FundingTransferStatus = 2
-	FundingTransferStatus_FUNDING_TRANSFER_STATUS_COMPLETED   FundingTransferStatus = 3
-	FundingTransferStatus_FUNDING_TRANSFER_STATUS_FAILED      FundingTransferStatus = 4
+	// The funding transfer is pending.
+	FundingTransferStatus_FUNDING_TRANSFER_STATUS_PENDING FundingTransferStatus = 1
+	// The funding transfer is being processed.
+	FundingTransferStatus_FUNDING_TRANSFER_STATUS_PROCESSING FundingTransferStatus = 2
+	// The funding transfer has been completed.
+	FundingTransferStatus_FUNDING_TRANSFER_STATUS_COMPLETED FundingTransferStatus = 3
+	// The funding transfer has failed.
+	FundingTransferStatus_FUNDING_TRANSFER_STATUS_FAILED FundingTransferStatus = 4
 )
 
 var FundingTransferStatus_name = map[int32]string{
@@ -61,11 +66,14 @@ func (FundingTransferStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_0caa3a369f9ea91c, []int{0}
 }
 
-// FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
+// FundTransferWithSettlement represents a fund transfer with settlement instructions.
 type FundTransferWithSettlement struct {
-	Key                      *LedgerKey               `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	LedgerEntryCorrelationId string                   `protobuf:"bytes,2,opt,name=ledger_entry_correlation_id,json=ledgerEntryCorrelationId,proto3" json:"ledger_entry_correlation_id,omitempty"`
-	SettlementInstructions   []*SettlementInstruction `protobuf:"bytes,3,rep,name=settlementInstructions,proto3" json:"settlementInstructions,omitempty"`
+	// The ledger key identifying the ledger for this transfer.
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// The correlation ID of the ledger entry associated with this transfer.
+	LedgerEntryCorrelationId string `protobuf:"bytes,2,opt,name=ledger_entry_correlation_id,json=ledgerEntryCorrelationId,proto3" json:"ledger_entry_correlation_id,omitempty"`
+	// The settlement instructions for this transfer.
+	SettlementInstructions []*SettlementInstruction `protobuf:"bytes,3,rep,name=settlementInstructions,proto3" json:"settlementInstructions,omitempty"`
 }
 
 func (m *FundTransferWithSettlement) Reset()         { *m = FundTransferWithSettlement{} }
@@ -122,15 +130,17 @@ func (m *FundTransferWithSettlement) GetSettlementInstructions() []*SettlementIn
 	return nil
 }
 
-// SettlementInstruction represents blockchain-specific settlement instructions
+// SettlementInstruction represents blockchain-specific settlement instructions.
 type SettlementInstruction struct {
+	// The amount to be transferred.
 	Amount types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	// The recipient's blockchain address
-	RecipientAddress string                `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
-	Status           FundingTransferStatus `protobuf:"varint,3,opt,name=status,proto3,enum=provenance.ledger.v1.FundingTransferStatus" json:"status,omitempty"`
-	// Optional memo or note for the transaction
+	// The recipient's blockchain address.
+	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+	// The current status of the funding transfer.
+	Status FundingTransferStatus `protobuf:"varint,3,opt,name=status,proto3,enum=provenance.ledger.v1.FundingTransferStatus" json:"status,omitempty"`
+	// An optional memo or note for the transaction.
 	Memo string `protobuf:"bytes,4,opt,name=memo,proto3" json:"memo,omitempty"`
-	// The minimum block height or timestamp for settlement
+	// The minimum block height or timestamp for settlement.
 	SettlementBlock int64 `protobuf:"varint,5,opt,name=settlement_block,json=settlementBlock,proto3" json:"settlement_block,omitempty"`
 }
 
@@ -202,8 +212,9 @@ func (m *SettlementInstruction) GetSettlementBlock() int64 {
 	return 0
 }
 
-// Used as the stored version of settlement instructions against a ledger key and entry correlation id.
+// StoredSettlementInstructions represents the stored version of settlement instructions against a ledger key and entry correlation ID.
 type StoredSettlementInstructions struct {
+	// The settlement instructions.
 	SettlementInstructions []*SettlementInstruction `protobuf:"bytes,1,rep,name=settlementInstructions,proto3" json:"settlementInstructions,omitempty"`
 }
 

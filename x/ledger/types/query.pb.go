@@ -28,7 +28,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryLedgerRequest represents a request to query a ledger.
 type QueryLedgerRequest struct {
+	// The ledger key identifying the ledger to query.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -72,7 +74,9 @@ func (m *QueryLedgerRequest) GetKey() *LedgerKey {
 	return nil
 }
 
+// QueryLedgerResponse represents the response from querying a ledger.
 type QueryLedgerResponse struct {
+	// The ledger data.
 	Ledger *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
 }
 
@@ -116,7 +120,9 @@ func (m *QueryLedgerResponse) GetLedger() *Ledger {
 	return nil
 }
 
+// QueryLedgerEntriesRequest represents a request to query ledger entries.
 type QueryLedgerEntriesRequest struct {
+	// The ledger key identifying the ledger to query entries for.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -160,7 +166,9 @@ func (m *QueryLedgerEntriesRequest) GetKey() *LedgerKey {
 	return nil
 }
 
+// QueryLedgerEntriesResponse represents the response from querying ledger entries.
 type QueryLedgerEntriesResponse struct {
+	// The ledger entries.
 	Entries []*LedgerEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
 }
 
@@ -204,9 +212,12 @@ func (m *QueryLedgerEntriesResponse) GetEntries() []*LedgerEntry {
 	return nil
 }
 
+// QueryLedgerEntryRequest represents a request to query a specific ledger entry.
 type QueryLedgerEntryRequest struct {
-	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	CorrelationId string     `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	// The ledger key identifying the ledger.
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// The correlation ID of the entry to query (free-form string up to 50 characters).
+	CorrelationId string `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 }
 
 func (m *QueryLedgerEntryRequest) Reset()         { *m = QueryLedgerEntryRequest{} }
@@ -256,7 +267,9 @@ func (m *QueryLedgerEntryRequest) GetCorrelationId() string {
 	return ""
 }
 
+// QueryLedgerEntryResponse represents the response from querying a specific ledger entry.
 type QueryLedgerEntryResponse struct {
+	// The ledger entry.
 	Entry *LedgerEntry `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry,omitempty"`
 }
 
@@ -300,10 +313,11 @@ func (m *QueryLedgerEntryResponse) GetEntry() *LedgerEntry {
 	return nil
 }
 
-// QueryBalancesAsOfRequest is the request type for the Query/GetBalancesAsOf RPC method
+// QueryBalancesAsOfRequest represents a request to query balances as of a specific date.
 type QueryBalancesAsOfRequest struct {
+	// The ledger key identifying the ledger.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// Format: YYYY-MM-DD
+	// The date to query balances as of (format: YYYY-MM-DD).
 	AsOfDate string `protobuf:"bytes,2,opt,name=as_of_date,json=asOfDate,proto3" json:"as_of_date,omitempty"`
 }
 
@@ -354,8 +368,9 @@ func (m *QueryBalancesAsOfRequest) GetAsOfDate() string {
 	return ""
 }
 
-// QueryBalancesAsOfResponse is the response type for the Query/GetBalancesAsOf RPC method
+// QueryBalancesAsOfResponse represents the response from querying balances as of a specific date.
 type QueryBalancesAsOfResponse struct {
+	// The balances as of the specified date.
 	Balances *Balances `protobuf:"bytes,1,opt,name=balances,proto3" json:"balances,omitempty"`
 }
 
@@ -399,7 +414,9 @@ func (m *QueryBalancesAsOfResponse) GetBalances() *Balances {
 	return nil
 }
 
+// QueryLedgerClassEntryTypesRequest represents a request to query entry types for a ledger class.
 type QueryLedgerClassEntryTypesRequest struct {
+	// The ledger class ID to query entry types for.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
 }
 
@@ -443,7 +460,9 @@ func (m *QueryLedgerClassEntryTypesRequest) GetLedgerClassId() string {
 	return ""
 }
 
+// QueryLedgerClassEntryTypesResponse represents the response from querying entry types for a ledger class.
 type QueryLedgerClassEntryTypesResponse struct {
+	// The entry types for the ledger class.
 	EntryTypes []*LedgerClassEntryType `protobuf:"bytes,1,rep,name=entry_types,json=entryTypes,proto3" json:"entry_types,omitempty"`
 }
 
@@ -487,7 +506,9 @@ func (m *QueryLedgerClassEntryTypesResponse) GetEntryTypes() []*LedgerClassEntry
 	return nil
 }
 
+// QueryLedgerClassStatusTypesRequest represents a request to query status types for a ledger class.
 type QueryLedgerClassStatusTypesRequest struct {
+	// The ledger class ID to query status types for.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
 }
 
@@ -531,7 +552,9 @@ func (m *QueryLedgerClassStatusTypesRequest) GetLedgerClassId() string {
 	return ""
 }
 
+// QueryLedgerClassStatusTypesResponse represents the response from querying status types for a ledger class.
 type QueryLedgerClassStatusTypesResponse struct {
+	// The status types for the ledger class.
 	StatusTypes []*LedgerClassStatusType `protobuf:"bytes,1,rep,name=status_types,json=statusTypes,proto3" json:"status_types,omitempty"`
 }
 
@@ -575,7 +598,9 @@ func (m *QueryLedgerClassStatusTypesResponse) GetStatusTypes() []*LedgerClassSta
 	return nil
 }
 
+// QueryLedgerClassBucketTypesRequest represents a request to query bucket types for a ledger class.
 type QueryLedgerClassBucketTypesRequest struct {
+	// The ledger class ID to query bucket types for.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
 }
 
@@ -619,7 +644,9 @@ func (m *QueryLedgerClassBucketTypesRequest) GetLedgerClassId() string {
 	return ""
 }
 
+// QueryLedgerClassBucketTypesResponse represents the response from querying bucket types for a ledger class.
 type QueryLedgerClassBucketTypesResponse struct {
+	// The bucket types for the ledger class.
 	BucketTypes []*LedgerClassBucketType `protobuf:"bytes,1,rep,name=bucket_types,json=bucketTypes,proto3" json:"bucket_types,omitempty"`
 }
 
@@ -663,7 +690,9 @@ func (m *QueryLedgerClassBucketTypesResponse) GetBucketTypes() []*LedgerClassBuc
 	return nil
 }
 
+// QueryLedgerClassRequest represents a request to query a ledger class.
 type QueryLedgerClassRequest struct {
+	// The ledger class ID to query.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
 }
 
@@ -707,7 +736,9 @@ func (m *QueryLedgerClassRequest) GetLedgerClassId() string {
 	return ""
 }
 
+// QueryLedgerClassResponse represents the response from querying a ledger class.
 type QueryLedgerClassResponse struct {
+	// The ledger class data.
 	LedgerClass *LedgerClass `protobuf:"bytes,1,opt,name=ledger_class,json=ledgerClass,proto3" json:"ledger_class,omitempty"`
 }
 
@@ -751,7 +782,9 @@ func (m *QueryLedgerClassResponse) GetLedgerClass() *LedgerClass {
 	return nil
 }
 
+// QuerySettlementsRequest represents a request to query settlements for a ledger.
 type QuerySettlementsRequest struct {
+	// The ledger key identifying the ledger to query settlements for.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -795,7 +828,9 @@ func (m *QuerySettlementsRequest) GetKey() *LedgerKey {
 	return nil
 }
 
+// QuerySettlementsResponse represents the response from querying settlements for a ledger.
 type QuerySettlementsResponse struct {
+	// The settlements for the ledger.
 	Settlements []*StoredSettlementInstructions `protobuf:"bytes,1,rep,name=settlements,proto3" json:"settlements,omitempty"`
 }
 
@@ -839,9 +874,12 @@ func (m *QuerySettlementsResponse) GetSettlements() []*StoredSettlementInstructi
 	return nil
 }
 
+// QuerySettlementsByCorrelationIdRequest represents a request to query settlements by correlation ID.
 type QuerySettlementsByCorrelationIdRequest struct {
-	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	CorrelationId string     `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	// The ledger key identifying the ledger.
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// The correlation ID to query settlements for.
+	CorrelationId string `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 }
 
 func (m *QuerySettlementsByCorrelationIdRequest) Reset() {
@@ -893,7 +931,9 @@ func (m *QuerySettlementsByCorrelationIdRequest) GetCorrelationId() string {
 	return ""
 }
 
+// QuerySettlementsByCorrelationIdResponse represents the response from querying settlements by correlation ID.
 type QuerySettlementsByCorrelationIdResponse struct {
+	// The settlement instructions for the correlation ID.
 	Settlement *StoredSettlementInstructions `protobuf:"bytes,1,opt,name=settlement,proto3" json:"settlement,omitempty"`
 }
 
@@ -1043,25 +1083,25 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	//****************************************************************
-	//Ledger Class Queries
-	//***************************************************************
+	// ClassQuery retrieves a ledger class by its ID.
 	ClassQuery(ctx context.Context, in *QueryLedgerClassRequest, opts ...grpc.CallOption) (*QueryLedgerClassResponse, error)
+	// ClassEntryTypesQuery retrieves all entry types for a ledger class.
 	ClassEntryTypesQuery(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error)
+	// ClassStatusTypesQuery retrieves all status types for a ledger class.
 	ClassStatusTypesQuery(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error)
+	// ClassBucketTypesQuery retrieves all bucket types for a ledger class.
 	ClassBucketTypesQuery(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error)
-	//****************************************************************
-	//Ledger Queries
-	//***************************************************************
+	// LedgerQuery retrieves a ledger by its key.
 	LedgerQuery(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
+	// EntriesQuery retrieves all entries for a ledger.
 	EntriesQuery(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error)
-	// GetLedgerEntry returns a specific ledger entry for an NFT
+	// LedgerEntryQuery returns a specific ledger entry for an NFT.
 	LedgerEntryQuery(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
-	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
+	// BalancesAsOfQuery returns the balances for a specific NFT as of a given date.
 	BalancesAsOfQuery(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error)
-	// get all settlements for a ledger
+	// SettlementsQuery retrieves all settlements for a ledger.
 	SettlementsQuery(ctx context.Context, in *QuerySettlementsRequest, opts ...grpc.CallOption) (*QuerySettlementsResponse, error)
-	// get settlements by correlation id
+	// SettlementsByCorrelationIdQuery retrieves settlements by correlation ID.
 	SettlementsByCorrelationIdQuery(ctx context.Context, in *QuerySettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QuerySettlementsByCorrelationIdResponse, error)
 }
 
@@ -1165,25 +1205,25 @@ func (c *queryClient) SettlementsByCorrelationIdQuery(ctx context.Context, in *Q
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	//****************************************************************
-	//Ledger Class Queries
-	//***************************************************************
+	// ClassQuery retrieves a ledger class by its ID.
 	ClassQuery(context.Context, *QueryLedgerClassRequest) (*QueryLedgerClassResponse, error)
+	// ClassEntryTypesQuery retrieves all entry types for a ledger class.
 	ClassEntryTypesQuery(context.Context, *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error)
+	// ClassStatusTypesQuery retrieves all status types for a ledger class.
 	ClassStatusTypesQuery(context.Context, *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error)
+	// ClassBucketTypesQuery retrieves all bucket types for a ledger class.
 	ClassBucketTypesQuery(context.Context, *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error)
-	//****************************************************************
-	//Ledger Queries
-	//***************************************************************
+	// LedgerQuery retrieves a ledger by its key.
 	LedgerQuery(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
+	// EntriesQuery retrieves all entries for a ledger.
 	EntriesQuery(context.Context, *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error)
-	// GetLedgerEntry returns a specific ledger entry for an NFT
+	// LedgerEntryQuery returns a specific ledger entry for an NFT.
 	LedgerEntryQuery(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
-	// GetBalancesAsOf returns the balances for a specific NFT as of a given date
+	// BalancesAsOfQuery returns the balances for a specific NFT as of a given date.
 	BalancesAsOfQuery(context.Context, *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error)
-	// get all settlements for a ledger
+	// SettlementsQuery retrieves all settlements for a ledger.
 	SettlementsQuery(context.Context, *QuerySettlementsRequest) (*QuerySettlementsResponse, error)
-	// get settlements by correlation id
+	// SettlementsByCorrelationIdQuery retrieves settlements by correlation ID.
 	SettlementsByCorrelationIdQuery(context.Context, *QuerySettlementsByCorrelationIdRequest) (*QuerySettlementsByCorrelationIdResponse, error)
 }
 

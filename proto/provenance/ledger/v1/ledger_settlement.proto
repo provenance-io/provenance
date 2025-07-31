@@ -11,24 +11,33 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "provenance/ledger/v1/ledger.proto";
 
-// FlowStatus represents the current status of a flow
+// FundingTransferStatus represents the current status of a funding transfer.
 enum FundingTransferStatus {
+  // Unspecified funding transfer status.
   FUNDING_TRANSFER_STATUS_UNSPECIFIED = 0;
+  // The funding transfer is pending.
   FUNDING_TRANSFER_STATUS_PENDING     = 1;
+  // The funding transfer is being processed.
   FUNDING_TRANSFER_STATUS_PROCESSING  = 2;
+  // The funding transfer has been completed.
   FUNDING_TRANSFER_STATUS_COMPLETED   = 3;
+  // The funding transfer has failed.
   FUNDING_TRANSFER_STATUS_FAILED      = 4;
 }
 
-// FundTransferEntryWithSettlement represents a fund transfer with settlement instructions
+// FundTransferWithSettlement represents a fund transfer with settlement instructions.
 message FundTransferWithSettlement {
+  // The ledger key identifying the ledger for this transfer.
   LedgerKey                      key                         = 1;
+  // The correlation ID of the ledger entry associated with this transfer.
   string                         ledger_entry_correlation_id = 2;
+  // The settlement instructions for this transfer.
   repeated SettlementInstruction settlementInstructions      = 3;
 }
 
-// SettlementInstruction represents blockchain-specific settlement instructions
+// SettlementInstruction represents blockchain-specific settlement instructions.
 message SettlementInstruction {
+  // The amount to be transferred.
   cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -36,19 +45,21 @@ message SettlementInstruction {
     (amino.encoding)         = "legacy_coins"
   ];
 
-  // The recipient's blockchain address
+  // The recipient's blockchain address.
   string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
+  // The current status of the funding transfer.
   FundingTransferStatus status = 3;
 
-  // Optional memo or note for the transaction
+  // An optional memo or note for the transaction.
   string memo = 4;
 
-  // The minimum block height or timestamp for settlement
+  // The minimum block height or timestamp for settlement.
   int64 settlement_block = 5;
 }
 
-// Used as the stored version of settlement instructions against a ledger key and entry correlation id.
+// StoredSettlementInstructions represents the stored version of settlement instructions against a ledger key and entry correlation ID.
 message StoredSettlementInstructions {
+  // The settlement instructions.
   repeated SettlementInstruction settlementInstructions = 1;
 }

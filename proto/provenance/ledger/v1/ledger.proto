@@ -40,19 +40,22 @@ message LedgerClassEntryType {
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
+// LedgerClassStatusType defines the types of possible status values for a given asset class. These type codes allow
+// for minimal data storage while providing a human readable description of the status type.
 message LedgerClassStatusType {
-  // Unique ID for the status type (eg. 1, 2, 3, etc.)
+  // Unique ID for the status type (eg. 1, 2, 3, etc.).
   int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
   // Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY",
-  // "CLOSED", "CANCELLED", "SUSPENDED", "OTHER")
+  // "CLOSED", "CANCELLED", "SUSPENDED", "OTHER").
   string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 
   // Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy",
-  // "Closed", "Cancelled", "Suspended", "Other")
+  // "Closed", "Cancelled", "Suspended", "Other").
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
+// LedgerKey represents a unique key to identify an NFT/Asset for ledger transactions.
 message LedgerKey {
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
@@ -63,37 +66,38 @@ message LedgerKey {
   string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
 }
 
-// Ledger
+// Ledger represents a ledger for tracking financial transactions and balances for a specific NFT.
 message Ledger {
+  // The ledger key identifying the ledger.
   LedgerKey key = 1 [(gogoproto.jsontag) = "key,omitempty"];
 
-  // Ledger class id for the ledger
+  // The ledger class ID for the ledger.
   string ledger_class_id = 2 [(gogoproto.jsontag) = "ledgerClassId,omitempty"];
 
-  // Status of the ledger
+  // The status of the ledger.
   int32 status_type_id = 3 [(gogoproto.jsontag) = "statusTypeId,omitempty"];
 
-  // Next payment date days since epoch
+  // The next payment date (days since epoch).
   int32 next_pmt_date = 4 [(gogoproto.jsontag) = "nextPmtDate,omitempty"];
 
-  // Next payment amount
+  // The next payment amount.
   int64 next_pmt_amt = 5 [(gogoproto.jsontag) = "nextPmtAmt,omitempty"];
 
-  // Interest rate (10000000 = 10.000000%) - 6 decimal places
+  // The interest rate (10000000 = 10.000000%) - 6 decimal places.
   int32 interest_rate = 6 [(gogoproto.jsontag) = "interestRate,omitempty"];
 
-  // Maturity date days since epoch
+  // The maturity date (days since epoch).
   int32 maturity_date = 7 [(gogoproto.jsontag) = "maturityDate,omitempty"];
 
-  // Day count convention for interest
+  // The day count convention for interest calculations.
   DayCountConvention interest_day_count_convention = 8
       [(gogoproto.jsontag) = "interestDayCountConvention,omitempty", (gogoproto.casttype) = "DayCountConvention"];
 
-  // Interest accrual method for interest
+  // The interest accrual method for interest calculations.
   InterestAccrualMethod interest_accrual_method = 9
       [(gogoproto.jsontag) = "interestAccrualMethod,omitempty", (gogoproto.casttype) = "InterestAccrualMethod"];
 
-  // Payment frequency
+  // The payment frequency.
   PaymentFrequency payment_frequency = 10
       [(gogoproto.jsontag) = "paymentFrequency,omitempty", (gogoproto.casttype) = "PaymentFrequency"];
 }
@@ -110,33 +114,32 @@ message LedgerClassBucketType {
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
-// LedgerEntry
+// LedgerEntry represents a single entry in a ledger for tracking financial transactions.
 message LedgerEntry {
-  // Correlation ID for tracking ledger entries with external systems (max 50 characters)
+  // The correlation ID for tracking ledger entries with external systems (max 50 characters).
   string correlation_id = 1 [(gogoproto.jsontag) = "correlationId,omitempty"];
 
-  // If this entry reverses another entry, the correlation id of the entry it reverses
+  // If this entry reverses another entry, the correlation ID of the entry it reverses.
   string reverses_correlation_id = 2 [(gogoproto.jsontag) = "reversesCorrelationId,omitempty"];
 
-  // If true, this entry is a void and should not be included in the ledger balance calculations
+  // If true, this entry is a void and should not be included in the ledger balance calculations.
   bool is_void = 3 [(gogoproto.jsontag) = "isVoid,omitempty"];
 
-  // The NFT address that this ledger entry pertains to
-  // Sequence number of the ledger entry (less than 100)
+  // The sequence number of the ledger entry (less than 100).
   // This field is used to maintain the correct order of entries when multiple entries
   // share the same effective date. Entries are sorted first by effective date, then by sequence.
   uint32 sequence = 4 [(gogoproto.jsontag) = "sequence,omitempty"];
 
-  // The type of ledger entry specified by the LedgerClassEntryType.id
+  // The type of ledger entry specified by the LedgerClassEntryType.id.
   int32 entry_type_id = 5 [(gogoproto.jsontag) = "entryTypeId,omitempty"];
 
-  // Posted date days since epoch
+  // The posted date (days since epoch).
   int32 posted_date = 7 [(gogoproto.jsontag) = "postedDate,omitempty"];
 
-  // Effective date days since epoch
+  // The effective date (days since epoch).
   int32 effective_date = 8 [(gogoproto.jsontag) = "effectiveDate,omitempty"];
 
-  // Total amount of the ledger entry
+  // The total amount of the ledger entry.
   string total_amt = 9 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -144,18 +147,19 @@ message LedgerEntry {
     (gogoproto.jsontag)    = "totalAmt,omitempty"
   ];
 
-  // Applied amounts for each bucket
+  // The applied amounts for each bucket.
   repeated LedgerBucketAmount applied_amounts = 10 [(gogoproto.jsontag) = "appliedAmounts,omitempty"];
 
-  // Balances for each bucket
+  // The balances for each bucket.
   repeated BucketBalance balance_amounts = 11 [(gogoproto.jsontag) = "balanceAmounts,omitempty"];
 }
 
+// LedgerBucketAmount represents the amount applied to a specific bucket in a ledger entry.
 message LedgerBucketAmount {
-  // The bucket type specified by the LedgerClassBucketType.id
+  // The bucket type specified by the LedgerClassBucketType.id.
   int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
 
-  // The amount applied to the bucket
+  // The amount applied to the bucket.
   string applied_amt = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -164,16 +168,18 @@ message LedgerBucketAmount {
   ];
 }
 
-// Balances represents the current balances for principal, interest, and other amounts
+// Balances represents the current balances for principal, interest, and other amounts.
 message Balances {
+  // The bucket balances.
   repeated BucketBalance bucket_balances = 1 [(gogoproto.jsontag) = "bucketBalances,omitempty"];
 }
 
+// BucketBalance represents the balance for a specific bucket.
 message BucketBalance {
-  // The bucket type specified by the LedgerClassBucketType.id
+  // The bucket type specified by the LedgerClassBucketType.id.
   int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
 
-  // The balance of the bucket
+  // The balance of the bucket.
   string balance_amt = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -182,13 +188,19 @@ message BucketBalance {
   ];
 }
 
-// Used for conversion....
+// Ledgers represents a collection of ledgers with their entries, used for conversion and bulk operations.
 message Ledgers {
+  // The ledgers with their entries.
   repeated LedgerToEntries ledger_to_entries = 1 [(gogoproto.jsontag) = "ledgerToEntries,omitempty"];
 }
+
+// LedgerToEntries represents a ledger with its associated entries.
 message LedgerToEntries {
+  // The ledger key identifying the ledger.
   LedgerKey            ledger_key = 1 [(gogoproto.jsontag) = "ledgerKey,omitempty"];
+  // The ledger data.
   Ledger               ledger     = 2 [(gogoproto.jsontag) = "ledger,omitempty"];
+  // The ledger entries.
   repeated LedgerEntry entries    = 3 [(gogoproto.jsontag) = "entries,omitempty"];
 }
 

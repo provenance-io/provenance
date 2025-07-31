@@ -8,13 +8,13 @@ option java_multiple_files = true;
 import "gogoproto/gogo.proto";
 import "provenance/ledger/v1/ledger.proto";
 
-// Initial state of the ledger store.
+// GenesisState represents the initial state of the ledger store.
 // This structure matches the test.json format for bulk import.
 message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // Ledgers with their entries - matches the test.json structure
+  // Ledgers with their entries - matches the test.json structure.
   repeated LedgerToEntries ledger_to_entries = 1
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerToEntries,omitempty"];
 }

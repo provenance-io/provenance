@@ -22,25 +22,25 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Ledger
+// LedgerPlainText represents a ledger in plain text format for human-readable display.
 type LedgerPlainText struct {
-	// Ledger key
+	// The ledger key identifying the ledger.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// Status of the ledger
+	// The status of the ledger as a human-readable string.
 	Status string `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	// Next payment date
+	// The next payment date as a human-readable string.
 	NextPmtDate string `protobuf:"bytes,3,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"next_pmt_date,omitempty"`
-	// Next payment amount
+	// The next payment amount as a human-readable string.
 	NextPmtAmt string `protobuf:"bytes,4,opt,name=next_pmt_amt,json=nextPmtAmt,proto3" json:"next_pmt_amt,omitempty"`
-	// Interest rate
+	// The interest rate as a human-readable string.
 	InterestRate string `protobuf:"bytes,5,opt,name=interest_rate,json=interestRate,proto3" json:"interest_rate,omitempty"`
-	// Maturity date
+	// The maturity date as a human-readable string.
 	MaturityDate string `protobuf:"bytes,6,opt,name=maturity_date,json=maturityDate,proto3" json:"maturity_date,omitempty"`
-	// Day count convention for interest
+	// The day count convention for interest calculations.
 	InterestDayCountConvention DayCountConvention `protobuf:"varint,7,opt,name=interest_day_count_convention,json=interestDayCountConvention,proto3,enum=provenance.ledger.v1.DayCountConvention" json:"interest_day_count_convention,omitempty"`
-	// Interest accrual method for interest
+	// The interest accrual method for interest calculations.
 	InterestAccrualMethod InterestAccrualMethod `protobuf:"varint,8,opt,name=interest_accrual_method,json=interestAccrualMethod,proto3,enum=provenance.ledger.v1.InterestAccrualMethod" json:"interest_accrual_method,omitempty"`
-	// Payment frequency
+	// The payment frequency.
 	PaymentFrequency PaymentFrequency `protobuf:"varint,9,opt,name=payment_frequency,json=paymentFrequency,proto3,enum=provenance.ledger.v1.PaymentFrequency" json:"payment_frequency,omitempty"`
 }
 
@@ -140,23 +140,23 @@ func (m *LedgerPlainText) GetPaymentFrequency() PaymentFrequency {
 	return LEDGER_PAYMENT_FREQUENCY_UNSPECIFIED
 }
 
-// LedgerEntry
+// LedgerEntryPlainText represents a ledger entry in plain text format for human-readable display.
 type LedgerEntryPlainText struct {
-	// Correlation ID for tracking ledger entries with external systems (max 50 characters)
+	// The correlation ID for tracking ledger entries with external systems (max 50 characters).
 	CorrelationId string `protobuf:"bytes,1,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
-	// Sequence number of the ledger entry (less than 100)
+	// The sequence number of the ledger entry (less than 100).
 	// This field is used to maintain the correct order of entries when multiple entries
 	// share the same effective date. Entries are sorted first by effective date, then by sequence.
 	Sequence uint32 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// The type of ledger entry specified by the LedgerClassEntryType.id
+	// The type of ledger entry.
 	Type *LedgerClassEntryType `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
-	// Posted date
+	// The posted date as a human-readable string.
 	PostedDate string `protobuf:"bytes,5,opt,name=posted_date,json=postedDate,proto3" json:"posted_date,omitempty"`
-	// Effective date
+	// The effective date as a human-readable string.
 	EffectiveDate string `protobuf:"bytes,6,opt,name=effective_date,json=effectiveDate,proto3" json:"effective_date,omitempty"`
-	// The total amount of the ledger entry
+	// The total amount of the ledger entry as a human-readable string.
 	TotalAmt string `protobuf:"bytes,7,opt,name=total_amt,json=totalAmt,proto3" json:"total_amt,omitempty"`
-	// The amounts applied to each bucket
+	// The amounts applied to each bucket in plain text format.
 	AppliedAmounts []*LedgerBucketAmountPlainText `protobuf:"bytes,8,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"applied_amounts,omitempty"`
 }
 
@@ -242,10 +242,14 @@ func (m *LedgerEntryPlainText) GetAppliedAmounts() []*LedgerBucketAmountPlainTex
 	return nil
 }
 
+// LedgerBucketAmountPlainText represents a bucket amount in plain text format for human-readable display.
 type LedgerBucketAmountPlainText struct {
-	Bucket     *LedgerClassBucketType `protobuf:"bytes,1,opt,name=bucket,proto3" json:"bucket,omitempty"`
-	AppliedAmt string                 `protobuf:"bytes,2,opt,name=applied_amt,json=appliedAmt,proto3" json:"applied_amt,omitempty"`
-	BalanceAmt string                 `protobuf:"bytes,3,opt,name=balance_amt,json=balanceAmt,proto3" json:"balance_amt,omitempty"`
+	// The bucket type for this amount.
+	Bucket *LedgerClassBucketType `protobuf:"bytes,1,opt,name=bucket,proto3" json:"bucket,omitempty"`
+	// The amount applied to this bucket as a human-readable string.
+	AppliedAmt string `protobuf:"bytes,2,opt,name=applied_amt,json=appliedAmt,proto3" json:"applied_amt,omitempty"`
+	// The balance amount for this bucket as a human-readable string.
+	BalanceAmt string `protobuf:"bytes,3,opt,name=balance_amt,json=balanceAmt,proto3" json:"balance_amt,omitempty"`
 }
 
 func (m *LedgerBucketAmountPlainText) Reset()         { *m = LedgerBucketAmountPlainText{} }
@@ -302,7 +306,9 @@ func (m *LedgerBucketAmountPlainText) GetBalanceAmt() string {
 	return ""
 }
 
+// QueryLedgerEntryResponsePlainText represents a response containing ledger entries in plain text format.
 type QueryLedgerEntryResponsePlainText struct {
+	// The ledger entries in plain text format.
 	Entries []*LedgerEntryPlainText `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
 }
 
