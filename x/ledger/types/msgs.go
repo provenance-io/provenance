@@ -2,6 +2,7 @@ package types
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,22 +34,13 @@ var AllRequestMsgs = []sdk.Msg{
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateRequest
 func (m MsgCreateRequest) ValidateBasic() error {
-	if m.Ledger == nil {
-		return NewErrCodeInvalidField("ledger", "ledger cannot be nil")
-	}
-
 	if err := validateLedgerKeyBasic(m.Ledger.Key); err != nil {
 		return err
 	}
 
 	// Validate the LedgerClassId field
-	if emptyString(&m.Ledger.LedgerClassId) {
-		return NewErrCodeMissingField("ledger_class_id")
-	}
-
-	keyError := validateLedgerKeyBasic(m.Ledger.Key)
-	if keyError != nil {
-		return keyError
+	if err := lenCheck("ledger_class_id", &m.Ledger.LedgerClassId, 1, 50); err != nil {
+		return err
 	}
 
 	epochTime, _ := time.Parse("2006-01-02", "1970-01-01")
@@ -192,12 +184,8 @@ func (m MsgAppendRequest) ValidateBasic() error {
 	}
 
 	for _, e := range m.Entries {
-		if emptyString(&e.CorrelationId) {
-			return NewErrCodeMissingField("correlation_id")
-		} else {
-			if !isCorrelationIDValid(e.CorrelationId) {
-				return NewErrCodeInvalidField("correlation_id", "must be a valid string that is less than 50 characters")
-			}
+		if err := lenCheck("correlation_id", &e.CorrelationId, 1, 50); err != nil {
+			return err
 		}
 
 		if e.PostedDate <= 0 {
@@ -272,8 +260,8 @@ func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 		}
 
 		// Validate that the correlation ID is valid
-		if !isCorrelationIDValid(ft.LedgerEntryCorrelationId) {
-			return NewErrCodeInvalidField("ledger_entry_correlation_id", "must be a valid string that is less than 50 characters")
+		if err := lenCheck("ledger_entry_correlation_id", &ft.LedgerEntryCorrelationId, 1, 50); err != nil {
+			return err
 		}
 
 		// Validate that the settlement instructions are valid
@@ -324,13 +312,8 @@ func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 		return NewErrCodeUnauthorized("maintainer address is not the same as the authority")
 	}
 
-	if emptyString(&m.LedgerClass.LedgerClassId) {
-		return NewErrCodeMissingField("ledger_class_id")
-	}
-
-	// Verify that the ledger class id is less than 50 characters
-	if len(m.LedgerClass.LedgerClassId) > 50 {
-		return NewErrCodeInvalidField("ledger_class_id", "must be less than 50 characters")
+	if err := lenCheck("ledger_class_id", &m.LedgerClass.LedgerClassId, 1, 50); err != nil {
+		return err
 	}
 
 	// Verify that the ledger class only contains alphanumeric and dashes
@@ -338,17 +321,21 @@ func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("ledger_class_id", "must only contain alphanumeric and dashes")
 	}
 
-	if emptyString(&m.LedgerClass.AssetClassId) {
-		return NewErrCodeMissingField("asset_class_id")
+	if err := lenCheck("asset_class_id", &m.LedgerClass.AssetClassId, 1, 128); err != nil {
+		return err
 	}
 
-	if emptyString(&m.LedgerClass.Denom) {
-		return NewErrCodeMissingField("denom")
+	if err := lenCheck("denom", &m.LedgerClass.Denom, 1, 128); err != nil {
+		return err
 	}
 
 	maintainerAddress := m.LedgerClass.MaintainerAddress
-	if emptyString(&maintainerAddress) {
-		return NewErrCodeMissingField("maintainer_address")
+	if err := lenCheck("maintainer_address", &maintainerAddress, 1, 256); err != nil {
+		return err
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.LedgerClass.MaintainerAddress); err != nil {
+		return NewErrCodeInvalidField("maintainer_address", "must be a valid bech32 address")
 	}
 
 	return nil
@@ -373,20 +360,12 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("status_type_id", "must be a positive integer")
 	}
 
-	if strings.TrimSpace(m.StatusType.Code) == "" {
-		return NewErrCodeMissingField("status_type_code")
+	if err := lenCheck("status_type_code", &m.StatusType.Code, 1, 50); err != nil {
+		return err
 	}
 
-	if len(m.StatusType.Code) > 50 {
-		return NewErrCodeInvalidField("status_type_code", "must be less than or equal to 50 characters")
-	}
-
-	if strings.TrimSpace(m.StatusType.Description) == "" {
-		return NewErrCodeMissingField("status_type_description")
-	}
-
-	if len(m.StatusType.Description) > 100 {
-		return NewErrCodeInvalidField("status_type_description", "must be less than or equal to 100 characters")
+	if err := lenCheck("status_type_description", &m.StatusType.Description, 1, 100); err != nil {
+		return err
 	}
 
 	return nil
@@ -410,20 +389,12 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("entry_type_id", "must be a positive integer")
 	}
 
-	if strings.TrimSpace(m.EntryType.Code) == "" {
-		return NewErrCodeMissingField("entry_type_code")
+	if err := lenCheck("entry_type_code", &m.EntryType.Code, 1, 50); err != nil {
+		return err
 	}
 
-	if len(m.EntryType.Code) > 50 {
-		return NewErrCodeInvalidField("entry_type_code", "must be less than or equal to 50 characters")
-	}
-
-	if strings.TrimSpace(m.EntryType.Description) == "" {
-		return NewErrCodeMissingField("entry_type_description")
-	}
-
-	if len(m.EntryType.Description) > 100 {
-		return NewErrCodeInvalidField("entry_type_description", "must be less than or equal to 100 characters")
+	if err := lenCheck("entry_type_description", &m.EntryType.Description, 1, 100); err != nil {
+		return err
 	}
 
 	return nil
@@ -447,20 +418,12 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
 	}
 
-	if strings.TrimSpace(m.BucketType.Code) == "" {
-		return NewErrCodeMissingField("bucket_type_code")
+	if err := lenCheck("bucket_type_code", &m.BucketType.Code, 1, 50); err != nil {
+		return err
 	}
 
-	if len(m.BucketType.Code) > 50 {
-		return NewErrCodeInvalidField("bucket_type_code", "must be less than or equal to 50 characters")
-	}
-
-	if strings.TrimSpace(m.BucketType.Description) == "" {
-		return NewErrCodeMissingField("bucket_type_description")
-	}
-
-	if len(m.BucketType.Description) > 100 {
-		return NewErrCodeInvalidField("bucket_type_description", "must be less than or equal to 50 characters")
+	if err := lenCheck("bucket_type_description", &m.BucketType.Description, 1, 100); err != nil {
+		return err
 	}
 
 	return nil
@@ -481,12 +444,14 @@ func (m MsgBulkImportRequest) ValidateBasic() error {
 }
 
 func validateLedgerKeyBasic(key *LedgerKey) error {
-	if emptyString(&key.NftId) {
-		return NewErrCodeMissingField("nft_id")
+	if err := lenCheck("nft_id", &key.NftId, 1, 128); err != nil {
+		return err
 	}
-	if emptyString(&key.AssetClassId) {
-		return NewErrCodeMissingField("asset_class_id")
+
+	if err := lenCheck("asset_class_id", &key.AssetClassId, 1, 128); err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -505,19 +470,27 @@ func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*LedgerBucketAmoun
 	return nil
 }
 
-// Returns true if the string is nil or empty(TrimSpace(*s))
-func emptyString(s *string) bool {
-	if s == nil || strings.TrimSpace(*s) == "" {
-		return true
+// lenCheck checks if the string is nil or empty and if it is, returns a missing field error.
+// It also checks if the string is less than the minimum length or greater than the maximum length and returns an invalid field error.
+func lenCheck(field string, s *string, minLength int, maxLength int) error {
+	if s == nil {
+		return NewErrCodeMissingField(field)
 	}
-	return false
-}
 
-// validateCorrelationID validates that the provided string is a valid correlation ID.
-// Returns true if the string is a valid correlation ID (non-empty and max 50 characters), false otherwise.
-func isCorrelationIDValid(correlationID string) bool {
-	if len(correlationID) == 0 || len(correlationID) > 50 {
-		return false
+	trimmed := strings.TrimSpace(*s)
+
+	// empty string
+	if trimmed == "" {
+		return NewErrCodeMissingField(field)
 	}
-	return true
+
+	if len(trimmed) < minLength {
+		return NewErrCodeInvalidField(field, "must be greater than or equal to "+strconv.Itoa(minLength)+" characters")
+	}
+
+	if len(trimmed) > maxLength {
+		return NewErrCodeInvalidField(field, "must be less than or equal to "+strconv.Itoa(maxLength)+" characters")
+	}
+
+	return nil
 }
