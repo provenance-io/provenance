@@ -23,7 +23,6 @@ func NewMigrator(keeper Keeper) Migrator {
 // MigrateKVToCollections2to3 migrates the name module data from the legacy KV store layout
 // to the new collections-based layout (version 2 to version 3).
 func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
-	fmt.Println("RUNNING NAME MODULE MIGRATION")
 	ctx.Logger().Info("Migrating name module from KV store to collections (v2 to v3)...")
 
 	store := ctx.KVStore(m.keeper.storeKey)
