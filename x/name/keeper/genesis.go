@@ -36,7 +36,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		EndExclusive(storetypes.PrefixEndBytes(types.NameKeyPrefix))
 
 	// Iterate through all name records
-	err := k.nameRecords.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
+	err := k.nameRecords.Walk(ctx, rng, func(_ []byte, record types.NameRecord) (bool, error) {
 		records = append(records, record)
 		return false, nil
 	})
