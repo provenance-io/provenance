@@ -10,101 +10,103 @@ syntax = "proto3";
 
 package provenance.smartaccounts.v1;
 
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+import "provenance/smartaccounts/v1/provenanceaccount.proto";
+
 option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
 
-import "google/protobuf/any.proto";
-import "cosmos/msg/v1/msg.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "gogoproto/gogo.proto";
-// MsgInit is used to initialize a provenance account.
-message MsgInit {
-  // if we pull in x/accounts this field can go away
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // UpdateParams defines a governance operation for updating the parameters for smart account module only.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  // RegisterFido2Credential defines a method for registering a Fido2 credential.
+  rpc RegisterFido2Credential(MsgRegisterFido2Credential) returns (MsgRegisterFido2CredentialResponse);
+  // RegisterCosmosCredential defines a method for registering a Cosmos credential.
+  rpc RegisterCosmosCredential(MsgRegisterCosmosCredential) returns (MsgRegisterCosmosCredentialResponse);
+  // DeleteCredential defines a method for deleting a credential.
+  rpc DeleteCredential(MsgDeleteCredential) returns (MsgDeleteCredentialResponse);
+}
+
+// MsgRegisterFido2Credential is used to initialize a provenance smart account with fido2 credentials.
+message MsgRegisterFido2Credential {
   option (cosmos.msg.v1.signer) = "sender";
 
   // sender is the address of the sender of this message.
-  // if we pull in x/accounts this field can go away
-  string sender = 1;
-  // account_type is the type of the account to be created.
-  // if we pull in x/accounts this field can go away
-  string account_type = 2;
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // address_seed can be used to deterministically create the address of the account.
-  // If not present the address will be generated based on its associated account number.
-  // if we pull in x/accounts this field can go away
-  bytes address_seed = 4;
-
-  // pub_key defines a pubkey for the account arbitrary encapsulated.
-  google.protobuf.Any pub_key = 5;
-  // init_sequence defines the initial sequence of the account.
-  // Defaults to zero if not set.
-  uint64 init_sequence = 6;
-  // list of credential types supported by the account
-  repeated Credential credentials = 7;
+  string encoded_attestation = 2;
+  // You must store the user ID separately when initiating registration and retrieve it later.
+  // This is the fido2 user identifier for the authenticator.
+  string user_identifier = 3;
 }
 
-// MsgInitResponse is the response returned after smart account initialization.
-// For now, This is empty.
-message MsgInitResponse {
-  // account_address is the address of the newly created account.
-  string account_address = 1;
+// MsgDeleteCredential defines a method for deleting a credential.
+message MsgDeleteCredential {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the address of the sender of this message.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // credential number is the credential number assigned to the credential in the provenance smart account module.
+  uint64 credential_number = 2;
+}
+// MsgDeleteCredentialResponse defines the response structure for executing a
+message MsgDeleteCredentialResponse {
+  // credential_number is the credential number that was deleted.
+  uint64 credential_number = 1;
 }
 
-// Enum for credential type
-enum CredentialType {
-  // Unspecified credential type
-  CREDENTIAL_TYPE_UNSPECIFIED = 0;
-  // ED25519 credential type
-  CREDENTIAL_TYPE_ED25519 = 1;
-  // Invite credential type
-  CREDENTIAL_TYPE_INVITE = 2;
-  // K256 credential type
-  CREDENTIAL_TYPE_K256 = 3;
-  // P256 credential type
-  CREDENTIAL_TYPE_P256 = 4;
-  // WebAuthn credential type
-  CREDENTIAL_TYPE_WEBAUTHN = 5;
-  // WebAuthn with UV credential type
-  CREDENTIAL_TYPE_WEBAUTHN_UV = 6;
+// MsgRegisterCosmosCredential defines a method for registering a Cosmos credential.
+message MsgRegisterCosmosCredential {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the address of the sender of this message.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // pubkey for which the secp256k1 keypair being registered.
+  google.protobuf.Any pubkey = 2;
 }
 
-// Credential message
-message Credential {
-  string id = 1 ;
-  // do we want hex bytes here?
-  google.protobuf.Any public_key = 2;
-  string username = 3 ;
-  CredentialType variant = 4;
-  bytes raw_id = 5;
-  bytes aaguid = 6;
+// MsgRegisterFido2CredentialResponse is returned after successfully registering a WebAuthn credential.
+// It contains information about the newly registered credential and the associated smart account.
+message MsgRegisterFido2CredentialResponse {
+  // credential_number is a globally unique identifier assigned to the newly registered credential.
+  // This number can be used in future operations like credential deletion.
+  uint64 credential_number = 1;
+
+  // provenanceaccount contains the full smart account data after the registration,
+  // including all credentials associated with the account and its current state.
+  ProvenanceAccount provenance_account = 2;
 }
 
-// MsgSwapPubKey is used to change the pubkey for the account.
-message MsgSwapPubKey {
-  // new_pub_key defines the secp256k1 pubkey to swap the account to.
-  google.protobuf.Any new_pub_key = 1;
+// MsgRegisterCosmosCredentialResponse defines the response structure for executing a
+message MsgRegisterCosmosCredentialResponse {
+  uint64 credential_number = 1;
 }
 
-// MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
-// This is empty.
-message MsgSwapPubKeyResponse {}
+// MsgUpdateParams is the Msg/UpdateParams request type.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
 
-// QuerySequence is the request for the account sequence.
-message QuerySequence {}
+  // authority is the address of the governance account.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-// QuerySequenceResponse returns the sequence of the account.
-message QuerySequenceResponse {
-  // sequence is the current sequence of the account.
-  uint64 sequence = 1;
+  // params defines the parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false];
 }
 
-// QueryPubKey is the request used to query the pubkey of an account.
-message QueryPubKey {}
-
-// QueryPubKeyResponse is the response returned when a QueryPubKey message is sent.
-message QueryPubKeyResponse {
-  google.protobuf.Any pub_key = 1;
-}
-
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParamsResponse {}
 
 ```
 
