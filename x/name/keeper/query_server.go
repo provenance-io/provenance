@@ -38,7 +38,6 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 }
 
 // ReverseLookup gets all names bound to an address with proper pagination
-// ReverseLookup gets all names bound to an address with proper pagination
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
