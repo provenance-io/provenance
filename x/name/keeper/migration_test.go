@@ -80,15 +80,14 @@ func (s *MigrationTestSuite) TestMigration() {
 	err := migrator.MigrateKVToCollections2to3(s.ctx)
 	s.Require().NoError(err)
 
-	params, err := newKeeper.ParamsStore.Get(s.ctx)
-	s.Require().NoError(err)
+	params := newKeeper.GetParams(s.ctx)
 	s.Require().Equal(types.DefaultParams(), params)
 
 	name := "test.provenance"
 	nameKey, err := types.GetNameKeyPrefix(name)
 	s.Require().NoError(err)
 
-	record, err := newKeeper.NameRecords.Get(s.ctx, nameKey)
+	record, err := newKeeper.GetNameRecord(s.ctx, nameKey)
 	s.Require().NoError(err)
 	s.Require().Equal(name, record.Name)
 
@@ -103,7 +102,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	s.Require().NoError(err)
 
 	addrKey := append(addrPrefix, nameKey...)
-	indexRecord, err := newKeeper.AddrIndex.Get(s.ctx, addrKey)
+	indexRecord, err := newKeeper.GetAddrIndexRecord(s.ctx, addrKey)
 	s.Require().NoError(err)
 	s.Require().Equal(*recordPtr, indexRecord)
 

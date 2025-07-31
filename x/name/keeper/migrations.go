@@ -23,6 +23,7 @@ func NewMigrator(keeper Keeper) Migrator {
 // MigrateKVToCollections2to3 migrates the name module data from the legacy KV store layout
 // to the new collections-based layout (version 2 to version 3).
 func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
+	fmt.Println("RUNNING NAME MODULE MIGRATION")
 	ctx.Logger().Info("Migrating name module from KV store to collections (v2 to v3)...")
 
 	store := ctx.KVStore(m.keeper.storeKey)
@@ -31,7 +32,7 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 	if bz := store.Get(types.NameParamStoreKey); bz != nil {
 		var params types.Params
 		m.keeper.cdc.MustUnmarshal(bz, &params)
-		if err := m.keeper.ParamsStore.Set(ctx, params); err != nil {
+		if err := m.keeper.paramsStore.Set(ctx, params); err != nil {
 			return err
 		}
 		ctx.Logger().Info("Migrated name module parameters to collections store.")
@@ -51,7 +52,7 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 		key := nameIter.Key()
 
 		// Set in collections
-		if err := m.keeper.NameRecords.Set(ctx, key, record); err != nil {
+		if err := m.keeper.nameRecords.Set(ctx, key, record); err != nil {
 			return err
 		}
 		count++
@@ -70,7 +71,7 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 		key := addrIter.Key()
 
 		// Set in collections address index
-		if err := m.keeper.AddrIndex.Set(ctx, key, record); err != nil {
+		if err := m.keeper.addrIndex.Set(ctx, key, record); err != nil {
 			return err
 		}
 		addrCount++

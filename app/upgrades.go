@@ -103,24 +103,6 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"collectionsmigration-rc1": { // Migration name module from kv store to collections (v2 -> v3)
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			migrator := namekeeper.NewMigrator(app.NameKeeper)
-			if err := migrator.MigrateKVToCollections2to3(ctx); err != nil {
-				return nil, err
-			}
-			return app.mm.RunMigrations(ctx, app.configurator, vm)
-		},
-	},
-	"collectionsmigration": { // Migration name module from kv store to collections (v2 -> v3)
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			migrator := namekeeper.NewMigrator(app.NameKeeper)
-			if err := migrator.MigrateKVToCollections2to3(ctx); err != nil {
-				return nil, err
-			}
-			return app.mm.RunMigrations(ctx, app.configurator, vm)
-		},
-	},
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
