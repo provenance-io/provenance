@@ -998,7 +998,7 @@ func (app *App) setPostHandler() {
 func (app *App) registerUpgradeHandlers() {
 	// Add the upgrade handlers for each release.
 	InstallCustomUpgradeHandlers(app)
-	// app.injectUpgrade("bouvardia")
+
 	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
 	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
