@@ -33,8 +33,57 @@ var AllRequestMsgs = []sdk.Msg{
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateRequest
 func (m MsgCreateRequest) ValidateBasic() error {
-	if err := validateLedgerBasic(m.Ledger); err != nil {
+	if m.Ledger == nil {
+		return NewErrCodeInvalidField("ledger", "ledger cannot be nil")
+	}
+
+	if err := validateLedgerKeyBasic(m.Ledger.Key); err != nil {
 		return err
+	}
+
+	// Validate the LedgerClassId field
+	if emptyString(&m.Ledger.LedgerClassId) {
+		return NewErrCodeMissingField("ledger_class_id")
+	}
+
+	keyError := validateLedgerKeyBasic(m.Ledger.Key)
+	if keyError != nil {
+		return keyError
+	}
+
+	epochTime, _ := time.Parse("2006-01-02", "1970-01-01")
+	epoch := helper.DaysSinceEpoch(epochTime.UTC())
+
+	// Validate next payment date format if provided
+	if m.Ledger.NextPmtDate < epoch {
+		return NewErrCodeInvalidField("next_pmt_date", "must be after 1970-01-01")
+	}
+
+	// Validate next payment amount if provided
+	if m.Ledger.NextPmtAmt < 0 {
+		return NewErrCodeInvalidField("next_pmt_amt", "must be a non-negative integer")
+	}
+
+	// Validate interest rate if provided
+	if m.Ledger.InterestRate < 0 {
+		return NewErrCodeInvalidField("interest_rate", "must be a non-negative integer")
+	}
+
+	// Validate maturity date format if provided
+	if m.Ledger.MaturityDate < epoch {
+		return NewErrCodeInvalidField("maturity_date", "must be after 1970-01-01")
+	}
+
+	if _, ok := DayCountConvention_name[int32(m.Ledger.InterestDayCountConvention)]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest day count convention: %d", m.Ledger.InterestDayCountConvention)
+	}
+
+	if _, ok := InterestAccrualMethod_name[int32(m.Ledger.InterestAccrualMethod)]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest accrual method: %d", m.Ledger.InterestAccrualMethod)
+	}
+
+	if _, ok := PaymentFrequency_name[int32(m.Ledger.PaymentFrequency)]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid payment frequency: %d", m.Ledger.PaymentFrequency)
 	}
 
 	return nil
@@ -72,11 +121,13 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 	if m.InterestRate < 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("interest rate cannot be negative")
 	}
-	if m.InterestDayCountConvention == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("interest day count convention cannot be zero (0)")
+
+	if _, ok := DayCountConvention_name[int32(m.InterestDayCountConvention)]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest day count convention: %d", m.InterestDayCountConvention)
 	}
-	if m.InterestAccrualMethod == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("interest accrual method cannot be zero")
+
+	if _, ok := InterestAccrualMethod_name[int32(m.InterestAccrualMethod)]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest accrual method: %d", m.InterestAccrualMethod)
 	}
 
 	return nil
@@ -99,8 +150,9 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 	if m.NextPmtDate == 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("next payment date cannot be zero")
 	}
-	if m.PaymentFrequency == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("payment frequency cannot be zero")
+
+	if _, ok := PaymentFrequency_name[int32(m.PaymentFrequency)]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid payment frequency: %d", m.PaymentFrequency)
 	}
 
 	return nil
@@ -139,12 +191,29 @@ func (m MsgAppendRequest) ValidateBasic() error {
 		return sdkerrors.ErrInvalidRequest.Wrap("entries cannot be empty")
 	}
 
-	for _, entry := range m.Entries {
-		if err := validateLedgerEntryBasic(entry); err != nil {
-			return err
+	for _, e := range m.Entries {
+		if emptyString(&e.CorrelationId) {
+			return NewErrCodeMissingField("correlation_id")
+		} else {
+			if !isCorrelationIDValid(e.CorrelationId) {
+				return NewErrCodeInvalidField("correlation_id", "must be a valid string that is less than 50 characters")
+			}
 		}
 
-		if err := validateEntryAmounts(entry.TotalAmt, entry.AppliedAmounts); err != nil {
+		if e.PostedDate <= 0 {
+			return NewErrCodeInvalidField("posted_date", "must be a valid integer")
+		}
+
+		if e.EffectiveDate <= 0 {
+			return NewErrCodeInvalidField("effective_date", "must be a valid integer")
+		}
+
+		// Validate amounts are non-negative
+		if e.TotalAmt.LT(math.NewInt(0)) {
+			return NewErrCodeInvalidField("total_amt", "must be a non-negative integer")
+		}
+
+		if err := validateEntryAmounts(e.TotalAmt, e.AppliedAmounts); err != nil {
 			return err
 		}
 	}
@@ -174,8 +243,8 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 	}
 
 	for _, balanceAmount := range m.BalanceAmounts {
-		if err := validateBucketBalance(balanceAmount); err != nil {
-			return err
+		if balanceAmount.BucketTypeId <= 0 {
+			return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
 		}
 
 		if err := validateEntryAmounts(balanceAmount.BalanceAmt, m.AppliedAmounts); err != nil {
@@ -197,9 +266,31 @@ func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 		return sdkerrors.ErrInvalidRequest.Wrap("transfers cannot be empty")
 	}
 
-	for _, transfer := range m.Transfers {
-		if err := validateFundTransferWithSettlementBasic(transfer); err != nil {
+	for _, ft := range m.Transfers {
+		if err := validateLedgerKeyBasic(ft.Key); err != nil {
 			return err
+		}
+
+		// Validate that the correlation ID is valid
+		if !isCorrelationIDValid(ft.LedgerEntryCorrelationId) {
+			return NewErrCodeInvalidField("ledger_entry_correlation_id", "must be a valid string that is less than 50 characters")
+		}
+
+		// Validate that the settlement instructions are valid
+		for _, si := range ft.SettlementInstructions {
+			if si.Amount.IsNegative() {
+				return NewErrCodeInvalidField("amount", "must be a non-negative integer")
+			}
+
+			if si.Memo != "" {
+				if len(si.Memo) > 50 {
+					return NewErrCodeInvalidField("memo", "must be less than 50 characters")
+				}
+			}
+
+			if si.RecipientAddress == "" {
+				return NewErrCodeMissingField("recipient_address")
+			}
 		}
 	}
 
@@ -233,8 +324,31 @@ func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 		return NewErrCodeUnauthorized("maintainer address is not the same as the authority")
 	}
 
-	if err := validateLedgerClassBasic(m.LedgerClass); err != nil {
-		return err
+	if emptyString(&m.LedgerClass.LedgerClassId) {
+		return NewErrCodeMissingField("ledger_class_id")
+	}
+
+	// Verify that the ledger class id is less than 50 characters
+	if len(m.LedgerClass.LedgerClassId) > 50 {
+		return NewErrCodeInvalidField("ledger_class_id", "must be less than 50 characters")
+	}
+
+	// Verify that the ledger class only contains alphanumeric and dashes
+	if !regexp.MustCompile(`^[a-zA-Z0-9-]+$`).MatchString(m.LedgerClass.LedgerClassId) {
+		return NewErrCodeInvalidField("ledger_class_id", "must only contain alphanumeric and dashes")
+	}
+
+	if emptyString(&m.LedgerClass.AssetClassId) {
+		return NewErrCodeMissingField("asset_class_id")
+	}
+
+	if emptyString(&m.LedgerClass.Denom) {
+		return NewErrCodeMissingField("denom")
+	}
+
+	maintainerAddress := m.LedgerClass.MaintainerAddress
+	if emptyString(&maintainerAddress) {
+		return NewErrCodeMissingField("maintainer_address")
 	}
 
 	return nil
@@ -250,8 +364,29 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 	if m.LedgerClassId == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
 	}
+
 	if m.StatusType == nil {
 		return sdkerrors.ErrInvalidRequest.Wrap("status type cannot be nil")
+	}
+
+	if m.StatusType.Id < 0 {
+		return NewErrCodeInvalidField("status_type_id", "must be a positive integer")
+	}
+
+	if strings.TrimSpace(m.StatusType.Code) == "" {
+		return NewErrCodeMissingField("status_type_code")
+	}
+
+	if len(m.StatusType.Code) > 50 {
+		return NewErrCodeInvalidField("status_type_code", "must be less than or equal to 50 characters")
+	}
+
+	if strings.TrimSpace(m.StatusType.Description) == "" {
+		return NewErrCodeMissingField("status_type_description")
+	}
+
+	if len(m.StatusType.Description) > 100 {
+		return NewErrCodeInvalidField("status_type_description", "must be less than or equal to 100 characters")
 	}
 
 	return nil
@@ -271,6 +406,26 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 		return sdkerrors.ErrInvalidRequest.Wrap("entry type cannot be nil")
 	}
 
+	if m.EntryType.Id < 0 {
+		return NewErrCodeInvalidField("entry_type_id", "must be a positive integer")
+	}
+
+	if strings.TrimSpace(m.EntryType.Code) == "" {
+		return NewErrCodeMissingField("entry_type_code")
+	}
+
+	if len(m.EntryType.Code) > 50 {
+		return NewErrCodeInvalidField("entry_type_code", "must be less than or equal to 50 characters")
+	}
+
+	if strings.TrimSpace(m.EntryType.Description) == "" {
+		return NewErrCodeMissingField("entry_type_description")
+	}
+
+	if len(m.EntryType.Description) > 100 {
+		return NewErrCodeInvalidField("entry_type_description", "must be less than or equal to 100 characters")
+	}
+
 	return nil
 }
 
@@ -286,6 +441,26 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 	}
 	if m.BucketType == nil {
 		return sdkerrors.ErrInvalidRequest.Wrap("bucket type cannot be nil")
+	}
+
+	if m.BucketType.Id < 0 {
+		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
+	}
+
+	if strings.TrimSpace(m.BucketType.Code) == "" {
+		return NewErrCodeMissingField("bucket_type_code")
+	}
+
+	if len(m.BucketType.Code) > 50 {
+		return NewErrCodeInvalidField("bucket_type_code", "must be less than or equal to 50 characters")
+	}
+
+	if strings.TrimSpace(m.BucketType.Description) == "" {
+		return NewErrCodeMissingField("bucket_type_description")
+	}
+
+	if len(m.BucketType.Description) > 100 {
+		return NewErrCodeInvalidField("bucket_type_description", "must be less than or equal to 50 characters")
 	}
 
 	return nil
@@ -305,37 +480,6 @@ func (m MsgBulkImportRequest) ValidateBasic() error {
 	return nil
 }
 
-func validateLedgerClassBasic(l *LedgerClass) error {
-	if emptyString(&l.LedgerClassId) {
-		return NewErrCodeMissingField("ledger_class_id")
-	}
-
-	// Verify that the ledger class id is less than 50 characters
-	if len(l.LedgerClassId) > 50 {
-		return NewErrCodeInvalidField("ledger_class_id", "must be less than 50 characters")
-	}
-
-	// Verify that the ledger class only contains alphanumeric and dashes
-	if !regexp.MustCompile(`^[a-zA-Z0-9-]+$`).MatchString(l.LedgerClassId) {
-		return NewErrCodeInvalidField("ledger_class_id", "must only contain alphanumeric and dashes")
-	}
-
-	if emptyString(&l.AssetClassId) {
-		return NewErrCodeMissingField("asset_class_id")
-	}
-
-	if emptyString(&l.Denom) {
-		return NewErrCodeMissingField("denom")
-	}
-
-	maintainerAddress := l.MaintainerAddress
-	if emptyString(&maintainerAddress) {
-		return NewErrCodeMissingField("maintainer_address")
-	}
-
-	return nil
-}
-
 func validateLedgerKeyBasic(key *LedgerKey) error {
 	if emptyString(&key.NftId) {
 		return NewErrCodeMissingField("nft_id")
@@ -343,76 +487,6 @@ func validateLedgerKeyBasic(key *LedgerKey) error {
 	if emptyString(&key.AssetClassId) {
 		return NewErrCodeMissingField("asset_class_id")
 	}
-	return nil
-}
-
-func validateLedgerBasic(l *Ledger) error {
-	if l == nil {
-		return NewErrCodeInvalidField("ledger", "ledger cannot be nil")
-	}
-
-	if err := validateLedgerKeyBasic(l.Key); err != nil {
-		return err
-	}
-
-	// Validate the LedgerClassId field
-	if emptyString(&l.LedgerClassId) {
-		return NewErrCodeMissingField("ledger_class_id")
-	}
-
-	keyError := validateLedgerKeyBasic(l.Key)
-	if keyError != nil {
-		return keyError
-	}
-
-	epochTime, _ := time.Parse("2006-01-02", "1970-01-01")
-	epoch := helper.DaysSinceEpoch(epochTime.UTC())
-
-	// Validate next payment date format if provided
-	if l.NextPmtDate < epoch {
-		return NewErrCodeInvalidField("next_pmt_date", "must be after 1970-01-01")
-	}
-
-	// Validate next payment amount if provided
-	if l.NextPmtAmt < 0 {
-		return NewErrCodeInvalidField("next_pmt_amt", "must be a non-negative integer")
-	}
-
-	// Validate interest rate if provided
-	if l.InterestRate < 0 {
-		return NewErrCodeInvalidField("interest_rate", "must be a non-negative integer")
-	}
-
-	// Validate maturity date format if provided
-	if l.MaturityDate < epoch {
-		return NewErrCodeInvalidField("maturity_date", "must be after 1970-01-01")
-	}
-
-	return nil
-}
-
-func validateLedgerEntryBasic(e *LedgerEntry) error {
-	if emptyString(&e.CorrelationId) {
-		return NewErrCodeMissingField("correlation_id")
-	} else {
-		if !isCorrelationIDValid(e.CorrelationId) {
-			return NewErrCodeInvalidField("correlation_id", "must be a valid string that is less than 50 characters")
-		}
-	}
-
-	if e.PostedDate <= 0 {
-		return NewErrCodeInvalidField("posted_date", "must be a valid integer")
-	}
-
-	if e.EffectiveDate <= 0 {
-		return NewErrCodeInvalidField("effective_date", "must be a valid integer")
-	}
-
-	// Validate amounts are non-negative
-	if e.TotalAmt.LT(math.NewInt(0)) {
-		return NewErrCodeInvalidField("total_amt", "must be a non-negative integer")
-	}
-
 	return nil
 }
 
@@ -426,52 +500,6 @@ func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*LedgerBucketAmoun
 
 	if !totalAmt.Equal(totalApplied) {
 		return NewErrCodeInvalidField("total_amt", "total amount must equal sum of abs(applied amounts)")
-	}
-
-	return nil
-}
-
-func validateBucketBalance(bb *BucketBalance) error {
-	if bb.BucketTypeId <= 0 {
-		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
-	}
-
-	return nil
-}
-
-func validateFundTransferWithSettlementBasic(ft *FundTransferWithSettlement) error {
-	if err := validateLedgerKeyBasic(ft.Key); err != nil {
-		return err
-	}
-
-	// Validate that the correlation ID is valid
-	if !isCorrelationIDValid(ft.LedgerEntryCorrelationId) {
-		return NewErrCodeInvalidField("ledger_entry_correlation_id", "must be a valid string that is less than 50 characters")
-	}
-
-	// Validate that the settlement instructions are valid
-	for _, settlementInstruction := range ft.SettlementInstructions {
-		if err := validateSettlementInstructionBasic(settlementInstruction); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func validateSettlementInstructionBasic(si *SettlementInstruction) error {
-	if si.Amount.IsNegative() {
-		return NewErrCodeInvalidField("amount", "must be a non-negative integer")
-	}
-
-	if si.Memo != "" {
-		if len(si.Memo) > 50 {
-			return NewErrCodeInvalidField("memo", "must be less than 50 characters")
-		}
-	}
-
-	if si.RecipientAddress == "" {
-		return NewErrCodeMissingField("recipient_address")
 	}
 
 	return nil
