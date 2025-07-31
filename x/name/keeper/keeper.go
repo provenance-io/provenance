@@ -116,36 +116,8 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	if err = types.ValidateAddress(addr); err != nil {
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
-	nameKey, err := types.GetNameKeyPrefix(normalizedName)
-	if err != nil {
-		return types.ErrNameNotBound.Wrapf("failed to get key for name %q: %v", normalizedName, err)
-	}
-	// Check if name already exists
-	exists, err := k.nameRecords.Has(ctx, nameKey)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return types.ErrNameAlreadyBound
-	}
 
-	record := types.NewNameRecord(normalizedName, addr, restrict)
-	if err := record.Validate(); err != nil {
-		return err
-	}
-
-	// Set name record
-	if err := k.nameRecords.Set(ctx, nameKey, record); err != nil {
-		return err
-	}
-
-	// Set address index
-	addrPrefix, err := types.GetAddressKeyPrefix(addr)
-	if err != nil {
-		return err
-	}
-	addrIndexKey := append(addrPrefix, nameKey...)
-	if err := k.addrIndex.Set(ctx, addrIndexKey, record); err != nil {
+	if err = k.addRecord(ctx, name, addr, restrict, false); err != nil {
 		return err
 	}
 
