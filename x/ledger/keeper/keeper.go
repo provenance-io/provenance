@@ -1,0 +1,249 @@
+package keeper
+
+import (
+	"fmt"
+	"strings"
+
+	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	"github.com/provenance-io/provenance/x/registry"
+)
+
+var _ Keeper = (*BaseKeeper)(nil)
+
+type Keeper interface {
+}
+
+// Keeper defines the mymodule keeper.
+type BaseKeeper struct {
+	BaseViewKeeper
+	BaseConfigKeeper
+	BaseEntriesKeeper
+	BaseFundTransferKeeper
+}
+
+var (
+	ledgerPrefix                      = []byte{0x01}
+	entriesPrefix                     = []byte{0x02}
+	ledgerClassesPrefix               = []byte{0x03}
+	ledgerClassEntryTypesPrefix       = []byte{0x04}
+	ledgerClassStatusTypesPrefix      = []byte{0x05}
+	ledgerClassBucketTypesPrefix      = []byte{0x06}
+	fundTransfersPrefix               = []byte{0x07} // Reserved for future use...
+	fundTransfersWithSettlementPrefix = []byte{0x08}
+)
+
+const (
+	ledgerKeyHrp  = "ledger"
+	settlementHrp = "settlement"
+)
+
+// NewKeeper returns a new mymodule Keeper.
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, bankKeeper BankKeeper, registryKeeper RegistryKeeper) BaseKeeper {
+	viewKeeper := NewBaseViewKeeper(cdc, storeKey, storeService, registryKeeper)
+
+	return BaseKeeper{
+		BaseViewKeeper: viewKeeper,
+		BaseConfigKeeper: BaseConfigKeeper{
+			BaseViewKeeper: viewKeeper,
+			BankKeeper:     bankKeeper,
+		},
+		BaseEntriesKeeper: BaseEntriesKeeper{
+			BaseViewKeeper: viewKeeper,
+		},
+		BaseFundTransferKeeper: BaseFundTransferKeeper{
+			BankKeeper:     bankKeeper,
+			BaseViewKeeper: viewKeeper,
+		},
+	}
+}
+
+// Combine the asset class id and nft id into a bech32 string.
+// Using bech32 here just allows us a readable identifier for the ledger.
+func LedgerKeyToString(key *ledger.LedgerKey) (*string, error) {
+	joined := strings.Join([]string{key.AssetClassId, key.NftId}, ":")
+
+	b32, err := bech32.ConvertAndEncode(ledgerKeyHrp, []byte(joined))
+	if err != nil {
+		return nil, err
+	}
+
+	return &b32, nil
+}
+
+func StringToLedgerKey(s string) (*ledger.LedgerKey, error) {
+	hrp, b, err := bech32.DecodeAndConvert(s)
+	if err != nil {
+		return nil, err
+	}
+
+	if hrp != ledgerKeyHrp {
+		return nil, fmt.Errorf("invalid hrp: %s", hrp)
+	}
+
+	parts := strings.Split(string(b), ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid key: %s", s)
+	}
+
+	return &ledger.LedgerKey{
+		AssetClassId: parts[0],
+		NftId:        parts[1],
+	}, nil
+}
+
+func RequireAuthority(ctx sdk.Context, rk RegistryKeeper, addr string, key *registry.RegistryKey) error {
+	has, err := assertAuthority(ctx, rk, addr, key)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "authority is not the owner or servicer")
+	}
+	return nil
+}
+
+func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledgerKey *ledger.LedgerKey) error {
+	// Check if the authority has ownership of the NFT
+	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
+	if nftOwner == nil || nftOwner.String() != authorityAddr {
+		return ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, fmt.Sprintf("authority is not the nft owner (%s)", nftOwner.String()))
+	}
+
+	return nil
+}
+
+// Assert that the authority address is either the registered servicer, or the owner of the NFT if there is no registered servicer.
+func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk *registry.RegistryKey) (bool, error) {
+	// Get the registry entry for the NFT to determine if the authority has the servicer role.
+	registryEntry, err := k.GetRegistry(ctx, rk)
+	if err != nil {
+		return false, err
+	}
+
+	lk := &ledger.LedgerKey{
+		AssetClassId: rk.AssetClassId,
+		NftId:        rk.NftId,
+	}
+
+	if registryEntry == nil {
+		err = assertOwner(ctx, k, authorityAddr, lk)
+		if err != nil {
+			return false, err
+		}
+
+		return true, nil
+	} else {
+		// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
+		// so that only the assigned servicer can append entries.
+		var servicerRegistered bool = false
+		for _, role := range registryEntry.Roles {
+			if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
+				// Note that there is a registered servicer since we allow the owner to be the servicer if there is a registry without one.
+				servicerRegistered = true
+				for _, address := range role.Addresses {
+					// Check if the authority is the servicer
+					if address == authorityAddr {
+						return true, nil
+					}
+				}
+
+				return false, ledger.NewLedgerCodedError(ledger.ErrCodeUnauthorized, "registered servicer")
+			}
+		}
+
+		if !servicerRegistered {
+			err = assertOwner(ctx, k, authorityAddr, lk)
+			if err != nil {
+				return false, err
+			}
+
+			// The authority owns the asset, and there is no registered servicer
+			return true, nil
+		}
+	}
+
+	// Default to false if the authority is not the owner or servicer
+	return false, nil
+}
+
+// BulkImportLedgerData imports ledger data from genesis state
+// This function assumes that ledger classes, status types, entry types, and bucket types
+// are already created before calling this function.
+func (k BaseKeeper) BulkImportLedgerData(ctx sdk.Context, authorityAddr sdk.AccAddress, genesisState ledger.GenesisState) error {
+	ctx.Logger().Info("Starting bulk import of ledger data",
+		"ledger_to_entries", len(genesisState.LedgerToEntries))
+
+	// Import ledgers and their entries
+	for _, ledgerToEntries := range genesisState.LedgerToEntries {
+		var maintainerAddr sdk.AccAddress
+		var ledgerClassId string
+
+		// Determine the ledger class ID and get maintainer address
+		if ledgerToEntries.Ledger != nil {
+			// If we have a ledger object, use its ledger class ID
+			ledgerClassId = ledgerToEntries.Ledger.LedgerClassId
+		} else {
+			// If we don't have a ledger object, get it from the existing ledger
+			existingLedger, err := k.GetLedger(ctx, ledgerToEntries.LedgerKey)
+			if err != nil {
+				return fmt.Errorf("failed to get existing ledger: %w", err)
+			}
+			if existingLedger == nil {
+				return fmt.Errorf("ledger %s does not exist and no ledger object provided", ledgerToEntries.LedgerKey.NftId)
+			}
+			ledgerClassId = existingLedger.LedgerClassId
+		}
+
+		// Get the maintainer address from the ledger class
+		ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
+		if err != nil {
+			return fmt.Errorf("failed to get ledger class %s: %w", ledgerClassId, err)
+		}
+		if ledgerClass == nil {
+			return fmt.Errorf("ledger class %s not found - ensure it is created before bulk import", ledgerClassId)
+		}
+
+		maintainerAddr, err = sdk.AccAddressFromBech32(ledgerClass.MaintainerAddress)
+		if err != nil {
+			return fmt.Errorf("invalid maintainer address %s: %w", ledgerClass.MaintainerAddress, err)
+		}
+
+		// Create the ledger only if it doesn't already exist
+		if ledgerToEntries.Ledger != nil && !k.HasLedger(ctx, ledgerToEntries.Ledger.Key) {
+			if err := k.CreateLedger(ctx, maintainerAddr, *ledgerToEntries.Ledger); err != nil {
+				return fmt.Errorf("failed to create ledger: %w", err)
+			}
+			ctx.Logger().Info("Created ledger", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)
+		} else if ledgerToEntries.Ledger != nil {
+			ctx.Logger().Info("Ledger already exists, skipping creation", "nft_id", ledgerToEntries.Ledger.Key.NftId, "asset_class", ledgerToEntries.Ledger.Key.AssetClassId)
+		}
+
+		// If the ledger doesn't exist, we can't add entries to it
+		if !k.HasLedger(ctx, ledgerToEntries.LedgerKey) {
+			return fmt.Errorf("ledger %s does not exist", ledgerToEntries.LedgerKey.NftId)
+		}
+
+		// Add ledger entries
+		if len(ledgerToEntries.Entries) > 0 {
+			entries := make([]*ledger.LedgerEntry, len(ledgerToEntries.Entries))
+			for i, entry := range ledgerToEntries.Entries {
+				entries[i] = entry
+			}
+
+			if err := k.AppendEntries(ctx, maintainerAddr, ledgerToEntries.LedgerKey, entries); err != nil {
+				return fmt.Errorf("failed to append entries for ledger key %s: %w", ledgerToEntries.LedgerKey.NftId, err)
+			}
+			ctx.Logger().Info("Added ledger entries", "ledger_key", ledgerToEntries.LedgerKey.NftId, "count", len(entries))
+		}
+	}
+
+	ctx.Logger().Info("Successfully completed bulk import of ledger data",
+		"ledger_to_entries", len(genesisState.LedgerToEntries))
+
+	return nil
+}

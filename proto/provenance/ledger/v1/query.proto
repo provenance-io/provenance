@@ -1,0 +1,201 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/ledger/types";
+
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "google/api/annotations.proto";
+import "provenance/ledger/v1/ledger.proto";
+import "provenance/ledger/v1/ledger_settlement.proto";
+
+// Query defines the gRPC querier service for ledger module.
+service Query {
+  /*****************************************************************
+    Ledger Class Queries
+  *****************************************************************/
+  // LedgerClass retrieves a ledger class by its ID.
+  rpc LedgerClass(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}";
+  }
+
+  // LedgerClassEntryTypes retrieves all entry types for a ledger class.
+  rpc LedgerClassEntryTypes(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/entry_types";
+  }
+
+  // LedgerClassStatusTypes retrieves all status types for a ledger class.
+  rpc LedgerClassStatusTypes(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/status_types";
+  }
+
+  // LedgerClassBucketTypes retrieves all bucket types for a ledger class.
+  rpc LedgerClassBucketTypes(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/bucket_types";
+  }
+
+  /*****************************************************************
+    Ledger Queries
+  *****************************************************************/
+  // Ledger retrieves a ledger by its key.
+  rpc Ledger(QueryLedgerRequest) returns (QueryLedgerResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
+  }
+
+  // LedgerEntries retrieves all entries for a ledger.
+  rpc LedgerEntries(QueryLedgerEntriesRequest) returns (QueryLedgerEntriesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/entries/{key.asset_class_id}/{key.nft_id}";
+  }
+
+  // LedgerEntry returns a specific ledger entry for an NFT.
+  rpc LedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
+    option (google.api.http).get =
+        "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/entry/{correlation_id}";
+  }
+
+  // BalancesAsOf returns the balances for a specific NFT as of a given date.
+  rpc BalancesAsOf(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
+    option (google.api.http).get =
+        "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/balances/{as_of_date}";
+  }
+
+  // Settlements retrieves all settlements for a ledger.
+  rpc Settlements(QuerySettlementsRequest) returns (QuerySettlementsResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements";
+  }
+
+  // SettlementsByCorrelationId retrieves settlements by correlation ID.
+  rpc SettlementsByCorrelationId(QuerySettlementsByCorrelationIdRequest)
+      returns (QuerySettlementsByCorrelationIdResponse) {
+    option (google.api.http).get =
+        "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements/{correlation_id}";
+  }
+}
+
+// QueryLedgerRequest represents a request to query a ledger.
+message QueryLedgerRequest {
+  // The ledger key identifying the ledger to query.
+  LedgerKey key = 1;
+}
+
+// QueryLedgerResponse represents the response from querying a ledger.
+message QueryLedgerResponse {
+  // The ledger data.
+  Ledger ledger = 1;
+}
+
+// QueryLedgerEntriesRequest represents a request to query ledger entries.
+message QueryLedgerEntriesRequest {
+  // The ledger key identifying the ledger to query entries for.
+  LedgerKey key = 1;
+}
+
+// QueryLedgerEntriesResponse represents the response from querying ledger entries.
+message QueryLedgerEntriesResponse {
+  // The ledger entries.
+  repeated LedgerEntry entries = 1;
+}
+
+// QueryLedgerEntryRequest represents a request to query a specific ledger entry.
+message QueryLedgerEntryRequest {
+  // The ledger key identifying the ledger.
+  LedgerKey key            = 1;
+  // The correlation ID of the entry to query (free-form string up to 50 characters).
+  string    correlation_id = 2;
+}
+
+// QueryLedgerEntryResponse represents the response from querying a specific ledger entry.
+message QueryLedgerEntryResponse {
+  // The ledger entry.
+  LedgerEntry entry = 1;
+}
+
+// QueryBalancesAsOfRequest represents a request to query balances as of a specific date.
+message QueryBalancesAsOfRequest {
+  // The ledger key identifying the ledger.
+  LedgerKey key = 1;
+
+  // The date to query balances as of (format: YYYY-MM-DD).
+  string as_of_date = 2;
+}
+
+// QueryBalancesAsOfResponse represents the response from querying balances as of a specific date.
+message QueryBalancesAsOfResponse {
+  // The balances as of the specified date.
+  Balances balances = 1;
+}
+
+// QueryLedgerClassEntryTypesRequest represents a request to query entry types for a ledger class.
+message QueryLedgerClassEntryTypesRequest {
+  // The ledger class ID to query entry types for.
+  string ledger_class_id = 1;
+}
+
+// QueryLedgerClassEntryTypesResponse represents the response from querying entry types for a ledger class.
+message QueryLedgerClassEntryTypesResponse {
+  // The entry types for the ledger class.
+  repeated LedgerClassEntryType entry_types = 1;
+}
+
+// QueryLedgerClassStatusTypesRequest represents a request to query status types for a ledger class.
+message QueryLedgerClassStatusTypesRequest {
+  // The ledger class ID to query status types for.
+  string ledger_class_id = 1;
+}
+
+// QueryLedgerClassStatusTypesResponse represents the response from querying status types for a ledger class.
+message QueryLedgerClassStatusTypesResponse {
+  // The status types for the ledger class.
+  repeated LedgerClassStatusType status_types = 1;
+}
+
+// QueryLedgerClassBucketTypesRequest represents a request to query bucket types for a ledger class.
+message QueryLedgerClassBucketTypesRequest {
+  // The ledger class ID to query bucket types for.
+  string ledger_class_id = 1;
+}
+
+// QueryLedgerClassBucketTypesResponse represents the response from querying bucket types for a ledger class.
+message QueryLedgerClassBucketTypesResponse {
+  // The bucket types for the ledger class.
+  repeated LedgerClassBucketType bucket_types = 1;
+}
+
+// QueryLedgerClassRequest represents a request to query a ledger class.
+message QueryLedgerClassRequest {
+  // The ledger class ID to query.
+  string ledger_class_id = 1;
+}
+
+// QueryLedgerClassResponse represents the response from querying a ledger class.
+message QueryLedgerClassResponse {
+  // The ledger class data.
+  LedgerClass ledger_class = 1;
+}
+
+// QuerySettlementsRequest represents a request to query settlements for a ledger.
+message QuerySettlementsRequest {
+  // The ledger key identifying the ledger to query settlements for.
+  LedgerKey key = 1;
+}
+
+// QuerySettlementsResponse represents the response from querying settlements for a ledger.
+message QuerySettlementsResponse {
+  // The settlements for the ledger.
+  repeated StoredSettlementInstructions settlements = 1;
+}
+
+// QuerySettlementsByCorrelationIdRequest represents a request to query settlements by correlation ID.
+message QuerySettlementsByCorrelationIdRequest {
+  // The ledger key identifying the ledger.
+  LedgerKey key            = 1;
+  // The correlation ID to query settlements for.
+  string    correlation_id = 2;
+}
+
+// QuerySettlementsByCorrelationIdResponse represents the response from querying settlements by correlation ID.
+message QuerySettlementsByCorrelationIdResponse {
+  // The settlement instructions for the correlation ID.
+  StoredSettlementInstructions settlement = 1;
+}

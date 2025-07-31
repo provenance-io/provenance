@@ -18,6 +18,7 @@ keyring-*
 vendor/
 *.account
 .go.mod.bak
+.bulk_import_status.*.json
 
 # VS Code
 .history/
