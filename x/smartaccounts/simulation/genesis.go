@@ -107,7 +107,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			CredentialNumber: 1,
 			PublicKey:        credPubKey,
 			Variant:          types.CredentialType_CREDENTIAL_TYPE_K256,
-			CreateTime:       simState.Rand.Int63n(simState.GenTimestamp.Unix()-172800) + 172800, // Random time in last 2 days
+			CreateTime:       simState.GenTimestamp.Unix() - simState.Rand.Int63n(172800), // Random time in last 2 days
 		},
 	}
 
