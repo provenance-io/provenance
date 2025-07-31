@@ -966,26 +966,26 @@ func (m *MsgDestroyResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDestroyResponse proto.InternalMessageInfo
 
-// MsgCreateLedgerClassRequest represents a request to create a new ledger class.
-type MsgCreateLedgerClassRequest struct {
+// MsgCreateClassRequest represents a request to create a new ledger class.
+type MsgCreateClassRequest struct {
 	// The ledger class to create.
 	LedgerClass *LedgerClass `protobuf:"bytes,1,opt,name=ledger_class,json=ledgerClass,proto3" json:"ledger_class,omitempty"`
 	// The authority address that can create ledger classes.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
-func (m *MsgCreateLedgerClassRequest) Reset()         { *m = MsgCreateLedgerClassRequest{} }
-func (m *MsgCreateLedgerClassRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateLedgerClassRequest) ProtoMessage()    {}
-func (*MsgCreateLedgerClassRequest) Descriptor() ([]byte, []int) {
+func (m *MsgCreateClassRequest) Reset()         { *m = MsgCreateClassRequest{} }
+func (m *MsgCreateClassRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClassRequest) ProtoMessage()    {}
+func (*MsgCreateClassRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{18}
 }
-func (m *MsgCreateLedgerClassRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgCreateClassRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCreateLedgerClassRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCreateClassRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCreateLedgerClassRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCreateClassRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -995,48 +995,48 @@ func (m *MsgCreateLedgerClassRequest) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *MsgCreateLedgerClassRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateLedgerClassRequest.Merge(m, src)
+func (m *MsgCreateClassRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClassRequest.Merge(m, src)
 }
-func (m *MsgCreateLedgerClassRequest) XXX_Size() int {
+func (m *MsgCreateClassRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCreateLedgerClassRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateLedgerClassRequest.DiscardUnknown(m)
+func (m *MsgCreateClassRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClassRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCreateLedgerClassRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgCreateClassRequest proto.InternalMessageInfo
 
-func (m *MsgCreateLedgerClassRequest) GetLedgerClass() *LedgerClass {
+func (m *MsgCreateClassRequest) GetLedgerClass() *LedgerClass {
 	if m != nil {
 		return m.LedgerClass
 	}
 	return nil
 }
 
-func (m *MsgCreateLedgerClassRequest) GetAuthority() string {
+func (m *MsgCreateClassRequest) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-// MsgCreateLedgerClassResponse represents the response from creating a ledger class.
-type MsgCreateLedgerClassResponse struct {
+// MsgCreateClassResponse represents the response from creating a ledger class.
+type MsgCreateClassResponse struct {
 }
 
-func (m *MsgCreateLedgerClassResponse) Reset()         { *m = MsgCreateLedgerClassResponse{} }
-func (m *MsgCreateLedgerClassResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateLedgerClassResponse) ProtoMessage()    {}
-func (*MsgCreateLedgerClassResponse) Descriptor() ([]byte, []int) {
+func (m *MsgCreateClassResponse) Reset()         { *m = MsgCreateClassResponse{} }
+func (m *MsgCreateClassResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClassResponse) ProtoMessage()    {}
+func (*MsgCreateClassResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{19}
 }
-func (m *MsgCreateLedgerClassResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgCreateClassResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCreateLedgerClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCreateClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCreateLedgerClassResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCreateClassResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1046,20 +1046,20 @@ func (m *MsgCreateLedgerClassResponse) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *MsgCreateLedgerClassResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateLedgerClassResponse.Merge(m, src)
+func (m *MsgCreateClassResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClassResponse.Merge(m, src)
 }
-func (m *MsgCreateLedgerClassResponse) XXX_Size() int {
+func (m *MsgCreateClassResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCreateLedgerClassResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateLedgerClassResponse.DiscardUnknown(m)
+func (m *MsgCreateClassResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClassResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCreateLedgerClassResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgCreateClassResponse proto.InternalMessageInfo
 
-// MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class.
-type MsgAddLedgerClassStatusTypeRequest struct {
+// MsgAddClassStatusTypeRequest represents a request to add a status type to a ledger class.
+type MsgAddClassStatusTypeRequest struct {
 	// The ledger class ID to add the status type to.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
 	// The status type to add.
@@ -1068,18 +1068,18 @@ type MsgAddLedgerClassStatusTypeRequest struct {
 	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
-func (m *MsgAddLedgerClassStatusTypeRequest) Reset()         { *m = MsgAddLedgerClassStatusTypeRequest{} }
-func (m *MsgAddLedgerClassStatusTypeRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgAddLedgerClassStatusTypeRequest) ProtoMessage()    {}
-func (*MsgAddLedgerClassStatusTypeRequest) Descriptor() ([]byte, []int) {
+func (m *MsgAddClassStatusTypeRequest) Reset()         { *m = MsgAddClassStatusTypeRequest{} }
+func (m *MsgAddClassStatusTypeRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgAddClassStatusTypeRequest) ProtoMessage()    {}
+func (*MsgAddClassStatusTypeRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{20}
 }
-func (m *MsgAddLedgerClassStatusTypeRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddClassStatusTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddLedgerClassStatusTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddClassStatusTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddLedgerClassStatusTypeRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddClassStatusTypeRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1089,55 +1089,55 @@ func (m *MsgAddLedgerClassStatusTypeRequest) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *MsgAddLedgerClassStatusTypeRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddLedgerClassStatusTypeRequest.Merge(m, src)
+func (m *MsgAddClassStatusTypeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddClassStatusTypeRequest.Merge(m, src)
 }
-func (m *MsgAddLedgerClassStatusTypeRequest) XXX_Size() int {
+func (m *MsgAddClassStatusTypeRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddLedgerClassStatusTypeRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddLedgerClassStatusTypeRequest.DiscardUnknown(m)
+func (m *MsgAddClassStatusTypeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddClassStatusTypeRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddLedgerClassStatusTypeRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddClassStatusTypeRequest proto.InternalMessageInfo
 
-func (m *MsgAddLedgerClassStatusTypeRequest) GetLedgerClassId() string {
+func (m *MsgAddClassStatusTypeRequest) GetLedgerClassId() string {
 	if m != nil {
 		return m.LedgerClassId
 	}
 	return ""
 }
 
-func (m *MsgAddLedgerClassStatusTypeRequest) GetStatusType() *LedgerClassStatusType {
+func (m *MsgAddClassStatusTypeRequest) GetStatusType() *LedgerClassStatusType {
 	if m != nil {
 		return m.StatusType
 	}
 	return nil
 }
 
-func (m *MsgAddLedgerClassStatusTypeRequest) GetAuthority() string {
+func (m *MsgAddClassStatusTypeRequest) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-// MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type.
-type MsgAddLedgerClassStatusTypeResponse struct {
+// MsgAddClassStatusTypeResponse represents the response from adding a status type.
+type MsgAddClassStatusTypeResponse struct {
 }
 
-func (m *MsgAddLedgerClassStatusTypeResponse) Reset()         { *m = MsgAddLedgerClassStatusTypeResponse{} }
-func (m *MsgAddLedgerClassStatusTypeResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddLedgerClassStatusTypeResponse) ProtoMessage()    {}
-func (*MsgAddLedgerClassStatusTypeResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddClassStatusTypeResponse) Reset()         { *m = MsgAddClassStatusTypeResponse{} }
+func (m *MsgAddClassStatusTypeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddClassStatusTypeResponse) ProtoMessage()    {}
+func (*MsgAddClassStatusTypeResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{21}
 }
-func (m *MsgAddLedgerClassStatusTypeResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddClassStatusTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddLedgerClassStatusTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddClassStatusTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddLedgerClassStatusTypeResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddClassStatusTypeResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1147,20 +1147,20 @@ func (m *MsgAddLedgerClassStatusTypeResponse) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *MsgAddLedgerClassStatusTypeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddLedgerClassStatusTypeResponse.Merge(m, src)
+func (m *MsgAddClassStatusTypeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddClassStatusTypeResponse.Merge(m, src)
 }
-func (m *MsgAddLedgerClassStatusTypeResponse) XXX_Size() int {
+func (m *MsgAddClassStatusTypeResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddLedgerClassStatusTypeResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddLedgerClassStatusTypeResponse.DiscardUnknown(m)
+func (m *MsgAddClassStatusTypeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddClassStatusTypeResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddLedgerClassStatusTypeResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddClassStatusTypeResponse proto.InternalMessageInfo
 
-// MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class.
-type MsgAddLedgerClassEntryTypeRequest struct {
+// MsgAddClassEntryTypeRequest represents a request to add an entry type to a ledger class.
+type MsgAddClassEntryTypeRequest struct {
 	// The ledger class ID to add the entry type to.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
 	// The entry type to add.
@@ -1169,18 +1169,18 @@ type MsgAddLedgerClassEntryTypeRequest struct {
 	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
-func (m *MsgAddLedgerClassEntryTypeRequest) Reset()         { *m = MsgAddLedgerClassEntryTypeRequest{} }
-func (m *MsgAddLedgerClassEntryTypeRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgAddLedgerClassEntryTypeRequest) ProtoMessage()    {}
-func (*MsgAddLedgerClassEntryTypeRequest) Descriptor() ([]byte, []int) {
+func (m *MsgAddClassEntryTypeRequest) Reset()         { *m = MsgAddClassEntryTypeRequest{} }
+func (m *MsgAddClassEntryTypeRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgAddClassEntryTypeRequest) ProtoMessage()    {}
+func (*MsgAddClassEntryTypeRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{22}
 }
-func (m *MsgAddLedgerClassEntryTypeRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddClassEntryTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddLedgerClassEntryTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddClassEntryTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddLedgerClassEntryTypeRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddClassEntryTypeRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1190,55 +1190,55 @@ func (m *MsgAddLedgerClassEntryTypeRequest) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *MsgAddLedgerClassEntryTypeRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddLedgerClassEntryTypeRequest.Merge(m, src)
+func (m *MsgAddClassEntryTypeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddClassEntryTypeRequest.Merge(m, src)
 }
-func (m *MsgAddLedgerClassEntryTypeRequest) XXX_Size() int {
+func (m *MsgAddClassEntryTypeRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddLedgerClassEntryTypeRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddLedgerClassEntryTypeRequest.DiscardUnknown(m)
+func (m *MsgAddClassEntryTypeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddClassEntryTypeRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddLedgerClassEntryTypeRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddClassEntryTypeRequest proto.InternalMessageInfo
 
-func (m *MsgAddLedgerClassEntryTypeRequest) GetLedgerClassId() string {
+func (m *MsgAddClassEntryTypeRequest) GetLedgerClassId() string {
 	if m != nil {
 		return m.LedgerClassId
 	}
 	return ""
 }
 
-func (m *MsgAddLedgerClassEntryTypeRequest) GetEntryType() *LedgerClassEntryType {
+func (m *MsgAddClassEntryTypeRequest) GetEntryType() *LedgerClassEntryType {
 	if m != nil {
 		return m.EntryType
 	}
 	return nil
 }
 
-func (m *MsgAddLedgerClassEntryTypeRequest) GetAuthority() string {
+func (m *MsgAddClassEntryTypeRequest) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-// MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type.
-type MsgAddLedgerClassEntryTypeResponse struct {
+// MsgAddClassEntryTypeResponse represents the response from adding an entry type.
+type MsgAddClassEntryTypeResponse struct {
 }
 
-func (m *MsgAddLedgerClassEntryTypeResponse) Reset()         { *m = MsgAddLedgerClassEntryTypeResponse{} }
-func (m *MsgAddLedgerClassEntryTypeResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddLedgerClassEntryTypeResponse) ProtoMessage()    {}
-func (*MsgAddLedgerClassEntryTypeResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddClassEntryTypeResponse) Reset()         { *m = MsgAddClassEntryTypeResponse{} }
+func (m *MsgAddClassEntryTypeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddClassEntryTypeResponse) ProtoMessage()    {}
+func (*MsgAddClassEntryTypeResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{23}
 }
-func (m *MsgAddLedgerClassEntryTypeResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddClassEntryTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddLedgerClassEntryTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddClassEntryTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddLedgerClassEntryTypeResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddClassEntryTypeResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1248,20 +1248,20 @@ func (m *MsgAddLedgerClassEntryTypeResponse) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *MsgAddLedgerClassEntryTypeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddLedgerClassEntryTypeResponse.Merge(m, src)
+func (m *MsgAddClassEntryTypeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddClassEntryTypeResponse.Merge(m, src)
 }
-func (m *MsgAddLedgerClassEntryTypeResponse) XXX_Size() int {
+func (m *MsgAddClassEntryTypeResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddLedgerClassEntryTypeResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddLedgerClassEntryTypeResponse.DiscardUnknown(m)
+func (m *MsgAddClassEntryTypeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddClassEntryTypeResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddLedgerClassEntryTypeResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddClassEntryTypeResponse proto.InternalMessageInfo
 
-// MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
-type MsgAddLedgerClassBucketTypeRequest struct {
+// MsgAddClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
+type MsgAddClassBucketTypeRequest struct {
 	// The ledger class ID to add the bucket type to.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
 	// The bucket type to add.
@@ -1270,18 +1270,18 @@ type MsgAddLedgerClassBucketTypeRequest struct {
 	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
-func (m *MsgAddLedgerClassBucketTypeRequest) Reset()         { *m = MsgAddLedgerClassBucketTypeRequest{} }
-func (m *MsgAddLedgerClassBucketTypeRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgAddLedgerClassBucketTypeRequest) ProtoMessage()    {}
-func (*MsgAddLedgerClassBucketTypeRequest) Descriptor() ([]byte, []int) {
+func (m *MsgAddClassBucketTypeRequest) Reset()         { *m = MsgAddClassBucketTypeRequest{} }
+func (m *MsgAddClassBucketTypeRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgAddClassBucketTypeRequest) ProtoMessage()    {}
+func (*MsgAddClassBucketTypeRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{24}
 }
-func (m *MsgAddLedgerClassBucketTypeRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddClassBucketTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddLedgerClassBucketTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddClassBucketTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddLedgerClassBucketTypeRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddClassBucketTypeRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1291,55 +1291,55 @@ func (m *MsgAddLedgerClassBucketTypeRequest) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *MsgAddLedgerClassBucketTypeRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddLedgerClassBucketTypeRequest.Merge(m, src)
+func (m *MsgAddClassBucketTypeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddClassBucketTypeRequest.Merge(m, src)
 }
-func (m *MsgAddLedgerClassBucketTypeRequest) XXX_Size() int {
+func (m *MsgAddClassBucketTypeRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddLedgerClassBucketTypeRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddLedgerClassBucketTypeRequest.DiscardUnknown(m)
+func (m *MsgAddClassBucketTypeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddClassBucketTypeRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddLedgerClassBucketTypeRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddClassBucketTypeRequest proto.InternalMessageInfo
 
-func (m *MsgAddLedgerClassBucketTypeRequest) GetLedgerClassId() string {
+func (m *MsgAddClassBucketTypeRequest) GetLedgerClassId() string {
 	if m != nil {
 		return m.LedgerClassId
 	}
 	return ""
 }
 
-func (m *MsgAddLedgerClassBucketTypeRequest) GetBucketType() *LedgerClassBucketType {
+func (m *MsgAddClassBucketTypeRequest) GetBucketType() *LedgerClassBucketType {
 	if m != nil {
 		return m.BucketType
 	}
 	return nil
 }
 
-func (m *MsgAddLedgerClassBucketTypeRequest) GetAuthority() string {
+func (m *MsgAddClassBucketTypeRequest) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-// MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type.
-type MsgAddLedgerClassBucketTypeResponse struct {
+// MsgAddClassBucketTypeResponse represents the response from adding a bucket type.
+type MsgAddClassBucketTypeResponse struct {
 }
 
-func (m *MsgAddLedgerClassBucketTypeResponse) Reset()         { *m = MsgAddLedgerClassBucketTypeResponse{} }
-func (m *MsgAddLedgerClassBucketTypeResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddLedgerClassBucketTypeResponse) ProtoMessage()    {}
-func (*MsgAddLedgerClassBucketTypeResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddClassBucketTypeResponse) Reset()         { *m = MsgAddClassBucketTypeResponse{} }
+func (m *MsgAddClassBucketTypeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddClassBucketTypeResponse) ProtoMessage()    {}
+func (*MsgAddClassBucketTypeResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3c124d2e9569f84d, []int{25}
 }
-func (m *MsgAddLedgerClassBucketTypeResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddClassBucketTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddLedgerClassBucketTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddClassBucketTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddLedgerClassBucketTypeResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddClassBucketTypeResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1349,17 +1349,17 @@ func (m *MsgAddLedgerClassBucketTypeResponse) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *MsgAddLedgerClassBucketTypeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddLedgerClassBucketTypeResponse.Merge(m, src)
+func (m *MsgAddClassBucketTypeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddClassBucketTypeResponse.Merge(m, src)
 }
-func (m *MsgAddLedgerClassBucketTypeResponse) XXX_Size() int {
+func (m *MsgAddClassBucketTypeResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddLedgerClassBucketTypeResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddLedgerClassBucketTypeResponse.DiscardUnknown(m)
+func (m *MsgAddClassBucketTypeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddClassBucketTypeResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddLedgerClassBucketTypeResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddClassBucketTypeResponse proto.InternalMessageInfo
 
 // MsgBulkImportRequest represents a request to bulk import ledger data from genesis state.
 type MsgBulkImportRequest struct {
@@ -1472,14 +1472,14 @@ func init() {
 	proto.RegisterType((*MsgTransferFundsWithSettlementResponse)(nil), "provenance.ledger.v1.MsgTransferFundsWithSettlementResponse")
 	proto.RegisterType((*MsgDestroyRequest)(nil), "provenance.ledger.v1.MsgDestroyRequest")
 	proto.RegisterType((*MsgDestroyResponse)(nil), "provenance.ledger.v1.MsgDestroyResponse")
-	proto.RegisterType((*MsgCreateLedgerClassRequest)(nil), "provenance.ledger.v1.MsgCreateLedgerClassRequest")
-	proto.RegisterType((*MsgCreateLedgerClassResponse)(nil), "provenance.ledger.v1.MsgCreateLedgerClassResponse")
-	proto.RegisterType((*MsgAddLedgerClassStatusTypeRequest)(nil), "provenance.ledger.v1.MsgAddLedgerClassStatusTypeRequest")
-	proto.RegisterType((*MsgAddLedgerClassStatusTypeResponse)(nil), "provenance.ledger.v1.MsgAddLedgerClassStatusTypeResponse")
-	proto.RegisterType((*MsgAddLedgerClassEntryTypeRequest)(nil), "provenance.ledger.v1.MsgAddLedgerClassEntryTypeRequest")
-	proto.RegisterType((*MsgAddLedgerClassEntryTypeResponse)(nil), "provenance.ledger.v1.MsgAddLedgerClassEntryTypeResponse")
-	proto.RegisterType((*MsgAddLedgerClassBucketTypeRequest)(nil), "provenance.ledger.v1.MsgAddLedgerClassBucketTypeRequest")
-	proto.RegisterType((*MsgAddLedgerClassBucketTypeResponse)(nil), "provenance.ledger.v1.MsgAddLedgerClassBucketTypeResponse")
+	proto.RegisterType((*MsgCreateClassRequest)(nil), "provenance.ledger.v1.MsgCreateClassRequest")
+	proto.RegisterType((*MsgCreateClassResponse)(nil), "provenance.ledger.v1.MsgCreateClassResponse")
+	proto.RegisterType((*MsgAddClassStatusTypeRequest)(nil), "provenance.ledger.v1.MsgAddClassStatusTypeRequest")
+	proto.RegisterType((*MsgAddClassStatusTypeResponse)(nil), "provenance.ledger.v1.MsgAddClassStatusTypeResponse")
+	proto.RegisterType((*MsgAddClassEntryTypeRequest)(nil), "provenance.ledger.v1.MsgAddClassEntryTypeRequest")
+	proto.RegisterType((*MsgAddClassEntryTypeResponse)(nil), "provenance.ledger.v1.MsgAddClassEntryTypeResponse")
+	proto.RegisterType((*MsgAddClassBucketTypeRequest)(nil), "provenance.ledger.v1.MsgAddClassBucketTypeRequest")
+	proto.RegisterType((*MsgAddClassBucketTypeResponse)(nil), "provenance.ledger.v1.MsgAddClassBucketTypeResponse")
 	proto.RegisterType((*MsgBulkImportRequest)(nil), "provenance.ledger.v1.MsgBulkImportRequest")
 	proto.RegisterType((*MsgBulkImportResponse)(nil), "provenance.ledger.v1.MsgBulkImportResponse")
 }
@@ -1487,89 +1487,87 @@ func init() {
 func init() { proto.RegisterFile("provenance/ledger/v1/tx.proto", fileDescriptor_3c124d2e9569f84d) }
 
 var fileDescriptor_3c124d2e9569f84d = []byte{
-	// 1301 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0xcf, 0x6f, 0xdb, 0x54,
-	0x1c, 0x9f, 0x9b, 0x75, 0x90, 0x6f, 0x9a, 0xb4, 0x7b, 0x2b, 0x34, 0xf3, 0xd6, 0x2c, 0x4d, 0xd7,
-	0x12, 0x75, 0x5b, 0x42, 0x33, 0x24, 0x06, 0xe3, 0xd2, 0x1f, 0x6c, 0x8a, 0x68, 0x50, 0x71, 0x8d,
-	0x90, 0x40, 0x22, 0x72, 0xe3, 0x37, 0xd7, 0x6a, 0xfc, 0x03, 0xbf, 0x97, 0xca, 0x96, 0x90, 0x40,
-	0xdc, 0x41, 0xec, 0xc0, 0x85, 0x0b, 0x17, 0xb8, 0xf7, 0xce, 0x11, 0x0e, 0x3b, 0xee, 0xc8, 0x11,
-	0xb5, 0x87, 0xfd, 0x1b, 0xc8, 0xf6, 0x73, 0xe2, 0xc4, 0x8e, 0x9d, 0x94, 0xf5, 0x16, 0x3f, 0x7f,
-	0x7f, 0x7c, 0x3e, 0x9f, 0xf7, 0x7d, 0xef, 0xfb, 0x75, 0x60, 0xd9, 0xb4, 0x8c, 0x13, 0xac, 0x4b,
-	0x7a, 0x07, 0xd7, 0xbb, 0x58, 0x56, 0xb0, 0x55, 0x3f, 0xd9, 0xac, 0x53, 0xbb, 0x66, 0x5a, 0x06,
-	0x35, 0xd0, 0xe2, 0xe0, 0x75, 0xcd, 0x7f, 0x5d, 0x3b, 0xd9, 0xe4, 0x97, 0x3a, 0x06, 0xd1, 0x0c,
-	0x52, 0xd7, 0x88, 0xe2, 0x5a, 0x6b, 0x44, 0xf1, 0xcd, 0xf9, 0x95, 0xd8, 0x68, 0xcc, 0xd1, 0x37,
-	0xb9, 0x9f, 0x60, 0xd2, 0x26, 0x98, 0xd2, 0x2e, 0xd6, 0xb0, 0x4e, 0x99, 0x75, 0x25, 0xd6, 0x5a,
-	0xc1, 0x3a, 0x26, 0x2a, 0xf1, 0x6d, 0x2a, 0x27, 0xb0, 0xd0, 0x22, 0xca, 0x8e, 0x85, 0x25, 0x8a,
-	0x05, 0xfc, 0x4d, 0x0f, 0x13, 0x8a, 0xde, 0x83, 0x6b, 0xbe, 0x79, 0x91, 0x2b, 0x73, 0xd5, 0x5c,
-	0xe3, 0x76, 0x2d, 0x8e, 0x48, 0x6d, 0xcf, 0xfb, 0x25, 0x30, 0x5b, 0x74, 0x1b, 0xb2, 0x52, 0x8f,
-	0x1e, 0x19, 0x96, 0x4a, 0x9d, 0xe2, 0x4c, 0x99, 0xab, 0x66, 0x85, 0xc1, 0xc2, 0x87, 0x85, 0x1f,
-	0x5e, 0x9d, 0x6e, 0x0c, 0x9e, 0x2b, 0x37, 0xe0, 0x7a, 0x28, 0x2f, 0x31, 0x0d, 0x9d, 0xe0, 0xca,
-	0x6f, 0x1c, 0xbc, 0xdd, 0x22, 0xca, 0xe7, 0xa6, 0x2c, 0x51, 0x7c, 0x40, 0x25, 0xda, 0x23, 0x01,
-	0xa6, 0x4d, 0xc8, 0x1c, 0x63, 0x87, 0x01, 0xba, 0x93, 0x04, 0xe8, 0x13, 0xec, 0x08, 0xae, 0x6d,
-	0x32, 0x20, 0x74, 0x17, 0x0a, 0xc4, 0xcb, 0xd0, 0xa6, 0x8e, 0x89, 0xdb, 0xaa, 0x5c, 0xcc, 0x94,
-	0xb9, 0xea, 0xac, 0x30, 0xe7, 0xaf, 0x8a, 0x8e, 0x89, 0x9b, 0x72, 0x04, 0xf6, 0x4d, 0x58, 0x8a,
-	0x00, 0x64, 0xe0, 0xff, 0x9e, 0x81, 0xdb, 0xfd, 0x77, 0x4d, 0x9d, 0x62, 0x0b, 0x13, 0x2a, 0x84,
-	0x64, 0x7d, 0xed, 0x14, 0x56, 0x21, 0xaf, 0xb2, 0x3c, 0x6d, 0x4b, 0xa2, 0x38, 0x60, 0xa0, 0x86,
-	0x92, 0xa3, 0x3d, 0x40, 0x7d, 0x23, 0x59, 0x72, 0xda, 0x1d, 0xa3, 0xa7, 0xd3, 0xe2, 0xd5, 0x32,
-	0x57, 0x2d, 0x34, 0x4a, 0xf1, 0x20, 0x76, 0x25, 0x67, 0xc7, 0xb5, 0x12, 0x16, 0x02, 0xcf, 0x60,
-	0x05, 0xed, 0x43, 0x7f, 0xad, 0x2d, 0x75, 0x3a, 0x56, 0x4f, 0xea, 0x16, 0x67, 0xbd, 0x58, 0x6b,
-	0xf1, 0xb1, 0x02, 0x21, 0xb6, 0x7c, 0x63, 0x61, 0x5e, 0x1d, 0x5e, 0x88, 0x28, 0x7c, 0x07, 0x96,
-	0xc7, 0xa8, 0xc8, 0x74, 0xfe, 0x65, 0x26, 0xb4, 0x07, 0xfb, 0x92, 0xe3, 0x16, 0xfc, 0xa5, 0x49,
-	0x5c, 0x86, 0x39, 0x1d, 0xdb, 0xb4, 0x6d, 0x6a, 0xb4, 0x2d, 0x69, 0xd4, 0x53, 0x38, 0x23, 0x80,
-	0xbb, 0xb6, 0xaf, 0xd1, 0x2d, 0x8d, 0xa2, 0x0a, 0xe4, 0xfb, 0x16, 0x2e, 0x22, 0x4f, 0xda, 0x59,
-	0x21, 0xc7, 0x4c, 0x76, 0xdd, 0x3d, 0x38, 0x80, 0xeb, 0xa6, 0x0f, 0xb4, 0xfd, 0xcc, 0x72, 0xa1,
-	0xea, 0x1d, 0x87, 0xc9, 0xb6, 0x1e, 0x0f, 0x92, 0xf1, 0x7a, 0x12, 0x58, 0x0b, 0x0b, 0xe6, 0xc8,
-	0x4a, 0x44, 0x38, 0x1e, 0x8a, 0x51, 0x59, 0x98, 0x66, 0xbf, 0x73, 0xa1, 0xda, 0x6c, 0x49, 0xb4,
-	0xe7, 0x7a, 0xec, 0x5e, 0x72, 0x6d, 0x6a, 0x2c, 0x8f, 0x2f, 0x0b, 0xab, 0x4d, 0x2d, 0x94, 0x3c,
-	0x71, 0xef, 0x87, 0x51, 0x32, 0x1e, 0xa7, 0x9c, 0x77, 0x5d, 0x6d, 0x99, 0x26, 0xd6, 0xe5, 0xff,
-	0x81, 0xfd, 0x31, 0xbc, 0x81, 0x75, 0x6a, 0xa9, 0x98, 0x14, 0x67, 0xca, 0x99, 0x6a, 0xae, 0xb1,
-	0x92, 0xe4, 0xf6, 0xb1, 0x4e, 0x2d, 0x47, 0x08, 0x3c, 0x86, 0x89, 0x67, 0x26, 0xbb, 0xe8, 0x02,
-	0xc4, 0x8c, 0xc7, 0x5f, 0x33, 0xa1, 0xcd, 0xda, 0x96, 0xba, 0x6e, 0xda, 0xcb, 0xbb, 0xea, 0xd6,
-	0xa0, 0xd0, 0x31, 0x2c, 0x0b, 0x77, 0x25, 0xaa, 0x1a, 0x7a, 0x70, 0xd5, 0x65, 0x85, 0x7c, 0x68,
-	0xb5, 0x29, 0xa3, 0xcf, 0x60, 0x5e, 0x32, 0xcd, 0xae, 0x8a, 0xe5, 0xb6, 0xa4, 0xb9, 0xa7, 0x9d,
-	0x14, 0xaf, 0x7a, 0xe2, 0x54, 0x93, 0x30, 0x6c, 0xf7, 0x3a, 0xc7, 0x98, 0x6e, 0x79, 0x0e, 0x42,
-	0x81, 0x05, 0xf0, 0x1f, 0x09, 0xda, 0x83, 0xf9, 0x43, 0x9f, 0x5d, 0x3f, 0xe4, 0xac, 0x17, 0x72,
-	0x35, 0x3e, 0xa4, 0x1f, 0x8c, 0x09, 0x22, 0x14, 0x98, 0x2f, 0x8b, 0x16, 0x91, 0xf6, 0x16, 0xdc,
-	0x8c, 0x11, 0x91, 0x49, 0xfc, 0x07, 0x07, 0x6b, 0x2d, 0xa2, 0x88, 0x96, 0xa4, 0x93, 0x67, 0xd8,
-	0x7a, 0xd2, 0xd3, 0x65, 0xf2, 0x85, 0x4a, 0x8f, 0x0e, 0xfa, 0x5d, 0x32, 0xd0, 0x7b, 0x48, 0x3c,
-	0x6e, 0x54, 0xbc, 0x4f, 0x21, 0x4b, 0x59, 0x8c, 0xa0, 0x58, 0xde, 0x8d, 0x07, 0xef, 0xa6, 0x08,
-	0xd2, 0x8d, 0x64, 0x1a, 0x84, 0x88, 0x90, 0xa8, 0xc2, 0x7a, 0x1a, 0x4c, 0xc6, 0x88, 0x7a, 0x95,
-	0xb4, 0x8b, 0x09, 0xb5, 0x0c, 0xe7, 0xb2, 0x8a, 0x25, 0x82, 0x6f, 0x11, 0x50, 0x38, 0x2b, 0xc3,
-	0xf2, 0x9c, 0x83, 0x5b, 0xfd, 0xfe, 0xed, 0xc7, 0xdf, 0xe9, 0x4a, 0xa4, 0x5f, 0xc3, 0xbb, 0x30,
-	0xc7, 0xa6, 0x92, 0x8e, 0xbb, 0xcc, 0xf0, 0x25, 0x9e, 0x32, 0xdf, 0x3f, 0xd7, 0x1d, 0x3c, 0x4c,
-	0x89, 0xb4, 0xe4, 0xdd, 0x71, 0x31, 0x90, 0x18, 0xe6, 0x17, 0x1c, 0x54, 0xdc, 0xa3, 0x28, 0xcb,
-	0xa1, 0xb7, 0x07, 0xfd, 0x6e, 0x1f, 0x40, 0x5f, 0x87, 0xf9, 0x30, 0x74, 0xf7, 0xb8, 0xf8, 0x45,
-	0x91, 0x0f, 0x41, 0x6b, 0xca, 0x68, 0x0f, 0x72, 0xa1, 0x01, 0xc2, 0x83, 0x97, 0x6b, 0xdc, 0x4b,
-	0x65, 0x18, 0x4a, 0x08, 0x83, 0x51, 0x63, 0xca, 0x4b, 0x65, 0x0d, 0x56, 0x13, 0x99, 0x04, 0x23,
-	0x09, 0x07, 0x2b, 0x11, 0x3b, 0xef, 0x36, 0xbb, 0x08, 0xe1, 0x26, 0x80, 0x7b, 0x05, 0x3a, 0x61,
-	0xbe, 0x1b, 0xa9, 0x7c, 0x07, 0xe9, 0xb2, 0x38, 0xf8, 0x39, 0x25, 0xdb, 0xbb, 0x31, 0xfb, 0x16,
-	0x62, 0x91, 0xb4, 0xbd, 0xfe, 0x85, 0x72, 0xc1, 0xed, 0x3d, 0xf4, 0x9c, 0xa7, 0xdb, 0xde, 0x50,
-	0x42, 0x38, 0xec, 0xff, 0x7e, 0x0d, 0xdb, 0x1b, 0x66, 0xc2, 0x18, 0xff, 0xc8, 0xc1, 0x62, 0x8b,
-	0x28, 0xdb, 0xbd, 0xee, 0x71, 0x53, 0x33, 0x0d, 0x6b, 0xc2, 0x1b, 0xed, 0x29, 0xe4, 0xd9, 0x37,
-	0x40, 0xdb, 0x2d, 0xc0, 0x80, 0x5b, 0x25, 0x9e, 0xdb, 0x53, 0xdf, 0xd4, 0xad, 0x2e, 0x2c, 0xcc,
-	0x29, 0xa1, 0xa7, 0x08, 0xec, 0x25, 0x78, 0x6b, 0x04, 0x8e, 0x0f, 0xb4, 0xf1, 0x67, 0x1e, 0x32,
-	0x2d, 0xa2, 0xa0, 0xaf, 0xe0, 0x4d, 0xff, 0x78, 0x8a, 0x36, 0x1a, 0x33, 0xf8, 0x8c, 0x7e, 0x8c,
-	0xf0, 0xef, 0xa4, 0xda, 0xf9, 0x49, 0x90, 0x06, 0x85, 0xf0, 0x5c, 0x2e, 0xda, 0xe8, 0xfe, 0x58,
-	0xd7, 0x98, 0x2f, 0x0c, 0xfe, 0xc1, 0x84, 0xd6, 0x2c, 0xdd, 0x77, 0xb0, 0x18, 0x1d, 0x52, 0x45,
-	0x1b, 0x35, 0x52, 0xc2, 0xc4, 0x7c, 0x19, 0xf0, 0x0f, 0xa7, 0xf2, 0x61, 0x00, 0x4c, 0x98, 0x1f,
-	0x1a, 0xf6, 0x44, 0x1b, 0xa5, 0x51, 0x18, 0x9e, 0x96, 0xf9, 0xda, 0xa4, 0xe6, 0xa3, 0x94, 0xc3,
-	0xb3, 0xd9, 0x04, 0x94, 0x63, 0x06, 0xce, 0x54, 0xca, 0x71, 0xe3, 0x9f, 0x5b, 0x3f, 0xfe, 0x20,
-	0x95, 0x58, 0x3f, 0x43, 0xd3, 0x61, 0x42, 0xfd, 0x0c, 0xcf, 0x64, 0x88, 0xc0, 0xc2, 0xf0, 0x28,
-	0x21, 0xda, 0x28, 0x4d, 0xa1, 0x91, 0xd1, 0x8d, 0xaf, 0x4f, 0x6c, 0xcf, 0x92, 0xfe, 0xca, 0xc1,
-	0x72, 0x42, 0xef, 0x17, 0x6d, 0xf4, 0x78, 0x6c, 0xc8, 0xf4, 0xd1, 0x86, 0xff, 0xe8, 0x62, 0xce,
-	0x0c, 0xdc, 0xd7, 0x90, 0x65, 0x7d, 0x5f, 0xb4, 0xd1, 0x78, 0x1d, 0x87, 0x27, 0x12, 0xbe, 0x9a,
-	0x6e, 0xc8, 0xe2, 0x7f, 0x0b, 0x37, 0x22, 0xdd, 0x5a, 0xb4, 0xd1, 0x66, 0xca, 0x89, 0x8f, 0x8e,
-	0x1b, 0x7c, 0x63, 0x1a, 0x17, 0x96, 0xfd, 0x39, 0x07, 0xfc, 0xb8, 0x0e, 0x2a, 0xda, 0xe8, 0xd1,
-	0xf8, 0xba, 0x49, 0x1e, 0x20, 0xf8, 0x0f, 0x2e, 0xe0, 0xc9, 0x30, 0xfd, 0xc4, 0xc1, 0xcd, 0x31,
-	0x7d, 0x4e, 0xb4, 0xd1, 0xfb, 0x13, 0x06, 0x1e, 0xed, 0xf0, 0xfc, 0xa3, 0xe9, 0x1d, 0xc7, 0x8a,
-	0x34, 0xe8, 0x43, 0x53, 0x88, 0x14, 0x69, 0xc3, 0x13, 0x8b, 0x14, 0x6d, 0x7b, 0x48, 0x81, 0xb9,
-	0x41, 0x8f, 0x11, 0x6d, 0xb4, 0x31, 0x36, 0x54, 0xa4, 0x33, 0xf2, 0xf7, 0x26, 0xb2, 0xf5, 0x13,
-	0xf1, 0xb3, 0xdf, 0xbf, 0x3a, 0xdd, 0xe0, 0xb6, 0x95, 0x17, 0x67, 0x25, 0xee, 0xe5, 0x59, 0x89,
-	0xfb, 0xf7, 0xac, 0xc4, 0xfd, 0x7c, 0x5e, 0xba, 0xf2, 0xf2, 0xbc, 0x74, 0xe5, 0x9f, 0xf3, 0xd2,
-	0x15, 0x58, 0x52, 0x8d, 0xd8, 0x78, 0xfb, 0xdc, 0x97, 0x0d, 0x45, 0xa5, 0x47, 0xbd, 0xc3, 0x5a,
-	0xc7, 0xd0, 0xea, 0x03, 0x93, 0x07, 0xaa, 0x11, 0x7a, 0xaa, 0xdb, 0xc1, 0xdf, 0x72, 0xee, 0x88,
-	0x41, 0x0e, 0xaf, 0x79, 0x7f, 0xc9, 0x3d, 0xfc, 0x2f, 0x00, 0x00, 0xff, 0xff, 0xf1, 0x13, 0xc5,
-	0xdb, 0x57, 0x14, 0x00, 0x00,
+	// 1271 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0xcd, 0x6f, 0xe3, 0x54,
+	0x10, 0xaf, 0x9b, 0x6d, 0x57, 0x9d, 0x7c, 0xb4, 0x7d, 0x14, 0x9a, 0x75, 0xbb, 0xd9, 0x6c, 0x96,
+	0x96, 0xa8, 0xed, 0x26, 0x34, 0xcb, 0x89, 0xe5, 0xd2, 0x0f, 0x76, 0x15, 0xd1, 0xa0, 0xe2, 0x2e,
+	0x42, 0x20, 0xa4, 0xc8, 0x8d, 0xdf, 0xba, 0x56, 0xe3, 0x8f, 0xf5, 0x7b, 0xa9, 0x6a, 0x24, 0x24,
+	0xc4, 0x15, 0x21, 0x71, 0x41, 0xe2, 0xc6, 0x05, 0xee, 0xfd, 0x0b, 0x38, 0x00, 0x07, 0x8e, 0x7b,
+	0xe0, 0xc0, 0x11, 0xb5, 0x87, 0xfd, 0x37, 0x90, 0xed, 0xe7, 0xe4, 0x39, 0x76, 0xec, 0xa4, 0x4b,
+	0x6f, 0xf1, 0xcb, 0x6f, 0x66, 0x7e, 0xbf, 0x79, 0xe3, 0x99, 0x49, 0xe0, 0xae, 0x65, 0x9b, 0x67,
+	0xd8, 0x90, 0x8d, 0x0e, 0xae, 0x77, 0xb1, 0xa2, 0x62, 0xbb, 0x7e, 0xb6, 0x5d, 0xa7, 0xe7, 0x35,
+	0xcb, 0x36, 0xa9, 0x89, 0x96, 0x06, 0x5f, 0xd7, 0xfc, 0xaf, 0x6b, 0x67, 0xdb, 0xe2, 0x72, 0xc7,
+	0x24, 0xba, 0x49, 0xea, 0x3a, 0x51, 0x5d, 0xb4, 0x4e, 0x54, 0x1f, 0x2e, 0xde, 0x8f, 0xf5, 0xc6,
+	0x0c, 0x7d, 0xc8, 0x56, 0x02, 0xa4, 0x4d, 0x30, 0xa5, 0x5d, 0xac, 0x63, 0x83, 0x32, 0x74, 0x25,
+	0x16, 0xad, 0x62, 0x03, 0x13, 0x8d, 0xf8, 0x98, 0xca, 0x19, 0x2c, 0xb4, 0x88, 0xba, 0x67, 0x63,
+	0x99, 0x62, 0x09, 0xbf, 0xe8, 0x61, 0x42, 0xd1, 0x7b, 0x30, 0xeb, 0xc3, 0x8b, 0x42, 0x59, 0xa8,
+	0x66, 0x1b, 0xab, 0xb5, 0x38, 0x21, 0xb5, 0x03, 0xef, 0x93, 0xc4, 0xb0, 0x68, 0x15, 0xe6, 0xe4,
+	0x1e, 0x3d, 0x31, 0x6d, 0x8d, 0x3a, 0xc5, 0xe9, 0xb2, 0x50, 0x9d, 0x93, 0x06, 0x07, 0xef, 0x17,
+	0xbe, 0x7d, 0x75, 0xb1, 0x31, 0x78, 0xae, 0xbc, 0x01, 0x8b, 0x5c, 0x5c, 0x62, 0x99, 0x06, 0xc1,
+	0x95, 0x9f, 0x05, 0x78, 0xab, 0x45, 0xd4, 0x4f, 0x2d, 0x45, 0xa6, 0xf8, 0x88, 0xca, 0xb4, 0x47,
+	0x02, 0x4e, 0xdb, 0x90, 0x39, 0xc5, 0x0e, 0x23, 0x74, 0x2f, 0x89, 0xd0, 0x47, 0xd8, 0x91, 0x5c,
+	0x6c, 0x32, 0x21, 0xf4, 0x36, 0x14, 0x88, 0x17, 0xa1, 0x4d, 0x1d, 0x0b, 0xb7, 0x35, 0xa5, 0x98,
+	0x29, 0x0b, 0xd5, 0x19, 0x29, 0xe7, 0x9f, 0x3e, 0x73, 0x2c, 0xdc, 0x54, 0x22, 0xb4, 0xef, 0xc0,
+	0x72, 0x84, 0x20, 0x23, 0xff, 0xe7, 0x34, 0xac, 0xf6, 0xbf, 0x6b, 0x1a, 0x14, 0xdb, 0x98, 0x50,
+	0x89, 0x4b, 0xeb, 0xff, 0x2e, 0xe1, 0x01, 0xe4, 0x35, 0x16, 0xa7, 0x6d, 0xcb, 0x14, 0x07, 0x0a,
+	0x34, 0x2e, 0x38, 0x3a, 0x00, 0xd4, 0x07, 0x29, 0xb2, 0xd3, 0xee, 0x98, 0x3d, 0x83, 0x16, 0x6f,
+	0x95, 0x85, 0x6a, 0xa1, 0x51, 0x8a, 0x27, 0xb1, 0x2f, 0x3b, 0x7b, 0x2e, 0x4a, 0x5a, 0x08, 0x2c,
+	0x83, 0x13, 0x74, 0x08, 0xfd, 0xb3, 0xb6, 0xdc, 0xe9, 0xd8, 0x3d, 0xb9, 0x5b, 0x9c, 0xf1, 0x7c,
+	0xad, 0xc5, 0xfb, 0x0a, 0x12, 0xb1, 0xe3, 0x83, 0xa5, 0x79, 0x2d, 0x7c, 0x10, 0xc9, 0xf0, 0x3d,
+	0xb8, 0x3b, 0x22, 0x8b, 0x2c, 0xcf, 0x3f, 0x4e, 0x73, 0x77, 0x70, 0x28, 0x3b, 0x6e, 0xc1, 0xdf,
+	0x58, 0x8a, 0xcb, 0x90, 0x33, 0xf0, 0x39, 0x6d, 0x5b, 0x3a, 0x6d, 0xcb, 0x3a, 0xf5, 0x32, 0x9c,
+	0x91, 0xc0, 0x3d, 0x3b, 0xd4, 0xe9, 0x8e, 0x4e, 0x51, 0x05, 0xf2, 0x7d, 0x84, 0xcb, 0xc8, 0x4b,
+	0xed, 0x8c, 0x94, 0x65, 0x90, 0x7d, 0xf7, 0x0e, 0x8e, 0x60, 0xd1, 0xf2, 0x89, 0xb6, 0x9f, 0xdb,
+	0x2e, 0x55, 0xa3, 0xe3, 0xb0, 0xb4, 0xad, 0xc7, 0x93, 0x64, 0xba, 0x9e, 0x04, 0x68, 0x69, 0xc1,
+	0x1a, 0x3a, 0x89, 0x24, 0x4e, 0x84, 0x62, 0x34, 0x2d, 0x2c, 0x67, 0xbf, 0x08, 0x5c, 0x6d, 0xb6,
+	0x64, 0xda, 0x73, 0x2d, 0xf6, 0x6f, 0xb8, 0x36, 0x75, 0x16, 0xc7, 0x4f, 0x0b, 0xab, 0x4d, 0x9d,
+	0x0b, 0x9e, 0x78, 0xf7, 0x61, 0x96, 0x4c, 0xc7, 0x85, 0xe0, 0xb5, 0xab, 0x1d, 0xcb, 0xc2, 0x86,
+	0xf2, 0x1a, 0xdc, 0x1f, 0xc3, 0x6d, 0x6c, 0x50, 0x5b, 0xc3, 0xa4, 0x38, 0x5d, 0xce, 0x54, 0xb3,
+	0x8d, 0xfb, 0x49, 0x66, 0x1f, 0x1a, 0xd4, 0x76, 0xa4, 0xc0, 0x22, 0x2c, 0x3c, 0x33, 0x5e, 0xa3,
+	0x0b, 0x18, 0x33, 0x1d, 0x7f, 0x4c, 0x73, 0x97, 0xb5, 0x2b, 0x77, 0xdd, 0xb0, 0x37, 0xd7, 0xea,
+	0xd6, 0xa0, 0xd0, 0x31, 0x6d, 0x1b, 0x77, 0x65, 0xaa, 0x99, 0x46, 0xd0, 0xea, 0xe6, 0xa4, 0x3c,
+	0x77, 0xda, 0x54, 0xd0, 0x27, 0x30, 0x2f, 0x5b, 0x56, 0x57, 0xc3, 0x4a, 0x5b, 0xd6, 0xdd, 0xb7,
+	0x9d, 0x14, 0x6f, 0x79, 0xc9, 0xa9, 0x26, 0x71, 0xd8, 0xed, 0x75, 0x4e, 0x31, 0xdd, 0xf1, 0x0c,
+	0xa4, 0x02, 0x73, 0xe0, 0x3f, 0x12, 0x74, 0x00, 0xf3, 0xc7, 0xbe, 0xba, 0xbe, 0xcb, 0x19, 0xcf,
+	0xe5, 0x83, 0x78, 0x97, 0xbe, 0x33, 0x96, 0x10, 0xa9, 0xc0, 0x6c, 0x99, 0xb7, 0x48, 0x6a, 0x57,
+	0xe0, 0x4e, 0x4c, 0x12, 0x59, 0x8a, 0x7f, 0x15, 0x60, 0xad, 0x45, 0xd4, 0x67, 0xb6, 0x6c, 0x90,
+	0xe7, 0xd8, 0x7e, 0xd2, 0x33, 0x14, 0xf2, 0x99, 0x46, 0x4f, 0x8e, 0xfa, 0x53, 0x32, 0xc8, 0x77,
+	0x28, 0x79, 0xc2, 0x70, 0xf2, 0x3e, 0x86, 0x39, 0xca, 0x7c, 0x04, 0xc5, 0xf2, 0x6e, 0x3c, 0x79,
+	0x37, 0x44, 0x10, 0x6e, 0x28, 0xd2, 0xc0, 0x45, 0x44, 0x44, 0x15, 0xd6, 0xd3, 0x68, 0x32, 0x45,
+	0xd4, 0xab, 0xa4, 0x7d, 0x4c, 0xa8, 0x6d, 0x3a, 0x37, 0x55, 0x2c, 0x11, 0x7e, 0x4b, 0x80, 0xf8,
+	0xa8, 0x8c, 0xcb, 0x77, 0x02, 0xbc, 0xd9, 0x9f, 0xdf, 0x7b, 0x5d, 0x99, 0xf4, 0xab, 0x77, 0x1f,
+	0x72, 0x6c, 0x1f, 0xe9, 0xb8, 0xc7, 0x8c, 0x59, 0xe2, 0xfb, 0xe5, 0xdb, 0x67, 0xbb, 0x83, 0x87,
+	0x09, 0x39, 0x16, 0xbd, 0xb5, 0x21, 0x44, 0x86, 0xf1, 0xfc, 0xdd, 0x6f, 0x7c, 0x3b, 0x8a, 0xe2,
+	0x9d, 0x1f, 0xf5, 0x67, 0x7b, 0x40, 0x77, 0x1d, 0xe6, 0x79, 0xba, 0xee, 0xcb, 0xe1, 0x97, 0x40,
+	0x9e, 0xa3, 0xd3, 0x54, 0xd0, 0x01, 0x64, 0xb9, 0x75, 0xc1, 0xa3, 0x94, 0x6d, 0x6c, 0xa6, 0xaa,
+	0xe2, 0x02, 0xc2, 0x60, 0xb1, 0x98, 0xb0, 0x85, 0xf8, 0x6d, 0x31, 0x4e, 0x03, 0x53, 0xf9, 0x9b,
+	0x00, 0x2b, 0x1c, 0xc2, 0xeb, 0x57, 0xd7, 0x11, 0xd9, 0x04, 0x70, 0x9b, 0x9c, 0xc3, 0x6b, 0xdc,
+	0x48, 0xd5, 0x38, 0x08, 0x37, 0x87, 0x83, 0x8f, 0x13, 0x2a, 0x2c, 0x85, 0x6e, 0x89, 0xe3, 0x1f,
+	0x7f, 0x8d, 0x7e, 0x9b, 0xb8, 0xe6, 0x35, 0x1e, 0x7b, 0xc6, 0x93, 0x5d, 0x23, 0x17, 0x10, 0x8e,
+	0xfb, 0x9f, 0x5f, 0xeb, 0x1a, 0x79, 0x0d, 0x4c, 0xe5, 0xf7, 0x02, 0x2c, 0xb5, 0x88, 0xba, 0xdb,
+	0xeb, 0x9e, 0x36, 0x75, 0xcb, 0xb4, 0xc7, 0xec, 0x50, 0x4f, 0x21, 0xcf, 0x76, 0xfa, 0xb6, 0x5b,
+	0x62, 0x81, 0xaa, 0x4a, 0xbc, 0xaa, 0xa7, 0x3e, 0xd4, 0xad, 0x22, 0x2c, 0xe5, 0x54, 0xee, 0x29,
+	0x42, 0x78, 0xd9, 0x7b, 0xc7, 0x79, 0x3a, 0x3e, 0xd1, 0xc6, 0xdf, 0x39, 0xc8, 0xb4, 0x88, 0x8a,
+	0x3e, 0x87, 0x59, 0xff, 0xa5, 0x43, 0x23, 0xd6, 0x98, 0xe1, 0x9f, 0x16, 0xe2, 0x3b, 0xa9, 0x38,
+	0x3f, 0x04, 0x3a, 0x85, 0x1c, 0xbf, 0x65, 0xa3, 0xad, 0x91, 0x86, 0x31, 0xbf, 0x16, 0xc4, 0x87,
+	0x63, 0xa2, 0x59, 0xb0, 0xaf, 0x01, 0x45, 0x17, 0x4e, 0xd4, 0x48, 0x71, 0x12, 0xb3, 0xe3, 0x8b,
+	0x8f, 0x26, 0xb2, 0x61, 0xe1, 0x0d, 0xc8, 0x87, 0xd6, 0x36, 0x94, 0x46, 0x3f, 0xbc, 0xf5, 0x8a,
+	0xb5, 0x71, 0xe1, 0xc3, 0x72, 0xf9, 0x1d, 0x2b, 0x55, 0x6e, 0xcc, 0xda, 0x98, 0x2a, 0x37, 0x6e,
+	0x89, 0x73, 0xab, 0xc6, 0x5f, 0x87, 0x12, 0xaa, 0x26, 0xb4, 0xe1, 0x25, 0x54, 0x4d, 0x78, 0xaf,
+	0x42, 0x2f, 0xa0, 0x10, 0x5e, 0x07, 0x50, 0x5a, 0x6e, 0x86, 0x96, 0x2f, 0xb1, 0x3e, 0x36, 0x9e,
+	0x85, 0xfc, 0x49, 0x80, 0x95, 0x84, 0xe9, 0x8d, 0x1e, 0x8f, 0x74, 0x98, 0xbe, 0x9a, 0x88, 0x1f,
+	0x5c, 0xcf, 0x98, 0x51, 0xfb, 0x12, 0x6e, 0xb3, 0xb9, 0x8d, 0x46, 0x67, 0x30, 0xbc, 0x4f, 0x88,
+	0xd5, 0x74, 0x20, 0xf3, 0x7e, 0x02, 0x59, 0x6e, 0xe2, 0xa2, 0xcd, 0x94, 0x37, 0x9b, 0x5f, 0x12,
+	0xc4, 0xad, 0xf1, 0xc0, 0x83, 0x7a, 0x8d, 0x0e, 0xbf, 0x84, 0x7a, 0x1d, 0x39, 0xed, 0x13, 0xea,
+	0x75, 0xf4, 0x74, 0x45, 0x5f, 0xc1, 0x62, 0x64, 0x32, 0xa1, 0xed, 0x54, 0x4f, 0xc3, 0x53, 0x58,
+	0x6c, 0x4c, 0x62, 0x12, 0x95, 0x3e, 0x18, 0x18, 0x63, 0x48, 0x8f, 0x4c, 0xc8, 0x31, 0xa4, 0x47,
+	0x27, 0x12, 0xc2, 0x00, 0x83, 0xf6, 0x8f, 0x36, 0x46, 0xba, 0x88, 0x8c, 0x2c, 0x71, 0x73, 0x2c,
+	0xac, 0x1f, 0x46, 0x9c, 0xf9, 0xe6, 0xd5, 0xc5, 0x86, 0xb0, 0xab, 0xfe, 0x75, 0x59, 0x12, 0x5e,
+	0x5e, 0x96, 0x84, 0x7f, 0x2f, 0x4b, 0xc2, 0x0f, 0x57, 0xa5, 0xa9, 0x97, 0x57, 0xa5, 0xa9, 0x7f,
+	0xae, 0x4a, 0x53, 0xb0, 0xac, 0x99, 0xb1, 0xfe, 0x0e, 0x85, 0x2f, 0x1a, 0xaa, 0x46, 0x4f, 0x7a,
+	0xc7, 0xb5, 0x8e, 0xa9, 0xd7, 0x07, 0x90, 0x87, 0x9a, 0xc9, 0x3d, 0xd5, 0xcf, 0x83, 0xff, 0xbf,
+	0xdc, 0xa9, 0x4f, 0x8e, 0x67, 0xbd, 0xff, 0xbe, 0x1e, 0xfd, 0x17, 0x00, 0x00, 0xff, 0xff, 0x95,
+	0xfe, 0x44, 0xa5, 0xc0, 0x13, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1585,33 +1583,33 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// Create a new NFT ledger.
-	CreateTx(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error)
+	Create(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error)
 	// Update Status.
-	UpdateStatusTx(ctx context.Context, in *MsgUpdateStatusRequest, opts ...grpc.CallOption) (*MsgUpdateStatusResponse, error)
+	UpdateStatus(ctx context.Context, in *MsgUpdateStatusRequest, opts ...grpc.CallOption) (*MsgUpdateStatusResponse, error)
 	// Update Interest Rate.
-	UpdateInterestRateTx(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
+	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
 	// Update Payment Amount, Next Payment Date, and Payment Frequency.
-	UpdatePaymentTx(ctx context.Context, in *MsgUpdatePaymentRequest, opts ...grpc.CallOption) (*MsgUpdatePaymentResponse, error)
+	UpdatePayment(ctx context.Context, in *MsgUpdatePaymentRequest, opts ...grpc.CallOption) (*MsgUpdatePaymentResponse, error)
 	// Update Maturity Date.
-	UpdateMaturityDateTx(ctx context.Context, in *MsgUpdateMaturityDateRequest, opts ...grpc.CallOption) (*MsgUpdateMaturityDateResponse, error)
+	UpdateMaturityDate(ctx context.Context, in *MsgUpdateMaturityDateRequest, opts ...grpc.CallOption) (*MsgUpdateMaturityDateResponse, error)
 	// Append a ledger entry.
-	AppendTx(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error)
+	Append(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error)
 	// Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied.
-	UpdateBalancesTx(ctx context.Context, in *MsgUpdateBalancesRequest, opts ...grpc.CallOption) (*MsgUpdateBalancesResponse, error)
+	UpdateBalances(ctx context.Context, in *MsgUpdateBalancesRequest, opts ...grpc.CallOption) (*MsgUpdateBalancesResponse, error)
 	// Process multiple fund transfers with manual settlement instructions.
-	TransferFundsWithSettlementTx(ctx context.Context, in *MsgTransferFundsWithSettlementRequest, opts ...grpc.CallOption) (*MsgTransferFundsWithSettlementResponse, error)
+	TransferFundsWithSettlement(ctx context.Context, in *MsgTransferFundsWithSettlementRequest, opts ...grpc.CallOption) (*MsgTransferFundsWithSettlementResponse, error)
 	// Destroy a ledger by NFT address.
-	DestroyTx(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error)
+	Destroy(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error)
 	// Create a new ledger class.
-	CreateLedgerClassTx(ctx context.Context, in *MsgCreateLedgerClassRequest, opts ...grpc.CallOption) (*MsgCreateLedgerClassResponse, error)
+	CreateClass(ctx context.Context, in *MsgCreateClassRequest, opts ...grpc.CallOption) (*MsgCreateClassResponse, error)
 	// Add a status type to a ledger class.
-	AddLedgerClassStatusTypeTx(ctx context.Context, in *MsgAddLedgerClassStatusTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassStatusTypeResponse, error)
+	AddClassStatusType(ctx context.Context, in *MsgAddClassStatusTypeRequest, opts ...grpc.CallOption) (*MsgAddClassStatusTypeResponse, error)
 	// Add an entry type to a ledger class.
-	AddLedgerClassEntryTypeTx(ctx context.Context, in *MsgAddLedgerClassEntryTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassEntryTypeResponse, error)
+	AddClassEntryType(ctx context.Context, in *MsgAddClassEntryTypeRequest, opts ...grpc.CallOption) (*MsgAddClassEntryTypeResponse, error)
 	// Add a bucket type to a ledger class.
-	AddLedgerClassBucketTypeTx(ctx context.Context, in *MsgAddLedgerClassBucketTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassBucketTypeResponse, error)
+	AddClassBucketType(ctx context.Context, in *MsgAddClassBucketTypeRequest, opts ...grpc.CallOption) (*MsgAddClassBucketTypeResponse, error)
 	// Bulk import ledger data from genesis state.
-	BulkImportTx(ctx context.Context, in *MsgBulkImportRequest, opts ...grpc.CallOption) (*MsgBulkImportResponse, error)
+	BulkImport(ctx context.Context, in *MsgBulkImportRequest, opts ...grpc.CallOption) (*MsgBulkImportResponse, error)
 }
 
 type msgClient struct {
@@ -1622,126 +1620,126 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) CreateTx(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error) {
+func (c *msgClient) Create(ctx context.Context, in *MsgCreateRequest, opts ...grpc.CallOption) (*MsgCreateResponse, error) {
 	out := new(MsgCreateResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/CreateTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateStatusTx(ctx context.Context, in *MsgUpdateStatusRequest, opts ...grpc.CallOption) (*MsgUpdateStatusResponse, error) {
+func (c *msgClient) UpdateStatus(ctx context.Context, in *MsgUpdateStatusRequest, opts ...grpc.CallOption) (*MsgUpdateStatusResponse, error) {
 	out := new(MsgUpdateStatusResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateStatusTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateInterestRateTx(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error) {
+func (c *msgClient) UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error) {
 	out := new(MsgUpdateInterestRateResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateInterestRateTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateInterestRate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdatePaymentTx(ctx context.Context, in *MsgUpdatePaymentRequest, opts ...grpc.CallOption) (*MsgUpdatePaymentResponse, error) {
+func (c *msgClient) UpdatePayment(ctx context.Context, in *MsgUpdatePaymentRequest, opts ...grpc.CallOption) (*MsgUpdatePaymentResponse, error) {
 	out := new(MsgUpdatePaymentResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdatePaymentTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdatePayment", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateMaturityDateTx(ctx context.Context, in *MsgUpdateMaturityDateRequest, opts ...grpc.CallOption) (*MsgUpdateMaturityDateResponse, error) {
+func (c *msgClient) UpdateMaturityDate(ctx context.Context, in *MsgUpdateMaturityDateRequest, opts ...grpc.CallOption) (*MsgUpdateMaturityDateResponse, error) {
 	out := new(MsgUpdateMaturityDateResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateMaturityDateTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateMaturityDate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) AppendTx(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error) {
+func (c *msgClient) Append(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error) {
 	out := new(MsgAppendResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/AppendTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/Append", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateBalancesTx(ctx context.Context, in *MsgUpdateBalancesRequest, opts ...grpc.CallOption) (*MsgUpdateBalancesResponse, error) {
+func (c *msgClient) UpdateBalances(ctx context.Context, in *MsgUpdateBalancesRequest, opts ...grpc.CallOption) (*MsgUpdateBalancesResponse, error) {
 	out := new(MsgUpdateBalancesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateBalancesTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/UpdateBalances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) TransferFundsWithSettlementTx(ctx context.Context, in *MsgTransferFundsWithSettlementRequest, opts ...grpc.CallOption) (*MsgTransferFundsWithSettlementResponse, error) {
+func (c *msgClient) TransferFundsWithSettlement(ctx context.Context, in *MsgTransferFundsWithSettlementRequest, opts ...grpc.CallOption) (*MsgTransferFundsWithSettlementResponse, error) {
 	out := new(MsgTransferFundsWithSettlementResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/TransferFundsWithSettlementTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/TransferFundsWithSettlement", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) DestroyTx(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error) {
+func (c *msgClient) Destroy(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error) {
 	out := new(MsgDestroyResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/DestroyTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/Destroy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) CreateLedgerClassTx(ctx context.Context, in *MsgCreateLedgerClassRequest, opts ...grpc.CallOption) (*MsgCreateLedgerClassResponse, error) {
-	out := new(MsgCreateLedgerClassResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/CreateLedgerClassTx", in, out, opts...)
+func (c *msgClient) CreateClass(ctx context.Context, in *MsgCreateClassRequest, opts ...grpc.CallOption) (*MsgCreateClassResponse, error) {
+	out := new(MsgCreateClassResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/CreateClass", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) AddLedgerClassStatusTypeTx(ctx context.Context, in *MsgAddLedgerClassStatusTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassStatusTypeResponse, error) {
-	out := new(MsgAddLedgerClassStatusTypeResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/AddLedgerClassStatusTypeTx", in, out, opts...)
+func (c *msgClient) AddClassStatusType(ctx context.Context, in *MsgAddClassStatusTypeRequest, opts ...grpc.CallOption) (*MsgAddClassStatusTypeResponse, error) {
+	out := new(MsgAddClassStatusTypeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/AddClassStatusType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) AddLedgerClassEntryTypeTx(ctx context.Context, in *MsgAddLedgerClassEntryTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassEntryTypeResponse, error) {
-	out := new(MsgAddLedgerClassEntryTypeResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/AddLedgerClassEntryTypeTx", in, out, opts...)
+func (c *msgClient) AddClassEntryType(ctx context.Context, in *MsgAddClassEntryTypeRequest, opts ...grpc.CallOption) (*MsgAddClassEntryTypeResponse, error) {
+	out := new(MsgAddClassEntryTypeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/AddClassEntryType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) AddLedgerClassBucketTypeTx(ctx context.Context, in *MsgAddLedgerClassBucketTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassBucketTypeResponse, error) {
-	out := new(MsgAddLedgerClassBucketTypeResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/AddLedgerClassBucketTypeTx", in, out, opts...)
+func (c *msgClient) AddClassBucketType(ctx context.Context, in *MsgAddClassBucketTypeRequest, opts ...grpc.CallOption) (*MsgAddClassBucketTypeResponse, error) {
+	out := new(MsgAddClassBucketTypeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/AddClassBucketType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) BulkImportTx(ctx context.Context, in *MsgBulkImportRequest, opts ...grpc.CallOption) (*MsgBulkImportResponse, error) {
+func (c *msgClient) BulkImport(ctx context.Context, in *MsgBulkImportRequest, opts ...grpc.CallOption) (*MsgBulkImportResponse, error) {
 	out := new(MsgBulkImportResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/BulkImportTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Msg/BulkImport", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1751,334 +1749,334 @@ func (c *msgClient) BulkImportTx(ctx context.Context, in *MsgBulkImportRequest, 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Create a new NFT ledger.
-	CreateTx(context.Context, *MsgCreateRequest) (*MsgCreateResponse, error)
+	Create(context.Context, *MsgCreateRequest) (*MsgCreateResponse, error)
 	// Update Status.
-	UpdateStatusTx(context.Context, *MsgUpdateStatusRequest) (*MsgUpdateStatusResponse, error)
+	UpdateStatus(context.Context, *MsgUpdateStatusRequest) (*MsgUpdateStatusResponse, error)
 	// Update Interest Rate.
-	UpdateInterestRateTx(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
+	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
 	// Update Payment Amount, Next Payment Date, and Payment Frequency.
-	UpdatePaymentTx(context.Context, *MsgUpdatePaymentRequest) (*MsgUpdatePaymentResponse, error)
+	UpdatePayment(context.Context, *MsgUpdatePaymentRequest) (*MsgUpdatePaymentResponse, error)
 	// Update Maturity Date.
-	UpdateMaturityDateTx(context.Context, *MsgUpdateMaturityDateRequest) (*MsgUpdateMaturityDateResponse, error)
+	UpdateMaturityDate(context.Context, *MsgUpdateMaturityDateRequest) (*MsgUpdateMaturityDateResponse, error)
 	// Append a ledger entry.
-	AppendTx(context.Context, *MsgAppendRequest) (*MsgAppendResponse, error)
+	Append(context.Context, *MsgAppendRequest) (*MsgAppendResponse, error)
 	// Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied.
-	UpdateBalancesTx(context.Context, *MsgUpdateBalancesRequest) (*MsgUpdateBalancesResponse, error)
+	UpdateBalances(context.Context, *MsgUpdateBalancesRequest) (*MsgUpdateBalancesResponse, error)
 	// Process multiple fund transfers with manual settlement instructions.
-	TransferFundsWithSettlementTx(context.Context, *MsgTransferFundsWithSettlementRequest) (*MsgTransferFundsWithSettlementResponse, error)
+	TransferFundsWithSettlement(context.Context, *MsgTransferFundsWithSettlementRequest) (*MsgTransferFundsWithSettlementResponse, error)
 	// Destroy a ledger by NFT address.
-	DestroyTx(context.Context, *MsgDestroyRequest) (*MsgDestroyResponse, error)
+	Destroy(context.Context, *MsgDestroyRequest) (*MsgDestroyResponse, error)
 	// Create a new ledger class.
-	CreateLedgerClassTx(context.Context, *MsgCreateLedgerClassRequest) (*MsgCreateLedgerClassResponse, error)
+	CreateClass(context.Context, *MsgCreateClassRequest) (*MsgCreateClassResponse, error)
 	// Add a status type to a ledger class.
-	AddLedgerClassStatusTypeTx(context.Context, *MsgAddLedgerClassStatusTypeRequest) (*MsgAddLedgerClassStatusTypeResponse, error)
+	AddClassStatusType(context.Context, *MsgAddClassStatusTypeRequest) (*MsgAddClassStatusTypeResponse, error)
 	// Add an entry type to a ledger class.
-	AddLedgerClassEntryTypeTx(context.Context, *MsgAddLedgerClassEntryTypeRequest) (*MsgAddLedgerClassEntryTypeResponse, error)
+	AddClassEntryType(context.Context, *MsgAddClassEntryTypeRequest) (*MsgAddClassEntryTypeResponse, error)
 	// Add a bucket type to a ledger class.
-	AddLedgerClassBucketTypeTx(context.Context, *MsgAddLedgerClassBucketTypeRequest) (*MsgAddLedgerClassBucketTypeResponse, error)
+	AddClassBucketType(context.Context, *MsgAddClassBucketTypeRequest) (*MsgAddClassBucketTypeResponse, error)
 	// Bulk import ledger data from genesis state.
-	BulkImportTx(context.Context, *MsgBulkImportRequest) (*MsgBulkImportResponse, error)
+	BulkImport(context.Context, *MsgBulkImportRequest) (*MsgBulkImportResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) CreateTx(ctx context.Context, req *MsgCreateRequest) (*MsgCreateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTx not implemented")
+func (*UnimplementedMsgServer) Create(ctx context.Context, req *MsgCreateRequest) (*MsgCreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (*UnimplementedMsgServer) UpdateStatusTx(ctx context.Context, req *MsgUpdateStatusRequest) (*MsgUpdateStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateStatusTx not implemented")
+func (*UnimplementedMsgServer) UpdateStatus(ctx context.Context, req *MsgUpdateStatusRequest) (*MsgUpdateStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateStatus not implemented")
 }
-func (*UnimplementedMsgServer) UpdateInterestRateTx(ctx context.Context, req *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateInterestRateTx not implemented")
+func (*UnimplementedMsgServer) UpdateInterestRate(ctx context.Context, req *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateInterestRate not implemented")
 }
-func (*UnimplementedMsgServer) UpdatePaymentTx(ctx context.Context, req *MsgUpdatePaymentRequest) (*MsgUpdatePaymentResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdatePaymentTx not implemented")
+func (*UnimplementedMsgServer) UpdatePayment(ctx context.Context, req *MsgUpdatePaymentRequest) (*MsgUpdatePaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePayment not implemented")
 }
-func (*UnimplementedMsgServer) UpdateMaturityDateTx(ctx context.Context, req *MsgUpdateMaturityDateRequest) (*MsgUpdateMaturityDateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaturityDateTx not implemented")
+func (*UnimplementedMsgServer) UpdateMaturityDate(ctx context.Context, req *MsgUpdateMaturityDateRequest) (*MsgUpdateMaturityDateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaturityDate not implemented")
 }
-func (*UnimplementedMsgServer) AppendTx(ctx context.Context, req *MsgAppendRequest) (*MsgAppendResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AppendTx not implemented")
+func (*UnimplementedMsgServer) Append(ctx context.Context, req *MsgAppendRequest) (*MsgAppendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Append not implemented")
 }
-func (*UnimplementedMsgServer) UpdateBalancesTx(ctx context.Context, req *MsgUpdateBalancesRequest) (*MsgUpdateBalancesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateBalancesTx not implemented")
+func (*UnimplementedMsgServer) UpdateBalances(ctx context.Context, req *MsgUpdateBalancesRequest) (*MsgUpdateBalancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBalances not implemented")
 }
-func (*UnimplementedMsgServer) TransferFundsWithSettlementTx(ctx context.Context, req *MsgTransferFundsWithSettlementRequest) (*MsgTransferFundsWithSettlementResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TransferFundsWithSettlementTx not implemented")
+func (*UnimplementedMsgServer) TransferFundsWithSettlement(ctx context.Context, req *MsgTransferFundsWithSettlementRequest) (*MsgTransferFundsWithSettlementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferFundsWithSettlement not implemented")
 }
-func (*UnimplementedMsgServer) DestroyTx(ctx context.Context, req *MsgDestroyRequest) (*MsgDestroyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DestroyTx not implemented")
+func (*UnimplementedMsgServer) Destroy(ctx context.Context, req *MsgDestroyRequest) (*MsgDestroyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Destroy not implemented")
 }
-func (*UnimplementedMsgServer) CreateLedgerClassTx(ctx context.Context, req *MsgCreateLedgerClassRequest) (*MsgCreateLedgerClassResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateLedgerClassTx not implemented")
+func (*UnimplementedMsgServer) CreateClass(ctx context.Context, req *MsgCreateClassRequest) (*MsgCreateClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateClass not implemented")
 }
-func (*UnimplementedMsgServer) AddLedgerClassStatusTypeTx(ctx context.Context, req *MsgAddLedgerClassStatusTypeRequest) (*MsgAddLedgerClassStatusTypeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddLedgerClassStatusTypeTx not implemented")
+func (*UnimplementedMsgServer) AddClassStatusType(ctx context.Context, req *MsgAddClassStatusTypeRequest) (*MsgAddClassStatusTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddClassStatusType not implemented")
 }
-func (*UnimplementedMsgServer) AddLedgerClassEntryTypeTx(ctx context.Context, req *MsgAddLedgerClassEntryTypeRequest) (*MsgAddLedgerClassEntryTypeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddLedgerClassEntryTypeTx not implemented")
+func (*UnimplementedMsgServer) AddClassEntryType(ctx context.Context, req *MsgAddClassEntryTypeRequest) (*MsgAddClassEntryTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddClassEntryType not implemented")
 }
-func (*UnimplementedMsgServer) AddLedgerClassBucketTypeTx(ctx context.Context, req *MsgAddLedgerClassBucketTypeRequest) (*MsgAddLedgerClassBucketTypeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddLedgerClassBucketTypeTx not implemented")
+func (*UnimplementedMsgServer) AddClassBucketType(ctx context.Context, req *MsgAddClassBucketTypeRequest) (*MsgAddClassBucketTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddClassBucketType not implemented")
 }
-func (*UnimplementedMsgServer) BulkImportTx(ctx context.Context, req *MsgBulkImportRequest) (*MsgBulkImportResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BulkImportTx not implemented")
+func (*UnimplementedMsgServer) BulkImport(ctx context.Context, req *MsgBulkImportRequest) (*MsgBulkImportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BulkImport not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_CreateTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgCreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateTx(ctx, in)
+		return srv.(MsgServer).Create(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/CreateTx",
+		FullMethod: "/provenance.ledger.v1.Msg/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateTx(ctx, req.(*MsgCreateRequest))
+		return srv.(MsgServer).Create(ctx, req.(*MsgCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateStatusTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_UpdateStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateStatusTx(ctx, in)
+		return srv.(MsgServer).UpdateStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/UpdateStatusTx",
+		FullMethod: "/provenance.ledger.v1.Msg/UpdateStatus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateStatusTx(ctx, req.(*MsgUpdateStatusRequest))
+		return srv.(MsgServer).UpdateStatus(ctx, req.(*MsgUpdateStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateInterestRateTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_UpdateInterestRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateInterestRateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateInterestRateTx(ctx, in)
+		return srv.(MsgServer).UpdateInterestRate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/UpdateInterestRateTx",
+		FullMethod: "/provenance.ledger.v1.Msg/UpdateInterestRate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateInterestRateTx(ctx, req.(*MsgUpdateInterestRateRequest))
+		return srv.(MsgServer).UpdateInterestRate(ctx, req.(*MsgUpdateInterestRateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdatePaymentTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_UpdatePayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdatePaymentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdatePaymentTx(ctx, in)
+		return srv.(MsgServer).UpdatePayment(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/UpdatePaymentTx",
+		FullMethod: "/provenance.ledger.v1.Msg/UpdatePayment",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdatePaymentTx(ctx, req.(*MsgUpdatePaymentRequest))
+		return srv.(MsgServer).UpdatePayment(ctx, req.(*MsgUpdatePaymentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateMaturityDateTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_UpdateMaturityDate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateMaturityDateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateMaturityDateTx(ctx, in)
+		return srv.(MsgServer).UpdateMaturityDate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/UpdateMaturityDateTx",
+		FullMethod: "/provenance.ledger.v1.Msg/UpdateMaturityDate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateMaturityDateTx(ctx, req.(*MsgUpdateMaturityDateRequest))
+		return srv.(MsgServer).UpdateMaturityDate(ctx, req.(*MsgUpdateMaturityDateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AppendTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_Append_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgAppendRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AppendTx(ctx, in)
+		return srv.(MsgServer).Append(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/AppendTx",
+		FullMethod: "/provenance.ledger.v1.Msg/Append",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AppendTx(ctx, req.(*MsgAppendRequest))
+		return srv.(MsgServer).Append(ctx, req.(*MsgAppendRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateBalancesTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_UpdateBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateBalancesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateBalancesTx(ctx, in)
+		return srv.(MsgServer).UpdateBalances(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/UpdateBalancesTx",
+		FullMethod: "/provenance.ledger.v1.Msg/UpdateBalances",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateBalancesTx(ctx, req.(*MsgUpdateBalancesRequest))
+		return srv.(MsgServer).UpdateBalances(ctx, req.(*MsgUpdateBalancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_TransferFundsWithSettlementTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_TransferFundsWithSettlement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgTransferFundsWithSettlementRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).TransferFundsWithSettlementTx(ctx, in)
+		return srv.(MsgServer).TransferFundsWithSettlement(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/TransferFundsWithSettlementTx",
+		FullMethod: "/provenance.ledger.v1.Msg/TransferFundsWithSettlement",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).TransferFundsWithSettlementTx(ctx, req.(*MsgTransferFundsWithSettlementRequest))
+		return srv.(MsgServer).TransferFundsWithSettlement(ctx, req.(*MsgTransferFundsWithSettlementRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_DestroyTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_Destroy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgDestroyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).DestroyTx(ctx, in)
+		return srv.(MsgServer).Destroy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/DestroyTx",
+		FullMethod: "/provenance.ledger.v1.Msg/Destroy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DestroyTx(ctx, req.(*MsgDestroyRequest))
+		return srv.(MsgServer).Destroy(ctx, req.(*MsgDestroyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CreateLedgerClassTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateLedgerClassRequest)
+func _Msg_CreateClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateClassRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateLedgerClassTx(ctx, in)
+		return srv.(MsgServer).CreateClass(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/CreateLedgerClassTx",
+		FullMethod: "/provenance.ledger.v1.Msg/CreateClass",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateLedgerClassTx(ctx, req.(*MsgCreateLedgerClassRequest))
+		return srv.(MsgServer).CreateClass(ctx, req.(*MsgCreateClassRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AddLedgerClassStatusTypeTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAddLedgerClassStatusTypeRequest)
+func _Msg_AddClassStatusType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddClassStatusTypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AddLedgerClassStatusTypeTx(ctx, in)
+		return srv.(MsgServer).AddClassStatusType(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/AddLedgerClassStatusTypeTx",
+		FullMethod: "/provenance.ledger.v1.Msg/AddClassStatusType",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AddLedgerClassStatusTypeTx(ctx, req.(*MsgAddLedgerClassStatusTypeRequest))
+		return srv.(MsgServer).AddClassStatusType(ctx, req.(*MsgAddClassStatusTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AddLedgerClassEntryTypeTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAddLedgerClassEntryTypeRequest)
+func _Msg_AddClassEntryType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddClassEntryTypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AddLedgerClassEntryTypeTx(ctx, in)
+		return srv.(MsgServer).AddClassEntryType(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/AddLedgerClassEntryTypeTx",
+		FullMethod: "/provenance.ledger.v1.Msg/AddClassEntryType",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AddLedgerClassEntryTypeTx(ctx, req.(*MsgAddLedgerClassEntryTypeRequest))
+		return srv.(MsgServer).AddClassEntryType(ctx, req.(*MsgAddClassEntryTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AddLedgerClassBucketTypeTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAddLedgerClassBucketTypeRequest)
+func _Msg_AddClassBucketType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddClassBucketTypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AddLedgerClassBucketTypeTx(ctx, in)
+		return srv.(MsgServer).AddClassBucketType(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/AddLedgerClassBucketTypeTx",
+		FullMethod: "/provenance.ledger.v1.Msg/AddClassBucketType",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AddLedgerClassBucketTypeTx(ctx, req.(*MsgAddLedgerClassBucketTypeRequest))
+		return srv.(MsgServer).AddClassBucketType(ctx, req.(*MsgAddClassBucketTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_BulkImportTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_BulkImport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgBulkImportRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).BulkImportTx(ctx, in)
+		return srv.(MsgServer).BulkImport(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Msg/BulkImportTx",
+		FullMethod: "/provenance.ledger.v1.Msg/BulkImport",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).BulkImportTx(ctx, req.(*MsgBulkImportRequest))
+		return srv.(MsgServer).BulkImport(ctx, req.(*MsgBulkImportRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2089,60 +2087,60 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateTx",
-			Handler:    _Msg_CreateTx_Handler,
+			MethodName: "Create",
+			Handler:    _Msg_Create_Handler,
 		},
 		{
-			MethodName: "UpdateStatusTx",
-			Handler:    _Msg_UpdateStatusTx_Handler,
+			MethodName: "UpdateStatus",
+			Handler:    _Msg_UpdateStatus_Handler,
 		},
 		{
-			MethodName: "UpdateInterestRateTx",
-			Handler:    _Msg_UpdateInterestRateTx_Handler,
+			MethodName: "UpdateInterestRate",
+			Handler:    _Msg_UpdateInterestRate_Handler,
 		},
 		{
-			MethodName: "UpdatePaymentTx",
-			Handler:    _Msg_UpdatePaymentTx_Handler,
+			MethodName: "UpdatePayment",
+			Handler:    _Msg_UpdatePayment_Handler,
 		},
 		{
-			MethodName: "UpdateMaturityDateTx",
-			Handler:    _Msg_UpdateMaturityDateTx_Handler,
+			MethodName: "UpdateMaturityDate",
+			Handler:    _Msg_UpdateMaturityDate_Handler,
 		},
 		{
-			MethodName: "AppendTx",
-			Handler:    _Msg_AppendTx_Handler,
+			MethodName: "Append",
+			Handler:    _Msg_Append_Handler,
 		},
 		{
-			MethodName: "UpdateBalancesTx",
-			Handler:    _Msg_UpdateBalancesTx_Handler,
+			MethodName: "UpdateBalances",
+			Handler:    _Msg_UpdateBalances_Handler,
 		},
 		{
-			MethodName: "TransferFundsWithSettlementTx",
-			Handler:    _Msg_TransferFundsWithSettlementTx_Handler,
+			MethodName: "TransferFundsWithSettlement",
+			Handler:    _Msg_TransferFundsWithSettlement_Handler,
 		},
 		{
-			MethodName: "DestroyTx",
-			Handler:    _Msg_DestroyTx_Handler,
+			MethodName: "Destroy",
+			Handler:    _Msg_Destroy_Handler,
 		},
 		{
-			MethodName: "CreateLedgerClassTx",
-			Handler:    _Msg_CreateLedgerClassTx_Handler,
+			MethodName: "CreateClass",
+			Handler:    _Msg_CreateClass_Handler,
 		},
 		{
-			MethodName: "AddLedgerClassStatusTypeTx",
-			Handler:    _Msg_AddLedgerClassStatusTypeTx_Handler,
+			MethodName: "AddClassStatusType",
+			Handler:    _Msg_AddClassStatusType_Handler,
 		},
 		{
-			MethodName: "AddLedgerClassEntryTypeTx",
-			Handler:    _Msg_AddLedgerClassEntryTypeTx_Handler,
+			MethodName: "AddClassEntryType",
+			Handler:    _Msg_AddClassEntryType_Handler,
 		},
 		{
-			MethodName: "AddLedgerClassBucketTypeTx",
-			Handler:    _Msg_AddLedgerClassBucketTypeTx_Handler,
+			MethodName: "AddClassBucketType",
+			Handler:    _Msg_AddClassBucketType_Handler,
 		},
 		{
-			MethodName: "BulkImportTx",
-			Handler:    _Msg_BulkImportTx_Handler,
+			MethodName: "BulkImport",
+			Handler:    _Msg_BulkImport_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2825,7 +2823,7 @@ func (m *MsgDestroyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCreateLedgerClassRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgCreateClassRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2835,12 +2833,12 @@ func (m *MsgCreateLedgerClassRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgCreateLedgerClassRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCreateClassRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCreateLedgerClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCreateClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2867,7 +2865,7 @@ func (m *MsgCreateLedgerClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCreateLedgerClassResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgCreateClassResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2877,12 +2875,12 @@ func (m *MsgCreateLedgerClassResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgCreateLedgerClassResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCreateClassResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCreateLedgerClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCreateClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2890,7 +2888,7 @@ func (m *MsgCreateLedgerClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddLedgerClassStatusTypeRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddClassStatusTypeRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2900,12 +2898,12 @@ func (m *MsgAddLedgerClassStatusTypeRequest) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddLedgerClassStatusTypeRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddClassStatusTypeRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddLedgerClassStatusTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddClassStatusTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2939,7 +2937,7 @@ func (m *MsgAddLedgerClassStatusTypeRequest) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddLedgerClassStatusTypeResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddClassStatusTypeResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2949,12 +2947,12 @@ func (m *MsgAddLedgerClassStatusTypeResponse) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddLedgerClassStatusTypeResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddClassStatusTypeResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddLedgerClassStatusTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddClassStatusTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2962,7 +2960,7 @@ func (m *MsgAddLedgerClassStatusTypeResponse) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddLedgerClassEntryTypeRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddClassEntryTypeRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2972,12 +2970,12 @@ func (m *MsgAddLedgerClassEntryTypeRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddLedgerClassEntryTypeRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddClassEntryTypeRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddLedgerClassEntryTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddClassEntryTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3011,7 +3009,7 @@ func (m *MsgAddLedgerClassEntryTypeRequest) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddLedgerClassEntryTypeResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddClassEntryTypeResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3021,12 +3019,12 @@ func (m *MsgAddLedgerClassEntryTypeResponse) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddLedgerClassEntryTypeResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddClassEntryTypeResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddLedgerClassEntryTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddClassEntryTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3034,7 +3032,7 @@ func (m *MsgAddLedgerClassEntryTypeResponse) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddLedgerClassBucketTypeRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddClassBucketTypeRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3044,12 +3042,12 @@ func (m *MsgAddLedgerClassBucketTypeRequest) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddLedgerClassBucketTypeRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddClassBucketTypeRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddLedgerClassBucketTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddClassBucketTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3083,7 +3081,7 @@ func (m *MsgAddLedgerClassBucketTypeRequest) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddLedgerClassBucketTypeResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddClassBucketTypeResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3093,12 +3091,12 @@ func (m *MsgAddLedgerClassBucketTypeResponse) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddLedgerClassBucketTypeResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddClassBucketTypeResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddLedgerClassBucketTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddClassBucketTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3464,7 +3462,7 @@ func (m *MsgDestroyResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgCreateLedgerClassRequest) Size() (n int) {
+func (m *MsgCreateClassRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3481,7 +3479,7 @@ func (m *MsgCreateLedgerClassRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgCreateLedgerClassResponse) Size() (n int) {
+func (m *MsgCreateClassResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3490,7 +3488,7 @@ func (m *MsgCreateLedgerClassResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddLedgerClassStatusTypeRequest) Size() (n int) {
+func (m *MsgAddClassStatusTypeRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3511,7 +3509,7 @@ func (m *MsgAddLedgerClassStatusTypeRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddLedgerClassStatusTypeResponse) Size() (n int) {
+func (m *MsgAddClassStatusTypeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3520,7 +3518,7 @@ func (m *MsgAddLedgerClassStatusTypeResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddLedgerClassEntryTypeRequest) Size() (n int) {
+func (m *MsgAddClassEntryTypeRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3541,7 +3539,7 @@ func (m *MsgAddLedgerClassEntryTypeRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddLedgerClassEntryTypeResponse) Size() (n int) {
+func (m *MsgAddClassEntryTypeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3550,7 +3548,7 @@ func (m *MsgAddLedgerClassEntryTypeResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddLedgerClassBucketTypeRequest) Size() (n int) {
+func (m *MsgAddClassBucketTypeRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3571,7 +3569,7 @@ func (m *MsgAddLedgerClassBucketTypeRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddLedgerClassBucketTypeResponse) Size() (n int) {
+func (m *MsgAddClassBucketTypeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -5408,7 +5406,7 @@ func (m *MsgDestroyResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCreateLedgerClassRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgCreateClassRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5431,10 +5429,10 @@ func (m *MsgCreateLedgerClassRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateLedgerClassRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCreateClassRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateLedgerClassRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCreateClassRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5526,7 +5524,7 @@ func (m *MsgCreateLedgerClassRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCreateLedgerClassResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgCreateClassResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5549,10 +5547,10 @@ func (m *MsgCreateLedgerClassResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateLedgerClassResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCreateClassResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateLedgerClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCreateClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -5576,7 +5574,7 @@ func (m *MsgCreateLedgerClassResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddLedgerClassStatusTypeRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgAddClassStatusTypeRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5599,10 +5597,10 @@ func (m *MsgAddLedgerClassStatusTypeRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddLedgerClassStatusTypeRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddClassStatusTypeRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddLedgerClassStatusTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddClassStatusTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5726,7 +5724,7 @@ func (m *MsgAddLedgerClassStatusTypeRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddLedgerClassStatusTypeResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddClassStatusTypeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5749,10 +5747,10 @@ func (m *MsgAddLedgerClassStatusTypeResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddLedgerClassStatusTypeResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddClassStatusTypeResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddLedgerClassStatusTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddClassStatusTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -5776,7 +5774,7 @@ func (m *MsgAddLedgerClassStatusTypeResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddLedgerClassEntryTypeRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgAddClassEntryTypeRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5799,10 +5797,10 @@ func (m *MsgAddLedgerClassEntryTypeRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddLedgerClassEntryTypeRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddClassEntryTypeRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddLedgerClassEntryTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddClassEntryTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5926,7 +5924,7 @@ func (m *MsgAddLedgerClassEntryTypeRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddLedgerClassEntryTypeResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddClassEntryTypeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5949,10 +5947,10 @@ func (m *MsgAddLedgerClassEntryTypeResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddLedgerClassEntryTypeResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddClassEntryTypeResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddLedgerClassEntryTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddClassEntryTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -5976,7 +5974,7 @@ func (m *MsgAddLedgerClassEntryTypeResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddLedgerClassBucketTypeRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgAddClassBucketTypeRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5999,10 +5997,10 @@ func (m *MsgAddLedgerClassBucketTypeRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddLedgerClassBucketTypeRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddClassBucketTypeRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddLedgerClassBucketTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddClassBucketTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6126,7 +6124,7 @@ func (m *MsgAddLedgerClassBucketTypeRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddLedgerClassBucketTypeResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddClassBucketTypeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6149,10 +6147,10 @@ func (m *MsgAddLedgerClassBucketTypeResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddLedgerClassBucketTypeResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddClassBucketTypeResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddLedgerClassBucketTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddClassBucketTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

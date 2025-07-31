@@ -15,47 +15,47 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
 
   // Create a new NFT ledger.
-  rpc CreateTx(MsgCreateRequest) returns (MsgCreateResponse);
+  rpc Create(MsgCreateRequest) returns (MsgCreateResponse);
 
   // Update Status.
-  rpc UpdateStatusTx(MsgUpdateStatusRequest) returns (MsgUpdateStatusResponse);
+  rpc UpdateStatus(MsgUpdateStatusRequest) returns (MsgUpdateStatusResponse);
 
   // Update Interest Rate.
-  rpc UpdateInterestRateTx(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
+  rpc UpdateInterestRate(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
 
   // Update Payment Amount, Next Payment Date, and Payment Frequency.
-  rpc UpdatePaymentTx(MsgUpdatePaymentRequest) returns (MsgUpdatePaymentResponse);
+  rpc UpdatePayment(MsgUpdatePaymentRequest) returns (MsgUpdatePaymentResponse);
 
   // Update Maturity Date.
-  rpc UpdateMaturityDateTx(MsgUpdateMaturityDateRequest) returns (MsgUpdateMaturityDateResponse);
+  rpc UpdateMaturityDate(MsgUpdateMaturityDateRequest) returns (MsgUpdateMaturityDateResponse);
 
   // Append a ledger entry.
-  rpc AppendTx(MsgAppendRequest) returns (MsgAppendResponse);
+  rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
 
   // Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied.
-  rpc UpdateBalancesTx(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
+  rpc UpdateBalances(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
 
   // Process multiple fund transfers with manual settlement instructions.
-  rpc TransferFundsWithSettlementTx(MsgTransferFundsWithSettlementRequest)
+  rpc TransferFundsWithSettlement(MsgTransferFundsWithSettlementRequest)
       returns (MsgTransferFundsWithSettlementResponse);
 
   // Destroy a ledger by NFT address.
-  rpc DestroyTx(MsgDestroyRequest) returns (MsgDestroyResponse);
+  rpc Destroy(MsgDestroyRequest) returns (MsgDestroyResponse);
 
   // Create a new ledger class.
-  rpc CreateLedgerClassTx(MsgCreateLedgerClassRequest) returns (MsgCreateLedgerClassResponse);
+  rpc CreateClass(MsgCreateClassRequest) returns (MsgCreateClassResponse);
 
   // Add a status type to a ledger class.
-  rpc AddLedgerClassStatusTypeTx(MsgAddLedgerClassStatusTypeRequest) returns (MsgAddLedgerClassStatusTypeResponse);
+  rpc AddClassStatusType(MsgAddClassStatusTypeRequest) returns (MsgAddClassStatusTypeResponse);
 
   // Add an entry type to a ledger class.
-  rpc AddLedgerClassEntryTypeTx(MsgAddLedgerClassEntryTypeRequest) returns (MsgAddLedgerClassEntryTypeResponse);
+  rpc AddClassEntryType(MsgAddClassEntryTypeRequest) returns (MsgAddClassEntryTypeResponse);
 
   // Add a bucket type to a ledger class.
-  rpc AddLedgerClassBucketTypeTx(MsgAddLedgerClassBucketTypeRequest) returns (MsgAddLedgerClassBucketTypeResponse);
+  rpc AddClassBucketType(MsgAddClassBucketTypeRequest) returns (MsgAddClassBucketTypeResponse);
 
   // Bulk import ledger data from genesis state.
-  rpc BulkImportTx(MsgBulkImportRequest) returns (MsgBulkImportResponse);
+  rpc BulkImport(MsgBulkImportRequest) returns (MsgBulkImportResponse);
 }
 
 // MsgCreateRequest represents a request to create a new ledger.
@@ -204,8 +204,8 @@ message MsgDestroyRequest {
 // MsgDestroyResponse represents the response from destroying a ledger.
 message MsgDestroyResponse {}
 
-// MsgCreateLedgerClassRequest represents a request to create a new ledger class.
-message MsgCreateLedgerClassRequest {
+// MsgCreateClassRequest represents a request to create a new ledger class.
+message MsgCreateClassRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The ledger class to create.
@@ -214,11 +214,11 @@ message MsgCreateLedgerClassRequest {
   string      authority    = 2;
 }
 
-// MsgCreateLedgerClassResponse represents the response from creating a ledger class.
-message MsgCreateLedgerClassResponse {}
+// MsgCreateClassResponse represents the response from creating a ledger class.
+message MsgCreateClassResponse {}
 
-// MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class.
-message MsgAddLedgerClassStatusTypeRequest {
+// MsgAddClassStatusTypeRequest represents a request to add a status type to a ledger class.
+message MsgAddClassStatusTypeRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The ledger class ID to add the status type to.
@@ -229,11 +229,11 @@ message MsgAddLedgerClassStatusTypeRequest {
   string                authority       = 3;
 }
 
-// MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type.
-message MsgAddLedgerClassStatusTypeResponse {}
+// MsgAddClassStatusTypeResponse represents the response from adding a status type.
+message MsgAddClassStatusTypeResponse {}
 
-// MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class.
-message MsgAddLedgerClassEntryTypeRequest {
+// MsgAddClassEntryTypeRequest represents a request to add an entry type to a ledger class.
+message MsgAddClassEntryTypeRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The ledger class ID to add the entry type to.
@@ -244,11 +244,11 @@ message MsgAddLedgerClassEntryTypeRequest {
   string               authority       = 3;
 }
 
-// MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type.
-message MsgAddLedgerClassEntryTypeResponse {}
+// MsgAddClassEntryTypeResponse represents the response from adding an entry type.
+message MsgAddClassEntryTypeResponse {}
 
-// MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
-message MsgAddLedgerClassBucketTypeRequest {
+// MsgAddClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
+message MsgAddClassBucketTypeRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The ledger class ID to add the bucket type to.
@@ -259,8 +259,8 @@ message MsgAddLedgerClassBucketTypeRequest {
   string                authority       = 3;
 }
 
-// MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type.
-message MsgAddLedgerClassBucketTypeResponse {}
+// MsgAddClassBucketTypeResponse represents the response from adding a bucket type.
+message MsgAddClassBucketTypeResponse {}
 
 // MsgBulkImportRequest represents a request to bulk import ledger data from genesis state.
 message MsgBulkImportRequest {

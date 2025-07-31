@@ -14,7 +14,7 @@ import (
 var _ FundTransferKeeper = (*BaseFundTransferKeeper)(nil)
 
 type FundTransferKeeper interface {
-	TransferFundsWithSettlement(ctx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error
+	TransferLedgerFundsWithSettlement(ctx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error
 
 	GetAllSettlements(ctx context.Context, keyStr *string) ([]*types.StoredSettlementInstructions, error)
 	GetSettlements(ctx context.Context, keyStr *string, correlationId string) (*types.StoredSettlementInstructions, error)
@@ -25,8 +25,8 @@ type BaseFundTransferKeeper struct {
 	BaseViewKeeper
 }
 
-// TransferFundsWithSettlement processes a fund transfer request with settlement instructions
-func (k BaseFundTransferKeeper) TransferFundsWithSettlement(goCtx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error {
+// TransferLedgerFundsWithSettlement processes a fund transfer request with settlement instructions
+func (k BaseFundTransferKeeper) TransferLedgerFundsWithSettlement(goCtx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := types.ValidateFundTransferWithSettlementBasic(transfer); err != nil {

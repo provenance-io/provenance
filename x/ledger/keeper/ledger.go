@@ -14,9 +14,9 @@ var _ ConfigKeeper = (*BaseConfigKeeper)(nil)
 
 type ConfigKeeper interface {
 	CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.AccAddress, l types.LedgerClass) error
-	AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error
-	AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error
-	AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error
+	AddLedgerClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error
+	AddLedgerClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error
+	AddLedgerClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error
 
 	CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error
 
@@ -69,7 +69,7 @@ func (k BaseConfigKeeper) CreateLedgerClass(ctx sdk.Context, maintainerAddr sdk.
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error {
+func (k BaseConfigKeeper) AddLedgerClassEntryType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassEntryType) error {
 	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
 		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
@@ -93,7 +93,7 @@ func (k BaseConfigKeeper) AddClassEntryType(ctx sdk.Context, maintainerAddr sdk.
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error {
+func (k BaseConfigKeeper) AddLedgerClassStatusType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassStatusType) error {
 	if !k.IsLedgerClassMaintainer(ctx, maintainerAddr, ledgerClassId) {
 		return types.NewLedgerCodedError(types.ErrCodeUnauthorized)
 	}
@@ -116,7 +116,7 @@ func (k BaseConfigKeeper) AddClassStatusType(ctx sdk.Context, maintainerAddr sdk
 	return nil
 }
 
-func (k BaseConfigKeeper) AddClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error {
+func (k BaseConfigKeeper) AddLedgerClassBucketType(ctx sdk.Context, maintainerAddr sdk.AccAddress, ledgerClassId string, l types.LedgerClassBucketType) error {
 	// Bucket type validation is performed at the message level in ValidateBasic()
 
 	// Check if the ledger class exists

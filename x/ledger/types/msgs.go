@@ -16,10 +16,10 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateBalancesRequest)(nil),
 	(*MsgTransferFundsWithSettlementRequest)(nil),
 	(*MsgDestroyRequest)(nil),
-	(*MsgCreateLedgerClassRequest)(nil),
-	(*MsgAddLedgerClassStatusTypeRequest)(nil),
-	(*MsgAddLedgerClassEntryTypeRequest)(nil),
-	(*MsgAddLedgerClassBucketTypeRequest)(nil),
+	(*MsgCreateClassRequest)(nil),
+	(*MsgAddClassStatusTypeRequest)(nil),
+	(*MsgAddClassEntryTypeRequest)(nil),
+	(*MsgAddClassBucketTypeRequest)(nil),
 	(*MsgBulkImportRequest)(nil),
 }
 
@@ -166,8 +166,8 @@ func (m *MsgDestroyRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic implements the sdk.Msg interface for MsgCreateLedgerClassRequest
-func (m *MsgCreateLedgerClassRequest) ValidateBasic() error {
+// ValidateBasic implements the sdk.Msg interface for MsgCreateClassRequest
+func (m *MsgCreateClassRequest) ValidateBasic() error {
 	if err := ValidateLedgerClassBasic(m.LedgerClass); err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (m *MsgCreateLedgerClassRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassStatusTypeRequest
-func (m *MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
+func (m *MsgAddClassStatusTypeRequest) ValidateBasic() error {
 	if m.LedgerClassId == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
 	}
@@ -188,7 +188,7 @@ func (m *MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassEntryTypeRequest
-func (m *MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
+func (m *MsgAddClassEntryTypeRequest) ValidateBasic() error {
 	if m.LedgerClassId == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
 	}
@@ -200,7 +200,7 @@ func (m *MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 }
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassBucketTypeRequest
-func (m *MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
+func (m *MsgAddClassBucketTypeRequest) ValidateBasic() error {
 	if m.LedgerClassId == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("ledger class id cannot be empty")
 	}

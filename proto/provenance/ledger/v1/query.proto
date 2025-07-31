@@ -15,58 +15,58 @@ service Query {
   /*****************************************************************
     Ledger Class Queries
   *****************************************************************/
-  // ClassQuery retrieves a ledger class by its ID.
-  rpc ClassQuery(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
+  // LedgerClass retrieves a ledger class by its ID.
+  rpc LedgerClass(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}";
   }
 
-  // ClassEntryTypesQuery retrieves all entry types for a ledger class.
-  rpc ClassEntryTypesQuery(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
+  // LedgerClassEntryTypes retrieves all entry types for a ledger class.
+  rpc LedgerClassEntryTypes(QueryLedgerClassEntryTypesRequest) returns (QueryLedgerClassEntryTypesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/entry_types";
   }
 
-  // ClassStatusTypesQuery retrieves all status types for a ledger class.
-  rpc ClassStatusTypesQuery(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
+  // LedgerClassStatusTypes retrieves all status types for a ledger class.
+  rpc LedgerClassStatusTypes(QueryLedgerClassStatusTypesRequest) returns (QueryLedgerClassStatusTypesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/status_types";
   }
 
-  // ClassBucketTypesQuery retrieves all bucket types for a ledger class.
-  rpc ClassBucketTypesQuery(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
+  // LedgerClassBucketTypes retrieves all bucket types for a ledger class.
+  rpc LedgerClassBucketTypes(QueryLedgerClassBucketTypesRequest) returns (QueryLedgerClassBucketTypesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}/bucket_types";
   }
 
   /*****************************************************************
     Ledger Queries
   *****************************************************************/
-  // LedgerQuery retrieves a ledger by its key.
-  rpc LedgerQuery(QueryLedgerRequest) returns (QueryLedgerResponse) {
+  // Ledger retrieves a ledger by its key.
+  rpc Ledger(QueryLedgerRequest) returns (QueryLedgerResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
 
-  // EntriesQuery retrieves all entries for a ledger.
-  rpc EntriesQuery(QueryLedgerEntriesRequest) returns (QueryLedgerEntriesResponse) {
+  // LedgerEntries retrieves all entries for a ledger.
+  rpc LedgerEntries(QueryLedgerEntriesRequest) returns (QueryLedgerEntriesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/entries/{key.asset_class_id}/{key.nft_id}";
   }
 
-  // LedgerEntryQuery returns a specific ledger entry for an NFT.
-  rpc LedgerEntryQuery(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
+  // LedgerEntry returns a specific ledger entry for an NFT.
+  rpc LedgerEntry(QueryLedgerEntryRequest) returns (QueryLedgerEntryResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/entry/{correlation_id}";
   }
 
-  // BalancesAsOfQuery returns the balances for a specific NFT as of a given date.
-  rpc BalancesAsOfQuery(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
+  // BalancesAsOf returns the balances for a specific NFT as of a given date.
+  rpc BalancesAsOf(QueryBalancesAsOfRequest) returns (QueryBalancesAsOfResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/balances/{as_of_date}";
   }
 
-  // SettlementsQuery retrieves all settlements for a ledger.
-  rpc SettlementsQuery(QuerySettlementsRequest) returns (QuerySettlementsResponse) {
+  // Settlements retrieves all settlements for a ledger.
+  rpc Settlements(QuerySettlementsRequest) returns (QuerySettlementsResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements";
   }
 
-  // SettlementsByCorrelationIdQuery retrieves settlements by correlation ID.
-  rpc SettlementsByCorrelationIdQuery(QuerySettlementsByCorrelationIdRequest)
+  // SettlementsByCorrelationId retrieves settlements by correlation ID.
+  rpc SettlementsByCorrelationId(QuerySettlementsByCorrelationIdRequest)
       returns (QuerySettlementsByCorrelationIdResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements/{correlation_id}";

@@ -275,7 +275,7 @@ func CmdCreateLedgerClass() *cobra.Command {
 			assetClassId := args[1]
 			denom := args[2]
 
-			msg := &ledger.MsgCreateLedgerClassRequest{
+			msg := &ledger.MsgCreateClassRequest{
 				LedgerClass: &ledger.LedgerClass{
 					LedgerClassId:     ledgerClassId,
 					AssetClassId:      assetClassId,
@@ -315,7 +315,7 @@ func CmdAddLedgerClassStatusType() *cobra.Command {
 			code := args[2]
 			description := args[3]
 
-			msg := &ledger.MsgAddLedgerClassStatusTypeRequest{
+			msg := &ledger.MsgAddClassStatusTypeRequest{
 				LedgerClassId: ledgerClassId,
 				StatusType: &ledger.LedgerClassStatusType{
 					Id:          int32(id),
@@ -355,7 +355,7 @@ func CmdAddLedgerClassEntryType() *cobra.Command {
 			code := args[2]
 			description := args[3]
 
-			msg := &ledger.MsgAddLedgerClassEntryTypeRequest{
+			msg := &ledger.MsgAddClassEntryTypeRequest{
 				LedgerClassId: ledgerClassId,
 				EntryType: &ledger.LedgerClassEntryType{
 					Id:          int32(id),
@@ -395,7 +395,7 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 			code := args[2]
 			description := args[3]
 
-			msg := &ledger.MsgAddLedgerClassBucketTypeRequest{
+			msg := &ledger.MsgAddClassBucketTypeRequest{
 				LedgerClassId: ledgerClassId,
 				BucketType: &ledger.LedgerClassBucketType{
 					Id:          int32(id),

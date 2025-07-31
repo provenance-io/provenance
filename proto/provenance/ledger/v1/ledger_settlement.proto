@@ -32,7 +32,7 @@ message FundTransferWithSettlement {
   // The correlation ID of the ledger entry associated with this transfer.
   string                         ledger_entry_correlation_id = 2;
   // The settlement instructions for this transfer.
-  repeated SettlementInstruction settlementInstructions      = 3;
+  repeated SettlementInstruction settlement_instructions      = 3;
 }
 
 // SettlementInstruction represents blockchain-specific settlement instructions.
@@ -61,5 +61,5 @@ message SettlementInstruction {
 // StoredSettlementInstructions represents the stored version of settlement instructions against a ledger key and entry correlation ID.
 message StoredSettlementInstructions {
   // The settlement instructions.
-  repeated SettlementInstruction settlementInstructions = 1;
+  repeated SettlementInstruction settlement_instructions = 1;
 }

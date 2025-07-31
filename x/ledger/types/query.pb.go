@@ -1005,70 +1005,70 @@ func init() {
 func init() { proto.RegisterFile("provenance/ledger/v1/query.proto", fileDescriptor_7955b82df44e45aa) }
 
 var fileDescriptor_7955b82df44e45aa = []byte{
-	// 1005 bytes of a gzipped FileDescriptorProto
+	// 997 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x97, 0x5b, 0x6f, 0x1b, 0x45,
-	0x14, 0xc7, 0x33, 0xa9, 0x5a, 0xca, 0xd9, 0x00, 0x61, 0x28, 0x6a, 0x58, 0x45, 0x6e, 0x32, 0x88,
-	0x12, 0x2e, 0xd9, 0x25, 0x06, 0x54, 0x7a, 0xe1, 0x12, 0xb7, 0x50, 0x85, 0x44, 0x2d, 0x6c, 0x02,
-	0x15, 0x97, 0xca, 0xac, 0xed, 0xb1, 0x59, 0xc5, 0xdd, 0x75, 0x76, 0xc6, 0x11, 0xab, 0x28, 0x0f,
-	0x94, 0x2f, 0x80, 0xc4, 0x37, 0xe0, 0x91, 0x8f, 0xc0, 0x3b, 0x12, 0x0f, 0x3c, 0x58, 0xf0, 0xc2,
-	0x23, 0x4a, 0xf8, 0x20, 0x68, 0x67, 0xc6, 0xd9, 0x59, 0x7b, 0xb3, 0x5e, 0xdb, 0xe1, 0x31, 0x93,
-	0x73, 0xfe, 0xe7, 0xff, 0x9b, 0xcb, 0xd9, 0x63, 0x58, 0xea, 0x84, 0xc1, 0x3e, 0xf5, 0x5d, 0xbf,
-	0x4e, 0xed, 0x36, 0x6d, 0xb4, 0x68, 0x68, 0xef, 0xaf, 0xd9, 0x7b, 0x5d, 0x1a, 0x46, 0x56, 0x27,
-	0x0c, 0x78, 0x80, 0x2f, 0x25, 0x11, 0x96, 0x8c, 0xb0, 0xf6, 0xd7, 0xcc, 0xc5, 0x56, 0x10, 0xb4,
-	0xda, 0xd4, 0x76, 0x3b, 0x9e, 0xed, 0xfa, 0x7e, 0xc0, 0x5d, 0xee, 0x05, 0x3e, 0x93, 0x39, 0xe6,
-	0x72, 0xa6, 0xaa, 0xca, 0x96, 0x21, 0xaf, 0xe7, 0x84, 0x54, 0x19, 0xe5, 0xbc, 0x4d, 0x1f, 0x51,
-	0x9f, 0xcb, 0x68, 0x72, 0x17, 0xf0, 0xa7, 0xb1, 0xa7, 0x2d, 0xf1, 0x7f, 0x87, 0xee, 0x75, 0x29,
-	0xe3, 0x78, 0x0d, 0xce, 0xed, 0xd2, 0x68, 0x01, 0x2d, 0xa1, 0x15, 0xa3, 0x7c, 0xc5, 0xca, 0x32,
-	0x6a, 0xc9, 0x8c, 0x4d, 0x1a, 0x39, 0x71, 0x2c, 0xd9, 0x84, 0xe7, 0x52, 0x42, 0xac, 0x13, 0xf8,
-	0x8c, 0xe2, 0xb7, 0xe0, 0x82, 0x4c, 0x51, 0x62, 0x8b, 0x79, 0x62, 0x8e, 0x8a, 0x25, 0xf7, 0xe0,
-	0x05, 0x4d, 0xec, 0x43, 0x9f, 0x87, 0x1e, 0x65, 0x53, 0x98, 0xfb, 0x02, 0xcc, 0x2c, 0x3d, 0xe5,
-	0xf1, 0x26, 0x3c, 0x41, 0xe5, 0xd2, 0x02, 0x5a, 0x3a, 0xb7, 0x62, 0x94, 0x97, 0xf3, 0x44, 0xe3,
-	0xec, 0xc8, 0xe9, 0x67, 0x10, 0x06, 0x97, 0x07, 0xa4, 0xa3, 0xc9, 0x8d, 0xe2, 0x97, 0xe0, 0xe9,
-	0x7a, 0x10, 0x86, 0xb4, 0x2d, 0x4e, 0xbd, 0xea, 0x35, 0x16, 0x66, 0x97, 0xd0, 0xca, 0x93, 0xce,
-	0x53, 0xda, 0xea, 0x46, 0x83, 0x6c, 0xc3, 0xc2, 0x70, 0x51, 0x45, 0x73, 0x0d, 0xce, 0xc7, 0xde,
-	0xfa, 0x75, 0x0b, 0xb0, 0xc8, 0x78, 0xb2, 0xab, 0x44, 0x2b, 0x6e, 0x3b, 0x0e, 0x66, 0xeb, 0xec,
-	0x7e, 0x73, 0x0a, 0x94, 0x45, 0x00, 0x97, 0x55, 0x83, 0x66, 0xb5, 0xe1, 0x72, 0xaa, 0x30, 0x2e,
-	0xba, 0xec, 0x7e, 0xf3, 0x8e, 0xcb, 0x29, 0x79, 0xa0, 0x4e, 0x38, 0x5d, 0x4c, 0x21, 0xdc, 0x80,
-	0x8b, 0x35, 0xb5, 0xae, 0x4a, 0x96, 0xb2, 0x4b, 0xf6, 0xb3, 0x9d, 0x93, 0x78, 0xb2, 0x09, 0xcb,
-	0xda, 0xd6, 0xdc, 0x6e, 0xbb, 0x8c, 0x09, 0xca, 0x9d, 0xa8, 0x93, 0x5c, 0xa1, 0xab, 0xf0, 0x8c,
-	0x7a, 0x10, 0xf5, 0x38, 0x20, 0xde, 0x67, 0x24, 0xf7, 0xb9, 0x9d, 0xa4, 0x6d, 0x34, 0xc8, 0x1e,
-	0x90, 0x3c, 0x31, 0x65, 0x77, 0x13, 0x0c, 0xb1, 0x83, 0x55, 0x1e, 0x2f, 0xab, 0x3b, 0xf4, 0x6a,
-	0xde, 0x26, 0xa5, 0x95, 0x1c, 0xa0, 0x27, 0xa2, 0x64, 0x6b, 0xb8, 0xe4, 0x36, 0x77, 0x79, 0x97,
-	0x4d, 0x04, 0xd0, 0x85, 0x17, 0x73, 0xd5, 0x14, 0xc1, 0x3d, 0x98, 0x63, 0x62, 0x39, 0x85, 0xf0,
-	0xda, 0x48, 0x84, 0x44, 0xcb, 0x31, 0x58, 0xa2, 0x9b, 0x05, 0x51, 0xe9, 0xd6, 0x77, 0x29, 0x3f,
-	0x2b, 0x88, 0x94, 0x5a, 0x02, 0x51, 0x13, 0xcb, 0x63, 0x42, 0x24, 0x5a, 0x8e, 0x51, 0x4b, 0x74,
-	0xc9, 0x7a, 0xea, 0x65, 0x8b, 0xd0, 0x71, 0x9d, 0x7f, 0x93, 0x7a, 0xa7, 0x4a, 0x42, 0xd9, 0xbd,
-	0x03, 0x73, 0xba, 0x46, 0x91, 0xe7, 0x2a, 0x05, 0x0c, 0xad, 0x06, 0xd9, 0x52, 0x26, 0xb7, 0x4f,
-	0x1a, 0xfb, 0x34, 0x7d, 0xb2, 0xa3, 0xfc, 0xa6, 0xd4, 0x94, 0xdf, 0x1d, 0x30, 0x92, 0xaf, 0x47,
-	0x7f, 0x77, 0xcb, 0xd9, 0xb2, 0xdb, 0x3c, 0x08, 0x69, 0x23, 0x51, 0xd9, 0xf0, 0x19, 0x0f, 0xbb,
-	0x75, 0xf1, 0x25, 0x73, 0x74, 0x19, 0xf2, 0x18, 0xc1, 0xd5, 0xc1, 0x92, 0x95, 0xe8, 0xb6, 0xde,
-	0xed, 0xfe, 0xff, 0x76, 0x7a, 0x08, 0x2f, 0x8f, 0xf4, 0xa0, 0x76, 0xc1, 0x01, 0x48, 0xec, 0x2b,
-	0x2f, 0x93, 0x6c, 0x82, 0xa6, 0x52, 0xfe, 0x7e, 0x1e, 0xce, 0x8b, 0xfa, 0xf8, 0x67, 0x04, 0x20,
-	0xce, 0x55, 0xfe, 0xb9, 0x9a, 0x2d, 0x7c, 0xca, 0xad, 0x34, 0xad, 0xa2, 0xe1, 0x92, 0x85, 0xbc,
-	0xfd, 0xf8, 0xaf, 0x7f, 0x7f, 0x9a, 0xb5, 0xf1, 0xaa, 0x9d, 0x39, 0x32, 0x88, 0x6b, 0x69, 0x1f,
-	0x0c, 0x5c, 0xf4, 0x43, 0xfc, 0x07, 0x82, 0x4b, 0x03, 0xad, 0x50, 0xda, 0xbd, 0x56, 0xac, 0xfe,
-	0x50, 0x3b, 0x36, 0xdf, 0x19, 0x3f, 0x51, 0x21, 0xac, 0x0b, 0x84, 0x9b, 0xf8, 0xfa, 0x58, 0x08,
-	0xb6, 0xd6, 0xae, 0x71, 0x0f, 0xc1, 0xf3, 0x83, 0x8d, 0x51, 0xf2, 0x14, 0xb4, 0x35, 0xdc, 0x9e,
-	0xcd, 0xeb, 0x13, 0x64, 0x2a, 0xa2, 0x8a, 0x20, 0xba, 0x85, 0x6f, 0x8c, 0x47, 0xa4, 0xb7, 0xef,
-	0x04, 0x49, 0x6b, 0x93, 0x63, 0x21, 0x0d, 0x37, 0xeb, 0xa2, 0x48, 0x19, 0x8d, 0x79, 0x52, 0x24,
-	0xbd, 0x99, 0xe3, 0x5f, 0x10, 0x18, 0xb2, 0x8c, 0x04, 0x59, 0x19, 0x69, 0xa7, 0x6f, 0xfc, 0x95,
-	0x02, 0x91, 0xca, 0xe8, 0x47, 0xc2, 0xe8, 0x07, 0xf8, 0xbd, 0x53, 0x8c, 0x06, 0x7e, 0xd3, 0x6b,
-	0xd9, 0x07, 0xbb, 0x34, 0xb2, 0x5c, 0xc6, 0x28, 0xd7, 0xcc, 0x8a, 0x45, 0xbf, 0xc9, 0xc5, 0x0b,
-	0xf9, 0x15, 0xc1, 0x9c, 0x1a, 0x32, 0xa5, 0x5b, 0x7b, 0xa4, 0x87, 0xf4, 0x8c, 0x6b, 0xbe, 0x51,
-	0x3c, 0x41, 0x79, 0xbf, 0x2b, 0xbc, 0xaf, 0xe3, 0xf7, 0xb3, 0xbd, 0xab, 0x71, 0xb5, 0x80, 0xf9,
-	0x1e, 0x82, 0x79, 0x6d, 0x3a, 0x2c, 0xda, 0x89, 0xf4, 0xc9, 0xb7, 0x40, 0x27, 0x4a, 0xcd, 0xac,
-	0xe4, 0xa1, 0x30, 0xff, 0x00, 0x7f, 0x66, 0xe7, 0xfc, 0x78, 0x19, 0xed, 0x5d, 0xbe, 0x6b, 0xfb,
-	0x20, 0xdd, 0xf3, 0x0f, 0xf1, 0x9f, 0x08, 0x9e, 0xd5, 0x07, 0x4d, 0xc9, 0x94, 0x67, 0x32, 0x63,
-	0x06, 0x36, 0xed, 0xc2, 0xf1, 0x8a, 0xea, 0x6b, 0x41, 0xf5, 0x39, 0xde, 0x99, 0x92, 0xaa, 0x3f,
-	0xdb, 0xda, 0x07, 0xc9, 0x40, 0x7d, 0x88, 0x7f, 0x43, 0x30, 0xaf, 0x7d, 0xb0, 0x46, 0x9f, 0xd3,
-	0xf0, 0x88, 0x90, 0x7b, 0x4e, 0x19, 0x33, 0x00, 0x71, 0x04, 0xd1, 0x16, 0xfe, 0x78, 0x4a, 0x22,
-	0x6d, 0x02, 0xc0, 0x3f, 0xcc, 0xc2, 0x95, 0xd3, 0x3f, 0xbc, 0x12, 0xeb, 0x56, 0x31, 0x9f, 0xd9,
-	0x83, 0x83, 0xf9, 0xee, 0x84, 0xd9, 0x0a, 0xba, 0x2e, 0xa0, 0x1f, 0xe2, 0xaf, 0xce, 0x0e, 0x7a,
-	0xe8, 0x8a, 0x56, 0x5a, 0xbf, 0x1f, 0x95, 0x50, 0xef, 0xa8, 0x84, 0xfe, 0x39, 0x2a, 0xa1, 0x1f,
-	0x8f, 0x4b, 0x33, 0xbd, 0xe3, 0xd2, 0xcc, 0xdf, 0xc7, 0xa5, 0x19, 0xb8, 0xec, 0x05, 0x99, 0xfe,
-	0x3f, 0x41, 0x5f, 0x96, 0x5b, 0x1e, 0xff, 0xb6, 0x5b, 0xb3, 0xea, 0xc1, 0x23, 0xcd, 0xdb, 0xaa,
-	0x17, 0xe8, 0x4e, 0xbf, 0xeb, 0x3b, 0x14, 0x8d, 0xb4, 0x76, 0x41, 0xfc, 0xee, 0x7f, 0xf3, 0xbf,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0xf5, 0x32, 0xa7, 0xad, 0xa0, 0x10, 0x00, 0x00,
+	0x14, 0xc7, 0x33, 0xad, 0x1a, 0xca, 0xd9, 0x94, 0x4a, 0xc3, 0xa5, 0x61, 0x15, 0x99, 0x64, 0x10,
+	0x25, 0x5c, 0xb2, 0x4b, 0x0c, 0xa8, 0xf4, 0xc2, 0x25, 0x6e, 0xa1, 0x0a, 0x89, 0x5a, 0xd8, 0x04,
+	0x2a, 0x2e, 0x95, 0x59, 0xdb, 0x63, 0xb3, 0x8a, 0xbb, 0xeb, 0xec, 0x8c, 0x23, 0x56, 0x56, 0x5e,
+	0xfa, 0x09, 0x90, 0xf8, 0x08, 0x88, 0x4f, 0xc1, 0x0b, 0x8f, 0x48, 0x08, 0xa9, 0x88, 0x17, 0x1e,
+	0x51, 0xc2, 0x2b, 0x5f, 0x01, 0xa1, 0x9d, 0x1d, 0x7b, 0x67, 0xed, 0xc9, 0x7a, 0x6d, 0xa7, 0xaf,
+	0xe3, 0x73, 0xfe, 0xe7, 0xf7, 0x9f, 0x9d, 0x39, 0x73, 0x0c, 0xcb, 0x9d, 0x30, 0x38, 0xa0, 0xbe,
+	0xeb, 0xd7, 0xa9, 0xdd, 0xa6, 0x8d, 0x16, 0x0d, 0xed, 0x83, 0x75, 0x7b, 0xbf, 0x4b, 0xc3, 0xc8,
+	0xea, 0x84, 0x01, 0x0f, 0xf0, 0x33, 0x69, 0x84, 0x95, 0x44, 0x58, 0x07, 0xeb, 0xe6, 0x52, 0x2b,
+	0x08, 0x5a, 0x6d, 0x6a, 0xbb, 0x1d, 0xcf, 0x76, 0x7d, 0x3f, 0xe0, 0x2e, 0xf7, 0x02, 0x9f, 0x25,
+	0x39, 0xe6, 0x8a, 0x56, 0x55, 0x66, 0x27, 0x21, 0xaf, 0xe7, 0x84, 0x54, 0x19, 0xe5, 0xbc, 0x4d,
+	0x1f, 0x50, 0x9f, 0x27, 0xd1, 0xe4, 0x36, 0xe0, 0x4f, 0x63, 0xa6, 0x6d, 0xf1, 0xbb, 0x43, 0xf7,
+	0xbb, 0x94, 0x71, 0xbc, 0x0e, 0x67, 0xf7, 0x68, 0xb4, 0x88, 0x96, 0xd1, 0xaa, 0x51, 0x7e, 0xc1,
+	0xd2, 0x81, 0x5a, 0x49, 0xc6, 0x16, 0x8d, 0x9c, 0x38, 0x96, 0x6c, 0xc1, 0xd3, 0x19, 0x21, 0xd6,
+	0x09, 0x7c, 0x46, 0xf1, 0x5b, 0x30, 0x9f, 0xa4, 0x48, 0xb1, 0xa5, 0x3c, 0x31, 0x47, 0xc6, 0x92,
+	0x3b, 0xf0, 0xbc, 0x22, 0xf6, 0xa1, 0xcf, 0x43, 0x8f, 0xb2, 0x19, 0xe0, 0xbe, 0x00, 0x53, 0xa7,
+	0x27, 0x19, 0xaf, 0xc3, 0x13, 0x34, 0x59, 0x5a, 0x44, 0xcb, 0x67, 0x57, 0x8d, 0xf2, 0x4a, 0x9e,
+	0x68, 0x9c, 0x1d, 0x39, 0xfd, 0x0c, 0xc2, 0xe0, 0xd2, 0x90, 0x74, 0x34, 0x3d, 0x28, 0x7e, 0x09,
+	0x9e, 0xaa, 0x07, 0x61, 0x48, 0xdb, 0xe2, 0xab, 0x57, 0xbd, 0xc6, 0xe2, 0x99, 0x65, 0xb4, 0xfa,
+	0xa4, 0x73, 0x41, 0x59, 0xdd, 0x6c, 0x90, 0x1d, 0x58, 0x1c, 0x2d, 0x2a, 0xdd, 0x5c, 0x81, 0x73,
+	0x31, 0x5b, 0xbf, 0x6e, 0x01, 0x2f, 0x49, 0x3c, 0xd9, 0x93, 0xa2, 0x15, 0xb7, 0x1d, 0x07, 0xb3,
+	0x0d, 0x76, 0xb7, 0x39, 0x83, 0x95, 0x25, 0x00, 0x97, 0x55, 0x83, 0x66, 0xb5, 0xe1, 0x72, 0x2a,
+	0x6d, 0x9c, 0x77, 0xd9, 0xdd, 0xe6, 0x2d, 0x97, 0x53, 0x72, 0x4f, 0x7e, 0xe1, 0x6c, 0x31, 0x69,
+	0xe1, 0x1a, 0x9c, 0xaf, 0xc9, 0x75, 0x59, 0xb2, 0xa4, 0x2f, 0xd9, 0xcf, 0x76, 0x06, 0xf1, 0x64,
+	0x0b, 0x56, 0x94, 0xad, 0xb9, 0xd9, 0x76, 0x19, 0x13, 0x2e, 0x77, 0xa3, 0x4e, 0x7a, 0x84, 0x2e,
+	0xc3, 0x45, 0x79, 0x21, 0xea, 0x71, 0x40, 0xbc, 0xcf, 0x28, 0xd9, 0xe7, 0x76, 0x9a, 0xb6, 0xd9,
+	0x20, 0xfb, 0x40, 0xf2, 0xc4, 0x24, 0xee, 0x16, 0x18, 0x62, 0x07, 0xab, 0x3c, 0x5e, 0x96, 0x67,
+	0xe8, 0xd5, 0xbc, 0x4d, 0xca, 0x2a, 0x39, 0x40, 0x07, 0xa2, 0x64, 0x7b, 0xb4, 0xe4, 0x0e, 0x77,
+	0x79, 0x97, 0x4d, 0x65, 0xa0, 0x0b, 0x2f, 0xe6, 0xaa, 0x49, 0x07, 0x77, 0x60, 0x81, 0x89, 0xe5,
+	0x8c, 0x85, 0xd7, 0xc6, 0x5a, 0x48, 0xb5, 0x1c, 0x83, 0xa5, 0xba, 0x3a, 0x13, 0x95, 0x6e, 0x7d,
+	0x8f, 0xf2, 0xd3, 0x32, 0x91, 0x51, 0x4b, 0x4d, 0xd4, 0xc4, 0xf2, 0x84, 0x26, 0x52, 0x2d, 0xc7,
+	0xa8, 0xa5, 0xba, 0x64, 0x23, 0x73, 0xb3, 0x45, 0xe8, 0xa4, 0xe4, 0xdf, 0x64, 0xee, 0xa9, 0x94,
+	0x90, 0xb8, 0xb7, 0x60, 0x41, 0xd5, 0x28, 0x72, 0x5d, 0x13, 0x01, 0x43, 0xa9, 0x41, 0xb6, 0x25,
+	0xe4, 0xce, 0xa0, 0xb1, 0xcf, 0xd2, 0x27, 0x3b, 0x92, 0x37, 0xa3, 0x26, 0x79, 0x77, 0xc1, 0x48,
+	0x5f, 0x8f, 0xfe, 0xee, 0x96, 0xf5, 0xb2, 0x3b, 0x3c, 0x08, 0x69, 0x23, 0x55, 0xd9, 0xf4, 0x19,
+	0x0f, 0xbb, 0x75, 0xf1, 0x92, 0x39, 0xaa, 0x0c, 0x79, 0x88, 0xe0, 0xf2, 0x70, 0xc9, 0x4a, 0x74,
+	0x53, 0xed, 0x76, 0x8f, 0xbf, 0x9d, 0x1e, 0xc2, 0xcb, 0x63, 0x19, 0xe4, 0x2e, 0x38, 0x00, 0x29,
+	0xbe, 0x64, 0x99, 0x66, 0x13, 0x14, 0x95, 0xf2, 0xbf, 0x17, 0xe1, 0x9c, 0xa8, 0x8f, 0x7f, 0x44,
+	0x60, 0x28, 0x9f, 0x1a, 0xaf, 0xe9, 0x95, 0x4f, 0x38, 0x96, 0xa6, 0x55, 0x34, 0x3c, 0x31, 0x43,
+	0xde, 0x7e, 0xf8, 0xe7, 0x3f, 0x3f, 0x9c, 0xb1, 0xf1, 0x9a, 0xad, 0x9d, 0x19, 0xc4, 0xb9, 0xb4,
+	0x7b, 0x43, 0x27, 0xfd, 0x10, 0xff, 0x8e, 0xe0, 0x59, 0x6d, 0x47, 0xc4, 0x57, 0x8a, 0x01, 0x8c,
+	0x34, 0x64, 0xf3, 0x9d, 0xc9, 0x13, 0xa5, 0x87, 0x0d, 0xe1, 0xe1, 0x3a, 0xbe, 0x3a, 0x91, 0x07,
+	0x5b, 0x69, 0xd8, 0xf8, 0x0f, 0x04, 0xcf, 0xe9, 0x1b, 0x24, 0x2e, 0xc8, 0x35, 0xda, 0xa1, 0xcd,
+	0xab, 0x53, 0x64, 0x4a, 0x4b, 0x15, 0x61, 0xe9, 0x06, 0xbe, 0x36, 0x99, 0x25, 0xb5, 0x83, 0x0f,
+	0x7b, 0x52, 0xfa, 0x65, 0x51, 0x4f, 0xa3, 0x0d, 0xbb, 0xa8, 0x27, 0x4d, 0x73, 0x9e, 0xd6, 0x93,
+	0xda, 0xd0, 0xf1, 0x4f, 0x08, 0xe6, 0x93, 0x32, 0x78, 0x75, 0x2c, 0x49, 0x9f, 0xf9, 0x95, 0x02,
+	0x91, 0x92, 0xf1, 0x23, 0xc1, 0xf8, 0x01, 0x7e, 0xef, 0x04, 0xc6, 0xc0, 0x6f, 0x7a, 0x2d, 0xbb,
+	0xb7, 0x47, 0x23, 0xcb, 0x65, 0x8c, 0x72, 0x85, 0x53, 0x2c, 0xfa, 0x4d, 0x2e, 0xee, 0xc7, 0xcf,
+	0x08, 0x2e, 0x64, 0x26, 0x4d, 0x6c, 0x8f, 0x85, 0xc8, 0xce, 0xb8, 0xe6, 0x1b, 0xc5, 0x13, 0x24,
+	0xfc, 0x6d, 0x01, 0xbf, 0x81, 0xdf, 0xd7, 0xc3, 0xcb, 0x71, 0xb5, 0x00, 0xfd, 0x6f, 0x83, 0x1e,
+	0x24, 0x6e, 0x5b, 0x81, 0x1e, 0xa4, 0x0e, 0xbd, 0x05, 0x7a, 0x50, 0x66, 0x5c, 0x25, 0xf7, 0x05,
+	0xf7, 0x3d, 0xfc, 0x99, 0x9d, 0xf3, 0xbf, 0x65, 0x3c, 0x76, 0x72, 0xa1, 0xed, 0x5e, 0xb6, 0xdd,
+	0x8b, 0x5e, 0xb5, 0xa0, 0xce, 0x98, 0x38, 0x8f, 0x4f, 0x33, 0xf9, 0x9a, 0x76, 0xe1, 0x78, 0x69,
+	0xe8, 0x6b, 0x61, 0xe8, 0x73, 0xbc, 0x3b, 0xa3, 0xa1, 0xfe, 0x44, 0x6b, 0xf7, 0xd2, 0x31, 0xfa,
+	0x10, 0xff, 0x82, 0xc0, 0x50, 0x9e, 0xa9, 0xdc, 0xaf, 0x33, 0x3a, 0x13, 0xe4, 0x7e, 0x1d, 0xcd,
+	0xa3, 0x4f, 0x1c, 0x61, 0x66, 0x1b, 0x7f, 0x3c, 0xa3, 0x19, 0xe5, 0xc9, 0xc7, 0xff, 0x21, 0x30,
+	0x4f, 0x7e, 0x69, 0xf1, 0x8d, 0x62, 0x88, 0xfa, 0x21, 0xc1, 0x7c, 0x77, 0xca, 0x6c, 0xe9, 0xb7,
+	0x2e, 0xfc, 0xde, 0xc7, 0x5f, 0x9d, 0x9e, 0xdf, 0x91, 0x33, 0x59, 0x69, 0xfd, 0x7a, 0x54, 0x42,
+	0x8f, 0x8e, 0x4a, 0xe8, 0xef, 0xa3, 0x12, 0xfa, 0xfe, 0xb8, 0x34, 0xf7, 0xe8, 0xb8, 0x34, 0xf7,
+	0xd7, 0x71, 0x69, 0x0e, 0x2e, 0x79, 0x81, 0x96, 0xff, 0x13, 0xf4, 0x65, 0xb9, 0xe5, 0xf1, 0x6f,
+	0xbb, 0x35, 0xab, 0x1e, 0x3c, 0x50, 0xd8, 0xd6, 0xbc, 0x40, 0x25, 0xfd, 0xae, 0x4f, 0x28, 0x1a,
+	0x66, 0x6d, 0x5e, 0xfc, 0xc7, 0x7f, 0xf3, 0xff, 0x00, 0x00, 0x00, 0xff, 0xff, 0x33, 0xa3, 0xb1,
+	0xf0, 0x8c, 0x10, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1083,26 +1083,26 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// ClassQuery retrieves a ledger class by its ID.
-	ClassQuery(ctx context.Context, in *QueryLedgerClassRequest, opts ...grpc.CallOption) (*QueryLedgerClassResponse, error)
-	// ClassEntryTypesQuery retrieves all entry types for a ledger class.
-	ClassEntryTypesQuery(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error)
-	// ClassStatusTypesQuery retrieves all status types for a ledger class.
-	ClassStatusTypesQuery(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error)
-	// ClassBucketTypesQuery retrieves all bucket types for a ledger class.
-	ClassBucketTypesQuery(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error)
-	// LedgerQuery retrieves a ledger by its key.
-	LedgerQuery(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
-	// EntriesQuery retrieves all entries for a ledger.
-	EntriesQuery(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error)
-	// LedgerEntryQuery returns a specific ledger entry for an NFT.
-	LedgerEntryQuery(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
-	// BalancesAsOfQuery returns the balances for a specific NFT as of a given date.
-	BalancesAsOfQuery(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error)
-	// SettlementsQuery retrieves all settlements for a ledger.
-	SettlementsQuery(ctx context.Context, in *QuerySettlementsRequest, opts ...grpc.CallOption) (*QuerySettlementsResponse, error)
-	// SettlementsByCorrelationIdQuery retrieves settlements by correlation ID.
-	SettlementsByCorrelationIdQuery(ctx context.Context, in *QuerySettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QuerySettlementsByCorrelationIdResponse, error)
+	// LedgerClass retrieves a ledger class by its ID.
+	LedgerClass(ctx context.Context, in *QueryLedgerClassRequest, opts ...grpc.CallOption) (*QueryLedgerClassResponse, error)
+	// LedgerClassEntryTypes retrieves all entry types for a ledger class.
+	LedgerClassEntryTypes(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error)
+	// LedgerClassStatusTypes retrieves all status types for a ledger class.
+	LedgerClassStatusTypes(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error)
+	// LedgerClassBucketTypes retrieves all bucket types for a ledger class.
+	LedgerClassBucketTypes(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error)
+	// Ledger retrieves a ledger by its key.
+	Ledger(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
+	// LedgerEntries retrieves all entries for a ledger.
+	LedgerEntries(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error)
+	// LedgerEntry returns a specific ledger entry for an NFT.
+	LedgerEntry(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
+	// BalancesAsOf returns the balances for a specific NFT as of a given date.
+	BalancesAsOf(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error)
+	// Settlements retrieves all settlements for a ledger.
+	Settlements(ctx context.Context, in *QuerySettlementsRequest, opts ...grpc.CallOption) (*QuerySettlementsResponse, error)
+	// SettlementsByCorrelationId retrieves settlements by correlation ID.
+	SettlementsByCorrelationId(ctx context.Context, in *QuerySettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QuerySettlementsByCorrelationIdResponse, error)
 }
 
 type queryClient struct {
@@ -1113,90 +1113,90 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) ClassQuery(ctx context.Context, in *QueryLedgerClassRequest, opts ...grpc.CallOption) (*QueryLedgerClassResponse, error) {
+func (c *queryClient) LedgerClass(ctx context.Context, in *QueryLedgerClassRequest, opts ...grpc.CallOption) (*QueryLedgerClassResponse, error) {
 	out := new(QueryLedgerClassResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/ClassQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerClass", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) ClassEntryTypesQuery(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error) {
+func (c *queryClient) LedgerClassEntryTypes(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error) {
 	out := new(QueryLedgerClassEntryTypesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/ClassEntryTypesQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerClassEntryTypes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) ClassStatusTypesQuery(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error) {
+func (c *queryClient) LedgerClassStatusTypes(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error) {
 	out := new(QueryLedgerClassStatusTypesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/ClassStatusTypesQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerClassStatusTypes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) ClassBucketTypesQuery(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error) {
+func (c *queryClient) LedgerClassBucketTypes(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error) {
 	out := new(QueryLedgerClassBucketTypesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/ClassBucketTypesQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerClassBucketTypes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) LedgerQuery(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error) {
+func (c *queryClient) Ledger(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error) {
 	out := new(QueryLedgerResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/Ledger", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) EntriesQuery(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error) {
+func (c *queryClient) LedgerEntries(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error) {
 	out := new(QueryLedgerEntriesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/EntriesQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerEntries", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) LedgerEntryQuery(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error) {
+func (c *queryClient) LedgerEntry(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error) {
 	out := new(QueryLedgerEntryResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerEntryQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/LedgerEntry", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) BalancesAsOfQuery(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error) {
+func (c *queryClient) BalancesAsOf(ctx context.Context, in *QueryBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryBalancesAsOfResponse, error) {
 	out := new(QueryBalancesAsOfResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/BalancesAsOfQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/BalancesAsOf", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) SettlementsQuery(ctx context.Context, in *QuerySettlementsRequest, opts ...grpc.CallOption) (*QuerySettlementsResponse, error) {
+func (c *queryClient) Settlements(ctx context.Context, in *QuerySettlementsRequest, opts ...grpc.CallOption) (*QuerySettlementsResponse, error) {
 	out := new(QuerySettlementsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/SettlementsQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/Settlements", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) SettlementsByCorrelationIdQuery(ctx context.Context, in *QuerySettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QuerySettlementsByCorrelationIdResponse, error) {
+func (c *queryClient) SettlementsByCorrelationId(ctx context.Context, in *QuerySettlementsByCorrelationIdRequest, opts ...grpc.CallOption) (*QuerySettlementsByCorrelationIdResponse, error) {
 	out := new(QuerySettlementsByCorrelationIdResponse)
-	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/SettlementsByCorrelationIdQuery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.ledger.v1.Query/SettlementsByCorrelationId", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1205,243 +1205,243 @@ func (c *queryClient) SettlementsByCorrelationIdQuery(ctx context.Context, in *Q
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// ClassQuery retrieves a ledger class by its ID.
-	ClassQuery(context.Context, *QueryLedgerClassRequest) (*QueryLedgerClassResponse, error)
-	// ClassEntryTypesQuery retrieves all entry types for a ledger class.
-	ClassEntryTypesQuery(context.Context, *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error)
-	// ClassStatusTypesQuery retrieves all status types for a ledger class.
-	ClassStatusTypesQuery(context.Context, *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error)
-	// ClassBucketTypesQuery retrieves all bucket types for a ledger class.
-	ClassBucketTypesQuery(context.Context, *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error)
-	// LedgerQuery retrieves a ledger by its key.
-	LedgerQuery(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
-	// EntriesQuery retrieves all entries for a ledger.
-	EntriesQuery(context.Context, *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error)
-	// LedgerEntryQuery returns a specific ledger entry for an NFT.
-	LedgerEntryQuery(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
-	// BalancesAsOfQuery returns the balances for a specific NFT as of a given date.
-	BalancesAsOfQuery(context.Context, *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error)
-	// SettlementsQuery retrieves all settlements for a ledger.
-	SettlementsQuery(context.Context, *QuerySettlementsRequest) (*QuerySettlementsResponse, error)
-	// SettlementsByCorrelationIdQuery retrieves settlements by correlation ID.
-	SettlementsByCorrelationIdQuery(context.Context, *QuerySettlementsByCorrelationIdRequest) (*QuerySettlementsByCorrelationIdResponse, error)
+	// LedgerClass retrieves a ledger class by its ID.
+	LedgerClass(context.Context, *QueryLedgerClassRequest) (*QueryLedgerClassResponse, error)
+	// LedgerClassEntryTypes retrieves all entry types for a ledger class.
+	LedgerClassEntryTypes(context.Context, *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error)
+	// LedgerClassStatusTypes retrieves all status types for a ledger class.
+	LedgerClassStatusTypes(context.Context, *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error)
+	// LedgerClassBucketTypes retrieves all bucket types for a ledger class.
+	LedgerClassBucketTypes(context.Context, *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error)
+	// Ledger retrieves a ledger by its key.
+	Ledger(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
+	// LedgerEntries retrieves all entries for a ledger.
+	LedgerEntries(context.Context, *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error)
+	// LedgerEntry returns a specific ledger entry for an NFT.
+	LedgerEntry(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
+	// BalancesAsOf returns the balances for a specific NFT as of a given date.
+	BalancesAsOf(context.Context, *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error)
+	// Settlements retrieves all settlements for a ledger.
+	Settlements(context.Context, *QuerySettlementsRequest) (*QuerySettlementsResponse, error)
+	// SettlementsByCorrelationId retrieves settlements by correlation ID.
+	SettlementsByCorrelationId(context.Context, *QuerySettlementsByCorrelationIdRequest) (*QuerySettlementsByCorrelationIdResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) ClassQuery(ctx context.Context, req *QueryLedgerClassRequest) (*QueryLedgerClassResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ClassQuery not implemented")
+func (*UnimplementedQueryServer) LedgerClass(ctx context.Context, req *QueryLedgerClassRequest) (*QueryLedgerClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LedgerClass not implemented")
 }
-func (*UnimplementedQueryServer) ClassEntryTypesQuery(ctx context.Context, req *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ClassEntryTypesQuery not implemented")
+func (*UnimplementedQueryServer) LedgerClassEntryTypes(ctx context.Context, req *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LedgerClassEntryTypes not implemented")
 }
-func (*UnimplementedQueryServer) ClassStatusTypesQuery(ctx context.Context, req *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ClassStatusTypesQuery not implemented")
+func (*UnimplementedQueryServer) LedgerClassStatusTypes(ctx context.Context, req *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LedgerClassStatusTypes not implemented")
 }
-func (*UnimplementedQueryServer) ClassBucketTypesQuery(ctx context.Context, req *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ClassBucketTypesQuery not implemented")
+func (*UnimplementedQueryServer) LedgerClassBucketTypes(ctx context.Context, req *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LedgerClassBucketTypes not implemented")
 }
-func (*UnimplementedQueryServer) LedgerQuery(ctx context.Context, req *QueryLedgerRequest) (*QueryLedgerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LedgerQuery not implemented")
+func (*UnimplementedQueryServer) Ledger(ctx context.Context, req *QueryLedgerRequest) (*QueryLedgerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ledger not implemented")
 }
-func (*UnimplementedQueryServer) EntriesQuery(ctx context.Context, req *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EntriesQuery not implemented")
+func (*UnimplementedQueryServer) LedgerEntries(ctx context.Context, req *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LedgerEntries not implemented")
 }
-func (*UnimplementedQueryServer) LedgerEntryQuery(ctx context.Context, req *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LedgerEntryQuery not implemented")
+func (*UnimplementedQueryServer) LedgerEntry(ctx context.Context, req *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LedgerEntry not implemented")
 }
-func (*UnimplementedQueryServer) BalancesAsOfQuery(ctx context.Context, req *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BalancesAsOfQuery not implemented")
+func (*UnimplementedQueryServer) BalancesAsOf(ctx context.Context, req *QueryBalancesAsOfRequest) (*QueryBalancesAsOfResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BalancesAsOf not implemented")
 }
-func (*UnimplementedQueryServer) SettlementsQuery(ctx context.Context, req *QuerySettlementsRequest) (*QuerySettlementsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SettlementsQuery not implemented")
+func (*UnimplementedQueryServer) Settlements(ctx context.Context, req *QuerySettlementsRequest) (*QuerySettlementsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Settlements not implemented")
 }
-func (*UnimplementedQueryServer) SettlementsByCorrelationIdQuery(ctx context.Context, req *QuerySettlementsByCorrelationIdRequest) (*QuerySettlementsByCorrelationIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SettlementsByCorrelationIdQuery not implemented")
+func (*UnimplementedQueryServer) SettlementsByCorrelationId(ctx context.Context, req *QuerySettlementsByCorrelationIdRequest) (*QuerySettlementsByCorrelationIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SettlementsByCorrelationId not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_ClassQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LedgerClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryLedgerClassRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ClassQuery(ctx, in)
+		return srv.(QueryServer).LedgerClass(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/ClassQuery",
+		FullMethod: "/provenance.ledger.v1.Query/LedgerClass",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ClassQuery(ctx, req.(*QueryLedgerClassRequest))
+		return srv.(QueryServer).LedgerClass(ctx, req.(*QueryLedgerClassRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ClassEntryTypesQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LedgerClassEntryTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryLedgerClassEntryTypesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ClassEntryTypesQuery(ctx, in)
+		return srv.(QueryServer).LedgerClassEntryTypes(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/ClassEntryTypesQuery",
+		FullMethod: "/provenance.ledger.v1.Query/LedgerClassEntryTypes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ClassEntryTypesQuery(ctx, req.(*QueryLedgerClassEntryTypesRequest))
+		return srv.(QueryServer).LedgerClassEntryTypes(ctx, req.(*QueryLedgerClassEntryTypesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ClassStatusTypesQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LedgerClassStatusTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryLedgerClassStatusTypesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ClassStatusTypesQuery(ctx, in)
+		return srv.(QueryServer).LedgerClassStatusTypes(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/ClassStatusTypesQuery",
+		FullMethod: "/provenance.ledger.v1.Query/LedgerClassStatusTypes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ClassStatusTypesQuery(ctx, req.(*QueryLedgerClassStatusTypesRequest))
+		return srv.(QueryServer).LedgerClassStatusTypes(ctx, req.(*QueryLedgerClassStatusTypesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ClassBucketTypesQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LedgerClassBucketTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryLedgerClassBucketTypesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ClassBucketTypesQuery(ctx, in)
+		return srv.(QueryServer).LedgerClassBucketTypes(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/ClassBucketTypesQuery",
+		FullMethod: "/provenance.ledger.v1.Query/LedgerClassBucketTypes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ClassBucketTypesQuery(ctx, req.(*QueryLedgerClassBucketTypesRequest))
+		return srv.(QueryServer).LedgerClassBucketTypes(ctx, req.(*QueryLedgerClassBucketTypesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_LedgerQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Ledger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryLedgerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).LedgerQuery(ctx, in)
+		return srv.(QueryServer).Ledger(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/LedgerQuery",
+		FullMethod: "/provenance.ledger.v1.Query/Ledger",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).LedgerQuery(ctx, req.(*QueryLedgerRequest))
+		return srv.(QueryServer).Ledger(ctx, req.(*QueryLedgerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_EntriesQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LedgerEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryLedgerEntriesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).EntriesQuery(ctx, in)
+		return srv.(QueryServer).LedgerEntries(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/EntriesQuery",
+		FullMethod: "/provenance.ledger.v1.Query/LedgerEntries",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).EntriesQuery(ctx, req.(*QueryLedgerEntriesRequest))
+		return srv.(QueryServer).LedgerEntries(ctx, req.(*QueryLedgerEntriesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_LedgerEntryQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LedgerEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryLedgerEntryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).LedgerEntryQuery(ctx, in)
+		return srv.(QueryServer).LedgerEntry(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/LedgerEntryQuery",
+		FullMethod: "/provenance.ledger.v1.Query/LedgerEntry",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).LedgerEntryQuery(ctx, req.(*QueryLedgerEntryRequest))
+		return srv.(QueryServer).LedgerEntry(ctx, req.(*QueryLedgerEntryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_BalancesAsOfQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_BalancesAsOf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryBalancesAsOfRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).BalancesAsOfQuery(ctx, in)
+		return srv.(QueryServer).BalancesAsOf(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/BalancesAsOfQuery",
+		FullMethod: "/provenance.ledger.v1.Query/BalancesAsOf",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).BalancesAsOfQuery(ctx, req.(*QueryBalancesAsOfRequest))
+		return srv.(QueryServer).BalancesAsOf(ctx, req.(*QueryBalancesAsOfRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_SettlementsQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Settlements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QuerySettlementsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).SettlementsQuery(ctx, in)
+		return srv.(QueryServer).Settlements(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/SettlementsQuery",
+		FullMethod: "/provenance.ledger.v1.Query/Settlements",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).SettlementsQuery(ctx, req.(*QuerySettlementsRequest))
+		return srv.(QueryServer).Settlements(ctx, req.(*QuerySettlementsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_SettlementsByCorrelationIdQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_SettlementsByCorrelationId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QuerySettlementsByCorrelationIdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).SettlementsByCorrelationIdQuery(ctx, in)
+		return srv.(QueryServer).SettlementsByCorrelationId(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.ledger.v1.Query/SettlementsByCorrelationIdQuery",
+		FullMethod: "/provenance.ledger.v1.Query/SettlementsByCorrelationId",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).SettlementsByCorrelationIdQuery(ctx, req.(*QuerySettlementsByCorrelationIdRequest))
+		return srv.(QueryServer).SettlementsByCorrelationId(ctx, req.(*QuerySettlementsByCorrelationIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1452,44 +1452,44 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ClassQuery",
-			Handler:    _Query_ClassQuery_Handler,
+			MethodName: "LedgerClass",
+			Handler:    _Query_LedgerClass_Handler,
 		},
 		{
-			MethodName: "ClassEntryTypesQuery",
-			Handler:    _Query_ClassEntryTypesQuery_Handler,
+			MethodName: "LedgerClassEntryTypes",
+			Handler:    _Query_LedgerClassEntryTypes_Handler,
 		},
 		{
-			MethodName: "ClassStatusTypesQuery",
-			Handler:    _Query_ClassStatusTypesQuery_Handler,
+			MethodName: "LedgerClassStatusTypes",
+			Handler:    _Query_LedgerClassStatusTypes_Handler,
 		},
 		{
-			MethodName: "ClassBucketTypesQuery",
-			Handler:    _Query_ClassBucketTypesQuery_Handler,
+			MethodName: "LedgerClassBucketTypes",
+			Handler:    _Query_LedgerClassBucketTypes_Handler,
 		},
 		{
-			MethodName: "LedgerQuery",
-			Handler:    _Query_LedgerQuery_Handler,
+			MethodName: "Ledger",
+			Handler:    _Query_Ledger_Handler,
 		},
 		{
-			MethodName: "EntriesQuery",
-			Handler:    _Query_EntriesQuery_Handler,
+			MethodName: "LedgerEntries",
+			Handler:    _Query_LedgerEntries_Handler,
 		},
 		{
-			MethodName: "LedgerEntryQuery",
-			Handler:    _Query_LedgerEntryQuery_Handler,
+			MethodName: "LedgerEntry",
+			Handler:    _Query_LedgerEntry_Handler,
 		},
 		{
-			MethodName: "BalancesAsOfQuery",
-			Handler:    _Query_BalancesAsOfQuery_Handler,
+			MethodName: "BalancesAsOf",
+			Handler:    _Query_BalancesAsOf_Handler,
 		},
 		{
-			MethodName: "SettlementsQuery",
-			Handler:    _Query_SettlementsQuery_Handler,
+			MethodName: "Settlements",
+			Handler:    _Query_Settlements_Handler,
 		},
 		{
-			MethodName: "SettlementsByCorrelationIdQuery",
-			Handler:    _Query_SettlementsByCorrelationIdQuery_Handler,
+			MethodName: "SettlementsByCorrelationId",
+			Handler:    _Query_SettlementsByCorrelationId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
