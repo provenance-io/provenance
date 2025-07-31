@@ -24,23 +24,31 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Role defines the different types of roles that can be assigned to addresses
+// RegistryRole defines the different types of roles that can be assigned to addresses.
+// These roles determine the permissions and capabilities that an address has within the registry system.
 type RegistryRole int32
 
 const (
-	// REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned
+	// REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned.
+	// This is the default state for addresses that have not been granted any specific permissions.
 	RegistryRole_REGISTRY_ROLE_UNSPECIFIED RegistryRole = 0
-	// REGISTRY_ROLE_SERVICER indicates the address has servicer privileges
+	// REGISTRY_ROLE_SERVICER indicates the address has servicer privileges.
+	// Servicers are responsible for maintaining and servicing the underlying assets.
 	RegistryRole_REGISTRY_ROLE_SERVICER RegistryRole = 1
-	// REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges
+	// REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges.
+	// Subservicers assist servicers in their duties and may have limited administrative capabilities.
 	RegistryRole_REGISTRY_ROLE_SUBSERVICER RegistryRole = 2
-	// REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges
+	// REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges.
+	// Controllers have administrative control over the registry entries and can modify roles.
 	RegistryRole_REGISTRY_ROLE_CONTROLLER RegistryRole = 3
-	// REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges
+	// REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges.
+	// Custodians are responsible for holding and safeguarding the underlying assets.
 	RegistryRole_REGISTRY_ROLE_CUSTODIAN RegistryRole = 4
-	// REGISTRY_ROLE_BORROWER indicates the address has borrower privileges
+	// REGISTRY_ROLE_BORROWER indicates the address has borrower privileges.
+	// Borrowers can borrow against the underlying assets within defined parameters.
 	RegistryRole_REGISTRY_ROLE_BORROWER RegistryRole = 5
-	// REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges
+	// REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges.
+	// Originators are responsible for creating and originating the underlying assets.
 	RegistryRole_REGISTRY_ROLE_ORIGINATOR RegistryRole = 6
 )
 
@@ -72,12 +80,15 @@ func (RegistryRole) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_2fa7a0b4d34d0208, []int{0}
 }
 
+// RegistryKey represents a unique identifier for registry entries.
+// It links registry entries to specific NFT assets and their associated asset classes.
 type RegistryKey struct {
-	// Identifier for the nft that this ledger is linked to.
+	// nft_id is the identifier for the NFT that this ledger is linked to.
 	// This could be a `x/metadata` scope id or an `x/nft` nft id.
-	// In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
+	// In order to create a ledger for an NFT, the NFT class must be registered in the ledger module as a LedgerClass.
 	NftId string `protobuf:"bytes,1,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
-	// Scope Specification ID or NFT Class ID
+	// asset_class_id is the Scope Specification ID or NFT Class ID.
+	// This identifies the class or specification that the NFT belongs to.
 	AssetClassId string `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
 }
 
@@ -128,11 +139,14 @@ func (m *RegistryKey) GetAssetClassId() string {
 	return ""
 }
 
-// RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
+// RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles.
+// Each entry contains the key information and the roles assigned to various addresses.
 type RegistryEntry struct {
-	// Key ties the registry entry to an asset class and nft id
+	// key ties the registry entry to an asset class and NFT id.
+	// This provides the unique identifier for the registry entry.
 	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// roles is a list of roles and addresses that can perform that role
+	// roles is a list of roles and addresses that can perform that role.
+	// Each role entry contains a role type and the addresses authorized for that role.
 	Roles []RolesEntry `protobuf:"bytes,2,rep,name=roles,proto3" json:"roles"`
 }
 
@@ -183,9 +197,13 @@ func (m *RegistryEntry) GetRoles() []RolesEntry {
 	return nil
 }
 
+// RolesEntry represents a mapping between a role and the addresses that can perform that role.
+// This allows multiple addresses to be assigned the same role for a given registry entry.
 type RolesEntry struct {
+	// role is the type of role being assigned.
 	Role RegistryRole `protobuf:"varint,1,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
-	// addresses is the list of blockchain addresses that can perform this role
+	// addresses is the list of blockchain addresses that can perform this role.
+	// These addresses have the permissions associated with the specified role.
 	Addresses []string `protobuf:"bytes,2,rep,name=addresses,proto3" json:"addresses,omitempty"`
 }
 
@@ -236,9 +254,11 @@ func (m *RolesEntry) GetAddresses() []string {
 	return nil
 }
 
-// GenesisState defines the registry module's genesis state
+// GenesisState defines the registry module's genesis state.
+// This contains all the registry entries that exist when the blockchain is first initialized.
 type GenesisState struct {
-	// entries is the list of registry entries
+	// entries is the list of registry entries.
+	// These entries define the initial state of the registry module.
 	Entries []RegistryEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries"`
 }
 
@@ -282,7 +302,11 @@ func (m *GenesisState) GetEntries() []RegistryEntry {
 	return nil
 }
 
+// RegistryBulkUpdate represents a bulk update operation for multiple registry entries.
+// This allows for efficient batch processing of registry modifications.
 type RegistryBulkUpdate struct {
+	// entries is the list of bulk update entries to be processed.
+	// Each entry contains the key and the registry entries to be updated.
 	Entries []RegistryBulkUpdateEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries"`
 }
 
@@ -326,8 +350,12 @@ func (m *RegistryBulkUpdate) GetEntries() []RegistryBulkUpdateEntry {
 	return nil
 }
 
+// RegistryBulkUpdateEntry represents a single entry in a bulk update operation.
+// It contains the key and the registry entries to be updated for that key.
 type RegistryBulkUpdateEntry struct {
-	Key     *RegistryKey     `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// key is the registry key for which the update applies.
+	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// entries is the list of registry entries to be updated for the specified key.
 	Entries []*RegistryEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
 }
 

@@ -30,13 +30,17 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgRegisterNFT represents a message to register a new NFT
+// MsgRegisterNFT represents a message to register a new NFT in the registry.
+// This message creates a new registry entry with the specified roles and addresses.
 type MsgRegisterNFT struct {
-	// authority is the address that is authorized to register addresses
+	// authority is the address that is authorized to register NFTs.
+	// This address must have the appropriate permissions to create registry entries.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// key is the key to register
+	// key is the registry key to register.
+	// This contains the NFT ID and asset class ID that uniquely identify the registry entry.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	// roles is a list of roles and addresses that can perform that role
+	// roles is a list of roles and addresses that can perform that role.
+	// Each role entry defines a role type and the addresses authorized for that role.
 	Roles []RolesEntry `protobuf:"bytes,3,rep,name=roles,proto3" json:"roles"`
 }
 
@@ -94,7 +98,8 @@ func (m *MsgRegisterNFT) GetRoles() []RolesEntry {
 	return nil
 }
 
-// MsgRegisterNFTResponse defines the response for RegisterNFT
+// MsgRegisterNFTResponse defines the response for RegisterNFT.
+// This is an empty response indicating successful registration.
 type MsgRegisterNFTResponse struct {
 }
 
@@ -131,15 +136,20 @@ func (m *MsgRegisterNFTResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterNFTResponse proto.InternalMessageInfo
 
-// MsgGrantRole represents a message to grant a role to an address
+// MsgGrantRole represents a message to grant a role to one or more addresses.
+// This message adds the specified addresses to an existing role for the given registry key.
 type MsgGrantRole struct {
-	// authority is the address that is authorized to grant the role
+	// authority is the address that is authorized to grant the role.
+	// This address must have the appropriate permissions to modify role assignments.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// key is the key to grant the role to
+	// key is the registry key to grant the role to.
+	// This identifies the specific registry entry to modify.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	// role is the role to grant
+	// role is the role to grant.
+	// This specifies which role type is being assigned to the addresses.
 	Role RegistryRole `protobuf:"varint,3,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
-	// addresses is the list of addresses to grant the role to
+	// addresses is the list of addresses to grant the role to.
+	// These addresses will be added to the specified role for the registry key.
 	Addresses []string `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty"`
 }
 
@@ -204,7 +214,8 @@ func (m *MsgGrantRole) GetAddresses() []string {
 	return nil
 }
 
-// MsgGrantRoleResponse defines the response for GrantRole
+// MsgGrantRoleResponse defines the response for GrantRole.
+// This is an empty response indicating successful role grant.
 type MsgGrantRoleResponse struct {
 }
 
@@ -241,15 +252,20 @@ func (m *MsgGrantRoleResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGrantRoleResponse proto.InternalMessageInfo
 
-// MsgRevokeRole represents a message to revoke a role from an address
+// MsgRevokeRole represents a message to revoke a role from one or more addresses.
+// This message removes the specified addresses from an existing role for the given registry key.
 type MsgRevokeRole struct {
-	// authority is the address that is authorized to revoke the role
+	// authority is the address that is authorized to revoke the role.
+	// This address must have the appropriate permissions to modify role assignments.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// key is the key to revoke the role from
+	// key is the registry key to revoke the role from.
+	// This identifies the specific registry entry to modify.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	// role is the role to revoke
+	// role is the role to revoke.
+	// This specifies which role type is being removed from the addresses.
 	Role RegistryRole `protobuf:"varint,3,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
-	// addresses is the list of addresses to revoke the role from
+	// addresses is the list of addresses to revoke the role from.
+	// These addresses will be removed from the specified role for the registry key.
 	Addresses []string `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty"`
 }
 
@@ -314,7 +330,8 @@ func (m *MsgRevokeRole) GetAddresses() []string {
 	return nil
 }
 
-// MsgRevokeRoleResponse defines the response for RevokeRole
+// MsgRevokeRoleResponse defines the response for RevokeRole.
+// This is an empty response indicating successful role revocation.
 type MsgRevokeRoleResponse struct {
 }
 
@@ -351,11 +368,14 @@ func (m *MsgRevokeRoleResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRevokeRoleResponse proto.InternalMessageInfo
 
-// MsgUnregisterNFT represents a message to unregister an NFT from the registry
+// MsgUnregisterNFT represents a message to unregister an NFT from the registry.
+// This message removes the entire registry entry for the specified key.
 type MsgUnregisterNFT struct {
-	// authority is the address that is authorized to remove addresses
+	// authority is the address that is authorized to unregister NFTs.
+	// This address must have the appropriate permissions to remove registry entries.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// key is the key to remove
+	// key is the registry key to remove.
+	// This identifies the specific registry entry to delete.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -406,7 +426,8 @@ func (m *MsgUnregisterNFT) GetKey() *RegistryKey {
 	return nil
 }
 
-// MsgUnregisterNFTResponse defines the response for UnregisterNFT
+// MsgUnregisterNFTResponse defines the response for UnregisterNFT.
+// This is an empty response indicating successful unregistration.
 type MsgUnregisterNFTResponse struct {
 }
 
@@ -505,13 +526,17 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// RegisterNFT registers a new NFT
+	// RegisterNFT registers a new NFT in the registry.
+	// This creates a new registry entry with the specified roles and addresses.
 	RegisterNFT(ctx context.Context, in *MsgRegisterNFT, opts ...grpc.CallOption) (*MsgRegisterNFTResponse, error)
-	// GrantRole grants a role to an address
+	// GrantRole grants a role to one or more addresses.
+	// This adds the specified addresses to the role for the given registry key.
 	GrantRole(ctx context.Context, in *MsgGrantRole, opts ...grpc.CallOption) (*MsgGrantRoleResponse, error)
-	// RevokeRole revokes a role from an address
+	// RevokeRole revokes a role from one or more addresses.
+	// This removes the specified addresses from the role for the given registry key.
 	RevokeRole(ctx context.Context, in *MsgRevokeRole, opts ...grpc.CallOption) (*MsgRevokeRoleResponse, error)
-	// UnregisterNFT unregisters an NFT from the registry
+	// UnregisterNFT unregisters an NFT from the registry.
+	// This removes the entire registry entry for the specified key.
 	UnregisterNFT(ctx context.Context, in *MsgUnregisterNFT, opts ...grpc.CallOption) (*MsgUnregisterNFTResponse, error)
 }
 
@@ -561,13 +586,17 @@ func (c *msgClient) UnregisterNFT(ctx context.Context, in *MsgUnregisterNFT, opt
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// RegisterNFT registers a new NFT
+	// RegisterNFT registers a new NFT in the registry.
+	// This creates a new registry entry with the specified roles and addresses.
 	RegisterNFT(context.Context, *MsgRegisterNFT) (*MsgRegisterNFTResponse, error)
-	// GrantRole grants a role to an address
+	// GrantRole grants a role to one or more addresses.
+	// This adds the specified addresses to the role for the given registry key.
 	GrantRole(context.Context, *MsgGrantRole) (*MsgGrantRoleResponse, error)
-	// RevokeRole revokes a role from an address
+	// RevokeRole revokes a role from one or more addresses.
+	// This removes the specified addresses from the role for the given registry key.
 	RevokeRole(context.Context, *MsgRevokeRole) (*MsgRevokeRoleResponse, error)
-	// UnregisterNFT unregisters an NFT from the registry
+	// UnregisterNFT unregisters an NFT from the registry.
+	// This removes the entire registry entry for the specified key.
 	UnregisterNFT(context.Context, *MsgUnregisterNFT) (*MsgUnregisterNFTResponse, error)
 }
 

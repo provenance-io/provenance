@@ -8,61 +8,90 @@ option java_multiple_files = true;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 
-// Role defines the different types of roles that can be assigned to addresses
+// RegistryRole defines the different types of roles that can be assigned to addresses.
+// These roles determine the permissions and capabilities that an address has within the registry system.
 enum RegistryRole {
-  // REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned
+  // REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned.
+  // This is the default state for addresses that have not been granted any specific permissions.
   REGISTRY_ROLE_UNSPECIFIED = 0;
-  // REGISTRY_ROLE_SERVICER indicates the address has servicer privileges
+  // REGISTRY_ROLE_SERVICER indicates the address has servicer privileges.
+  // Servicers are responsible for maintaining and servicing the underlying assets.
   REGISTRY_ROLE_SERVICER = 1;
-  // REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges
+  // REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges.
+  // Subservicers assist servicers in their duties and may have limited administrative capabilities.
   REGISTRY_ROLE_SUBSERVICER = 2;
-  // REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges
+  // REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges.
+  // Controllers have administrative control over the registry entries and can modify roles.
   REGISTRY_ROLE_CONTROLLER = 3;
-  // REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges
+  // REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges.
+  // Custodians are responsible for holding and safeguarding the underlying assets.
   REGISTRY_ROLE_CUSTODIAN = 4;
-  // REGISTRY_ROLE_BORROWER indicates the address has borrower privileges
+  // REGISTRY_ROLE_BORROWER indicates the address has borrower privileges.
+  // Borrowers can borrow against the underlying assets within defined parameters.
   REGISTRY_ROLE_BORROWER = 5;
-  // REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges
+  // REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges.
+  // Originators are responsible for creating and originating the underlying assets.
   REGISTRY_ROLE_ORIGINATOR = 6;
 }
 
+// RegistryKey represents a unique identifier for registry entries.
+// It links registry entries to specific NFT assets and their associated asset classes.
 message RegistryKey {
-  // Identifier for the nft that this ledger is linked to.
+  // nft_id is the identifier for the NFT that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
-  // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
+  // In order to create a ledger for an NFT, the NFT class must be registered in the ledger module as a LedgerClass.
   string nft_id = 1;
 
-  // Scope Specification ID or NFT Class ID
+  // asset_class_id is the Scope Specification ID or NFT Class ID.
+  // This identifies the class or specification that the NFT belongs to.
   string asset_class_id = 2;
 }
 
-// RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
+// RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles.
+// Each entry contains the key information and the roles assigned to various addresses.
 message RegistryEntry {
-  // Key ties the registry entry to an asset class and nft id
+  // key ties the registry entry to an asset class and NFT id.
+  // This provides the unique identifier for the registry entry.
   RegistryKey key = 1;
 
-  // roles is a list of roles and addresses that can perform that role
+  // roles is a list of roles and addresses that can perform that role.
+  // Each role entry contains a role type and the addresses authorized for that role.
   repeated RolesEntry roles = 2 [(gogoproto.nullable) = false];
 }
 
+// RolesEntry represents a mapping between a role and the addresses that can perform that role.
+// This allows multiple addresses to be assigned the same role for a given registry entry.
 message RolesEntry {
+  // role is the type of role being assigned.
   RegistryRole role = 1;
 
-  // addresses is the list of blockchain addresses that can perform this role
+  // addresses is the list of blockchain addresses that can perform this role.
+  // These addresses have the permissions associated with the specified role.
   repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// GenesisState defines the registry module's genesis state
+// GenesisState defines the registry module's genesis state.
+// This contains all the registry entries that exist when the blockchain is first initialized.
 message GenesisState {
-  // entries is the list of registry entries
+  // entries is the list of registry entries.
+  // These entries define the initial state of the registry module.
   repeated RegistryEntry entries = 1 [(gogoproto.nullable) = false];
 }
 
+// RegistryBulkUpdate represents a bulk update operation for multiple registry entries.
+// This allows for efficient batch processing of registry modifications.
 message RegistryBulkUpdate {
+  // entries is the list of bulk update entries to be processed.
+  // Each entry contains the key and the registry entries to be updated.
   repeated RegistryBulkUpdateEntry entries = 1 [(gogoproto.nullable) = false];
 }
 
+// RegistryBulkUpdateEntry represents a single entry in a bulk update operation.
+// It contains the key and the registry entries to be updated for that key.
 message RegistryBulkUpdateEntry {
-  RegistryKey            key     = 1;
+  // key is the registry key for which the update applies.
+  RegistryKey key = 1;
+  
+  // entries is the list of registry entries to be updated for the specified key.
   repeated RegistryEntry entries = 2;
 }

@@ -29,9 +29,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method
+// QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method.
+// It contains the key information needed to retrieve a specific registry entry.
 type QueryGetRegistryRequest struct {
-	// key is the key to query
+	// key is the registry key to query.
+	// This contains the NFT ID and asset class ID that uniquely identify the registry entry.
 	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -75,9 +77,11 @@ func (m *QueryGetRegistryRequest) GetKey() *RegistryKey {
 	return nil
 }
 
-// QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method
+// QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method.
+// It contains the complete registry entry for the requested key.
 type QueryGetRegistryResponse struct {
-	// entry is the registry entry for the requested key
+	// registry is the registry entry for the requested key.
+	// This includes all roles and addresses associated with the specified NFT and asset class.
 	Registry RegistryEntry `protobuf:"bytes,1,opt,name=registry,proto3" json:"registry"`
 }
 
@@ -121,13 +125,17 @@ func (m *QueryGetRegistryResponse) GetRegistry() RegistryEntry {
 	return RegistryEntry{}
 }
 
-// QueryHasRoleRequest is the request type for the Query/HasRole RPC method
+// QueryHasRoleRequest is the request type for the Query/HasRole RPC method.
+// It contains the information needed to verify if an address has a specific role.
 type QueryHasRoleRequest struct {
-	// key is the key to query
+	// key is the registry key to query.
+	// This identifies the specific registry entry to check.
 	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// address is the address to query
+	// address is the blockchain address to check for the role.
+	// This is the address whose role permissions are being verified.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	// role is the role to query
+	// role is the specific role to check for.
+	// This determines which role permission is being verified.
 	Role RegistryRole `protobuf:"varint,3,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
 }
 
@@ -185,9 +193,11 @@ func (m *QueryHasRoleRequest) GetRole() RegistryRole {
 	return RegistryRole_REGISTRY_ROLE_UNSPECIFIED
 }
 
-// QueryHasRoleResponse is the response type for the Query/HasRole RPC method
+// QueryHasRoleResponse is the response type for the Query/HasRole RPC method.
+// It provides a boolean result indicating whether the address has the specified role.
 type QueryHasRoleResponse struct {
-	// has_role is true if the address has the role for the given key
+	// has_role is true if the address has the specified role for the given key.
+	// This boolean value indicates whether the role verification was successful.
 	HasRole bool `protobuf:"varint,1,opt,name=has_role,json=hasRole,proto3" json:"has_role,omitempty"`
 }
 
@@ -287,9 +297,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// GetRegistry returns the registry for a given key
+	// GetRegistry returns the registry entry for a given key.
+	// This method retrieves the complete registry entry including all roles and addresses.
 	GetRegistry(ctx context.Context, in *QueryGetRegistryRequest, opts ...grpc.CallOption) (*QueryGetRegistryResponse, error)
-	// HasRole returns true if the address has the role for the given key
+	// HasRole returns true if the address has the specified role for the given key.
+	// This method provides a quick way to verify if an address has a specific role.
 	HasRole(ctx context.Context, in *QueryHasRoleRequest, opts ...grpc.CallOption) (*QueryHasRoleResponse, error)
 }
 
@@ -321,9 +333,11 @@ func (c *queryClient) HasRole(ctx context.Context, in *QueryHasRoleRequest, opts
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// GetRegistry returns the registry for a given key
+	// GetRegistry returns the registry entry for a given key.
+	// This method retrieves the complete registry entry including all roles and addresses.
 	GetRegistry(context.Context, *QueryGetRegistryRequest) (*QueryGetRegistryResponse, error)
-	// HasRole returns true if the address has the role for the given key
+	// HasRole returns true if the address has the specified role for the given key.
+	// This method provides a quick way to verify if an address has a specific role.
 	HasRole(context.Context, *QueryHasRoleRequest) (*QueryHasRoleResponse, error)
 }
 

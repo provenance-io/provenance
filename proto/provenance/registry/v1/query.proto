@@ -9,46 +9,59 @@ import "gogoproto/gogo.proto";
 import "provenance/registry/v1/registry.proto";
 import "google/api/annotations.proto";
 
-// Query defines the gRPC querier service.
+// Query defines the gRPC querier service for the registry module.
+// This service provides read-only access to registry data and role verification.
 service Query {
-  // GetRegistry returns the registry for a given key
+  // GetRegistry returns the registry entry for a given key.
+  // This method retrieves the complete registry entry including all roles and addresses.
   rpc GetRegistry(QueryGetRegistryRequest) returns (QueryGetRegistryResponse) {
     option (google.api.http).get = "/provenance/registry/v1/registry/{key.asset_class_id}/{key.nft_id}";
   }
 
-  // HasRole returns true if the address has the role for the given key
+  // HasRole returns true if the address has the specified role for the given key.
+  // This method provides a quick way to verify if an address has a specific role.
   rpc HasRole(QueryHasRoleRequest) returns (QueryHasRoleResponse) {
     option (google.api.http).get =
         "/provenance/registry/v1/has_role/{key.asset_class_id}/{key.nft_id}/{address}/{role}";
   }
 }
 
-// QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method
+// QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method.
+// It contains the key information needed to retrieve a specific registry entry.
 message QueryGetRegistryRequest {
-  // key is the key to query
+  // key is the registry key to query.
+  // This contains the NFT ID and asset class ID that uniquely identify the registry entry.
   RegistryKey key = 1;
 }
 
-// QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method
+// QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method.
+// It contains the complete registry entry for the requested key.
 message QueryGetRegistryResponse {
-  // entry is the registry entry for the requested key
+  // registry is the registry entry for the requested key.
+  // This includes all roles and addresses associated with the specified NFT and asset class.
   RegistryEntry registry = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryHasRoleRequest is the request type for the Query/HasRole RPC method
+// QueryHasRoleRequest is the request type for the Query/HasRole RPC method.
+// It contains the information needed to verify if an address has a specific role.
 message QueryHasRoleRequest {
-  // key is the key to query
+  // key is the registry key to query.
+  // This identifies the specific registry entry to check.
   RegistryKey key = 1;
 
-  // address is the address to query
+  // address is the blockchain address to check for the role.
+  // This is the address whose role permissions are being verified.
   string address = 2;
 
-  // role is the role to query
+  // role is the specific role to check for.
+  // This determines which role permission is being verified.
   RegistryRole role = 3;
 }
 
-// QueryHasRoleResponse is the response type for the Query/HasRole RPC method
+// QueryHasRoleResponse is the response type for the Query/HasRole RPC method.
+// It provides a boolean result indicating whether the address has the specified role.
 message QueryHasRoleResponse {
-  // has_role is true if the address has the role for the given key
+  // has_role is true if the address has the specified role for the given key.
+  // This boolean value indicates whether the role verification was successful.
   bool has_role = 1;
 }
