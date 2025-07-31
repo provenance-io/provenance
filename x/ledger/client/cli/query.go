@@ -77,8 +77,8 @@ func GetConfigCmd() *cobra.Command {
 				NextPmtAmt:                 strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
 				InterestRate:               strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
 				MaturityDate:               helper.EpochDaysToISO8601(l.Ledger.MaturityDate),
-				InterestDayCountConvention: l.Ledger.InterestDayCountConvention,
-				InterestAccrualMethod:      l.Ledger.InterestAccrualMethod,
+				InterestDayCount: l.Ledger.InterestDayCount,
+				InterestAccrual:      l.Ledger.InterestAccrual,
 				PaymentFrequency:           l.Ledger.PaymentFrequency,
 			}
 

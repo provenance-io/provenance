@@ -95,7 +95,7 @@ func (k *MsgServer) UpdateInterestRateTx(goCtx context.Context, req *ledger.MsgU
 		return nil, err
 	}
 
-	err = k.UpdateLedgerInterestRate(ctx, authorityAddr, req.Key, req.InterestRate, req.InterestDayCountConvention, req.InterestAccrualMethod)
+	err = k.UpdateLedgerInterestRate(ctx, authorityAddr, req.Key, req.InterestRate, req.InterestDayCount, req.InterestAccrual)
 	if err != nil {
 		return nil, err
 	}

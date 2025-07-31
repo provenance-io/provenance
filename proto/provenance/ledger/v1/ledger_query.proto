@@ -28,10 +28,10 @@ message LedgerPlainText {
   string maturity_date = 6;
 
   // The day count convention for interest calculations.
-  DayCountConvention interest_day_count_convention = 7;
+  DayCount interest_day_count = 7;
 
   // The interest accrual method for interest calculations.
-  InterestAccrualMethod interest_accrual_method = 8;
+  InterestAccrual interest_accrual = 8;
 
   // The payment frequency.
   PaymentFrequency payment_frequency = 9;

@@ -98,9 +98,9 @@ message MsgUpdateInterestRateRequest {
   // The new interest rate (10000000 = 10.000000%) - 6 decimal places.
   int32                 interest_rate                 = 3;
   // The day count convention for interest calculations.
-  DayCountConvention    interest_day_count_convention = 4;
+  DayCount    interest_day_count = 4;
   // The interest accrual method.
-  InterestAccrualMethod interest_accrual_method       = 5;
+  InterestAccrual interest_accrual       = 5;
 }
 
 // MsgUpdateInterestRateResponse represents the response from updating a ledger interest rate.

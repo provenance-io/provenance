@@ -21,7 +21,7 @@ type ConfigKeeper interface {
 	CreateLedger(ctx sdk.Context, authorityAddr sdk.AccAddress, l types.Ledger) error
 
 	UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, statusTypeId int32) error
-	UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error
+	UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCount, interestAccrualMethod types.InterestAccrual) error
 	UpdateLedgerPayment(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error
 	UpdateLedgerMaturityDate(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.LedgerKey, maturityDate int32) error
 }
@@ -286,7 +286,7 @@ func (k BaseConfigKeeper) UpdateLedgerStatus(ctx sdk.Context, authorityAddr sdk.
 	return fmt.Errorf("not implemented")
 }
 
-func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
+func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAddr sdk.AccAddress, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCount, interestAccrualMethod types.InterestAccrual) error {
 	if err := RequireAuthority(ctx, k.BaseViewKeeper.RegistryKeeper, authorityAddr.String(), &registry.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
@@ -305,8 +305,8 @@ func (k BaseConfigKeeper) UpdateLedgerInterestRate(ctx sdk.Context, authorityAdd
 
 	// Update the ledger interest rate
 	ledger.InterestRate = interestRate
-	ledger.InterestDayCountConvention = interestDayCountConvention
-	ledger.InterestAccrualMethod = interestAccrualMethod
+	ledger.InterestDayCount = interestDayCountConvention
+	ledger.InterestAccrual = interestAccrualMethod
 
 	// Validate ledger basic fields
 	if err := types.ValidateLedgerBasic(ledger); err != nil {

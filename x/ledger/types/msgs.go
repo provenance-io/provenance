@@ -56,10 +56,10 @@ func (m *MsgUpdateInterestRateRequest) ValidateBasic() error {
 	if m.InterestRate < 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("interest rate cannot be negative")
 	}
-	if m.InterestDayCountConvention == 0 {
+	if m.InterestDayCount == 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("interest day count convention cannot be zero (0)")
 	}
-	if m.InterestAccrualMethod == 0 {
+	if m.InterestAccrual == 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("interest accrual method cannot be zero")
 	}
 
