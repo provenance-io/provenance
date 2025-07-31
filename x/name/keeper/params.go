@@ -8,13 +8,13 @@ import (
 
 // GetParams returns the total set of name parameters with fallback to default values.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	params, _ = k.ParamsStore.Get(ctx)
+	params, _ = k.paramsStore.Get(ctx)
 	return params
 }
 
 // SetParams sets the name parameters to the store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.ParamsStore.Set(ctx, params)
+	k.paramsStore.Set(ctx, params)
 }
 
 // GetMaxNameLevels returns the current maximum number of name segments allowed.
