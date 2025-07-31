@@ -144,8 +144,8 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	if err != nil {
 		return err
 	}
-	addrKey := append(addrPrefix, nameKey...)
-	if err := k.addrIndex.Set(ctx, addrKey, record); err != nil {
+	addrIndexKey := append(addrPrefix, nameKey...)
+	if err := k.addrIndex.Set(ctx, addrIndexKey, record); err != nil {
 		return err
 	}
 
@@ -185,8 +185,8 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 		if err != nil {
 			return err
 		}
-		oldAddrKey := append(oldAddrPrefix, nameKey...)
-		if err := k.addrIndex.Remove(ctx, oldAddrKey); err != nil {
+		oldAddrIndexKey := append(oldAddrPrefix, nameKey...)
+		if err := k.addrIndex.Remove(ctx, oldAddrIndexKey); err != nil {
 			return err
 		}
 	}
@@ -206,8 +206,8 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	if err != nil {
 		return err
 	}
-	addrKey := append(addrPrefix, nameKey...)
-	if err := k.addrIndex.Set(ctx, addrKey, record); err != nil {
+	addrIndexKey := append(addrPrefix, nameKey...)
+	if err := k.addrIndex.Set(ctx, addrIndexKey, record); err != nil {
 		return err
 	}
 
@@ -304,8 +304,8 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	addrKey := append(addrPrefix, nameKey...)
-	if err := k.addrIndex.Remove(ctx, addrKey); err != nil {
+	addrIndexKey := append(addrPrefix, nameKey...)
+	if err := k.addrIndex.Remove(ctx, addrIndexKey); err != nil {
 		return err
 	}
 
@@ -325,7 +325,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 		StartInclusive(prefix).
 		EndExclusive(storetypes.PrefixEndBytes(prefix))
 
-	return k.nameRecords.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
+	return k.nameRecords.Walk(ctx, rng, func(_ []byte, record types.NameRecord) (bool, error) {
 		if err := handle(record); err != nil {
 			return true, err
 		}
@@ -340,7 +340,7 @@ func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 		return "", types.ErrNameInvalid
 	}
 	segments := strings.Split(normalized, ".")
-	if uint32(len(segments)) > k.GetMaxNameLevels(ctx) {
+	if len(segments) > int(k.GetMaxNameLevels(ctx)) {
 		return "", types.ErrNameHasTooManySegments
 	}
 	for _, segment := range segments {
@@ -411,8 +411,8 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 	if err != nil {
 		return err
 	}
-	addrkey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
-	if err := k.addrIndex.Set(ctx, addrkey, record); err != nil {
+	addrIndexKey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
+	if err := k.addrIndex.Set(ctx, addrIndexKey, record); err != nil {
 		return err
 	}
 
