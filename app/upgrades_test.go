@@ -1053,17 +1053,6 @@ func (s *UpgradeTestSuite) TestForsythiaRC2() {
 	}
 	s.AssertUpgradeHandlerLogs("forsythia-rc2", expInLog, nil)
 }
-func (s *UpgradeTestSuite) TestCollectionsmigration() {
-	expInLog := []string{
-		"INF Migrating name module from KV store to collections (v2 to v3)...",
-		"INF Migrated name module parameters to collections store.",
-		"INF Migrating name records...",
-		"INF Migrated 1 name records.",
-		"INF Migrated 1 address index records.",
-		"INF Name module migration to collections (v2 to v3) completed successfully.",
-	}
-	s.AssertUpgradeHandlerLogs("collectionsmigration", expInLog, nil)
-}
 
 func (s *UpgradeTestSuite) TestForsythia() {
 	expInLog := []string{

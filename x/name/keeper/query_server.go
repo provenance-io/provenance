@@ -71,7 +71,7 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 
 	// Iterate through address index with pagination
 	count := 0
-	err = k.AddrIndex.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
+	err = k.addrIndex.Walk(ctx, rng, func(key []byte, record types.NameRecord) (bool, error) {
 		// Break if we've reached the limit
 		if count >= limit {
 			nextKey = key
