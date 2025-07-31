@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic = (*AppModule)(nil)
+	_ module.AppModuleBasic = (*AppModuleBasic)(nil)
 	_ appmodule.AppModule   = (*AppModule)(nil)
 )
 
@@ -46,6 +46,23 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 // Register the protobuf message types and services with the sdk.
 func (AppModuleBasic) RegisterInterfaces(registry types.InterfaceRegistry) {
 	ledger.RegisterInterfaces(registry)
+}
+
+// DefaultGenesis returns default genesis state as raw bytes.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(&ledger.GenesisState{})
+}
+
+// ValidateGenesis validates the genesis state.
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	return nil
+}
+
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
+	err := ledger.RegisterQueryHandlerClient(context.Background(), mux, ledger.NewQueryClient(ctx))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // AppModule implements an application module for mymodule.
@@ -76,16 +93,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	return nil
 }
 
-// DefaultGenesis returns default genesis state as raw bytes.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(&ledger.GenesisState{})
-}
-
-// ValidateGenesis validates the genesis state.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
-}
-
 // ExportGenesis exports the module's genesis state.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := am.keeper.ExportGenesis(ctx)
@@ -100,13 +107,6 @@ func (AppModule) IsOnePerModuleType() {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	ledger.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 	ledger.RegisterQueryServer(cfg.QueryServer(), keeper.NewLedgerQueryServer(am.keeper))
-}
-
-func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
-	err := ledger.RegisterQueryHandlerClient(context.Background(), mux, ledger.NewQueryClient(ctx))
-	if err != nil {
-		panic(err)
-	}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
