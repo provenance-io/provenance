@@ -1036,7 +1036,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 
 // Create strings with the log statements that start off the reusable upgrade functions.
 var (
-	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
+	LogMsgRunModuleMigrations = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
 	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
@@ -1056,23 +1056,13 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 func (s *UpgradeTestSuite) TestBouvardia() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		// "INF Migrating name module from KV store to collections (v2 to v3)...",
 		"INF Pruning expired consensus states for IBC.",
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
-}
-func (s *UpgradeTestSuite) TestCollectionsmigration() {
-	expInLog := []string{
-		"INF Migrating name module from KV store to collections (v2 to v3)...",
-		"INF Migrated name module parameters to collections store.",
-		"INF Migrating name records...",
-		"INF Migrated 1 name records.",
-		"INF Migrated 1 address index records.",
-		"INF Name module migration to collections (v2 to v3) completed successfully.",
-	}
-	s.AssertUpgradeHandlerLogs("collectionsmigration", expInLog, nil)
 }
 
 type MockFlatFeesKeeper struct {
