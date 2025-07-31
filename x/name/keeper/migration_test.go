@@ -59,8 +59,8 @@ func (s *MigrationTestSuite) SetupTest() {
 	addrPrefix, err := types.GetAddressKeyPrefix(s.user1Addr)
 	s.Require().NoError(err)
 
-	addrKey := append(addrPrefix, nameKey...)
-	store.Set(addrKey, s.cdc.MustMarshal(&record))
+	addrIndexKey := append(addrPrefix, nameKey...)
+	store.Set(addrIndexKey, s.cdc.MustMarshal(&record))
 }
 
 func (s *MigrationTestSuite) TestMigration() {
@@ -101,8 +101,8 @@ func (s *MigrationTestSuite) TestMigration() {
 	addrPrefix, err := types.GetAddressKeyPrefix(addr)
 	s.Require().NoError(err)
 
-	addrKey := append(addrPrefix, nameKey...)
-	indexRecord, err := newKeeper.GetAddrIndexRecord(s.ctx, addrKey)
+	addrIndexKey := append(addrPrefix, nameKey...)
+	indexRecord, err := newKeeper.GetAddrIndexRecord(s.ctx, addrIndexKey)
 	s.Require().NoError(err)
 	s.Require().Equal(*recordPtr, indexRecord)
 
