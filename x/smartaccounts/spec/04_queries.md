@@ -169,12 +169,12 @@ provenance.smartaccounts.v1.Query/Params
 ### Query Smart Account
 
 ```bash
-provenanced query smartaccounts account [address]
+provenanced query smartaccounts address [address]
 ```
 
 **Example:**
 ```bash
-provenanced query smartaccounts account tp1..address..
+provenanced query smartaccounts address tp1..address..
 ```
 
 **Flags:**
@@ -375,7 +375,7 @@ func TestSmartAccountQuery(t *testing.T) {
 
 ```bash
 # Test CLI queries
-provenanced query smartaccounts account tp1test... --node http://localhost:26657
+provenanced query smartaccounts address tp1test... --node http://localhost:26657
 provenanced query smartaccounts params --node http://localhost:26657
 
 # Test REST API

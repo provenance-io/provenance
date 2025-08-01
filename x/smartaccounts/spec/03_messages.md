@@ -272,6 +272,51 @@ Message gas costs are determined by:
 - Credential metadata storage
 - Event emission costs
 
+## CLI Commands
+
+### Register FIDO2/WebAuthn Credential
+
+```bash
+provenanced tx smartaccounts add-webauthn-credentials \
+  --encodedAttestation "$WEBAUTHN_ATTESTATION" \
+  --user-identifier "user@example.com" \
+  --from alice \
+  --chain-id provenance-1 \
+  --gas auto \
+  --gas-adjustment 1.5
+```
+
+### Register Traditional Cryptographic Credential
+
+```bash
+provenanced tx smartaccounts register-cosmos-credential <base64-encoded-pubkey> \
+  --from alice \
+  --chain-id provenance-1 \
+  --gas auto \
+  --gas-adjustment 1.5
+```
+
+### Delete Credential
+
+```bash
+provenanced tx smartaccounts delete-credential 42 \
+  --from alice \
+  --chain-id provenance-1 \
+  --gas auto \
+  --gas-adjustment 1.5
+```
+
+### Update Module Parameters (Governance)
+
+```bash
+provenanced tx smartaccounts update-params true 15 \
+  --title "Enable Smart Accounts" \
+  --description "Enable smart accounts module with increased credential limit" \
+  --deposit 10000000nhash \
+  --from validator \
+  --chain-id provenance-1
+```
+
 ## Best Practices
 
 ### For Client Applications

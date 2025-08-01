@@ -50,8 +50,8 @@ provenanced query smartaccounts params
 **Using CLI:**
 ```bash
 # Register first credential (creates smart account)
-provenanced tx smartaccounts register-fido2 \
-  --encoded-attestation "$WEBAUTHN_ATTESTATION" \
+provenanced tx smartaccounts add-webauthn-credentials \
+  --encodedAttestation "$WEBAUTHN_ATTESTATION" \
   --user-identifier "user@example.com" \
   --from alice \
   --chain-id provenance-1
@@ -78,7 +78,7 @@ txResponse, err := client.BroadcastTx(ctx, msg)
 
 ```bash
 # Query account details
-provenanced query smartaccounts account tp1...address...
+provenanced query smartaccounts address tp1...address...
 ```
 
 ### 3. Authenticate Transaction
@@ -751,20 +751,30 @@ describe('SmartAccountIntegration', () => {
 # Integration test script
 
 echo "Testing smart account registration..."
-CRED_RESPONSE=$(provenanced tx smartaccounts register-fido2 \
-  --encoded-attestation "$TEST_ATTESTATION" \
+CRED_RESPONSE=$(provenanced tx smartaccounts add-webauthn-credentials \
+  --encodedAttestation "$TEST_ATTESTATION" \
   --user-identifier "test-user" \
   --from alice \
   --chain-id testing \
   --yes \
   --output json)
 
-CRED_NUMBER=$(echo $CRED_RESPONSE | jq -r '.logs[0].events[] | select(.type=="provenance.smartaccounts.v1.EventFido2CredentialAdd") | .attributes[] | select(.key=="credential_number") | .value')
+CRED_NUMBER=$(echo $CRED_RESPONSE | jq -r '
+  if .logs then 
+    .logs[] | .events[]? | select(.type=="provenance.smartaccounts.v1.EventFido2CredentialAdd") | .attributes[] | select(.key=="credential_number") | .value
+  else 
+    .events[]? | select(.type=="provenance.smartaccounts.v1.EventFido2CredentialAdd") | .attributes[] | select(.key=="credential_number") | .value
+  end')
 
 echo "Credential registered with number: $CRED_NUMBER"
 
 echo "Testing account query..."
-provenanced query smartaccounts account $(echo $CRED_RESPONSE | jq -r '.logs[0].events[0].attributes[0].value')
+provenanced query smartaccounts address $(echo $CRED_RESPONSE | jq -r '
+  if .logs then 
+    .logs[] | .events[]? | select(.type | contains("smartaccounts")) | .attributes[] | select(.key=="address") | .value
+  else 
+    .events[]? | select(.type | contains("smartaccounts")) | .attributes[] | select(.key=="address") | .value
+  end')
 
 echo "Testing transaction authentication..."
 provenanced tx bank send alice bob 1000stake \

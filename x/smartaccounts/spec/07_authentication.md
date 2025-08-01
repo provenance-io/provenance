@@ -410,8 +410,8 @@ func TestSmartAccountAuthentication(t *testing.T) {
 #!/bin/bash
 
 # Test FIDO2 authentication flow
-provenanced tx smartaccounts register-fido2 \
-    --encoded-attestation "$ATTESTATION" \
+provenanced tx smartaccounts add-webauthn-credentials \
+    --encodedAttestation "$ATTESTATION" \
     --user-identifier "test-user" \
     --from alice \
     --chain-id testing

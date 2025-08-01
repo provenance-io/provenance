@@ -317,8 +317,7 @@ provenanced query smartaccounts params --output json
 
 # Test parameter enforcement
 # Try to register credential when module is disabled
-provenanced tx smartaccounts register-cosmos \
-  --pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"..."}' \
+provenanced tx smartaccounts register-cosmos-credential <base64-encoded-pubkey> \
   --from alice \
   --chain-id testing \
   --yes
