@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package provenance.smartaccounts.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
+
+// PublicKeyData represents the public key data for WebAuthn credentials.
+message PublicKeyData {
+  bytes public_key = 1; // Decode the results to int by default.
+  int64 key_type   = 2; // The type of key created. Should be OKP, EC2, ( RSA not supported).
+  int64 algorithm  = 3; // A COSEAlgorithmIdentifier for the algorithm used to derive the key signature.
+}
+// EC2PublicKeyData represents the EC2 public key data for WebAuthn credentials.
+message EC2PublicKeyData {
+  PublicKeyData public_key_data = 1; // Embedding PublicKeyData
+  int64         curve           = 2; // Curve: If the key type is EC2, the curve on which we derive the signature from.
+  bytes         x_coord         = 3; // XCoord: A byte string 32 bytes in length that holds the x coordinate of the key.
+  bytes         y_coord         = 4; // YCoord: A byte string 32 bytes in length that holds the y coordinate of the key.
+}
+
+// EdDSAPublicKeyData represents the EdDSA public key data for WebAuthn credentials.
+message EdDSAPublicKeyData {
+  PublicKeyData public_key_data = 1; // Embedding PublicKeyData
+  int64         curve           = 2; // Curve: Curve for OKP
+  bytes         x_coord         = 3; // XCoord: A byte string that holds the x coordinate of the key.
+}

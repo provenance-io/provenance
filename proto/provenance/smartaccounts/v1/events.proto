@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package provenance.smartaccounts.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
+
+import "cosmos_proto/cosmos.proto";
+
+// Events
+message EventSmartAccountInit {
+  string address          = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 credential_count = 2;
+}
+
+// Event emitted when a WebAuthn credential is added to a smart account
+message EventFido2CredentialAdd {
+  string address           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 credential_number = 2;
+  string credential_id     = 3;
+}
+
+// Event emitted when a Cosmos credential is added to a smart account
+message EventCosmosCredentialAdd {
+  string address           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 credential_number = 2;
+}
+
+// Event emitted when a credential is deleted from a smart account
+message EventCredentialDelete {
+  string address           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 credential_number = 2;
+}
