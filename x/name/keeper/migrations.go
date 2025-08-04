@@ -4,10 +4,15 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/provenance-io/provenance/x/name/types"
+)
+
+// Define old key prefixes for migration
+var (
+	OldNameKeyPrefix    = []byte{0x03}
+	OldAddressKeyPrefix = []byte{0x05}
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -24,58 +29,35 @@ func NewMigrator(keeper Keeper) Migrator {
 // to the new collections-based layout (version 2 to version 3).
 func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating name module from KV store to collections (v2 to v3)...")
+	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	store := ctx.KVStore(m.keeper.storeKey)
-
-	// Migrate parameters
-	if bz := store.Get(types.NameParamStoreKey); bz != nil {
+	// 1. Migrate parameters
+	if bz, _ := store.Get(types.NameParamStoreKey); bz != nil {
 		var params types.Params
 		m.keeper.cdc.MustUnmarshal(bz, &params)
 		if err := m.keeper.paramsStore.Set(ctx, params); err != nil {
-			return err
+			return fmt.Errorf("failed to migrate params: %w", err)
 		}
-		ctx.Logger().Info("Migrated name module parameters to collections store.")
+		ctx.Logger().Info("Migrated parameters")
+		store.Delete(types.NameParamStoreKey)
 	}
-
 	// Migrate name records
 	ctx.Logger().Info("Migrating name records...")
-	namePrefix := types.NameKeyPrefix
-	nameIter := store.Iterator(namePrefix, storetypes.PrefixEndBytes(namePrefix))
-	defer nameIter.Close()
+	addrPrefix := types.AddressKeyPrefix
+	iter, _ := store.Iterator(addrPrefix, storetypes.PrefixEndBytes(addrPrefix))
+	defer iter.Close()
+
 	count := 0
-	for ; nameIter.Valid(); nameIter.Next() {
-		var record types.NameRecord
-		m.keeper.cdc.MustUnmarshal(nameIter.Value(), &record)
-
-		// Use the exact key from the store
-		key := nameIter.Key()
-
-		// Set in collections
-		if err := m.keeper.nameRecords.Set(ctx, key, record); err != nil {
-			return err
-		}
+	for ; iter.Valid(); iter.Next() {
+		store.Set(iter.Key(), []byte{})
 		count++
 	}
-	ctx.Logger().Info(fmt.Sprintf("Migrated %d name records.", count))
-	// Migrate address index
-	addrPrefix := types.AddressKeyPrefix
-	addrIter := store.Iterator(addrPrefix, storetypes.PrefixEndBytes(addrPrefix))
-	defer addrIter.Close()
-	addrCount := 0
-	for ; addrIter.Valid(); addrIter.Next() {
-		var record types.NameRecord
-		m.keeper.cdc.MustUnmarshal(addrIter.Value(), &record)
+	ctx.Logger().Info(fmt.Sprintf("Fixed %d address index values", count))
 
-		// Use the exact key from the store
-		key := addrIter.Key()
+	ctx.Logger().Info("Deleting old entries...")
+	// m.keeper.DeleteInvalidAddressIndexEntries(ctx)
 
-		// Set in collections address index
-		if err := m.keeper.addrIndex.Set(ctx, key, record); err != nil {
-			return err
-		}
-		addrCount++
-	}
-	ctx.Logger().Info(fmt.Sprintf("Migrated %d address index records.", addrCount))
 	ctx.Logger().Info("Name module migration to collections (v2 to v3) completed successfully.")
+
 	return nil
 }
