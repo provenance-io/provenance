@@ -1,9 +1,10 @@
 package types
 
 import (
-	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -55,13 +56,13 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 			"",
 			[]byte(nil),
 			true,
-			fmt.Errorf("name can not be empty: %w", ErrNameInvalid).Error(),
+			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
 		},
 		"invalid empty name whitespace": {
 			"   ",
 			[]byte(nil),
 			true,
-			fmt.Errorf("name can not be empty: %w", ErrNameInvalid).Error(),
+			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
 		},
 		"invalid empty name segment": {
 			"name..empty.segment",
@@ -80,7 +81,7 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 		tc := tc
 
 		s.Run(n, func() {
-			key, err := GetNameKeyPrefix(tc.name)
+			key, err := GetNameKeyBytes(tc.name)
 			if tc.expectErr {
 				s.Error(err)
 				if s != nil {
@@ -119,55 +120,69 @@ func mustHexDecode(h string) []byte {
 	return result
 }
 
-func (s *NameKeyTestSuite) TestRawBytesKeyCodec() {
+func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
+	codec := HashedStringKeyCodec{}
+
 	tests := []struct {
-		name string
-		key  []byte
+		name      string
+		input     string
+		expectErr bool
 	}{
-		{"empty key", []byte{}},
-		{"single byte", []byte{0x01}},
-		{"short key", []byte("short")},
-		{"20 byte key", bytes.Repeat([]byte{0xAB}, 20)},
-		{"32 byte key", bytes.Repeat([]byte{0xCD}, 32)},
-		{"random key", []byte{0x01, 0x02, 0x03, 0x04, 0x05}},
+		{"empty string", "", false},
+		{"single char", "a", false},
+		{"short string", "short", false},
+		{"domain style", "example.domain", false},
+		{"multi-level domain", "one.two.three.four", false},
+		{"long string", strings.Repeat("x", 100), false},
+		{"whitespace only", "   ", false},
+		{"contains whitespace", "some domain.name", false},
+		{"special chars", "!@#$%^&*()_+{}|:\"<>?", false},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			buffer := make([]byte, RawBytesKey.Size(tc.key))
-			n, err := RawBytesKey.Encode(buffer, tc.key)
-			s.Require().NoError(err)
-			s.Equal(len(tc.key), n, "encode returned length")
-			s.True(bytes.Equal(tc.key, buffer[:n]), "encoded value should match input")
+			// Encode
+			size := codec.Size(tc.input)
+			buffer := make([]byte, size)
+			n, err := codec.Encode(buffer, tc.input)
 
-			// Decode back
-			read, out, err := RawBytesKey.Decode(buffer[:n])
-			s.Require().NoError(err)
-			s.Equal(n, read, "decode should read full encoded length")
-			s.True(bytes.Equal(tc.key, out), "decoded value should match input")
+			if tc.expectErr {
+				s.Error(err)
+				return
+			}
 
-			// EncodeNonTerminal
-			buffer = make([]byte, RawBytesKey.SizeNonTerminal(tc.key))
-			n2, err := RawBytesKey.EncodeNonTerminal(buffer, tc.key)
 			s.Require().NoError(err)
-			s.Equal(n2, len(tc.key), "non-terminal encode length")
-			s.True(bytes.Equal(tc.key, buffer[:n2]), "non-terminal encode matches input")
+			s.Equal(sha256.Size, n, "encoded hash size must be 32 bytes")
 
-			read2, out2, err := RawBytesKey.DecodeNonTerminal(buffer[:n2])
+			// Decode: will return base64 of the hash (not the original string)
+			read, out, err := codec.Decode(buffer[:n])
 			s.Require().NoError(err)
-			s.Equal(read2, n2, "non-terminal decode read length")
-			s.True(bytes.Equal(tc.key, out2), "non-terminal decode matches input")
+			s.Equal(n, read)
+			s.NotEmpty(out)
+			s.NotEqual(tc.input, out, "decoded value must not match original (it's a hash)")
+
+			// EncodeNonTerminal / DecodeNonTerminal
+			nonTermSize := codec.SizeNonTerminal(tc.input)
+			nonTermBuf := make([]byte, nonTermSize)
+			n2, err := codec.EncodeNonTerminal(nonTermBuf, tc.input)
+			s.Require().NoError(err)
+			s.Equal(nonTermSize, n2, "non-terminal encode length")
+
+			read2, out2, err := codec.DecodeNonTerminal(nonTermBuf[:n2])
+			s.Require().NoError(err)
+			s.Equal(n2, read2, "non-terminal decode should match encoded length")
+			s.Equal(tc.input, out2, "non-terminal decode should match original")
 
 			// JSON encode/decode
-			jsonVal, err := RawBytesKey.EncodeJSON(tc.key)
+			jsonBytes, err := codec.EncodeJSON(tc.input)
 			s.Require().NoError(err)
 
-			outJSON, err := RawBytesKey.DecodeJSON(jsonVal)
+			outJSON, err := codec.DecodeJSON(jsonBytes)
 			s.Require().NoError(err)
-			s.True(bytes.Equal(tc.key, outJSON), "json roundtrip should match")
+			s.Equal(tc.input, outJSON)
 
 			// Stringify
-			s.Equal(string(tc.key), RawBytesKey.Stringify(tc.key))
+			s.Equal(tc.input, codec.Stringify(tc.input))
 		})
 	}
 }

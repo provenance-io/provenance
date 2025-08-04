@@ -581,7 +581,7 @@ func New(
 	hooksTransferModule := ibchooks.NewIBCMiddleware(app.RateLimitMiddleware, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
-	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey], runtime.NewKVStoreService(keys[nametypes.StoreKey]))
+	app.NameKeeper = namekeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[nametypes.StoreKey]))
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.AccountKeeper, &app.NameKeeper,
@@ -1082,6 +1082,7 @@ func (app *App) registerInvariants() {
 func (app *App) registerUpgradeHandlers() {
 	// Add the upgrade handlers for each release.
 	InstallCustomUpgradeHandlers(app)
+	app.injectUpgrade("bouvardia")
 	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
 	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

@@ -669,38 +669,42 @@ func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 
 	// 1. Store NameRecord and AddrIndex
 	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restrict)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to set name record")
 
 	// 2. Get normalized name and keys
 	normalized, err := s.app.NameKeeper.Normalize(s.ctx, name)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to normalize name")
 
-	nameKey, err := types.GetNameKeyPrefix(normalized)
-	s.Require().NoError(err)
-
-	addrPrefix, err := types.GetAddressKeyPrefix(addr)
-	s.Require().NoError(err)
-
-	addrIndexKey := append(addrPrefix, nameKey...)
+	nameKey, err := types.GetNameKeyBytes(normalized) // make sure this is the correct function in your types pkg
+	s.Require().NoError(err, "failed to get name key bytes")
 
 	// 3. Fetch NameRecord from NameRecords map
-	recordByName, err := s.app.NameKeeper.GetNameRecord(s.ctx, nameKey)
-	s.Require().NoError(err)
-	s.Require().NotNil(recordByName)
+	recordByName, err := s.app.NameKeeper.GetNameRecord(s.ctx, normalized)
+	s.Require().NoError(err, "failed to get name record by normalized name")
 
-	// 4. Fetch NameRecord from AddrIndex map
-	recordByAddr, err := s.app.NameKeeper.GetAddrIndexRecord(s.ctx, addrIndexKey)
-	s.Require().NoError(err)
-	s.Require().NotNil(recordByAddr)
+	// 4. Fetch NameRecord from AddrIndex map via index
+	iter, err := s.app.NameKeeper.GetAddrIndex().MatchExact(s.ctx, addr.Bytes())
+	s.Require().NoError(err, "failed to get address index iterator")
+	defer iter.Close()
+
+	var recordByAddr *types.NameRecord
+	found := false
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		s.Require().NoError(err, "failed to get primary key from address index iterator")
+
+		record, err := s.app.NameKeeper.GetNameRecord(s.ctx, pk)
+		s.Require().NoError(err, "failed to get name record by primary key from address index")
+		recordByAddr = &record
+		found = true
+		break
+	}
+	s.Require().True(found, "no name record found for address in AddrIndex")
 
 	// 5. Check both are equal
-	s.Require().Equal(recordByName, recordByAddr, "NameRecord and AddrIndex values should be equal")
+	s.Require().Equal(recordByName, *recordByAddr, "name record from NameRecords and AddrIndex do not match")
 
-	// 6. Verify key lengths
+	// 6. Verify key lengths (optional logs)
 	fmt.Printf("NameKey (NameRecords) length: %d\n", len(nameKey))
-	fmt.Printf("AddrIndexKey (AddrIndex) length: %d\n", len(addrIndexKey))
-
-	// 7. Optionally print hex or binary for visual comparison
 	fmt.Printf("NameKey bytes: %X\n", nameKey)
-	fmt.Printf("AddrIndexKey bytes: %X\n", addrIndexKey)
 }

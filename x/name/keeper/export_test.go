@@ -7,5 +7,5 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // AddRecord is a TEST ONLY exposure of addRecord.
 func (k Keeper) AddRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict, isModifiable bool) error {
-	return k.addRecord(ctx, name, addr, restrict, isModifiable)
+	return k.SetNameRecord(ctx, name, addr, restrict)
 }
