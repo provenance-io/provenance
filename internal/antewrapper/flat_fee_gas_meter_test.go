@@ -19,6 +19,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // AssertEqualFlatFeeGasMeters will assert that the provided FlatFeeGasMeters are equal, returning false if not equal.
@@ -45,12 +46,43 @@ func AssertEqualFlatFeeGasMeters(t *testing.T, expected, actual *FlatFeeGasMeter
 	rv = assertEqualMsgTypes(t, expected.extraMsgs, actual.extraMsgs, "FlatFeeGasMeter.extraMsgs") && rv
 
 	// We don't care about checking the FlatFeesKeeper or logger since they don't change over the life of the gas meter.
+	rv = AssertEqualFeeConverter(t, expected.feeConverter, actual.feeConverter) && rv
 
 	rv = assert.Equal(t, expected.msgTypeURLs, actual.msgTypeURLs, "FlatFeeGasMeter.msgTypeURLs") && rv
 	rv = assert.Equal(t, expected.used, actual.used, "FlatFeeGasMeter.used") && rv
 	rv = assert.Equal(t, expected.counts, actual.counts, "FlatFeeGasMeter.counts") && rv
 
 	return rv
+}
+
+// AssertEqualFeeConverter will assert that the provided fee converters equal.
+func AssertEqualFeeConverter(t *testing.T, expected, actual FeeConverter) bool {
+	t.Helper()
+	if !assert.Equal(t, expected == nil, actual == nil, "FlatFeeGasMeter.feeConverter == nil") {
+		return false
+	}
+	if expected == nil {
+		return true
+	}
+
+	// Make sure that the definition amounts are the same.
+	expDef := expected.GetDefinitionAmount()
+	actDef := actual.GetDefinitionAmount()
+	if !assert.Equal(t, expDef.String(), actDef.String(), "FlatFeeGasMeter.feeConverter.GetDefinitionAmount()") {
+		// The only thing left to check is whether these amounts convert to the same amount.
+		// If they're already not equal, we'll skip that check too, since it's now meaningless.
+		return false
+	}
+
+	// Make sure that the definition amounts convert to the same.
+	// This is the simplest way I could think of to check the conversion factor.
+	expConv := expected.ConvertCoins(sdk.Coins{expDef})
+	actConv := actual.ConvertCoins(sdk.Coins{actDef})
+	return assert.Equal(t, expConv.String(), actConv.String(),
+		"FlatFeeGasMeter.feeConverter.ConvertCoins(<definition amount>)\n"+
+			"<definition amount> expected: %s => %s\n"+
+			"<definition amount> actual  : %s => %s",
+		expDef, expConv, actDef, actConv)
 }
 
 // AssertEqualGas will assert that the provided gases are equal, returning false if not equal.
@@ -257,12 +289,13 @@ func TestFlatFeeGasMeter_Finalize(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		gm          *FlatFeeGasMeter
-		ffk         *MockFlatFeesKeeper // Will be set in gm automatically.
-		expGM       *FlatFeeGasMeter
-		expErr      string
-		expCalcArgs bool
+		name         string
+		gm           *FlatFeeGasMeter
+		ffk          *MockFlatFeesKeeper // Will be set in gm automatically.
+		expGM        *FlatFeeGasMeter
+		expErr       string
+		expCalcArgs  bool
+		expGetParams bool
 	}{
 		{
 			name: "nil extra msgs",
@@ -366,6 +399,71 @@ func TestFlatFeeGasMeter_Finalize(t *testing.T) {
 			expCalcArgs: true,
 		},
 		{
+			name: "added fees: unconvertable, no converter",
+			gm: &FlatFeeGasMeter{
+				addedFees: cz("33addedfees"),
+			},
+			ffk: NewMockFlatFeesKeeper(),
+			expGM: &FlatFeeGasMeter{
+				addedFees:    cz("33addedfees"),
+				feeConverter: &MockDefaultFlatfeesParams.ConversionFactor,
+			},
+			expGetParams: true,
+		},
+		{
+			name: "added fees: unconvertable, already have converter",
+			gm: &FlatFeeGasMeter{
+				addedFees:    cz("33addedfees"),
+				feeConverter: &MockDefaultFlatfeesParams.ConversionFactor,
+			},
+			ffk: NewMockFlatFeesKeeper(),
+			expGM: &FlatFeeGasMeter{
+				addedFees:    cz("33addedfees"),
+				feeConverter: &MockDefaultFlatfeesParams.ConversionFactor,
+			},
+			expGetParams: false,
+		},
+		{
+			name: "added fees: convertable, no converter",
+			gm: &FlatFeeGasMeter{
+				addedFees: cz("33addedfees"),
+			},
+			ffk: NewMockFlatFeesKeeper().WithParams(&flatfeestypes.Params{
+				DefaultCost: sdk.NewInt64Coin("addedfees", 50),
+				ConversionFactor: flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("addedfees", 11),
+					ConvertedAmount:  sdk.NewInt64Coin("morefees", 25),
+				},
+			}),
+			expGM: &FlatFeeGasMeter{
+				addedFees: cz("75morefees"),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("addedfees", 11),
+					ConvertedAmount:  sdk.NewInt64Coin("morefees", 25),
+				},
+			},
+			expGetParams: true,
+		},
+		{
+			name: "added fees: convertable, with converter",
+			gm: &FlatFeeGasMeter{
+				addedFees: cz("33addedfees"),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("addedfees", 11),
+					ConvertedAmount:  sdk.NewInt64Coin("morefees", 4),
+				},
+			},
+			ffk: NewMockFlatFeesKeeper(),
+			expGM: &FlatFeeGasMeter{
+				addedFees: cz("12morefees"),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("addedfees", 11),
+					ConvertedAmount:  sdk.NewInt64Coin("morefees", 4),
+				},
+			},
+			expGetParams: false,
+		},
+		{
 			name: "five extra msgs",
 			gm: &FlatFeeGasMeter{
 				extraMsgs: []sdk.Msg{
@@ -402,9 +500,11 @@ func TestFlatFeeGasMeter_Finalize(t *testing.T) {
 					"/cosmos.gov.v1.MsgSubmitProposal", "/cosmos.gov.v1.MsgVote",
 					"/cosmos.bank.v1beta1.MsgSend",
 				},
-				knownMsgs: map[string]int{"dummyMsg": 0, "otherMsg": 0},
+				knownMsgs:    map[string]int{"dummyMsg": 0, "otherMsg": 0},
+				feeConverter: &MockDefaultFlatfeesParams.ConversionFactor,
 			},
-			expCalcArgs: true,
+			expCalcArgs:  true,
+			expGetParams: true,
 		},
 	}
 
@@ -416,6 +516,11 @@ func TestFlatFeeGasMeter_Finalize(t *testing.T) {
 			}
 			tc.gm.ffk = tc.ffk
 
+			expGetParamsCalls := 0
+			if tc.expGetParams {
+				expGetParamsCalls++
+			}
+
 			ctx := sdk.Context{}
 			var err error
 			testFunc := func() {
@@ -425,6 +530,7 @@ func TestFlatFeeGasMeter_Finalize(t *testing.T) {
 			assertions.AssertErrorValue(t, err, tc.expErr, "Finalize error")
 			AssertEqualFlatFeeGasMeters(t, tc.expGM, tc.gm)
 			tc.ffk.AssertCalculateMsgCostCall(t, expCalcArgs)
+			tc.ffk.AssertGetParamsCalls(t, expGetParamsCalls)
 		})
 	}
 }
@@ -1520,6 +1626,170 @@ func TestFlatFeeGasMeter_adjustCostsForUnitTests(t *testing.T) {
 	}
 }
 
+func TestFlatFeeGasMeter_ensureFeeConverter(t *testing.T) {
+	tests := []struct {
+		name   string
+		ffk    *MockFlatFeesKeeper
+		gm     *FlatFeeGasMeter
+		expGet bool
+		expGM  *FlatFeeGasMeter
+	}{
+		{
+			name: "no converter yet",
+			ffk: NewMockFlatFeesKeeper().WithParams(&flatfeestypes.Params{
+				DefaultCost: sdk.NewInt64Coin("apple", 60),
+				ConversionFactor: flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			}),
+			gm: &FlatFeeGasMeter{
+				upFrontCost: sdk.NewCoins(sdk.NewInt64Coin("banana", 98)),
+			},
+			expGet: true,
+			expGM: &FlatFeeGasMeter{
+				upFrontCost: sdk.NewCoins(sdk.NewInt64Coin("banana", 98)),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			},
+		},
+		{
+			name: "with converter",
+			ffk: NewMockFlatFeesKeeper().WithParams(&flatfeestypes.Params{
+				DefaultCost: sdk.NewInt64Coin("apple", 120),
+				ConversionFactor: flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 6),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 20),
+				},
+			}),
+			gm: &FlatFeeGasMeter{
+				addedFees: sdk.NewCoins(sdk.NewInt64Coin("apple", 14)),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			},
+			expGet: false,
+			expGM: &FlatFeeGasMeter{
+				addedFees: sdk.NewCoins(sdk.NewInt64Coin("apple", 14)),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.ffk == nil {
+				tc.ffk = NewMockFlatFeesKeeper()
+			}
+			tc.gm.ffk = tc.ffk
+
+			expGetParamsCalls := 0
+			if tc.expGet {
+				expGetParamsCalls++
+			}
+
+			testFunc := func() {
+				tc.gm.ensureFeeConverter(sdk.Context{})
+			}
+			require.NotPanics(t, testFunc, "ensureFeeConverter")
+			assert.NotNil(t, tc.gm.feeConverter, "FlatFeeGasMeter.feeConverter")
+			tc.ffk.AssertGetParamsCalls(t, expGetParamsCalls)
+			AssertEqualFlatFeeGasMeters(t, tc.expGM, tc.gm)
+		})
+	}
+}
+
+func TestFlatFeeGasMeter_getDefinitionDenom(t *testing.T) {
+	tests := []struct {
+		name     string
+		ffk      *MockFlatFeesKeeper
+		gm       *FlatFeeGasMeter
+		expGet   bool
+		expGM    *FlatFeeGasMeter
+		expDenom string
+	}{
+		{
+			name: "no converter yet",
+			ffk: NewMockFlatFeesKeeper().WithParams(&flatfeestypes.Params{
+				DefaultCost: sdk.NewInt64Coin("apple", 60),
+				ConversionFactor: flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			}),
+			gm: &FlatFeeGasMeter{
+				upFrontCost: sdk.NewCoins(sdk.NewInt64Coin("banana", 98)),
+			},
+			expGet: true,
+			expGM: &FlatFeeGasMeter{
+				upFrontCost: sdk.NewCoins(sdk.NewInt64Coin("banana", 98)),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			},
+			expDenom: "apple",
+		},
+		{
+			name: "with converter",
+			ffk: NewMockFlatFeesKeeper().WithParams(&flatfeestypes.Params{
+				DefaultCost: sdk.NewInt64Coin("apple", 120),
+				ConversionFactor: flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apricot", 6),
+					ConvertedAmount:  sdk.NewInt64Coin("cherry", 20),
+				},
+			}),
+			gm: &FlatFeeGasMeter{
+				addedFees: sdk.NewCoins(sdk.NewInt64Coin("apple", 14)),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			},
+			expGet: false,
+			expGM: &FlatFeeGasMeter{
+				addedFees: sdk.NewCoins(sdk.NewInt64Coin("apple", 14)),
+				feeConverter: &flatfeestypes.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("apple", 3),
+					ConvertedAmount:  sdk.NewInt64Coin("banana", 10),
+				},
+			},
+			expDenom: "apple",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.ffk == nil {
+				tc.ffk = NewMockFlatFeesKeeper()
+			}
+			tc.gm.ffk = tc.ffk
+
+			expGetParamsCalls := 0
+			if tc.expGet {
+				expGetParamsCalls++
+			}
+
+			var actDenom string
+			testFunc := func() {
+				actDenom = tc.gm.getDefinitionDenom(sdk.Context{})
+			}
+			require.NotPanics(t, testFunc, "getDefinitionDenom")
+			assert.Equal(t, tc.expDenom, actDenom, "getDefinitionDenom result")
+
+			assert.NotNil(t, tc.gm.feeConverter, "FlatFeeGasMeter.feeConverter")
+			tc.ffk.AssertGetParamsCalls(t, expGetParamsCalls)
+			AssertEqualFlatFeeGasMeters(t, tc.expGM, tc.gm)
+		})
+	}
+}
+
 func TestGetFlatFeeGasMeter(t *testing.T) {
 	cz := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
@@ -1757,6 +2027,100 @@ func TestConsumeAdditionalFee(t *testing.T) {
 				ConsumeAdditionalFee(ctx, tc.fee)
 			}
 			require.NotPanics(t, testFunc, "ConsumeAdditionalFee")
+			actGM, _ := GetFlatFeeGasMeter(ctx)
+			AssertEqualFlatFeeGasMeters(t, tc.expGM, actGM)
+		})
+	}
+}
+
+func TestConsumeAdditionalFlatFee(t *testing.T) {
+	cz := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		require.NoError(t, err, "ParseCoinNormalized(%q)", coins)
+		return rv
+	}
+	feeConv := func(defCoin, convCoin string) *flatfeestypes.ConversionFactor {
+		defAmt, err := sdk.ParseCoinNormalized(defCoin)
+		require.NoError(t, err, "ParseCoinNormalized(%q) defCoin", defCoin)
+		conAmt, err := sdk.ParseCoinNormalized(convCoin)
+		require.NoError(t, err, "ParseCoinNormalized(%q) convCoin", convCoin)
+		return &flatfeestypes.ConversionFactor{DefinitionAmount: defAmt, ConvertedAmount: conAmt}
+	}
+
+	tests := []struct {
+		name  string
+		ctxGM storetypes.GasMeter
+		amt   uint64
+		expGM *FlatFeeGasMeter
+	}{
+		{
+			name:  "zero fee",
+			ctxGM: &FlatFeeGasMeter{},
+			amt:   0,
+			expGM: &FlatFeeGasMeter{},
+		},
+		{
+			name:  "not a flat fee gas meter",
+			ctxGM: storetypes.NewGasMeter(100),
+			amt:   12,
+			expGM: nil,
+		},
+		{
+			name: "no previously consumed added fee",
+			ctxGM: &FlatFeeGasMeter{
+				feeConverter: feeConv("3apple", "8banana"),
+			},
+			amt: 17,
+			expGM: &FlatFeeGasMeter{
+				addedFees:    cz("17apple"),
+				feeConverter: feeConv("3apple", "8banana"),
+			},
+		},
+		{
+			name: "added to previously consumed added fee of same denom",
+			ctxGM: &FlatFeeGasMeter{
+				addedFees:    cz("8apricot"),
+				feeConverter: feeConv("2apricot", "6orange"),
+			},
+			amt: 65,
+			expGM: &FlatFeeGasMeter{
+				addedFees:    cz("73apricot"),
+				feeConverter: feeConv("2apricot", "6orange"),
+			},
+		},
+		{
+			name: "added to previously consumed added fee of different denoms",
+			ctxGM: &FlatFeeGasMeter{
+				addedFees:    cz("3banana,7cherry"),
+				feeConverter: feeConv("27grape", "5cherry"),
+			},
+			amt: 15,
+			expGM: &FlatFeeGasMeter{
+				addedFees:    cz("3banana,7cherry,15grape"),
+				feeConverter: feeConv("27grape", "5cherry"),
+			},
+		},
+		{
+			name: "added to previously consumed added fee of mixed denoms",
+			ctxGM: &FlatFeeGasMeter{
+				addedFees:    cz("12apple,3banana,7cherry"),
+				feeConverter: feeConv("79banana", "51apple"),
+			},
+			amt: 59,
+			expGM: &FlatFeeGasMeter{
+				addedFees:    cz("12apple,62banana,7cherry"),
+				feeConverter: feeConv("79banana", "51apple"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			testFunc := func() {
+				ConsumeAdditionalFlatFee(ctx, tc.amt)
+			}
+			require.NotPanics(t, testFunc, "ConsumeAdditionalFlatFee")
 			actGM, _ := GetFlatFeeGasMeter(ctx)
 			AssertEqualFlatFeeGasMeters(t, tc.expGM, actGM)
 		})

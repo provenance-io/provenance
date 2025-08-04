@@ -616,6 +616,17 @@ func (k *MockFlatFeesKeeper) ExpandMsgs(msgs []sdk.Msg) ([]sdk.Msg, error) {
 	return msgs, nil
 }
 
+func (k *MockFlatFeesKeeper) GetParams(_ sdk.Context) flatfeestypes.Params {
+	return flatfeestypes.Params{
+		// These values were picked arbitrarily since nothing in here should use these values anyway.
+		DefaultCost: sdk.NewInt64Coin("stablecoin", 10),
+		ConversionFactor: flatfeestypes.ConversionFactor{
+			DefinitionAmount: sdk.NewInt64Coin("stablecoin", 100),
+			ConvertedAmount:  sdk.NewInt64Coin("feecoin", 15),
+		},
+	}
+}
+
 func TestHandlersConsumeMsgs(t *testing.T) {
 	pioconfig.SetProvConfig(sdk.DefaultBondDenom) // Set denom as stake.
 	priv, _, addr1 := testdata.KeyTestPubAddr()

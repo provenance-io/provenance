@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -52,6 +52,10 @@ type FlatFeeGasMeter struct {
 
 	// ffk is the x/flatfees keeper.
 	ffk FlatFeesKeeper
+
+	// feeConverter knows the definition denom and is used to convert added fees.
+	// This is only populated if needed using ensureFeeConverter.
+	feeConverter FeeConverter
 
 	// logger is a context logger to use to output gas info.
 	logger log.Logger
@@ -108,17 +112,22 @@ func (g *FlatFeeGasMeter) SetCosts(ctx sdk.Context, msgs []sdk.Msg) error {
 }
 
 // Finalize calculates the cost for any extra msgs and sets extraMsgsCost.
+// It also converts any fees added that need to be converted.
 func (g *FlatFeeGasMeter) Finalize(ctx sdk.Context) error {
 	g.extraMsgsCost = nil
-	if len(g.extraMsgs) == 0 {
-		return nil
+	if len(g.extraMsgs) > 0 {
+		upFront, onSuccess, err := g.ffk.CalculateMsgCost(ctx, g.extraMsgs...)
+		if err != nil {
+			return err
+		}
+		g.extraMsgsCost = upFront.Add(onSuccess...)
 	}
 
-	upFront, onSuccess, err := g.ffk.CalculateMsgCost(ctx, g.extraMsgs...)
-	if err != nil {
-		return err
+	if !g.addedFees.IsZero() {
+		g.ensureFeeConverter(ctx)
+		g.addedFees = g.feeConverter.ConvertCoins(g.addedFees)
 	}
-	g.extraMsgsCost = upFront.Add(onSuccess...)
+
 	return nil
 }
 
@@ -325,6 +334,22 @@ func (g *FlatFeeGasMeter) adjustCostsForUnitTests(chainID string, feeProvided sd
 	}
 }
 
+// ensureFeeConverter will ensure that the feeConverter field in this gas meter is set.
+// If it's not yet set, it'll be looked up and set. If it's already set, nothing happens.
+func (g *FlatFeeGasMeter) ensureFeeConverter(ctx sdk.Context) {
+	if g.feeConverter != nil {
+		return
+	}
+	params := g.ffk.GetParams(ctx)
+	g.feeConverter = &params.ConversionFactor
+}
+
+// getDefinitionDenom returns the denom used to define all the fees (that gets converted into the fee denom).
+func (g *FlatFeeGasMeter) getDefinitionDenom(ctx sdk.Context) string {
+	g.ensureFeeConverter(ctx)
+	return g.feeConverter.GetDefinitionAmount().Denom
+}
+
 // GetFlatFeeGasMeter will extract the flat fee gas meter from the ctx.
 func GetFlatFeeGasMeter(ctx sdk.Context) (*FlatFeeGasMeter, error) {
 	rv, ok := ctx.GasMeter().(*FlatFeeGasMeter)
@@ -337,6 +362,7 @@ func GetFlatFeeGasMeter(ctx sdk.Context) (*FlatFeeGasMeter, error) {
 // ConsumeMsg will get the FlatFeeGasMeter from the context and call ConsumeMsg with the provided msg.
 // Use this if you want to include the cost of another Msg in the required fee.
 // If you want to add a specific cost to the required fee, use ConsumeAdditionalFee.
+// If you want to add to the fee in the same denom as the flat fee definitions, use ConsumeAdditionalFlatFee.
 func ConsumeMsg(ctx sdk.Context, msgs ...sdk.Msg) {
 	// There are some legitimate reasons why we might not get a flat fee gas meter here
 	// (e.g. during a gov prop). In those cases, we just skip consuming this fee and move on.
@@ -352,6 +378,7 @@ func ConsumeMsg(ctx sdk.Context, msgs ...sdk.Msg) {
 // Does nothing if the fee is zero, or the context doesn't have a FlatFeeGasMeter.
 // Use this if you want to add a specific amount to the required fee.
 // If you want the cost to reflect a specific Msg type, use ConsumeMsg.
+// If you want to add to the fee in the same denom as the flat fee definitions, use ConsumeAdditionalFlatFee.
 func ConsumeAdditionalFee(ctx sdk.Context, fee sdk.Coins) {
 	if fee.IsZero() {
 		return
@@ -363,4 +390,28 @@ func ConsumeAdditionalFee(ctx sdk.Context, fee sdk.Coins) {
 	if err == nil && feeGasMeter != nil {
 		feeGasMeter.ConsumeAddedFee(fee)
 	}
+}
+
+// ConsumeAdditionalFlatFee will get the FlatFeeGasMeter from the context and call ConsumeAddedFee with the provided amount of flat fee.
+// Does nothing if the fee is zero, or the context doesn't have a FlatFeeGasMeter.
+// Use this if you want to add a specific amount to the required fee in the denom that gets converted to the fee amount.
+// E.g. mainnet and testnet have their fees defined in musd, so on those chains, this will consume amounts in musd.
+// These amounts are later converted to the fee amount before being checked against the fee provided.
+// If you want the cost to reflect a specific Msg type, use ConsumeMsg.
+// If you want to add to the fee in another denom, use ConsumeAdditionalFee.
+func ConsumeAdditionalFlatFee(ctx sdk.Context, flatAmount uint64) {
+	if flatAmount == 0 {
+		return
+	}
+
+	// There are some legitimate reasons why we might not get a flat fee gas meter here
+	// (e.g. during a gov prop). In those cases, we just skip consuming this fee and move on.
+	feeGasMeter, err := GetFlatFeeGasMeter(ctx)
+	if err != nil || feeGasMeter == nil {
+		return
+	}
+
+	denom := feeGasMeter.getDefinitionDenom(ctx)
+	amt := sdkmath.NewIntFromUint64(flatAmount)
+	feeGasMeter.ConsumeAddedFee(sdk.NewCoins(sdk.NewCoin(denom, amt)))
 }
