@@ -187,8 +187,8 @@ func (lc *LedgerClass) Validate() error {
 
 // Validate validates the LedgerClassStatusType type
 func (lcst *LedgerClassStatusType) Validate() error {
-	if lcst.Id <= 0 {
-		return NewErrCodeInvalidField("id", "must be a positive integer")
+	if lcst.Id < 0 {
+		return NewErrCodeInvalidField("id", "must be a non-negative integer")
 	}
 
 	if err := lenCheck("code", &lcst.Code, 1, 50); err != nil {
@@ -204,8 +204,8 @@ func (lcst *LedgerClassStatusType) Validate() error {
 
 // Validate validates the LedgerClassEntryType type
 func (lcet *LedgerClassEntryType) Validate() error {
-	if lcet.Id <= 0 {
-		return NewErrCodeInvalidField("id", "must be a positive integer")
+	if lcet.Id < 0 {
+		return NewErrCodeInvalidField("id", "must be a non-negative integer")
 	}
 
 	if err := lenCheck("code", &lcet.Code, 1, 50); err != nil {
@@ -221,8 +221,8 @@ func (lcet *LedgerClassEntryType) Validate() error {
 
 // Validate validates the LedgerClassBucketType type
 func (lcbt *LedgerClassBucketType) Validate() error {
-	if lcbt.Id <= 0 {
-		return NewErrCodeInvalidField("id", "must be a positive integer")
+	if lcbt.Id < 0 {
+		return NewErrCodeInvalidField("id", "must be a non-negative integer")
 	}
 
 	if err := lenCheck("code", &lcbt.Code, 1, 50); err != nil {
