@@ -390,8 +390,8 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 // CmdTransferFundsWithSettlement returns the command for transferring funds with settlement instructions
 func CmdTransferFundsWithSettlement() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "xfer <transfers-json>",
-		Short: "Submit a fund transfer with settlement instructions (ledger module)",
+		Use:   "xfer <fund_transfers_json_file",
+		Short: "Submit fund transfers",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -399,20 +399,26 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 				return err
 			}
 
-			// TODO: read this from a file and update the example
-			jsonStr := args[0]
+			jsonData, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
 
-			var transfers []ledger.FundTransferWithSettlement
-			if err := json.Unmarshal([]byte(jsonStr), &transfers); err != nil {
-				return fmt.Errorf("failed to parse transfers JSON: %w", err)
+			var rawTransfers []json.RawMessage
+			if err := json.Unmarshal(jsonData, &rawTransfers); err != nil {
+				return fmt.Errorf("failed to unmarshal JSON array: %w", err)
+			}
+
+			transfers := make([]*ledger.FundTransferWithSettlement, 0, len(rawTransfers))
+			for _, rawTransfer := range rawTransfers {
+				var transfer ledger.FundTransferWithSettlement
+				clientCtx.Codec.UnmarshalJSON(rawTransfer, &transfer)
+				transfers = append(transfers, &transfer)
 			}
 
 			msg := &ledger.MsgTransferFundsWithSettlementRequest{
 				Authority: clientCtx.FromAddress.String(),
-				Transfers: make([]*ledger.FundTransferWithSettlement, len(transfers)),
-			}
-			for i := range transfers {
-				msg.Transfers[i] = &transfers[i]
+				Transfers: transfers,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
