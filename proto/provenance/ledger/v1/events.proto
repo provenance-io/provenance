@@ -37,10 +37,10 @@ message EventLedgerUpdated {
 // UpdateType is the type of data update that caused the EventLedgerUpdated event to be emitted.
 // This is used to identify the specific update that caused the event to be emitted.
 enum UpdateType {
-  UPDATE_TYPE_UNSPECIFIED = 0;
-  UPDATE_TYPE_STATUS = 1;
+  UPDATE_TYPE_UNSPECIFIED   = 0;
+  UPDATE_TYPE_STATUS        = 1;
   UPDATE_TYPE_INTEREST_RATE = 2;
-  UPDATE_TYPE_PAYMENT = 3;
+  UPDATE_TYPE_PAYMENT       = 3;
   UPDATE_TYPE_MATURITY_DATE = 4;
 }
 

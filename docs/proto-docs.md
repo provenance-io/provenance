@@ -298,6 +298,8 @@
     - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
     - [EventLedgerUpdated](#provenance-ledger-v1-EventLedgerUpdated)
   
+    - [UpdateType](#provenance-ledger-v1-UpdateType)
+  
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
     - [BucketBalance](#provenance-ledger-v1-BucketBalance)
     - [BucketBalances](#provenance-ledger-v1-BucketBalances)
@@ -4993,7 +4995,10 @@ Msg defines the ledger module Msg service.
 <a name="provenance-ledger-v1-EventFundTransferWithSettlement"></a>
 
 ### EventFundTransferWithSettlement
-
+EventFundTransferWithSettlement is emitted when funds are transferred with
+settlement instructions. This event is triggered by the
+MsgTransferFundsWithSettlement message handler when a fund transfer with
+settlement instructions is successfully processed.
 
 
 | Field | Type | Label | Description |
@@ -5010,7 +5015,9 @@ Msg defines the ledger module Msg service.
 <a name="provenance-ledger-v1-EventLedgerCreated"></a>
 
 ### EventLedgerCreated
-
+EventLedgerCreated is emitted when a new ledger is created for an asset.
+This event is triggered by the MsgCreateLedger message handler when a
+ledger is successfully created for a specific NFT or scope.
 
 
 | Field | Type | Label | Description |
@@ -5026,7 +5033,9 @@ Msg defines the ledger module Msg service.
 <a name="provenance-ledger-v1-EventLedgerDestroyed"></a>
 
 ### EventLedgerDestroyed
-
+EventLedgerDestroyed is emitted when a ledger is destroyed.
+This event is triggered by the MsgDestroyLedger message handler when
+a ledger and all its associated data are successfully removed.
 
 
 | Field | Type | Label | Description |
@@ -5042,7 +5051,9 @@ Msg defines the ledger module Msg service.
 <a name="provenance-ledger-v1-EventLedgerEntryAdded"></a>
 
 ### EventLedgerEntryAdded
-
+EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
+This event is triggered by the MsgAppendLedgerEntry message handler when
+one or more ledger entries are successfully added to an existing ledger.
 
 
 | Field | Type | Label | Description |
@@ -5059,19 +5070,40 @@ Msg defines the ledger module Msg service.
 <a name="provenance-ledger-v1-EventLedgerUpdated"></a>
 
 ### EventLedgerUpdated
-
+EventLedgerUpdated is emitted when a ledger's configuration is updated.
+This event is triggered by various update message handlers such as
+MsgUpdateLedgerStatus, MsgUpdateLedgerInterestRate, MsgUpdateLedgerPayment,
+and MsgUpdateLedgerMaturityDate when a ledger's configuration is
+successfully modified.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset_class_id` | [string](#string) |  | asset class of the ledger |
 | `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+| `update_type` | [UpdateType](#provenance-ledger-v1-UpdateType) |  | What type of data update caused this event to be emitted. |
 
 
 
 
 
  <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-UpdateType"></a>
+
+### UpdateType
+UpdateType is the type of data update that caused the EventLedgerUpdated event to be emitted.
+This is used to identify the specific update that caused the event to be emitted.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `UPDATE_TYPE_UNSPECIFIED` | `0` |  |
+| `UPDATE_TYPE_STATUS` | `1` |  |
+| `UPDATE_TYPE_INTEREST_RATE` | `2` |  |
+| `UPDATE_TYPE_PAYMENT` | `3` |  |
+| `UPDATE_TYPE_MATURITY_DATE` | `4` |  |
+
 
  <!-- end enums -->
 

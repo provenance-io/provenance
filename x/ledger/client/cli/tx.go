@@ -157,10 +157,10 @@ func CmdDestroy() *cobra.Command {
 // CmdAppend creates a new ledger entry from a JSON file
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "append <asset_class_id> <nft_id> <json>",
+		Use:     "append <asset_class_id> <nft_id> <json_file_path>",
 		Aliases: []string{"aj"},
 		Short:   "Append ledger entries from a JSON file",
-		Example: `$ provenanced tx ledger append pb1a2b3c4... 0ADE096F-60D8-49CF-8D20-418DABD549B1 'json' --from mykey
+		Example: `$ provenanced tx ledger append asset-class-1 nft-1 entries.json --from mykey
 where the json is formatted as follows:
 [
 	{
@@ -184,39 +184,9 @@ where the json is formatted as follows:
 				"balance_amt": "80000"
 			}
 		]
-	},
-	{
-		"correlation_id": "entry2",
-		"reverses_correlation_id": "",
-		"is_void": false,
-		"sequence": 1,
-		"entry_type_id": 2,
-		"posted_date": 19700,
-		"effective_date": 19700,
-		"total_amt": "1000",
-		"applied_amounts": [
-			{
-				"bucket_type_id": 1,
-				"applied_amt": "400"
-			},
-			{
-				"bucket_type_id": 2,
-				"applied_amt": "600"
-			}
-		],
-		"balance_amounts": [
-			{
-				"bucket_type_id": 1,
-				"balance_amt": "76600"
-			},
-			{
-				"bucket_type_id": 2,
-				"balance_amt": "0"
-			}
-		]
 	}
 ]
-		`,
+`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -227,28 +197,21 @@ where the json is formatted as follows:
 			assetClassId := args[0]
 			nftId := args[1]
 
-			// TODO: remove this check and let the server validate the nft_id
-			if nftId == "" {
-				return fmt.Errorf("invalid <nft_id>")
+			jsonData, err := os.ReadFile(args[2])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
 			}
 
-			// TODO read this from a file and update the example
-			jsonData := args[2]
-
-			var entries []*ledger.LedgerEntry
-			if err := json.Unmarshal([]byte(jsonData), &entries); err != nil {
-				return fmt.Errorf("failed to unmarshal JSON: %w", err)
+			var rawEntries []json.RawMessage
+			if err := json.Unmarshal(jsonData, &rawEntries); err != nil {
+				return fmt.Errorf("failed to unmarshal JSON array: %w", err)
 			}
 
-			// Validate entries
-			// TODO: move this to the server
-			for _, entry := range entries {
-				if entry.Sequence >= 100 {
-					return fmt.Errorf("sequence must be less than 100")
-				}
-				if len(entry.CorrelationId) > 50 {
-					return fmt.Errorf("correlation_id must be 50 characters or less")
-				}
+			entries := make([]*ledger.LedgerEntry, 0, len(rawEntries))
+			for _, rawEntry := range rawEntries {
+				var entry ledger.LedgerEntry
+				clientCtx.Codec.UnmarshalJSON(rawEntry, &entry)
+				entries = append(entries, &entry)
 			}
 
 			msg := &ledger.MsgAppendRequest{

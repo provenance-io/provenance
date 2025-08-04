@@ -240,25 +240,32 @@ enum InterestAccrualMethod {
   INTEREST_ACCRUAL_METHOD_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_UNSPECIFIED"];
 
   // Simple Interest: Calculated only on the principal amount.
-  INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST = 1 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST"];
+  INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST = 1
+      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST"];
 
   // Compound Interest: Calculated on both the principal and on previously accumulated interest.
-  INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST = 2 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST"];
+  INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST = 2
+      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST"];
 
   // Daily Compounding: Interest is compounded on a daily basis.
-  INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING = 3 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING = 3
+      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING"];
 
   // Monthly Compounding: Interest is compounded each month.
-  INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING = 4 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING = 4
+      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING"];
 
   // Quarterly Compounding: Interest is compounded every quarter.
-  INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING = 5 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING = 5
+      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING"];
 
   // Annually Compounding: Interest is compounded once per year.
-  INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING = 6 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING = 6
+      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING"];
 
   // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
-  INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7
+      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING"];
 }
 
 // Payment frequencies for loan repayments
