@@ -151,6 +151,10 @@ func TestGetTreeCmd(t *testing.T) {
 				outLines := strings.Split(res.Stdout, "\n")
 				assert.Subset(t, outLines, tc.expInOutLines, "stdout")
 			}
+
+			if t.Failed() {
+				res.LogStd(t)
+			}
 		})
 	}
 }

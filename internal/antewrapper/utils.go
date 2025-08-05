@@ -17,6 +17,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/internal/provutils"
+	flatfees "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 const (
@@ -54,6 +55,13 @@ type (
 	FlatFeesKeeper interface {
 		CalculateMsgCost(ctx sdk.Context, msgs ...sdk.Msg) (upFront sdk.Coins, onSuccess sdk.Coins, err error)
 		ExpandMsgs(msgs []sdk.Msg) ([]sdk.Msg, error)
+		GetParams(ctx sdk.Context) flatfees.Params
+	}
+
+	// FeeConverter has the methods needed from the flatfees.ConversionFactor type that are needed in here.
+	FeeConverter interface {
+		GetDefinitionAmount() sdk.Coin
+		ConvertCoins(toConvert sdk.Coins) sdk.Coins
 	}
 
 	// FeegrantKeeper defines the expected feegrant keeper.

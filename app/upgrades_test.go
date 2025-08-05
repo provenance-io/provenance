@@ -1042,28 +1042,6 @@ var (
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
 )
 
-func (s *UpgradeTestSuite) TestAlyssum() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgPruneIBCExpiredConsensusStates,
-		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Unlocking select vesting accounts.",
-		"INF Transferring some locked funds.",
-	}
-	s.AssertUpgradeHandlerLogs("alyssum", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestAlyssumRC1() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgPruneIBCExpiredConsensusStates,
-		LogMsgConvertFinishedVestingAccountsToBase,
-	}
-	s.AssertUpgradeHandlerLogs("alyssum-rc1", expInLog, nil)
-}
-
 func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",

@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
@@ -43,43 +42,6 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"alyssum": { // Upgrade for v1.25.0
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-			removeInactiveValidatorDelegations(ctx, app)
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-
-			// Doing some account-specific stuff on mainnet that isn't applicable to testnet.
-			unlockVestingAccounts(ctx, app, getMainnetUnlocks())
-			_ = transferLocked(ctx, app)
-
-			return vm, nil
-		},
-	},
-	"alyssum-rc1": { // Upgrade for v1.25.0-rc1
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-			removeInactiveValidatorDelegations(ctx, app)
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-			return vm, nil
-		},
-	},
 	"bouvardia-rc1": { // Upgrade for v1.26.0-rc1.
 		Added:   []string{flatfeestypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
@@ -344,124 +306,6 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
-
-// getMainnetUnlocks gets a list of mainnet addresses to unlock.
-func getMainnetUnlocks() []sdk.AccAddress {
-	addrs := []string{
-		"pb15yfx2r9sxjzgrcdghvt8me9vvt540w4kg25mehwlcjm4jq2m2hmsh6af7z",
-		"pb14t3me36m9gpkdwpyczgevctlt6trdq46dugccdnrlu92n9eee0ss5k65tq",
-		"pb1e2fhljv44saqmewp6j6ra0y94e8vzfs9a9r4aq",
-		"pb1rkml5878l2daw3a7xvg48wqecnh9u9dn2dtl8g57rsctq5pnc00s9ej3xw",
-
-		"pb1npzfcx3qrtxnwuqxqnzufmk777nj6k4568t5n3",
-		"pb1y6hl64k2u5khyex5fzk5ss5nj5dqrxacvxvha6",
-		"pb13l7duyn5wn3tvuv08rkl8azee38s3xwp3x36rr",
-		"pb1x42u2yvpg2xq9me28rzg6x25qw379tsa8rua0v",
-		"pb1t5d3mm66cxsnyufqjk7y38m4zjes44avwncynu",
-		"pb1lermz6u6r7cjw4khamdxhddw8h2n4u4fsemx3t",
-		"pb1v0mjw2802n898gmhaceumltn2l4kdnsgtptezk",
-		"pb1m65lmxsrs5fdpley5frqaa55rfrl7c2e2dj507",
-	}
-
-	rv := make([]sdk.AccAddress, 0, len(addrs))
-	for _, str := range addrs {
-		// This will give an error if not on mainnet (where the HRP is "pb").
-		// If that happens, we ignore the errors and essentially end up with an empty list.
-		addr, err := sdk.AccAddressFromBech32(str)
-		if err == nil {
-			rv = append(rv, addr)
-		}
-	}
-
-	return rv
-}
-
-// transferLocked transfers some locked hash from one specific account to another, keeping it locked.
-// Part of the alyssum upgrade.
-func transferLocked(ctx sdk.Context, app *App) (err error) {
-	ctx.Logger().Info("Transferring some locked funds.")
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic (recovered): %v", r)
-		}
-		if err != nil {
-			ctx.Logger().Error("Error transferring some locked funds.", "error", err)
-		} else {
-			ctx.Logger().Info("Done transferring some locked funds.")
-		}
-	}()
-
-	from := "pb1mfejechmw7n70drzxkem3fu463ea9sc87kzz2m"
-	to := "pb1w07247yzrkcslcxtn0c2n6spxkzs4nnntet9x33r0jghhlgh7jdqgdvtpe"
-	moveAmt := sdk.NewInt64Coin("nhash", 40_250_000_000000000)
-	ctx.Logger().Debug(fmt.Sprintf("Transferring %s from %s to %s.", moveAmt, from, to))
-
-	fromAddr, err := sdk.AccAddressFromBech32(from)
-	if err != nil {
-		return fmt.Errorf("invalid source address %q: %w", from, err)
-	}
-	fromAcctI := app.AccountKeeper.GetAccount(ctx, fromAddr)
-	if fromAcctI == nil {
-		return fmt.Errorf("source account %q not found", from)
-	}
-	fromAcct, ok := fromAcctI.(*vesting.ContinuousVestingAccount)
-	if !ok {
-		return fmt.Errorf("source account %q is not a continuous vesting account, is %T", from, fromAcctI)
-	}
-
-	toAddr, err := sdk.AccAddressFromBech32(to)
-	if err != nil {
-		return fmt.Errorf("invalid destination address %q: %w", to, err)
-	}
-	toAcctI := app.AccountKeeper.GetAccount(ctx, toAddr)
-	if toAcctI == nil {
-		return fmt.Errorf("destination account %q not found", to)
-	}
-	toAcct, ok := toAcctI.(*authtypes.BaseAccount)
-	if !ok {
-		return fmt.Errorf("destination account %q is not a continuous vesting account, is %T", to, toAcctI)
-	}
-
-	// I already know that the source account's original vesting is more than 40.25M.
-	// So no worry about a negative here.
-	fromAcct.OriginalVesting = fromAcct.OriginalVesting.Sub(moveAmt)
-
-	// Adjust delegated vesting and delegated free.
-	delTot := fromAcct.DelegatedVesting.Add(fromAcct.DelegatedFree...)
-	var delVest, delFree sdk.Coins
-	for _, delCoin := range delTot {
-		ogv := fromAcct.OriginalVesting.AmountOf(delCoin.Denom)
-		if ogv.LTE(delCoin.Amount) {
-			delVest = delVest.Add(delCoin)
-		} else {
-			delVest = delVest.Add(sdk.NewCoin(delCoin.Denom, ogv))
-			delFree = delFree.Add(sdk.NewCoin(delCoin.Denom, delCoin.Amount.Sub(ogv)))
-		}
-	}
-	fromAcct.DelegatedVesting = delVest
-	fromAcct.DelegatedFree = delFree
-
-	newToAcct := &vesting.ContinuousVestingAccount{
-		BaseVestingAccount: &vesting.BaseVestingAccount{
-			BaseAccount:      toAcct,
-			OriginalVesting:  sdk.NewCoins(moveAmt),
-			DelegatedFree:    nil,
-			DelegatedVesting: nil,
-			EndTime:          fromAcct.EndTime,
-		},
-		StartTime: fromAcct.StartTime,
-	}
-
-	cacheCtx, writeCache := ctx.CacheContext()
-	app.AccountKeeper.SetAccount(cacheCtx, fromAcct)
-	err = app.BankKeeper.SendCoins(cacheCtx, fromAddr, toAddr, sdk.Coins{moveAmt})
-	if err != nil {
-		return fmt.Errorf("could not move funds to new account: %w", err)
-	}
-	app.AccountKeeper.SetAccount(cacheCtx, newToAcct)
-	writeCache()
-	return nil
-}
 
 // FlatFeesKeeper has the flatfees keeper methods needed for setting up flat fees.
 // Part of the bouvardia upgrade.
