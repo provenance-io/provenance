@@ -13,6 +13,7 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // CmdTx creates the tx command (and sub-commands) for the exchange module.
@@ -44,13 +45,12 @@ func CmdTx() *cobra.Command {
 
 func CmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		// TODO: Update optional fields to use flags instead of positional arguments
-		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> <status_type_id> [next_pmt_date] [next_pmt_amt] [interest_rate] [maturity_date]",
+		Use:     "create <asset_class_id> <nft_id> <ledger_class_id> <status_type_id>",
 		Aliases: []string{},
 		Short:   "Create a ledger for the nft_address",
-		Example: `$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" "IN_REPAYMENT" "2024-12-31" "1000.00" "0.05" "2025-12-31" --from mykey
-$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" "IN_REPAYMENT" --from mykey  # minimal example with required fields only`,
-		Args: cobra.MinimumNArgs(4),
+		Example: `$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --next-pmt-date "2024-12-31" --next-pmt-amt 1000 --interest-rate 5000000 --maturity-date "2025-12-31" --from mykey
+$ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from mykey  # minimal example with required fields only`,
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -60,11 +60,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" 
 			assetClassId := args[0]
 			nftId := args[1]
 			ledgerClassId := args[2]
-
-			statusTypeId, err := strconv.ParseInt(args[3], 10, 32)
-			if err != nil {
-				return fmt.Errorf("invalid <status_type_id>: %v", err)
-			}
+			statusTypeId, _ := strconv.ParseInt(args[3], 10, 32)
 
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
@@ -76,32 +72,94 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" 
 				StatusTypeId:  int32(statusTypeId),
 			}
 
-			// Add optional fields if provided
-			if len(args) > 4 {
-				nextPmtDate, err := helper.StrToDate(args[4])
+			// Get optional fields from flags
+			nextPmtDateStr, _ := cmd.Flags().GetString("next-pmt-date")
+			if nextPmtDateStr != "" {
+				nextPmtDate, err := helper.StrToDate(nextPmtDateStr)
 				if err != nil {
-					return fmt.Errorf("invalid <next_pmt_date>: %v", err)
+					return fmt.Errorf("invalid --next-pmt-date: %v", err)
 				}
 				ledgerObj.NextPmtDate = helper.DaysSinceEpoch(nextPmtDate.UTC())
+			}
 
-				ledgerObj.NextPmtAmt, err = strconv.ParseInt(args[5], 10, 64)
+			nextPmtAmt, _ := cmd.Flags().GetInt64("next-pmt-amt")
+			if nextPmtAmt > 0 {
+				ledgerObj.NextPmtAmt = nextPmtAmt
+			}
+
+			interestRate, _ := cmd.Flags().GetInt32("interest-rate")
+			if interestRate > 0 {
+				ledgerObj.InterestRate = interestRate
+			}
+
+			maturityDateStr, _ := cmd.Flags().GetString("maturity-date")
+			if maturityDateStr != "" {
+				maturityDate, err := helper.StrToDate(maturityDateStr)
 				if err != nil {
-					return fmt.Errorf("invalid <next_pmt_amt>: %v", err)
-				}
-
-				ledgerObj.StatusTypeId = int32(statusTypeId)
-
-				intRate, err := strconv.ParseInt(args[6], 10, 32)
-				if err != nil {
-					return fmt.Errorf("invalid <interest_rate>: %v", err)
-				}
-				ledgerObj.InterestRate = int32(intRate)
-
-				maturityDate, err := helper.StrToDate(args[7])
-				if err != nil {
-					return fmt.Errorf("invalid <maturity_date>: %v", err)
+					return fmt.Errorf("invalid --maturity-date: %v", err)
 				}
 				ledgerObj.MaturityDate = helper.DaysSinceEpoch(maturityDate.UTC())
+			}
+
+			// Get enum values from flags
+			dayCountConvention, _ := cmd.Flags().GetString("day-count-convention")
+			if dayCountConvention != "" {
+				switch dayCountConvention {
+				case "actual-365":
+					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_ACTUAL_365
+				case "actual-360":
+					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_ACTUAL_360
+				case "thirty-360":
+					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_THIRTY_360
+				case "actual-actual":
+					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_ACTUAL_ACTUAL
+				case "days-365":
+					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_DAYS_365
+				case "days-360":
+					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_DAYS_360
+				default:
+					return fmt.Errorf("invalid --day-count-convention: %s", dayCountConvention)
+				}
+			}
+
+			interestAccrualMethod, _ := cmd.Flags().GetString("interest-accrual-method")
+			if interestAccrualMethod != "" {
+				switch interestAccrualMethod {
+				case "simple":
+					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST
+				case "compound":
+					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST
+				case "daily":
+					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING
+				case "monthly":
+					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING
+				case "quarterly":
+					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING
+				case "annual":
+					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING
+				case "continuous":
+					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING
+				default:
+					return fmt.Errorf("invalid --interest-accrual-method: %s", interestAccrualMethod)
+				}
+			}
+
+			paymentFrequency, _ := cmd.Flags().GetString("payment-frequency")
+			if paymentFrequency != "" {
+				switch paymentFrequency {
+				case "daily":
+					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_DAILY
+				case "weekly":
+					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_WEEKLY
+				case "monthly":
+					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_MONTHLY
+				case "quarterly":
+					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_QUARTERLY
+				case "annually":
+					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_ANNUALLY
+				default:
+					return fmt.Errorf("invalid --payment-frequency: %s", paymentFrequency)
+				}
 			}
 
 			msg := &ledger.MsgCreateRequest{
@@ -112,6 +170,17 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" "nhash" 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	// Add custom flags
+	ledgerFlags := pflag.NewFlagSet("ledger", pflag.ContinueOnError)
+	ledgerFlags.String("next-pmt-date", "", "Next payment date (YYYY-MM-DD)")
+	ledgerFlags.Int64("next-pmt-amt", 0, "Next payment amount")
+	ledgerFlags.Int("interest-rate", 0, "Interest rate (10000000 = 10.000000%)")
+	ledgerFlags.String("maturity-date", "", "Maturity date (YYYY-MM-DD)")
+	ledgerFlags.String("day-count-convention", "", "Day count convention (actual-365, actual-360, thirty-360, actual-actual, days-365, days-360)")
+	ledgerFlags.String("interest-accrual-method", "", "Interest accrual method (simple, compound, daily, monthly, quarterly, annual, continuous)")
+	ledgerFlags.String("payment-frequency", "", "Payment frequency (daily, weekly, monthly, quarterly, annually)")
+	cmd.Flags().AddFlagSet(ledgerFlags)
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
