@@ -515,7 +515,6 @@ func MakeFlatFeesParams() flatfeestypes.Params {
 // MakeFlatFeesCosts returns the list of MsgFees that we want to set.
 // Part of the bouvardia upgrade.
 func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
-	// TODO[fees]: Identify the new Msgs being added, how much we want them to cost, and add them to this list.
 	return []*flatfeestypes.MsgFee{
 		// Free Msg types. These are gov-prop-only Msg types. A gov prop costs $2.00 + the cost of each msg in it.
 		// So even though these msgs are free, it'll still cost $2.00 to submit one.
@@ -561,6 +560,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateConversionFactorRequest"),
 		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateMsgFeesRequest"),
 		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.hold.v1.MsgUnlockVestingAccountsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibchooks.v1.MsgUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgUpdateParamsRequest"),
@@ -583,8 +583,12 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.oracle.v1.MsgUpdateOracleRequest"),
 
-		// Msgs that cost $0.005
+		// Msgs that cost $0.005.
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddNetAssetValuesRequest", feeDefCoin(5)),
+
+		// Msgs that cost $0.01.
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgDestroyRequest", feeDefCoin(10)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgRevokeGrantAllowanceRequest", feeDefCoin(10)),
 
 		// Msgs that cost $0.05.
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgExec", feeDefCoin(50)),
@@ -601,18 +605,31 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgDeposit", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgExec", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgWithdrawProposal", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.nft.v1beta1.MsgSend", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgAcknowledgement", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgRecvPacket", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgAcceptPaymentRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgCommitFundsRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketTransferCommitmentRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentsRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAddClassBucketTypeRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAddClassEntryTypeRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAddClassStatusTypeRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateBalancesRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateInterestRateRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateMaturityDateRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdatePaymentRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateStatusRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgActivateRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddNetAssetValuesRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgFinalizeRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgGrantAllowanceRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSetDenomMetadataRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgGrantRole", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgRevokeRole", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgUnregisterNFT", feeDefCoin(50)),
 
 		// Msgs that cost $0.10.
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgGrant", feeDefCoin(100)),
@@ -630,6 +647,8 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateEnabledRequest", feeDefCoin(100)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest", feeDefCoin(100)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateUserSettleRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAppendRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgTransferFundsWithSettlementRequest", feeDefCoin(100)),
 		flatfeestypes.NewMsgFee("/provenance.trigger.v1.MsgCreateTriggerRequest", feeDefCoin(100)),
 
 		// The default cost is $0.15. All Msg types not in this list will use the default.
@@ -645,6 +664,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract2", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/ibc.core.client.v1.MsgCreateClient", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateAssetClass", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgMigrateValueOwnerRequest", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgUpdateValueOwnersRequest", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteContractSpecificationRequest", feeDefCoin(500)),
@@ -655,6 +675,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		// Msgs that cost $1.00.
 		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgSubmitProposal", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgStoreCode", feeDefCoin(1000)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteScopeRequest", feeDefCoin(1000)),
@@ -669,7 +690,19 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgSubmitProposal", feeDefCoin(2000)),
 
 		// Msgs that cost $3.00.
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreatePool", feeDefCoin(3000)),
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateSecuritization", feeDefCoin(3000)),
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateTokenization", feeDefCoin(3000)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest", feeDefCoin(3000)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddMarkerRequest", feeDefCoin(3000)),
+
+		// Msgs that cost $5.00.
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateClassRequest", feeDefCoin(5000)),
+
+		// Msgs that cost $17.00.
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgRegisterNFT", feeDefCoin(17000)),
+
+		// Msgs that cost $18.00.
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateAsset", feeDefCoin(18000)),
 	}
 }
