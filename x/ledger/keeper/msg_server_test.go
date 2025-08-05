@@ -47,7 +47,7 @@ type MockKeeper struct {
 	UpdateLedgerStatusArgs []*types.LedgerKey
 }
 
-var _ keeper.Keeper = (*MockKeeper)(nil)
+// var _ keeper.Keeper = (*MockKeeper)(nil)
 
 // NewMockKeeper creates a new (ledger) MockKeeper for use in the msg-server tests.
 func NewMockKeeper() *MockKeeper {
@@ -98,7 +98,7 @@ func (k *MockKeeper) WithExpAddLedger(ledgers ...*types.Ledger) *MockKeeper {
 
 // WithExpGetLedger adds the provided ledger keys to the list of expected calls to GetLedger.
 // This method both updates the receiver and returns it.
-func (k *MockKeeper) WithExpGetLedger(ledgerKeys ...*types.LedgerKey) *MockKeeper {
+func (k *MockKeeper) WithExpGetLedger(ledgerKeys ...*types.Ledger) *MockKeeper {
 	k.GetLedgerExp = append(k.GetLedgerExp, ledgerKeys...)
 	return k
 }
@@ -110,8 +110,6 @@ func (k *MockKeeper) WithExpUpdateLedgerStatus(ledgerKeys ...*types.LedgerKey) *
 	return k
 }
 
-// shiftErr removes the first entry from errs. If it's not an empty string, it's converted to an error and also returned.
-// If errs is empty, or the first entry is an empty string, no error is returned (but the 1st entry is still removed).
 func shiftErr(errs []string) ([]string, error) {
 	var err error
 	if len(errs) > 0 {
@@ -119,9 +117,9 @@ func shiftErr(errs []string) ([]string, error) {
 		errs = errs[1:]
 		switch {
 		case errMsg == "ErrLedgerDoesNotExist":
-			err = types.ErrLedgerDoesNotExist
+			err = types.ErrNotFound
 		case errMsg == "ErrLedgerClassDoesNotExist":
-			err = types.ErrLedgerClassDoesNotExist
+			err = types.ErrNotFound
 		case len(errMsg) > 0:
 			err = errors.New(errMsg)
 		}
@@ -269,7 +267,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 				expResp = &types.MsgCreateResponse{}
 			}
 
-			msgServer := keeper.NewMsgServer(tc.kpr)
+			msgServer := keeper.NewMsgServer(s.app.LedgerKeeper)
 			var err error
 			testFunc := func() {
 				actResp, err = msgServer.Create(s.ctx, tc.req)
@@ -346,7 +344,7 @@ func (s *MsgServerTestSuite) TestUpdateStatus() {
 				expResp = &types.MsgUpdateStatusResponse{}
 			}
 
-			msgServer := keeper.NewMsgServer(tc.kpr)
+			msgServer := keeper.NewMsgServer(s.app.LedgerKeeper)
 			var err error
 			testFunc := func() {
 				actResp, err = msgServer.UpdateStatus(s.ctx, tc.req)

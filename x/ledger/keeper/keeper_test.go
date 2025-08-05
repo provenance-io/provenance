@@ -19,6 +19,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
+	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
 )
@@ -95,45 +96,45 @@ func (s *TestSuite) ConfigureTest() {
 		MaintainerAddress: s.addr1.String(),
 		Denom:             s.bondDenom,
 	}
-	s.keeper.AddLedgerClass(s.ctx, s.addr1, s.validLedgerClass)
+	s.keeper.AddLedgerClass(s.ctx, s.validLedgerClass)
 
-	s.keeper.AddClassEntryType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          1,
 		Code:        "SCHEDULED_PAYMENT",
 		Description: "Scheduled Payment",
 	})
 
-	s.keeper.AddClassEntryType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          2,
 		Code:        "DISBURSEMENT",
 		Description: "Disbursement",
 	})
 
-	s.keeper.AddClassEntryType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          3,
 		Code:        "ORIGINATION_FEE",
 		Description: "Origination Fee",
 	})
 
-	s.keeper.AddClassBucketType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          1,
 		Code:        "PRINCIPAL",
 		Description: "Principal",
 	})
 
-	s.keeper.AddClassBucketType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          2,
 		Code:        "INTEREST",
 		Description: "Interest",
 	})
 
-	s.keeper.AddClassBucketType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          3,
 		Code:        "ESCROW",
 		Description: "Escrow",
 	})
 
-	s.keeper.AddClassStatusType(s.ctx, s.addr1, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          1,
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
@@ -160,13 +161,13 @@ func (s *TestSuite) TestNonExistentDenom() {
 		MaintainerAddress: s.addr1.String(),
 		Denom:             "non-existent-denom",
 	}
-	err := s.keeper.AddLedgerClass(s.ctx, s.addr1, ledgerClass)
+	err := s.keeper.AddLedgerClass(s.ctx, ledgerClass)
 	s.Require().Error(err, "CreateLedgerClass error")
 	s.Require().Contains(err.Error(), "denom doesn't have a supply", "CreateLedgerClass error")
 }
 
 func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
-	err := s.keeper.AddClassEntryType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	err := s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          1,
 		Code:        "SCHEDULED_PAYMENT",
 		Description: "Scheduled Payment",
@@ -174,7 +175,7 @@ func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
 	s.Require().Error(err, "AddClassEntryType error")
 	s.Require().Contains(err.Error(), ledger.ErrCodeUnauthorized, "AddClassEntryType error")
 
-	err = s.keeper.AddClassBucketType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          1,
 		Code:        "PRINCIPAL",
 		Description: "Principal",
@@ -182,7 +183,7 @@ func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
 	s.Require().Error(err, "AddClassBucketType error")
 	s.Require().Contains(err.Error(), ledger.ErrCodeUnauthorized, "AddClassBucketType error")
 
-	err = s.keeper.AddClassStatusType(s.ctx, s.addr2, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	err = s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          1,
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
@@ -202,7 +203,7 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.AddLedger(s.ctx, s.addr2, ledger)
+	err := s.keeper.AddLedger(s.ctx, ledger)
 	s.Require().Error(err, "CreateLedger error")
 	s.Require().Contains(err.Error(), "unauthorized", "CreateLedger error")
 
@@ -215,7 +216,7 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 	err = s.registryKeeper.CreateRegistry(s.ctx, s.addr1, registryKey, []registry.RolesEntry{})
 	s.Require().NoError(err, "CreateRegistry error")
 
-	err = s.keeper.AddLedger(s.ctx, s.addr2, ledger)
+	err = s.keeper.AddLedger(s.ctx, ledger)
 	s.Require().Error(err, "CreateLedger error")
 
 	// Grant a role of servicer to the s.addr2 so that it can create the ledger
@@ -228,7 +229,7 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 	s.Require().True(hasRole, "HasRole error")
 
 	// Verify that the s.addr2 can create the ledger as the servicer
-	err = s.keeper.AddLedger(s.ctx, s.addr2, ledger)
+	err = s.keeper.AddLedger(s.ctx, ledger)
 	s.Require().NoError(err, "CreateLedger error")
 }
 
@@ -263,7 +264,7 @@ func (s *TestSuite) TestCreateLedgerClass() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.AddLedgerClass(s.ctx, s.addr1, tc.ledgerClass)
+			err := s.keeper.AddLedgerClass(s.ctx, tc.ledgerClass)
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "CreateLedgerClass error")
 			} else {
@@ -324,7 +325,7 @@ func (s *TestSuite) TestCreateLedger() {
 			// Clear events before each test
 			s.ctx.EventManager().Events()
 
-			err := s.keeper.AddLedger(s.ctx, s.addr1, tc.ledger)
+			err := s.keeper.AddLedger(s.ctx, tc.ledger)
 
 			if len(tc.expErr) > 0 {
 				s.assertErrorContents(err, tc.expErr, "CreateLedger error")
@@ -344,14 +345,14 @@ func (s *TestSuite) TestCreateLedger() {
 					// Find the expected event
 					var foundEvent *sdk.Event
 					for _, e := range s.ctx.EventManager().Events() {
-						if e.Type == ledger.EventTypeLedgerCreated {
+						if e.Type == "EventLedgerCreated" {
 							foundEvent = &e
 							break
 						}
 					}
 
 					s.Require().NotNil(foundEvent)
-					s.Require().Equal(ledger.EventTypeLedgerCreated, foundEvent.Type, "event type")
+					s.Require().Equal("EventLedgerCreated", foundEvent.Type, "event type")
 					s.Require().Len(foundEvent.Attributes, 2, "event attributes length")
 					s.Require().Equal("asset_class_id", foundEvent.Attributes[0].Key, "event asset class id key")
 					s.Require().Equal(tc.ledger.Key.AssetClassId, foundEvent.Attributes[0].Value, "event asset class id value")
@@ -374,7 +375,7 @@ func (s *TestSuite) TestGetLedger() {
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
-	err := s.keeper.AddLedger(s.ctx, s.addr1, validLedger)
+	err := s.keeper.AddLedger(s.ctx, validLedger)
 	s.Require().NoError(err, "CreateLedger error")
 
 	tests := []struct {
@@ -387,21 +388,6 @@ func (s *TestSuite) TestGetLedger() {
 			name:      "valid ledger retrieval",
 			nftId:     s.validNFT.Id,
 			expLedger: &validLedger,
-		},
-		{
-			name:   "empty nft address",
-			nftId:  "",
-			expErr: []string{"nft_id"},
-		},
-		{
-			name:      "non-existent ledger",
-			nftId:     s.addr2.String(),
-			expLedger: nil,
-		},
-		{
-			name:   "invalid nft address",
-			nftId:  "invalid",
-			expErr: nil,
 		},
 	}
 
@@ -442,10 +428,8 @@ func (s *TestSuite) TestGetLedgerEntry() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, l)
 	s.Require().NoError(err, "CreateLedger error")
-
-	expErr := ledger.ErrCodeNotFound
 
 	// Test cases
 	tests := []struct {
@@ -453,18 +437,8 @@ func (s *TestSuite) TestGetLedgerEntry() {
 		key           *ledger.LedgerKey
 		correlationId string
 		expEntry      *ledger.LedgerEntry
-		expErr        *string
+		expErr        *types.ErrCode
 	}{
-		{
-			name: "invalid nft address",
-			key: &ledger.LedgerKey{
-				AssetClassId: s.validNFTClass.Id,
-				NftId:        "invalid",
-			},
-			correlationId: "test-correlation-id",
-			expEntry:      nil,
-			expErr:        &expErr,
-		},
 		{
 			name: "not found",
 			key: &ledger.LedgerKey{
@@ -537,15 +511,18 @@ func (s *TestSuite) TestAppendEntry() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, l)
 	s.Require().NoError(err, "CreateLedger error")
+
+	notFoundErr := func() *ledger.ErrCode { err := ledger.ErrCodeNotFound; return &err }()
+	invalidFieldErr := func() *ledger.ErrCode { err := ledger.ErrCodeInvalidField; return &err }()
 
 	// Test cases
 	tests := []struct {
 		name   string
 		key    *ledger.LedgerKey
 		entry  ledger.LedgerEntry
-		expErr *string
+		expErr *types.ErrCode
 	}{
 		{
 			name: "invalid nft address",
@@ -570,7 +547,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-9",
 			},
-			expErr: helper.StrPtr(ledger.ErrCodeNotFound),
+			expErr: notFoundErr,
 		},
 		{
 			name: "not found",
@@ -595,7 +572,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-10",
 			},
-			expErr: helper.StrPtr(ledger.ErrCodeNotFound),
+			expErr: notFoundErr,
 		},
 		{
 			name: "amounts_do_not_sum_to_total",
@@ -620,7 +597,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-11",
 			},
-			expErr: helper.StrPtr(ledger.ErrCodeInvalidField),
+			expErr: invalidFieldErr,
 		},
 		{
 			name: "valid amounts and balances",
@@ -695,7 +672,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-14",
 			},
-			expErr: helper.StrPtr(ledger.ErrCodeInvalidField),
+			expErr: func() *ledger.ErrCode { err := ledger.ErrCodeInvalidField; return &err }(),
 		},
 		{
 			name: "allow negative principal applied amount",
@@ -726,7 +703,7 @@ func (s *TestSuite) TestAppendEntry() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.AppendEntries(s.ctx, s.addr1, tc.key, []*ledger.LedgerEntry{&tc.entry})
+			err := s.keeper.AppendEntries(s.ctx, tc.key, []*ledger.LedgerEntry{&tc.entry})
 			if tc.expErr != nil {
 				s.Require().Error(err, "AppendEntry error")
 				s.Require().Contains(err.Error(), *tc.expErr, "AppendEntry error type")
@@ -748,7 +725,7 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create test entries with the same effective date but different sequence numbers
@@ -811,21 +788,21 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 
 	// Add entries in a specific order to test sequence number adjustment
 	// First add entry with sequence 2
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{entries[1]})
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{entries[1]})
 	s.Require().NoError(err, "AppendEntry error for sequence 2")
 	allEntries, err := s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(2), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Then add entry with sequence 1
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{entries[0]})
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{entries[0]})
 	s.Require().NoError(err, "AppendEntry error for sequence 1")
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-2")
 
 	// Finally add entry with sequence 3
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{entries[2]})
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{entries[2]})
 	s.Require().NoError(err, "AppendEntry error for sequence 3")
 	allEntries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
 	s.Require().NoError(err, "ListLedgerEntries error")
@@ -861,7 +838,7 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 		CorrelationId: "test-correlation-id-4",
 	}
 
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&newEntry})
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&newEntry})
 	s.Require().NoError(err, "AppendEntry error for new entry with sequence 2")
 
 	// Get all entries again and verify updated sequence numbers
@@ -887,7 +864,7 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create a test entry
@@ -911,11 +888,11 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 	}
 
 	// Add the entry successfully
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry})
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&entry})
 	s.Require().NoError(err, "AppendEntry error for first entry")
 
 	// Try to add the same entry again with the same correlation ID
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry})
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&entry})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
 	s.Require().Contains(err.Error(), ledger.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
@@ -944,7 +921,7 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 		CorrelationId: "test-correlation-id-1",
 	}
 
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, []*ledger.LedgerEntry{&entry2})
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&entry2})
 	s.Require().Error(err, "AppendEntry should fail for duplicate correlation ID")
 	s.Require().Contains(err.Error(), ledger.ErrCodeAlreadyExists, "error should be ErrCodeAlreadyExists")
 
@@ -966,7 +943,7 @@ func (s *TestSuite) TestGetBalances() {
 		StatusTypeId:  1,
 	}
 
-	err := s.keeper.AddLedger(s.ctx, s.addr1, l)
+	err := s.keeper.AddLedger(s.ctx, l)
 	s.Require().NoError(err, "CreateLedger error")
 
 	// Create a test entry
@@ -1059,7 +1036,7 @@ func (s *TestSuite) TestGetBalances() {
 	}
 
 	// Add entries to the ledger
-	err = s.keeper.AppendEntries(s.ctx, s.addr1, l.Key, entries)
+	err = s.keeper.AppendEntries(s.ctx, l.Key, entries)
 	s.Require().NoError(err, "AppendEntries error")
 
 	entries, err = s.keeper.ListLedgerEntries(s.ctx, l.Key)
@@ -1086,15 +1063,14 @@ func (s *TestSuite) TestBech32() {
 
 	expectedBech32Str := "ledger1w3jhxapdden8gttrd3shxuedd9jr5cm0wdkk7ue3x44hjwtyw5uxzvnhd3ehg73kvec8svmsx3khzur209ex6dtrvack5amv8pehzv7wxj4"
 
-	bech32Id, err := keeper.LedgerKeyToString(ledgerKey)
-	s.Require().NoError(err, "LedgerKeyToString error")
-	s.Require().Equal(expectedBech32Str, *bech32Id)
+	bech32Id := ledgerKey.String()
+	s.Require().Equal(expectedBech32Str, bech32Id)
 
-	ledgerKey2, err := keeper.StringToLedgerKey(*bech32Id)
+	ledgerKey2, err := types.StringToLedgerKey(bech32Id)
 	s.Require().NoError(err, "StringToLedgerKey error")
 	s.Require().Equal(ledgerKey, ledgerKey2, "ledger keys should be equal")
 
-	_, err = keeper.StringToLedgerKey("ledgerasdf1w3jhxapdden8gttrd3shxuedd9jr5cm0wdkk7ue3x44hjwtyw5uxzvnhd3ehg73kvec8svmsx3khzur209ex6dtrvack5amv8pehzv7wxj4")
+	_, err = types.StringToLedgerKey("ledgerasdf1w3jhxapdden8gttrd3shxuedd9jr5cm0wdkk7ue3x44hjwtyw5uxzvnhd3ehg73kvec8svmsx3khzur209ex6dtrvack5amv8pehzv7wxj4")
 	s.Require().Error(err, "StringToLedgerKey error")
 }
 
