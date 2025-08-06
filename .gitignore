@@ -56,3 +56,6 @@ proto/gen/
 
 # act (local GitHub workflow runner: https://github.com/nektos/act)
 .secrets
+
+# Typical file for go coverage output
+coverage.out
