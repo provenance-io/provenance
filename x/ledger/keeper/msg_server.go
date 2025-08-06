@@ -22,6 +22,10 @@ func NewMsgServer(k Keeper) ledger.MsgServer {
 func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) (*ledger.MsgAppendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
+
 	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
@@ -35,6 +39,10 @@ func (k *MsgServer) Append(goCtx context.Context, req *ledger.MsgAppendRequest) 
 
 func (k *MsgServer) UpdateBalances(goCtx context.Context, req *ledger.MsgUpdateBalancesRequest) (*ledger.MsgUpdateBalancesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
 
 	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
@@ -50,6 +58,10 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *ledger.MsgUpdateB
 func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) (*ledger.MsgCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if k.HasLedger(ctx, req.Ledger.Key) {
+		return nil, ledger.NewErrCodeAlreadyExists("ledger")
+	}
+
 	if err := k.RequireAuthority(ctx, req.Authority, req.Ledger.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
@@ -62,6 +74,10 @@ func (k *MsgServer) Create(goCtx context.Context, req *ledger.MsgCreateRequest) 
 
 func (k *MsgServer) UpdateStatus(goCtx context.Context, req *ledger.MsgUpdateStatusRequest) (*ledger.MsgUpdateStatusResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
 
 	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
@@ -77,6 +93,10 @@ func (k *MsgServer) UpdateStatus(goCtx context.Context, req *ledger.MsgUpdateSta
 func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *ledger.MsgUpdateInterestRateRequest) (*ledger.MsgUpdateInterestRateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
+
 	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
@@ -90,6 +110,10 @@ func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *ledger.MsgUpd
 
 func (k *MsgServer) UpdatePayment(goCtx context.Context, req *ledger.MsgUpdatePaymentRequest) (*ledger.MsgUpdatePaymentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
 
 	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
@@ -105,6 +129,10 @@ func (k *MsgServer) UpdatePayment(goCtx context.Context, req *ledger.MsgUpdatePa
 func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *ledger.MsgUpdateMaturityDateRequest) (*ledger.MsgUpdateMaturityDateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
+
 	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
@@ -118,6 +146,10 @@ func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *ledger.MsgUpd
 
 func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *ledger.MsgTransferFundsWithSettlementRequest) (*ledger.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.HasLedger(ctx, req.Transfers[0].Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
 
 	if err := k.RequireAuthority(ctx, req.Authority, req.Transfers[0].Key.ToRegistryKey()); err != nil {
 		return nil, err
@@ -138,6 +170,10 @@ func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *ledg
 
 func (k *MsgServer) Destroy(goCtx context.Context, req *ledger.MsgDestroyRequest) (*ledger.MsgDestroyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, ledger.NewErrCodeNotFound("ledger")
+	}
 
 	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
@@ -168,11 +204,19 @@ func (k *MsgServer) CreateLedgerClass(goCtx context.Context, req *ledger.MsgCrea
 func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *ledger.MsgAddLedgerClassStatusTypeRequest) (*ledger.MsgAddLedgerClassStatusTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	has, err := k.LedgerClasses.Has(ctx, req.LedgerClassId)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, ledger.NewErrCodeNotFound("ledger_class")
+	}
+
 	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
 		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
 	}
 
-	err := k.AddClassStatusType(ctx, req.LedgerClassId, *req.StatusType)
+	err = k.AddClassStatusType(ctx, req.LedgerClassId, *req.StatusType)
 	if err != nil {
 		return nil, err
 	}
@@ -183,6 +227,14 @@ func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *ledger.
 // AddLedgerClassEntryType handles the MsgAddLedgerClassEntryTypeRequest message
 func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *ledger.MsgAddLedgerClassEntryTypeRequest) (*ledger.MsgAddLedgerClassEntryTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	has, err := k.LedgerClasses.Has(ctx, req.LedgerClassId)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, ledger.NewErrCodeNotFound("ledger_class")
+	}
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
 		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
@@ -198,6 +250,14 @@ func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *ledger.M
 // AddLedgerClassBucketType handles the MsgAddLedgerClassBucketTypeRequest message
 func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *ledger.MsgAddLedgerClassBucketTypeRequest) (*ledger.MsgAddLedgerClassBucketTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	has, err := k.LedgerClasses.Has(ctx, req.LedgerClassId)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, ledger.NewErrCodeNotFound("ledger_class")
+	}
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
 		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")

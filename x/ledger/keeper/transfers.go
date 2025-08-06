@@ -44,7 +44,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 		}
 
 		if err := k.BankKeeper.SendCoins(ctx, authorityAddr, recipientAddr, sdk.NewCoins(inst.Amount)); err != nil {
-			return types.NewErrCodeInternal("bank failed to send coins")
+			return err
 		}
 
 		// Set the xfer status to completed

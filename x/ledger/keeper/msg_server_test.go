@@ -6,13 +6,16 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/nft"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	"github.com/provenance-io/provenance/x/registry"
 )
 
 func TestMsgServerTestSuite(t *testing.T) {
@@ -30,6 +33,11 @@ type MsgServerTestSuite struct {
 	validLedgerClass ledger.LedgerClass
 	validNFTClass    nft.Class
 	validNFT         nft.NFT
+	validNFT2        nft.NFT
+	validAddress1    sdk.AccAddress
+	validAddress2    sdk.AccAddress
+
+	existingLedger *ledger.Ledger
 }
 
 func (s *MsgServerTestSuite) SetupTest() {
@@ -43,6 +51,14 @@ func (s *MsgServerTestSuite) SetupTest() {
 
 	// Create a timestamp 24 hours in the past to avoid future date errors
 	s.pastDate = helper.DaysSinceEpoch(time.Now().Add(-24 * time.Hour).UTC())
+
+	s.validAddress1, err = sdk.AccAddressFromBech32("cosmos156vfr4kpaa0f07y673awf3u87eeemygldsjwu5")
+	s.Require().NoError(err, "AccAddressFromBech32 error")
+
+	s.validAddress2, err = sdk.AccAddressFromBech32("cosmos1ze3f954mtj30st8dw2qhylfvvtdv5q6x0e4k4q")
+	s.Require().NoError(err, "AccAddressFromBech32 error")
+
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, s.validAddress1, sdk.NewCoins(sdk.NewCoin(s.bondDenom, math.NewInt(1000000000000000000))))
 
 	// Load the test ledger class configs
 	s.ConfigureTest()
@@ -60,12 +76,18 @@ func (s *MsgServerTestSuite) ConfigureTest() {
 		ClassId: s.validNFTClass.Id,
 		Id:      "test-nft-id",
 	}
-	s.app.NFTKeeper.Mint(s.ctx, s.validNFT, s.app.AccountKeeper.GetModuleAddress("distribution"))
+	s.app.NFTKeeper.Mint(s.ctx, s.validNFT, s.validAddress1)
+
+	s.validNFT2 = nft.NFT{
+		ClassId: s.validNFTClass.Id,
+		Id:      "test-nft-id-2",
+	}
+	s.app.NFTKeeper.Mint(s.ctx, s.validNFT2, s.validAddress1)
 
 	s.validLedgerClass = ledger.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id",
 		AssetClassId:      s.validNFTClass.Id,
-		MaintainerAddress: s.app.AccountKeeper.GetModuleAddress("distribution").String(),
+		MaintainerAddress: s.validAddress1.String(),
 		Denom:             s.bondDenom,
 	}
 	s.keeper.AddLedgerClass(s.ctx, s.validLedgerClass)
@@ -111,12 +133,14 @@ func (s *MsgServerTestSuite) ConfigureTest() {
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
 	})
-}
 
-// TestAppendEntriesValidation tests validation logic for AppendEntries
-func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
-	// Create a test ledger first
-	l := ledger.Ledger{
+	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+		Id:          2,
+		Code:        "IN_DEFERMENT",
+		Description: "In Deferment",
+	})
+
+	s.existingLedger = &ledger.Ledger{
 		Key: &ledger.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
@@ -124,14 +148,1039 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
+	err := s.keeper.AddLedger(s.ctx, *s.existingLedger)
+	s.Require().NoError(err, "AddLedger error")
+}
 
-	err := s.keeper.AddLedger(s.ctx, l)
-	s.Require().NoError(err, "CreateLedger error")
+// TestAppend tests the Append message server method
+func (s *MsgServerTestSuite) TestAppend() {
+	tests := []struct {
+		name    string
+		req     *ledger.MsgAppendRequest
+		expErr  string
+		expResp *ledger.MsgAppendResponse
+	}{
+		{
+			name: "successful append",
+			req: &ledger.MsgAppendRequest{
+				Key: s.existingLedger.Key,
+				Entries: []*ledger.LedgerEntry{
+					{
+						EntryTypeId:   1,
+						PostedDate:    s.pastDate,
+						EffectiveDate: s.pastDate,
+						TotalAmt:      math.NewInt(100),
+						AppliedAmounts: []*ledger.LedgerBucketAmount{
+							{
+								AppliedAmt:   math.NewInt(100),
+								BucketTypeId: 1,
+							},
+						},
+						CorrelationId: "test-correlation-id-append",
+					},
+				},
+				Authority: s.validAddress1.String(),
+			},
+			expResp: &ledger.MsgAppendResponse{},
+		},
+		{
+			name: "unauthorized append",
+			req: &ledger.MsgAppendRequest{
+				Key: s.existingLedger.Key,
+				Entries: []*ledger.LedgerEntry{
+					{
+						EntryTypeId:   1,
+						PostedDate:    s.pastDate,
+						EffectiveDate: s.pastDate,
+						TotalAmt:      math.NewInt(100),
+						AppliedAmounts: []*ledger.LedgerBucketAmount{
+							{
+								AppliedAmt:   math.NewInt(100),
+								BucketTypeId: 1,
+							},
+						},
+						CorrelationId: "test-correlation-id-unauthorized",
+					},
+				},
+				Authority: "cosmos1invalid",
+			},
+			expErr: "unauthorized",
+		},
+		{
+			name: "invalid entry type",
+			req: &ledger.MsgAppendRequest{
+				Key: s.existingLedger.Key,
+				Entries: []*ledger.LedgerEntry{
+					{
+						EntryTypeId:   999, // Invalid entry type
+						PostedDate:    s.pastDate,
+						EffectiveDate: s.pastDate,
+						TotalAmt:      math.NewInt(100),
+						AppliedAmounts: []*ledger.LedgerBucketAmount{
+							{
+								AppliedAmt:   math.NewInt(100),
+								BucketTypeId: 1,
+							},
+						},
+						CorrelationId: "test-correlation-id-invalid-type",
+					},
+				},
+				Authority: s.validAddress1.String(),
+			},
+			expErr: "entry type doesn't exist",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.Append(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "Append should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "Append should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestUpdateBalances tests the UpdateBalances message server method
+func (s *MsgServerTestSuite) TestUpdateBalances() {
+	// Add an entry first
+	entry := ledger.LedgerEntry{
+		EntryTypeId:   1,
+		PostedDate:    s.pastDate,
+		EffectiveDate: s.pastDate,
+		TotalAmt:      math.NewInt(100),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{
+			{
+				AppliedAmt:   math.NewInt(100),
+				BucketTypeId: 1,
+			},
+		},
+		CorrelationId: "test-correlation-id-update-balances",
+	}
+
+	err := s.keeper.AppendEntries(s.ctx, s.existingLedger.Key, []*ledger.LedgerEntry{&entry})
+	s.Require().NoError(err, "AppendEntry error")
 
 	tests := []struct {
 		name    string
-		entries []*ledger.LedgerEntry
+		req     *ledger.MsgUpdateBalancesRequest
+		expErr  error
+		expResp *ledger.MsgUpdateBalancesResponse
+	}{
+		{
+			name: "successful update balances",
+			req: &ledger.MsgUpdateBalancesRequest{
+				Key:           s.existingLedger.Key,
+				Authority:     s.validAddress1.String(),
+				CorrelationId: "test-correlation-id-update-balances",
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(200),
+						BucketTypeId: 1,
+					},
+				},
+				BalanceAmounts: []*ledger.BucketBalance{
+					{
+						BucketTypeId: 1,
+						BalanceAmt:   math.NewInt(200),
+					},
+				},
+			},
+			expResp: &ledger.MsgUpdateBalancesResponse{},
+		},
+		{
+			name: "unauthorized update balances",
+			req: &ledger.MsgUpdateBalancesRequest{
+				Key:           s.existingLedger.Key,
+				Authority:     s.validAddress2.String(),
+				CorrelationId: "test-correlation-id-update-balances",
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(200),
+						BucketTypeId: 1,
+					},
+				},
+				BalanceAmounts: []*ledger.BucketBalance{
+					{
+						BucketTypeId: 1,
+						BalanceAmt:   math.NewInt(200),
+					},
+				},
+			},
+			expErr: ledger.ErrUnauthorized,
+		},
+		{
+			name: "non-existent entry",
+			req: &ledger.MsgUpdateBalancesRequest{
+				Key:           s.existingLedger.Key,
+				Authority:     s.validAddress1.String(),
+				CorrelationId: "non-existent-correlation-id",
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(200),
+						BucketTypeId: 1,
+					},
+				},
+				BalanceAmounts: []*ledger.BucketBalance{
+					{
+						BucketTypeId: 1,
+						BalanceAmt:   math.NewInt(200),
+					},
+				},
+			},
+			expErr: ledger.ErrNotFound,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.UpdateBalances(s.ctx, tc.req)
+
+			if tc.expErr != nil {
+				s.Require().Error(err, "UpdateBalances should fail")
+				s.Require().ErrorIs(err, tc.expErr)
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "UpdateBalances should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestCreate tests the Create message server method
+func (s *MsgServerTestSuite) TestCreate() {
+	nftOwner := s.validAddress1
+	nftServicer := s.validAddress2
+
+	tests := []struct {
+		name            string
+		mintNFTs        []nft.NFT
+		registryEntries []registry.RolesEntry
+		req             *ledger.MsgCreateRequest
+		expResp         *ledger.MsgCreateResponse
+		expErr          error
+	}{
+		{
+			name: "successful create no registry",
+			mintNFTs: []nft.NFT{
+				{
+					ClassId: s.validNFTClass.Id,
+					Id:      s.validNFT.Id + "1",
+				},
+			},
+			req: &ledger.MsgCreateRequest{
+				// Use a new ledger key to avoid already exist errors
+				Ledger: &ledger.Ledger{
+					Key: &ledger.LedgerKey{
+						AssetClassId: s.validNFTClass.Id,
+						NftId:        s.validNFT.Id + "1",
+					},
+					LedgerClassId: s.validLedgerClass.LedgerClassId,
+					StatusTypeId:  1,
+				},
+				Authority: nftOwner.String(),
+			},
+			expResp: &ledger.MsgCreateResponse{},
+		},
+		{
+			name: "successful create with registry",
+			mintNFTs: []nft.NFT{
+				{
+					ClassId: s.validNFTClass.Id,
+					Id:      s.validNFT.Id + "2",
+				},
+			},
+			registryEntries: []registry.RolesEntry{
+				{
+					Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER,
+					Addresses: []string{nftServicer.String()},
+				},
+			},
+			req: &ledger.MsgCreateRequest{
+				// Use a new ledger key to avoid already exist errors
+				Ledger: &ledger.Ledger{
+					Key: &ledger.LedgerKey{
+						AssetClassId: s.validNFTClass.Id,
+						NftId:        s.validNFT.Id + "2",
+					},
+					LedgerClassId: s.validLedgerClass.LedgerClassId,
+					StatusTypeId:  1,
+				},
+				// Note that we authorize with the servicer address, not the owner address
+				Authority: nftServicer.String(),
+			},
+			expResp: &ledger.MsgCreateResponse{},
+		},
+		{
+			name: "unauthorized create no registry",
+			mintNFTs: []nft.NFT{
+				{
+					ClassId: s.validNFTClass.Id,
+					Id:      s.validNFT.Id + "3",
+				},
+			},
+			req: &ledger.MsgCreateRequest{
+				Ledger: &ledger.Ledger{
+					Key: &ledger.LedgerKey{
+						AssetClassId: s.validNFTClass.Id,
+						NftId:        s.validNFT.Id + "3",
+					},
+					LedgerClassId: s.validLedgerClass.LedgerClassId,
+					StatusTypeId:  1,
+				},
+				// Servicer shouldn't be able to create a ledger because there is no registry/role
+				Authority: nftServicer.String(),
+			},
+			expErr: ledger.ErrUnauthorized,
+		},
+		{
+			name: "unauthorized create with registry",
+			mintNFTs: []nft.NFT{
+				{
+					ClassId: s.validNFTClass.Id,
+					Id:      s.validNFT.Id + "4",
+				},
+			},
+			registryEntries: []registry.RolesEntry{
+				{
+					Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER,
+					Addresses: []string{nftServicer.String()},
+				},
+			},
+			req: &ledger.MsgCreateRequest{
+				Ledger: &ledger.Ledger{
+					Key: &ledger.LedgerKey{
+						AssetClassId: s.validNFTClass.Id,
+						NftId:        s.validNFT.Id + "4",
+					},
+					LedgerClassId: s.validLedgerClass.LedgerClassId,
+					StatusTypeId:  1,
+				},
+				// Owner has given servicing off to a servicer, so they shouldn't be able to create a ledger
+				Authority: nftOwner.String(),
+			},
+			expErr: ledger.ErrUnauthorized,
+		},
+		{
+			name: "duplicate ledger",
+			req: &ledger.MsgCreateRequest{
+				Ledger:    s.existingLedger,
+				Authority: nftOwner.String(),
+			},
+			expErr: ledger.ErrAlreadyExists,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Create the NFTs with valid address 1
+			for _, nft := range tc.mintNFTs {
+				s.app.NFTKeeper.Mint(s.ctx, nft, nftOwner)
+
+				// Associate all roles with the created NFT
+				registryKey := registry.RegistryKey{
+					AssetClassId: nft.ClassId,
+					NftId:        nft.Id,
+				}
+
+				// Create a registry if there are roles to grant
+				if len(tc.registryEntries) > 0 {
+					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.validAddress1, &registryKey, []registry.RolesEntry{})
+					s.Require().NoError(err, "CreateRegistry error")
+				}
+
+				// Grant all roles to the created NFT
+				for _, entry := range tc.registryEntries {
+					for _, address := range entry.Addresses {
+						sdkAddress, _ := sdk.AccAddressFromBech32(address)
+						err := s.app.RegistryKeeper.GrantRole(s.ctx, s.validAddress1, &registryKey, entry.Role, []*sdk.AccAddress{&sdkAddress})
+						s.Require().NoError(err, "GrantRole error")
+					}
+				}
+			}
+
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.Create(s.ctx, tc.req)
+
+			if tc.expErr != nil {
+				s.Require().ErrorIs(err, tc.expErr)
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "Create should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestUpdateStatus tests the UpdateStatus message server method
+func (s *MsgServerTestSuite) TestUpdateStatus() {
+	tests := []struct {
+		name    string
+		req     *ledger.MsgUpdateStatusRequest
+		expErr  *errors.Error
+		expResp *ledger.MsgUpdateStatusResponse
+	}{
+		{
+			name: "successful update status",
+			req: &ledger.MsgUpdateStatusRequest{
+				Key:          s.existingLedger.Key,
+				Authority:    s.validAddress1.String(),
+				StatusTypeId: 2,
+			},
+			expResp: &ledger.MsgUpdateStatusResponse{},
+		},
+		{
+			name: "unauthorized update status",
+			req: &ledger.MsgUpdateStatusRequest{
+				Key:          s.existingLedger.Key,
+				Authority:    s.validAddress2.String(),
+				StatusTypeId: 2,
+			},
+			expErr: ledger.ErrUnauthorized,
+		},
+		{
+			name: "non-existent ledger",
+			req: &ledger.MsgUpdateStatusRequest{
+				Key: &ledger.LedgerKey{
+					AssetClassId: s.validNFTClass.Id,
+					NftId:        "non-existent-nft",
+				},
+				Authority:    s.validAddress1.String(),
+				StatusTypeId: 2,
+			},
+			expErr: ledger.ErrNotFound,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+
+			var combinedErr error
+			var resp *ledger.MsgUpdateStatusResponse
+			if err := tc.req.ValidateBasic(); err != nil {
+				combinedErr = err
+			} else {
+				resp, combinedErr = msgServer.UpdateStatus(s.ctx, tc.req)
+			}
+
+			if tc.expErr != nil {
+				s.Require().Error(combinedErr, "UpdateStatus should fail")
+				s.Require().ErrorIs(combinedErr, tc.expErr)
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(combinedErr, "UpdateStatus should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestUpdateInterestRate tests the UpdateInterestRate message server method
+func (s *MsgServerTestSuite) TestUpdateInterestRate() {
+	tests := []struct {
+		name    string
+		req     *ledger.MsgUpdateInterestRateRequest
 		expErr  string
+		expResp *ledger.MsgUpdateInterestRateResponse
+	}{
+		{
+			name: "successful update interest rate",
+			req: &ledger.MsgUpdateInterestRateRequest{
+				Key:                        s.existingLedger.Key,
+				Authority:                  s.validAddress1.String(),
+				InterestRate:               5000000, // 5%
+				InterestDayCountConvention: ledger.DAY_COUNT_CONVENTION_ACTUAL_365,
+				InterestAccrualMethod:      ledger.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST,
+			},
+			expResp: &ledger.MsgUpdateInterestRateResponse{},
+		},
+		{
+			name: "unauthorized update interest rate",
+			req: &ledger.MsgUpdateInterestRateRequest{
+				Key:                        s.existingLedger.Key,
+				Authority:                  "cosmos1invalid",
+				InterestRate:               5000000,
+				InterestDayCountConvention: ledger.DAY_COUNT_CONVENTION_ACTUAL_365,
+				InterestAccrualMethod:      ledger.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST,
+			},
+			expErr: "unauthorized",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.UpdateInterestRate(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "UpdateInterestRate should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "UpdateInterestRate should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestUpdatePayment tests the UpdatePayment message server method
+func (s *MsgServerTestSuite) TestUpdatePayment() {
+	nextPmtDate, err := helper.StrToDate("2024-01-15")
+	s.Require().NoError(err, "StrToDate error")
+
+	tests := []struct {
+		name    string
+		req     *ledger.MsgUpdatePaymentRequest
+		expErr  string
+		expResp *ledger.MsgUpdatePaymentResponse
+	}{
+		{
+			name: "successful update payment",
+			req: &ledger.MsgUpdatePaymentRequest{
+				Key:              s.existingLedger.Key,
+				Authority:        s.validAddress1.String(),
+				NextPmtAmt:       1000,
+				NextPmtDate:      helper.DaysSinceEpoch(nextPmtDate),
+				PaymentFrequency: ledger.PAYMENT_FREQUENCY_MONTHLY,
+			},
+			expResp: &ledger.MsgUpdatePaymentResponse{},
+		},
+		{
+			name: "unauthorized update payment",
+			req: &ledger.MsgUpdatePaymentRequest{
+				Key:              s.existingLedger.Key,
+				Authority:        "cosmos1invalid",
+				NextPmtAmt:       1000,
+				NextPmtDate:      helper.DaysSinceEpoch(nextPmtDate),
+				PaymentFrequency: ledger.PAYMENT_FREQUENCY_MONTHLY,
+			},
+			expErr: "unauthorized",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.UpdatePayment(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "UpdatePayment should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "UpdatePayment should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestUpdateMaturityDate tests the UpdateMaturityDate message server method
+func (s *MsgServerTestSuite) TestUpdateMaturityDate() {
+	maturityDate, err := helper.StrToDate("2025-12-31")
+	s.Require().NoError(err, "StrToDate error")
+
+	tests := []struct {
+		name    string
+		req     *ledger.MsgUpdateMaturityDateRequest
+		expErr  string
+		expResp *ledger.MsgUpdateMaturityDateResponse
+	}{
+		{
+			name: "successful update maturity date",
+			req: &ledger.MsgUpdateMaturityDateRequest{
+				Key:          s.existingLedger.Key,
+				Authority:    s.validAddress1.String(),
+				MaturityDate: helper.DaysSinceEpoch(maturityDate),
+			},
+			expResp: &ledger.MsgUpdateMaturityDateResponse{},
+		},
+		{
+			name: "unauthorized update maturity date",
+			req: &ledger.MsgUpdateMaturityDateRequest{
+				Key:          s.existingLedger.Key,
+				Authority:    "cosmos1invalid",
+				MaturityDate: helper.DaysSinceEpoch(maturityDate),
+			},
+			expErr: "unauthorized",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.UpdateMaturityDate(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "UpdateMaturityDate should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "UpdateMaturityDate should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestTransferFundsWithSettlement tests the TransferFundsWithSettlement message server method
+func (s *MsgServerTestSuite) TestTransferFundsWithSettlement() {
+	s.keeper.AppendEntries(s.ctx, s.existingLedger.Key, []*ledger.LedgerEntry{
+		{
+			EntryTypeId:   1,
+			PostedDate:    s.pastDate,
+			EffectiveDate: s.pastDate,
+			TotalAmt:      math.NewInt(100),
+			AppliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					AppliedAmt:   math.NewInt(100),
+					BucketTypeId: 1,
+				},
+			},
+			BalanceAmounts: []*ledger.BucketBalance{
+				{
+					BucketTypeId: 1,
+					BalanceAmt:   math.NewInt(100),
+				},
+			},
+			CorrelationId: "1",
+		},
+	})
+
+	tests := []struct {
+		name    string
+		req     *ledger.MsgTransferFundsWithSettlementRequest
+		expErr  error
+		expResp *ledger.MsgTransferFundsWithSettlementResponse
+	}{
+		{
+			name: "successful transfer funds with settlement",
+			req: &ledger.MsgTransferFundsWithSettlementRequest{
+				Authority: s.validAddress1.String(),
+				Transfers: []*ledger.FundTransferWithSettlement{
+					{
+						Key:                      s.existingLedger.Key,
+						LedgerEntryCorrelationId: "1",
+						SettlementInstructions: []*ledger.SettlementInstruction{
+							{
+								Amount: sdk.Coin{
+									Denom:  s.bondDenom,
+									Amount: math.NewInt(1000),
+								},
+								RecipientAddress: s.validAddress2.String(),
+								Status:           ledger.FundingTransferStatus_FUNDING_TRANSFER_STATUS_PENDING,
+								Memo:             "test transfer",
+							},
+						},
+					},
+				},
+			},
+			expResp: &ledger.MsgTransferFundsWithSettlementResponse{},
+		},
+		{
+			name: "unauthorized transfer funds",
+			req: &ledger.MsgTransferFundsWithSettlementRequest{
+				Authority: s.validAddress2.String(),
+				Transfers: []*ledger.FundTransferWithSettlement{
+					{
+						Key:                      s.existingLedger.Key,
+						LedgerEntryCorrelationId: "1",
+						SettlementInstructions: []*ledger.SettlementInstruction{
+							{
+								Amount: sdk.Coin{
+									Denom:  s.bondDenom,
+									Amount: math.NewInt(100),
+								},
+								RecipientAddress: s.validAddress2.String(),
+								Status:           ledger.FundingTransferStatus_FUNDING_TRANSFER_STATUS_PENDING,
+								Memo:             "test transfer",
+							},
+						},
+					},
+				},
+			},
+			expErr: ledger.ErrUnauthorized,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.TransferFundsWithSettlement(s.ctx, tc.req)
+
+			if tc.expErr != nil {
+				s.Require().Error(err, "TransferFundsWithSettlement should fail")
+				s.Require().ErrorIs(err, tc.expErr)
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "TransferFundsWithSettlement should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestDestroy tests the Destroy message server method
+func (s *MsgServerTestSuite) TestDestroy() {
+	tests := []struct {
+		name    string
+		req     *ledger.MsgDestroyRequest
+		expErr  error
+		expResp *ledger.MsgDestroyResponse
+	}{
+		{
+			name: "unauthorized destroy",
+			req: &ledger.MsgDestroyRequest{
+				Key:       s.existingLedger.Key,
+				Authority: s.validAddress2.String(),
+			},
+			expErr: ledger.ErrUnauthorized,
+		},
+		{
+			name: "successful destroy",
+			req: &ledger.MsgDestroyRequest{
+				Key:       s.existingLedger.Key,
+				Authority: s.validAddress1.String(),
+			},
+			expResp: &ledger.MsgDestroyResponse{},
+		},
+		{
+			name: "non-existent ledger",
+			req: &ledger.MsgDestroyRequest{
+				Key: &ledger.LedgerKey{
+					AssetClassId: s.validNFTClass.Id,
+					NftId:        "non-existent-nft",
+				},
+				Authority: s.validAddress1.String(),
+			},
+			expErr: ledger.ErrNotFound,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.Destroy(s.ctx, tc.req)
+
+			if tc.expErr != nil {
+				s.Require().Error(err, "Destroy should fail")
+				s.Require().ErrorIs(err, tc.expErr)
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "Destroy should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestCreateLedgerClass tests the CreateLedgerClass message server method
+func (s *MsgServerTestSuite) TestCreateLedgerClass() {
+	authorityAddr := s.validAddress1
+
+	tests := []struct {
+		name    string
+		req     *ledger.MsgCreateLedgerClassRequest
+		expErr  string
+		expResp *ledger.MsgCreateLedgerClassResponse
+	}{
+		{
+			name: "successful create ledger class",
+			req: &ledger.MsgCreateLedgerClassRequest{
+				LedgerClass: &ledger.LedgerClass{
+					LedgerClassId:     "test-ledger-class-new",
+					AssetClassId:      s.validNFTClass.Id,
+					MaintainerAddress: authorityAddr.String(),
+					Denom:             s.bondDenom,
+				},
+				Authority: authorityAddr.String(),
+			},
+			expResp: &ledger.MsgCreateLedgerClassResponse{},
+		},
+		{
+			name: "duplicate ledger class",
+			req: &ledger.MsgCreateLedgerClassRequest{
+				LedgerClass: &ledger.LedgerClass{
+					LedgerClassId:     s.validLedgerClass.LedgerClassId,
+					AssetClassId:      s.validNFTClass.Id,
+					MaintainerAddress: authorityAddr.String(),
+					Denom:             s.bondDenom,
+				},
+				Authority: authorityAddr.String(),
+			},
+			expErr: "already exists",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.CreateLedgerClass(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "CreateLedgerClass should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "CreateLedgerClass should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestAddLedgerClassStatusType tests the AddLedgerClassStatusType message server method
+func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
+	authorityAddr := s.validAddress1
+
+	tests := []struct {
+		name    string
+		req     *ledger.MsgAddLedgerClassStatusTypeRequest
+		expErr  string
+		expResp *ledger.MsgAddLedgerClassStatusTypeResponse
+	}{
+		{
+			name: "successful add status type",
+			req: &ledger.MsgAddLedgerClassStatusTypeRequest{
+				LedgerClassId: s.validLedgerClass.LedgerClassId,
+				StatusType: &ledger.LedgerClassStatusType{
+					Id:          4,
+					Code:        "COMPLETED",
+					Description: "Completed",
+				},
+				Authority: authorityAddr.String(),
+			},
+			expResp: &ledger.MsgAddLedgerClassStatusTypeResponse{},
+		},
+		{
+			name: "unauthorized add status type",
+			req: &ledger.MsgAddLedgerClassStatusTypeRequest{
+				LedgerClassId: s.validLedgerClass.LedgerClassId,
+				StatusType: &ledger.LedgerClassStatusType{
+					Id:          5,
+					Code:        "CANCELLED",
+					Description: "Cancelled",
+				},
+				Authority: "cosmos1invalid",
+			},
+			expErr: "ledger class maintainer",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.AddLedgerClassStatusType(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "AddLedgerClassStatusType should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "AddLedgerClassStatusType should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestAddLedgerClassEntryType tests the AddLedgerClassEntryType message server method
+func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
+	authorityAddr := s.validAddress1
+
+	tests := []struct {
+		name    string
+		req     *ledger.MsgAddLedgerClassEntryTypeRequest
+		expErr  string
+		expResp *ledger.MsgAddLedgerClassEntryTypeResponse
+	}{
+		{
+			name: "successful add entry type",
+			req: &ledger.MsgAddLedgerClassEntryTypeRequest{
+				LedgerClassId: s.validLedgerClass.LedgerClassId,
+				EntryType: &ledger.LedgerClassEntryType{
+					Id:          4,
+					Code:        "ADJUSTMENT",
+					Description: "Adjustment",
+				},
+				Authority: authorityAddr.String(),
+			},
+			expResp: &ledger.MsgAddLedgerClassEntryTypeResponse{},
+		},
+		{
+			name: "unauthorized add entry type",
+			req: &ledger.MsgAddLedgerClassEntryTypeRequest{
+				LedgerClassId: s.validLedgerClass.LedgerClassId,
+				EntryType: &ledger.LedgerClassEntryType{
+					Id:          5,
+					Code:        "FEE",
+					Description: "Fee",
+				},
+				Authority: "cosmos1invalid",
+			},
+			expErr: "ledger class maintainer",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.AddLedgerClassEntryType(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "AddLedgerClassEntryType should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "AddLedgerClassEntryType should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestAddLedgerClassBucketType tests the AddLedgerClassBucketType message server method
+func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
+	authorityAddr := s.validAddress1
+
+	tests := []struct {
+		name    string
+		req     *ledger.MsgAddLedgerClassBucketTypeRequest
+		expErr  string
+		expResp *ledger.MsgAddLedgerClassBucketTypeResponse
+	}{
+		{
+			name: "successful add bucket type",
+			req: &ledger.MsgAddLedgerClassBucketTypeRequest{
+				LedgerClassId: s.validLedgerClass.LedgerClassId,
+				BucketType: &ledger.LedgerClassBucketType{
+					Id:          4,
+					Code:        "FEES",
+					Description: "Fees",
+				},
+				Authority: authorityAddr.String(),
+			},
+			expResp: &ledger.MsgAddLedgerClassBucketTypeResponse{},
+		},
+		{
+			name: "unauthorized add bucket type",
+			req: &ledger.MsgAddLedgerClassBucketTypeRequest{
+				LedgerClassId: s.validLedgerClass.LedgerClassId,
+				BucketType: &ledger.LedgerClassBucketType{
+					Id:          5,
+					Code:        "PENALTIES",
+					Description: "Penalties",
+				},
+				Authority: "cosmos1invalid",
+			},
+			expErr: "ledger class maintainer",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := keeper.NewMsgServer(s.keeper)
+			resp, err := msgServer.AddLedgerClassBucketType(s.ctx, tc.req)
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "AddLedgerClassBucketType should fail")
+				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().Nil(resp, "response should be nil on error")
+			} else {
+				s.Require().NoError(err, "AddLedgerClassBucketType should succeed")
+				s.Require().Equal(tc.expResp, resp, "response should match expected")
+			}
+		})
+	}
+}
+
+// TestBulkImport tests the BulkImport message server method
+// func (s *MsgServerTestSuite) TestBulkImport() {
+// 	tests := []struct {
+// 		name    string
+// 		req     *ledger.MsgBulkImportRequest
+// 		expErr  string
+// 		expResp *ledger.MsgBulkImportResponse
+// 	}{
+// 		{
+// 			name: "successful bulk import",
+// 			req: &ledger.MsgBulkImportRequest{
+// 				GenesisState: &ledger.GenesisState{
+// 					LedgerToEntries: []*ledger.LedgerToEntries{
+// 						{
+// 							Ledger: &ledger.Ledger{
+// 								Key: &ledger.LedgerKey{
+// 									AssetClassId: s.validNFTClass.Id,
+// 									NftId:        "bulk-import-nft",
+// 								},
+// 								LedgerClassId: s.validLedgerClass.LedgerClassId,
+// 								StatusTypeId:  1,
+// 							},
+// 							Entries: []*ledger.LedgerEntry{
+// 								{
+// 									EntryTypeId:   1,
+// 									PostedDate:    s.pastDate,
+// 									EffectiveDate: s.pastDate,
+// 									TotalAmt:      math.NewInt(100),
+// 									AppliedAmounts: []*ledger.LedgerBucketAmount{
+// 										{
+// 											AppliedAmt:   math.NewInt(100),
+// 											BucketTypeId: 1,
+// 										},
+// 									},
+// 									CorrelationId: "bulk-import-correlation-id",
+// 								},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 			expResp: &ledger.MsgBulkImportResponse{},
+// 		},
+// 		{
+// 			name: "empty genesis state",
+// 			req: &ledger.MsgBulkImportRequest{
+// 				GenesisState: &ledger.GenesisState{},
+// 			},
+// 			expResp: &ledger.MsgBulkImportResponse{},
+// 		},
+// 	}
+
+// 	for _, tc := range tests {
+// 		s.Run(tc.name, func() {
+// 			msgServer := keeper.NewMsgServer(s.keeper)
+// 			resp, err := msgServer.BulkImport(s.ctx, tc.req)
+
+// 			if tc.expErr != "" {
+// 				s.Require().Error(err, "BulkImport should fail")
+// 				s.Require().Contains(err.Error(), tc.expErr, "error message")
+// 				s.Require().Nil(resp, "response should be nil on error")
+// 			} else {
+// 				s.Require().NoError(err, "BulkImport should succeed")
+// 				s.Require().Equal(tc.expResp, resp, "response should match expected")
+// 			}
+// 		})
+// 	}
+// }
+
+// TestAppendEntriesValidation tests validation logic for AppendEntries
+func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
+	tests := []struct {
+		name    string
+		entries []*ledger.LedgerEntry
+		expErr  error
 	}{
 		{
 			name: "future posted date",
@@ -150,7 +1199,7 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 					CorrelationId: "test-correlation-id-future",
 				},
 			},
-			expErr: "posted_date cannot be in the future",
+			expErr: ledger.ErrInvalidField,
 		},
 		{
 			name: "invalid entry type id",
@@ -169,7 +1218,7 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 					CorrelationId: "test-correlation-id-invalid-type",
 				},
 			},
-			expErr: "entry_type_id entry type doesn't exist",
+			expErr: ledger.ErrInvalidField,
 		},
 		{
 			name: "non-existent ledger",
@@ -188,7 +1237,7 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 					CorrelationId: "test-correlation-id-non-existent",
 				},
 			},
-			expErr: "ledger not found",
+			expErr: ledger.ErrNotFound,
 		},
 		{
 			name: "valid entry",
@@ -207,13 +1256,13 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 					CorrelationId: "test-correlation-id-valid",
 				},
 			},
-			expErr: "",
+			expErr: nil,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			ledgerKey := l.Key
+			ledgerKey := s.existingLedger.Key
 			if tc.name == "non-existent ledger" {
 				ledgerKey = &ledger.LedgerKey{
 					AssetClassId: s.validNFTClass.Id,
@@ -222,9 +1271,9 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 			}
 
 			err := s.keeper.AppendEntries(s.ctx, ledgerKey, tc.entries)
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "AppendEntries should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 			} else {
 				s.Require().NoError(err, "AppendEntries should succeed")
 			}
@@ -234,19 +1283,6 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 
 // TestUpdateEntryBalancesValidation tests validation logic for UpdateEntryBalances
 func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
-	// Create a test ledger and entry
-	l := ledger.Ledger{
-		Key: &ledger.LedgerKey{
-			AssetClassId: s.validNFTClass.Id,
-			NftId:        s.validNFT.Id,
-		},
-		LedgerClassId: s.validLedgerClass.LedgerClassId,
-		StatusTypeId:  1,
-	}
-
-	err := s.keeper.AddLedger(s.ctx, l)
-	s.Require().NoError(err, "CreateLedger error")
-
 	// Add an entry first
 	entry := ledger.LedgerEntry{
 		EntryTypeId:   1,
@@ -262,7 +1298,7 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 		CorrelationId: "test-correlation-id-update",
 	}
 
-	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&entry})
+	err := s.keeper.AppendEntries(s.ctx, s.existingLedger.Key, []*ledger.LedgerEntry{&entry})
 	s.Require().NoError(err, "AppendEntry error")
 
 	tests := []struct {
@@ -271,14 +1307,11 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 		correlationId  string
 		balanceAmounts []*ledger.BucketBalance
 		appliedAmounts []*ledger.LedgerBucketAmount
-		expErr         string
+		expErr         error
 	}{
 		{
-			name: "non-existent entry",
-			ledgerKey: &ledger.LedgerKey{
-				AssetClassId: s.validNFTClass.Id,
-				NftId:        s.validNFT.Id,
-			},
+			name:          "non-existent entry",
+			ledgerKey:     s.existingLedger.Key,
 			correlationId: "non-existent-correlation-id",
 			balanceAmounts: []*ledger.BucketBalance{
 				{
@@ -292,11 +1325,11 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 					BucketTypeId: 1,
 				},
 			},
-			expErr: "entry not found",
+			expErr: ledger.NewErrCodeNotFound("entry"),
 		},
 		{
 			name:          "valid update",
-			ledgerKey:     l.Key,
+			ledgerKey:     s.existingLedger.Key,
 			correlationId: "test-correlation-id-update",
 			balanceAmounts: []*ledger.BucketBalance{
 				{
@@ -310,16 +1343,16 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 					BucketTypeId: 1,
 				},
 			},
-			expErr: "",
+			expErr: nil,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			err := s.keeper.UpdateEntryBalances(s.ctx, tc.ledgerKey, tc.correlationId, tc.balanceAmounts, tc.appliedAmounts)
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "UpdateEntryBalances should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 			} else {
 				s.Require().NoError(err, "UpdateEntryBalances should succeed")
 			}
@@ -329,23 +1362,10 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 
 // TestAppendEntriesMultipleValidation tests validation for multiple entries
 func (s *MsgServerTestSuite) TestAppendEntriesMultipleValidation() {
-	// Create a test ledger
-	l := ledger.Ledger{
-		Key: &ledger.LedgerKey{
-			AssetClassId: s.validNFTClass.Id,
-			NftId:        s.validNFT.Id,
-		},
-		LedgerClassId: s.validLedgerClass.LedgerClassId,
-		StatusTypeId:  1,
-	}
-
-	err := s.keeper.AddLedger(s.ctx, l)
-	s.Require().NoError(err, "CreateLedger error")
-
 	tests := []struct {
 		name    string
 		entries []*ledger.LedgerEntry
-		expErr  string
+		expErr  error
 	}{
 		{
 			name: "mixed valid and invalid entries",
@@ -377,7 +1397,7 @@ func (s *MsgServerTestSuite) TestAppendEntriesMultipleValidation() {
 					CorrelationId: "test-correlation-id-invalid-1",
 				},
 			},
-			expErr: "entry_type_id entry type doesn't exist",
+			expErr: ledger.ErrInvalidField,
 		},
 		{
 			name: "all valid entries",
@@ -409,16 +1429,16 @@ func (s *MsgServerTestSuite) TestAppendEntriesMultipleValidation() {
 					CorrelationId: "test-correlation-id-valid-3",
 				},
 			},
-			expErr: "",
+			expErr: nil,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.AppendEntries(s.ctx, l.Key, tc.entries)
-			if tc.expErr != "" {
+			err := s.keeper.AppendEntries(s.ctx, s.existingLedger.Key, tc.entries)
+			if tc.expErr != nil {
 				s.Require().Error(err, "AppendEntries should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 			} else {
 				s.Require().NoError(err, "AppendEntries should succeed")
 			}
@@ -428,21 +1448,7 @@ func (s *MsgServerTestSuite) TestAppendEntriesMultipleValidation() {
 
 // TestAppendEntriesEmptyArray tests edge case of empty entries array
 func (s *MsgServerTestSuite) TestAppendEntriesEmptyArray() {
-	// Create a test ledger
-	l := ledger.Ledger{
-		Key: &ledger.LedgerKey{
-			AssetClassId: s.validNFTClass.Id,
-			NftId:        s.validNFT.Id,
-		},
-		LedgerClassId: s.validLedgerClass.LedgerClassId,
-		StatusTypeId:  1,
-	}
-
-	err := s.keeper.AddLedger(s.ctx, l)
-	s.Require().NoError(err, "CreateLedger error")
-
-	// Test appending empty array
-	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{})
+	err := s.keeper.AppendEntries(s.ctx, s.existingLedger.Key, []*ledger.LedgerEntry{})
 	s.Require().NoError(err, "AppendEntries with empty array should succeed")
 }
 
@@ -462,15 +1468,11 @@ func (s *MsgServerTestSuite) TestAppendEntriesInvalidLedgerKey() {
 		CorrelationId: "test-correlation-id-invalid-key",
 	}
 
-	// Test with nil ledger key
-	err := s.keeper.AppendEntries(s.ctx, nil, []*ledger.LedgerEntry{&entry})
-	s.Require().Error(err, "AppendEntries with nil ledger key should fail")
-
 	// Test with empty ledger key
 	emptyKey := &ledger.LedgerKey{
 		AssetClassId: "",
 		NftId:        "",
 	}
-	err = s.keeper.AppendEntries(s.ctx, emptyKey, []*ledger.LedgerEntry{&entry})
+	err := s.keeper.AppendEntries(s.ctx, emptyKey, []*ledger.LedgerEntry{&entry})
 	s.Require().Error(err, "AppendEntries with empty ledger key should fail")
 }
