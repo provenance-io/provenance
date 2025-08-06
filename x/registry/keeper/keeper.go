@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -82,21 +81,21 @@ func (k Keeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, ke
 
 	has, err := k.Registry.Has(ctx, *keyStr)
 	if err != nil {
-		return fmt.Errorf("registry already exists")
+		return types.NewErrCodeRegistryAlreadyExists(*keyStr)
 	}
 	if has {
-		return fmt.Errorf("registry already exists")
+		return types.NewErrCodeRegistryAlreadyExists(*keyStr)
 	}
 
 	// Verify that an NFT exists for the given key and that the authority owns the NFT
 	hasNFT := k.HasNFT(ctx, &key.AssetClassId, &key.NftId)
 	if !hasNFT {
-		return fmt.Errorf("NFT does not exist")
+		return types.NewErrCodeNFTNotFound(key.NftId)
 	}
 
 	nftOwner := k.GetNFTOwner(ctx, &key.AssetClassId, &key.NftId)
 	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
-		return fmt.Errorf("authority does not own the NFT")
+		return types.NewErrCodeUnauthorized("authority does not own the NFT")
 	}
 
 	k.Registry.Set(ctx, *keyStr, types.RegistryEntry{
@@ -108,7 +107,7 @@ func (k Keeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, ke
 
 func (k Keeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.RegistryKey, role types.RegistryRole, addr []*sdk.AccAddress) error {
 	if role == types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
-		return fmt.Errorf("invalid role")
+		return types.NewErrCodeInvalidRole(role.String())
 	}
 
 	keyStr, err := RegistryKeyToString(key)
@@ -121,13 +120,13 @@ func (k Keeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ty
 		return err
 	}
 	if !has {
-		return fmt.Errorf("registry not found")
+		return types.NewErrCodeRegistryNotFound(*keyStr)
 	}
 
 	// Determine if the authority owns the NFT
 	nftOwner := k.GetNFTOwner(ctx, &key.AssetClassId, &key.NftId)
 	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
-		return fmt.Errorf("authority does not own the NFT")
+		return types.NewErrCodeUnauthorized("authority does not own the NFT")
 	}
 
 	registryEntry, err := k.Registry.Get(ctx, *keyStr)
@@ -150,7 +149,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ty
 	// Determine if any of the new grants are already authorized, and if so error out.
 	for _, a := range addr {
 		if slices.Contains(authorized, a.String()) {
-			return fmt.Errorf("address already has role")
+			return types.NewErrCodeAddressAlreadyHasRole(a.String(), role.String())
 		}
 	}
 
@@ -183,7 +182,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *ty
 
 func (k Keeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.RegistryKey, role types.RegistryRole, addr []*sdk.AccAddress) error {
 	if role == types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
-		return fmt.Errorf("invalid role")
+		return types.NewErrCodeInvalidRole(role.String())
 	}
 
 	keyStr, err := RegistryKeyToString(key)
@@ -196,13 +195,13 @@ func (k Keeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *t
 		return err
 	}
 	if !has {
-		return fmt.Errorf("registry not found")
+		return types.NewErrCodeRegistryNotFound(*keyStr)
 	}
 
 	// Determine if the authority owns the NFT
 	nftOwner := k.GetNFTOwner(ctx, &key.AssetClassId, &key.NftId)
 	if nftOwner == nil || nftOwner.String() != authorityAddr.String() {
-		return fmt.Errorf("authority does not own the NFT")
+		return types.NewErrCodeUnauthorized("authority does not own the NFT")
 	}
 
 	registryEntry, err := k.Registry.Get(ctx, *keyStr)
@@ -333,12 +332,12 @@ func StringToRegistryKey(s string) (*types.RegistryKey, error) {
 	}
 
 	if hrp != registryKeyHrp {
-		return nil, fmt.Errorf("invalid hrp: %s", hrp)
+		return nil, types.NewErrCodeInvalidHrp(hrp)
 	}
 
 	parts := strings.Split(string(b), ":")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid key: %s", s)
+		return nil, types.NewErrCodeInvalidKey(s)
 	}
 
 	return &types.RegistryKey{
