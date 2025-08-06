@@ -16,6 +16,7 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/registry"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 func TestMsgServerTestSuite(t *testing.T) {
@@ -487,14 +488,14 @@ func (s *MsgServerTestSuite) TestCreate() {
 				s.app.NFTKeeper.Mint(s.ctx, nft, nftOwner)
 
 				// Associate all roles with the created NFT
-				registryKey := registry.RegistryKey{
+				registryKey := registrytypes.RegistryKey{
 					AssetClassId: nft.ClassId,
 					NftId:        nft.Id,
 				}
 
 				// Create a registry if there are roles to grant
 				if len(tc.registryEntries) > 0 {
-					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.validAddress1, &registryKey, []registry.RolesEntry{})
+					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.validAddress1, &registryKey, []registrytypes.RolesEntry{})
 					s.Require().NoError(err, "CreateRegistry error")
 				}
 

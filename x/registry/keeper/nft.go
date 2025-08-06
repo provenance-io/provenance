@@ -10,7 +10,7 @@ import (
 // HasNFT checks if an NFT exists in either the metadata or nft module.
 // If the assetClassId is a metadata scope, it will check if the scope exists.
 // Otherwise, it will check if the NFT exists in the nft module.
-func (k BaseRegistryKeeper) HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool {
+func (k Keeper) HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool {
 	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -22,7 +22,7 @@ func (k BaseRegistryKeeper) HasNFT(ctx sdk.Context, assetClassId, nftId *string)
 }
 
 // AssetClassExists checks if an asset class exists in either the metadata or nft module.
-func (k BaseRegistryKeeper) AssetClassExists(ctx sdk.Context, assetClassId *string) bool {
+func (k Keeper) AssetClassExists(ctx sdk.Context, assetClassId *string) bool {
 	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -36,7 +36,7 @@ func (k BaseRegistryKeeper) AssetClassExists(ctx sdk.Context, assetClassId *stri
 // GetNFTOwner returns the owner of an NFT.
 // If the assetClassId is a metadata scope, it will return the owner of the scope.
 // Otherwise, it will return the owner of the NFT from the nft module.
-func (k BaseRegistryKeeper) GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.AccAddress {
+func (k Keeper) GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.AccAddress {
 	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)

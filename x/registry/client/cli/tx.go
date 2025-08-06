@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/provenance-io/provenance/x/registry"
+	"github.com/provenance-io/provenance/x/registry/types"
 )
 
 // CmdTx returns the transaction commands for the registry module
@@ -44,16 +45,16 @@ func CmdRegisterNFT() *cobra.Command {
 			}
 
 			// Parse key from args
-			key := registry.RegistryKey{
+			key := types.RegistryKey{
 				AssetClassId: args[0],
 				NftId:        args[1],
 			}
 
 			// TODO: Parse key and roles from args
-			msg := registry.MsgRegisterNFT{
+			msg := types.MsgRegisterNFT{
 				Authority: clientCtx.GetFromAddress().String(),
 				Key:       &key,
-				Roles:     []registry.RolesEntry{},
+				Roles:     []types.RolesEntry{},
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
@@ -76,22 +77,22 @@ func CmdGrantRole() *cobra.Command {
 				return err
 			}
 
-			key := registry.RegistryKey{
+			key := types.RegistryKey{
 				AssetClassId: args[0],
 				NftId:        args[1],
 			}
 
 			// convert arg[2] to a registry.RegistryRole enum value
-			role, ok := registry.RegistryRole_value[args[2]]
+			role, ok := types.RegistryRole_value[args[2]]
 			if !ok {
 				return fmt.Errorf("invalid role: %s", args[2])
 			}
 
 			// TODO: Parse key, role and addresses from args
-			msg := registry.MsgGrantRole{
+			msg := types.MsgGrantRole{
 				Authority: clientCtx.GetFromAddress().String(),
 				Key:       &key,
-				Role:      registry.RegistryRole(role),
+				Role:      types.RegistryRole(role),
 				Addresses: args[3:],
 			}
 
@@ -115,22 +116,22 @@ func CmdRevokeRole() *cobra.Command {
 				return err
 			}
 
-			key := registry.RegistryKey{
+			key := types.RegistryKey{
 				AssetClassId: args[0],
 				NftId:        args[1],
 			}
 
 			// convert arg[2] to a registry.RegistryRole enum value
-			role, ok := registry.RegistryRole_value[args[2]]
+			role, ok := types.RegistryRole_value[args[2]]
 			if !ok {
 				return fmt.Errorf("invalid role: %s", args[2])
 			}
 
 			// TODO: Parse key, role and addresses from args
-			msg := registry.MsgRevokeRole{
+			msg := types.MsgRevokeRole{
 				Authority: clientCtx.GetFromAddress().String(),
 				Key:       &key,
-				Role:      registry.RegistryRole(role),
+				Role:      types.RegistryRole(role),
 				Addresses: args[3:],
 			}
 
@@ -154,13 +155,13 @@ func CmdUnregisterNFT() *cobra.Command {
 				return err
 			}
 
-			key := registry.RegistryKey{
+			key := types.RegistryKey{
 				AssetClassId: args[0],
 				NftId:        args[1],
 			}
 
 			// TODO: Parse key from args
-			msg := registry.MsgUnregisterNFT{
+			msg := types.MsgUnregisterNFT{
 				Authority: clientCtx.GetFromAddress().String(),
 				Key:       &key,
 			}

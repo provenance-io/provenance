@@ -15,6 +15,7 @@ import (
 	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/client/cli"
 	"github.com/provenance-io/provenance/x/registry/keeper"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/spf13/cobra"
 )
 
@@ -44,11 +45,11 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 // AppModule implements an application module for the registry module.
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.RegistryKeeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(cdc codec.Codec, k keeper.RegistryKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         k,
@@ -58,7 +59,7 @@ func NewAppModule(cdc codec.Codec, k keeper.RegistryKeeper) AppModule {
 // InitGenesis initializes the genesis state.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	ctx.Logger().Info("Genesising Registry Module")
-	var state registry.GenesisState
+	var state registrytypes.GenesisState
 	cdc.MustUnmarshalJSON(gs, &state)
 	am.keeper.InitGenesis(ctx, &state)
 	return nil
@@ -66,7 +67,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 
 // DefaultGenesis returns default genesis state as raw bytes.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(&registry.GenesisState{})
+	return cdc.MustMarshalJSON(&registrytypes.GenesisState{})
 }
 
 // ValidateGenesis validates the genesis state.
@@ -81,17 +82,17 @@ func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	registry.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
-	registry.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
+	registrytypes.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
+	registrytypes.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 }
 
 // Register the protobuf message types and services with the sdk.
 func (AppModule) RegisterInterfaces(r types.InterfaceRegistry) {
-	msgservice.RegisterMsgServiceDesc(r, &registry.Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(r, &registrytypes.Msg_serviceDesc)
 }
 
 func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
-	err := registry.RegisterQueryHandlerClient(context.Background(), mux, registry.NewQueryClient(ctx))
+	err := registrytypes.RegisterQueryHandlerClient(context.Background(), mux, registrytypes.NewQueryClient(ctx))
 	if err != nil {
 		panic(err)
 	}

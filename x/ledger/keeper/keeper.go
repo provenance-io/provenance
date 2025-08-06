@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
-	"github.com/provenance-io/provenance/x/registry"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 // Keeper defines the mymodule keeper.
@@ -112,7 +112,7 @@ func NewLedgerKey(assetClassId string, nftId string) *ledger.LedgerKey {
 	}
 }
 
-func (k Keeper) RequireAuthority(ctx sdk.Context, addr string, key *registry.RegistryKey) error {
+func (k Keeper) RequireAuthority(ctx sdk.Context, addr string, key *registrytypes.RegistryKey) error {
 	has, err := assertAuthority(ctx, k.RegistryKeeper, addr, key)
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledger
 }
 
 // Assert that the authority address is either the registered servicer, or the owner of the NFT if there is no registered servicer.
-func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk *registry.RegistryKey) (bool, error) {
+func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk *registrytypes.RegistryKey) (bool, error) {
 	// Get the registry entry for the NFT to determine if the authority has the servicer role.
 	registryEntry, err := k.GetRegistry(ctx, rk)
 	if err != nil {
@@ -156,7 +156,7 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 	// Since the authority doesn't have the servicer role, let's see if there is any servicer set. If there is, we'll return an error
 	// so that only the assigned servicer can append entries.
 	for _, role := range registryEntry.Roles {
-		if role.Role == registry.RegistryRole_REGISTRY_ROLE_SERVICER {
+		if role.Role == registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER {
 			for _, address := range role.Addresses {
 				// Check if the authority is the servicer
 				if address == authorityAddr {

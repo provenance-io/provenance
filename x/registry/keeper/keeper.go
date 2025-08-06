@@ -12,54 +12,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/provenance-io/provenance/x/registry"
+	"github.com/provenance-io/provenance/x/registry/types"
 )
 
-var _ RegistryKeeper = (*BaseRegistryKeeper)(nil)
-
-type RegistryKeeper interface {
-	CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey) error
-	CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles []registry.RolesEntry) error
-	GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error
-	RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error
-	HasRole(ctx sdk.Context, key *registry.RegistryKey, role registry.RegistryRole, address string) (bool, error)
-	GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error)
-
-	// As the registry it is important to have some basic nft information to share as it is a central point for
-	// other modules to reference.
-	AssetClassExists(ctx sdk.Context, assetClassId *string) bool
-	HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool
-	GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.AccAddress
-
-	InitGenesis(ctx sdk.Context, state *registry.GenesisState)
-	ExportGenesis(ctx sdk.Context) *registry.GenesisState
-}
-
 // RegistryKeeper defines the registry keeper
-type BaseRegistryKeeper struct {
+type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 	schema   collections.Schema
-
-	Registry collections.Map[string, registry.RegistryEntry]
+	Registry collections.Map[string, types.RegistryEntry]
 
 	NFTKeeper
 	MetaDataKeeper
 }
-
-var (
-	registryPrefix = []byte{0x01}
-)
 
 const (
 	registryKeyHrp = "reg"
 )
 
 // NewKeeper returns a new registry Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, nftKeeper NFTKeeper, metaDataKeeper MetaDataKeeper) RegistryKeeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, nftKeeper NFTKeeper, metaDataKeeper MetaDataKeeper) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
-	rk := BaseRegistryKeeper{
+	rk := Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 
@@ -68,7 +43,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 			collections.NewPrefix(registryPrefix),
 			"registry",
 			collections.StringKey,
-			codec.CollValue[registry.RegistryEntry](cdc),
+			codec.CollValue[types.RegistryEntry](cdc),
 		),
 
 		NFTKeeper:      nftKeeper,
@@ -86,20 +61,20 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 }
 
 // Generate a default registry for a given nft key.
-func (k BaseRegistryKeeper) CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey) error {
+func (k Keeper) CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.RegistryKey) error {
 	ownerAddrStr := authorityAddr.String()
 
 	// Set the default roles for originator and servicer.
-	roles := make([]registry.RolesEntry, 1)
-	roles[0] = registry.RolesEntry{
-		Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+	roles := make([]types.RolesEntry, 1)
+	roles[0] = types.RolesEntry{
+		Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 		Addresses: []string{ownerAddrStr},
 	}
 
 	return k.CreateRegistry(ctx, authorityAddr, key, roles)
 }
 
-func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, roles []registry.RolesEntry) error {
+func (k Keeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.RegistryKey, roles []types.RolesEntry) error {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return err
@@ -124,16 +99,15 @@ func (k BaseRegistryKeeper) CreateRegistry(ctx sdk.Context, authorityAddr sdk.Ac
 		return fmt.Errorf("authority does not own the NFT")
 	}
 
-	k.Registry.Set(ctx, *keyStr, registry.RegistryEntry{
+	k.Registry.Set(ctx, *keyStr, types.RegistryEntry{
 		Key:   key,
 		Roles: roles,
 	})
 	return nil
 }
 
-func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error {
-	registryRole := registry.RegistryRole(role)
-	if registryRole == registry.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+func (k Keeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.RegistryKey, role types.RegistryRole, addr []*sdk.AccAddress) error {
+	if role == types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
 		return fmt.Errorf("invalid role")
 	}
 
@@ -162,7 +136,7 @@ func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddr
 	}
 
 	// Return all the addresses that have the role.
-	getRoleAddresses := func(role registry.RegistryRole) []string {
+	getRoleAddresses := func(role types.RegistryRole) []string {
 		for _, roleEntry := range registryEntry.Roles {
 			if roleEntry.Role == role {
 				return roleEntry.Addresses
@@ -190,12 +164,12 @@ func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddr
 	authorized = append(authorized, addrStr...)
 
 	// Remove the old role entry from the registry
-	updatedRoles := slices.DeleteFunc(registryEntry.Roles, func(s registry.RolesEntry) bool {
+	updatedRoles := slices.DeleteFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
 		return s.Role == role
 	})
 
 	// Add the new authorized addresses to the role entry
-	updatedRoles = append(updatedRoles, registry.RolesEntry{
+	updatedRoles = append(updatedRoles, types.RolesEntry{
 		Role:      role,
 		Addresses: authorized,
 	})
@@ -207,8 +181,8 @@ func (k BaseRegistryKeeper) GrantRole(ctx sdk.Context, authorityAddr sdk.AccAddr
 	return nil
 }
 
-func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey, role registry.RegistryRole, addr []*sdk.AccAddress) error {
-	if role == registry.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+func (k Keeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *types.RegistryKey, role types.RegistryRole, addr []*sdk.AccAddress) error {
+	if role == types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
 		return fmt.Errorf("invalid role")
 	}
 
@@ -257,7 +231,7 @@ func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAdd
 	}
 
 	// Delete the old permissioned addresses from the role entry
-	slices.DeleteFunc(registryEntry.Roles, func(s registry.RolesEntry) bool {
+	slices.DeleteFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
 		if s.Role == role {
 			return true
 		}
@@ -266,7 +240,7 @@ func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAdd
 	})
 
 	// Add the new permissioned addresses to the role entry
-	registryEntry.Roles = append(registryEntry.Roles, registry.RolesEntry{
+	registryEntry.Roles = append(registryEntry.Roles, types.RolesEntry{
 		Role:      role,
 		Addresses: updatedAddresses,
 	})
@@ -277,7 +251,7 @@ func (k BaseRegistryKeeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAdd
 	return nil
 }
 
-func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, role registry.RegistryRole, address string) (bool, error) {
+func (k Keeper) HasRole(ctx sdk.Context, key *types.RegistryKey, role types.RegistryRole, address string) (bool, error) {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 		return false, err
@@ -311,7 +285,7 @@ func (k BaseRegistryKeeper) HasRole(ctx sdk.Context, key *registry.RegistryKey, 
 }
 
 // GetRegistry returns a registry entry for a given key. If the registry entry is not found, it returns nil, nil.
-func (k BaseRegistryKeeper) GetRegistry(ctx sdk.Context, key *registry.RegistryKey) (*registry.RegistryEntry, error) {
+func (k Keeper) GetRegistry(ctx sdk.Context, key *types.RegistryKey) (*types.RegistryEntry, error) {
 	keyStr, err := RegistryKeyToString(key)
 	if err != nil {
 
@@ -331,17 +305,17 @@ func (k BaseRegistryKeeper) GetRegistry(ctx sdk.Context, key *registry.RegistryK
 	return &registryEntry, nil
 }
 
-func (k BaseRegistryKeeper) InitGenesis(ctx sdk.Context, state *registry.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	// Initialize genesis state
 }
 
-func (k BaseRegistryKeeper) ExportGenesis(ctx sdk.Context) *registry.GenesisState {
-	return &registry.GenesisState{}
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	return &types.GenesisState{}
 }
 
 // Combine the asset class id and nft id into a bech32 string.
 // Using bech32 here just allows us a readable identifier for the registry.
-func RegistryKeyToString(key *registry.RegistryKey) (*string, error) {
+func RegistryKeyToString(key *types.RegistryKey) (*string, error) {
 	joined := strings.Join([]string{key.AssetClassId, key.NftId}, ":")
 
 	b32, err := bech32.ConvertAndEncode(registryKeyHrp, []byte(joined))
@@ -352,7 +326,7 @@ func RegistryKeyToString(key *registry.RegistryKey) (*string, error) {
 	return &b32, nil
 }
 
-func StringToRegistryKey(s string) (*registry.RegistryKey, error) {
+func StringToRegistryKey(s string) (*types.RegistryKey, error) {
 	hrp, b, err := bech32.DecodeAndConvert(s)
 	if err != nil {
 		return nil, err
@@ -367,7 +341,7 @@ func StringToRegistryKey(s string) (*registry.RegistryKey, error) {
 		return nil, fmt.Errorf("invalid key: %s", s)
 	}
 
-	return &registry.RegistryKey{
+	return &types.RegistryKey{
 		AssetClassId: parts[0],
 		NftId:        parts[1],
 	}, nil

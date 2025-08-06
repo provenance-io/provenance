@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/asset/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	registry "github.com/provenance-io/provenance/x/registry"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -136,7 +136,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	}
 
 	// Create a default registry for the asset
-	registryKey := &registry.RegistryKey{
+	registryKey := &registrytypes.RegistryKey{
 		AssetClassId: msg.Asset.ClassId,
 		NftId:        msg.Asset.Id,
 	}

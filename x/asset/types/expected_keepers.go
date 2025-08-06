@@ -2,14 +2,15 @@ package types
 
 import (
 	"context"
+
 	"cosmossdk.io/x/nft"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	registry "github.com/provenance-io/provenance/x/registry"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 // BaseRegistryKeeper defines the expected base registry keeper interface
 type BaseRegistryKeeper interface {
-	CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registry.RegistryKey) error
+	CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registrytypes.RegistryKey) error
 }
 
 // NFTKeeper defines the expected NFT keeper interface

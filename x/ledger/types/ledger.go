@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/provenance-io/provenance/x/registry"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 const (
@@ -71,8 +71,8 @@ func (a *LedgerEntry) Compare(b *LedgerEntry) int {
 	return 0
 }
 
-func (lk LedgerKey) ToRegistryKey() *registry.RegistryKey {
-	return &registry.RegistryKey{
+func (lk LedgerKey) ToRegistryKey() *registrytypes.RegistryKey {
+	return &registrytypes.RegistryKey{
 		AssetClassId: lk.AssetClassId,
 		NftId:        lk.NftId,
 	}

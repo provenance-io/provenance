@@ -4,20 +4,20 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/registry"
+	"github.com/provenance-io/provenance/x/registry/types"
 )
 
 type msgServer struct {
-	keeper RegistryKeeper
+	keeper Keeper
 }
 
 // NewMsgServer returns an implementation of the MsgServer interface
 // for the provided Keeper.
-func NewMsgServer(keeper RegistryKeeper) registry.MsgServer {
+func NewMsgServer(keeper Keeper) types.MsgServer {
 	return &msgServer{keeper: keeper}
 }
 
-func (k msgServer) RegisterNFT(ctx context.Context, msg *registry.MsgRegisterNFT) (*registry.MsgRegisterNFTResponse, error) {
+func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (*types.MsgRegisterNFTResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	authority, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
@@ -29,10 +29,10 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *registry.MsgRegisterNFT
 		return nil, err
 	}
 
-	return &registry.MsgRegisterNFTResponse{}, nil
+	return &types.MsgRegisterNFTResponse{}, nil
 }
 
-func (k msgServer) GrantRole(ctx context.Context, msg *registry.MsgGrantRole) (*registry.MsgGrantRoleResponse, error) {
+func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*types.MsgGrantRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	authority, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
@@ -57,7 +57,7 @@ func (k msgServer) GrantRole(ctx context.Context, msg *registry.MsgGrantRole) (*
 	return nil, nil
 }
 
-func (k msgServer) RevokeRole(ctx context.Context, msg *registry.MsgRevokeRole) (*registry.MsgRevokeRoleResponse, error) {
+func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*types.MsgRevokeRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	authority, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
@@ -82,6 +82,6 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *registry.MsgRevokeRole) 
 	return nil, nil
 }
 
-func (k msgServer) UnregisterNFT(ctx context.Context, msg *registry.MsgUnregisterNFT) (*registry.MsgUnregisterNFTResponse, error) {
+func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {
 	return nil, nil
 }

@@ -2,11 +2,11 @@
 // source: provenance/registry/v1/query.proto
 
 /*
-Package registry is a reverse proxy.
+Package types is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package registry
+package types
 
 import (
 	"context"

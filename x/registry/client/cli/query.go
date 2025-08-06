@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/provenance-io/provenance/x/registry"
+	"github.com/provenance-io/provenance/x/registry/types"
 	"github.com/spf13/cobra"
 )
 
@@ -40,14 +41,14 @@ func GetCmdQueryRegistry() *cobra.Command {
 				return err
 			}
 
-			key := registry.RegistryKey{
+			key := types.RegistryKey{
 				AssetClassId: args[0],
 				NftId:        args[1],
 			}
 
-			queryClient := registry.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GetRegistry(context.Background(), &registry.QueryGetRegistryRequest{
+			res, err := queryClient.GetRegistry(context.Background(), &types.QueryGetRegistryRequest{
 				Key: &key,
 			})
 			if err != nil {
@@ -75,23 +76,23 @@ func GetCmdQueryHasRole() *cobra.Command {
 				return err
 			}
 
-			key := registry.RegistryKey{
+			key := types.RegistryKey{
 				AssetClassId: args[0],
 				NftId:        args[1],
 			}
 
 			// convert arg[2] to a registry.RegistryRole enum value
-			role, ok := registry.RegistryRole_value[args[2]]
+			role, ok := types.RegistryRole_value[args[2]]
 			if !ok {
 				return fmt.Errorf("invalid role: %s", args[2])
 			}
 
-			queryClient := registry.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx)
 
 			// TODO: Parse key and role from args
-			res, err := queryClient.HasRole(context.Background(), &registry.QueryHasRoleRequest{
+			res, err := queryClient.HasRole(context.Background(), &types.QueryHasRoleRequest{
 				Key:     &key,
-				Role:    registry.RegistryRole(role),
+				Role:    types.RegistryRole(role),
 				Address: args[3],
 			})
 			if err != nil {
