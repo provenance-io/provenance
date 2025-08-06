@@ -26,3 +26,4 @@ Checkout `./bindings` for all supported language bindings.
 ./gradlew clean :kotlin:jar
 ```
 
+> Published to maven central during GH build.
