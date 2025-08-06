@@ -14,6 +14,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	flatfees "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // newErr returns the provided string as an error unless it's an empty string, then this returns nil.
@@ -380,6 +382,9 @@ type MockFlatFeesKeeper struct {
 	ExpandMsgsReturnMsgs  []sdk.Msg
 	ExpandMsgsReturnError error
 	ExpandMsgsCall        []sdk.Msg
+
+	GetParamsReturn *flatfees.Params
+	GetParamsCalls  int
 }
 
 var _ FlatFeesKeeper = (*MockFlatFeesKeeper)(nil)
@@ -405,6 +410,12 @@ func (k *MockFlatFeesKeeper) WithExpandMsgs(msgs []sdk.Msg, errStr string) *Mock
 	return k
 }
 
+// WithParams sets the value that this will return when GetParams is called.
+func (k *MockFlatFeesKeeper) WithParams(params *flatfees.Params) *MockFlatFeesKeeper {
+	k.GetParamsReturn = params
+	return k
+}
+
 func (k *MockFlatFeesKeeper) CalculateMsgCost(_ sdk.Context, msgs ...sdk.Msg) (upFront sdk.Coins, onSuccess sdk.Coins, err error) {
 	k.CalculateMsgCostCall = msgs
 	return k.CalculateMsgCostReturnUpFront, k.CalculateMsgCostReturnOnSuccess, k.CalculateMsgCostReturnError
@@ -419,6 +430,23 @@ func (k *MockFlatFeesKeeper) ExpandMsgs(msgs []sdk.Msg) ([]sdk.Msg, error) {
 	return k.ExpandMsgsReturnMsgs, k.ExpandMsgsReturnError
 }
 
+func (k *MockFlatFeesKeeper) GetParams(_ sdk.Context) flatfees.Params {
+	k.GetParamsCalls++
+	if k.GetParamsReturn != nil {
+		return *k.GetParamsReturn
+	}
+	return MockDefaultFlatfeesParams
+}
+
+var MockDefaultFlatfeesParams = flatfees.Params{
+	// Picking a denom here that shouldn't be used by anything so that this effectively does nothing unless mocked.
+	DefaultCost: sdk.NewInt64Coin("defaultxyzabc.gg", 1),
+	ConversionFactor: flatfees.ConversionFactor{
+		DefinitionAmount: sdk.NewInt64Coin("defaultxyzabc.gg", 1),
+		ConvertedAmount:  sdk.NewInt64Coin("defaultxyzabc.gg", 1),
+	},
+}
+
 // AssertCalculateMsgCostCall asserts that the call made to CalculateMsgCost equals the expected.
 // Returns true if equal, false if the assertion fails.
 func (k *MockFlatFeesKeeper) AssertCalculateMsgCostCall(t *testing.T, expected []sdk.Msg) bool {
@@ -431,4 +459,11 @@ func (k *MockFlatFeesKeeper) AssertCalculateMsgCostCall(t *testing.T, expected [
 func (k *MockFlatFeesKeeper) AssertExpandMsgsCall(t *testing.T, expected []sdk.Msg) bool {
 	t.Helper()
 	return assertEqualMsgTypes(t, expected, k.ExpandMsgsCall, "ExpandMsgs: msg types provided")
+}
+
+// AssertGetParamsCalls asserts that GetParams was called the provided number of times.
+// Returns true if equal, false if the assertion fails.
+func (k *MockFlatFeesKeeper) AssertGetParamsCalls(t *testing.T, expected int) bool {
+	t.Helper()
+	return assert.Equal(t, expected, k.GetParamsCalls, "number of times GetParams was called")
 }
