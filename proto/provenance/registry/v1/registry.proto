@@ -28,6 +28,9 @@ enum RegistryRole {
 
 // RegistryKey defines the key for registry entries
 message RegistryKey {
+  // disable stringer
+  option (gogoproto.goproto_stringer) = false;
+
   // Identifier for the nft that this ledger is linked to.
   // This could be a `x/metadata` scope id or an `x/nft` nft id.
   // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.

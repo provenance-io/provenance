@@ -4,7 +4,12 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+const (
+	registryKeyHrp = "reg"
 )
 
 // Validate validates the RegistryKey
@@ -32,10 +37,6 @@ func (m *RegistryEntry) Validate() error {
 		return sdkerrors.ErrInvalidRequest.Wrap("registry entry cannot be nil")
 	}
 
-	// Validate key
-	if m.Key == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("key cannot be nil")
-	}
 	if err := m.Key.Validate(); err != nil {
 		return sdkerrors.ErrInvalidRequest.Wrapf("invalid key: %s", err)
 	}
@@ -46,15 +47,10 @@ func (m *RegistryEntry) Validate() error {
 	}
 
 	// Check for duplicate roles
-	seenRoles := make(map[RegistryRole]bool)
 	for i, role := range m.Roles {
 		if err := role.Validate(); err != nil {
 			return sdkerrors.ErrInvalidRequest.Wrapf("invalid role at index %d: %s", i, err)
 		}
-		if seenRoles[role.Role] {
-			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate role at index %d: %s", i, role.Role)
-		}
-		seenRoles[role.Role] = true
 	}
 
 	return nil
@@ -66,9 +62,8 @@ func (m *RolesEntry) Validate() error {
 		return sdkerrors.ErrInvalidRequest.Wrap("roles entry cannot be nil")
 	}
 
-	// Validate role
-	if m.Role == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
-		return sdkerrors.ErrInvalidRequest.Wrap("role cannot be unspecified")
+	if err := m.Role.Validate(); err != nil {
+		return err
 	}
 
 	// Validate addresses
@@ -89,6 +84,19 @@ func (m *RolesEntry) Validate() error {
 			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate address at index %d: %s", i, address)
 		}
 		seen[address] = true
+	}
+
+	return nil
+}
+
+func (m *RegistryRole) Validate() error {
+	if _, ok := RegistryRole_value[m.String()]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid role: %s", m.String())
+	}
+
+	// Validate role
+	if *m == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+		return sdkerrors.ErrInvalidRequest.Wrap("role cannot be unspecified")
 	}
 
 	return nil
@@ -162,4 +170,38 @@ func (m *RegistryBulkUpdateEntry) Validate() error {
 	}
 
 	return nil
+}
+
+// Combine the asset class id and nft id into a bech32 string.
+// Using bech32 here just allows us a readable identifier for the registry.
+func (key RegistryKey) String() string {
+	joined := strings.Join([]string{key.AssetClassId, key.NftId}, ":")
+
+	b32, err := bech32.ConvertAndEncode(registryKeyHrp, []byte(joined))
+	if err != nil {
+		panic(err)
+	}
+
+	return b32
+}
+
+func StringToRegistryKey(s string) (*RegistryKey, error) {
+	hrp, b, err := bech32.DecodeAndConvert(s)
+	if err != nil {
+		return nil, err
+	}
+
+	if hrp != registryKeyHrp {
+		return nil, NewErrCodeInvalidHrp(hrp)
+	}
+
+	parts := strings.Split(string(b), ":")
+	if len(parts) != 2 {
+		return nil, NewErrCodeInvalidKey(s)
+	}
+
+	return &RegistryKey{
+		AssetClassId: parts[0],
+		NftId:        parts[1],
+	}, nil
 }

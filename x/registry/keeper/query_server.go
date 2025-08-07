@@ -33,6 +33,17 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegist
 func (qs QueryServer) HasRole(ctx context.Context, req *types.QueryHasRoleRequest) (*types.QueryHasRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	keyStr := req.Key.String()
+
+	// ensure the registry exists
+	has, err := qs.keeper.Registry.Has(sdkCtx, keyStr)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, types.NewErrCodeRegistryNotFound(keyStr)
+	}
+
 	hasRole, err := qs.keeper.HasRole(sdkCtx, req.Key, req.Role, req.Address)
 	if err != nil {
 		return nil, err

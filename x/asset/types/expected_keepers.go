@@ -10,7 +10,7 @@ import (
 
 // BaseRegistryKeeper defines the expected base registry keeper interface
 type BaseRegistryKeeper interface {
-	CreateDefaultRegistry(ctx sdk.Context, authorityAddr sdk.AccAddress, key *registrytypes.RegistryKey) error
+	CreateDefaultRegistry(ctx sdk.Context, authorityAddr string, key *registrytypes.RegistryKey) error
 }
 
 // NFTKeeper defines the expected NFT keeper interface

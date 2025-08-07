@@ -19,12 +19,29 @@ func NewMsgServer(keeper Keeper) types.MsgServer {
 
 func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (*types.MsgRegisterNFTResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	authority, err := sdk.AccAddressFromBech32(msg.Authority)
+
+	keyStr := msg.Key.String()
+
+	// Already exists check
+	has, err := k.keeper.Registry.Has(sdkCtx, keyStr)
 	if err != nil {
 		return nil, err
 	}
+	if has {
+		return nil, types.NewErrCodeRegistryAlreadyExists(keyStr)
+	}
 
-	err = k.keeper.CreateRegistry(sdkCtx, authority, msg.Key, msg.Roles)
+	// Validate that the NFT exists
+	if hasNFT := k.keeper.HasNFT(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId); !hasNFT {
+		return nil, types.NewErrCodeNFTNotFound(msg.Key.NftId)
+	}
+
+	// Validate that the authority owns the NFT
+	if nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId); nftOwner == nil || nftOwner.String() != msg.Authority {
+		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
+	}
+
+	err = k.keeper.CreateRegistry(sdkCtx, msg.Key, msg.Roles)
 	if err != nil {
 		return nil, err
 	}
@@ -34,22 +51,25 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 
 func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*types.MsgGrantRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	authority, err := sdk.AccAddressFromBech32(msg.Authority)
+
+	keyStr := msg.Key.String()
+
+	// ensure the registry exists
+	has, err := k.keeper.Registry.Has(sdkCtx, keyStr)
 	if err != nil {
 		return nil, err
 	}
-
-	addresses := make([]*sdk.AccAddress, len(msg.Addresses))
-	for i, address := range msg.Addresses {
-		addr, err := sdk.AccAddressFromBech32(address)
-		if err != nil {
-			return nil, err
-		}
-
-		addresses[i] = &addr
+	if !has {
+		return nil, types.NewErrCodeRegistryNotFound(keyStr)
 	}
 
-	err = k.keeper.GrantRole(sdkCtx, authority, msg.Key, msg.Role, addresses)
+	// Validate that the authority owns the NFT
+	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
+	if nftOwner == nil || nftOwner.String() != msg.Authority {
+		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
+	}
+
+	err = k.keeper.GrantRole(sdkCtx, msg.Key, msg.Role, msg.Addresses)
 	if err != nil {
 		return nil, err
 	}
@@ -59,23 +79,25 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 
 func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*types.MsgRevokeRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	authority, err := sdk.AccAddressFromBech32(msg.Authority)
+
+	keyStr := msg.Key.String()
+
+	// ensure the registry exists
+	has, err := k.keeper.Registry.Has(sdkCtx, keyStr)
 	if err != nil {
 		return nil, err
 	}
-
-	addresses := make([]*sdk.AccAddress, len(msg.Addresses))
-	for i, address := range msg.Addresses {
-		addr, err := sdk.AccAddressFromBech32(address)
-		if err != nil {
-			return nil, err
-		}
-
-		addresses[i] = &addr
+	if !has {
+		return nil, types.NewErrCodeRegistryNotFound(keyStr)
 	}
 
-	err = k.keeper.RevokeRole(sdkCtx, authority, msg.Key, msg.Role, addresses)
-	if err != nil {
+	// Validate that the authority owns the NFT
+	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
+	if nftOwner == nil || nftOwner.String() != msg.Authority {
+		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
+	}
+
+	if err := k.keeper.RevokeRole(sdkCtx, msg.Key, msg.Role, msg.Addresses); err != nil {
 		return nil, err
 	}
 
@@ -83,5 +105,14 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 }
 
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {
-	return nil, nil
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// Validate that the authority owns the NFT
+	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
+	if nftOwner == nil || nftOwner.String() != msg.Authority {
+		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
+	}
+
+	// TODO: Implement unregister functionality
+	return &types.MsgUnregisterNFTResponse{}, nil
 }

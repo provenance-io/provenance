@@ -141,7 +141,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 		NftId:        msg.Asset.Id,
 	}
 
-	err = m.registryKeeper.CreateDefaultRegistry(ctx, owner, registryKey)
+	err = m.registryKeeper.CreateDefaultRegistry(ctx, owner.String(), registryKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default registry: %w", err)
 	}
