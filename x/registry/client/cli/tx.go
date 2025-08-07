@@ -35,7 +35,7 @@ func CmdTx() *cobra.Command {
 // CmdRegisterNFT returns the command to register a new NFT
 func CmdRegisterNFT() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "register-nft [asset_class_id] [nft_id]",
+		Use:   "register-nft <asset_class_id> <nft_id>",
 		Short: "Register an NFT",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -64,7 +64,7 @@ func CmdRegisterNFT() *cobra.Command {
 // CmdGrantRole returns the command to grant a role
 func CmdGrantRole() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant-role [asset_class_id] [nft_id] [role] [address]",
+		Use:   "grant-role <asset_class_id> <nft_id> <role> <address>",
 		Short: "Grant a role to an address",
 		Args:  cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -78,7 +78,6 @@ func CmdGrantRole() *cobra.Command {
 				return fmt.Errorf("invalid role: %s", args[2])
 			}
 
-			// TODO: Parse key, role and addresses from args
 			msg := types.MsgGrantRole{
 				Authority: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
@@ -100,7 +99,7 @@ func CmdGrantRole() *cobra.Command {
 // CmdRevokeRole returns the command to revoke a role
 func CmdRevokeRole() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke-role [asset_class_id] [nft_id] [role] [address]",
+		Use:   "revoke-role <asset_class_id> <nft_id> <role> <address>",
 		Short: "Revoke a role from an address",
 		Args:  cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -115,7 +114,6 @@ func CmdRevokeRole() *cobra.Command {
 				return fmt.Errorf("invalid role: %s", args[2])
 			}
 
-			// TODO: Parse key, role and addresses from args
 			msg := types.MsgRevokeRole{
 				Authority: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
@@ -137,7 +135,7 @@ func CmdRevokeRole() *cobra.Command {
 // CmdUnregisterNFT returns the command to unregister an NFT
 func CmdUnregisterNFT() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unregister-nft [asset_class_id] [nft_id]",
+		Use:   "unregister-nft <asset_class_id> <nft_id>",
 		Short: "Unregister an NFT",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -146,15 +144,12 @@ func CmdUnregisterNFT() *cobra.Command {
 				return err
 			}
 
-			key := types.RegistryKey{
-				AssetClassId: args[0],
-				NftId:        args[1],
-			}
-
-			// TODO: Parse key from args
 			msg := types.MsgUnregisterNFT{
 				Authority: clientCtx.GetFromAddress().String(),
-				Key:       &key,
+				Key: &types.RegistryKey{
+					AssetClassId: args[0],
+					NftId:        args[1],
+				},
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
