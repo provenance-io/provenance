@@ -186,6 +186,8 @@ func (k Keeper) HasRole(ctx sdk.Context, key *types.RegistryKey, role types.Regi
 					return true, nil
 				}
 			}
+			// If we found the role, break out of the loop.
+			break
 		}
 	}
 
