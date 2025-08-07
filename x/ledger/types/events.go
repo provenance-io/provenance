@@ -7,10 +7,11 @@ func NewEventLedgerCreated(key *LedgerKey) *EventLedgerCreated {
 	}
 }
 
-func NewEventLedgerUpdated(key *LedgerKey) *EventLedgerUpdated {
+func NewEventLedgerUpdated(key *LedgerKey, updateType UpdateType) *EventLedgerUpdated {
 	return &EventLedgerUpdated{
 		AssetClassId: key.AssetClassId,
 		NftId:        key.NftId,
+		UpdateType:   updateType,
 	}
 }
 

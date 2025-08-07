@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -53,7 +52,7 @@ func (m MsgUpdateStatusRequest) ValidateBasic() error {
 	}
 
 	if m.StatusTypeId <= 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("status type id must be a positive integer")
+		return NewErrCodeInvalidField("status_type_id", "must be a positive integer")
 	}
 
 	return nil
@@ -71,15 +70,15 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 
 	// Validate interest rate bounds (reasonable bounds: 0-100000000 for 0-1000%)
 	if m.InterestRate < 0 || m.InterestRate > 100000000 {
-		return sdkerrors.ErrInvalidRequest.Wrap("interest rate must be between 0 and 100000000 (0-1000%)")
+		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100000000 (0-1000%)")
 	}
 
 	if _, ok := DayCountConvention_name[int32(m.InterestDayCountConvention)]; !ok {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest day count convention: %d", m.InterestDayCountConvention)
+		return NewErrCodeInvalidField("interest_day_count_convention", "invalid interest day count convention")
 	}
 
 	if _, ok := InterestAccrualMethod_name[int32(m.InterestAccrualMethod)]; !ok {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest accrual method: %d", m.InterestAccrualMethod)
+		return NewErrCodeInvalidField("interest_accrual_method", "invalid interest accrual method")
 	}
 
 	return nil
@@ -97,16 +96,16 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 
 	// Validate next payment amount bounds
 	if m.NextPmtAmt < 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("next payment amount cannot be negative")
+		return NewErrCodeInvalidField("next_pmt_amt", "cannot be negative")
 	}
 
 	// Validate next payment date
 	if m.NextPmtDate <= 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("next payment date must be a positive integer")
+		return NewErrCodeInvalidField("next_pmt_date", "must be a positive integer")
 	}
 
 	if _, ok := PaymentFrequency_name[int32(m.PaymentFrequency)]; !ok {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid payment frequency: %d", m.PaymentFrequency)
+		return NewErrCodeInvalidField("payment_frequency", "invalid payment frequency")
 	}
 
 	return nil
@@ -123,7 +122,7 @@ func (m MsgUpdateMaturityDateRequest) ValidateBasic() error {
 	}
 
 	if m.MaturityDate <= 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("maturity date must be a positive integer")
+		return NewErrCodeInvalidField("maturity_date", "must be a positive integer")
 	}
 
 	return nil
@@ -140,7 +139,7 @@ func (m MsgAppendRequest) ValidateBasic() error {
 	}
 
 	if len(m.Entries) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("entries cannot be empty")
+		return NewErrCodeInvalidField("entries", "cannot be empty")
 	}
 
 	for _, e := range m.Entries {
@@ -167,10 +166,10 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 	}
 
 	if len(m.BalanceAmounts) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("balance amounts cannot be empty")
+		return NewErrCodeInvalidField("balance_amounts", "cannot be empty")
 	}
 	if len(m.AppliedAmounts) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("applied amounts cannot be empty")
+		return NewErrCodeInvalidField("applied_amounts", "cannot be empty")
 	}
 
 	for _, balanceAmount := range m.BalanceAmounts {
@@ -200,7 +199,7 @@ func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 	}
 
 	if len(m.Transfers) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("transfers cannot be empty")
+		return NewErrCodeInvalidField("transfers", "cannot be empty")
 	}
 
 	for _, ft := range m.Transfers {
@@ -255,7 +254,7 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 	}
 
 	if m.StatusType == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("status type cannot be nil")
+		return NewErrCodeInvalidField("status_type", "cannot be nil")
 	}
 
 	if err := m.StatusType.Validate(); err != nil {
@@ -276,7 +275,7 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 	}
 
 	if m.EntryType == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("entry type cannot be nil")
+		return NewErrCodeInvalidField("entry_type", "cannot be nil")
 	}
 
 	if err := m.EntryType.Validate(); err != nil {
@@ -297,7 +296,7 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 	}
 
 	if m.BucketType == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("bucket type cannot be nil")
+		return NewErrCodeInvalidField("bucket_type", "cannot be nil")
 	}
 
 	if err := m.BucketType.Validate(); err != nil {
@@ -314,7 +313,7 @@ func (m MsgBulkImportRequest) ValidateBasic() error {
 	}
 
 	if m.GenesisState == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("genesis state cannot be nil")
+		return NewErrCodeInvalidField("genesis_state", "cannot be nil")
 	}
 
 	return nil

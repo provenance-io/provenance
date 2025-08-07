@@ -5,8 +5,6 @@ option go_package          = "github.com/provenance-io/provenance/x/ledger/types
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
-import "cosmos_proto/cosmos.proto";
-
 // EventLedgerCreated is emitted when a new ledger is created for an asset.
 // This event is triggered by the MsgCreateLedger message handler when a
 // ledger is successfully created for a specific NFT or scope.
@@ -37,10 +35,19 @@ message EventLedgerUpdated {
 // UpdateType is the type of data update that caused the EventLedgerUpdated event to be emitted.
 // This is used to identify the specific update that caused the event to be emitted.
 enum UpdateType {
+  // The update type is unspecified.
   UPDATE_TYPE_UNSPECIFIED   = 0;
+
+  // The status of the ledger was updated.
   UPDATE_TYPE_STATUS        = 1;
+
+  // The interest rate of the ledger was updated.
   UPDATE_TYPE_INTEREST_RATE = 2;
+
+  // The payment of the ledger was updated.
   UPDATE_TYPE_PAYMENT       = 3;
+
+  // The maturity date of the ledger was updated.
   UPDATE_TYPE_MATURITY_DATE = 4;
 }
 

@@ -12,6 +12,13 @@ const (
 	ledgerKeyHrp = "ledger"
 )
 
+func NewLedgerKey(assetClassId string, nftId string) *LedgerKey {
+	return &LedgerKey{
+		AssetClassId: assetClassId,
+		NftId:        nftId,
+	}
+}
+
 // Combine the asset class id and nft id into a bech32 string.
 // Using bech32 here just allows us a readable identifier for the ledger.
 func (lk LedgerKey) String() string {

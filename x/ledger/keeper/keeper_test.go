@@ -136,6 +136,12 @@ func (s *TestSuite) ConfigureTest() {
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
 	})
+
+	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+		Id:          2,
+		Code:        "IN_DEFERMENT",
+		Description: "In Deferment",
+	})
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -373,3 +373,282 @@ func (s *TestSuite) TestBech32() {
 	_, err = types.StringToLedgerKey("ledgerasdf1w3jhxapdden8gttrd3shxuedd9jr5cm0wdkk7ue3x44hjwtyw5uxzvnhd3ehg73kvec8svmsx3khzur209ex6dtrvack5amv8pehzv7wxj4")
 	s.Require().Error(err, "StringToLedgerKey error")
 }
+
+// TestUpdateLedgerStatus tests the UpdateLedgerStatus function and event emission
+func (s *TestSuite) TestUpdateLedgerStatus() {
+	// Create a valid ledger first
+	validLedger := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+	err := s.keeper.AddLedger(s.ctx, validLedger)
+	s.Require().NoError(err, "CreateLedger error")
+
+	tests := []struct {
+		name         string
+		statusTypeId int32
+		expErr       []string
+		expEvent     bool
+	}{
+		{
+			name:         "valid status update",
+			statusTypeId: 2,
+			expEvent:     true,
+		},
+		{
+			name:         "invalid status type id",
+			statusTypeId: 999,
+			expErr:       []string{"status type doesn't exist"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Clear events before each test
+			s.ctx.EventManager().Events()
+
+			err := s.keeper.UpdateLedgerStatus(s.ctx, validLedger.Key, tc.statusTypeId)
+
+			if len(tc.expErr) > 0 {
+				s.assertErrorContents(err, tc.expErr, "UpdateLedgerStatus error")
+			} else {
+				s.Require().NoError(err, "UpdateLedgerStatus error")
+
+				// Verify the ledger was updated
+				l, err := s.keeper.GetLedger(s.ctx, validLedger.Key)
+				s.Require().NoError(err, "GetLedger error")
+				s.Require().NotNil(l, "GetLedger result")
+				s.Require().Equal(tc.statusTypeId, l.StatusTypeId, "ledger status type id")
+
+				// Verify event emission
+				if tc.expEvent {
+					var foundEvent *sdk.Event
+					for _, e := range s.ctx.EventManager().Events() {
+						if e.Type == "provenance.ledger.v1.EventLedgerUpdated" {
+							foundEvent = &e
+							break
+						}
+					}
+					s.Require().NotNil(foundEvent, "EventLedgerUpdated event should be found")
+					s.Require().Equal("provenance.ledger.v1.EventLedgerUpdated", foundEvent.Type, "event type")
+					s.Require().Len(foundEvent.Attributes, 3, "event attributes length")
+					s.Require().Equal("asset_class_id", foundEvent.Attributes[0].Key, "event asset class id key")
+					s.Require().Equal("nft_id", foundEvent.Attributes[1].Key, "event nft id key")
+					s.Require().Equal("update_type", foundEvent.Attributes[2].Key, "event update type key")
+					s.Require().Contains(foundEvent.Attributes[2].Value, "UPDATE_TYPE_STATUS", "event update type value")
+				}
+			}
+		})
+	}
+}
+
+// TestUpdateLedgerInterestRate tests the UpdateLedgerInterestRate function and event emission
+func (s *TestSuite) TestUpdateLedgerInterestRate() {
+	// Create a valid ledger first
+	validLedger := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+	err := s.keeper.AddLedger(s.ctx, validLedger)
+	s.Require().NoError(err, "CreateLedger error")
+
+	tests := []struct {
+		name                  string
+		interestRate          int32
+		dayCountConvention    types.DayCountConvention
+		interestAccrualMethod types.InterestAccrualMethod
+		expErr                []string
+		expEvent              bool
+	}{
+		{
+			name:                  "valid interest rate update",
+			interestRate:          500, // 5%
+			dayCountConvention:    types.DAY_COUNT_CONVENTION_THIRTY_360,
+			interestAccrualMethod: types.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST,
+			expEvent:              true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Clear events before each test
+			s.ctx.EventManager().Events()
+
+			err := s.keeper.UpdateLedgerInterestRate(s.ctx, validLedger.Key, tc.interestRate, tc.dayCountConvention, tc.interestAccrualMethod)
+
+			if len(tc.expErr) > 0 {
+				s.assertErrorContents(err, tc.expErr, "UpdateLedgerInterestRate error")
+			} else {
+				s.Require().NoError(err, "UpdateLedgerInterestRate error")
+
+				// Verify the ledger was updated
+				l, err := s.keeper.GetLedger(s.ctx, validLedger.Key)
+				s.Require().NoError(err, "GetLedger error")
+				s.Require().NotNil(l, "GetLedger result")
+				s.Require().Equal(tc.interestRate, l.InterestRate, "ledger interest rate")
+				s.Require().Equal(tc.dayCountConvention, l.InterestDayCountConvention, "ledger day count convention")
+				s.Require().Equal(tc.interestAccrualMethod, l.InterestAccrualMethod, "ledger interest accrual method")
+
+				// Verify event emission
+				if tc.expEvent {
+					var foundEvent *sdk.Event
+					for _, e := range s.ctx.EventManager().Events() {
+						if e.Type == "provenance.ledger.v1.EventLedgerUpdated" {
+							foundEvent = &e
+							break
+						}
+					}
+					s.Require().NotNil(foundEvent, "EventLedgerUpdated event should be found")
+					s.Require().Equal("provenance.ledger.v1.EventLedgerUpdated", foundEvent.Type, "event type")
+					s.Require().Len(foundEvent.Attributes, 3, "event attributes length")
+					s.Require().Equal("update_type", foundEvent.Attributes[2].Key, "event update type key")
+					s.Require().Contains(foundEvent.Attributes[2].Value, "UPDATE_TYPE_INTEREST_RATE", "event update type value")
+				}
+			}
+		})
+	}
+}
+
+// TestUpdateLedgerPayment tests the UpdateLedgerPayment function and event emission
+func (s *TestSuite) TestUpdateLedgerPayment() {
+	// Create a valid ledger first
+	validLedger := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+	err := s.keeper.AddLedger(s.ctx, validLedger)
+	s.Require().NoError(err, "CreateLedger error")
+
+	tests := []struct {
+		name             string
+		nextPmtAmt       int64
+		nextPmtDate      int32
+		paymentFrequency types.PaymentFrequency
+		expErr           []string
+		expEvent         bool
+	}{
+		{
+			name:             "valid payment update",
+			nextPmtAmt:       1000000,  // 1000 tokens
+			nextPmtDate:      20241201, // Dec 1, 2024
+			paymentFrequency: types.PAYMENT_FREQUENCY_MONTHLY,
+			expEvent:         true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Clear events before each test
+			s.ctx.EventManager().Events()
+
+			err := s.keeper.UpdateLedgerPayment(s.ctx, validLedger.Key, tc.nextPmtAmt, tc.nextPmtDate, tc.paymentFrequency)
+
+			if len(tc.expErr) > 0 {
+				s.assertErrorContents(err, tc.expErr, "UpdateLedgerPayment error")
+			} else {
+				s.Require().NoError(err, "UpdateLedgerPayment error")
+
+				// Verify the ledger was updated
+				l, err := s.keeper.GetLedger(s.ctx, validLedger.Key)
+				s.Require().NoError(err, "GetLedger error")
+				s.Require().NotNil(l, "GetLedger result")
+				s.Require().Equal(tc.nextPmtAmt, l.NextPmtAmt, "ledger next payment amount")
+				s.Require().Equal(tc.nextPmtDate, l.NextPmtDate, "ledger next payment date")
+				s.Require().Equal(tc.paymentFrequency, l.PaymentFrequency, "ledger payment frequency")
+
+				// Verify event emission
+				if tc.expEvent {
+					var foundEvent *sdk.Event
+					for _, e := range s.ctx.EventManager().Events() {
+						if e.Type == "provenance.ledger.v1.EventLedgerUpdated" {
+							foundEvent = &e
+							break
+						}
+					}
+					s.Require().NotNil(foundEvent, "EventLedgerUpdated event should be found")
+					s.Require().Equal("provenance.ledger.v1.EventLedgerUpdated", foundEvent.Type, "event type")
+					s.Require().Len(foundEvent.Attributes, 3, "event attributes length")
+					s.Require().Equal("update_type", foundEvent.Attributes[2].Key, "event update type key")
+					s.Require().Contains(foundEvent.Attributes[2].Value, "UPDATE_TYPE_PAYMENT", "event update type value")
+				}
+			}
+		})
+	}
+}
+
+// TestUpdateLedgerMaturityDate tests the UpdateLedgerMaturityDate function and event emission
+func (s *TestSuite) TestUpdateLedgerMaturityDate() {
+	// Create a valid ledger first
+	validLedger := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+	err := s.keeper.AddLedger(s.ctx, validLedger)
+	s.Require().NoError(err, "CreateLedger error")
+
+	tests := []struct {
+		name         string
+		maturityDate int32
+		expErr       []string
+		expEvent     bool
+	}{
+		{
+			name:         "valid maturity date update",
+			maturityDate: 20251231, // Dec 31, 2025
+			expEvent:     true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Clear events before each test
+			s.ctx.EventManager().Events()
+
+			err := s.keeper.UpdateLedgerMaturityDate(s.ctx, validLedger.Key, tc.maturityDate)
+
+			if len(tc.expErr) > 0 {
+				s.assertErrorContents(err, tc.expErr, "UpdateLedgerMaturityDate error")
+			} else {
+				s.Require().NoError(err, "UpdateLedgerMaturityDate error")
+
+				// Verify the ledger was updated
+				l, err := s.keeper.GetLedger(s.ctx, validLedger.Key)
+				s.Require().NoError(err, "GetLedger error")
+				s.Require().NotNil(l, "GetLedger result")
+				s.Require().Equal(tc.maturityDate, l.MaturityDate, "ledger maturity date")
+
+				// Verify event emission
+				if tc.expEvent {
+					var foundEvent *sdk.Event
+					for _, e := range s.ctx.EventManager().Events() {
+						if e.Type == "provenance.ledger.v1.EventLedgerUpdated" {
+							foundEvent = &e
+							break
+						}
+					}
+					s.Require().NotNil(foundEvent, "EventLedgerUpdated event should be found")
+					s.Require().Equal("provenance.ledger.v1.EventLedgerUpdated", foundEvent.Type, "event type")
+					s.Require().Len(foundEvent.Attributes, 3, "event attributes length")
+					s.Require().Equal("update_type", foundEvent.Attributes[2].Key, "event update type key")
+					s.Require().Contains(foundEvent.Attributes[2].Value, "UPDATE_TYPE_MATURITY_DATE", "event update type value")
+				}
+			}
+		})
+	}
+}
