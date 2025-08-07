@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user2Addr,
-			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": name has too many segments",
+			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": segment of name is too short",
 		},
 		{
 			name: "should fail unable to resolve name to user",

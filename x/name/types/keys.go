@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -32,11 +34,21 @@ var (
 	NameParamStoreKey = []byte{0x06}
 )
 
-// HashedStringKeyCodec implements codec.KeyCodec for hashed string keys
+// NameRecordIndexes defines indexes for name records
+type NameRecordIndexes struct {
+	// AddrIndex maps (address, name) -> empty, like bank module's pattern
+	AddrIndex *indexes.Multi[collections.Pair[[]byte, string], string, NameRecord]
+}
+
+// IndexesList implements collections.Indexes
+func (i NameRecordIndexes) IndexesList() []collections.Index[string, NameRecord] {
+	return []collections.Index[string, NameRecord]{i.AddrIndex}
+}
+
 type HashedStringKeyCodec struct{}
 
 func (c HashedStringKeyCodec) Encode(buffer []byte, key string) (int, error) {
-	hash := c.computeHash(key)
+	hash := c.ComputeHash(key)
 	if len(buffer) < len(hash) {
 		return 0, fmt.Errorf("buffer too small")
 	}
@@ -71,24 +83,23 @@ func (c HashedStringKeyCodec) KeyType() string {
 }
 
 func (c HashedStringKeyCodec) EncodeNonTerminal(buffer []byte, key string) (int, error) {
-	// Use collections.StringKey for non-terminal encoding
-	strKey := collections.StringKey
-	size := strKey.SizeNonTerminal(key)
-	if len(buffer) < size {
+	hash := c.ComputeHash(key)
+	if len(buffer) < len(hash) {
 		return 0, fmt.Errorf("buffer too small")
 	}
-	return strKey.EncodeNonTerminal(buffer, key)
+	copy(buffer, hash)
+	return len(hash), nil
 }
 
 func (c HashedStringKeyCodec) DecodeNonTerminal(buffer []byte) (int, string, error) {
-	return collections.StringKey.DecodeNonTerminal(buffer)
+	return len(buffer), base64.StdEncoding.EncodeToString(buffer), nil
 }
 
 func (c HashedStringKeyCodec) SizeNonTerminal(key string) int {
-	return collections.StringKey.SizeNonTerminal(key)
+	return sha256.Size
 }
 
-func (c HashedStringKeyCodec) computeHash(name string) []byte {
+func (c HashedStringKeyCodec) ComputeHash(name string) []byte {
 	comps := strings.Split(name, ".")
 	hsh := sha256.New()
 	for i := len(comps) - 1; i >= 0; i-- {
@@ -141,6 +152,7 @@ func computeNameHash(name string) ([]byte, error) {
 	return hsh.Sum(nil), nil
 }
 
+// ValidateAddress validates an account address
 func ValidateAddress(addr sdk.AccAddress) error {
 	return sdk.VerifyAddressFormat(addr)
 }
