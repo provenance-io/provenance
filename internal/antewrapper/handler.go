@@ -11,6 +11,8 @@ import (
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
+	smartaccountkeeper "github.com/provenance-io/provenance/x/smartaccounts/keeper"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -23,6 +25,7 @@ type HandlerOptions struct {
 	CircuitKeeper          circuitante.CircuitBreaker
 	TxSigningHandlerMap    *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	SmartAccountKeeper     smartaccountkeeper.Keeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -59,7 +62,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
-		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap),
+		NewProvenanceSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap, options.SmartAccountKeeper),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 

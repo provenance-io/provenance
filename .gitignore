@@ -8,7 +8,6 @@ config/
 data/
 .idea/
 *.swp
-utils/
 .blockade
 blockade.yaml
 *.sock
@@ -38,6 +37,8 @@ profile.iws
 *.iml
 *.ipr
 *.iws
+.run/
+qodana.yaml
 
 # Tools make target marker
 tools-stamp
@@ -55,3 +56,5 @@ proto/gen/
 
 # act (local GitHub workflow runner: https://github.com/nektos/act)
 .secrets
+
+

@@ -170,6 +170,9 @@ import (
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
+	smartaccountkeeper "github.com/provenance-io/provenance/x/smartaccounts/keeper"
+	smartacccountmodule "github.com/provenance-io/provenance/x/smartaccounts/module"
+	smartaccounttypes "github.com/provenance-io/provenance/x/smartaccounts/types"
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -195,12 +198,13 @@ var (
 		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		ibchookstypes.ModuleName:    nil,
 
-		attributetypes.ModuleName: nil,
-		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		wasmtypes.ModuleName:      {authtypes.Burner},
-		triggertypes.ModuleName:   nil,
-		oracletypes.ModuleName:    nil,
-		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		attributetypes.ModuleName:    nil,
+		markertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		wasmtypes.ModuleName:         {authtypes.Burner},
+		triggertypes.ModuleName:      nil,
+		oracletypes.ModuleName:       nil,
+		metadatatypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
+		smartaccounttypes.ModuleName: nil,
 	}
 )
 
@@ -266,14 +270,15 @@ type App struct {
 	ICQKeeper          icqkeeper.Keeper
 	RateLimitingKeeper *ibcratelimitkeeper.Keeper
 
-	MarkerKeeper    markerkeeper.Keeper
-	MetadataKeeper  metadatakeeper.Keeper
-	AttributeKeeper attributekeeper.Keeper
-	NameKeeper      namekeeper.Keeper
-	HoldKeeper      holdkeeper.Keeper
-	ExchangeKeeper  exchangekeeper.Keeper
-	WasmKeeper      *wasmkeeper.Keeper
-	ContractKeeper  *wasmkeeper.PermissionedKeeper
+	MarkerKeeper       markerkeeper.Keeper
+	MetadataKeeper     metadatakeeper.Keeper
+	AttributeKeeper    attributekeeper.Keeper
+	NameKeeper         namekeeper.Keeper
+	HoldKeeper         holdkeeper.Keeper
+	ExchangeKeeper     exchangekeeper.Keeper
+	SmartAccountKeeper smartaccountkeeper.Keeper
+	WasmKeeper         *wasmkeeper.Keeper
+	ContractKeeper     *wasmkeeper.PermissionedKeeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -385,6 +390,7 @@ func New(
 		oracletypes.StoreKey,
 		hold.StoreKey,
 		exchange.StoreKey,
+		smartaccounttypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys()
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -450,6 +456,7 @@ func New(
 	if err != nil {
 		panic(err)
 	}
+	signingCtx := interfaceRegistry.SigningContext()
 	if err = txConfig.SigningContext().Validate(); err != nil {
 		panic(err)
 	}
@@ -565,6 +572,17 @@ func New(
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
 		authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName), // Allow bond denom to be a restricted coin.
 	}
+
+	// Create the smart account Keeper
+	app.SmartAccountKeeper = smartaccountkeeper.NewKeeper(
+		appCodec,
+		signingCtx.AddressCodec(),
+		runtime.NewKVStoreService(keys[smartaccounttypes.StoreKey]),
+		app.txConfig.SignModeHandler(),
+		app.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		logger,
+	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.AccountKeeper,
@@ -757,6 +775,7 @@ func New(
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
+		smartacccountmodule.NewAppModule(appCodec, app.SmartAccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -868,6 +887,7 @@ func New(
 		wasmtypes.ModuleName, // must be after ibctransfer.
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
+		smartaccounttypes.ModuleName,
 	}
 	app.mm.SetOrderInitGenesis(moduleGenesisOrder...)
 	app.mm.SetOrderExportGenesis(moduleGenesisOrder...)
@@ -912,6 +932,7 @@ func New(
 		nametypes.ModuleName,
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
+		smartaccounttypes.ModuleName,
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
@@ -979,6 +1000,7 @@ func (app *App) setAnteHandler() {
 			FlatFeesKeeper:      app.FlatFeesKeeper,
 			CircuitKeeper:       &app.CircuitKeeper,
 			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
+			SmartAccountKeeper:  app.SmartAccountKeeper,
 		})
 	if err != nil {
 		panic(err)
