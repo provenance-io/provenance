@@ -14,8 +14,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/keeper"
+	"github.com/provenance-io/provenance/x/registry/types"
 )
 
 type KeeperTestSuite struct {
@@ -71,156 +71,156 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) TestCreateRegistry() {
-	key := &registry.RegistryKey{
+	key := &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := []registry.RolesEntry{
+	roles := []types.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER,
+			Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
 
 	// Test successful creation
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.user1Addr, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
 	s.Require().NoError(err)
 
 	// Test duplicate creation
-	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, s.user1Addr, key, roles)
+	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "registry already exists")
 }
 
 func (s *KeeperTestSuite) TestGrantRole() {
-	key := &registry.RegistryKey{
+	key := &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := []registry.RolesEntry{
+	roles := []types.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
 
 	// Create registry first
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.user1Addr, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
 	s.Require().NoError(err)
 
 	// Test successful role grant
-	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.GrantRole(s.ctx, key, types.RegistryRole_REGISTRY_ROLE_SERVICER, []string{s.user2Addr.String()})
 	s.Require().NoError(err)
 
 	// Verify role was granted
-	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, s.user2Addr.String())
+	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, types.RegistryRole_REGISTRY_ROLE_SERVICER, s.user2Addr.String())
 	s.Require().NoError(err)
 	s.Require().True(hasRole)
 
 	// Test granting to non-existent registry
-	nonExistentKey := &registry.RegistryKey{
+	nonExistentKey := &types.RegistryKey{
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
-	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, nonExistentKey, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.GrantRole(s.ctx, nonExistentKey, types.RegistryRole_REGISTRY_ROLE_SERVICER, []string{s.user2Addr.String()})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "registry not found")
 
 	// Test granting to address that already has role
-	err = s.app.RegistryKeeper.GrantRole(s.ctx, s.user1Addr, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.GrantRole(s.ctx, key, types.RegistryRole_REGISTRY_ROLE_SERVICER, []string{s.user2Addr.String()})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "address already has role")
 }
 
 func (s *KeeperTestSuite) TestRevokeRole() {
-	key := &registry.RegistryKey{
+	key := &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := []registry.RolesEntry{
+	roles := []types.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String(), s.user2Addr.String()},
 		},
 	}
 
 	// Create registry first
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.user1Addr, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
 	s.Require().NoError(err)
 
 	// Test successful role revocation
-	err = s.app.RegistryKeeper.RevokeRole(s.ctx, s.user1Addr, key, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.RevokeRole(s.ctx, key, types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, []string{s.user2Addr.String()})
 	s.Require().NoError(err)
 
 	// Verify role was revoked
-	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user2Addr.String())
+	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user2Addr.String())
 	s.Require().NoError(err)
 	s.Require().False(hasRole)
 
 	// Test revoking from non-existent registry
-	nonExistentKey := &registry.RegistryKey{
+	nonExistentKey := &types.RegistryKey{
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
-	err = s.app.RegistryKeeper.RevokeRole(s.ctx, s.user1Addr, nonExistentKey, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, []*sdk.AccAddress{&s.user2Addr})
+	err = s.app.RegistryKeeper.RevokeRole(s.ctx, nonExistentKey, types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, []string{s.user2Addr.String()})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "registry not found")
 }
 
 func (s *KeeperTestSuite) TestHasRole() {
-	key := &registry.RegistryKey{
+	key := &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := []registry.RolesEntry{
+	roles := []types.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
 
 	// Create registry first
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.user1Addr, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
 	s.Require().NoError(err)
 
 	// Test has role
-	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user1Addr.String())
+	hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, key, types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user1Addr.String())
 	s.Require().NoError(err)
 	s.Require().True(hasRole)
 
 	// Test doesn't have role
-	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, key, registry.RegistryRole_REGISTRY_ROLE_SERVICER, s.user2Addr.String())
+	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, key, types.RegistryRole_REGISTRY_ROLE_SERVICER, s.user2Addr.String())
 	s.Require().NoError(err)
 	s.Require().False(hasRole)
 
 	// Test non-existent registry
-	nonExistentKey := &registry.RegistryKey{
+	nonExistentKey := &types.RegistryKey{
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
-	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, nonExistentKey, registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user1Addr.String())
+	hasRole, err = s.app.RegistryKeeper.HasRole(s.ctx, nonExistentKey, types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, s.user1Addr.String())
 	s.Require().NoError(err)
 	s.Require().False(hasRole)
 }
 
 func (s *KeeperTestSuite) TestGetRegistry() {
-	key := &registry.RegistryKey{
+	key := &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := []registry.RolesEntry{
+	roles := []types.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
 
 	// Create registry first
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.user1Addr, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
 	s.Require().NoError(err)
 
 	// Test get existing registry
@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 	s.Require().Equal(roles, entry.Roles)
 
 	// Test get non-existent registry
-	nonExistentKey := &registry.RegistryKey{
+	nonExistentKey := &types.RegistryKey{
 		AssetClassId: "nonexistent",
 		NftId:        "nonexistent",
 	}
@@ -240,19 +240,19 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 }
 
 func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
-	key := &registry.RegistryKey{
+	key := &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
-	roles := []registry.RolesEntry{
+	roles := []types.RolesEntry{
 		{
-			Role:      registry.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
 
 	// Create msg
-	msg := &registry.MsgRegisterNFT{
+	msg := &types.MsgRegisterNFT{
 		Authority: s.user1Addr.String(),
 		Key:       key,
 		Roles:     roles,

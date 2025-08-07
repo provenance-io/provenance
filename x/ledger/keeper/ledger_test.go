@@ -6,7 +6,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/ledger/types"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
-	"github.com/provenance-io/provenance/x/registry"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 func (s *TestSuite) TestNonExistentDenom() {
@@ -72,24 +72,24 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 	s.Require().Error(err, "CreateLedger error")
 	s.Require().Contains(err.Error(), "unauthorized", "CreateLedger error")
 
-	registryKey := &registry.RegistryKey{
+	registryKey := &registrytypes.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	}
 
 	// Create a no role registry entry for the nft
-	err = s.registryKeeper.CreateRegistry(s.ctx, s.addr1, registryKey, []registry.RolesEntry{})
+	err = s.registryKeeper.CreateRegistry(s.ctx, registryKey, []registrytypes.RolesEntry{})
 	s.Require().NoError(err, "CreateRegistry error")
 
 	err = s.keeper.AddLedger(s.ctx, ledger)
 	s.Require().Error(err, "CreateLedger error")
 
 	// Grant a role of servicer to the s.addr2 so that it can create the ledger
-	err = s.registryKeeper.GrantRole(s.ctx, s.addr1, registryKey, registry.RegistryRole_REGISTRY_ROLE_SERVICER, []*sdk.AccAddress{&s.addr2})
+	err = s.registryKeeper.GrantRole(s.ctx, registryKey, registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER, []string{s.addr2.String()})
 	s.Require().NoError(err, "GrantRole error")
 
 	// Verify that the registry granted the role to the s.addr2
-	hasRole, err := s.registryKeeper.HasRole(s.ctx, registryKey, registry.RegistryRole_REGISTRY_ROLE_SERVICER, s.addr2.String())
+	hasRole, err := s.registryKeeper.HasRole(s.ctx, registryKey, registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER, s.addr2.String())
 	s.Require().NoError(err, "HasRole error")
 	s.Require().True(hasRole, "HasRole error")
 

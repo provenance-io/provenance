@@ -15,7 +15,6 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
-	"github.com/provenance-io/provenance/x/registry"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -365,7 +364,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 	tests := []struct {
 		name            string
 		mintNFTs        []nft.NFT
-		registryEntries []registry.RolesEntry
+		registryEntries []registrytypes.RolesEntry
 		req             *ledger.MsgCreateRequest
 		expResp         *ledger.MsgCreateResponse
 		expErr          error
@@ -400,9 +399,9 @@ func (s *MsgServerTestSuite) TestCreate() {
 					Id:      s.validNFT.Id + "2",
 				},
 			},
-			registryEntries: []registry.RolesEntry{
+			registryEntries: []registrytypes.RolesEntry{
 				{
-					Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER,
+					Role:      registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER,
 					Addresses: []string{nftServicer.String()},
 				},
 			},
@@ -451,9 +450,9 @@ func (s *MsgServerTestSuite) TestCreate() {
 					Id:      s.validNFT.Id + "4",
 				},
 			},
-			registryEntries: []registry.RolesEntry{
+			registryEntries: []registrytypes.RolesEntry{
 				{
-					Role:      registry.RegistryRole_REGISTRY_ROLE_SERVICER,
+					Role:      registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER,
 					Addresses: []string{nftServicer.String()},
 				},
 			},
@@ -495,17 +494,8 @@ func (s *MsgServerTestSuite) TestCreate() {
 
 				// Create a registry if there are roles to grant
 				if len(tc.registryEntries) > 0 {
-					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, s.validAddress1, &registryKey, []registrytypes.RolesEntry{})
+					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, &registryKey, tc.registryEntries)
 					s.Require().NoError(err, "CreateRegistry error")
-				}
-
-				// Grant all roles to the created NFT
-				for _, entry := range tc.registryEntries {
-					for _, address := range entry.Addresses {
-						sdkAddress, _ := sdk.AccAddressFromBech32(address)
-						err := s.app.RegistryKeeper.GrantRole(s.ctx, s.validAddress1, &registryKey, entry.Role, []*sdk.AccAddress{&sdkAddress})
-						s.Require().NoError(err, "GrantRole error")
-					}
 				}
 			}
 

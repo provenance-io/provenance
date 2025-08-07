@@ -29,7 +29,7 @@ type TestSuite struct {
 	keeper         keeper.Keeper
 	bankKeeper     bankkeeper.Keeper
 	nftKeeper      nftkeeper.Keeper
-	registryKeeper registrykeeper.RegistryKeeper
+	registryKeeper registrykeeper.Keeper
 
 	bondDenom  string
 	initBal    sdk.Coins

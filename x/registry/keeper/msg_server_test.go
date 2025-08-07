@@ -17,8 +17,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/keeper"
+	"github.com/provenance-io/provenance/x/registry/types"
 )
 
 type MsgServerTestSuite struct {
@@ -27,7 +27,7 @@ type MsgServerTestSuite struct {
 	app *app.App
 	ctx sdk.Context
 
-	registryKeeper keeper.RegistryKeeper
+	registryKeeper keeper.Keeper
 	nftKeeper      nftkeeper.Keeper
 
 	pubkey1   cryptotypes.PubKey
@@ -70,15 +70,15 @@ func (s *MsgServerTestSuite) SetupTest() {
 }
 
 func (s *MsgServerTestSuite) TestRegisterNFTGRPC() {
-	servicerRole := registry.RegistryRole_REGISTRY_ROLE_SERVICER
+	servicerRole := types.RegistryRole_REGISTRY_ROLE_SERVICER
 
-	msg := &registry.MsgRegisterNFT{
+	msg := &types.MsgRegisterNFT{
 		Authority: s.user1Addr.String(),
-		Key: &registry.RegistryKey{
+		Key: &types.RegistryKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
-		Roles: []registry.RolesEntry{
+		Roles: []types.RolesEntry{
 			{
 				Role:      servicerRole,
 				Addresses: []string{s.user1Addr.String()},
@@ -90,7 +90,7 @@ func (s *MsgServerTestSuite) TestRegisterNFTGRPC() {
 	_, err := handler(s.ctx, msg)
 	s.Require().NoError(err)
 
-	registry, err := s.registryKeeper.GetRegistry(s.ctx, &registry.RegistryKey{
+	registry, err := s.registryKeeper.GetRegistry(s.ctx, &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.validNFT.Id,
 	})
