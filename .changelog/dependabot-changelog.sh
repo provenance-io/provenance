@@ -149,16 +149,17 @@ fi
 
 # Okay. There weren't any go.mod changes. It's a bump to something else (e.g. a
 # github action helper). Create an entry ourselves, based on the title, which
-# should look something like this: "Bump <library> from <old version> to <new version>".
-# First, though, standardize the spacing so the rest of the regex stuff is cleaner.
-title="$( sed -E 's/[[:space:]]+/ /; s/^ //; s/ $//;' <<< "$title" )"
+# should look something like this: "Bump <library> from <old version> to <new version>",
+# but might look like this: "chore(deps): bump <library> from <old version> to <new version>".
+# First, remove the semantic flair and standardize the spacing so the rest of the regex stuff is cleaner.
+title="$( sed -E 's/^[^[:space:]]+: //; s/[[:space:]]+/ /; s/^ //; s/ $//;' <<< "$title" )"
 [[ -n "$verbose" ]] && printf 'Clean Title: "%s"\n' "$title"
-if ! grep -Eqi '^Bump [^ ]+ from [^ ]+ to [^ ]+$' <<< "$title"; then
+if ! grep -Eqi '^[Bb]ump [^ ]+ from [^ ]+ to [^ ]+$' <<< "$title"; then
     printf 'Unknown title format: %s\n' "$title"
     exit 1
 fi
 
-lib="$( sed -E 's/^Bump //; s/ from.*$//;' <<< "$title" )"
+lib="$( sed -E 's/^[Bb]ump //; s/ from.*$//;' <<< "$title" )"
 [[ -n "$verbose" ]] && printf '    Library: "%s"\n' "$lib"
 if [[ -z "$lib" || "$lib" == "$title" || "$lib" =~ ' ' ]]; then
     printf 'Could not extract library from title: %s\n' "$title"
