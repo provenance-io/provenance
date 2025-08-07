@@ -199,11 +199,6 @@ func CmdDestroy() *cobra.Command {
 			assetClassId := args[0]
 			nftId := args[1]
 
-			// TODO: remove this check and let the server validate the nft_id
-			if nftId == "" {
-				return fmt.Errorf("invalid <nft_id>")
-			}
-
 			msg := &ledger.MsgDestroyRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassId,
