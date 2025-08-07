@@ -90,19 +90,19 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		return fmt.Errorf("invalid pool: %w", err)
 	}
 
-	if len(msg.Nfts) == 0 {
-		return fmt.Errorf("nfts cannot be empty")
+	if len(msg.Assets) == 0 {
+		return fmt.Errorf("assets cannot be empty")
 	}
 
-	for i, nft := range msg.Nfts {
-		if nft == nil {
-			return fmt.Errorf("nft at index %d cannot be nil", i)
+	for i, asset := range msg.Assets {
+		if asset == nil {
+			return fmt.Errorf("asset at index %d cannot be nil", i)
 		}
-		if nft.ClassId == "" {
-			return fmt.Errorf("nft at index %d class_id cannot be empty", i)
+		if asset.ClassId == "" {
+			return fmt.Errorf("asset at index %d class_id cannot be empty", i)
 		}
-		if nft.Id == "" {
-			return fmt.Errorf("nft at index %d id cannot be empty", i)
+		if asset.Id == "" {
+			return fmt.Errorf("asset at index %d id cannot be empty", i)
 		}
 	}
 
@@ -123,16 +123,16 @@ func (msg MsgCreateTokenization) ValidateBasic() error {
 		return fmt.Errorf("invalid denom: %w", err)
 	}
 
-	if msg.Nft == nil {
-		return fmt.Errorf("nft cannot be nil")
+	if msg.Asset == nil {
+		return fmt.Errorf("asset cannot be nil")
 	}
 
-	if msg.Nft.ClassId == "" {
-		return fmt.Errorf("nft class_id cannot be empty")
+	if msg.Asset.ClassId == "" {
+		return fmt.Errorf("asset class_id cannot be empty")
 	}
 
-	if msg.Nft.Id == "" {
-		return fmt.Errorf("nft id cannot be empty")
+	if msg.Asset.Id == "" {
+		return fmt.Errorf("asset id cannot be empty")
 	}
 
 	if msg.FromAddress == "" {

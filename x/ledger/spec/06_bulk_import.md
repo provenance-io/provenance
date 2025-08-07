@@ -10,6 +10,8 @@ The ledger module supports bulk importing ledger data through dedicated endpoint
 4. **Maintainability**: Data is properly structured and validated
 5. **Reusability**: Can be used for testing, development, and production
 6. **Large Dataset Support**: Includes chunked import for handling large datasets
+7. **Flat Fee Integration**: Uses flat fees for predictable transaction costs
+8. **Robust Resume Functionality**: Advanced resume capabilities with transaction tracking
 
 ## Available Commands
 
@@ -30,7 +32,7 @@ provenanced tx ledger bulk-import test.json \
     --from validator \
     --keyring-backend test \
     --chain-id testing \
-    --gas-prices 1905nhash \
+    --gas-prices 1nhash \
     --testnet \
     --yes
 
@@ -38,7 +40,7 @@ provenanced tx ledger bulk-import test.json \
 provenanced tx ledger bulk-import production.json \
     --from mykey \
     --chain-id pio-mainnet-1 \
-    --gas-prices 1905nhash \
+    --gas-prices 1nhash \
     --yes
 ```
 
@@ -49,17 +51,24 @@ For large datasets that need to be split into manageable chunks.
 **Note**: Chunked bulk import supports both camelCase (`ledgerToEntries`) and snake_case (`ledger_to_entries`) for the root key.
 
 ```bash
-# Import with default chunk size (100 ledgers per chunk)
+# Import with default chunk size (10MB memory limit, optimized for gas efficiency)
 provenanced tx ledger chunked-bulk-import large_dataset.json --from mykey
 
-# Import with custom chunk size (50 ledgers per chunk)
-provenanced tx ledger chunked-bulk-import large_dataset.json 50 --from mykey
+# Import with custom chunk size (5MB memory limit)
+provenanced tx ledger chunked-bulk-import large_dataset.json 5000000 --from mykey
 
-# Example with full options
-provenanced tx ledger chunked-bulk-import large_dataset.json 75 \
+# Example with import ID for resume functionality
+provenanced tx ledger chunked-bulk-import large_dataset.json \
+    --import-id my_import_123 \
     --from mykey \
     --chain-id pio-mainnet-1 \
-    --gas-prices 1905nhash \
+    --yes
+
+# Example with full options
+provenanced tx ledger chunked-bulk-import large_dataset.json 7500000 \
+    --import-id production_import_456 \
+    --from mykey \
+    --chain-id pio-mainnet-1 \
     --yes
 ```
 
@@ -87,6 +96,7 @@ When importing large datasets into the ledger module, you may encounter block si
 2. **Block Gas Limit**: Configurable via consensus parameters
 3. **Block Size**: Limited by `max_bytes` in consensus parameters
 4. **Transaction Size**: Limited by block size and gas constraints
+5. **Flat Fees**: Fixed transaction costs regardless of gas usage
 
 #### Typical Constraints
 
@@ -104,34 +114,39 @@ Split large datasets into manageable chunks that fit within block size and gas l
 
 The chunked bulk import automatically:
 - Processes files using streaming JSON parsing for memory efficiency
-- Splits data into configurable chunk sizes
-- Tracks import progress locally
-- Provides detailed status reporting
+- Splits data into configurable chunk sizes based on memory limits
+- Uses flat fees for predictable transaction costs
+- Tracks import progress locally with advanced resume functionality
+- Provides detailed status reporting with transaction tracking
 
 #### Default Configuration
 
 ```go
 type ChunkConfig struct {
-    MaxLedgersPerChunk  int // Default: 100
-    MaxEntriesPerChunk  int // Default: 1,000
-    MaxChunkSizeBytes   int // Default: 500KB
-    MaxGasPerChunk      int // Default: 2M gas
+    MaxChunkSizeBytes int // Default: 10MB (memory safety limit during parsing)
+    MaxGasPerTx       int // Default: 4M gas per transaction
+    MaxTxSizeBytes    int // Default: 1MB max transaction size
 }
+
+// Effective gas limit with safety margin
+GetEffectiveGasLimit() int // Returns 3.8M gas (4M - 200k safety margin)
 ```
 
 #### Benefits
 
 - **Reliable**: Each chunk fits within transaction limits
-- **Resumable**: Failed chunks can be retried individually
-- **Progress tracking**: Monitor import progress with status files
+- **Resumable**: Failed chunks can be retried individually with transaction tracking
+- **Progress tracking**: Monitor import progress with detailed status files
 - **Flexible**: Adjustable chunk sizes based on data characteristics
 - **Memory efficient**: Uses streaming JSON parsing for large files
+- **Predictable costs**: Flat fees provide consistent transaction costs
+- **Advanced resume**: Robust resume functionality with transaction hash tracking
 
 #### Example Workflow
 
 1. **Prepare data**: Ensure ledger classes, status types, and entry types exist
 2. **Estimate size**: Use helper functions to estimate chunk requirements
-3. **Configure chunking**: Set appropriate chunk sizes
+3. **Configure chunking**: Set appropriate chunk sizes (default 10MB recommended)
 4. **Execute import**: Run chunked import with progress monitoring
 5. **Verify results**: Check import status and validate data
 
@@ -239,13 +254,49 @@ Combine multiple strategies based on data characteristics and requirements.
 ```bash
 # 1. Import critical ledgers via genesis
 # 2. Import remaining ledgers via chunked import
-provenanced tx ledger chunked-bulk-import remaining_ledgers.json --from mykey
+provenanced tx ledger chunked-bulk-import remaining_ledgers.json \
+    --import-id hybrid_import_123 \
+    --from mykey
 
 # 3. Import entries in parallel batches
 provenanced tx ledger bulk-import entries_batch_1.json --from mykey1 &
 provenanced tx ledger bulk-import entries_batch_2.json --from mykey2 &
 provenanced tx ledger bulk-import entries_batch_3.json --from mykey3 &
 ```
+
+## Flat Fees Integration
+
+The bulk import system now uses flat fees for predictable transaction costs, while maintaining gas limit validation for execution constraints.
+
+### How Flat Fees Work
+
+1. **Flat Fees**: Determine transaction cost (how much you pay)
+   - Queried from `x/flatfees` module
+   - Fixed cost per message type regardless of gas usage
+   - Stored in `FlatFeeInfo` struct for resume functionality
+
+2. **Gas Limits**: Determine execution limits (how much computation is allowed)
+   - Still enforced at 4M gas per transaction
+   - Used for validation to ensure chunks don't exceed limits
+   - Gas estimation still performed for validation purposes
+
+### Benefits of Flat Fees
+
+- **Simplified Fee Calculation**: No need for complex gas estimation for fees
+- **Predictable Costs**: Flat fees provide consistent transaction costs
+- **Higher Success Rate**: Transactions have predictable fees and better chance of success
+- **Proper Gas Information**: Fixed transaction response parsing to show actual gas usage
+- **Backward Compatibility**: Resume functionality works with both old and new fee systems
+
+### Transaction Flow
+
+1. **Startup**: Query flat fees for `MsgBulkImportRequest`
+2. **Chunk Processing**: 
+   - Validate chunk size and estimated gas usage
+   - Build transaction with flat fees via command flags
+   - Broadcast using `GenerateOrBroadcastTxCLI` for proper response parsing
+   - Get detailed gas information in response
+3. **Status Tracking**: Store both gas costs and flat fee info for resume
 
 ## JSON Format Support
 
@@ -473,6 +524,10 @@ The chunked import creates a local status file (`.bulk_import_status.<import_id>
   "gas_costs": {
     "ledger_with_key_gas": 150000,
     "entry_gas": 7500
+  },
+  "flat_fee_info": {
+    "fee_amount": "1000000nhash",
+    "msg_type": "/provenance.ledger.v1.MsgBulkImportRequest"
   }
 }
 ```
@@ -487,6 +542,7 @@ Resume functionality provides:
 - **Automatic detection** of interrupted imports
 - **File integrity validation** to prevent data corruption
 - **Gas cost persistence** for efficient chunking
+- **Flat fee persistence** for consistent transaction costs
 - **Transaction hash tracking** for reliable resume points
 - **Correlation ID tracking** for precise data positioning
 
@@ -496,7 +552,8 @@ Resume functionality provides:
 2. **File Hash Validation**: Validates that the source file hasn't changed using SHA256 hash
 3. **Resume Point Calculation**: Determines the correct starting point based on last successful chunk
 4. **Gas Cost Reuse**: Uses stored gas costs to maintain consistent chunk structure
-5. **Transaction Verification**: Checks if the last attempted transaction was actually processed
+5. **Flat Fee Reuse**: Uses stored flat fee information for consistent transaction costs
+6. **Transaction Verification**: Checks if the last attempted transaction was actually processed
 
 ### Import ID Behavior
 
@@ -531,6 +588,24 @@ The system stores component-based gas costs for efficient resume:
 
 These costs are calculated from representative simulations and reused on resume to avoid re-simulation.
 
+### Flat Fee Storage
+
+The system stores flat fee information for consistent transaction costs:
+
+```json
+{
+  "flat_fee_info": {
+    "fee_amount": "1000000nhash",
+    "msg_type": "/provenance.ledger.v1.MsgBulkImportRequest"
+  }
+}
+```
+
+- **`fee_amount`**: The flat fee amount for each chunk
+- **`msg_type`**: The message type URL for the bulk import
+
+This information is queried from the `x/flatfees` module and reused on resume for consistent costs.
+
 ### Transaction Hash Tracking
 
 The system ensures transaction information is preserved:
@@ -555,7 +630,7 @@ The system ensures transaction information is preserved:
 #### Scenario 1: Normal Interruption
 - **Cause**: Ctrl+C, network interruption, process kill
 - **Status**: `"in_progress"` with complete `LastAttemptedChunk`
-- **Resume**: Starts from next chunk using stored gas costs
+- **Resume**: Starts from next chunk using stored gas costs and flat fees
 - **Result**: Seamless continuation
 
 #### Scenario 2: Transaction Confirmation Wait
@@ -570,7 +645,13 @@ The system ensures transaction information is preserved:
 - **Resume**: Maintains same chunk structure
 - **Result**: Predictable behavior
 
-#### Scenario 4: File Modification
+#### Scenario 4: Flat Fee Changes
+- **Cause**: Flat fees change between runs
+- **Status**: Uses stored flat fee info for consistent costs
+- **Resume**: Maintains same transaction costs
+- **Result**: Predictable transaction costs
+
+#### Scenario 5: File Modification
 - **Cause**: Source file modified between runs
 - **Status**: File hash mismatch detected
 - **Resume**: Prevents resume to avoid corruption
@@ -596,12 +677,14 @@ func detectResume(importID string, sourceFile string) (*ResumeInfo, error) {
     // 3. Determine resume point
     resumePoint := calculateResumePoint(status)
     
-    // 4. Load stored gas costs
+    // 4. Load stored gas costs and flat fees
     gasCosts := status.GasCosts
+    flatFeeInfo := status.FlatFeeInfo
     
     return &ResumeInfo{
         StartChunk: resumePoint.ChunkIndex,
         GasCosts:   gasCosts,
+        FlatFeeInfo: flatFeeInfo,
         Status:     status,
     }, nil
 }
@@ -623,7 +706,7 @@ func detectResume(importID string, sourceFile string) (*ResumeInfo, error) {
 
 #### 3. Monitoring and Verification
 - Regularly check import status
-- Monitor logs for gas cost calculations
+- Monitor logs for gas cost and flat fee calculations
 - Verify transactions on-chain after completion
 - Use status queries to track progress
 
@@ -658,7 +741,14 @@ func detectResume(importID string, sourceFile string) (*ResumeInfo, error) {
    # Check simulation logs
    ```
 
-4. **Wrong Resume Point**
+4. **Flat Fee Query Failed**
+   ```bash
+   # Check flat fees module availability
+   # Verify network connectivity
+   # Check flat fee configuration
+   ```
+
+5. **Wrong Resume Point**
    ```bash
    # Verify correlation ID tracking
    # Check status file contents
@@ -680,6 +770,9 @@ provenanced query tx <tx_hash>
 # Validate gas costs
 provenanced query ledger bulk-import-status <import_id> | jq '.gas_costs'
 
+# Check flat fee info
+provenanced query ledger bulk-import-status <import_id> | jq '.flat_fee_info'
+
 # Check import progress
 provenanced query ledger bulk-import-status <import_id> | jq '.completed_chunks'
 ```
@@ -692,6 +785,7 @@ provenanced query ledger bulk-import-status <import_id> | jq '.completed_chunks'
 | `"no next correlation ID found"` | Import complete or file corrupted | Check if import is finished |
 | `"failed to extract transaction hash"` | Transaction broadcast failed | Check network and gas settings |
 | `"gas costs not found"` | First run needed | Let first run complete to calculate costs |
+| `"flat fee query failed"` | Flat fees module unavailable | Check flat fees module status |
 | `"last chunk was not processed"` | Transaction failed | Check transaction status and retry |
 
 ## Best Practices
@@ -704,8 +798,9 @@ provenanced query ledger bulk-import-status <import_id> | jq '.completed_chunks'
 
 ### 2. Chunking Strategy
 
-- **Ledger-based**: Split by ledger count (recommended)
-- **Entry-based**: Split by entry count for ledger-heavy data
+- **Memory-based**: Split by memory limits (recommended, default 10MB)
+- **Ledger-based**: Split by ledger count for ledger-heavy data
+- **Entry-based**: Split by entry count for entry-heavy data
 - **Size-based**: Split by estimated transaction size
 - **Time-based**: Split by date ranges for time-series data
 
@@ -717,7 +812,8 @@ provenanced query ledger bulk-import-status <import_id> | jq '.completed_chunks'
 
 ### 4. Performance Optimization
 
-- **Gas estimation**: Accurately estimate gas consumption
+- **Gas estimation**: Accurately estimate gas consumption for validation
+- **Flat fee usage**: Use flat fees for predictable transaction costs
 - **Batch sizing**: Optimize chunk sizes for your data
 - **Parallel processing**: Use multiple accounts for parallel imports
 
@@ -738,6 +834,7 @@ provenanced query ledger bulk-import-status <import_id> | jq '.completed_chunks'
 2. **Block size exceeded**: Split data into smaller chunks
 3. **Missing dependencies**: Ensure ledger classes exist before import
 4. **Duplicate data**: Check for existing ledgers/entries before import
+5. **Flat fee query failed**: Check flat fees module availability
 
 ### Debugging Commands
 
@@ -747,6 +844,9 @@ provenanced query tx <tx_hash> --output json | jq '.gas_used'
 
 # Check block size
 provenanced query block <height> --output json | jq '.block.data.txs | length'
+
+# Check flat fee for bulk import
+provenanced query flatfees msg-fee "/provenance.ledger.v1.MsgBulkImportRequest"
 
 # Validate chunk before import
 provenanced tx ledger validate-chunk chunk.json
@@ -761,9 +861,10 @@ Common error messages and their solutions:
 - **`account not found`**: The signing account doesn't exist on the target network. Create the account or use a different key.
 - **`chunk size too large`**: Reduce the chunk size parameter for chunked imports.
 - **`no data imported`**: If using snake_case (`ledger_to_entries`) with standard bulk import, switch to chunked bulk import or use camelCase (`ledgerToEntries`).
+- **`flat fee query failed`**: The flat fees module may not be available. Check module status or use gas-prices instead.
 
 ## Conclusion
 
-For large data imports, the **chunked bulk import** strategy is recommended as it provides the best balance of reliability, flexibility, and performance. The hybrid approach can be used for very large datasets that require multiple strategies.
+For large data imports, the **chunked bulk import** strategy is recommended as it provides the best balance of reliability, flexibility, and performance. The integration with flat fees provides predictable transaction costs, while the advanced resume functionality ensures robust handling of interruptions.
 
 Always test your import strategy with sample data before running on production datasets, and ensure you have proper monitoring and rollback capabilities in place. 

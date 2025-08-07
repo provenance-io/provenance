@@ -315,13 +315,13 @@ func (m *LedgerClassEntryType) GetDescription() string {
 // LedgerClassStatusType defines the status types for a ledger class.
 // These status types are used to track the status of underlying loan throughout the loan life cycle.
 type LedgerClassStatusType struct {
-	// Unique ID for the status type (eg. 1, 2, 3, etc.)
+	// Unique ID for the status type (eg. 1, 2, 3, etc.).
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY""CLOSED",
-	// "CANCELLED", "SUSPENDED", "OTHER")
+	// Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY",
+	// "CLOSED", "CANCELLED", "SUSPENDED", "OTHER").
 	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
 	// Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy",
-	// "Closed", "Cancelled", "Suspended", "Other")
+	// "Closed", "Cancelled", "Suspended", "Other").
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 }
 
@@ -437,24 +437,25 @@ func (m *LedgerKey) GetAssetClassId() string {
 
 // Ledger defines an servicing ledger for an asset.
 type Ledger struct {
+	// The ledger key identifying the ledger.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// Ledger class id for the ledger
+	// The ledger class ID for the ledger.
 	LedgerClassId string `protobuf:"bytes,2,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledgerClassId,omitempty"`
-	// Status of the ledger
+	// The status of the ledger.
 	StatusTypeId int32 `protobuf:"varint,3,opt,name=status_type_id,json=statusTypeId,proto3" json:"statusTypeId,omitempty"`
-	// Next payment date days since epoch
+	// The next payment date (days since epoch).
 	NextPmtDate int32 `protobuf:"varint,4,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"nextPmtDate,omitempty"`
-	// Next payment amount
+	// The next payment amount.
 	NextPmtAmt int64 `protobuf:"varint,5,opt,name=next_pmt_amt,json=nextPmtAmt,proto3" json:"nextPmtAmt,omitempty"`
-	// Interest rate (10000000 = 10.000000%) - 6 decimal places
+	// The interest rate (10000000 = 10.000000%) - 6 decimal places.
 	InterestRate int32 `protobuf:"varint,6,opt,name=interest_rate,json=interestRate,proto3" json:"interestRate,omitempty"`
-	// Maturity date days since epoch
+	// The maturity date (days since epoch).
 	MaturityDate int32 `protobuf:"varint,7,opt,name=maturity_date,json=maturityDate,proto3" json:"maturityDate,omitempty"`
-	// Day count convention for interest
+	// The day count convention for interest calculations.
 	InterestDayCountConvention DayCountConvention `protobuf:"varint,8,opt,name=interest_day_count_convention,json=interestDayCountConvention,proto3,enum=provenance.ledger.v1.DayCountConvention,casttype=DayCountConvention" json:"interestDayCountConvention,omitempty"`
-	// Interest accrual method for interest
+	// The interest accrual method for interest calculations.
 	InterestAccrualMethod InterestAccrualMethod `protobuf:"varint,9,opt,name=interest_accrual_method,json=interestAccrualMethod,proto3,enum=provenance.ledger.v1.InterestAccrualMethod,casttype=InterestAccrualMethod" json:"interestAccrualMethod,omitempty"`
-	// Payment frequency
+	// The payment frequency.
 	PaymentFrequency PaymentFrequency `protobuf:"varint,10,opt,name=payment_frequency,json=paymentFrequency,proto3,enum=provenance.ledger.v1.PaymentFrequency,casttype=PaymentFrequency" json:"paymentFrequency,omitempty"`
 }
 
@@ -627,27 +628,27 @@ func (m *LedgerClassBucketType) GetDescription() string {
 
 // LedgerEntry is an single entry in the ledger. An entry would be a payment, disbursement, adjustment, etc...
 type LedgerEntry struct {
-	// Correlation ID for tracking ledger entries with external systems (max 50 characters)
+	// The correlation ID for tracking ledger entries with external systems (max 50 characters).
 	CorrelationId string `protobuf:"bytes,1,opt,name=correlation_id,json=correlationId,proto3" json:"correlationId,omitempty"`
-	// If this entry reverses another entry, the correlation id of the entry it reverses
+	// If this entry reverses another entry, the correlation ID of the entry it reverses.
 	ReversesCorrelationId string `protobuf:"bytes,2,opt,name=reverses_correlation_id,json=reversesCorrelationId,proto3" json:"reversesCorrelationId,omitempty"`
-	// If true, this entry is a void and should not be included in the ledger balance calculations
+	// If true, this entry is a void and should not be included in the ledger balance calculations.
 	IsVoid bool `protobuf:"varint,3,opt,name=is_void,json=isVoid,proto3" json:"isVoid,omitempty"`
 	// Sequence number of the ledger entry (less than 100). This field is used to maintain the correct
 	// order of entries when multiple entries share the same effective date. Entries are sorted first
 	// by effective date, then by sequence.
 	Sequence uint32 `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// The type of ledger entry specified by the LedgerClassEntryType.id
+	// The type of ledger entry specified by the LedgerClassEntryType.id.
 	EntryTypeId int32 `protobuf:"varint,5,opt,name=entry_type_id,json=entryTypeId,proto3" json:"entryTypeId,omitempty"`
-	// Posted date days since epoch
+	// The posted date (days since epoch).
 	PostedDate int32 `protobuf:"varint,7,opt,name=posted_date,json=postedDate,proto3" json:"postedDate,omitempty"`
-	// Effective date days since epoch
+	// The effective date (days since epoch).
 	EffectiveDate int32 `protobuf:"varint,8,opt,name=effective_date,json=effectiveDate,proto3" json:"effectiveDate,omitempty"`
-	// Total amount of the ledger entry
+	// The total amount of the ledger entry.
 	TotalAmt cosmossdk_io_math.Int `protobuf:"bytes,9,opt,name=total_amt,json=totalAmt,proto3,customtype=cosmossdk.io/math.Int" json:"totalAmt,omitempty"`
-	// Applied amounts for each bucket
+	// The applied amounts for each bucket.
 	AppliedAmounts []*LedgerBucketAmount `protobuf:"bytes,10,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"appliedAmounts,omitempty"`
-	// Balances for each bucket
+	// The balances for each bucket.
 	BalanceAmounts []*BucketBalance `protobuf:"bytes,11,rep,name=balance_amounts,json=balanceAmounts,proto3" json:"balanceAmounts,omitempty"`
 }
 
@@ -750,9 +751,9 @@ func (m *LedgerEntry) GetBalanceAmounts() []*BucketBalance {
 // LedgerBucketAmount is the amount applied to a bucket. Applications to a bucket increase or
 // decrease the balance of the bucket.
 type LedgerBucketAmount struct {
-	// The bucket type specified by the LedgerClassBucketType.id
+	// The bucket type specified by the LedgerClassBucketType.id.
 	BucketTypeId int32 `protobuf:"varint,1,opt,name=bucket_type_id,json=bucketTypeId,proto3" json:"bucketTypeId,omitempty"`
-	// The amount applied to the bucket
+	// The amount applied to the bucket.
 	AppliedAmt cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=applied_amt,json=appliedAmt,proto3,customtype=cosmossdk.io/math.Int" json:"appliedAmt,omitempty"`
 }
 
@@ -843,9 +844,9 @@ func (m *BucketBalances) GetBucketBalances() []*BucketBalance {
 
 // BucketBalance represents the balance for a specific bucket type
 type BucketBalance struct {
-	// The bucket type specified by the LedgerClassBucketType.id
+	// The bucket type specified by the LedgerClassBucketType.id.
 	BucketTypeId int32 `protobuf:"varint,1,opt,name=bucket_type_id,json=bucketTypeId,proto3" json:"bucketTypeId,omitempty"`
-	// The balance of the bucket
+	// The balance of the bucket.
 	BalanceAmt cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=balance_amt,json=balanceAmt,proto3,customtype=cosmossdk.io/math.Int" json:"balanceAmt,omitempty"`
 }
 
@@ -889,8 +890,9 @@ func (m *BucketBalance) GetBucketTypeId() int32 {
 	return 0
 }
 
-// Used for conversion....
+// Ledgers represents a collection of ledgers with their entries, used for conversion and bulk operations.
 type Ledgers struct {
+	// The ledgers with their entries.
 	LedgerToEntries []*LedgerToEntries `protobuf:"bytes,1,rep,name=ledger_to_entries,json=ledgerToEntries,proto3" json:"ledgerToEntries,omitempty"`
 }
 
@@ -936,9 +938,12 @@ func (m *Ledgers) GetLedgerToEntries() []*LedgerToEntries {
 
 // LedgerToEntries represents a ledger with its associated entries
 type LedgerToEntries struct {
-	LedgerKey *LedgerKey     `protobuf:"bytes,1,opt,name=ledger_key,json=ledgerKey,proto3" json:"ledgerKey,omitempty"`
-	Ledger    *Ledger        `protobuf:"bytes,2,opt,name=ledger,proto3" json:"ledger,omitempty"`
-	Entries   []*LedgerEntry `protobuf:"bytes,3,rep,name=entries,proto3" json:"entries,omitempty"`
+	// The ledger key identifying the ledger.
+	LedgerKey *LedgerKey `protobuf:"bytes,1,opt,name=ledger_key,json=ledgerKey,proto3" json:"ledgerKey,omitempty"`
+	// The ledger data.
+	Ledger *Ledger `protobuf:"bytes,2,opt,name=ledger,proto3" json:"ledger,omitempty"`
+	// The ledger entries.
+	Entries []*LedgerEntry `protobuf:"bytes,3,rep,name=entries,proto3" json:"entries,omitempty"`
 }
 
 func (m *LedgerToEntries) Reset()         { *m = LedgerToEntries{} }

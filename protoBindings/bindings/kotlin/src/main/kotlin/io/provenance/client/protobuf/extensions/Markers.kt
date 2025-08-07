@@ -76,12 +76,17 @@ suspend fun CoroutineMarkers.getMarkerMetadata(denom: String): Bank.Metadata =
  * @param limit
  * @return [QueryHoldingResponse]
  */
-fun BlockingMarkers.getMarkerHolders(denom: String, offset: Int = 0, limit: Int = 200): QueryHoldingResponse =
+fun BlockingMarkers.getMarkerHolders(
+    denom: String,
+    offset: Int = 0,
+    limit: Int = 200,
+): QueryHoldingResponse =
     holding(
-        QueryHoldingRequest.newBuilder()
+        QueryHoldingRequest
+            .newBuilder()
             .setId(denom)
             .setPagination(paginationBuilder(offset, limit))
-            .build()
+            .build(),
     )
 
 /**
@@ -94,12 +99,17 @@ fun BlockingMarkers.getMarkerHolders(denom: String, offset: Int = 0, limit: Int 
  * @param limit
  * @return [QueryHoldingResponse]
  */
-suspend fun CoroutineMarkers.getMarkerHolders(denom: String, offset: Int = 0, limit: Int = 200): QueryHoldingResponse =
+suspend fun CoroutineMarkers.getMarkerHolders(
+    denom: String,
+    offset: Int = 0,
+    limit: Int = 200,
+): QueryHoldingResponse =
     holding(
-        QueryHoldingRequest.newBuilder()
+        QueryHoldingRequest
+            .newBuilder()
             .setId(denom)
             .setPagination(paginationBuilder(offset, limit))
-            .build()
+            .build(),
     )
 
 /**
@@ -109,12 +119,15 @@ suspend fun CoroutineMarkers.getMarkerHolders(denom: String, offset: Int = 0, li
  * @param escrowDenom The escrow denomination.
  * @return [CoinOuterClass.Coin?]
  */
-fun BlockingMarkers.getMarkerEscrow(id: String, escrowDenom: String): CoinOuterClass.Coin? =
+fun BlockingMarkers.getMarkerEscrow(
+    id: String,
+    escrowDenom: String,
+): CoinOuterClass.Coin? =
     escrow(
         QueryEscrowRequest
             .newBuilder()
             .setId(id)
-            .build()
+            .build(),
     ).escrowList
         .firstOrNull { it.denom == escrowDenom }
 
@@ -125,11 +138,14 @@ fun BlockingMarkers.getMarkerEscrow(id: String, escrowDenom: String): CoinOuterC
  * @param escrowDenom The escrow denomination.
  * @return [CoinOuterClass.Coin?]
  */
-suspend fun CoroutineMarkers.getMarkerEscrow(id: String, escrowDenom: String): CoinOuterClass.Coin? =
+suspend fun CoroutineMarkers.getMarkerEscrow(
+    id: String,
+    escrowDenom: String,
+): CoinOuterClass.Coin? =
     escrow(
         QueryEscrowRequest
             .newBuilder()
             .setId(id)
-            .build()
+            .build(),
     ).escrowList
         .firstOrNull { it.denom == escrowDenom }

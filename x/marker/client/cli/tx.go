@@ -1,8 +1,11 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -58,6 +62,10 @@ const (
 	FlagTargetAddress          = "target-address"
 )
 
+const (
+	maxInputSize = 1024 * 1024 // 1MB
+)
+
 // NewTxCmd returns the top-level command for marker CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -83,6 +91,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdGrantAuthorization(),
 		GetCmdRevokeAuthorization(),
 		GetCmdFeeGrant(),
+		GetCmdRevokeFeeGrant(),
 		GetIbcTransferTxCmd(),
 		GetCmdAddFinalizeActivateMarker(),
 		GetCmdUpdateRequiredAttributes(),
@@ -97,6 +106,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdChangeStatusProposal(),
 		GetCmdWithdrawEscrowProposal(),
 		GetUpdateMarkerParamsCmd(),
+		GetGrantMultiAuthzCmd(),
 	)
 	return txCmd
 }
@@ -177,26 +187,32 @@ with the given supply amount and denomination provided in the coin argument
 // GetCmdMint implements the mint additional supply for marker command.
 func GetCmdMint() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "mint [coin]",
+		Use:     "mint <coin> [recipient]",
 		Aliases: []string{"m"},
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.RangeArgs(1, 2),
 		Short:   "Mint coins against the marker",
 		Long: strings.TrimSpace(`Mints coins of the marker's denomination and places them
 in the marker's account under escrow.  Caller must possess the mint permission and 
 marker must be in the active status.`),
-		Example: fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin --from mykey`, version.AppName),
+		Example: fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewMsgMintRequest(callerAddr, coin)
+			var recipient sdk.AccAddress
+			if len(args) > 1 {
+				recipient, err = sdk.AccAddressFromBech32(args[1])
+				if err != nil {
+					return sdkErrors.ErrInvalidAddress.Wrapf("invalid recipient %s", args[1])
+				}
+			}
+			msg := types.NewMsgMintRequest(callerAddr, coin, recipient)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -816,12 +832,10 @@ Examples:
 					return err
 				}
 			}
-
 			msg, err := types.NewMsgGrantAllowance(denom, administrator, grantee, allowance)
 			if err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -833,6 +847,42 @@ Examples:
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")
 	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
 
+	return cmd
+}
+
+// GetCmdRevokeFeeGrant returns a CLI command handler for revoking a MsgRevokeGrantAllowance transaction.
+func GetCmdRevokeFeeGrant() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "revoke-feegrant [denom] [administrator_key_or_address] [grantee]",
+		Short: "Revoke allowance issued by a admin",
+		Long: strings.TrimSpace(`Revoke a previously granted fee allowance from an admin. Note, the'--from' flag is
+				ignored as it is implied from [administrator].`),
+		Example: fmt.Sprintf(`$ %s tx marker revoke-feegrant markerdenom pb1edlyu... pb1psh7r... --from=mykey`, version.AppName),
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			denom := args[0]
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			administrator := clientCtx.GetFromAddress()
+			grantee, err := sdk.AccAddressFromBech32(args[2])
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgRevokeGrantAllowance(denom, administrator, grantee)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -1634,4 +1684,178 @@ func GetUpdateMarkerParamsCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func GetGrantMultiAuthzCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "grant-multi-authz <grantee> <msg-type-url> <authorizations-json-or-file>",
+		Short: "Grant a MultiAuthorization with multiple sub-authorizations",
+		Long: strings.TrimSpace(`Grant a MultiAuthorization to a grantee with multiple sub-authorizations.
+    The authorizations can be provided in one of the following ways:
+        - Inline JSON: '[{"@type": "...", ...}]'
+        - File: '@/path/to/authorizations.json'
+        - Stdin: '-'`), // End backtick on its own line if it makes sense visually
+		Example: fmt.Sprintf(`%[1]s
+Inline JSON:
+    tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
+    '[{"@type": "/cosmos.authz.v1beta1.GenericAuthorization", "msg": "/provenance.marker.v1.MsgTransfer"}]' \
+    --from=cosmos1granter
+From file:
+    tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
+    '@/path/to/auths.json' --from=cosmos1granter
+From stdin:
+    cat auths.json | tx marker grant-multi-authz cosmos1grantee /provenance.marker.v1.MsgTransfer \
+    '-' --from=cosmos1granter`, version.AppName),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return fmt.Errorf("failed to get client context: %w", err)
+			}
+
+			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid grantee address: %w", err)
+			}
+
+			granter := clientCtx.GetFromAddress()
+			if granter == nil {
+				return fmt.Errorf("failed to get granter address from context")
+			}
+
+			msgTypeURL := strings.TrimSpace(args[1])
+			if msgTypeURL == "" {
+				return fmt.Errorf("msg-type-url cannot be empty")
+			}
+
+			var authzJSON []byte
+			authInput := strings.TrimSpace(args[2])
+			switch {
+			case authInput == "-":
+				authzJSON, err = io.ReadAll(io.LimitReader(os.Stdin, maxInputSize+1)) // +1 to detect overflow
+				if err != nil {
+					return fmt.Errorf("failed to read authorizations from stdin: %w", err)
+				}
+				if len(authzJSON) == 0 {
+					return fmt.Errorf("authorizations input from stdin is empty")
+				}
+				if len(authzJSON) > maxInputSize {
+					return fmt.Errorf("authorizations input from stdin too large (max %d bytes)", maxInputSize)
+				}
+
+			case strings.HasPrefix(authInput, "@"):
+				filePath := strings.TrimPrefix(authInput, "@")
+				if filePath == "" {
+					return fmt.Errorf("missing file path after '@'")
+				}
+
+				f, err := os.Open(filePath) // Use filePath directly
+				if err != nil {
+					if os.IsNotExist(err) {
+						return fmt.Errorf("file not found: %s", filePath)
+					}
+					// For other errors like permissions or invalid characters, os.Open will return relevant error.
+					return fmt.Errorf("failed to open file %s: %w", filePath, err)
+				}
+				defer f.Close()
+
+				limitedReader := io.LimitReader(f, maxInputSize+1) // +1 to detect overflow
+				authzJSON, err = io.ReadAll(limitedReader)
+				if err != nil {
+					return fmt.Errorf("failed to read file %s: %w", filePath, err)
+				}
+				if len(authzJSON) == 0 {
+					return fmt.Errorf("authorizations input from file is empty")
+				}
+				if len(authzJSON) > maxInputSize {
+					return fmt.Errorf("file too large (max %d bytes): %s", maxInputSize, filePath)
+				}
+
+			default:
+				authzJSON = []byte(authInput)
+			}
+
+			if len(authzJSON) > maxInputSize {
+				return fmt.Errorf("input too large (max %d bytes)", maxInputSize)
+			}
+
+			expEpoch, err := cmd.Flags().GetInt64(FlagExpiration)
+			if err != nil {
+				return fmt.Errorf("failed to get expiration flag: %w", err)
+			}
+
+			subAuths, err := parseAuthorizationsFromInput(clientCtx, authzJSON, msgTypeURL)
+			if err != nil {
+				return err
+			}
+
+			// Create MultiAuthorization
+			multiAuth, err := types.NewMultiAuthorization(msgTypeURL, subAuths...)
+			if err != nil {
+				return fmt.Errorf("failed to create MultiAuthorization: %w", err)
+			}
+
+			anyAuth, err := codectypes.NewAnyWithValue(multiAuth)
+			if err != nil {
+				return fmt.Errorf("failed to pack MultiAuthorization: %w", err)
+			}
+			exp := time.Unix(expEpoch, 0)
+			// Create MsgGrant
+			msg := &authz.MsgGrant{
+				Granter: granter.String(),
+				Grantee: grantee.String(),
+				Grant: authz.Grant{
+					Authorization: anyAuth,
+					Expiration:    &exp,
+				},
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// parseAuthorizationsFromInput parses authorizations from JSON input and validates them
+func parseAuthorizationsFromInput(clientCtx client.Context, authzJSON []byte, msgTypeURL string) ([]authz.Authorization, error) {
+	if len(authzJSON) == 0 {
+		return nil, fmt.Errorf("authorizations input is empty")
+	}
+	if !json.Valid(authzJSON) {
+		return nil, fmt.Errorf("invalid JSON format for authorizations")
+	}
+
+	// Parse JSON array into raw messages
+	var rawAuths []json.RawMessage
+	if err := json.Unmarshal(authzJSON, &rawAuths); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal authorizations array: %w", err)
+	}
+
+	subAuths := make([]authz.Authorization, len(rawAuths))
+	for i, rawAuth := range rawAuths {
+		var anyAuth codectypes.Any
+		if err := clientCtx.Codec.UnmarshalJSON(rawAuth, &anyAuth); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal authorization %d: %w", i, err)
+		}
+
+		var auth authz.Authorization
+		if err := clientCtx.InterfaceRegistry.UnpackAny(&anyAuth, &auth); err != nil {
+			return nil, fmt.Errorf("failed to unpack authorization %d: %w", i, err)
+		}
+
+		if auth.MsgTypeURL() != msgTypeURL {
+			return nil, fmt.Errorf("authorization %d type mismatch: expected %s, got %s",
+				i, msgTypeURL, auth.MsgTypeURL())
+		}
+
+		if err := auth.ValidateBasic(); err != nil {
+			return nil, fmt.Errorf("authorization %d failed basic validation: %w", i, err)
+		}
+
+		subAuths[i] = auth
+	}
+
+	return subAuths, nil
 }

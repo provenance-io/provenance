@@ -165,7 +165,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nfts: []*Nft{
+				Assets: []*AssetKey{
 					{
 						ClassId: "test-class",
 						Id:      "test-id",
@@ -179,7 +179,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 			name: "nil pool",
 			msg: MsgCreatePool{
 				Pool: nil,
-				Nfts: []*Nft{
+				Assets: []*AssetKey{
 					{
 						ClassId: "test-class",
 						Id:      "test-id",
@@ -190,25 +190,25 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "empty nfts",
+			name: "empty assets",
 			msg: MsgCreatePool{
 				Pool: &sdk.Coin{
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nfts:        []*Nft{},
+				Assets:        []*AssetKey{},
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
 		{
-			name: "nil nft",
+			name: "nil asset",
 			msg: MsgCreatePool{
 				Pool: &sdk.Coin{
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nfts: []*Nft{
+				Assets: []*AssetKey{
 					nil,
 				},
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
@@ -242,7 +242,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nft: &Nft{
+				Asset: &AssetKey{
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
@@ -257,7 +257,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					Denom:  "",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nft: &Nft{
+				Asset: &AssetKey{
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
@@ -266,25 +266,25 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "nil nft",
+			name: "nil asset",
 			msg: MsgCreateTokenization{
 				Denom: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nft:         nil,
+				Asset:         nil,
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
 		{
-			name: "empty nft class_id",
+			name: "empty asset class_id",
 			msg: MsgCreateTokenization{
 				Denom: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nft: &Nft{
+				Asset: &AssetKey{
 					ClassId: "",
 					Id:      "test-id",
 				},
@@ -293,13 +293,13 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "empty nft id",
+			name: "empty asset id",
 			msg: MsgCreateTokenization{
 				Denom: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nft: &Nft{
+				Asset: &AssetKey{
 					ClassId: "test-class",
 					Id:      "",
 				},
@@ -314,7 +314,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Nft: &Nft{
+				Asset: &AssetKey{
 					ClassId: "test-class",
 					Id:      "test-id",
 				},

@@ -139,6 +139,19 @@ func (k MsgServer) MarketReleaseCommitments(goCtx context.Context, msg *exchange
 	return &exchange.MsgMarketReleaseCommitmentsResponse{}, nil
 }
 
+// MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another.
+func (k MsgServer) MarketTransferCommitment(goCtx context.Context, msg *exchange.MsgMarketTransferCommitmentRequest) (*exchange.MsgMarketTransferCommitmentResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanTransferCommitmentForMarket(ctx, msg.CurrentMarketId, msg.Admin) {
+		return nil, permError("transfer commitments for", msg.Admin, msg.CurrentMarketId)
+	}
+	err := k.TransferCommitments(ctx, msg)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgMarketTransferCommitmentResponse{}, nil
+}
+
 // MarketSetOrderExternalID updates an order's external id field.
 func (k MsgServer) MarketSetOrderExternalID(goCtx context.Context, msg *exchange.MsgMarketSetOrderExternalIDRequest) (*exchange.MsgMarketSetOrderExternalIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -275,7 +288,7 @@ func (k MsgServer) CreatePayment(goCtx context.Context, msg *exchange.MsgCreateP
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if !msg.Payment.SourceAmount.IsZero() {
-		k.consumeCreatePaymentFee(ctx, msg)
+		k.consumeCreatePaymentFee(ctx)
 	}
 	return &exchange.MsgCreatePaymentResponse{}, nil
 }
@@ -287,7 +300,7 @@ func (k MsgServer) AcceptPayment(goCtx context.Context, msg *exchange.MsgAcceptP
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if !msg.Payment.TargetAmount.IsZero() {
-		k.consumeAcceptPaymentFee(ctx, msg)
+		k.consumeAcceptPaymentFee(ctx)
 	}
 	return &exchange.MsgAcceptPaymentResponse{}, nil
 }

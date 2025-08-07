@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	chunkimport "github.com/provenance-io/provenance/x/ledger/client/cli/import"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
@@ -43,7 +42,6 @@ func CmdQuery() *cobra.Command {
 		GetLedgerClassCmd(),
 		GetAllSettlementsCmd(),
 		GetSettlementsByCorrelationIdCmd(),
-		chunkimport.CmdBulkImportStatus(),
 	)
 
 	return queryCmd
@@ -195,6 +193,14 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			entryTypes := getEntryTypes(config.Ledger.LedgerClassId)
 			bucketTypes := getBucketTypes(config.Ledger.LedgerClassId)
 
+			// Check if we successfully retrieved the entry types and bucket types
+			if entryTypes == nil {
+				return fmt.Errorf("failed to retrieve entry types for ledger class: %s", config.Ledger.LedgerClassId)
+			}
+			if bucketTypes == nil {
+				return fmt.Errorf("failed to retrieve bucket types for ledger class: %s", config.Ledger.LedgerClassId)
+			}
+
 			plainTextEntries := make([]*LedgerEntryPlainText, len(entries))
 			for i, entry := range entries {
 				appliedAmts := make([]*LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
@@ -207,16 +213,21 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 				for _, balanceAmt := range entry.BalanceAmounts {
 					for _, appliedAmt := range appliedAmts {
-						if appliedAmt.Bucket.Id == balanceAmt.BucketTypeId {
+						if appliedAmt.Bucket != nil && appliedAmt.Bucket.Id == balanceAmt.BucketTypeId {
 							appliedAmt.BalanceAmt = balanceAmt.BalanceAmt.String()
 						}
 					}
 				}
 
+				entryType := entryTypes[entry.EntryTypeId]
+				if entryType == nil {
+					return fmt.Errorf("entry type not found for id: %d", entry.EntryTypeId)
+				}
+
 				plainTextEntries[i] = &LedgerEntryPlainText{
 					CorrelationId:  entry.CorrelationId,
 					Sequence:       entry.Sequence,
-					Type:           entryTypes[entry.EntryTypeId],
+					Type:           entryType,
 					PostedDate:     helper.EpochDaysToISO8601(entry.PostedDate),
 					EffectiveDate:  helper.EpochDaysToISO8601(entry.EffectiveDate),
 					TotalAmt:       entry.TotalAmt.String(),

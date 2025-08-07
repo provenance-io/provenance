@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// UnmarshalJSON implements json.Unmarshaler for DayCountConvention
+// UnmarshalJSON implements json.Unmarshaler for DayCount
 func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
 	// Try to unmarshal as string first
 	var str string
@@ -17,12 +17,12 @@ func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
 			*d = DayCountConvention(value)
 			return nil
 		}
-		// Try without LEDGER_DAY_COUNT_ prefix
-		if value, exists := DayCountConvention_value["LEDGER_DAY_COUNT_"+str]; exists {
+		// Try without DAY_COUNT_ prefix
+		if value, exists := DayCountConvention_value["DAY_COUNT_"+str]; exists {
 			*d = DayCountConvention(value)
 			return nil
 		}
-		return fmt.Errorf("unknown DayCountConvention string value: %s", str)
+		return fmt.Errorf("unknown DayCount string value: %s", str)
 	}
 
 	// Try to unmarshal as integer
@@ -32,10 +32,10 @@ func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	return fmt.Errorf("DayCountConvention must be a string or integer, got: %s", string(data))
+	return fmt.Errorf("DayCount must be a string or integer, got: %s", string(data))
 }
 
-// UnmarshalJSON implements json.Unmarshaler for InterestAccrualMethod
+// UnmarshalJSON implements json.Unmarshaler for InterestAccrual
 func (i *InterestAccrualMethod) UnmarshalJSON(data []byte) error {
 	// Try to unmarshal as string first
 	var str string
@@ -46,12 +46,12 @@ func (i *InterestAccrualMethod) UnmarshalJSON(data []byte) error {
 			*i = InterestAccrualMethod(value)
 			return nil
 		}
-		// Try without LEDGER_ACCRUAL_ prefix
-		if value, exists := InterestAccrualMethod_value["LEDGER_ACCRUAL_"+str]; exists {
+		// Try without INTEREST_ACCRUAL_ prefix
+		if value, exists := InterestAccrualMethod_value["INTEREST_ACCRUAL_"+str]; exists {
 			*i = InterestAccrualMethod(value)
 			return nil
 		}
-		return fmt.Errorf("unknown InterestAccrualMethod string value: %s", str)
+		return fmt.Errorf("unknown InterestAccrual string value: %s", str)
 	}
 
 	// Try to unmarshal as integer
@@ -61,7 +61,7 @@ func (i *InterestAccrualMethod) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	return fmt.Errorf("InterestAccrualMethod must be a string or integer, got: %s", string(data))
+	return fmt.Errorf("InterestAccrual must be a string or integer, got: %s", string(data))
 }
 
 // UnmarshalJSON implements json.Unmarshaler for PaymentFrequency

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
 	"maps"
 	"slices"
@@ -9,8 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -19,6 +22,7 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -441,7 +445,7 @@ func (s *TestSuite) TestKeeper_ValidateNewHold() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			bk := NewMockBankKeeper().WithSpendable(tc.addr, tc.spendable)
+			bk := NewMockBankKeeper().WithBalance(tc.addr, tc.spendable)
 			k := s.app.HoldKeeper.WithBankKeeper(bk)
 
 			var err error
@@ -450,6 +454,107 @@ func (s *TestSuite) TestKeeper_ValidateNewHold() {
 			}
 			s.Require().NotPanics(testFunc, "ValidateNewHold")
 			s.assertErrorContents(err, tc.expErr, "ValidateNewHold")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_getSpendableForDenoms() {
+	tests := []struct {
+		name  string
+		addr  sdk.AccAddress
+		funds sdk.Coins
+		bk    *MockBankKeeper
+		exp   sdk.Coins
+	}{
+		{
+			name:  "one coin, nothing locked, no balance",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			exp:   nil,
+		},
+		{
+			name:  "one coin, some locked, no balance",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk:    NewMockBankKeeper().WithLocked(s.addr1, s.coins("3apple")),
+			exp:   nil,
+		},
+		{
+			name:  "one coin, nothing locked, some balance",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk:    NewMockBankKeeper().WithBalance(s.addr1, s.coins("4apple")),
+			exp:   s.coins("4apple"),
+		},
+		{
+			name:  "one coin, some locked, same balance",
+			addr:  s.addr2,
+			funds: s.coins("1banana"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr2, s.coins("99banana")).
+				WithLocked(s.addr2, s.coins("99banana")),
+			exp: nil,
+		},
+		{
+			name:  "one coin, some locked, less balance",
+			addr:  s.addr2,
+			funds: s.coins("1banana"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr2, s.coins("97banana")).
+				WithLocked(s.addr2, s.coins("99banana")),
+			exp: nil,
+		},
+		{
+			name:  "one coin, some locked, more balance",
+			addr:  s.addr2,
+			funds: s.coins("1banana"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr2, s.coins("99banana")).
+				WithLocked(s.addr2, s.coins("41banana")),
+			exp: s.coins("58banana"),
+		},
+		{
+			name:  "one coin, one balance, two others locked",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr1, s.coins("351apple")).
+				WithLocked(s.addr1, s.coins("12apricot,18banana")),
+			exp: s.coins("351apple"),
+		},
+		{
+			name:  "one coin, one balance, some locked with others locked",
+			addr:  s.addr1,
+			funds: s.coins("1apple"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr1, s.coins("76apple")).
+				WithLocked(s.addr1, s.coins("42apple,18banana")),
+			exp: s.coins("34apple"),
+		},
+		{
+			name:  "three coins, all with balances: none locked, some locked, all locked.",
+			addr:  s.addr3,
+			funds: s.coins("1apple,1banana,1cherry"),
+			bk: NewMockBankKeeper().
+				WithBalance(s.addr3, s.coins("16apple,71banana,4000cherry")).
+				WithLocked(s.addr3, s.coins("12apricot,18banana,4000cherry")),
+			exp: s.coins("16apple,53banana"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.bk == nil {
+				tc.bk = NewMockBankKeeper()
+			}
+			kpr := s.keeper.WithBankKeeper(tc.bk)
+
+			var act sdk.Coins
+			testFunc := func() {
+				act = kpr.GetSpendableForDenoms(s.ctx, tc.addr, tc.funds)
+			}
+			s.Require().NotPanics(testFunc, "getSpendableForDenoms")
+			s.Assert().Equal(tc.exp.String(), act.String(), "getSpendableForDenoms result")
 		})
 	}
 }
@@ -637,7 +742,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			if len(tc.expErr) > 0 {
 				tc.expErr = append(tc.expErr, tc.addr.String())
 			}
-			bk := NewMockBankKeeper().WithSpendable(tc.addr, tc.spendBal)
+			bk := NewMockBankKeeper().WithBalance(tc.addr, tc.spendBal)
 			k := s.keeper.WithBankKeeper(bk)
 
 			em := sdk.NewEventManager()
@@ -1645,6 +1750,479 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 			s.Require().Equal(result.locked.String(), lockedCheck.String(),
 				"locked VS locked vesting %q + locked on hold %q",
 				result.lockedVest, result.lockedHold)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_GetAuthority() {
+	expected := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	var actual string
+	testFunc := func() {
+		actual = s.keeper.GetAuthority()
+	}
+	s.Require().NotPanics(testFunc, "GetAuthority()")
+	s.Assert().Equal(expected, actual, "GetAuthority() result")
+}
+
+func (s *TestSuite) TestKeeper_IsAuthority() {
+	tests := []struct {
+		name string
+		addr string
+		exp  bool
+	}{
+		{name: "empty string", addr: "", exp: false},
+		{name: "whitespace", addr: strings.Repeat(" ", len(s.keeper.GetAuthority())), exp: false},
+		{name: "authority", addr: s.keeper.GetAuthority(), exp: true},
+		{name: "authority upper-case", addr: strings.ToUpper(s.keeper.GetAuthority()), exp: true},
+		{name: "authority space", addr: s.keeper.GetAuthority() + " ", exp: false},
+		{name: "space authority", addr: " " + s.keeper.GetAuthority(), exp: false},
+		{name: "other addr", addr: s.addr1.String(), exp: false},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var actual bool
+			testFunc := func() {
+				actual = s.keeper.IsAuthority(tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "IsAuthority(%q)", tc.addr)
+			s.Assert().Equal(tc.exp, actual, "IsAuthority(%q) result", tc.addr)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ValidateAuthority() {
+	tests := []struct {
+		name   string
+		addr   string
+		expErr bool
+	}{
+		{name: "empty string", addr: "", expErr: true},
+		{name: "whitespace", addr: strings.Repeat(" ", len(s.keeper.GetAuthority())), expErr: true},
+		{name: "authority", addr: s.keeper.GetAuthority(), expErr: false},
+		{name: "authority upper-case", addr: strings.ToUpper(s.keeper.GetAuthority()), expErr: false},
+		{name: "authority space", addr: s.keeper.GetAuthority() + " ", expErr: true},
+		{name: "space authority", addr: " " + s.keeper.GetAuthority(), expErr: true},
+		{name: "other addr", addr: s.addr1.String(), expErr: true},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expErr := ""
+			if tc.expErr {
+				expErr = fmt.Sprintf("expected %q got %q: expected gov account as only signer for proposal message",
+					s.keeper.GetAuthority(), tc.addr)
+			}
+			var err error
+			testFunc := func() {
+				err = s.keeper.ValidateAuthority(tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "ValidateAuthority(%q)", tc.addr)
+			s.assertErrorValue(err, expErr, "ValidateAuthority(%q) error", tc.addr)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_UnlockVestingAccounts() {
+	blockTime := time.Date(2020, 04, 20, 16, 20, 0, 0, time.UTC).UTC()
+	ctxWithLogger := func() (sdk.Context, *bytes.Buffer) {
+		var buffer bytes.Buffer
+		lw := zerolog.ConsoleWriter{
+			Out:          &buffer,
+			NoColor:      true,
+			PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
+		}
+		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
+		return s.ctx.WithLogger(log.NewCustomLogger(logger)).WithBlockTime(blockTime), &buffer
+	}
+
+	ba := func(addr sdk.AccAddress, acctNo, seq uint64) *authtypes.BaseAccount {
+		return &authtypes.BaseAccount{Address: addr.String(), AccountNumber: acctNo, Sequence: seq}
+	}
+	bva := func(addr sdk.AccAddress, acctNo, seq uint64) *vesting.BaseVestingAccount {
+		return &vesting.BaseVestingAccount{
+			BaseAccount:     ba(addr, acctNo, seq),
+			OriginalVesting: sdk.NewCoins(sdk.NewInt64Coin("banana", 600)),
+			EndTime:         blockTime.Add(time.Minute * 600).Unix(),
+		}
+	}
+
+	addrVestCont := sdk.AccAddress("addrVestCont________")
+	addrVestDel := sdk.AccAddress("addrVestDel_________")
+	addrVestPer := sdk.AccAddress("addrVestPer_________")
+	addrPermLock := sdk.AccAddress("addrPermLock________")
+	addrBase := sdk.AccAddress("addrBase____________")
+	addrModule := sdk.AccAddress("addrModule___________")
+	addrNotExists := sdk.AccAddress("addrNotExists_______")
+
+	acctKpr := NewMockAccountKeeper().
+		WithAccount(addrNotExists, nil).
+		WithAccounts(s.T(),
+			&vesting.ContinuousVestingAccount{
+				BaseVestingAccount: bva(addrVestCont, 71, 12),
+				StartTime:          blockTime.Unix(),
+			},
+			&vesting.DelayedVestingAccount{
+				BaseVestingAccount: bva(addrVestDel, 123, 4),
+			},
+			&vesting.PeriodicVestingAccount{
+				BaseVestingAccount: bva(addrVestPer, 14, 44),
+				StartTime:          blockTime.Unix(),
+				VestingPeriods: []vesting.Period{
+					{Length: 200 * 60, Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 100))},
+					{Length: 400 * 60, Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 500))},
+				},
+			},
+			&vesting.PermanentLockedAccount{
+				BaseVestingAccount: bva(addrPermLock, 8, 173),
+			},
+			ba(addrBase, 61, 1),
+			&authtypes.ModuleAccount{
+				BaseAccount: ba(addrModule, 14, 71),
+				Name:        "whatever",
+			},
+		)
+
+	tests := []struct {
+		name     string
+		addrs    []string
+		expErr   string
+		expGets  int
+		expSets  int
+		expInLog []string
+	}{
+		{
+			name:     "nil addrs",
+			addrs:    nil,
+			expErr:   "",
+			expGets:  0,
+			expSets:  0,
+			expInLog: nil,
+		},
+		{
+			name:     "empty addrs",
+			addrs:    []string{},
+			expErr:   "",
+			expGets:  0,
+			expSets:  0,
+			expInLog: nil,
+		},
+		{
+			name:    "one addr: invalid",
+			addrs:   []string{"oopsienopes"},
+			expErr:  "invalid address \"oopsienopes\": decoding bech32 failed: invalid separator index -1",
+			expGets: 0,
+			expSets: 0,
+			expInLog: []string{"ERR Could not unlock vesting account with invalid address.",
+				"address=oopsienopes", "error=\"invalid address \\\"oopsienopes\\\": "},
+		},
+		{
+			name:    "one addr: not vesting",
+			addrs:   []string{addrModule.String()},
+			expErr:  "could not unlock account " + addrModule.String() + ": unsupported account type *types.ModuleAccount: invalid type",
+			expGets: 1,
+			expSets: 0,
+			expInLog: []string{"ERR Could not unlock vesting account.",
+				"error=\"could not unlock account ", "address=" + addrModule.String()},
+		},
+		{
+			name:     "one addr: okay",
+			addrs:    []string{addrVestCont.String()},
+			expGets:  1,
+			expSets:  1,
+			expInLog: []string{"INF Unlocked vesting account.", "address=" + addrVestCont.String()},
+		},
+		{
+			name:  "three addrs: okay, invalid, unknown",
+			addrs: []string{addrVestDel.String(), "badBad", addrNotExists.String()},
+			expErr: "invalid address \"badBad\": decoding bech32 failed: invalid bech32 string length 6\n" +
+				"account \"" + addrNotExists.String() + "\" does not exist: unknown address",
+			expGets: 2,
+			expSets: 1,
+			expInLog: []string{
+				"INF Unlocked vesting account. account_number=123",
+				"ERR Could not unlock vesting account with invalid address. error=\"invalid address \\\"badBad\\\"",
+				"ERR Could not unlock vesting account. error=\"account \\\"" + addrNotExists.String(),
+			},
+		},
+		{
+			name:  "three addrs: okay, unknown, invalid",
+			addrs: []string{addrPermLock.String(), addrNotExists.String(), "noworky"},
+			expErr: "account \"" + addrNotExists.String() + "\" does not exist: unknown address\n" +
+				"invalid address \"noworky\": decoding bech32 failed: invalid bech32 string length 7",
+			expGets: 2,
+			expSets: 1,
+			expInLog: []string{
+				"INF Unlocked vesting account. account_number=8",
+				"ERR Could not unlock vesting account. error=\"account \\\"" + addrNotExists.String(),
+				"ERR Could not unlock vesting account with invalid address. error=\"invalid address \\\"noworky\\\"",
+			},
+		},
+		{
+			name:  "three addrs: invalid, okay, unknown",
+			addrs: []string{"listenhere", addrVestPer.String(), addrNotExists.String()},
+			expErr: "invalid address \"listenhere\": decoding bech32 failed: invalid separator index -1\n" +
+				"account \"" + addrNotExists.String() + "\" does not exist: unknown address",
+			expGets: 2,
+			expSets: 1,
+			expInLog: []string{
+				"ERR Could not unlock vesting account with invalid address. error=\"invalid address \\\"listenhere\\\"",
+				"INF Unlocked vesting account. account_number=14",
+				"ERR Could not unlock vesting account. error=\"account \\\"" + addrNotExists.String(),
+			},
+		},
+		{
+			name:  "three addrs: invalid, unknown, okay",
+			addrs: []string{"willnotwork", addrNotExists.String(), addrVestCont.String()},
+			expErr: "invalid address \"willnotwork\": decoding bech32 failed: invalid separator index -1\n" +
+				"account \"" + addrNotExists.String() + "\" does not exist: unknown address",
+			expGets: 2,
+			expSets: 1,
+			expInLog: []string{
+				"ERR Could not unlock vesting account with invalid address. error=\"invalid address \\\"willnotwork\\\"",
+				"ERR Could not unlock vesting account. error=\"account \\\"" + addrNotExists.String(),
+				"INF Unlocked vesting account. account_number=71",
+			},
+		},
+		{
+			name:  "three addrs: unknown, okay, invalid",
+			addrs: []string{addrNotExists.String(), addrVestDel.String(), "noyeahno"},
+			expErr: "account \"" + addrNotExists.String() + "\" does not exist: unknown address\n" +
+				"invalid address \"noyeahno\": decoding bech32 failed: invalid separator index -1",
+			expGets: 2,
+			expSets: 1,
+			expInLog: []string{
+				"ERR Could not unlock vesting account. error=\"account \\\"" + addrNotExists.String(),
+				"INF Unlocked vesting account. account_number=123",
+				"ERR Could not unlock vesting account with invalid address. error=\"invalid address \\\"noyeahno\\\"",
+			},
+		},
+		{
+			name:  "three addrs: unknown, invalid, okay",
+			addrs: []string{addrNotExists.String(), "negatory", addrPermLock.String()},
+			expErr: "account \"" + addrNotExists.String() + "\" does not exist: unknown address\n" +
+				"invalid address \"negatory\": decoding bech32 failed: invalid separator index -1",
+			expGets: 2,
+			expSets: 1,
+			expInLog: []string{
+				"ERR Could not unlock vesting account. error=\"account \\\"" + addrNotExists.String(),
+				"ERR Could not unlock vesting account with invalid address. error=\"invalid address \\\"negatory\\\"",
+				"INF Unlocked vesting account. account_number=8",
+			},
+		},
+		{
+			name:    "four addrs: all okay",
+			addrs:   []string{addrVestCont.String(), addrVestDel.String(), addrVestPer.String(), addrPermLock.String()},
+			expGets: 4,
+			expSets: 4,
+			expInLog: []string{
+				"INF Unlocked vesting account. account_number=71",
+				"INF Unlocked vesting account. account_number=123",
+				"INF Unlocked vesting account. account_number=14",
+				"INF Unlocked vesting account. account_number=8",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			acctKpr.Reset()
+			kpr := s.keeper.WithAccountKeeper(acctKpr)
+
+			ctx, logBuffer := ctxWithLogger()
+
+			var err error
+			testFunc := func() {
+				err = kpr.UnlockVestingAccounts(ctx, tc.addrs)
+			}
+			s.Require().NotPanics(testFunc, "UnlockVestingAccounts")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UnlockVestingAccounts error")
+			actLog := strings.TrimSpace(logBuffer.String())
+			if len(tc.expInLog) == 0 {
+				s.Assert().Empty(actLog, "Logs written during UnlockVestingAccounts")
+			}
+			for _, exp := range tc.expInLog {
+				s.Assert().Contains(actLog, exp, "Logs written during UnlockVestingAccounts\nExpected: %q\n%s", exp, actLog)
+			}
+
+			s.Assert().Len(acctKpr.GetAccountCalls, tc.expGets, "Calls made to GetAccount during UnlockVestingAccounts")
+			s.Assert().Len(acctKpr.SetAccountCalls, tc.expSets, "Calls made to SetAccount during UnlockVestingAccounts")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_UnlockVestingAccount() {
+	blockTime := time.Date(2020, 04, 20, 16, 20, 0, 0, time.UTC).UTC()
+	ctxWithLogger := func() (sdk.Context, *bytes.Buffer) {
+		var buffer bytes.Buffer
+		lw := zerolog.ConsoleWriter{
+			Out:          &buffer,
+			NoColor:      true,
+			PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
+		}
+		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
+		return s.ctx.WithLogger(log.NewCustomLogger(logger)).WithBlockTime(blockTime), &buffer
+	}
+
+	ba := func(addr sdk.AccAddress, acctNo, seq uint64) *authtypes.BaseAccount {
+		return &authtypes.BaseAccount{Address: addr.String(), AccountNumber: acctNo, Sequence: seq}
+	}
+	bva := func(addr sdk.AccAddress, acctNo, seq uint64) *vesting.BaseVestingAccount {
+		return &vesting.BaseVestingAccount{
+			BaseAccount:     ba(addr, acctNo, seq),
+			OriginalVesting: sdk.NewCoins(sdk.NewInt64Coin("banana", 600)),
+			EndTime:         blockTime.Add(time.Minute * 600).Unix(),
+		}
+	}
+
+	addrVestCont := sdk.AccAddress("addrVestCont________")
+	addrVestDel := sdk.AccAddress("addrVestDel_________")
+	addrVestPer := sdk.AccAddress("addrVestPer_________")
+	addrPermLock := sdk.AccAddress("addrPermLock________")
+	addrBase := sdk.AccAddress("addrBase____________")
+	addrModule := sdk.AccAddress("addrModule___________")
+	addrNotExists := sdk.AccAddress("addrNotExists_______")
+
+	tests := []struct {
+		name     string
+		acctKpr  *MockAccountKeeper
+		addr     sdk.AccAddress
+		expErr   string
+		expInLog []string
+		expSet   sdk.AccountI
+	}{
+		{
+			name:   "account does not exist",
+			addr:   addrNotExists,
+			expErr: "account \"" + addrNotExists.String() + "\" does not exist: unknown address",
+			expInLog: []string{"ERR Could not unlock vesting account.",
+				"error=\"account \\\"" + addrNotExists.String() + "\\\" does not exist: unknown address\"",
+				"address=" + addrNotExists.String(), "module=hold"},
+		},
+		{
+			name: "Module account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrModule, &authtypes.ModuleAccount{
+				BaseAccount: ba(addrModule, 14, 71),
+				Name:        "whatever",
+			}),
+			addr:   addrModule,
+			expErr: "could not unlock account " + addrModule.String() + ": unsupported account type *types.ModuleAccount: invalid type",
+			expInLog: []string{"ERR Could not unlock vesting account.",
+				"error=\"could not unlock account " + addrModule.String() + ": unsupported account type *types.ModuleAccount: invalid type\"",
+				"account_number=14", "address=" + addrModule.String(), "module=hold", "original_type=*types.ModuleAccount"},
+		},
+		{
+			name:    "base account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrBase, ba(addrBase, 101, 5)),
+			addr:    addrBase,
+			expErr:  "could not unlock account " + addrBase.String() + ": unsupported account type *types.BaseAccount: invalid type",
+			expInLog: []string{"ERR Could not unlock vesting account.",
+				"error=\"could not unlock account " + addrBase.String() + ": unsupported account type *types.BaseAccount: invalid type\"",
+				"account_number=101", "address=" + addrBase.String(), "module=hold", "original_type=*types.BaseAccount"},
+		},
+		{
+			name: "no base vesting account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrVestCont, &vesting.ContinuousVestingAccount{
+				BaseVestingAccount: nil,
+				StartTime:          blockTime.Unix(),
+			}),
+			addr:   addrVestCont,
+			expErr: "could not unlock account " + addrVestCont.String() + ": base vesting account is nil: invalid type",
+			expInLog: []string{"ERR Could not unlock vesting account.",
+				"error=\"could not unlock account " + addrVestCont.String() + ": base vesting account is nil: invalid type\"",
+				"account_number=0", "address=" + addrVestCont.String(), "module=hold", "original_type=*types.ContinuousVestingAccount"},
+		},
+		{
+			name: "no base account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrVestCont, &vesting.ContinuousVestingAccount{
+				BaseVestingAccount: &vesting.BaseVestingAccount{
+					BaseAccount:     nil,
+					OriginalVesting: sdk.NewCoins(sdk.NewInt64Coin("banana", 600)),
+					EndTime:         blockTime.Add(time.Minute * 600).Unix(),
+				},
+				StartTime: blockTime.Unix(),
+			}),
+			addr:   addrVestCont,
+			expErr: "could not unlock account " + addrVestCont.String() + ": base account is nil: invalid type",
+			expInLog: []string{"ERR Could not unlock vesting account.",
+				"error=\"could not unlock account " + addrVestCont.String() + ": base account is nil: invalid type\"",
+				"account_number=0", "address=" + addrVestCont.String(), "module=hold", "original_type=*types.ContinuousVestingAccount"},
+		},
+		{
+			name: "continuous vesting account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrVestCont, &vesting.ContinuousVestingAccount{
+				BaseVestingAccount: bva(addrVestCont, 71, 12), StartTime: blockTime.Unix()}),
+			addr: addrVestCont,
+			expInLog: []string{"INF Unlocked vesting account.", "account_number=71",
+				"address=" + addrVestCont.String(), "module=hold", "original_type=*types.ContinuousVestingAccount"},
+			expSet: ba(addrVestCont, 71, 12),
+		},
+		{
+			name: "delayed vesting account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrVestDel, &vesting.DelayedVestingAccount{
+				BaseVestingAccount: bva(addrVestDel, 123, 4)}),
+			addr: addrVestDel,
+			expInLog: []string{"INF Unlocked vesting account.", "account_number=123",
+				"address=" + addrVestDel.String(), "module=hold", "original_type=*types.DelayedVestingAccount"},
+			expSet: ba(addrVestDel, 123, 4),
+		},
+		{
+			name: "periodic vesting account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrVestPer, &vesting.PeriodicVestingAccount{
+				BaseVestingAccount: bva(addrVestPer, 14, 44),
+				StartTime:          blockTime.Unix(),
+				VestingPeriods: []vesting.Period{
+					{Length: 200 * 60, Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 100))},
+					{Length: 400 * 60, Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 500))},
+				},
+			}),
+			addr: addrVestPer,
+			expInLog: []string{"INF Unlocked vesting account.", "account_number=14",
+				"address=" + addrVestPer.String(), "module=hold", "original_type=*types.PeriodicVestingAccount"},
+			expSet: ba(addrVestPer, 14, 44),
+		},
+		{
+			name: "permanent locked account",
+			acctKpr: NewMockAccountKeeper().WithAccount(addrPermLock, &vesting.PermanentLockedAccount{
+				BaseVestingAccount: bva(addrPermLock, 8, 173)}),
+			addr: addrPermLock,
+			expInLog: []string{"INF Unlocked vesting account.", "account_number=8",
+				"address=" + addrPermLock.String(), "module=hold", "original_type=*types.PermanentLockedAccount"},
+			expSet: ba(addrPermLock, 8, 173),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expGetCalls := []string{tc.addr.String()}
+			var expSetCalls []sdk.AccountI
+			if tc.expSet != nil {
+				expSetCalls = append(expSetCalls, tc.expSet)
+			}
+
+			if tc.acctKpr == nil {
+				tc.acctKpr = NewMockAccountKeeper()
+			}
+
+			kpr := s.keeper.WithAccountKeeper(tc.acctKpr)
+			ctx, logBuffer := ctxWithLogger()
+
+			var err error
+			testFunc := func() {
+				err = kpr.UnlockVestingAccount(ctx, tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "UnlockVestingAccount")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UnlockVestingAccount error")
+			actLog := strings.TrimSpace(logBuffer.String())
+			if len(tc.expInLog) == 0 {
+				s.Assert().Empty(actLog, "Logs written during UnlockVestingAccount")
+			}
+			for _, exp := range tc.expInLog {
+				s.Assert().Contains(actLog, exp, "Logs written during UnlockVestingAccount")
+			}
+
+			s.Assert().Equal(expGetCalls, tc.acctKpr.GetAccountCalls, "Calls made to GetAccount(...)")
+			s.Assert().Equal(expSetCalls, tc.acctKpr.SetAccountCalls, "Calls made to SetAccount(...)")
 		})
 	}
 }

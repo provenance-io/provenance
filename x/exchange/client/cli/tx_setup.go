@@ -398,6 +398,45 @@ func MakeMsgMarketReleaseCommitments(clientCtx client.Context, flagSet *pflag.Fl
 	return msg, errors.Join(errs...)
 }
 
+// SetupCmdTxMarketTransferCommitment adds all the flags needed for MakeMsgMarketTransferCommitment.
+func SetupCmdTxMarketTransferCommitment(cmd *cobra.Command) {
+	AddFlagsAdmin(cmd)
+	cmd.Flags().String(FlagAccount, "", "The account that will receive the funds (required)")
+	cmd.Flags().String(FlagAmount, "", "The amount to withdraw (required)")
+	cmd.Flags().Uint32(FlagCurrentMarket, 0, "The current market id (required)")
+	cmd.Flags().Uint32(FlagNewMarket, 0, "The new market id (required)")
+	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of these transfer")
+
+	MarkFlagsRequired(cmd, FlagAccount, FlagAmount, FlagCurrentMarket, FlagNewMarket)
+
+	AddUseArgs(cmd,
+		ReqAdminUse,
+		ReqFlagUse(FlagAccount, "account"),
+		ReqFlagUse(FlagAmount, "amount"),
+		ReqFlagUse(FlagCurrentMarket, "current market id"),
+		ReqFlagUse(FlagNewMarket, "new market id"),
+		OptFlagUse(FlagTag, "event tag"),
+	)
+	AddUseDetails(cmd, ReqAdminDesc)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgMarketTransferCommitment reads all the SetupCmdTxMarketTransferCommitment flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgMarketTransferCommitment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketTransferCommitmentRequest, error) {
+	msg := &exchange.MsgMarketTransferCommitmentRequest{}
+
+	errs := make([]error, 6)
+	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
+	msg.Account, errs[1] = flagSet.GetString(FlagAccount)
+	msg.Amount, errs[2] = ReadCoinsFlag(flagSet, FlagAmount)
+	msg.CurrentMarketId, errs[3] = flagSet.GetUint32(FlagCurrentMarket)
+	msg.NewMarketId, errs[4] = flagSet.GetUint32(FlagNewMarket)
+	msg.EventTag, errs[5] = flagSet.GetString(FlagTag)
+	return msg, errors.Join(errs...)
+}
+
 // SetupCmdTxMarketSetOrderExternalID adds all the flags needed for MakeMsgMarketSetOrderExternalID.
 func SetupCmdTxMarketSetOrderExternalID(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)

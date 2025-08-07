@@ -67,7 +67,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -145,6 +144,9 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	exchangekeeper "github.com/provenance-io/provenance/x/exchange/keeper"
 	exchangemodule "github.com/provenance-io/provenance/x/exchange/module"
+	flatfeeskeeper "github.com/provenance-io/provenance/x/flatfees/keeper"
+	flatfeesmodule "github.com/provenance-io/provenance/x/flatfees/module"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	"github.com/provenance-io/provenance/x/hold"
 	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
 	holdmodule "github.com/provenance-io/provenance/x/hold/module"
@@ -163,7 +165,6 @@ import (
 	"github.com/provenance-io/provenance/x/metadata"
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/provenance-io/provenance/x/name"
@@ -172,9 +173,15 @@ import (
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
+	"github.com/provenance-io/provenance/x/quarantine"
+	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
+	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
 	"github.com/provenance-io/provenance/x/registry"
 	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
 	registrymodule "github.com/provenance-io/provenance/x/registry/module"
+	"github.com/provenance-io/provenance/x/sanction"
+	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
+	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -203,10 +210,10 @@ var (
 		assettypes.ModuleName:     nil,
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName:      {authtypes.Burner},
-		triggertypes.ModuleName:  nil,
-		oracletypes.ModuleName:   nil,
-		metadatatypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		wasmtypes.ModuleName:      {authtypes.Burner},
+		triggertypes.ModuleName:   nil,
+		oracletypes.ModuleName:    nil,
+		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
 		nft.ModuleName:           nil,
 	}
 )
@@ -214,13 +221,6 @@ var (
 var (
 	_ runtime.AppI            = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
-)
-
-// These are some values defined in the params module that we still need so that
-// the params module can be deleted. But I don't want the imports, so they're copied here.
-// TODO[viridian]: Delete these params constants after the upgrade.
-const (
-	paramsName = "params" // = paramstypes.ModuleName
 )
 
 // WasmWrapper allows us to use namespacing in the config file
@@ -267,7 +267,9 @@ type App struct {
 	GroupKeeper           groupkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
-	MsgFeesKeeper         msgfeeskeeper.Keeper
+	FlatFeesKeeper        flatfeeskeeper.Keeper
+	QuarantineKeeper      quarantinekeeper.Keeper
+	SanctionKeeper        sanctionkeeper.Keeper
 	TriggerKeeper         triggerkeeper.Keeper
 	OracleKeeper          oraclekeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
@@ -362,11 +364,18 @@ func New(
 	std.RegisterInterfaces(interfaceRegistry)
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, txConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(txConfig.TxDecoder()))
+	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter())
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
+	// We set the ABCI proposal handler here instead of using baseAppOptions because:
+	// 	1. We always want our custom TxSelector used, regardless of how app.New was called.
+	// 	2. I want to keep the standard mempool (currently no-op) defined in NewBaseApp.
+	abciPropHandler := baseapp.NewDefaultProposalHandler(bApp.Mempool(), bApp)
+	abciPropHandler.SetTxSelector(antewrapper.NewProvTxSelector())
+	bApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
+	bApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
 
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
@@ -387,8 +396,10 @@ func New(
 		assettypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
-		msgfeestypes.StoreKey,
+		flatfeestypes.StoreKey,
 		wasmtypes.StoreKey,
+		quarantine.StoreKey,
+		sanction.StoreKey,
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
@@ -498,14 +509,9 @@ func New(
 	}
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, govAuthority)
 
-	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
-		appCodec, keys[msgfeestypes.StoreKey], authtypes.FeeCollectorName,
-		pioconfig.GetProvenanceConfig().FeeDenom, app.SimulateProv,
-		app.txConfig.TxDecoder(), interfaceRegistry,
+	app.FlatFeesKeeper = flatfeeskeeper.NewKeeper(
+		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName, app.BaseApp.SimulateProv,
 	)
-
-	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
-	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
 
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	restrictHooks := piohandlers.NewStakingRestrictionHooks(app.StakingKeeper, *piohandlers.DefaultRestrictionOptions)
@@ -575,6 +581,7 @@ func New(
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
+		authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins.
 		authtypes.NewModuleAddress(govtypes.ModuleName),            // Allow restricted coins in deposits.
 		authtypes.NewModuleAddress(distrtypes.ModuleName),          // Allow fee denoms to be restricted coins.
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
@@ -600,7 +607,7 @@ func New(
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
-		appCodec, keys[hold.StoreKey], app.BankKeeper,
+		appCodec, keys[hold.StoreKey], app.AccountKeeper, app.BankKeeper,
 	)
 
 	app.RegistryKeeper = registrykeeper.NewKeeper(appCodec, keys[registry.StoreKey], runtime.NewKVStoreService(keys[registry.StoreKey]), app.NFTKeeper, app.MetadataKeeper)
@@ -618,7 +625,7 @@ func New(
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
-		return pioMsgFeesRouter.Handler(msg)
+		return app.MsgServiceRouter().Handler(msg)
 	})
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
 	icaHostKeeper := icahostkeeper.NewKeeper(
@@ -699,6 +706,15 @@ func New(
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper)
 
+	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
+	for mName := range maccPerms {
+		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
+	}
+	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
+	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
+		app.BankKeeper, &app.GovKeeper,
+		govAuthority, unsanctionableAddrs)
+
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
@@ -709,7 +725,8 @@ func New(
 
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
-	app.GovKeeper = *govKeeper
+
+	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(app.SanctionKeeper))
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -732,6 +749,8 @@ func New(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
+
+	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	/****  Module Options ****/
 
@@ -768,14 +787,17 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
-		// TODO[wasm]: Delete or uncomment: wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), nil),
+		flatfeesmodule.NewAppModule(appCodec, app.FlatFeesKeeper, app.interfaceRegistry),
+		msgfeesmodule.NewAppModule(appCodec, flatfeeskeeper.NewQueryServer(app.FlatFeesKeeper)),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), nil),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		registrymodule.NewAppModule(appCodec, app.RegistryKeeper),
 		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -847,16 +869,20 @@ func New(
 	// can do so safely.
 	moduleGenesisOrder := []string{
 		capabilitytypes.ModuleName, // Must be first.
+
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+
 		markertypes.ModuleName,
+
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
-		genutiltypes.ModuleName, // Must be after both staking and auth.
+		flatfeestypes.ModuleName, // Must be somewhere before genutiltypes.
+		genutiltypes.ModuleName,  // Must be after both staking and auth.
 		evidencetypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
@@ -865,23 +891,26 @@ func New(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
+
+		quarantine.ModuleName,
+		sanction.ModuleName,
 		nft.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
-		msgfeestypes.ModuleName,
 		hold.ModuleName,
 		registry.ModuleName,
 		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
 		assettypes.ModuleName,
+		
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
 		icatypes.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName, // must be after ibctransfer.
+		wasmtypes.ModuleName, // must be after ibctransfer.
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
 	}
@@ -907,6 +936,8 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
@@ -919,10 +950,11 @@ func New(
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		icqtypes.ModuleName,
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName,
+		wasmtypes.ModuleName,
 
 		attributetypes.ModuleName,
 		markertypes.ModuleName,
+		flatfeestypes.ModuleName,
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
@@ -951,7 +983,7 @@ func New(
 
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
-		// TODO[wasm]: Delete or uncomment: wasmtypes.ModuleName: provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, pioMessageRouter),
+		wasmtypes.ModuleName: provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, pioMessageRouter),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.mm.Modules, overrideModules)
 
@@ -969,7 +1001,6 @@ func New(
 	app.SetEndBlocker(app.EndBlocker)
 	app.setAnteHandler()
 	app.setPostHandler()
-	app.setFeeHandler()
 	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
 
 	// Register upgrade handlers and set the store loader.
@@ -994,7 +1025,7 @@ func (app *App) setAnteHandler() {
 			BankKeeper:          app.BankKeeper,
 			TxSigningHandlerMap: app.txConfig.SignModeHandler(),
 			FeegrantKeeper:      app.FeeGrantKeeper,
-			MsgFeesKeeper:       app.MsgFeesKeeper,
+			FlatFeesKeeper:      app.FlatFeesKeeper,
 			CircuitKeeper:       &app.CircuitKeeper,
 			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
 		})
@@ -1007,29 +1038,10 @@ func (app *App) setAnteHandler() {
 }
 
 func (app *App) setPostHandler() {
-	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{},
+	postHandler := sdk.ChainPostDecorators(
+		antewrapper.NewFlatFeePostHandler(app.BankKeeper, app.FeeGrantKeeper),
 	)
-	if err != nil {
-		panic(err)
-	}
-
 	app.SetPostHandler(postHandler)
-}
-
-func (app *App) setFeeHandler() {
-	msgFeeHandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  app.AccountKeeper,
-		BankKeeper:     app.BankKeeper,
-		FeegrantKeeper: app.FeeGrantKeeper,
-		MsgFeesKeeper:  app.MsgFeesKeeper,
-		Decoder:        app.txConfig.TxDecoder(),
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	app.SetFeeHandler(msgFeeHandler)
 }
 
 func (app *App) registerUpgradeHandlers() {
@@ -1260,7 +1272,34 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *App) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
+	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
+}
+
+// Simulate runs a tx to identify how much of a fee it will cost.
+func (app *App) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
+	gasInfo, res, ctx, err := app.BaseApp.SimulateProv(txBytes)
+	if err != nil {
+		return gasInfo, res, err
+	}
+
+	gasMeter, err := antewrapper.GetFlatFeeGasMeter(ctx)
+	if err != nil {
+		return gasInfo, res, err
+	}
+
+	// We report the GasUsed as the amount of the fee denom required.
+	// That way, we can tell people to use --gas-prices 1nhash
+	// and it will properly set the fee to the required amount (at least for most stuff).
+	// We report the GasWanted as the amount of gas used so that users have both if needed.
+	gasInfo.GasWanted = gasInfo.GasUsed
+	reqFee := gasMeter.GetRequiredFee()
+	ok, feeCoin := reqFee.Find(pioconfig.GetProvConfig().FeeDenom)
+	if ok && !feeCoin.IsNil() && feeCoin.IsPositive() {
+		gasInfo.GasUsed = feeCoin.Amount.Uint64()
+	} else {
+		gasInfo.GasUsed = 0
+	}
+	return gasInfo, res, err
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.

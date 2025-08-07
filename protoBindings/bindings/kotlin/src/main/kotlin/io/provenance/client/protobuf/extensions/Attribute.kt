@@ -25,16 +25,19 @@ fun BlockingAttribute.getAllAttributes(
     val attributes = mutableListOf<io.provenance.attribute.v1.Attribute>()
 
     do {
-        val request = QueryAttributesRequest.newBuilder()
-            .setAccount(address)
-            .setPagination(paginationBuilder(offset, limit))
-            .build()
+        val request =
+            QueryAttributesRequest
+                .newBuilder()
+                .setAccount(address)
+                .setPagination(paginationBuilder(offset, limit))
+                .build()
 
-        val client = if (deadlineInSeconds == null) {
-            this
-        } else {
-            this.withDeadlineAfter(deadlineInSeconds, TimeUnit.SECONDS)
-        }
+        val client =
+            if (deadlineInSeconds == null) {
+                this
+            } else {
+                this.withDeadlineAfter(deadlineInSeconds, TimeUnit.SECONDS)
+            }
 
         val results = client.attributes(request)
 
@@ -56,16 +59,19 @@ suspend fun CoroutineAttribute.getAllAttributes(
     val attributes = mutableListOf<io.provenance.attribute.v1.Attribute>()
 
     do {
-        val request = QueryAttributesRequest.newBuilder()
-            .setAccount(address)
-            .setPagination(paginationBuilder(offset, limit))
-            .build()
+        val request =
+            QueryAttributesRequest
+                .newBuilder()
+                .setAccount(address)
+                .setPagination(paginationBuilder(offset, limit))
+                .build()
 
-        val client = if (deadlineInSeconds == null) {
-            this
-        } else {
-            this.withDeadlineAfter(deadlineInSeconds, TimeUnit.SECONDS)
-        }
+        val client =
+            if (deadlineInSeconds == null) {
+                this
+            } else {
+                this.withDeadlineAfter(deadlineInSeconds, TimeUnit.SECONDS)
+            }
 
         val results = client.attributes(request)
 

@@ -49,11 +49,53 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/provenance/flatfees/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Fees"
+        ]
+      },
+      "operationIds": {
+        "rename": {
+          "Params": "FlatFeeParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/flatfees/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Fees"
+        ]
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/provenance/hold/v1/query.swagger.json",
       "tags": {
         "add": [
           "Hold"
         ]
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/hold/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Hold"
+        ]
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/ibchooks/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "IBC Hooks"
+        ]
+      },
+      "operationIds": {
+        "rename": {
+          "Params": "IBCHooksParams"
+        }
       }
     },
     {
@@ -139,16 +181,8 @@
       },
       "operationIds": {
         "rename": {
-          "Params": "MsgFeeParams"
+          "CalculateTxFees": "CalculateTxFeesDeprecated"
         }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/provenance/msgfees/v1/tx.swagger.json",
-      "tags": {
-        "add": [
-          "Fees"
-        ]
       }
     },
     {
@@ -239,19 +273,6 @@
         "add": [
           "Trigger"
         ]
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/provenance/ibchooks/v1/query.swagger.json",
-      "tags": {
-        "add": [
-          "IBC Hooks"
-        ]
-      },
-      "operationIds": {
-        "rename": {
-          "Params": "IBCHooksParams"
-        }
       }
     },
     {

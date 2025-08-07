@@ -71,10 +71,6 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 		),
 	)
 
-	m.Logger(ctx).Info("Created new asset class as NFT class",
-		"class_id", class.Id,
-		"name", class.Name)
-
 	return &types.MsgCreateAssetClassResponse{}, nil
 }
 
@@ -156,11 +152,6 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 		),
 	)
 
-	m.Logger(ctx).Info("Created new asset as NFT",
-		"class_id", token.ClassId,
-		"token_id", token.Id,
-		"owner", owner.String())
-
 	return &types.MsgCreateAssetResponse{}, nil
 }
 
@@ -174,15 +165,15 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	}
 
 	// Get the nfts
-	for _, nft := range msg.Nfts {
+	for _, asset := range msg.Assets {
 		// Get the owner of the nft and verify it matches the from address
-		owner := m.nftKeeper.GetOwner(goCtx, nft.ClassId, nft.Id)
+		owner := m.nftKeeper.GetOwner(goCtx, asset.ClassId, asset.Id)
 		if owner.String() != msg.FromAddress {
-			return nil, fmt.Errorf("nft class %s, id %s owner %s does not match from address %s", nft.ClassId, nft.Id, owner.String(), msg.FromAddress)
+			return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, owner.String(), msg.FromAddress)
 		}
 
 		// Transfer the nft to the pool marker address
-		err = m.nftKeeper.Transfer(goCtx, nft.ClassId, nft.Id, marker.GetAddress())
+		err = m.nftKeeper.Transfer(goCtx, asset.ClassId, asset.Id, marker.GetAddress())
 		if err != nil {
 			return nil, fmt.Errorf("failed to transfer nft: %w", err)
 		}
@@ -195,7 +186,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 			types.EventTypePoolCreated,
 			sdk.NewAttribute(types.AttributeKeyPoolDenom, msg.Pool.Denom),
 			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Pool.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyNftCount, fmt.Sprintf("%d", len(msg.Nfts))),
+			sdk.NewAttribute(types.AttributeKeyAssetCount, fmt.Sprintf("%d", len(msg.Assets))),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
 		),
 	)
@@ -212,16 +203,16 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 		return nil, fmt.Errorf("failed to create tokenization marker: %w", err)
 	}
 
-	// Verify the NFT exists and is owned by the from address
-	owner := m.nftKeeper.GetOwner(goCtx, msg.Nft.ClassId, msg.Nft.Id)
+	// Verify the Asset exists and is owned by the from address
+	owner := m.nftKeeper.GetOwner(goCtx, msg.Asset.ClassId, msg.Asset.Id)
 	if owner.String() != msg.FromAddress {
-		return nil, fmt.Errorf("nft class %s, id %s owner %s does not match from address %s", msg.Nft.ClassId, msg.Nft.Id, owner.String(), msg.FromAddress)
+		return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", msg.Asset.ClassId, msg.Asset.Id, owner.String(), msg.FromAddress)
 	}
 
-	// Transfer the NFT to the tokenization marker address
-	err = m.nftKeeper.Transfer(goCtx, msg.Nft.ClassId, msg.Nft.Id, marker.GetAddress())
+	// Transfer the Asset to the tokenization marker address
+	err = m.nftKeeper.Transfer(goCtx, msg.Asset.ClassId, msg.Asset.Id, marker.GetAddress())
 	if err != nil {
-		return nil, fmt.Errorf("failed to transfer nft: %w", err)
+		return nil, fmt.Errorf("failed to transfer asset: %w", err)
 	}
 
 	// Emit event for tokenization creation
@@ -231,8 +222,8 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 			types.EventTypeTokenizationCreated,
 			sdk.NewAttribute(types.AttributeKeyTokenizationDenom, msg.Denom.Denom),
 			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Denom.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyNftClassId, msg.Nft.ClassId),
-			sdk.NewAttribute(types.AttributeKeyNftId, msg.Nft.Id),
+			sdk.NewAttribute(types.AttributeKeyAssetClassId, msg.Asset.ClassId),
+			sdk.NewAttribute(types.AttributeKeyAssetId, msg.Asset.Id),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
 		),
 	)
@@ -328,9 +319,6 @@ func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr 
 	if err != nil {
 		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to add marker account: %w", err)
 	}
-
-	// Log the creation of the new pool marker
-	ctx.Logger().Info("Created new pool marker", "pool_id", denom.Denom)
 
 	return marker, nil
 }

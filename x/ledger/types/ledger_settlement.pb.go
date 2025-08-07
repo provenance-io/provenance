@@ -26,7 +26,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// FundingTransferStatus represents the current status of a flow
+// FundingTransferStatus represents the current status of a funding transfer.
 type FundingTransferStatus int32
 
 const (
@@ -68,7 +68,9 @@ func (FundingTransferStatus) EnumDescriptor() ([]byte, []int) {
 
 // FundTransferWithSettlement represents a fund transfer with settlement instructions
 type FundTransferWithSettlement struct {
-	Key                      *LedgerKey               `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// The ledger key identifying the ledger for this transfer.
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// The correlation ID of the ledger entry associated with this transfer.
 	LedgerEntryCorrelationId string                   `protobuf:"bytes,2,opt,name=ledger_entry_correlation_id,json=ledgerEntryCorrelationId,proto3" json:"ledger_entry_correlation_id,omitempty"`
 	SettlementInstructions   []*SettlementInstruction `protobuf:"bytes,3,rep,name=settlement_instructions,json=settlementInstructions,proto3" json:"settlement_instructions,omitempty"`
 }
@@ -127,13 +129,15 @@ func (m *FundTransferWithSettlement) GetSettlementInstructions() []*SettlementIn
 	return nil
 }
 
-// SettlementInstruction represents blockchain-specific settlement instructions
+// SettlementInstruction represents blockchain-specific settlement instructions.
 type SettlementInstruction struct {
+	// The amount to be transferred.
 	Amount types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	// The recipient's blockchain address
-	RecipientAddress string                `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
-	Status           FundingTransferStatus `protobuf:"varint,3,opt,name=status,proto3,enum=provenance.ledger.v1.FundingTransferStatus" json:"status,omitempty"`
-	// Optional memo or note for the transaction
+	// The recipient's blockchain address.
+	RecipientAddress string `protobuf:"bytes,2,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
+	// The current status of the funding transfer.
+	Status FundingTransferStatus `protobuf:"varint,3,opt,name=status,proto3,enum=provenance.ledger.v1.FundingTransferStatus" json:"status,omitempty"`
+	// An optional memo or note for the transaction.
 	Memo string `protobuf:"bytes,4,opt,name=memo,proto3" json:"memo,omitempty"`
 }
 

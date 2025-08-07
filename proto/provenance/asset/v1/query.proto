@@ -3,51 +3,69 @@ package provenance.asset.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
-import "provenance/asset/v1/asset.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
+import "provenance/asset/v1/asset.proto";
 
-// Query defines the gRPC querier service for asset module
+// Query defines the gRPC querier service for the asset module.
 service Query {
-  // ListAssets returns a list of assets
+  // ListAssets queries all assets for a given address.
   rpc ListAssets(QueryListAssets) returns (QueryListAssetsResponse) {
     option (google.api.http).get = "/provenance/asset/v1/asset";
   }
 
-  // ListAssetClasses returns a list of asset classes
+  // ListAssetClasses queries all asset classes.
   rpc ListAssetClasses(QueryListAssetClasses) returns (QueryListAssetClassesResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class";
   }
 
-  // GetClass returns a specific asset class by ID
+  // GetClass queries a specific asset class by its ID.
   rpc GetClass(QueryGetClass) returns (QueryGetClassResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class/{id}";
   }
 }
 
-// QueryListAssetClassesResponse
-message QueryListAssetClassesResponse {
-  repeated AssetClass asset_classes = 1;
+// QueryListAssets is the request type for the ListAssets RPC method.
+message QueryListAssets {
+  // address defines the address to query assets for.
+  string address = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// QueryGetClassResponse
-message QueryGetClassResponse {
-  AssetClass asset_class = 1;
-}
-
-// QueryListAssetsResponse
+// QueryListAssetsResponse is the response type for the ListAssets RPC method.
 message QueryListAssetsResponse {
+  // assets defines the list of assets.
   repeated Asset assets = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
-// QueryListAssetClasses
-message QueryListAssetClasses {}
+// QueryListAssetClasses is the request type for the ListAssetClasses RPC method.
+message QueryListAssetClasses {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
 
-// QueryGetClass
+// QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
+message QueryListAssetClassesResponse {
+  // asset_classes defines the list of asset classes.
+  repeated AssetClass asset_classes = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetClass is the request type for the GetClass RPC method.
 message QueryGetClass {
+  // id defines the unique identifier of the asset class to query.
   string id = 1;
 }
 
-// QueryListAssets
-message QueryListAssets {
-  string address = 1;
+// QueryGetClassResponse is the response type for the GetClass RPC method.
+message QueryGetClassResponse {
+  // asset_class defines the requested asset class.
+  AssetClass asset_class = 1;
 }

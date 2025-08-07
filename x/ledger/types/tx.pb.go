@@ -28,10 +28,12 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgCreateRequest
+// MsgCreateRequest represents a request to create a new ledger.
 type MsgCreateRequest struct {
-	Ledger    *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
-	Authority string  `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The ledger to create.
+	Ledger *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
+	// The authority address that can create ledgers.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
 func (m *MsgCreateRequest) Reset()         { *m = MsgCreateRequest{} }
@@ -81,7 +83,7 @@ func (m *MsgCreateRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgCreateResponse
+// MsgCreateResponse represents the response from creating a ledger.
 type MsgCreateResponse struct {
 }
 
@@ -118,7 +120,7 @@ func (m *MsgCreateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateResponse proto.InternalMessageInfo
 
-// MsgUpdateStatusRequest
+// MsgUpdateStatusRequest represents a request to update the status of a ledger.
 type MsgUpdateStatusRequest struct {
 	// Ledger key of the ledger whose status is being updated
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -182,7 +184,7 @@ func (m *MsgUpdateStatusRequest) GetStatusTypeId() int32 {
 	return 0
 }
 
-// MsgUpdateStatusResponse
+// MsgUpdateStatusResponse represents the response from updating a ledger status.
 type MsgUpdateStatusResponse struct {
 }
 
@@ -219,7 +221,7 @@ func (m *MsgUpdateStatusResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateStatusResponse proto.InternalMessageInfo
 
-// MsgUpdateInterestRateRequest
+// MsgUpdateInterestRateRequest represents a request to update the interest rate configuration of a ledger.
 type MsgUpdateInterestRateRequest struct {
 	// Ledger key of the ledger whose interest rate is being updated
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -301,7 +303,7 @@ func (m *MsgUpdateInterestRateRequest) GetInterestAccrualMethod() InterestAccrua
 	return INTEREST_ACCRUAL_METHOD_UNSPECIFIED
 }
 
-// MsgUpdateInterestRateResponse
+// MsgUpdateInterestRateResponse represents the response from updating a ledger interest rate.
 type MsgUpdateInterestRateResponse struct {
 }
 
@@ -338,7 +340,7 @@ func (m *MsgUpdateInterestRateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateInterestRateResponse proto.InternalMessageInfo
 
-// MsgUpdatePaymentRequest
+// MsgUpdatePaymentRequest represents a request to update payment configuration of a ledger.
 type MsgUpdatePaymentRequest struct {
 	// Ledger key of the ledger whose payment is being updated
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -420,7 +422,7 @@ func (m *MsgUpdatePaymentRequest) GetPaymentFrequency() PaymentFrequency {
 	return PAYMENT_FREQUENCY_UNSPECIFIED
 }
 
-// MsgUpdatePaymentResponse
+// MsgUpdatePaymentResponse represents the response from updating a ledger payment configuration.
 type MsgUpdatePaymentResponse struct {
 }
 
@@ -457,7 +459,7 @@ func (m *MsgUpdatePaymentResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdatePaymentResponse proto.InternalMessageInfo
 
-// MsgUpdateMaturityDateRequest
+// MsgUpdateMaturityDateRequest represents a request to update the maturity date of a ledger.
 type MsgUpdateMaturityDateRequest struct {
 	// Ledger key of the ledger whose maturity date is being updated
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -521,7 +523,7 @@ func (m *MsgUpdateMaturityDateRequest) GetMaturityDate() int32 {
 	return 0
 }
 
-// MsgUpdateMaturityDateResponse
+// MsgUpdateMaturityDateResponse represents the response from updating a ledger maturity date.
 type MsgUpdateMaturityDateResponse struct {
 }
 
@@ -558,7 +560,7 @@ func (m *MsgUpdateMaturityDateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateMaturityDateResponse proto.InternalMessageInfo
 
-// MsgAppendRequest
+// MsgAppendRequest represents a request to append entries to a ledger.
 type MsgAppendRequest struct {
 	// Ledger key of the ledger whose entries are being appended
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -622,7 +624,7 @@ func (m *MsgAppendRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgAppendResponse
+// MsgAppendResponse represents the response from appending entries to a ledger.
 type MsgAppendResponse struct {
 }
 
@@ -659,7 +661,7 @@ func (m *MsgAppendResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAppendResponse proto.InternalMessageInfo
 
-// MsgUpdateBalancesRequest
+// MsgUpdateBalancesRequest represents a request to update balances for a ledger entry.
 type MsgUpdateBalancesRequest struct {
 	// Ledger key of the ledger whose balances are being updated
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -667,9 +669,9 @@ type MsgUpdateBalancesRequest struct {
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// The correlation id of the ledger entry
 	CorrelationId string `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
-	// The applied amounts to be updated
+	// The applied amounts to be updated.
 	AppliedAmounts []*LedgerBucketAmount `protobuf:"bytes,4,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"applied_amounts,omitempty"`
-	// The bucket balances to update
+	// The bucket balances to update.
 	BalanceAmounts []*BucketBalance `protobuf:"bytes,5,rep,name=balance_amounts,json=balanceAmounts,proto3" json:"balance_amounts,omitempty"`
 }
 
@@ -741,7 +743,7 @@ func (m *MsgUpdateBalancesRequest) GetBalanceAmounts() []*BucketBalance {
 	return nil
 }
 
-// MsgUpdateBalancesResponse
+// MsgUpdateBalancesResponse represents the response from updating ledger balances.
 type MsgUpdateBalancesResponse struct {
 }
 
@@ -778,8 +780,7 @@ func (m *MsgUpdateBalancesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateBalancesResponse proto.InternalMessageInfo
 
-// MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement
-// instructions
+// MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement instructions.
 type MsgTransferFundsWithSettlementRequest struct {
 	// The authority/signer that is transferring the funds
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -834,7 +835,7 @@ func (m *MsgTransferFundsWithSettlementRequest) GetTransfers() []*FundTransferWi
 	return nil
 }
 
-// MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement
+// MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement.
 type MsgTransferFundsWithSettlementResponse struct {
 }
 
@@ -873,7 +874,7 @@ func (m *MsgTransferFundsWithSettlementResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgTransferFundsWithSettlementResponse proto.InternalMessageInfo
 
-// MsgDestroyRequest represents a request to destroy a ledger
+// MsgDestroyRequest represents a request to destroy a ledger.
 type MsgDestroyRequest struct {
 	// Ledger key of the ledger to destroy
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -928,7 +929,7 @@ func (m *MsgDestroyRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgDestroyResponse represents the response from destroying a ledger
+// MsgDestroyResponse represents the response from destroying a ledger.
 type MsgDestroyResponse struct {
 }
 
@@ -965,7 +966,7 @@ func (m *MsgDestroyResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDestroyResponse proto.InternalMessageInfo
 
-// MsgCreateLedgerClassRequest represents a request to create a new ledger class
+// MsgCreateLedgerClassRequest represents a request to create a new ledger class.
 type MsgCreateLedgerClassRequest struct {
 	// The ledger class to create
 	LedgerClass *LedgerClass `protobuf:"bytes,1,opt,name=ledger_class,json=ledgerClass,proto3" json:"ledger_class,omitempty"`
@@ -1020,7 +1021,7 @@ func (m *MsgCreateLedgerClassRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgCreateLedgerClassResponse represents the response from creating a ledger class
+// MsgCreateLedgerClassResponse represents the response from creating a ledger class.
 type MsgCreateLedgerClassResponse struct {
 }
 
@@ -1057,7 +1058,7 @@ func (m *MsgCreateLedgerClassResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateLedgerClassResponse proto.InternalMessageInfo
 
-// MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class
+// MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class.
 type MsgAddLedgerClassStatusTypeRequest struct {
 	// Ledger class id to add the status type to
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
@@ -1121,7 +1122,7 @@ func (m *MsgAddLedgerClassStatusTypeRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type
+// MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type.
 type MsgAddLedgerClassStatusTypeResponse struct {
 }
 
@@ -1158,7 +1159,7 @@ func (m *MsgAddLedgerClassStatusTypeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddLedgerClassStatusTypeResponse proto.InternalMessageInfo
 
-// MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class
+// MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class.
 type MsgAddLedgerClassEntryTypeRequest struct {
 	// Ledger class id to add the entry type to
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
@@ -1222,7 +1223,7 @@ func (m *MsgAddLedgerClassEntryTypeRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type
+// MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type.
 type MsgAddLedgerClassEntryTypeResponse struct {
 }
 
@@ -1259,7 +1260,7 @@ func (m *MsgAddLedgerClassEntryTypeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddLedgerClassEntryTypeResponse proto.InternalMessageInfo
 
-// MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class
+// MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
 type MsgAddLedgerClassBucketTypeRequest struct {
 	// Ledger class id to add the bucket type to
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
@@ -1323,7 +1324,7 @@ func (m *MsgAddLedgerClassBucketTypeRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type
+// MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type.
 type MsgAddLedgerClassBucketTypeResponse struct {
 }
 
@@ -1360,7 +1361,7 @@ func (m *MsgAddLedgerClassBucketTypeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddLedgerClassBucketTypeResponse proto.InternalMessageInfo
 
-// MsgBulkImportRequest represents a request to bulk import ledger data from genesis state
+// MsgBulkImportRequest represents a request to bulk import ledger data from genesis state.
 type MsgBulkImportRequest struct {
 	// The authority/signer that is bulk importing the ledger data
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -1415,7 +1416,7 @@ func (m *MsgBulkImportRequest) GetGenesisState() *GenesisState {
 	return nil
 }
 
-// MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state
+// MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state.
 type MsgBulkImportResponse struct {
 }
 

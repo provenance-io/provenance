@@ -104,10 +104,6 @@ func (m *RegistryRole) Validate() error {
 
 // Validate validates the GenesisState
 func (m *GenesisState) Validate() error {
-	if m == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("genesis state cannot be nil")
-	}
-
 	// Validate entries
 	for i, entry := range m.Entries {
 		if err := entry.Validate(); err != nil {
@@ -120,10 +116,6 @@ func (m *GenesisState) Validate() error {
 
 // Validate validates the RegistryBulkUpdate
 func (m *RegistryBulkUpdate) Validate() error {
-	if m == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("registry bulk update cannot be nil")
-	}
-
 	// Validate entries
 	if len(m.Entries) == 0 {
 		return sdkerrors.ErrInvalidRequest.Wrap("entries cannot be empty")
@@ -152,21 +144,10 @@ func (m *RegistryBulkUpdateEntry) Validate() error {
 		return sdkerrors.ErrInvalidRequest.Wrapf("invalid key: %s", err)
 	}
 
-	// Validate roles
-	if len(m.Roles) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("roles cannot be empty")
-	}
-
-	// Check for duplicate roles
-	seenRoles := make(map[RegistryRole]bool)
-	for i, role := range m.Roles {
-		if role == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
-			return sdkerrors.ErrInvalidRequest.Wrapf("role at index %d cannot be unspecified", i)
+	for _, entry := range m.Entries {
+		if err := entry.Validate(); err != nil {
+			return sdkerrors.ErrInvalidRequest.Wrapf("invalid entry: %s", err)
 		}
-		if seenRoles[role] {
-			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate role at index %d: %s", i, role)
-		}
-		seenRoles[role] = true
 	}
 
 	return nil

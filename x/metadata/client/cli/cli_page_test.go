@@ -69,7 +69,7 @@ func TestIntegrationCLIPageTestSuite(t *testing.T) {
 func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	var err error
-	pioconfig.SetProvenanceConfig("atom", 0)
+	pioconfig.SetProvConfig("atom")
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
 

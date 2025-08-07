@@ -109,32 +109,39 @@ message QueryLedgerClassBucketTypesResponse {
 
 // QueryLedgerRequest
 message QueryLedgerRequest {
+  // The ledger key identifying the ledger to query.
   LedgerKey key = 1;
 }
 
 // QueryLedgerResponse
 message QueryLedgerResponse {
+  // The ledger data.
   Ledger ledger = 1;
 }
 
 // QueryLedgerEntriesRequest
 message QueryLedgerEntriesRequest {
+  // The ledger key identifying the ledger to query entries for.
   LedgerKey key = 1;
 }
 
 // QueryLedgerEntriesResponse
 message QueryLedgerEntriesResponse {
+  // The ledger entries.
   repeated LedgerEntry entries = 1;
 }
 
 // QueryLedgerEntryRequest
 message QueryLedgerEntryRequest {
-  LedgerKey key            = 1;
-  string    correlation_id = 2; // Free-form string up to 50 characters
+  // The ledger key identifying the ledger.
+  LedgerKey key = 1;
+  // The correlation ID of the entry to query (free-form string up to 50 characters).
+  string correlation_id = 2;
 }
 
 // QueryLedgerEntryResponse
 message QueryLedgerEntryResponse {
+  // The ledger entry.
   LedgerEntry entry = 1;
 }
 
@@ -142,7 +149,7 @@ message QueryLedgerEntryResponse {
 message QueryLedgerBalancesAsOfRequest {
   LedgerKey key = 1;
 
-  // Format: YYYY-MM-DD
+  // The date to query balances as of (format: YYYY-MM-DD).
   string as_of_date = 2;
 }
 
@@ -163,8 +170,9 @@ message QueryLedgerSettlementsResponse {
 
 // QueryLedgerSettlementsByCorrelationIdRequest
 message QueryLedgerSettlementsByCorrelationIdRequest {
-  LedgerKey key            = 1;
-  string    correlation_id = 2;
+  LedgerKey key = 1;
+  // The correlation ID to query settlements for.
+  string correlation_id = 2;
 }
 
 // QueryLedgerSettlementsByCorrelationIdResponse

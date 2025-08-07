@@ -390,6 +390,7 @@ func (m *QueryLedgerClassBucketTypesResponse) GetBucketTypes() []*LedgerClassBuc
 
 // QueryLedgerRequest
 type QueryLedgerRequest struct {
+	// The ledger key identifying the ledger to query.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -435,6 +436,7 @@ func (m *QueryLedgerRequest) GetKey() *LedgerKey {
 
 // QueryLedgerResponse
 type QueryLedgerResponse struct {
+	// The ledger data.
 	Ledger *Ledger `protobuf:"bytes,1,opt,name=ledger,proto3" json:"ledger,omitempty"`
 }
 
@@ -480,6 +482,7 @@ func (m *QueryLedgerResponse) GetLedger() *Ledger {
 
 // QueryLedgerEntriesRequest
 type QueryLedgerEntriesRequest struct {
+	// The ledger key identifying the ledger to query entries for.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
@@ -525,6 +528,7 @@ func (m *QueryLedgerEntriesRequest) GetKey() *LedgerKey {
 
 // QueryLedgerEntriesResponse
 type QueryLedgerEntriesResponse struct {
+	// The ledger entries.
 	Entries []*LedgerEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
 }
 
@@ -570,8 +574,10 @@ func (m *QueryLedgerEntriesResponse) GetEntries() []*LedgerEntry {
 
 // QueryLedgerEntryRequest
 type QueryLedgerEntryRequest struct {
-	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	CorrelationId string     `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	// The ledger key identifying the ledger.
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// The correlation ID of the entry to query (free-form string up to 50 characters).
+	CorrelationId string `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 }
 
 func (m *QueryLedgerEntryRequest) Reset()         { *m = QueryLedgerEntryRequest{} }
@@ -623,6 +629,7 @@ func (m *QueryLedgerEntryRequest) GetCorrelationId() string {
 
 // QueryLedgerEntryResponse
 type QueryLedgerEntryResponse struct {
+	// The ledger entry.
 	Entry *LedgerEntry `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry,omitempty"`
 }
 
@@ -669,7 +676,7 @@ func (m *QueryLedgerEntryResponse) GetEntry() *LedgerEntry {
 // QueryLedgerBalancesAsOfRequest
 type QueryLedgerBalancesAsOfRequest struct {
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// Format: YYYY-MM-DD
+	// The date to query balances as of (format: YYYY-MM-DD).
 	AsOfDate string `protobuf:"bytes,2,opt,name=as_of_date,json=asOfDate,proto3" json:"as_of_date,omitempty"`
 }
 
@@ -857,8 +864,9 @@ func (m *QueryLedgerSettlementsResponse) GetSettlements() []*StoredSettlementIns
 
 // QueryLedgerSettlementsByCorrelationIdRequest
 type QueryLedgerSettlementsByCorrelationIdRequest struct {
-	Key           *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	CorrelationId string     `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// The correlation ID to query settlements for.
+	CorrelationId string `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 }
 
 func (m *QueryLedgerSettlementsByCorrelationIdRequest) Reset() {

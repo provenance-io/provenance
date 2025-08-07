@@ -1,0 +1,104 @@
+syntax = "proto3";
+package provenance.flatfees.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/flatfees/types";
+option java_package        = "io.provenance.flatfees.v1";
+option java_multiple_files = true;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/flatfees/v1/flatfees.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+// Query defines the gRPC querier service for flatfees module.
+service Query {
+  // Params returns the parameters for the x/flatfees module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/flatfees/v1/params";
+  }
+
+  // AllMsgFees returns info on all msg types that have a customized msg fee.
+  rpc AllMsgFees(QueryAllMsgFeesRequest) returns (QueryAllMsgFeesResponse) {
+    option (google.api.http).get = "/provenance/flatfees/v1/msgfee/all";
+  }
+
+  // MsgFee will return information about what it will cost to execute a given msg type.
+  // If the provided msg type does not have a specific fee defined, the default is returned.
+  rpc MsgFee(QueryMsgFeeRequest) returns (QueryMsgFeeResponse) {
+    option (google.api.http).get = "/provenance/flatfees/v1/msgfee";
+  }
+
+  // CalculateTxFees simulates executing a transaction for estimating gas usage and fees.
+  rpc CalculateTxFees(QueryCalculateTxFeesRequest) returns (QueryCalculateTxFeesResponse) {
+    option (google.api.http) = {
+      post: "/provenance/tx/v1/calculate_flat_fee"
+      body: "*"
+    };
+  }
+}
+
+// QueryParamsRequest is the request type for the Params query.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Params query.
+message QueryParamsResponse {
+  // params defines the parameters of the x/flatfees module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
+message QueryAllMsgFeesRequest {
+  // do_not_convert, if true, will return the fees as defined (instead of as converted).
+  bool do_not_convert = 1;
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryAllMsgFeesResponse is the response type for the AllMsgFees query.
+message QueryAllMsgFeesResponse {
+  // msg_fees contains the requested information.
+  repeated MsgFee msg_fees = 1;
+  // default_cost is the amount a msg costs when there is no specific msg-fee defined for it.
+  cosmos.base.v1beta1.Coin default_cost = 2 [(gogoproto.nullable) = false];
+  // pagination defines the pagination parameters of the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryMsgFeeRequest is the request type for the MsgFee query.
+message QueryMsgFeeRequest {
+  // msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend".
+  string msg_type_url = 1;
+  // do_not_convert, if true, will return the fees as defined (instead of as converted).
+  bool do_not_convert = 2;
+}
+
+// QueryMsgFeeResponse is the response type for the MsgFee query.
+message QueryMsgFeeResponse {
+  // msg_fee is the requested entry.
+  MsgFee msg_fee = 1;
+}
+
+// QueryCalculateTxFeesRequest is the request type for the CalculateTxFees query.
+message QueryCalculateTxFeesRequest {
+  // tx_bytes is the transaction to simulate.
+  bytes tx_bytes = 1;
+  // gas_adjustment is a multiplier applied to the gas used while simulating the tx.
+  // This only affects the estimated gas (since the fee is flat).
+  // The default is 1.0. Valid range is 0.0 (exclusive) to 10.0 (inclusive).
+  float gas_adjustment = 2;
+}
+
+// QueryCalculateTxFeesResponse is the response type for the CalculateTxFees query.
+message QueryCalculateTxFeesResponse {
+  // total_fees is the amount of fees needed for the Tx.
+  repeated cosmos.base.v1beta1.Coin total_fees = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
+  // estimated_gas is the amount of gas needed for the Tx.
+  uint64 estimated_gas = 2;
+}

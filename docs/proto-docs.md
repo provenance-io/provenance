@@ -125,6 +125,8 @@
     - [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse)
+    - [MsgMarketTransferCommitmentRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentRequest)
+    - [MsgMarketTransferCommitmentResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentResponse)
     - [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsRequest)
     - [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsResponse)
     - [MsgMarketUpdateAcceptingOrdersRequest](#provenance-exchange-v1-MsgMarketUpdateAcceptingOrdersRequest)
@@ -454,7 +456,7 @@
 - [provenance/asset/v1/asset.proto](#provenance_asset_v1_asset-proto)
     - [Asset](#provenance-asset-v1-Asset)
     - [AssetClass](#provenance-asset-v1-AssetClass)
-    - [Nft](#provenance-asset-v1-Nft)
+    - [AssetKey](#provenance-asset-v1-AssetKey)
   
 - [provenance/asset/v1/query.proto](#provenance_asset_v1_query-proto)
     - [QueryGetClass](#provenance-asset-v1-QueryGetClass)
@@ -483,26 +485,11 @@
     - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest)
     - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse)
   
-    - [Msg](#provenance-msgfees-v1-Msg)
-  
 - [provenance/msgfees/v1/query.proto](#provenance_msgfees_v1_query-proto)
     - [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest)
     - [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse)
-    - [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest)
-    - [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse)
-    - [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest)
-    - [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse)
   
     - [Query](#provenance-msgfees-v1-Query)
-  
-- [provenance/msgfees/v1/genesis.proto](#provenance_msgfees_v1_genesis-proto)
-    - [GenesisState](#provenance-msgfees-v1-GenesisState)
-  
-- [provenance/msgfees/v1/msgfees.proto](#provenance_msgfees_v1_msgfees-proto)
-    - [EventMsgFee](#provenance-msgfees-v1-EventMsgFee)
-    - [EventMsgFees](#provenance-msgfees-v1-EventMsgFees)
-    - [MsgFee](#provenance-msgfees-v1-MsgFee)
-    - [Params](#provenance-msgfees-v1-Params)
   
 - [provenance/msgfees/v1/proposals.proto](#provenance_msgfees_v1_proposals-proto)
     - [AddMsgFeeProposal](#provenance-msgfees-v1-AddMsgFeeProposal)
@@ -510,6 +497,36 @@
     - [UpdateConversionFeeDenomProposal](#provenance-msgfees-v1-UpdateConversionFeeDenomProposal)
     - [UpdateMsgFeeProposal](#provenance-msgfees-v1-UpdateMsgFeeProposal)
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
+  
+- [provenance/flatfees/v1/tx.proto](#provenance_flatfees_v1_tx-proto)
+    - [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest)
+    - [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse)
+    - [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest)
+    - [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse)
+    - [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest)
+    - [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse)
+  
+    - [Msg](#provenance-flatfees-v1-Msg)
+  
+- [provenance/flatfees/v1/flatfees.proto](#provenance_flatfees_v1_flatfees-proto)
+    - [ConversionFactor](#provenance-flatfees-v1-ConversionFactor)
+    - [MsgFee](#provenance-flatfees-v1-MsgFee)
+    - [Params](#provenance-flatfees-v1-Params)
+  
+- [provenance/flatfees/v1/query.proto](#provenance_flatfees_v1_query-proto)
+    - [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest)
+    - [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse)
+    - [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest)
+    - [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse)
+    - [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest)
+    - [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse)
+    - [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest)
+    - [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse)
+  
+    - [Query](#provenance-flatfees-v1-Query)
+  
+- [provenance/flatfees/v1/genesis.proto](#provenance_flatfees_v1_genesis-proto)
+    - [GenesisState](#provenance-flatfees-v1-GenesisState)
   
 - [provenance/oracle/v1/tx.proto](#provenance_oracle_v1_tx-proto)
     - [MsgSendQueryOracleRequest](#provenance-oracle-v1-MsgSendQueryOracleRequest)
@@ -644,6 +661,8 @@
     - [MsgMintResponse](#provenance-marker-v1-MsgMintResponse)
     - [MsgRemoveAdministratorProposalRequest](#provenance-marker-v1-MsgRemoveAdministratorProposalRequest)
     - [MsgRemoveAdministratorProposalResponse](#provenance-marker-v1-MsgRemoveAdministratorProposalResponse)
+    - [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest)
+    - [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse)
     - [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest)
     - [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse)
     - [MsgSetAdministratorProposalRequest](#provenance-marker-v1-MsgSetAdministratorProposalRequest)
@@ -732,6 +751,7 @@
   
 - [provenance/marker/v1/authz.proto](#provenance_marker_v1_authz-proto)
     - [MarkerTransferAuthorization](#provenance-marker-v1-MarkerTransferAuthorization)
+    - [MultiAuthorization](#provenance-marker-v1-MultiAuthorization)
   
 - [provenance/marker/v1/genesis.proto](#provenance_marker_v1_genesis-proto)
     - [DenySendAddress](#provenance-marker-v1-DenySendAddress)
@@ -994,9 +1014,16 @@
     - [GenesisState](#provenance-metadata-v1-GenesisState)
     - [MarkerNetAssetValues](#provenance-metadata-v1-MarkerNetAssetValues)
   
+- [provenance/hold/v1/tx.proto](#provenance_hold_v1_tx-proto)
+    - [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest)
+    - [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse)
+  
+    - [Msg](#provenance-hold-v1-Msg)
+  
 - [provenance/hold/v1/events.proto](#provenance_hold_v1_events-proto)
     - [EventHoldAdded](#provenance-hold-v1-EventHoldAdded)
     - [EventHoldReleased](#provenance-hold-v1-EventHoldReleased)
+    - [EventVestingAccountUnlocked](#provenance-hold-v1-EventVestingAccountUnlocked)
   
 - [provenance/hold/v1/hold.proto](#provenance_hold_v1_hold-proto)
     - [AccountHold](#provenance-hold-v1-AccountHold)
@@ -2555,6 +2582,36 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 
 
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentRequest"></a>
+
+### MsgMarketTransferCommitmentRequest
+MsgMarketTransferCommitmentRequest is a request message for the MarketTransferCommitment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this transfer. |
+| `account` | [string](#string) |  | account is the Bech32 address string of the account receiving the transferred funds. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | amount to transfer. |
+| `current_market_id` | [uint32](#uint32) |  | current_market_id is the numerical identifier of the market where the funds are currently committed and are being released from. |
+| `new_market_id` | [uint32](#uint32) |  | new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance-exchange-v1-MsgMarketTransferCommitmentResponse"></a>
+
+### MsgMarketTransferCommitmentResponse
+MsgMarketTransferCommitmentResponse is a response message for the MarketTransferCommitment endpoint.
+
+
+
+
+
+
 <a name="provenance-exchange-v1-MsgMarketUpdateAcceptingCommitmentsRequest"></a>
 
 ### MsgMarketUpdateAcceptingCommitmentsRequest
@@ -2848,6 +2905,7 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketSettle` | [MsgMarketSettleRequest](#provenance-exchange-v1-MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance-exchange-v1-MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. |
 | `MarketCommitmentSettle` | [MsgMarketCommitmentSettleRequest](#provenance-exchange-v1-MsgMarketCommitmentSettleRequest) | [MsgMarketCommitmentSettleResponse](#provenance-exchange-v1-MsgMarketCommitmentSettleResponse) | MarketCommitmentSettle is a market endpoint to transfer committed funds. |
 | `MarketReleaseCommitments` | [MsgMarketReleaseCommitmentsRequest](#provenance-exchange-v1-MsgMarketReleaseCommitmentsRequest) | [MsgMarketReleaseCommitmentsResponse](#provenance-exchange-v1-MsgMarketReleaseCommitmentsResponse) | MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s). |
+| `MarketTransferCommitment` | [MsgMarketTransferCommitmentRequest](#provenance-exchange-v1-MsgMarketTransferCommitmentRequest) | [MsgMarketTransferCommitmentResponse](#provenance-exchange-v1-MsgMarketTransferCommitmentResponse) | MarketTransferCommitment is a market endpoint to transfers committed funds from one market to another. |
 | `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance-exchange-v1-MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance-exchange-v1-MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance-exchange-v1-MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance-exchange-v1-MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance-exchange-v1-MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance-exchange-v1-MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. |
@@ -3684,6 +3742,7 @@ QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitm
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `account` | [string](#string) |  | account is the bech32 address string of the account with the commitments. |
+| `denom` | [string](#string) |  | denom is an optional denom that, if provided, limits the results to just that denom. |
 
 
 
@@ -4384,7 +4443,7 @@ Query is the service for exchange module's query endpoints.
 | `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance-exchange-v1-QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance-exchange-v1-QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. |
 | `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance-exchange-v1-QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance-exchange-v1-QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. |
 | `GetCommitment` | [QueryGetCommitmentRequest](#provenance-exchange-v1-QueryGetCommitmentRequest) | [QueryGetCommitmentResponse](#provenance-exchange-v1-QueryGetCommitmentResponse) | GetCommitment gets the funds in an account that are committed to the market. |
-| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. |
+| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance-exchange-v1-QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance-exchange-v1-QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. Optionally, you can filter the results for a specific denomination using the `denom` query parameter. |
 | `GetMarketCommitments` | [QueryGetMarketCommitmentsRequest](#provenance-exchange-v1-QueryGetMarketCommitmentsRequest) | [QueryGetMarketCommitmentsResponse](#provenance-exchange-v1-QueryGetMarketCommitmentsResponse) | GetMarketCommitments gets all the funds committed to a market from any account. |
 | `GetAllCommitments` | [QueryGetAllCommitmentsRequest](#provenance-exchange-v1-QueryGetAllCommitmentsRequest) | [QueryGetAllCommitmentsResponse](#provenance-exchange-v1-QueryGetAllCommitmentsResponse) | GetAllCommitments gets all fund committed to any market from any account. |
 | `GetMarket` | [QueryGetMarketRequest](#provenance-exchange-v1-QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance-exchange-v1-QueryGetMarketResponse) | GetMarket returns all the information and details about a market. |
@@ -4576,7 +4635,7 @@ Params is a representation of the exchange module parameters.
 <a name="provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest"></a>
 
 ### MsgAddLedgerClassBucketTypeRequest
-MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class
+MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
 
 
 | Field | Type | Label | Description |
@@ -4593,7 +4652,7 @@ MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to 
 <a name="provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse"></a>
 
 ### MsgAddLedgerClassBucketTypeResponse
-MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type
+MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type.
 
 
 
@@ -4603,7 +4662,7 @@ MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket
 <a name="provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest"></a>
 
 ### MsgAddLedgerClassEntryTypeRequest
-MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class
+MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class.
 
 
 | Field | Type | Label | Description |
@@ -4620,7 +4679,7 @@ MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a
 <a name="provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse"></a>
 
 ### MsgAddLedgerClassEntryTypeResponse
-MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type
+MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type.
 
 
 
@@ -4630,7 +4689,7 @@ MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry 
 <a name="provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest"></a>
 
 ### MsgAddLedgerClassStatusTypeRequest
-MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class
+MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class.
 
 
 | Field | Type | Label | Description |
@@ -4647,7 +4706,7 @@ MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to 
 <a name="provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse"></a>
 
 ### MsgAddLedgerClassStatusTypeResponse
-MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type
+MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type.
 
 
 
@@ -4657,7 +4716,7 @@ MsgAddLedgerClassStatusTypeResponse represents the response from adding a status
 <a name="provenance-ledger-v1-MsgAppendRequest"></a>
 
 ### MsgAppendRequest
-MsgAppendRequest
+MsgAppendRequest represents a request to append entries to a ledger.
 
 
 | Field | Type | Label | Description |
@@ -4674,7 +4733,7 @@ MsgAppendRequest
 <a name="provenance-ledger-v1-MsgAppendResponse"></a>
 
 ### MsgAppendResponse
-MsgAppendResponse
+MsgAppendResponse represents the response from appending entries to a ledger.
 
 
 
@@ -4684,7 +4743,7 @@ MsgAppendResponse
 <a name="provenance-ledger-v1-MsgBulkImportRequest"></a>
 
 ### MsgBulkImportRequest
-MsgBulkImportRequest represents a request to bulk import ledger data from genesis state
+MsgBulkImportRequest represents a request to bulk import ledger data from genesis state.
 
 
 | Field | Type | Label | Description |
@@ -4700,7 +4759,7 @@ MsgBulkImportRequest represents a request to bulk import ledger data from genesi
 <a name="provenance-ledger-v1-MsgBulkImportResponse"></a>
 
 ### MsgBulkImportResponse
-MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state
+MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state.
 
 
 
@@ -4710,7 +4769,7 @@ MsgBulkImportResponse represents the response from bulk importing ledger data fr
 <a name="provenance-ledger-v1-MsgCreateLedgerClassRequest"></a>
 
 ### MsgCreateLedgerClassRequest
-MsgCreateLedgerClassRequest represents a request to create a new ledger class
+MsgCreateLedgerClassRequest represents a request to create a new ledger class.
 
 
 | Field | Type | Label | Description |
@@ -4726,7 +4785,7 @@ MsgCreateLedgerClassRequest represents a request to create a new ledger class
 <a name="provenance-ledger-v1-MsgCreateLedgerClassResponse"></a>
 
 ### MsgCreateLedgerClassResponse
-MsgCreateLedgerClassResponse represents the response from creating a ledger class
+MsgCreateLedgerClassResponse represents the response from creating a ledger class.
 
 
 
@@ -4736,13 +4795,13 @@ MsgCreateLedgerClassResponse represents the response from creating a ledger clas
 <a name="provenance-ledger-v1-MsgCreateRequest"></a>
 
 ### MsgCreateRequest
-MsgCreateRequest
+MsgCreateRequest represents a request to create a new ledger.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
-| `authority` | [string](#string) |  |  |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger to create. |
+| `authority` | [string](#string) |  | The authority address that can create ledgers. |
 
 
 
@@ -4752,7 +4811,7 @@ MsgCreateRequest
 <a name="provenance-ledger-v1-MsgCreateResponse"></a>
 
 ### MsgCreateResponse
-MsgCreateResponse
+MsgCreateResponse represents the response from creating a ledger.
 
 
 
@@ -4762,7 +4821,7 @@ MsgCreateResponse
 <a name="provenance-ledger-v1-MsgDestroyRequest"></a>
 
 ### MsgDestroyRequest
-MsgDestroyRequest represents a request to destroy a ledger
+MsgDestroyRequest represents a request to destroy a ledger.
 
 
 | Field | Type | Label | Description |
@@ -4778,7 +4837,7 @@ MsgDestroyRequest represents a request to destroy a ledger
 <a name="provenance-ledger-v1-MsgDestroyResponse"></a>
 
 ### MsgDestroyResponse
-MsgDestroyResponse represents the response from destroying a ledger
+MsgDestroyResponse represents the response from destroying a ledger.
 
 
 
@@ -4788,8 +4847,7 @@ MsgDestroyResponse represents the response from destroying a ledger
 <a name="provenance-ledger-v1-MsgTransferFundsWithSettlementRequest"></a>
 
 ### MsgTransferFundsWithSettlementRequest
-MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement
-instructions
+MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement instructions.
 
 
 | Field | Type | Label | Description |
@@ -4805,7 +4863,7 @@ instructions
 <a name="provenance-ledger-v1-MsgTransferFundsWithSettlementResponse"></a>
 
 ### MsgTransferFundsWithSettlementResponse
-MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement
+MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement.
 
 
 
@@ -4815,7 +4873,7 @@ MsgTransferFundsWithSettlementResponse represents the response from transferring
 <a name="provenance-ledger-v1-MsgUpdateBalancesRequest"></a>
 
 ### MsgUpdateBalancesRequest
-MsgUpdateBalancesRequest
+MsgUpdateBalancesRequest represents a request to update balances for a ledger entry.
 
 
 | Field | Type | Label | Description |
@@ -4823,8 +4881,8 @@ MsgUpdateBalancesRequest
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose balances are being updated |
 | `authority` | [string](#string) |  | The authority/signer that is updating the balances |
 | `correlation_id` | [string](#string) |  | The correlation id of the ledger entry |
-| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated |
-| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated. |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update. |
 
 
 
@@ -4834,7 +4892,7 @@ MsgUpdateBalancesRequest
 <a name="provenance-ledger-v1-MsgUpdateBalancesResponse"></a>
 
 ### MsgUpdateBalancesResponse
-MsgUpdateBalancesResponse
+MsgUpdateBalancesResponse represents the response from updating ledger balances.
 
 
 
@@ -4844,7 +4902,7 @@ MsgUpdateBalancesResponse
 <a name="provenance-ledger-v1-MsgUpdateInterestRateRequest"></a>
 
 ### MsgUpdateInterestRateRequest
-MsgUpdateInterestRateRequest
+MsgUpdateInterestRateRequest represents a request to update the interest rate configuration of a ledger.
 
 
 | Field | Type | Label | Description |
@@ -4863,7 +4921,7 @@ MsgUpdateInterestRateRequest
 <a name="provenance-ledger-v1-MsgUpdateInterestRateResponse"></a>
 
 ### MsgUpdateInterestRateResponse
-MsgUpdateInterestRateResponse
+MsgUpdateInterestRateResponse represents the response from updating a ledger interest rate.
 
 
 
@@ -4873,7 +4931,7 @@ MsgUpdateInterestRateResponse
 <a name="provenance-ledger-v1-MsgUpdateMaturityDateRequest"></a>
 
 ### MsgUpdateMaturityDateRequest
-MsgUpdateMaturityDateRequest
+MsgUpdateMaturityDateRequest represents a request to update the maturity date of a ledger.
 
 
 | Field | Type | Label | Description |
@@ -4890,7 +4948,7 @@ MsgUpdateMaturityDateRequest
 <a name="provenance-ledger-v1-MsgUpdateMaturityDateResponse"></a>
 
 ### MsgUpdateMaturityDateResponse
-MsgUpdateMaturityDateResponse
+MsgUpdateMaturityDateResponse represents the response from updating a ledger maturity date.
 
 
 
@@ -4900,7 +4958,7 @@ MsgUpdateMaturityDateResponse
 <a name="provenance-ledger-v1-MsgUpdatePaymentRequest"></a>
 
 ### MsgUpdatePaymentRequest
-MsgUpdatePaymentRequest
+MsgUpdatePaymentRequest represents a request to update payment configuration of a ledger.
 
 
 | Field | Type | Label | Description |
@@ -4919,7 +4977,7 @@ MsgUpdatePaymentRequest
 <a name="provenance-ledger-v1-MsgUpdatePaymentResponse"></a>
 
 ### MsgUpdatePaymentResponse
-MsgUpdatePaymentResponse
+MsgUpdatePaymentResponse represents the response from updating a ledger payment configuration.
 
 
 
@@ -4929,7 +4987,7 @@ MsgUpdatePaymentResponse
 <a name="provenance-ledger-v1-MsgUpdateStatusRequest"></a>
 
 ### MsgUpdateStatusRequest
-MsgUpdateStatusRequest
+MsgUpdateStatusRequest represents a request to update the status of a ledger.
 
 
 | Field | Type | Label | Description |
@@ -4946,7 +5004,7 @@ MsgUpdateStatusRequest
 <a name="provenance-ledger-v1-MsgUpdateStatusResponse"></a>
 
 ### MsgUpdateStatusResponse
-MsgUpdateStatusResponse
+MsgUpdateStatusResponse represents the response from updating a ledger status.
 
 
 
@@ -5128,8 +5186,8 @@ BucketBalance represents the balance for a specific bucket type
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id |
-| `balance_amt` | [string](#string) |  | The balance of the bucket |
+| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id. |
+| `balance_amt` | [string](#string) |  | The balance of the bucket. |
 
 
 
@@ -5159,16 +5217,16 @@ Ledger defines an servicing ledger for an asset.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `ledger_class_id` | [string](#string) |  | Ledger class id for the ledger |
-| `status_type_id` | [int32](#int32) |  | Status of the ledger |
-| `next_pmt_date` | [int32](#int32) |  | Next payment date days since epoch |
-| `next_pmt_amt` | [int64](#int64) |  | Next payment amount |
-| `interest_rate` | [int32](#int32) |  | Interest rate (10000000 = 10.000000%) - 6 decimal places |
-| `maturity_date` | [int32](#int32) |  | Maturity date days since epoch |
-| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | Day count convention for interest |
-| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | Interest accrual method for interest |
-| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | Payment frequency |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `ledger_class_id` | [string](#string) |  | The ledger class ID for the ledger. |
+| `status_type_id` | [int32](#int32) |  | The status of the ledger. |
+| `next_pmt_date` | [int32](#int32) |  | The next payment date (days since epoch). |
+| `next_pmt_amt` | [int64](#int64) |  | The next payment amount. |
+| `interest_rate` | [int32](#int32) |  | The interest rate (10000000 = 10.000000%) - 6 decimal places. |
+| `maturity_date` | [int32](#int32) |  | The maturity date (days since epoch). |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The day count convention for interest calculations. |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The interest accrual method for interest calculations. |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The payment frequency. |
 
 
 
@@ -5184,8 +5242,8 @@ decrease the balance of the bucket.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id |
-| `applied_amt` | [string](#string) |  | The amount applied to the bucket |
+| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id. |
+| `applied_amt` | [string](#string) |  | The amount applied to the bucket. |
 
 
 
@@ -5256,9 +5314,9 @@ These status types are used to track the status of underlying loan throughout th
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [int32](#int32) |  | Unique ID for the status type (eg. 1, 2, 3, etc.) |
-| `code` | [string](#string) |  | Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY""CLOSED", "CANCELLED", "SUSPENDED", "OTHER") |
-| `description` | [string](#string) |  | Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy", "Closed", "Cancelled", "Suspended", "Other") |
+| `id` | [int32](#int32) |  | Unique ID for the status type (eg. 1, 2, 3, etc.). |
+| `code` | [string](#string) |  | Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY", "CLOSED", "CANCELLED", "SUSPENDED", "OTHER"). |
+| `description` | [string](#string) |  | Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy", "Closed", "Cancelled", "Suspended", "Other"). |
 
 
 
@@ -5273,16 +5331,16 @@ LedgerEntry is an single entry in the ledger. An entry would be a payment, disbu
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `correlation_id` | [string](#string) |  | Correlation ID for tracking ledger entries with external systems (max 50 characters) |
-| `reverses_correlation_id` | [string](#string) |  | If this entry reverses another entry, the correlation id of the entry it reverses |
-| `is_void` | [bool](#bool) |  | If true, this entry is a void and should not be included in the ledger balance calculations |
+| `correlation_id` | [string](#string) |  | The correlation ID for tracking ledger entries with external systems (max 50 characters). |
+| `reverses_correlation_id` | [string](#string) |  | If this entry reverses another entry, the correlation ID of the entry it reverses. |
+| `is_void` | [bool](#bool) |  | If true, this entry is a void and should not be included in the ledger balance calculations. |
 | `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100). This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
-| `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id |
-| `posted_date` | [int32](#int32) |  | Posted date days since epoch |
-| `effective_date` | [int32](#int32) |  | Effective date days since epoch |
-| `total_amt` | [string](#string) |  | Total amount of the ledger entry |
-| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts for each bucket |
-| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | Balances for each bucket |
+| `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id. |
+| `posted_date` | [int32](#int32) |  | The posted date (days since epoch). |
+| `effective_date` | [int32](#int32) |  | The effective date (days since epoch). |
+| `total_amt` | [string](#string) |  | The total amount of the ledger entry. |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts for each bucket. |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The balances for each bucket. |
 
 
 
@@ -5313,9 +5371,9 @@ LedgerToEntries represents a ledger with its associated entries
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
-| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
+| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
 
 
 
@@ -5325,12 +5383,12 @@ LedgerToEntries represents a ledger with its associated entries
 <a name="provenance-ledger-v1-Ledgers"></a>
 
 ### Ledgers
-Used for conversion....
+Ledgers represents a collection of ledgers with their entries, used for conversion and bulk operations.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated |  |
+| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | The ledgers with their entries. |
 
 
 
@@ -5413,7 +5471,7 @@ QueryLedgerBalancesAsOfRequest
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `as_of_date` | [string](#string) |  | Format: YYYY-MM-DD |
+| `as_of_date` | [string](#string) |  | The date to query balances as of (format: YYYY-MM-DD). |
 
 
 
@@ -5563,7 +5621,7 @@ QueryLedgerEntriesRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger to query entries for. |
 
 
 
@@ -5578,7 +5636,7 @@ QueryLedgerEntriesResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated |  |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
 
 
 
@@ -5593,8 +5651,8 @@ QueryLedgerEntryRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `correlation_id` | [string](#string) |  | Free-form string up to 50 characters |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `correlation_id` | [string](#string) |  | The correlation ID of the entry to query (free-form string up to 50 characters). |
 
 
 
@@ -5609,7 +5667,7 @@ QueryLedgerEntryResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  | The ledger entry. |
 
 
 
@@ -5624,7 +5682,7 @@ QueryLedgerRequest
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger to query. |
 
 
 
@@ -5639,7 +5697,7 @@ QueryLedgerResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
 
 
 
@@ -5655,7 +5713,7 @@ QueryLedgerSettlementsByCorrelationIdRequest
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `correlation_id` | [string](#string) |  |  |
+| `correlation_id` | [string](#string) |  | The correlation ID to query settlements for. |
 
 
 
@@ -5750,8 +5808,8 @@ FundTransferWithSettlement represents a fund transfer with settlement instructio
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
-| `ledger_entry_correlation_id` | [string](#string) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger for this transfer. |
+| `ledger_entry_correlation_id` | [string](#string) |  | The correlation ID of the ledger entry associated with this transfer. |
 | `settlement_instructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
 
@@ -5762,15 +5820,15 @@ FundTransferWithSettlement represents a fund transfer with settlement instructio
 <a name="provenance-ledger-v1-SettlementInstruction"></a>
 
 ### SettlementInstruction
-SettlementInstruction represents blockchain-specific settlement instructions
+SettlementInstruction represents blockchain-specific settlement instructions.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
-| `recipient_address` | [string](#string) |  | The recipient's blockchain address |
-| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  |  |
-| `memo` | [string](#string) |  | Optional memo or note for the transaction |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | The amount to be transferred. |
+| `recipient_address` | [string](#string) |  | The recipient's blockchain address. |
+| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  | The current status of the funding transfer. |
+| `memo` | [string](#string) |  | An optional memo or note for the transaction. |
 
 
 
@@ -5798,7 +5856,7 @@ correlation id.
 <a name="provenance-ledger-v1-FundingTransferStatus"></a>
 
 ### FundingTransferStatus
-FundingTransferStatus represents the current status of a flow
+FundingTransferStatus represents the current status of a funding transfer.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -5827,13 +5885,13 @@ FundingTransferStatus represents the current status of a flow
 <a name="provenance-ledger-v1-GenesisState"></a>
 
 ### GenesisState
-Initial state of the ledger store.
+GenesisState represents the initial state of the ledger store.
 This structure matches the test.json format for bulk import.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | Ledgers with their entries - matches the test.json structure |
+| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | Ledgers with their entries - matches the test.json structure. |
 
 
 
@@ -6111,12 +6169,13 @@ EventTriggerExecuted is an event for when a trigger is executed.
 
 ### GasLimit
 GasLimit defines the trigger module's grouping of a trigger and a gas limit
+Deprecated: The GasLimit type is no longer used since we use flat fees.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. |
-| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
+| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. Deprecated: The GasLimit type is no longer used since we use flat fees. |
+| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. Deprecated: The GasLimit type is no longer used since we use flat fees. |
 
 
 
@@ -6134,7 +6193,7 @@ GenesisState defines the trigger module's genesis state.
 | `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
 | `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
 | `triggers` | [Trigger](#provenance-trigger-v1-Trigger) | repeated | Triggers to initially start with. |
-| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. |
+| `gas_limits` | [GasLimit](#provenance-trigger-v1-GasLimit) | repeated | Maximum amount of gas that the triggers can use. Deprecated: We no longer need to keep track of gas limits since we use flat fees. |
 | `queued_triggers` | [QueuedTrigger](#provenance-trigger-v1-QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
 
 
@@ -6286,6 +6345,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -6431,6 +6491,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `update_attribute_type` | [AttributeType](#provenance-attribute-v1-AttributeType) |  | The update attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -6518,6 +6579,7 @@ Attribute holds a typed key/value structure for data associated with an account
 | `attribute_type` | [AttributeType](#provenance-attribute-v1-AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
 | `expiration_date` | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  | Time that an attribute will expire. |
+| `concrete_type` | [string](#string) |  | concrete_type defines the specific type of data for PROTO or JSON attribute. Optional. Max 200 characters. |
 
 
 
@@ -6974,13 +7036,13 @@ GenesisState defines the attribute module's genesis state.
 <a name="provenance-asset-v1-MsgCreateAsset"></a>
 
 ### MsgCreateAsset
-MsgCreateAsset
+MsgCreateAsset is the message type for creating a new asset.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset` | [Asset](#provenance-asset-v1-Asset) |  |  |
-| `from_address` | [string](#string) |  |  |
+| `asset` | [Asset](#provenance-asset-v1-Asset) |  | asset defines the asset to be created. |
+| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
 
 
 
@@ -6990,13 +7052,13 @@ MsgCreateAsset
 <a name="provenance-asset-v1-MsgCreateAssetClass"></a>
 
 ### MsgCreateAssetClass
-MsgCreateAssetClass
+MsgCreateAssetClass is the message type for creating a new asset class.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  |  |
-| `from_address` | [string](#string) |  |  |
+| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class defines the asset class to be created. |
+| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
 
 
 
@@ -7006,7 +7068,7 @@ MsgCreateAssetClass
 <a name="provenance-asset-v1-MsgCreateAssetClassResponse"></a>
 
 ### MsgCreateAssetClassResponse
-MsgCreateAssetClassResponse
+MsgCreateAssetClassResponse is the response type for the CreateAssetClass RPC method.
 
 
 
@@ -7016,7 +7078,7 @@ MsgCreateAssetClassResponse
 <a name="provenance-asset-v1-MsgCreateAssetResponse"></a>
 
 ### MsgCreateAssetResponse
-MsgCreateAssetResponse
+MsgCreateAssetResponse is the response type for the CreateAsset RPC method.
 
 
 
@@ -7026,14 +7088,14 @@ MsgCreateAssetResponse
 <a name="provenance-asset-v1-MsgCreatePool"></a>
 
 ### MsgCreatePool
-MsgCreatePool
+MsgCreatePool is the message type for creating a new pool.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `pool` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
-| `nfts` | [Nft](#provenance-asset-v1-Nft) | repeated |  |
-| `from_address` | [string](#string) |  |  |
+| `pool` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | pool defines the pool to be created. |
+| `assets` | [AssetKey](#provenance-asset-v1-AssetKey) | repeated | assets defines the list of assets by keys to be included in the pool. |
+| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
 
 
 
@@ -7043,7 +7105,7 @@ MsgCreatePool
 <a name="provenance-asset-v1-MsgCreatePoolResponse"></a>
 
 ### MsgCreatePoolResponse
-MsgCreatePoolResponse
+MsgCreatePoolResponse is the response type for the CreatePool RPC method.
 
 
 
@@ -7053,15 +7115,15 @@ MsgCreatePoolResponse
 <a name="provenance-asset-v1-MsgCreateSecuritization"></a>
 
 ### MsgCreateSecuritization
-MsgCreateSecuritization
+MsgCreateSecuritization is the message type for creating a new securitization.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  |  |
-| `pools` | [string](#string) | repeated |  |
-| `tranches` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
-| `from_address` | [string](#string) |  |  |
+| `id` | [string](#string) |  | id defines the unique identifier for the securitization. |
+| `pools` | [string](#string) | repeated | pools defines the list of pool identifiers to be included in the securitization. |
+| `tranches` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | tranches defines the list of tranches for the securitization. |
+| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
 
 
 
@@ -7071,7 +7133,7 @@ MsgCreateSecuritization
 <a name="provenance-asset-v1-MsgCreateSecuritizationResponse"></a>
 
 ### MsgCreateSecuritizationResponse
-MsgCreateSecuritizationResponse
+MsgCreateSecuritizationResponse is the response type for the CreateSecuritization RPC method.
 
 
 
@@ -7081,14 +7143,14 @@ MsgCreateSecuritizationResponse
 <a name="provenance-asset-v1-MsgCreateTokenization"></a>
 
 ### MsgCreateTokenization
-MsgCreateTokenization
+MsgCreateTokenization is the message type for creating a new tokenization.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
-| `nft` | [Nft](#provenance-asset-v1-Nft) |  |  |
-| `from_address` | [string](#string) |  |  |
+| `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | denom defines the denomination for the tokenization. |
+| `asset` | [AssetKey](#provenance-asset-v1-AssetKey) |  | asset defines the asset by key to be tokenized. |
+| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
 
 
 
@@ -7098,7 +7160,7 @@ MsgCreateTokenization
 <a name="provenance-asset-v1-MsgCreateTokenizationResponse"></a>
 
 ### MsgCreateTokenizationResponse
-MsgCreateTokenizationResponse
+MsgCreateTokenizationResponse is the response type for the CreateTokenization RPC method.
 
 
 
@@ -7114,15 +7176,15 @@ MsgCreateTokenizationResponse
 <a name="provenance-asset-v1-Msg"></a>
 
 ### Msg
-Msg defines the asset module's message service
+Msg defines the asset module's message service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) | CreateAsset creates a new asset |
-| `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) | CreateAssetClass creates a new asset class |
-| `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a new pool |
-| `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a new tokenization |
-| `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates a new securitization |
+| `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) | CreateAsset creates a new asset. |
+| `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) | CreateAssetClass creates a new asset class. |
+| `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a new pool. |
+| `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a new tokenization. |
+| `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates a new securitization. |
 
  <!-- end services -->
 
@@ -7138,16 +7200,16 @@ Msg defines the asset module's message service
 <a name="provenance-asset-v1-Asset"></a>
 
 ### Asset
-Asset defines the asset.
+Asset defines the asset. Similar to Nft.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  | class_id associated with the asset, similar to the contract address of ERC721 |
-| `id` | [string](#string) |  | id is a unique identifier of the asseet |
-| `uri` | [string](#string) |  | uri for the asset metadata stored off chain |
-| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri |
-| `data` | [string](#string) |  | data is an app specific json data of the asset |
+| `class_id` | [string](#string) |  | class_id associated with the asset, similar to the contract address of ERC721. |
+| `id` | [string](#string) |  | id is a unique identifier of the asset. |
+| `uri` | [string](#string) |  | uri for the asset metadata stored off chain. |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri. |
+| `data` | [string](#string) |  | data is an app specific json data of the asset. |
 
 
 
@@ -7157,34 +7219,34 @@ Asset defines the asset.
 <a name="provenance-asset-v1-AssetClass"></a>
 
 ### AssetClass
-AssetClass defines the classification of assets
+AssetClass defines the class type data for an Asset. Similar to NftClass.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  | id defines the unique identifier of the asset classification, similar to the contract address of ERC721 |
-| `name` | [string](#string) |  | name defines the human-readable name of the asset classification |
-| `symbol` | [string](#string) |  | symbol is an abbreviated name for asset classification |
-| `description` | [string](#string) |  | description is a brief description of asset classification |
-| `uri` | [string](#string) |  | uri for the class metadata stored off chain. It can define schema for Class and asset `Data` attributes |
-| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri |
-| `data` | [string](#string) |  | data is the app specific json schema of the asset class |
+| `id` | [string](#string) |  | id defines the unique identifier of the asset classification, similar to the contract address of ERC721. |
+| `name` | [string](#string) |  | name defines the human-readable name of the asset classification. |
+| `symbol` | [string](#string) |  | symbol is an abbreviated name for asset classification. |
+| `description` | [string](#string) |  | description is a brief description of asset classification. |
+| `uri` | [string](#string) |  | uri for the class metadata stored off chain. It can define schema for Class and asset `Data` attributes. |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri. |
+| `data` | [string](#string) |  | data is the app specific json schema of the asset class. |
 
 
 
 
 
 
-<a name="provenance-asset-v1-Nft"></a>
+<a name="provenance-asset-v1-AssetKey"></a>
 
-### Nft
-Nft defines a non-fungible token
+### AssetKey
+AssetKey defines the lookup key for an Asset.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  | class_id associated with the asset, similar to the contract address of ERC721. |
+| `id` | [string](#string) |  | id is a unique identifier of the asset. |
 
 
 
@@ -7210,12 +7272,12 @@ Nft defines a non-fungible token
 <a name="provenance-asset-v1-QueryGetClass"></a>
 
 ### QueryGetClass
-QueryGetClass
+QueryGetClass is the request type for the GetClass RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  |  |
+| `id` | [string](#string) |  | id defines the unique identifier of the asset class to query. |
 
 
 
@@ -7225,12 +7287,12 @@ QueryGetClass
 <a name="provenance-asset-v1-QueryGetClassResponse"></a>
 
 ### QueryGetClassResponse
-QueryGetClassResponse
+QueryGetClassResponse is the response type for the GetClass RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  |  |
+| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class defines the requested asset class. |
 
 
 
@@ -7240,7 +7302,12 @@ QueryGetClassResponse
 <a name="provenance-asset-v1-QueryListAssetClasses"></a>
 
 ### QueryListAssetClasses
-QueryListAssetClasses
+QueryListAssetClasses is the request type for the ListAssetClasses RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -7250,12 +7317,13 @@ QueryListAssetClasses
 <a name="provenance-asset-v1-QueryListAssetClassesResponse"></a>
 
 ### QueryListAssetClassesResponse
-QueryListAssetClassesResponse
+QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated |  |
+| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | asset_classes defines the list of asset classes. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the resulting pagination parameters. |
 
 
 
@@ -7265,12 +7333,13 @@ QueryListAssetClassesResponse
 <a name="provenance-asset-v1-QueryListAssets"></a>
 
 ### QueryListAssets
-QueryListAssets
+QueryListAssets is the request type for the ListAssets RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
+| `address` | [string](#string) |  | address defines the address to query assets for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -7280,12 +7349,13 @@ QueryListAssets
 <a name="provenance-asset-v1-QueryListAssetsResponse"></a>
 
 ### QueryListAssetsResponse
-QueryListAssetsResponse
+QueryListAssetsResponse is the response type for the ListAssets RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated |  |
+| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated | assets defines the list of assets. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the resulting pagination parameters. |
 
 
 
@@ -7301,13 +7371,13 @@ QueryListAssetsResponse
 <a name="provenance-asset-v1-Query"></a>
 
 ### Query
-Query defines the gRPC querier service for asset module
+Query defines the gRPC querier service for the asset module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `ListAssets` | [QueryListAssets](#provenance-asset-v1-QueryListAssets) | [QueryListAssetsResponse](#provenance-asset-v1-QueryListAssetsResponse) | ListAssets returns a list of assets |
-| `ListAssetClasses` | [QueryListAssetClasses](#provenance-asset-v1-QueryListAssetClasses) | [QueryListAssetClassesResponse](#provenance-asset-v1-QueryListAssetClassesResponse) | ListAssetClasses returns a list of asset classes |
-| `GetClass` | [QueryGetClass](#provenance-asset-v1-QueryGetClass) | [QueryGetClassResponse](#provenance-asset-v1-QueryGetClassResponse) | GetClass returns a specific asset class by ID |
+| `ListAssets` | [QueryListAssets](#provenance-asset-v1-QueryListAssets) | [QueryListAssetsResponse](#provenance-asset-v1-QueryListAssetsResponse) | ListAssets queries all assets for a given address. |
+| `ListAssetClasses` | [QueryListAssetClasses](#provenance-asset-v1-QueryListAssetClasses) | [QueryListAssetClassesResponse](#provenance-asset-v1-QueryListAssetClassesResponse) | ListAssetClasses queries all asset classes. |
+| `GetClass` | [QueryGetClass](#provenance-asset-v1-QueryGetClass) | [QueryGetClassResponse](#provenance-asset-v1-QueryGetClassResponse) | GetClass queries a specific asset class by its ID. |
 
  <!-- end services -->
 
@@ -7323,13 +7393,13 @@ Query defines the gRPC querier service for asset module
 <a name="provenance-asset-v1-GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the asset module's genesis state
+GenesisState defines the asset module's genesis state.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset` | [Asset](#provenance-asset-v1-Asset) | repeated |  |
-| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated |  |
+| `asset` | [Asset](#provenance-asset-v1-Asset) | repeated | asset defines the list of assets in the genesis state. |
+| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | asset_classes defines the list of asset classes in the genesis state. |
 
 
 
@@ -7356,6 +7426,9 @@ GenesisState defines the asset module's genesis state
 
 ### MsgAddMsgFeeProposalRequest
 AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7385,6 +7458,9 @@ MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
 
 ### MsgAssessCustomMsgFeeRequest
 MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7414,6 +7490,9 @@ MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 ### MsgRemoveMsgFeeProposalRequest
 RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7440,6 +7519,9 @@ MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateConversionFeeDenomProposalRequest
 UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7466,6 +7548,9 @@ MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeD
 
 ### MsgUpdateMsgFeeProposalRequest
 UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7495,6 +7580,9 @@ MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response ty
 
 ### MsgUpdateNhashPerUsdMilProposalRequest
 UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by functionality in the flatfees module.
 
 
 | Field | Type | Label | Description |
@@ -7522,21 +7610,6 @@ MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProp
 
  <!-- end HasExtensions -->
 
-
-<a name="provenance-msgfees-v1-Msg"></a>
-
-### Msg
-Msg defines the msgfees Msg service.
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance-msgfees-v1-MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance-msgfees-v1-MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts |
-| `AddMsgFeeProposal` | [MsgAddMsgFeeProposalRequest](#provenance-msgfees-v1-MsgAddMsgFeeProposalRequest) | [MsgAddMsgFeeProposalResponse](#provenance-msgfees-v1-MsgAddMsgFeeProposalResponse) | AddMsgFeeProposal defines a governance proposal to add additional msg based fee |
-| `UpdateMsgFeeProposal` | [MsgUpdateMsgFeeProposalRequest](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalRequest) | [MsgUpdateMsgFeeProposalResponse](#provenance-msgfees-v1-MsgUpdateMsgFeeProposalResponse) | UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee |
-| `RemoveMsgFeeProposal` | [MsgRemoveMsgFeeProposalRequest](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalRequest) | [MsgRemoveMsgFeeProposalResponse](#provenance-msgfees-v1-MsgRemoveMsgFeeProposalResponse) | RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee |
-| `UpdateNhashPerUsdMilProposal` | [MsgUpdateNhashPerUsdMilProposalRequest](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalRequest) | [MsgUpdateNhashPerUsdMilProposalResponse](#provenance-msgfees-v1-MsgUpdateNhashPerUsdMilProposalResponse) | UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param |
-| `UpdateConversionFeeDenomProposal` | [MsgUpdateConversionFeeDenomProposalRequest](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalRequest) | [MsgUpdateConversionFeeDenomProposalResponse](#provenance-msgfees-v1-MsgUpdateConversionFeeDenomProposalResponse) | UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom |
-
  <!-- end services -->
 
 
@@ -7552,13 +7625,15 @@ Msg defines the msgfees Msg service.
 
 ### CalculateTxFeesRequest
 CalculateTxFeesRequest is the request type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
-| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
-| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
+| `default_base_denom` | [string](#string) |  | default_base_denom used to be the denom used for gas fees. Deprecated: This field is now ignored. The fees will be in the appropriate denomination(s) automatically. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate gas returned by the tx simulation. This only affects the returned gas (since the fee is flat). |
 
 
 
@@ -7569,69 +7644,15 @@ CalculateTxFeesRequest is the request type for the Query RPC method.
 
 ### CalculateTxFeesResponse
 CalculateTxFeesResponse is the response type for the Query RPC method.
+Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module.
+This query endpoint will be removed in a future release.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees |
+| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees Deprecated: This field will always be empty |
 | `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg fees + gas fee) note: the gas fee is calculated with the floor gas price module param. |
 | `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesRequest"></a>
-
-### QueryAllMsgFeesRequest
-QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryAllMsgFeesResponse"></a>
-
-### QueryAllMsgFeesResponse
-response for querying all msg's with fees associated with them
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines the parameters of the module. |
 
 
 
@@ -7647,129 +7668,11 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 <a name="provenance-msgfees-v1-Query"></a>
 
 ### Query
-Query defines the gRPC querier service for marker module.
+Query defines the gRPC querier service for msgfees module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `Params` | [QueryParamsRequest](#provenance-msgfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-msgfees-v1-QueryParamsResponse) | Params queries the parameters for x/msgfees |
-| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance-msgfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-msgfees-v1-QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. |
-| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. |
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_genesis-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/genesis.proto
-
-
-
-<a name="provenance-msgfees-v1-GenesisState"></a>
-
-### GenesisState
-GenesisState contains a set of msg fees, persisted from the store
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines all the parameters of the module. |
-| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_msgfees_v1_msgfees-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/msgfees.proto
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFee"></a>
-
-### EventMsgFee
-EventMsgFee final event property for msg fee on type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type` | [string](#string) |  |  |
-| `count` | [string](#string) |  |  |
-| `total` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-EventMsgFees"></a>
-
-### EventMsgFees
-EventMsgFees event emitted with summary of msg fees
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [EventMsgFee](#provenance-msgfees-v1-EventMsgFee) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-MsgFee"></a>
-
-### MsgFee
-MsgFee is the core of what gets stored on the blockchain to define a msg-based fee.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message with the added fee, e.g. "/cosmos.bank.v1beta1.MsgSend". |
-| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional_fee is the extra fee that is required for the given message type (can be in any denom). |
-| `recipient` | [string](#string) |  | recipient is an option address that will receive a portion of the additional fee. There can only be a recipient if the recipient_basis_points is not zero. |
-| `recipient_basis_points` | [uint32](#uint32) |  | recipient_basis_points is an optional portion of the additional fee to be sent to the recipient. Must be between 0 and 10,000 (inclusive).<br>If there is a recipient, this must not be zero. If there is not a recipient, this must be zero.<br>The recipient will receive additional_fee * recipient_basis_points / 10,000. The fee collector will receive the rest, i.e. additional_fee * (10,000 - recipient_basis_points) / 10,000. |
-
-
-
-
-
-
-<a name="provenance-msgfees-v1-Params"></a>
-
-### Params
-Params defines the set of params for the msgfees module.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.<br>Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil<br>Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
-| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
+| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module. This query endpoint will be removed in a future release. |
 
  <!-- end services -->
 
@@ -7882,6 +7785,361 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 | `title` | [string](#string) |  | proposal title |
 | `description` | [string](#string) |  | proposal description |
 | `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/tx.proto
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorRequest"></a>
+
+### MsgUpdateConversionFactorRequest
+MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the new conversion factor that should be used. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateConversionFactorResponse"></a>
+
+### MsgUpdateConversionFactorResponse
+MsgUpdateConversionFactorResponse is the response for the UpdateConversionFactor governance endpoint.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesRequest"></a>
+
+### MsgUpdateMsgFeesRequest
+MsgUpdateMsgFeesRequest is the request for the UpdateMsgFees governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `to_set` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | to_set is the list of msg fees to create and/or update. |
+| `to_unset` | [string](#string) | repeated | to_unset is the list of msg-type-urls that should have their msg fee entries deleted (they'll go back to using the default cost). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateMsgFeesResponse"></a>
+
+### MsgUpdateMsgFeesResponse
+MsgUpdateMsgFeesResponse is the response for the UpdateMsgFees governance endpoint.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateParamsRequest"></a>
+
+### MsgUpdateParamsRequest
+MsgUpdateParamsRequest is the request for the UpdateParams governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params are the new param values to set. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgUpdateParamsResponse"></a>
+
+### MsgUpdateParamsResponse
+MsgUpdateParamsResponse is the response for the UpdateParams governance endpoint.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-flatfees-v1-Msg"></a>
+
+### Msg
+Msg defines the flatfees Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UpdateParams` | [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse) | UpdateParams is a governance endpoint for updating the x/flatfees params. |
+| `UpdateConversionFactor` | [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest) | [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse) | UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params. |
+| `UpdateMsgFees` | [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest) | [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse) | UpdateMsgFees is a governance endpoint for updating fees for specific msgs. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_flatfees-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/flatfees.proto
+
+
+
+<a name="provenance-flatfees-v1-ConversionFactor"></a>
+
+### ConversionFactor
+ConversionFactor equates the values of two coins in different denominations.
+It is used to determine how much of the fee denomination is due.
+actual cost = defined cost * converted_amount / definition_amount (truncated to an integer).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | definition_amount is an amount (in the denomination used to define fees) that is equal to the converted_amount. This cannot have an amount of zero. If this has the same denomination as the converted_amount, then the amounts must also be equal. The denom of this field should be the same as the default cost, e.g. musd. |
+| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is an amount in the fee denomination equal to the definition_amount. If this is zero, all msgs will be free. If this has the same denomination as the definition_amount, then the amounts must also be equal. The denom of this field should be the fee denom, e.g. nhash. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgFee"></a>
+
+### MsgFee
+MsgFee defines the cost to use a specific message type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | cost is the Tx fee required for this msg_type_url. It should have the same denomination as the default cost and as the conversion factor's definition_amount, e.g. musdc. Any other denomination will be charged as defined. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-Params"></a>
+
+### Params
+Params defines the set of params for the flatfees module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. The denom used here should be the same as used to define the specific msg costs. The recommended denom is musd. |
+| `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. The definition_amount should have the same denom as the default cost. The denom of the converted amount should be the denom that fees are paid in, e.g. nhash. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/query.proto
+
+
+
+<a name="provenance-flatfees-v1-QueryAllMsgFeesRequest"></a>
+
+### QueryAllMsgFeesRequest
+QueryAllMsgFeesRequest is the request type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the request. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryAllMsgFeesResponse"></a>
+
+### QueryAllMsgFeesResponse
+QueryAllMsgFeesResponse is the response type for the AllMsgFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees contains the requested information. |
+| `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination parameters of the response. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesRequest"></a>
+
+### QueryCalculateTxFeesRequest
+QueryCalculateTxFeesRequest is the request type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is a multiplier applied to the gas used while simulating the tx. This only affects the estimated gas (since the fee is flat). The default is 1.0. Valid range is 0.0 (exclusive) to 10.0 (inclusive). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryCalculateTxFeesResponse"></a>
+
+### QueryCalculateTxFeesResponse
+QueryCalculateTxFeesResponse is the response type for the CalculateTxFees query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | total_fees is the amount of fees needed for the Tx. |
+| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the Tx. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeRequest"></a>
+
+### QueryMsgFeeRequest
+QueryMsgFeeRequest is the request type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the is the type-url of the message, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `do_not_convert` | [bool](#bool) |  | do_not_convert, if true, will return the fees as defined (instead of as converted). |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryMsgFeeResponse"></a>
+
+### QueryMsgFeeResponse
+QueryMsgFeeResponse is the response type for the MsgFee query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fee` | [MsgFee](#provenance-flatfees-v1-MsgFee) |  | msg_fee is the requested entry. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Params query.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Params query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines the parameters of the x/flatfees module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-flatfees-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for flatfees module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `Params` | [QueryParamsRequest](#provenance-flatfees-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-flatfees-v1-QueryParamsResponse) | Params returns the parameters for the x/flatfees module. |
+| `AllMsgFees` | [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse) | AllMsgFees returns info on all msg types that have a customized msg fee. |
+| `MsgFee` | [QueryMsgFeeRequest](#provenance-flatfees-v1-QueryMsgFeeRequest) | [QueryMsgFeeResponse](#provenance-flatfees-v1-QueryMsgFeeResponse) | MsgFee will return information about what it will cost to execute a given msg type. If the provided msg type does not have a specific fee defined, the default is returned. |
+| `CalculateTxFees` | [QueryCalculateTxFeesRequest](#provenance-flatfees-v1-QueryCalculateTxFeesRequest) | [QueryCalculateTxFeesResponse](#provenance-flatfees-v1-QueryCalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and fees. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/genesis.proto
+
+
+
+<a name="provenance-flatfees-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of the flat fees module data, persisted from the store.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines all the parameters of the module. |
+| `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the fees defined for specific msg types. |
 
 
 
@@ -8172,15 +8430,16 @@ GenesisState defines the oracle module's genesis state.
 <a name="provenance-registry-v1-MsgGrantRole"></a>
 
 ### MsgGrantRole
-MsgGrantRole
+MsgGrantRole represents a message to grant a role to one or more addresses.
+This message adds the specified addresses to an existing role for the given registry key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to grant the role |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to grant the role to |
-| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to grant |
-| `addresses` | [string](#string) | repeated | addresses is the list of addresses to grant the role to |
+| `authority` | [string](#string) |  | authority is the address that is authorized to grant the role. This address must have the appropriate permissions to modify role assignments. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to grant the role to. This identifies the specific registry entry to modify. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to grant. This specifies which role type is being assigned to the addresses. |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses to grant the role to. These addresses will be added to the specified role for the registry key. |
 
 
 
@@ -8190,7 +8449,8 @@ MsgGrantRole
 <a name="provenance-registry-v1-MsgGrantRoleResponse"></a>
 
 ### MsgGrantRoleResponse
-MsgGrantRoleResponse
+MsgGrantRoleResponse defines the response for GrantRole.
+This is an empty response indicating successful role grant.
 
 
 
@@ -8200,14 +8460,15 @@ MsgGrantRoleResponse
 <a name="provenance-registry-v1-MsgRegisterNFT"></a>
 
 ### MsgRegisterNFT
-MsgRegisterNFT
+MsgRegisterNFT represents a message to register a new NFT in the registry.
+This message creates a new registry entry with the specified roles and addresses.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to register addresses |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to register |
-| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role |
+| `authority` | [string](#string) |  | authority is the address that is authorized to register NFTs. This address must have the appropriate permissions to create registry entries. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to register. This contains the NFT ID and asset class ID that uniquely identify the registry entry. |
+| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role. Each role entry defines a role type and the addresses authorized for that role. |
 
 
 
@@ -8217,7 +8478,8 @@ MsgRegisterNFT
 <a name="provenance-registry-v1-MsgRegisterNFTResponse"></a>
 
 ### MsgRegisterNFTResponse
-MsgRegisterNFTResponse defines the response for RegisterNFT
+MsgRegisterNFTResponse defines the response for RegisterNFT.
+This is an empty response indicating successful registration.
 
 
 
@@ -8227,15 +8489,16 @@ MsgRegisterNFTResponse defines the response for RegisterNFT
 <a name="provenance-registry-v1-MsgRevokeRole"></a>
 
 ### MsgRevokeRole
-MsgRevokeRole
+MsgRevokeRole represents a message to revoke a role from one or more addresses.
+This message removes the specified addresses from an existing role for the given registry key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to revoke the role |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to revoke the role from |
-| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to revoke |
-| `addresses` | [string](#string) | repeated | addresses is the list of addresses to revoke the role from |
+| `authority` | [string](#string) |  | authority is the address that is authorized to revoke the role. This address must have the appropriate permissions to modify role assignments. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to revoke the role from. This identifies the specific registry entry to modify. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to revoke. This specifies which role type is being removed from the addresses. |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses to revoke the role from. These addresses will be removed from the specified role for the registry key. |
 
 
 
@@ -8245,7 +8508,8 @@ MsgRevokeRole
 <a name="provenance-registry-v1-MsgRevokeRoleResponse"></a>
 
 ### MsgRevokeRoleResponse
-MsgRevokeRoleResponse
+MsgRevokeRoleResponse defines the response for RevokeRole.
+This is an empty response indicating successful role revocation.
 
 
 
@@ -8255,13 +8519,14 @@ MsgRevokeRoleResponse
 <a name="provenance-registry-v1-MsgUnregisterNFT"></a>
 
 ### MsgUnregisterNFT
-MsgUnregisterNFT
+MsgUnregisterNFT represents a message to unregister an NFT from the registry.
+This message removes the entire registry entry for the specified key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to remove addresses |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the key to remove |
+| `authority` | [string](#string) |  | authority is the address that is authorized to unregister NFTs. This address must have the appropriate permissions to remove registry entries. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to remove. This identifies the specific registry entry to delete. |
 
 
 
@@ -8271,7 +8536,8 @@ MsgUnregisterNFT
 <a name="provenance-registry-v1-MsgUnregisterNFTResponse"></a>
 
 ### MsgUnregisterNFTResponse
-MsgUnregisterNFTResponse
+MsgUnregisterNFTResponse defines the response for UnregisterNFT.
+This is an empty response indicating successful unregistration.
 
 
 
@@ -8288,13 +8554,14 @@ MsgUnregisterNFTResponse
 
 ### Msg
 Msg defines the registry Msg service.
+This service provides transaction functionality for managing registry entries and roles.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `RegisterNFT` | [MsgRegisterNFT](#provenance-registry-v1-MsgRegisterNFT) | [MsgRegisterNFTResponse](#provenance-registry-v1-MsgRegisterNFTResponse) | RegisterNFT registers a new NFT |
-| `GrantRole` | [MsgGrantRole](#provenance-registry-v1-MsgGrantRole) | [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse) | GrantRole grants a role to an address |
-| `RevokeRole` | [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole) | [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse) | RevokeRole revokes a role from an address |
-| `UnregisterNFT` | [MsgUnregisterNFT](#provenance-registry-v1-MsgUnregisterNFT) | [MsgUnregisterNFTResponse](#provenance-registry-v1-MsgUnregisterNFTResponse) | UnregisterNFT unregisters an NFT from the registry |
+| `RegisterNFT` | [MsgRegisterNFT](#provenance-registry-v1-MsgRegisterNFT) | [MsgRegisterNFTResponse](#provenance-registry-v1-MsgRegisterNFTResponse) | RegisterNFT registers a new NFT in the registry. This creates a new registry entry with the specified roles and addresses. |
+| `GrantRole` | [MsgGrantRole](#provenance-registry-v1-MsgGrantRole) | [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse) | GrantRole grants a role to one or more addresses. This adds the specified addresses to the role for the given registry key. |
+| `RevokeRole` | [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole) | [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse) | RevokeRole revokes a role from one or more addresses. This removes the specified addresses from the role for the given registry key. |
+| `UnregisterNFT` | [MsgUnregisterNFT](#provenance-registry-v1-MsgUnregisterNFT) | [MsgUnregisterNFTResponse](#provenance-registry-v1-MsgUnregisterNFTResponse) | UnregisterNFT unregisters an NFT from the registry. This removes the entire registry entry for the specified key. |
 
  <!-- end services -->
 
@@ -8310,12 +8577,13 @@ Msg defines the registry Msg service.
 <a name="provenance-registry-v1-QueryGetRegistryRequest"></a>
 
 ### QueryGetRegistryRequest
-QueryGetRegistryRequest
+QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method.
+It contains the key information needed to retrieve a specific registry entry.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key of the registry entry to query |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to query. This contains the NFT ID and asset class ID that uniquely identify the registry entry. |
 
 
 
@@ -8325,12 +8593,13 @@ QueryGetRegistryRequest
 <a name="provenance-registry-v1-QueryGetRegistryResponse"></a>
 
 ### QueryGetRegistryResponse
-QueryGetRegistryResponse
+QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method.
+It contains the complete registry entry for the requested key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `registry` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) |  | registry entry for the requested key |
+| `registry` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) |  | registry is the registry entry for the requested key. This includes all roles and addresses associated with the specified NFT and asset class. |
 
 
 
@@ -8340,14 +8609,15 @@ QueryGetRegistryResponse
 <a name="provenance-registry-v1-QueryHasRoleRequest"></a>
 
 ### QueryHasRoleRequest
-QueryHasRoleRequest
+QueryHasRoleRequest is the request type for the Query/HasRole RPC method.
+It contains the information needed to verify if an address has a specific role.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key of the registry entry to query |
-| `address` | [string](#string) |  | address of the account we're checking for the role |
-| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role we're checking for |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to query. This identifies the specific registry entry to check. |
+| `address` | [string](#string) |  | address is the blockchain address to check for the role. This is the address whose role permissions are being verified. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the specific role to check for. This determines which role permission is being verified. |
 
 
 
@@ -8357,12 +8627,13 @@ QueryHasRoleRequest
 <a name="provenance-registry-v1-QueryHasRoleResponse"></a>
 
 ### QueryHasRoleResponse
-QueryHasRoleResponse
+QueryHasRoleResponse is the response type for the Query/HasRole RPC method.
+It provides a boolean result indicating whether the address has the specified role.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `has_role` | [bool](#bool) |  | has_role is true if the address has the role for the given key |
+| `has_role` | [bool](#bool) |  | has_role is true if the address has the specified role for the given key. This boolean value indicates whether the role verification was successful. |
 
 
 
@@ -8378,12 +8649,13 @@ QueryHasRoleResponse
 <a name="provenance-registry-v1-Query"></a>
 
 ### Query
-Query defines the gRPC querier service.
+Query defines the gRPC querier service for the registry module.
+This service provides read-only access to registry data and role verification.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `GetRegistry` | [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest) | [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse) | GetRegistry returns the registry for a given key |
-| `HasRole` | [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest) | [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse) | HasRole returns true if the address has the role for the given key |
+| `GetRegistry` | [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest) | [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse) | GetRegistry returns the registry entry for a given key. This method retrieves the complete registry entry including all roles and addresses. |
+| `HasRole` | [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest) | [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse) | HasRole returns true if the address has the specified role for the given key. This method provides a quick way to verify if an address has a specific role. |
 
  <!-- end services -->
 
@@ -8399,12 +8671,13 @@ Query defines the gRPC querier service.
 <a name="provenance-registry-v1-GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the registry module's genesis state
+GenesisState defines the registry module's genesis state.
+This contains all the registry entries that exist when the blockchain is first initialized.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries |
+| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries. These entries define the initial state of the registry module. |
 
 
 
@@ -8414,12 +8687,13 @@ GenesisState defines the registry module's genesis state
 <a name="provenance-registry-v1-RegistryBulkUpdate"></a>
 
 ### RegistryBulkUpdate
-RegistryBulkUpdate represents a bulk update to the registry
+RegistryBulkUpdate represents a bulk update operation for multiple registry entries.
+This allows for efficient batch processing of registry modifications.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `entries` | [RegistryBulkUpdateEntry](#provenance-registry-v1-RegistryBulkUpdateEntry) | repeated |  |
+| `entries` | [RegistryBulkUpdateEntry](#provenance-registry-v1-RegistryBulkUpdateEntry) | repeated | entries is the list of bulk update entries to be processed. Each entry contains the key and the registry entries to be updated. |
 
 
 
@@ -8429,13 +8703,14 @@ RegistryBulkUpdate represents a bulk update to the registry
 <a name="provenance-registry-v1-RegistryBulkUpdateEntry"></a>
 
 ### RegistryBulkUpdateEntry
-RegistryBulkUpdateEntry represents a single entry in a bulk update
+RegistryBulkUpdateEntry represents a single entry in a bulk update operation.
+It contains the key and the registry entries to be updated for that key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  |  |
-| `roles` | [RegistryRole](#provenance-registry-v1-RegistryRole) | repeated |  |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key for which the update applies. |
+| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries to be updated for the specified key. |
 
 
 
@@ -8445,13 +8720,14 @@ RegistryBulkUpdateEntry represents a single entry in a bulk update
 <a name="provenance-registry-v1-RegistryEntry"></a>
 
 ### RegistryEntry
-RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles
+RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles.
+Each entry contains the key information and the roles assigned to various addresses.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | Key ties the registry entry to an asset class and nft id |
-| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key ties the registry entry to an asset class and NFT id. This provides the unique identifier for the registry entry. |
+| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role. Each role entry contains a role type and the addresses authorized for that role. |
 
 
 
@@ -8461,13 +8737,14 @@ RegistryEntry represents a single entry in the registry, mapping a blockchain ad
 <a name="provenance-registry-v1-RegistryKey"></a>
 
 ### RegistryKey
-RegistryKey defines the key for registry entries
+RegistryKey represents a unique identifier for registry entries.
+It links registry entries to specific NFT assets and their associated asset classes.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
-| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
+| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an NFT, the NFT class must be registered in the ledger module as a LedgerClass. |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. This identifies the class or specification that the NFT belongs to. |
 
 
 
@@ -8477,13 +8754,14 @@ RegistryKey defines the key for registry entries
 <a name="provenance-registry-v1-RolesEntry"></a>
 
 ### RolesEntry
-RolesEntry represents a role and the addresses that can perform that role
+RolesEntry represents a mapping between a role and the addresses that can perform that role.
+This allows multiple addresses to be assigned the same role for a given registry entry.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  |  |
-| `addresses` | [string](#string) | repeated | addresses is the list of blockchain addresses that can perform this role |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the type of role being assigned. |
+| `addresses` | [string](#string) | repeated | addresses is the list of blockchain addresses that can perform this role. These addresses have the permissions associated with the specified role. |
 
 
 
@@ -8495,17 +8773,18 @@ RolesEntry represents a role and the addresses that can perform that role
 <a name="provenance-registry-v1-RegistryRole"></a>
 
 ### RegistryRole
-Role defines the different types of roles that can be assigned to addresses
+RegistryRole defines the different types of roles that can be assigned to addresses.
+These roles determine the permissions and capabilities that an address has within the registry system.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `REGISTRY_ROLE_UNSPECIFIED` | `0` | REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned |
-| `REGISTRY_ROLE_SERVICER` | `1` | REGISTRY_ROLE_SERVICER indicates the address has servicer privileges |
-| `REGISTRY_ROLE_SUBSERVICER` | `2` | REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges |
-| `REGISTRY_ROLE_CONTROLLER` | `3` | REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges |
-| `REGISTRY_ROLE_CUSTODIAN` | `4` | REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges |
-| `REGISTRY_ROLE_BORROWER` | `5` | REGISTRY_ROLE_BORROWER indicates the address has borrower privileges |
-| `REGISTRY_ROLE_ORIGINATOR` | `6` | REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges |
+| `REGISTRY_ROLE_UNSPECIFIED` | `0` | REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned. This is the default state for addresses that have not been granted any specific permissions. |
+| `REGISTRY_ROLE_SERVICER` | `1` | REGISTRY_ROLE_SERVICER indicates the address has servicer privileges. Servicers are responsible for maintaining and servicing the underlying assets. |
+| `REGISTRY_ROLE_SUBSERVICER` | `2` | REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges. Subservicers assist servicers in their duties and may have limited administrative capabilities. |
+| `REGISTRY_ROLE_CONTROLLER` | `3` | REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges. Controllers have administrative control over the registry entries and can modify roles. |
+| `REGISTRY_ROLE_CUSTODIAN` | `4` | REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges. Custodians are responsible for holding and safeguarding the underlying assets. |
+| `REGISTRY_ROLE_BORROWER` | `5` | REGISTRY_ROLE_BORROWER indicates the address has borrower privileges. Borrowers can borrow against the underlying assets within defined parameters. |
+| `REGISTRY_ROLE_ORIGINATOR` | `6` | REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges. Originators are responsible for creating and originating the underlying assets. |
 
 
  <!-- end enums -->
@@ -9383,6 +9662,7 @@ MsgMintRequest defines the Msg/Mint request type
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  |  |
 | `administrator` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  | recipient is the optional address to receive the newly minted funds. |
 
 
 
@@ -9420,6 +9700,33 @@ MsgRemoveAdministratorProposalRequest defines the Msg/RemoveAdministratorProposa
 
 ### MsgRemoveAdministratorProposalResponse
 MsgRemoveAdministratorProposalResponse defines the Msg/RemoveAdministratorProposal response type
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgRevokeGrantAllowanceRequest"></a>
+
+### MsgRevokeGrantAllowanceRequest
+MsgRevokeGrantAllowanceRequest is a request message for the RevokeFeeGrantAllowance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  | address of the grantee whose allowance is being revoked. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgRevokeGrantAllowanceResponse"></a>
+
+### MsgRevokeGrantAllowanceResponse
+MsgRevokeGrantResponse is a response message for the RevokeFeeGrantAllowance endpoint.
 
 
 
@@ -9825,6 +10132,7 @@ Msg defines the Marker Msg service.
 | `WithdrawEscrowProposal` | [MsgWithdrawEscrowProposalRequest](#provenance-marker-v1-MsgWithdrawEscrowProposalRequest) | [MsgWithdrawEscrowProposalResponse](#provenance-marker-v1-MsgWithdrawEscrowProposalResponse) | WithdrawEscrowProposal is a governance proposal to withdraw escrow coins from a marker |
 | `SetDenomMetadataProposal` | [MsgSetDenomMetadataProposalRequest](#provenance-marker-v1-MsgSetDenomMetadataProposalRequest) | [MsgSetDenomMetadataProposalResponse](#provenance-marker-v1-MsgSetDenomMetadataProposalResponse) | SetDenomMetadataProposal is a governance proposal to set marker metadata |
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-marker-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-marker-v1-MsgUpdateParamsResponse) | UpdateParams is a governance proposal endpoint for updating the marker module's params. |
+| `RevokeGrantAllowance` | [MsgRevokeGrantAllowanceRequest](#provenance-marker-v1-MsgRevokeGrantAllowanceRequest) | [MsgRevokeGrantAllowanceResponse](#provenance-marker-v1-MsgRevokeGrantAllowanceResponse) | RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee. |
 
  <!-- end services -->
 
@@ -10679,6 +10987,23 @@ a marker transfer on behalf of the granter's account.
 | ----- | ---- | ----- | ----------- |
 | `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | transfer_limit is the total amount the grantee can transfer |
 | `allow_list` | [string](#string) | repeated | allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the granter. If omitted, any recipient is allowed. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MultiAuthorization"></a>
+
+### MultiAuthorization
+MultiAuthorization lets you combine several authorizations.
+All sub-authorizations must accept the message for it to be allowed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | The message type this authorization is for. |
+| `sub_authorizations` | [google.protobuf.Any](#google-protobuf-Any) | repeated | A list of sub-authorizations that must all accept the message. sub_authorizations: a list of authorizations (minimum 2, maximum 10). |
 
 
 
@@ -14642,6 +14967,58 @@ MarkerNetAssetValues defines the net asset values for a scope
 
 
 
+<a name="provenance_hold_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/tx.proto
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsRequest"></a>
+
+### MsgUnlockVestingAccountsRequest
+MsgUnlockVestingAccountsRequest defines the request for unlocking vesting accounts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address that can execute this message (governance module account) |
+| `addresses` | [string](#string) | repeated | addresses is the list of vesting account addresses to convert back to base accounts |
+
+
+
+
+
+
+<a name="provenance-hold-v1-MsgUnlockVestingAccountsResponse"></a>
+
+### MsgUnlockVestingAccountsResponse
+MsgUnlockVestingAccountsResponse defines the response for unlocking vesting accounts
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-hold-v1-Msg"></a>
+
+### Msg
+Msg defines the hold Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UnlockVestingAccounts` | [MsgUnlockVestingAccountsRequest](#provenance-hold-v1-MsgUnlockVestingAccountsRequest) | [MsgUnlockVestingAccountsResponse](#provenance-hold-v1-MsgUnlockVestingAccountsResponse) | UnlockVestingAccounts unlocks one or more vesting accounts. |
+
+ <!-- end services -->
+
+
+
 <a name="provenance_hold_v1_events-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -14676,6 +15053,21 @@ EventHoldReleased is an event indicating that some funds were released from hold
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
 | `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
+
+
+
+
+
+
+<a name="provenance-hold-v1-EventVestingAccountUnlocked"></a>
+
+### EventVestingAccountUnlocked
+EventUnlockVestingAccounts is an event indicating that a vesting account has been unlocked.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
 
 
 

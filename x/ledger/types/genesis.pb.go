@@ -23,10 +23,10 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Initial state of the ledger store.
+// GenesisState represents the initial state of the ledger store.
 // This structure matches the test.json format for bulk import.
 type GenesisState struct {
-	// Ledgers with their entries - matches the test.json structure
+	// Ledgers with their entries - matches the test.json structure.
 	LedgerToEntries []LedgerToEntries `protobuf:"bytes,1,rep,name=ledger_to_entries,json=ledgerToEntries,proto3" json:"ledgerToEntries,omitempty"`
 }
 

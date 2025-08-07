@@ -8,6 +8,8 @@ import (
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/feegrant"
+	feegranttypes "cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,6 +55,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 		return nil, err
 	}
 	err = k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), grantee, allowance)
+
 	return &types.MsgGrantAllowanceResponse{}, err
 }
 
@@ -268,6 +271,17 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 	if err := k.Keeper.MintCoin(ctx, admin, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if len(msg.Recipient) > 0 {
+		recipient, err := sdk.AccAddressFromBech32(msg.Recipient)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient: %s", msg.Recipient)
+		}
+		if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
+			ctx.Logger().Error("unable to withdraw coins", "err", err)
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
 	}
 
 	defer func() {
@@ -847,4 +861,50 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// RevokeGrantAllowance revokes a fee allowance granted by a admin to a grantee.
+func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRevokeGrantAllowanceRequest) (*types.MsgRevokeGrantAllowanceResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if m.GetStatus() != types.StatusActive {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker %s is not active", msg.Denom)
+	}
+	markerAddr := m.GetAddress()
+
+	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid administrator: %v", err)
+	}
+
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid grantee: %v", err)
+	}
+
+	if err = m.ValidateAddressHasAccess(admin, types.Access_Admin); err != nil {
+		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
+	}
+	// verify the grant exists
+	_, err = k.feegrantKeeper.GetAllowance(ctx, markerAddr, grantee)
+	if err != nil {
+		return nil, sdkerrors.ErrNotFound.Wrapf("no fee grant from %s marker (%s) to %s found", m.GetDenom(), markerAddr, grantee)
+	}
+
+	server := feegranttypes.NewMsgServerImpl(k.feegrantKeeper)
+
+	revokMsg := &feegrant.MsgRevokeAllowance{
+		Granter: markerAddr.String(),
+		Grantee: grantee.String(),
+	}
+
+	_, err = server.RevokeAllowance(ctx, revokMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRevokeGrantAllowanceResponse{}, nil
 }

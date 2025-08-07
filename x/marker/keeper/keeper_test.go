@@ -16,6 +16,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -26,7 +27,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -3129,8 +3129,8 @@ func TestBypassAddrsLocked(t *testing.T) {
 		sdk.AccAddress("addrs[3]____________"),
 		sdk.AccAddress("addrs[4]____________"),
 	}
-
-	mk := markerkeeper.NewKeeper(nil, nil, nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs, nil)
+	var feegrantKeeper = feegrantkeeper.Keeper{}
+	mk := markerkeeper.NewKeeper(nil, nil, nil, &dummyBankKeeper{}, nil, feegrantKeeper, nil, nil, nil, addrs, nil)
 
 	// Now that the keeper has been created using the provided addresses, change the first byte of
 	// the first address to something else. Then, get the addresses back from the keeper and make

@@ -11,89 +11,115 @@ import "cosmos/msg/v1/msg.proto";
 import "provenance/registry/v1/registry.proto";
 
 // Msg defines the registry Msg service.
+// This service provides transaction functionality for managing registry entries and roles.
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // RegisterNFT registers a new NFT
+  // RegisterNFT registers a new NFT in the registry.
+  // This creates a new registry entry with the specified roles and addresses.
   rpc RegisterNFT(MsgRegisterNFT) returns (MsgRegisterNFTResponse);
 
-  // GrantRole grants a role to an address
+  // GrantRole grants a role to one or more addresses.
+  // This adds the specified addresses to the role for the given registry key.
   rpc GrantRole(MsgGrantRole) returns (MsgGrantRoleResponse);
 
-  // RevokeRole revokes a role from an address
+  // RevokeRole revokes a role from one or more addresses.
+  // This removes the specified addresses from the role for the given registry key.
   rpc RevokeRole(MsgRevokeRole) returns (MsgRevokeRoleResponse);
 
-  // UnregisterNFT unregisters an NFT from the registry
+  // UnregisterNFT unregisters an NFT from the registry.
+  // This removes the entire registry entry for the specified key.
   rpc UnregisterNFT(MsgUnregisterNFT) returns (MsgUnregisterNFTResponse);
 }
 
-// MsgRegisterNFT
+// MsgRegisterNFT represents a message to register a new NFT in the registry.
+// This message creates a new registry entry with the specified roles and addresses.
 message MsgRegisterNFT {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address that is authorized to register addresses
+  // authority is the address that is authorized to register NFTs.
+  // This address must have the appropriate permissions to create registry entries.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // key is the key to register
+  // key is the registry key to register.
+  // This contains the NFT ID and asset class ID that uniquely identify the registry entry.
   RegistryKey key = 2;
 
-  // roles is a list of roles and addresses that can perform that role
+  // roles is a list of roles and addresses that can perform that role.
+  // Each role entry defines a role type and the addresses authorized for that role.
   repeated RolesEntry roles = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgRegisterNFTResponse defines the response for RegisterNFT
+// MsgRegisterNFTResponse defines the response for RegisterNFT.
+// This is an empty response indicating successful registration.
 message MsgRegisterNFTResponse {}
 
-// MsgGrantRole
+// MsgGrantRole represents a message to grant a role to one or more addresses.
+// This message adds the specified addresses to an existing role for the given registry key.
 message MsgGrantRole {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address that is authorized to grant the role
+  // authority is the address that is authorized to grant the role.
+  // This address must have the appropriate permissions to modify role assignments.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // key is the key to grant the role to
+  // key is the registry key to grant the role to.
+  // This identifies the specific registry entry to modify.
   RegistryKey key = 2;
 
-  // role is the role to grant
+  // role is the role to grant.
+  // This specifies which role type is being assigned to the addresses.
   RegistryRole role = 3;
 
-  // addresses is the list of addresses to grant the role to
+  // addresses is the list of addresses to grant the role to.
+  // These addresses will be added to the specified role for the registry key.
   repeated string addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgGrantRoleResponse
+// MsgGrantRoleResponse defines the response for GrantRole.
+// This is an empty response indicating successful role grant.
 message MsgGrantRoleResponse {}
 
-// MsgRevokeRole
+// MsgRevokeRole represents a message to revoke a role from one or more addresses.
+// This message removes the specified addresses from an existing role for the given registry key.
 message MsgRevokeRole {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address that is authorized to revoke the role
+  // authority is the address that is authorized to revoke the role.
+  // This address must have the appropriate permissions to modify role assignments.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // key is the key to revoke the role from
+  // key is the registry key to revoke the role from.
+  // This identifies the specific registry entry to modify.
   RegistryKey key = 2;
 
-  // role is the role to revoke
+  // role is the role to revoke.
+  // This specifies which role type is being removed from the addresses.
   RegistryRole role = 3;
 
-  // addresses is the list of addresses to revoke the role from
+  // addresses is the list of addresses to revoke the role from.
+  // These addresses will be removed from the specified role for the registry key.
   repeated string addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgRevokeRoleResponse
+// MsgRevokeRoleResponse defines the response for RevokeRole.
+// This is an empty response indicating successful role revocation.
 message MsgRevokeRoleResponse {}
 
-// MsgUnregisterNFT
+// MsgUnregisterNFT represents a message to unregister an NFT from the registry.
+// This message removes the entire registry entry for the specified key.
 message MsgUnregisterNFT {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address that is authorized to remove addresses
+  // authority is the address that is authorized to unregister NFTs.
+  // This address must have the appropriate permissions to remove registry entries.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // key is the key to remove
+  // key is the registry key to remove.
+  // This identifies the specific registry entry to delete.
   RegistryKey key = 2;
 }
 
-// MsgUnregisterNFTResponse
+// MsgUnregisterNFTResponse defines the response for UnregisterNFT.
+// This is an empty response indicating successful unregistration.
 message MsgUnregisterNFTResponse {}
