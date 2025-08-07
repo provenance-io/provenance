@@ -103,14 +103,8 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 		}
 	}
 
-	// Convert the incoming addresses to strings
-	addrStr := make([]string, len(addr))
-	for i, a := range addr {
-		addrStr[i] = a
-	}
-
 	// Append new addresses to the authorized slice
-	authorized = append(authorized, addrStr...)
+	authorized = append(authorized, addr...)
 
 	// Remove the old role entry from the registry
 	updatedRoles := slices.DeleteFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
