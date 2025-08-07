@@ -19,8 +19,8 @@ type Keeper struct {
 	schema   collections.Schema
 	Registry collections.Map[string, types.RegistryEntry]
 
-	NFTKeeper
-	MetadataKeeper
+	NFTKeeper      NFTKeeper
+	MetadataKeeper MetadataKeeper
 }
 
 // NewKeeper returns a new registry Keeper
