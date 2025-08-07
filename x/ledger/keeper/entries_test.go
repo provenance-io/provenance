@@ -335,3 +335,105 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 	s.Require().Len(allEntries, 1, "should still only have one entry")
 	s.Require().Equal(entry.TotalAmt, allEntries[0].TotalAmt, "entry amount should match original entry")
 }
+
+// TestRequireGetLedgerEntry tests the RequireGetLedgerEntry function
+// This function should return the ledger entry if it exists, or an error if it doesn't exist
+func (s *TestSuite) TestRequireGetLedgerEntry() {
+	// Create a test ledger
+	l := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        s.validNFT.Id,
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+
+	err := s.keeper.AddLedger(s.ctx, l)
+	s.Require().NoError(err, "CreateLedger error")
+
+	// Create a test entry
+	entry := ledger.LedgerEntry{
+		EntryTypeId:   1,
+		PostedDate:    s.pastDate,
+		EffectiveDate: s.pastDate,
+		Sequence:      1,
+		TotalAmt:      math.NewInt(100),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{
+			{
+				AppliedAmt:   math.NewInt(50),
+				BucketTypeId: 1,
+			},
+			{
+				AppliedAmt:   math.NewInt(50),
+				BucketTypeId: 2,
+			},
+		},
+		CorrelationId: "test-correlation-id-require",
+	}
+
+	// Add the entry to the ledger
+	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&entry})
+	s.Require().NoError(err, "AppendEntry error")
+
+	tests := []struct {
+		name          string
+		key           *ledger.LedgerKey
+		correlationId string
+		expEntry      *ledger.LedgerEntry
+		expErr        error
+	}{
+		{
+			name: "existing entry should be retrieved successfully",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
+			correlationId: "test-correlation-id-require",
+			expEntry:      &entry,
+			expErr:        nil,
+		},
+		{
+			name: "non-existent entry should return error",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        s.validNFT.Id,
+			},
+			correlationId: "non-existent-correlation-id",
+			expEntry:      nil,
+			expErr:        ledger.ErrNotFound,
+		},
+		{
+			name: "non-existent ledger should return error",
+			key: &ledger.LedgerKey{
+				AssetClassId: s.validNFTClass.Id,
+				NftId:        "non-existent-nft-id",
+			},
+			correlationId: "test-correlation-id-require",
+			expEntry:      nil,
+			expErr:        ledger.ErrNotFound,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			retrievedEntry, err := s.keeper.RequireGetLedgerEntry(s.ctx, tc.key, tc.correlationId)
+
+			if tc.expErr != nil {
+				s.Require().Error(err, "RequireGetLedgerEntry should return error")
+				s.Require().ErrorIs(err, tc.expErr, "error should contain expected error code")
+				s.Require().Nil(retrievedEntry, "retrieved entry should be nil on error")
+			} else {
+				s.Require().NoError(err, "RequireGetLedgerEntry should not return error")
+				s.Require().NotNil(retrievedEntry, "retrieved entry should not be nil")
+				s.Require().Equal(tc.expEntry.CorrelationId, retrievedEntry.CorrelationId, "correlation ID should match")
+				s.Require().Equal(tc.expEntry.TotalAmt, retrievedEntry.TotalAmt, "total amount should match")
+				s.Require().Equal(tc.expEntry.EntryTypeId, retrievedEntry.EntryTypeId, "entry type ID should match")
+				s.Require().Equal(tc.expEntry.PostedDate, retrievedEntry.PostedDate, "posted date should match")
+				s.Require().Equal(tc.expEntry.EffectiveDate, retrievedEntry.EffectiveDate, "effective date should match")
+				s.Require().Equal(tc.expEntry.Sequence, retrievedEntry.Sequence, "sequence should match")
+				s.Require().Len(retrievedEntry.AppliedAmounts, len(tc.expEntry.AppliedAmounts), "applied amounts length should match")
+			}
+		})
+	}
+}
