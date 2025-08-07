@@ -34,6 +34,7 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 	return &types.QueryResolveResponse{Address: record.Address, Restricted: record.Restricted}, nil
 }
 
+// ReverseLookup using CollectionsPaginate with a custom filtered approach
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
@@ -46,33 +47,68 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 		pageReq = request.Pagination
 	}
 
-	// Create a function that only processes records matching the address
-	filterFunc := func(nameKey string, record types.NameRecord) (*string, error) {
-		recordAddr, err := sdk.AccAddressFromBech32(record.Address)
-		if err != nil {
-			return nil, nil
-		}
-
-		if !recordAddr.Equals(accAddr) {
-			return nil, nil
-		}
-
-		return &record.Name, nil
-	}
-	rv := &types.QueryReverseLookupResponse{}
-	// Use CollectionsPaginate with filtering function
-	names, pagination, err := query.CollectionPaginate(ctx, k.nameRecords, pageReq, filterFunc)
+	allRecords, err := k.GetRecordsByAddress(ctx, accAddr)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	rv.Name = make([]string, 0, len(names))
-	for _, namePtr := range names {
-		if namePtr != nil {
-			rv.Name = append(rv.Name, *namePtr)
+	allNames := make([]string, len(allRecords))
+	for i, record := range allRecords {
+		allNames[i] = record.Name
+	}
+
+	limit := query.DefaultLimit
+	var start = 0
+
+	if pageReq != nil {
+		if pageReq.Limit > 0 {
+			limit = int(pageReq.Limit)
+		}
+
+		if len(pageReq.Key) > 0 {
+			pageKey := string(pageReq.Key)
+
+			found := false
+			for i, name := range allNames {
+				if name == pageKey {
+					start = i + 1
+					found = true
+					break
+				}
+			}
+			if !found {
+				start = 0
+			}
+		} else {
+			start = int(pageReq.Offset)
 		}
 	}
-	rv.Pagination = pagination
+
+	end := start + limit
+	if end > len(allNames) {
+		end = len(allNames)
+	}
+
+	if start >= len(allNames) {
+		start = len(allNames)
+		end = len(allNames)
+	}
+
+	var pageNames []string
+	if start < end {
+		pageNames = allNames[start:end]
+	} else {
+		pageNames = []string{}
+	}
+
+	rv := &types.QueryReverseLookupResponse{
+		Name:       pageNames,
+		Pagination: &query.PageResponse{},
+	}
+
+	if end < len(allNames) {
+		rv.Pagination.NextKey = []byte(allNames[end-1])
+	}
 
 	return rv, nil
 }
