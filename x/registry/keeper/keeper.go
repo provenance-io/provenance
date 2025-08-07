@@ -20,11 +20,11 @@ type Keeper struct {
 	Registry collections.Map[string, types.RegistryEntry]
 
 	NFTKeeper
-	MetaDataKeeper
+	MetadataKeeper
 }
 
 // NewKeeper returns a new registry Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, nftKeeper NFTKeeper, metaDataKeeper MetaDataKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService store.KVStoreService, nftKeeper NFTKeeper, metaDataKeeper MetadataKeeper) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
 	rk := Keeper{
@@ -40,7 +40,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, storeService
 		),
 
 		NFTKeeper:      nftKeeper,
-		MetaDataKeeper: metaDataKeeper,
+		MetadataKeeper: metaDataKeeper,
 	}
 
 	// Build and set the schema

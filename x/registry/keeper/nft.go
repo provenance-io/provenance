@@ -14,7 +14,7 @@ func (k Keeper) HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool {
 	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		_, found := k.MetaDataKeeper.GetScope(sdkCtx, metadataAddress)
+		_, found := k.MetadataKeeper.GetScope(sdkCtx, metadataAddress)
 		return found
 	} else {
 		return k.NFTKeeper.HasNFT(ctx, *assetClassId, *nftId)
@@ -26,7 +26,7 @@ func (k Keeper) AssetClassExists(ctx sdk.Context, assetClassId *string) bool {
 	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		_, found := k.MetaDataKeeper.GetScopeSpecification(sdkCtx, metadataAddress)
+		_, found := k.MetadataKeeper.GetScopeSpecification(sdkCtx, metadataAddress)
 		return found
 	} else {
 		return k.NFTKeeper.HasClass(ctx, *assetClassId)
@@ -42,7 +42,7 @@ func (k Keeper) GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.Ac
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 		// Use the value owner address as the owner of the scope.
-		accAddr, err := k.MetaDataKeeper.GetScopeValueOwner(sdkCtx, metadataAddress)
+		accAddr, err := k.MetadataKeeper.GetScopeValueOwner(sdkCtx, metadataAddress)
 		if err != nil {
 			return nil
 		}
