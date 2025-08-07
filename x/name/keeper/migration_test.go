@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -65,22 +66,21 @@ func (s *MigrationTestSuite) SetupTest() {
 
 func (s *MigrationTestSuite) TestMigration() {
 	storeKey := s.store.(*storetypes.KVStoreKey)
+
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-
-	oldStore := s.ctx.KVStore(storeKey)
-
 	name := "test.provenance"
 	record := types.NewNameRecord(name, s.user1Addr, true)
 
+	oldStore := s.ctx.KVStore(storeKey)
 	nameKey, err := types.GetNameKeyBytes(name)
 	s.Require().NoError(err, "failed to get name key bytes")
 
-	bz, err := s.cdc.Marshal(&record)
+	recordBz, err := s.cdc.Marshal(&record)
 	s.Require().NoError(err, "failed to marshal name record")
-	oldStore.Set(nameKey, bz)
+	oldStore.Set(nameKey, recordBz)
 
-	addrIndexKey, err := types.GetAddressKeyBytes(s.user1Addr, nameKey[1:])
+	addrIndexKey, err := types.GetAddressKeyBytes(s.user1Addr, nameKey[1:]) // Strip prefix byte
 	s.Require().NoError(err, "failed to get address key bytes")
 	oldStore.Set(addrIndexKey, []byte("old"))
 
@@ -96,12 +96,18 @@ func (s *MigrationTestSuite) TestMigration() {
 	migratedRecord, err := newKeeper.GetNameRecord(s.ctx, name)
 	s.Require().NoError(err, "failed to get migrated name record")
 	s.Require().Equal(name, migratedRecord.Name, "migrated record name mismatch")
+	s.Require().Equal(s.user1Addr.String(), migratedRecord.Address, "migrated record address mismatch")
 
-	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, s.user1Addr.Bytes())
+	normalized, err := newKeeper.Normalize(s.ctx, name)
+	s.Require().NoError(err, "failed to normalize name")
+
+	pair := collections.Join([]byte(s.user1Addr), normalized)
+	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, pair)
 	s.Require().NoError(err, "failed to get address index iterator")
 	defer iter.Close()
 
-	s.Require().True(iter.Valid(), "address index iterator invalid")
+	s.Require().True(iter.Valid(), "address index iterator should be valid")
+
 	primaryKey, err := iter.PrimaryKey()
 	s.Require().NoError(err, "failed to get primary key from iterator")
 

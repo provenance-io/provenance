@@ -4,15 +4,10 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/provenance-io/provenance/x/name/types"
-)
-
-// Define old key prefixes for migration
-var (
-	OldNameKeyPrefix    = []byte{0x03}
-	OldAddressKeyPrefix = []byte{0x05}
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -29,33 +24,62 @@ func NewMigrator(keeper Keeper) Migrator {
 // to the new collections-based layout (version 2 to version 3).
 func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating name module from KV store to collections (v2 to v3)...")
+
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	// 1. Migrate parameters
-	if bz, _ := store.Get(types.NameParamStoreKey); bz != nil {
-		var params types.Params
-		m.keeper.cdc.MustUnmarshal(bz, &params)
-		if err := m.keeper.paramsStore.Set(ctx, params); err != nil {
-			return fmt.Errorf("failed to migrate params: %w", err)
-		}
-		ctx.Logger().Info("Migrated parameters")
-		store.Delete(types.NameParamStoreKey)
+	ctx.Logger().Info("Phase 1: Collecting existing name records...")
+	var recordsToMigrate []struct {
+		name   string
+		record types.NameRecord
 	}
-	// Migrate name records
-	ctx.Logger().Info("Migrating name records...")
-	addrPrefix := types.AddressKeyPrefix
-	iter, _ := store.Iterator(addrPrefix, storetypes.PrefixEndBytes(addrPrefix))
+
+	// Iterate over name records.
+	namePrefix := types.NameKeyPrefix
+	iter, err := store.Iterator(namePrefix, storetypes.PrefixEndBytes(namePrefix))
+	if err != nil {
+		return fmt.Errorf("failed to create name records iterator: %w", err)
+	}
 	defer iter.Close()
 
-	count := 0
 	for ; iter.Valid(); iter.Next() {
-		store.Set(iter.Key(), []byte{})
-		count++
-	}
-	ctx.Logger().Info(fmt.Sprintf("Fixed %d address index values", count))
+		key := iter.Key()
+		value := iter.Value()
 
-	ctx.Logger().Info("Deleting old entries...")
-	// m.keeper.DeleteInvalidAddressIndexEntries(ctx)
+		if len(key) <= len(namePrefix) {
+			continue
+		}
+		var record types.NameRecord
+		if err := m.keeper.cdc.Unmarshal(value, &record); err != nil {
+			ctx.Logger().Error("failed to unmarshal name record during migration",
+				"key", fmt.Sprintf("%x", key), "error", err)
+			continue
+		}
+
+		if record.Name == "" {
+			ctx.Logger().Error("name record has empty name field",
+				"key", fmt.Sprintf("%x", key))
+			continue
+		}
+		recordsToMigrate = append(recordsToMigrate, struct {
+			name   string
+			record types.NameRecord
+		}{
+			name:   record.Name,
+			record: record,
+		})
+	}
+
+	ctx.Logger().Info(fmt.Sprintf("Found %d name records to migrate", len(recordsToMigrate)))
+
+	ctx.Logger().Info("Phase 2: Migrating records to collections...")
+	for _, item := range recordsToMigrate {
+		if err := m.keeper.nameRecords.Set(ctx, item.name, item.record); err != nil {
+			ctx.Logger().Error("failed to set record in nameRecords", "name", item.name, "address", item.record.Address, "error", err)
+			return fmt.Errorf("failed to migrate name record %s: %w", item.name, err)
+		}
+		ctx.Logger().Info("Record written to collections", "name", item.name, "address", item.record.Address)
+	}
+	ctx.Logger().Info(fmt.Sprintf("Successfully migrated %d name records to collections", len(recordsToMigrate)))
 
 	ctx.Logger().Info("Name module migration to collections (v2 to v3) completed successfully.")
 

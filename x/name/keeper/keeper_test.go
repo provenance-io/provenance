@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/collections"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -667,44 +668,60 @@ func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 	addr := s.user1Addr
 	restrict := false
 
-	// 1. Store NameRecord and AddrIndex
+	// Step 1: Set the name record
 	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restrict)
-	s.Require().NoError(err, "failed to set name record")
+	s.Require().NoError(err, "SetNameRecord failed")
 
-	// 2. Get normalized name and keys
+	// Step 2: Normalize the name
 	normalized, err := s.app.NameKeeper.Normalize(s.ctx, name)
-	s.Require().NoError(err, "failed to normalize name")
+	s.Require().NoError(err, "Normalize failed")
 
-	nameKey, err := types.GetNameKeyBytes(normalized) // make sure this is the correct function in your types pkg
-	s.Require().NoError(err, "failed to get name key bytes")
-
-	// 3. Fetch NameRecord from NameRecords map
+	// Step 3: Get the record directly by name
 	recordByName, err := s.app.NameKeeper.GetNameRecord(s.ctx, normalized)
-	s.Require().NoError(err, "failed to get name record by normalized name")
+	s.Require().NoError(err, "GetNameRecord failed")
 
-	// 4. Fetch NameRecord from AddrIndex map via index
-	iter, err := s.app.NameKeeper.GetAddrIndex().MatchExact(s.ctx, addr.Bytes())
-	s.Require().NoError(err, "failed to get address index iterator")
+	// Step 4: Match via AddrIndex
+	pair := collections.Join(addr.Bytes(), normalized)
+	iter, err := s.app.NameKeeper.GetAddrIndex().MatchExact(s.ctx, pair)
+	s.Require().NoError(err, "AddrIndex MatchExact failed")
 	defer iter.Close()
 
-	var recordByAddr *types.NameRecord
+	var recordByIndex types.NameRecord
 	found := false
 	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
-		s.Require().NoError(err, "failed to get primary key from address index iterator")
-
-		record, err := s.app.NameKeeper.GetNameRecord(s.ctx, pk)
-		s.Require().NoError(err, "failed to get name record by primary key from address index")
-		recordByAddr = &record
+		recordByIndex, err = s.app.NameKeeper.GetNameRecord(s.ctx, name)
+		s.Require().NoError(err, "failed to get name record from index")
 		found = true
 		break
 	}
-	s.Require().True(found, "no name record found for address in AddrIndex")
+	s.Require().True(found, "expected name record not found via AddrIndex")
 
-	// 5. Check both are equal
-	s.Require().Equal(recordByName, *recordByAddr, "name record from NameRecords and AddrIndex do not match")
+	s.Require().Equal(recordByName, recordByIndex, "name records mismatch")
+}
 
-	// 6. Verify key lengths (optional logs)
-	fmt.Printf("NameKey (NameRecords) length: %d\n", len(nameKey))
-	fmt.Printf("NameKey bytes: %X\n", nameKey)
+func (s *KeeperTestSuite) TestStoreNameRecordAndAddrIndex() {
+	// Setup
+	name := "example.prov"
+	addr := s.user1Addr
+	restricted := false
+
+	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restricted)
+	s.Require().NoError(err, "SetNameRecord failed")
+
+	recordByName, err := s.app.NameKeeper.GetRecordByName(s.ctx, name)
+	s.Require().NoError(err, "GetRecordByName failed")
+	s.Require().Equal(name, recordByName.Name, "Name mismatch in direct lookup")
+
+	recordsByAddr, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, addr)
+	s.Require().NoError(err, "GetRecordsByAddress failed")
+
+	found := false
+	for _, record := range recordsByAddr {
+		if record.Name == name && record.Address == addr.String() {
+			found = true
+			break
+		}
+	}
+	s.Require().True(found, "Expected to find name record [%s] for address [%s]", name, addr.String())
+	s.T().Logf("Found %d records for address %s", len(recordsByAddr), addr.String())
 }

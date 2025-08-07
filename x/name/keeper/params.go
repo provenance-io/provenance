@@ -8,7 +8,10 @@ import (
 
 // GetParams returns the total set of name parameters with fallback to default values.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	params, _ = k.paramsStore.Get(ctx)
+	params, err := k.paramsStore.Get(ctx)
+	if err != nil {
+		return types.DefaultParams()
+	}
 	return params
 }
 

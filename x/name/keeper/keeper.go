@@ -20,17 +20,6 @@ import (
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
-// NameRecordIndexes defines indexes for name records
-type NameRecordIndexes struct {
-	// AddrIndex maps address -> list of names
-	AddrIndex *indexes.Multi[[]byte, string, types.NameRecord]
-}
-
-// List implements collections.Indexes
-func (i NameRecordIndexes) IndexesList() []collections.Index[string, types.NameRecord] {
-	return []collections.Index[string, types.NameRecord]{i.AddrIndex}
-}
-
 // Keeper defines the name module Keeper.
 type Keeper struct {
 	// The codec for binary encoding/decoding.
@@ -42,14 +31,13 @@ type Keeper struct {
 	// Attribute keeper
 	attrKeeper types.AttributeKeeper
 
+	// storeService abstracts access to the module's KVStore.
 	storeService store.KVStoreService
-
 	// Schema definition
 	schema collections.Schema
-
 	// Primary: name (hashed) -> NameRecord, indexed by addr
-	nameRecords *collections.IndexedMap[string, types.NameRecord, NameRecordIndexes]
-
+	nameRecords *collections.IndexedMap[string, types.NameRecord, types.NameRecordIndexes]
+	// paramsStore manages the module's configurable parameters.
 	paramsStore collections.Item[types.Params]
 }
 
@@ -67,18 +55,18 @@ func NewKeeper(
 		sb,
 		collections.NewPrefix(types.AddressKeyPrefix),
 		"addr_index",
-		collections.BytesKey, // Index key is []byte
-		types.HashedStringKeyCodec{},
-		func(name string, record types.NameRecord) ([]byte, error) {
+		collections.PairKeyCodec(collections.BytesKey, collections.StringKey),
+		types.HashedStringKeyCodec{}, // Primary key codec
+		func(name string, record types.NameRecord) (collections.Pair[[]byte, string], error) {
 			addr, err := sdk.AccAddressFromBech32(record.Address)
 			if err != nil {
-				return nil, err
+				return collections.Pair[[]byte, string]{}, err
 			}
-			return addr, nil // addr is sdk.AccAddress, which is a []byte type
+			return collections.Join([]byte(addr), name), nil
 		},
 	)
 
-	indexes := NameRecordIndexes{
+	indexes := types.NameRecordIndexes{
 		AddrIndex: addrIndex,
 	}
 
@@ -91,7 +79,6 @@ func NewKeeper(
 		codec.CollValue[types.NameRecord](cdc),
 		indexes,
 	)
-
 	// Create params collection
 	params := collections.NewItem(
 		sb,
@@ -233,25 +220,19 @@ func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
 
 // GetRecordsByAddress looks up all names bound to an address.
 func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
-	iter, err := k.nameRecords.Indexes.AddrIndex.MatchExact(ctx, address)
-	if err != nil {
-		return nil, err
-	}
-	defer iter.Close()
-
 	var records []types.NameRecord
-	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
+	err := k.nameRecords.Walk(ctx, nil, func(nameKey string, record types.NameRecord) (bool, error) {
+		recordAddr, err := sdk.AccAddressFromBech32(record.Address)
 		if err != nil {
-			return nil, err
+			return false, nil
 		}
-		record, err := k.nameRecords.Get(ctx, pk)
-		if err != nil {
-			return nil, err
+		if recordAddr.Equals(address) {
+			records = append(records, record)
 		}
-		records = append(records, record)
-	}
-	return records, nil
+		return false, nil
+	})
+
+	return records, err
 }
 
 // DeleteRecord removes a name record from the kvstore.
@@ -289,11 +270,9 @@ func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 	if !types.IsValidName(normalized) {
 		return "", types.ErrNameInvalid
 	}
-	segments := strings.Split(normalized, ".")
-	if len(segments) > int(k.GetMaxNameLevels(ctx)) {
-		return "", types.ErrNameHasTooManySegments
-	}
-	for _, segment := range segments {
+	segCount := uint32(0)
+	for _, segment := range strings.Split(normalized, ".") {
+		segCount++
 		segLen := len(segment)
 		isUUID := types.IsValidUUID(segment)
 		if segLen < int(k.GetMinSegmentLength(ctx)) {
@@ -302,6 +281,9 @@ func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 		if segLen > int(k.GetMaxSegmentLength(ctx)) && !isUUID {
 			return "", types.ErrNameSegmentTooLong
 		}
+	}
+	if segCount > k.GetMaxNameLevels(ctx) {
+		return "", types.ErrNameHasTooManySegments
 	}
 	return normalized, nil
 }
@@ -386,12 +368,12 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 func (k *Keeper) GetNameRecord(ctx sdk.Context, key string) (types.NameRecord, error) {
 	return k.nameRecords.Get(ctx, key)
 }
-func (k Keeper) GetAddrIndex() *indexes.Multi[[]byte, string, types.NameRecord] {
+
+func (k Keeper) GetAddrIndex() *indexes.Multi[collections.Pair[[]byte, string], string, types.NameRecord] {
 	return k.nameRecords.Indexes.AddrIndex
 }
 
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
-	// Check root name
 	if k.NameExists(ctx, name) {
 		return types.ErrNameAlreadyBound
 	}

@@ -2,6 +2,7 @@ package types
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -141,8 +142,10 @@ func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			// Encode
+			expectedHash := codec.ComputeHash(tc.input)
 			size := codec.Size(tc.input)
+			s.Equal(sha256.Size, size, "codec.Size should match sha256 size")
+
 			buffer := make([]byte, size)
 			n, err := codec.Encode(buffer, tc.input)
 
@@ -152,28 +155,29 @@ func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
 			}
 
 			s.Require().NoError(err)
-			s.Equal(sha256.Size, n, "encoded hash size must be 32 bytes")
+			s.Equal(size, n)
+			s.Equal(expectedHash, buffer[:n], "computed hash and encoded hash should match")
 
-			// Decode: will return base64 of the hash (not the original string)
 			read, out, err := codec.Decode(buffer[:n])
 			s.Require().NoError(err)
 			s.Equal(n, read)
 			s.NotEmpty(out)
-			s.NotEqual(tc.input, out, "decoded value must not match original (it's a hash)")
+			s.NotEqual(tc.input, out, "decoded string should be base64 of hash, not the original input")
 
-			// EncodeNonTerminal / DecodeNonTerminal
 			nonTermSize := codec.SizeNonTerminal(tc.input)
+			s.Equal(sha256.Size, nonTermSize, "non-terminal size must also match sha256 size")
+
 			nonTermBuf := make([]byte, nonTermSize)
 			n2, err := codec.EncodeNonTerminal(nonTermBuf, tc.input)
 			s.Require().NoError(err)
-			s.Equal(nonTermSize, n2, "non-terminal encode length")
+			s.Equal(nonTermSize, n2)
+			s.Equal(expectedHash, nonTermBuf[:n2], "non-terminal hash must match terminal hash")
 
 			read2, out2, err := codec.DecodeNonTerminal(nonTermBuf[:n2])
 			s.Require().NoError(err)
-			s.Equal(n2, read2, "non-terminal decode should match encoded length")
-			s.Equal(tc.input, out2, "non-terminal decode should match original")
+			s.Equal(n2, read2)
+			s.Equal(out, out2, "non-terminal decode must match regular decode")
 
-			// JSON encode/decode
 			jsonBytes, err := codec.EncodeJSON(tc.input)
 			s.Require().NoError(err)
 
@@ -181,8 +185,30 @@ func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
 			s.Require().NoError(err)
 			s.Equal(tc.input, outJSON)
 
-			// Stringify
 			s.Equal(tc.input, codec.Stringify(tc.input))
+
+			s.Equal("hashedstring", codec.KeyType())
+
+			hash1 := codec.ComputeHash(tc.input)
+			hash2 := codec.ComputeHash(tc.input)
+			s.Equal(hash1, hash2, "ComputeHash must be deterministic")
+
+			s.T().Logf("Input: %q → Hash: %x (Base64: %s)", tc.input, hash1, base64.StdEncoding.EncodeToString(hash1))
 		})
 	}
+
+	s.Run("Hash uniqueness (no collision)", func() {
+		hashes := map[string][]byte{}
+		seen := map[string]bool{}
+		for _, tc := range tests {
+			hash := codec.ComputeHash(tc.input)
+			hashStr := base64.StdEncoding.EncodeToString(hash)
+			if strings.TrimSpace(tc.input) == "" {
+				continue
+			}
+			s.False(seen[hashStr], "duplicate hash found for input: %q", tc.input)
+			seen[hashStr] = true
+			hashes[tc.input] = hash
+		}
+	})
 }
