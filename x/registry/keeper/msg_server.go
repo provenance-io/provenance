@@ -74,7 +74,7 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, err
 	}
 
-	return nil, nil
+	return &types.MsgGrantRoleResponse{}, nil
 }
 
 func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*types.MsgRevokeRoleResponse, error) {
@@ -101,7 +101,7 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, err
 	}
 
-	return nil, nil
+	return &types.MsgRevokeRoleResponse{}, nil
 }
 
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {
@@ -114,5 +114,6 @@ func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNF
 	}
 
 	// TODO: Implement unregister functionality
+
 	return &types.MsgUnregisterNFTResponse{}, nil
 }
