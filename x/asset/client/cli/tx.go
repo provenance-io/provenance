@@ -37,11 +37,11 @@ func GetTxCmd() *cobra.Command {
 // GetCmdCreateAsset returns the command for creating an asset
 func GetCmdCreateAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-asset [class-id] [id] [uri] [uri-hash] [data]",
-		Short: "Create a new asset",
-		Long: `Create a new asset in the specified asset class.`,
+		Use:     "create-asset <class-id> <id> <uri> <uri-hash> <data>",
+		Short:   "Create a new asset",
+		Long:    `Create a new asset in the specified asset class.`,
 		Example: `  provenanced tx asset create-asset "real-estate" "property-001" "https://example.com/metadata.json" "abc123" '{"location": "New York", "value": 500000}'`,
-		Args:  cobra.ExactArgs(5),
+		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -72,11 +72,11 @@ func GetCmdCreateAsset() *cobra.Command {
 // GetCmdCreateAssetClass returns the command for creating an asset class
 func GetCmdCreateAssetClass() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-class [id] [name] [symbol] [description] [uri] [uri-hash] [data]",
-		Short: "Create a new asset class",
-		Long: `Create a new asset class with the specified properties.`,
+		Use:     "create-class <id> <name> <symbol> <description> <uri> <uri-hash> <data>",
+		Short:   "Create a new asset class",
+		Long:    `Create a new asset class with the specified properties.`,
 		Example: `  provenanced tx asset create-class "real-estate" "Real Estate Assets" "REAL" "Real estate properties" "https://example.com/class-metadata.json" "def456" '{"category": "property"}'`,
-		Args:  cobra.ExactArgs(7),
+		Args:    cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -109,7 +109,7 @@ func GetCmdCreateAssetClass() *cobra.Command {
 // GetCmdCreatePool returns the command for creating a new pool
 func GetCmdCreatePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool [pool] [nfts]",
+		Use:   "create-pool <pool> <nfts>",
 		Short: "Create a new pool marker",
 		Long: `Create a new pool marker with the specified NFTs.
 The nfts argument should be a semicolon-separated list of asset entries, where each entry is a comma-separated class-id and asset-id.
@@ -144,7 +144,7 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 
 			msg := &types.MsgCreatePool{
 				Pool:        &pool,
-				Assets:        assets,
+				Assets:      assets,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
@@ -159,11 +159,11 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 // GetCmdCreateTokenization returns the command for creating a new tokenization
 func GetCmdCreateTokenization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-tokenization [amount] [nft-class-id] [nft-id]",
-		Short: "Create a new tokenization marker",
-		Long: `Create a new tokenization marker with the specified amount and NFT.`,
+		Use:     "create-tokenization <amount> <nft-class-id> <nft-id>",
+		Short:   "Create a new tokenization marker",
+		Long:    `Create a new tokenization marker with the specified amount and NFT.`,
 		Example: `  provenanced tx asset create-tokenization 1000pooltoken real-estate property-001`,
-		Args:  cobra.ExactArgs(3),
+		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -182,7 +182,7 @@ func GetCmdCreateTokenization() *cobra.Command {
 
 			msg := &types.MsgCreateTokenization{
 				Denom:       coin,
-				Asset:         asset,
+				Asset:       asset,
 				FromAddress: clientCtx.GetFromAddress().String(),
 			}
 
@@ -197,7 +197,7 @@ func GetCmdCreateTokenization() *cobra.Command {
 // GetCmdCreateSecuritization returns the command for creating a new securitization
 func GetCmdCreateSecuritization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-securitization [id] [pools] [tranches]",
+		Use:   "create-securitization <id> <pools> <tranches>",
 		Short: "Create a new securitization marker and tranches",
 		Long: `Create a new securitization marker and tranches.
 The pools argument should be a comma-separated list of pool names.
