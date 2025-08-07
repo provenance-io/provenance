@@ -491,7 +491,8 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			name: "first run - deletes one",
 			expLog: []string{
 				"Checking address -> name index entries.",
-				fmt.Sprintf("All %d index entries are valid", len(expNameRecords)),
+				"Found 5 invalid entries, deleting",
+				"Done checking address -> name index entries. Deleted 5 invalid entries and kept 0 valid entries.",
 			},
 			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,
@@ -502,7 +503,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			name: "second run - all ok already",
 			expLog: []string{
 				"Checking address -> name index entries.",
-				fmt.Sprintf("All %d index entries are valid", len(expNameRecords)),
+				"All 0 index entries are valid",
 			},
 			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,
