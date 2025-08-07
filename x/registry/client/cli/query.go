@@ -32,7 +32,7 @@ func CmdQuery() *cobra.Command {
 // GetCmdQueryRegistry returns the command for querying a registry entry
 func GetCmdQueryRegistry() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "registry [asset_class_id] [nft_id]",
+		Use:   "registry <asset_class_id> <nft_id>",
 		Short: "Query a registry entry by key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -63,7 +63,7 @@ func GetCmdQueryRegistry() *cobra.Command {
 // GetCmdQueryHasRole returns the command for querying if an address has a role
 func GetCmdQueryHasRole() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "has-role [asset_class_id] [nft_id] [role] [address]",
+		Use:   "has-role <asset_class_id> <nft_id> <role> <address>",
 		Short: "Query if an address has a role for a given key",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
