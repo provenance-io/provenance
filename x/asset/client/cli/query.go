@@ -33,7 +33,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdListAssets returns the command for listing all assets
 func GetCmdListAssets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-assets [address]",
+		Use:   "list-assets <address>",
 		Short: "List all assets owned by an address",
 		Example: fmt.Sprintf(`$ %[1]s query asset list-assets pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 $ %[1]s query asset list-assets pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
