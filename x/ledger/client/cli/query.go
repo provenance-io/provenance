@@ -405,7 +405,7 @@ func GetLedgerClassBucketTypesCmd() *cobra.Command {
 func GetLedgerClassCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "class <ledger_class_id>",
-		Short:   "Query the ledger class for the specified ledger class",
+		Short:   "Query the ledger class for the specified id",
 		Example: fmt.Sprintf(`$ %s query ledger class class-123`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
