@@ -28,25 +28,27 @@ import (
 type ErrCode string
 
 const (
-	ErrCodeRegistryAlreadyExists ErrCode = "REGISTRY_ALREADY_EXISTS"
-	ErrCodeNFTNotFound           ErrCode = "NFT_NOT_FOUND"
-	ErrCodeUnauthorized          ErrCode = "UNAUTHORIZED"
-	ErrCodeInvalidRole           ErrCode = "INVALID_ROLE"
-	ErrCodeRegistryNotFound      ErrCode = "REGISTRY_NOT_FOUND"
-	ErrCodeAddressAlreadyHasRole ErrCode = "ADDRESS_ALREADY_HAS_ROLE"
-	ErrCodeInvalidHrp            ErrCode = "INVALID_HRP"
-	ErrCodeInvalidKey            ErrCode = "INVALID_KEY"
+	ErrCodeRegistryAlreadyExists  ErrCode = "REGISTRY_ALREADY_EXISTS"
+	ErrCodeNFTNotFound            ErrCode = "NFT_NOT_FOUND"
+	ErrCodeUnauthorized           ErrCode = "UNAUTHORIZED"
+	ErrCodeInvalidRole            ErrCode = "INVALID_ROLE"
+	ErrCodeRegistryNotFound       ErrCode = "REGISTRY_NOT_FOUND"
+	ErrCodeAddressAlreadyHasRole  ErrCode = "ADDRESS_ALREADY_HAS_ROLE"
+	ErrCodeInvalidHrp             ErrCode = "INVALID_HRP"
+	ErrCodeInvalidKey             ErrCode = "INVALID_KEY"
+	ErrCodeAddressDoesNotHaveRole ErrCode = "ADDRESS_DOES_NOT_HAVE_ROLE"
 )
 
 var (
-	ErrRegistryAlreadyExists = cerrs.Register(registry.ModuleName, 1, "registry already exists")
-	ErrNFTNotFound           = cerrs.Register(registry.ModuleName, 2, "NFT does not exist")
-	ErrUnauthorized          = cerrs.Register(registry.ModuleName, 3, "unauthorized")
-	ErrInvalidRole           = cerrs.Register(registry.ModuleName, 4, "invalid role")
-	ErrRegistryNotFound      = cerrs.Register(registry.ModuleName, 5, "registry not found")
-	ErrAddressAlreadyHasRole = cerrs.Register(registry.ModuleName, 6, "address already has role")
-	ErrInvalidHrp            = cerrs.Register(registry.ModuleName, 7, "invalid hrp")
-	ErrInvalidKey            = cerrs.Register(registry.ModuleName, 8, "invalid key")
+	ErrRegistryAlreadyExists  = cerrs.Register(registry.ModuleName, 1, "registry already exists")
+	ErrNFTNotFound            = cerrs.Register(registry.ModuleName, 2, "NFT does not exist")
+	ErrUnauthorized           = cerrs.Register(registry.ModuleName, 3, "unauthorized")
+	ErrInvalidRole            = cerrs.Register(registry.ModuleName, 4, "invalid role")
+	ErrRegistryNotFound       = cerrs.Register(registry.ModuleName, 5, "registry not found")
+	ErrAddressAlreadyHasRole  = cerrs.Register(registry.ModuleName, 6, "address already has role")
+	ErrInvalidHrp             = cerrs.Register(registry.ModuleName, 7, "invalid hrp")
+	ErrInvalidKey             = cerrs.Register(registry.ModuleName, 8, "invalid key")
+	ErrAddressDoesNotHaveRole = cerrs.Register(registry.ModuleName, 9, "address does not have role")
 )
 
 func NewErrCodeRegistryAlreadyExists(key string) error {
@@ -71,6 +73,10 @@ func NewErrCodeRegistryNotFound(key string) error {
 
 func NewErrCodeAddressAlreadyHasRole(address, role string) error {
 	return cerrs.Wrapf(ErrAddressAlreadyHasRole, "address %s already has role %s", address, role)
+}
+
+func NewErrCodeAddressDoesNotHaveRole(address, role string) error {
+	return cerrs.Wrapf(ErrAddressDoesNotHaveRole, "address %s does not have role %s", address, role)
 }
 
 func NewErrCodeInvalidHrp(hrp string) error {

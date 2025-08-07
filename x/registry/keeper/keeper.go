@@ -125,15 +125,20 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 }
 
 func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.RegistryRole, addr []string) error {
-	if role == types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
-		return types.NewErrCodeInvalidRole(role.String())
-	}
-
 	keyStr := key.String()
 
 	registryEntry, err := k.Registry.Get(ctx, keyStr)
 	if err != nil {
 		return err
+	}
+
+	// Verify that each address has the role or error out
+	for _, a := range addr {
+		if !slices.ContainsFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
+			return s.Role == role && slices.Contains(s.Addresses, a)
+		}) {
+			return types.NewErrCodeAddressDoesNotHaveRole(a, role.String())
+		}
 	}
 
 	// Remove any address from the current slice that is in the addresses to revoke slice
@@ -158,11 +163,7 @@ func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.R
 
 	// Delete the old permissioned addresses from the role entry
 	registryEntry.Roles = slices.DeleteFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
-		if s.Role == role {
-			return true
-		}
-
-		return false
+		return s.Role == role
 	})
 
 	// Add the new permissioned addresses to the role entry
