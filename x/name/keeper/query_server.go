@@ -3,6 +3,9 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -31,79 +34,45 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 	return &types.QueryResolveResponse{Address: record.Address, Restricted: record.Restricted}, nil
 }
 
-// ReverseLookup gets all names bound to an address with proper pagination
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
-
 	ctx := sdk.UnwrapSDKContext(c)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, types.ErrInvalidAddress
 	}
 
-	// Use the address index
-	iter, err := k.nameRecords.Indexes.AddrIndex.MatchExact(ctx, accAddr)
-	if err != nil {
-		return nil, err
-	}
-	defer iter.Close()
-
-	var names []string
-	var nextKey []byte
-	limit := query.DefaultLimit
-	offset := uint64(0)
-	startAfter := ""
-
-	// Handle pagination parameters
+	var pageReq *query.PageRequest
 	if request.Pagination != nil {
-		if request.Pagination.Limit > 0 {
-			limit = int(request.Pagination.Limit)
-		}
-		offset = request.Pagination.Offset
-		if len(request.Pagination.Key) > 0 {
-			startAfter = string(request.Pagination.Key)
-		}
+		pageReq = request.Pagination
 	}
 
-	count := uint64(0)
-	skipping := offset > 0 || startAfter != ""
-
-	for ; iter.Valid(); iter.Next() {
-		// Get the primary key (name)
-		name, err := iter.PrimaryKey()
+	// Create a function that only processes records matching the address
+	filterFunc := func(nameKey string, record types.NameRecord) (*string, error) {
+		recordAddr, err := sdk.AccAddressFromBech32(record.Address)
 		if err != nil {
-			return nil, err
+			return nil, nil
 		}
 
-		// Skip until we reach the startAfter point
-		if startAfter != "" {
-			if name == startAfter {
-				startAfter = ""
-			}
-			continue
+		if !recordAddr.Equals(accAddr) {
+			return nil, nil
 		}
 
-		// Skip offset items
-		if skipping && offset > 0 {
-			offset--
-			continue
-		}
-
-		// Stop if we've reached the limit
-		if count >= uint64(limit) {
-			nextKey = []byte(name)
-			break
-		}
-
-		names = append(names, name)
-		count++
+		return &record.Name, nil
+	}
+	rv := &types.QueryReverseLookupResponse{}
+	// Use CollectionsPaginate with filtering function
+	names, pagination, err := query.CollectionPaginate(ctx, k.nameRecords, pageReq, filterFunc)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	pageRes := &query.PageResponse{
-		NextKey: nextKey,
+	rv.Name = make([]string, 0, len(names))
+	for _, namePtr := range names {
+		if namePtr != nil {
+			rv.Name = append(rv.Name, *namePtr)
+		}
 	}
+	rv.Pagination = pagination
 
-	return &types.QueryReverseLookupResponse{
-		Name:       names,
-		Pagination: pageRes,
-	}, nil
+	return rv, nil
 }
