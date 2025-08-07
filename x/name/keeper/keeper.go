@@ -153,18 +153,7 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	if err = types.ValidateAddress(addr); err != nil {
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
-	exists, err := k.nameRecords.Has(ctx, normalizedName)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return types.ErrNameAlreadyBound
-	}
-	record := types.NewNameRecord(normalizedName, addr, restrict)
-	if err := record.Validate(); err != nil {
-		return err
-	}
-	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
+	if err := k.addRecord(ctx, name, addr, restrict, false); err != nil {
 		return err
 	}
 	nameBoundEvent := types.NewEventNameBound(addr.String(), normalizedName, restrict)
@@ -184,11 +173,8 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	if err != nil {
 		return types.ErrNameNotBound
 	}
-	record := types.NewNameRecord(normalizedName, addr, restrict)
-	if err := record.Validate(); err != nil {
-		return err
-	}
-	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
+	// Use AddRecord with isModifiable = true (matches old behavior)
+	if err := k.addRecord(ctx, normalizedName, addr, restrict, true); err != nil {
 		return err
 	}
 	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), name, restrict)
@@ -221,14 +207,14 @@ func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
 // GetRecordsByAddress looks up all names bound to an address.
 func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
 	var records []types.NameRecord
+
+	addressStr := address.String()
+
 	err := k.nameRecords.Walk(ctx, nil, func(nameKey string, record types.NameRecord) (bool, error) {
-		recordAddr, err := sdk.AccAddressFromBech32(record.Address)
-		if err != nil {
-			return false, nil
-		}
-		if recordAddr.Equals(address) {
+		if record.Address == addressStr {
 			records = append(records, record)
 		}
+
 		return false, nil
 	})
 
@@ -253,15 +239,29 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 }
 
 func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(record types.NameRecord) error) error {
-	return k.nameRecords.Walk(ctx, nil, func(name string, record types.NameRecord) (bool, error) {
-		if prefix != nil && !bytes.HasPrefix([]byte(name), prefix) {
-			return false, nil
+	ctx.Logger().Debug("IterateRecords called", "prefix", fmt.Sprintf("%x", prefix))
+
+	count := 0
+	err := k.nameRecords.Walk(ctx, nil, func(nameKey string, record types.NameRecord) (bool, error) {
+		count++
+		if prefix != nil {
+			if bytes.Equal(prefix, types.NameKeyPrefix) {
+			} else {
+				nameBytes := []byte(record.Name)
+				if !bytes.HasPrefix(nameBytes, prefix) {
+					return false, nil // skip this record
+				}
+			}
 		}
 		if err := handle(record); err != nil {
+			ctx.Logger().Error("IterateRecords handle error", "error", err)
 			return true, err
 		}
 		return false, nil
 	})
+
+	ctx.Logger().Debug("IterateRecords completed", "totalFound", count, "error", err)
+	return err
 }
 
 // Normalize returns a name in storage format.
@@ -371,6 +371,41 @@ func (k *Keeper) GetNameRecord(ctx sdk.Context, key string) (types.NameRecord, e
 
 func (k Keeper) GetAddrIndex() *indexes.Multi[collections.Pair[[]byte, string], string, types.NameRecord] {
 	return k.nameRecords.Indexes.AddrIndex
+}
+
+func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool, isModifiable bool) error {
+	normalizedName, err := k.Normalize(ctx, name)
+	if err != nil {
+		return err
+	}
+
+	if err = types.ValidateAddress(addr); err != nil {
+		return types.ErrInvalidAddress.Wrap(err.Error())
+	}
+
+	// Check if record exists only when isModifiable = false
+	exists, err := k.nameRecords.Has(ctx, normalizedName)
+	if err != nil {
+		return err
+	}
+
+	if exists && !isModifiable {
+		return types.ErrNameAlreadyBound
+	}
+	// If isModifiable = true, allow overwriting existing records
+
+	record := types.NewNameRecord(normalizedName, addr, restrict)
+	if err := record.Validate(); err != nil {
+		return err
+	}
+
+	// Set the record (will overwrite if isModifiable = true)
+	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
+		return err
+	}
+
+	nameBoundEvent := types.NewEventNameBound(addr.String(), normalizedName, restrict)
+	return ctx.EventManager().EmitTypedEvent(nameBoundEvent)
 }
 
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
