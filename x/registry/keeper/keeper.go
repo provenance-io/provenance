@@ -230,7 +230,7 @@ func (k Keeper) RevokeRole(ctx sdk.Context, authorityAddr sdk.AccAddress, key *t
 	}
 
 	// Delete the old permissioned addresses from the role entry
-	slices.DeleteFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
+	registryEntry.Roles = slices.DeleteFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
 		if s.Role == role {
 			return true
 		}
