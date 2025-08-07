@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 
 	"cosmossdk.io/collections"
@@ -81,7 +82,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 
 	registryEntry, err := k.Registry.Get(ctx, keyStr)
 	if err != nil {
-		return err
+		return types.NewErrCodeRegistryNotFound(fmt.Sprintf("class id: %s, nft id: %s", key.AssetClassId, key.NftId))
 	}
 
 	// Return all the addresses that have the role.
@@ -129,47 +130,38 @@ func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.R
 
 	registryEntry, err := k.Registry.Get(ctx, keyStr)
 	if err != nil {
-		return err
+		return types.NewErrCodeRegistryNotFound(fmt.Sprintf("class id: %s, nft id: %s", key.AssetClassId, key.NftId))
 	}
 
-	// Verify that each address has the role or error out
-	for _, a := range addr {
-		if !slices.ContainsFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
-			return s.Role == role && slices.Contains(s.Addresses, a)
-		}) {
-			return types.NewErrCodeAddressDoesNotHaveRole(a, role.String())
-		}
-	}
-
-	// Remove any address from the current slice that is in the addresses to revoke slice
-	var updatedAddresses []string
+	// Find the role entry that we'll be revoking the addresses from.
+	var roleToDeleteFrom *types.RolesEntry
 	for _, roleEntry := range registryEntry.Roles {
-		// Find the role entry that matches the role to revoke
 		if roleEntry.Role == role {
-			for _, roleAddr := range roleEntry.Addresses {
-				for _, addrToRevoke := range addr {
-					// If the address to revoke is the same as the role address, skip it
-					if roleAddr == addrToRevoke {
-						continue
-					}
-
-					updatedAddresses = append(updatedAddresses, roleAddr)
-				}
-			}
-
+			roleToDeleteFrom = &roleEntry
 			break
 		}
 	}
 
-	// Delete the old permissioned addresses from the role entry
-	registryEntry.Roles = slices.DeleteFunc(registryEntry.Roles, func(s types.RolesEntry) bool {
-		return s.Role == role
-	})
+	if roleToDeleteFrom == nil {
+		return types.NewErrCodeInvalidRole(role.String())
+	}
 
-	// Add the new permissioned addresses to the role entry
-	registryEntry.Roles = append(registryEntry.Roles, types.RolesEntry{
-		Role:      role,
-		Addresses: updatedAddresses,
+	// Verify that each address has the role or error out.
+	for _, a := range addr {
+		if !slices.Contains(roleToDeleteFrom.Addresses, a) {
+			return types.NewErrCodeAddressDoesNotHaveRole(a, role.String())
+		}
+	}
+
+	// Remove the addresses to revoke from the role entry
+	roleToDeleteFrom.Addresses = slices.DeleteFunc(roleToDeleteFrom.Addresses, func(s string) bool {
+		for _, addrToRevoke := range addr {
+			if s == addrToRevoke {
+				return true
+			}
+		}
+
+		return false
 	})
 
 	// Save the updated registry entry

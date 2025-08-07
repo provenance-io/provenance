@@ -146,7 +146,7 @@ func (s *KeeperTestSuite) TestGrantRole() {
 		key        *types.RegistryKey
 		role       types.RegistryRole
 		addr       []string
-		expErr     string
+		expErr     error
 		expHasRole bool
 		expAddr    string
 	}{
@@ -155,7 +155,7 @@ func (s *KeeperTestSuite) TestGrantRole() {
 			key:        baseKey,
 			role:       types.RegistryRole_REGISTRY_ROLE_SERVICER,
 			addr:       []string{s.user2Addr.String()},
-			expErr:     "",
+			expErr:     nil,
 			expHasRole: true,
 			expAddr:    s.user2Addr.String(),
 		},
@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestGrantRole() {
 			key:        baseKey,
 			role:       types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
 			addr:       []string{s.user1Addr.String(), s.user2Addr.String()},
-			expErr:     "",
+			expErr:     nil,
 			expHasRole: true,
 			expAddr:    s.user1Addr.String(),
 		},
@@ -176,30 +176,30 @@ func (s *KeeperTestSuite) TestGrantRole() {
 			},
 			role:   types.RegistryRole_REGISTRY_ROLE_SERVICER,
 			addr:   []string{s.user2Addr.String()},
-			expErr: "collections: not found",
+			expErr: types.ErrRegistryNotFound,
 		},
 		{
 			name:   "address already has role",
 			key:    baseKey,
 			role:   types.RegistryRole_REGISTRY_ROLE_SERVICER,
 			addr:   []string{s.user2Addr.String()},
-			expErr: "address already has role",
+			expErr: types.ErrAddressAlreadyHasRole,
 		},
 		{
 			name:   "invalid role",
 			key:    baseKey,
 			role:   types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED,
 			addr:   []string{s.user2Addr.String()},
-			expErr: "invalid role",
+			expErr: types.ErrInvalidRole,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			err := s.app.RegistryKeeper.GrantRole(s.ctx, tc.key, tc.role, tc.addr)
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErr)
+				s.Require().ErrorIs(err, tc.expErr)
 			} else {
 				s.Require().NoError(err)
 
@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 		key        *types.RegistryKey
 		role       types.RegistryRole
 		addr       []string
-		expErr     string
+		expErr     error
 		expHasRole bool
 		checkAddr  string
 	}{
@@ -245,7 +245,7 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 			key:        baseKey,
 			role:       types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			addr:       []string{s.user2Addr.String()},
-			expErr:     "",
+			expErr:     nil,
 			expHasRole: false,
 			checkAddr:  s.user2Addr.String(),
 		},
@@ -254,8 +254,8 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 			key:        baseKey,
 			role:       types.RegistryRole_REGISTRY_ROLE_SERVICER,
 			addr:       []string{s.user1Addr.String(), s.user2Addr.String()},
-			expErr:     "",
-			expHasRole: true, // The current implementation doesn't properly revoke
+			expErr:     nil,
+			expHasRole: false,
 			checkAddr:  s.user1Addr.String(),
 		},
 		{
@@ -266,23 +266,23 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 			},
 			role:   types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			addr:   []string{s.user2Addr.String()},
-			expErr: "collections: not found",
+			expErr: types.ErrRegistryNotFound,
 		},
 		{
 			name:   "invalid role",
 			key:    baseKey,
 			role:   types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED,
 			addr:   []string{s.user2Addr.String()},
-			expErr: "invalid role",
+			expErr: types.ErrInvalidRole,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			err := s.app.RegistryKeeper.RevokeRole(s.ctx, tc.key, tc.role, tc.addr)
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErr)
+				s.Require().ErrorIs(err, tc.expErr)
 			} else {
 				s.Require().NoError(err)
 
