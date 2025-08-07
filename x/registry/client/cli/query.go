@@ -41,15 +41,12 @@ func GetCmdQueryRegistry() *cobra.Command {
 				return err
 			}
 
-			key := types.RegistryKey{
-				AssetClassId: args[0],
-				NftId:        args[1],
-			}
-
 			queryClient := types.NewQueryClient(clientCtx)
-
 			res, err := queryClient.GetRegistry(context.Background(), &types.QueryGetRegistryRequest{
-				Key: &key,
+				Key: &types.RegistryKey{
+					AssetClassId: args[0],
+					NftId:        args[1],
+				},
 			})
 			if err != nil {
 				return err
@@ -60,7 +57,6 @@ func GetCmdQueryRegistry() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-
 	return cmd
 }
 
@@ -76,11 +72,6 @@ func GetCmdQueryHasRole() *cobra.Command {
 				return err
 			}
 
-			key := types.RegistryKey{
-				AssetClassId: args[0],
-				NftId:        args[1],
-			}
-
 			// convert arg[2] to a registry.RegistryRole enum value
 			role, ok := types.RegistryRole_value[args[2]]
 			if !ok {
@@ -88,10 +79,11 @@ func GetCmdQueryHasRole() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-
-			// TODO: Parse key and role from args
 			res, err := queryClient.HasRole(context.Background(), &types.QueryHasRoleRequest{
-				Key:     &key,
+				Key: &types.RegistryKey{
+					AssetClassId: args[0],
+					NftId:        args[1],
+				},
 				Role:    types.RegistryRole(role),
 				Address: args[3],
 			})
@@ -104,6 +96,5 @@ func GetCmdQueryHasRole() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-
 	return cmd
 }
