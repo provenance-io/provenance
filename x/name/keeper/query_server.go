@@ -37,7 +37,6 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 // ReverseLookup using CollectionsPaginate with a custom filtered approach
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	const maxInt = int(^uint(0) >> 1)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, types.ErrInvalidAddress
@@ -63,11 +62,7 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 
 	if pageReq != nil {
 		if pageReq.Limit > 0 {
-			if pageReq.Limit > uint64(maxInt) {
-				limit = maxInt
-			} else {
-				limit = int(pageReq.Limit)
-			}
+			limit = safeUint64ToInt(pageReq.Limit)
 		}
 
 		if len(pageReq.Key) > 0 {
@@ -79,11 +74,7 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 				}
 			}
 		} else {
-			if pageReq.Offset > uint64(maxInt) {
-				start = maxInt
-			} else {
-				start = int(pageReq.Offset)
-			}
+			start = safeUint64ToInt(pageReq.Offset)
 		}
 	}
 
@@ -114,4 +105,11 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 	}
 
 	return rv, nil
+}
+func safeUint64ToInt(u uint64) int {
+	const maxInt = int(^uint(0) >> 1)
+	if u > uint64(maxInt) {
+		return maxInt
+	}
+	return int(u)
 }
