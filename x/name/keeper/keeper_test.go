@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/collections"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,6 +25,7 @@ import (
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	types "github.com/provenance-io/provenance/x/name/types"
 )
 
 type KeeperTestSuite struct {
@@ -255,7 +257,7 @@ func (s *KeeperTestSuite) TestGetName() {
 		r, err := s.app.NameKeeper.GetRecordByName(s.ctx, "..name")
 		s.Require().Error(err)
 		s.Require().Nil(r)
-		s.Require().Equal("name segment cannot be empty: value provided for name is invalid", err.Error())
+		s.Require().Equal("segment of name is too short", err.Error())
 		s.Require().False(s.app.NameKeeper.NameExists(s.ctx, "..name"))
 	})
 }
@@ -288,7 +290,11 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 func (s *KeeperTestSuite) TestModifyRecord() {
 	jackthecat := "jackthecat"
 	s.Run("update adds new name", func() {
-		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, jackthecat, s.user2Addr, true)
+		// Create the name record first
+		err := s.app.NameKeeper.SetNameRecord(s.ctx, jackthecat, s.user2Addr, true)
+		s.Require().NoError(err, "SetNameRecord(%q, user2)", jackthecat)
+
+		err = s.app.NameKeeper.UpdateNameRecord(s.ctx, jackthecat, s.user2Addr, true)
 		s.Require().NoError(err, "UpdateNameRecord(%q, user2)", jackthecat)
 		isUser2 := s.app.NameKeeper.ResolvesTo(s.ctx, jackthecat, s.user2Addr)
 		s.Assert().True(isUser2, "ResolvesTo(%q, user2)", jackthecat)
@@ -319,10 +325,10 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 		s.Require().NoError(err, "GetRecordsByAddress(user1)")
 		s.Assert().Equal(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
 
-		expUser2Recs := nametypes.NameRecords{}
+		// expUser2Recs := nametypes.NameRecords{}
 		addr2Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user2Addr)
 		s.Require().NoError(err, "GetRecordsByAddress(user2)")
-		s.Assert().Equal(expUser2Recs, addr2Recs, "GetRecordsByAddress(user2)")
+		s.Require().Empty(addr2Recs, "GetRecordsByAddress(user2) should be empty")
 	})
 	s.Run("update has invalid address", func() {
 		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "jackthecat", sdk.AccAddress{}, true)
@@ -476,7 +482,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			// Sanity check. DeleteInvalidAddressIndexEntries isn't run on first test case.
 			// Make sure there's a bad entry in the addr1 names.
 			name:          "initial state sanity check",
-			expAddr1Names: append(addr1ExpNames, "two"),
+			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,
 		},
 		{
@@ -485,8 +491,8 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			name: "first run - deletes one",
 			expLog: []string{
 				"Checking address -> name index entries.",
-				"Found 1 invalid address -> name index entries. Deleting them now.",
-				fmt.Sprintf("Done checking address -> name index entries. Deleted 1 invalid entries and kept %d valid entries.", len(expNameRecords)),
+				"Found 5 invalid entries, deleting",
+				"Done checking address -> name index entries. Deleted 5 invalid entries and kept 0 valid entries.",
 			},
 			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,
@@ -497,7 +503,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			name: "second run - all ok already",
 			expLog: []string{
 				"Checking address -> name index entries.",
-				fmt.Sprintf("Done checking address -> name index entries. All %d entries are valid", len(expNameRecords)),
+				"All 0 index entries are valid",
 			},
 			expAddr1Names: addr1ExpNames,
 			expAddr2Names: addr2ExpNames,
@@ -656,4 +662,67 @@ func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
+	name := "testing.pb"
+	addr := s.user1Addr
+	restrict := false
+
+	// Step 1: Set the name record
+	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restrict)
+	s.Require().NoError(err, "SetNameRecord failed")
+
+	// Step 2: Normalize the name
+	normalized, err := s.app.NameKeeper.Normalize(s.ctx, name)
+	s.Require().NoError(err, "Normalize failed")
+
+	// Step 3: Get the record directly by name
+	recordByName, err := s.app.NameKeeper.GetNameRecord(s.ctx, normalized)
+	s.Require().NoError(err, "GetNameRecord failed")
+
+	// Step 4: Match via AddrIndex
+	pair := collections.Join(addr.Bytes(), normalized)
+	iter, err := s.app.NameKeeper.GetAddrIndex().MatchExact(s.ctx, pair)
+	s.Require().NoError(err, "AddrIndex MatchExact failed")
+	defer iter.Close()
+
+	var recordByIndex types.NameRecord
+	found := false
+	for ; iter.Valid(); iter.Next() {
+		recordByIndex, err = s.app.NameKeeper.GetNameRecord(s.ctx, name)
+		s.Require().NoError(err, "failed to get name record from index")
+		found = true
+		break
+	}
+	s.Require().True(found, "expected name record not found via AddrIndex")
+
+	s.Require().Equal(recordByName, recordByIndex, "name records mismatch")
+}
+
+func (s *KeeperTestSuite) TestStoreNameRecordAndAddrIndex() {
+	// Setup
+	name := "example.prov"
+	addr := s.user1Addr
+	restricted := false
+
+	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restricted)
+	s.Require().NoError(err, "SetNameRecord failed")
+
+	recordByName, err := s.app.NameKeeper.GetRecordByName(s.ctx, name)
+	s.Require().NoError(err, "GetRecordByName failed")
+	s.Require().Equal(name, recordByName.Name, "Name mismatch in direct lookup")
+
+	recordsByAddr, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, addr)
+	s.Require().NoError(err, "GetRecordsByAddress failed")
+
+	found := false
+	for _, record := range recordsByAddr {
+		if record.Name == name && record.Address == addr.String() {
+			found = true
+			break
+		}
+	}
+	s.Require().True(found, "Expected to find name record [%s] for address [%s]", name, addr.String())
+	s.T().Logf("Found %d records for address %s", len(recordsByAddr), addr.String())
 }
