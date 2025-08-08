@@ -29,7 +29,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	records := make(types.NameRecords, 0)
 
 	// Iterate through all name records
-	err := k.nameRecords.Walk(ctx, nil, func(name string, record types.NameRecord) (bool, error) {
+	err := k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
 		records = append(records, record)
 		return false, nil
 	})

@@ -17,7 +17,9 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 
 // SetParams sets the name parameters to the store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramsStore.Set(ctx, params)
+	if err := k.paramsStore.Set(ctx, params); err != nil {
+		k.Logger(ctx).Error("failed to set params", "error", err)
+	}
 }
 
 // GetMaxNameLevels returns the current maximum number of name segments allowed.
