@@ -55,19 +55,21 @@ message GenesisLedgerClassEntryType {
 }
 
 // GenesisLedgerClassStatusType is a single ledger class status type with its key. This is used for the genesis state
-// import/export so that we
+// import/export so that we can avoid non-deterministic maps in the genesis functions.
 message GenesisLedgerClassStatusType {
   GenesisPair           key         = 1 [(gogoproto.jsontag) = "key,omitempty"];
   LedgerClassStatusType status_type = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "statusType,omitempty"];
 }
 
 // GenesisLedgerClassBucketType is a single ledger class bucket type with its key. This is used for the genesis state
-// import/export so that we
+// import/export so that we can avoid non-deterministic maps in the genesis functions.
 message GenesisLedgerClassBucketType {
   GenesisPair           key         = 1 [(gogoproto.jsontag) = "key,omitempty"];
   LedgerClassBucketType bucket_type = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "bucketType,omitempty"];
 }
 
+// GenesisLedger is a single ledger type with its key. This is used for the genesis state import/export so that we
+// can avoid non-deterministic maps in the genesis functions.
 message GenesisLedger {
   string key    = 1 [(gogoproto.jsontag) = "key,omitempty"];
   Ledger ledger = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledger,omitempty"];
