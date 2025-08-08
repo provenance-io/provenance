@@ -10,6 +10,7 @@ on:
       - "Makefile"
       - "gon.json"
       - "scripts/**"
+      - "protoBindings/**"
       - ".github/workflows/release.yml"
   push:
     tags:
@@ -166,7 +167,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - name: Download linux zip artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: linux-zip
           path: build/
