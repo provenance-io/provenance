@@ -5894,7 +5894,8 @@ FundingTransferStatus represents the current status of a funding transfer.
 <a name="provenance-ledger-v1-GenesisLedger"></a>
 
 ### GenesisLedger
-
+GenesisLedger is a single ledger type with its key. This is used for the genesis state import/export so that we
+can avoid non-deterministic maps in the genesis functions.
 
 
 | Field | Type | Label | Description |
@@ -5911,7 +5912,7 @@ FundingTransferStatus represents the current status of a funding transfer.
 
 ### GenesisLedgerClassBucketType
 GenesisLedgerClassBucketType is a single ledger class bucket type with its key. This is used for the genesis state
-import/export so that we
+import/export so that we can avoid non-deterministic maps in the genesis functions.
 
 
 | Field | Type | Label | Description |
@@ -5945,7 +5946,7 @@ import/export so that we can avoid non-deterministic maps in the genesis functio
 
 ### GenesisLedgerClassStatusType
 GenesisLedgerClassStatusType is a single ledger class status type with its key. This is used for the genesis state
-import/export so that we
+import/export so that we can avoid non-deterministic maps in the genesis functions.
 
 
 | Field | Type | Label | Description |

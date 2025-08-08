@@ -132,7 +132,7 @@ func (m *GenesisLedgerClassEntryType) GetEntryType() LedgerClassEntryType {
 }
 
 // GenesisLedgerClassStatusType is a single ledger class status type with its key. This is used for the genesis state
-// import/export so that we
+// import/export so that we can avoid non-deterministic maps in the genesis functions.
 type GenesisLedgerClassStatusType struct {
 	Key        *GenesisPair          `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	StatusType LedgerClassStatusType `protobuf:"bytes,2,opt,name=status_type,json=statusType,proto3" json:"statusType,omitempty"`
@@ -186,7 +186,7 @@ func (m *GenesisLedgerClassStatusType) GetStatusType() LedgerClassStatusType {
 }
 
 // GenesisLedgerClassBucketType is a single ledger class bucket type with its key. This is used for the genesis state
-// import/export so that we
+// import/export so that we can avoid non-deterministic maps in the genesis functions.
 type GenesisLedgerClassBucketType struct {
 	Key        *GenesisPair          `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	BucketType LedgerClassBucketType `protobuf:"bytes,2,opt,name=bucket_type,json=bucketType,proto3" json:"bucketType,omitempty"`
@@ -239,6 +239,8 @@ func (m *GenesisLedgerClassBucketType) GetBucketType() LedgerClassBucketType {
 	return LedgerClassBucketType{}
 }
 
+// GenesisLedger is a single ledger type with its key. This is used for the genesis state import/export so that we
+// can avoid non-deterministic maps in the genesis functions.
 type GenesisLedger struct {
 	Key    string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Ledger Ledger `protobuf:"bytes,2,opt,name=ledger,proto3" json:"ledger,omitempty"`
