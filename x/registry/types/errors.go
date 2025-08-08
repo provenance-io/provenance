@@ -58,8 +58,8 @@ func NewErrCodeRegistryAlreadyExists(key string) error {
 	return cerrs.Wrapf(ErrRegistryAlreadyExists, "registry already exists for key: %s", key)
 }
 
-func NewErrCodeNFTNotFound(nftId string) error {
-	return cerrs.Wrapf(ErrNFTNotFound, "NFT does not exist: %s", nftId)
+func NewErrCodeNFTNotFound(nftID string) error {
+	return cerrs.Wrapf(ErrNFTNotFound, "NFT does not exist: %s", nftID)
 }
 
 func NewErrCodeUnauthorized(why string) error {

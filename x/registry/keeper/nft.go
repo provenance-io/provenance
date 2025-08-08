@@ -11,34 +11,32 @@ import (
 // HasNFT checks if an NFT exists in either the metadata or nft module.
 // If the assetClassId is a metadata scope, it will check if the scope exists.
 // Otherwise, it will check if the NFT exists in the nft module.
-func (k Keeper) HasNFT(ctx sdk.Context, assetClassId, nftId *string) bool {
-	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
+func (k Keeper) HasNFT(ctx sdk.Context, assetClassID, nftID *string) bool {
+	metadataAddress, isMetadataScope := metadataScopeID(*nftID)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		_, found := k.MetadataKeeper.GetScope(sdkCtx, metadataAddress)
 		return found
-	} else {
-		return k.NFTKeeper.HasNFT(ctx, *assetClassId, *nftId)
 	}
+	return k.NFTKeeper.HasNFT(ctx, *assetClassID, *nftID)
 }
 
 // AssetClassExists checks if an asset class exists in either the metadata or nft module.
-func (k Keeper) AssetClassExists(ctx sdk.Context, assetClassId *string) bool {
-	metadataAddress, isMetadataScope := metadataScopeID(*assetClassId)
+func (k Keeper) AssetClassExists(ctx sdk.Context, assetClassID *string) bool {
+	metadataAddress, isMetadataScope := metadataScopeID(*assetClassID)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		_, found := k.MetadataKeeper.GetScopeSpecification(sdkCtx, metadataAddress)
 		return found
-	} else {
-		return k.NFTKeeper.HasClass(ctx, *assetClassId)
 	}
+	return k.NFTKeeper.HasClass(ctx, *assetClassID)
 }
 
 // GetNFTOwner returns the owner of an NFT.
 // If the assetClassId is a metadata scope, it will return the owner of the scope.
 // Otherwise, it will return the owner of the NFT from the nft module.
-func (k Keeper) GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.AccAddress {
-	metadataAddress, isMetadataScope := metadataScopeID(*nftId)
+func (k Keeper) GetNFTOwner(ctx sdk.Context, assetClassID, nftID *string) sdk.AccAddress {
+	metadataAddress, isMetadataScope := metadataScopeID(*nftID)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -48,9 +46,8 @@ func (k Keeper) GetNFTOwner(ctx sdk.Context, assetClassId, nftId *string) sdk.Ac
 			return nil
 		}
 		return accAddr
-	} else {
-		return k.NFTKeeper.GetOwner(ctx, *assetClassId, *nftId)
 	}
+	return k.NFTKeeper.GetOwner(ctx, *assetClassID, *nftID)
 }
 
 // metadataScopeID returns the metadata address for a given bech32 string.

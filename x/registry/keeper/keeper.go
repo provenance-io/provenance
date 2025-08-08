@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -121,7 +122,9 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 
 	// Update the registry with the new role entries
 	registryEntry.Roles = updatedRoles
-	k.Registry.Set(ctx, keyStr, registryEntry)
+	if err := k.Registry.Set(ctx, keyStr, registryEntry); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -166,7 +169,9 @@ func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.R
 	})
 
 	// Save the updated registry entry
-	k.Registry.Set(ctx, keyStr, registryEntry)
+	if err := k.Registry.Set(ctx, keyStr, registryEntry); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -214,7 +219,9 @@ func (k Keeper) GetRegistry(ctx sdk.Context, key *types.RegistryKey) (*types.Reg
 
 func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	for _, entry := range state.Entries {
-		k.Registry.Set(ctx, entry.Key.String(), entry)
+		if err := k.Registry.Set(ctx, entry.Key.String(), entry); err != nil {
+			panic(err) // Genesis should not fail
+		}
 	}
 }
 

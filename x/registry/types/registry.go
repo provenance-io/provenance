@@ -153,8 +153,8 @@ func (m *RegistryBulkUpdateEntry) Validate() error {
 
 // Combine the asset class id and nft id into a bech32 string.
 // Using bech32 here just allows us a readable identifier for the registry.
-func (key RegistryKey) String() string {
-	joined := strings.Join([]string{key.AssetClassId, key.NftId}, ":")
+func (m RegistryKey) String() string {
+	joined := strings.Join([]string{m.AssetClassId, m.NftId}, ":")
 
 	b32, err := bech32.ConvertAndEncode(registryKeyHrp, []byte(joined))
 	if err != nil {
