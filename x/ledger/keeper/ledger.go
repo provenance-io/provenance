@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/types"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 // AddLedgerClass creates a new ledger class with validation checks.
@@ -31,7 +30,7 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
 	}
 
 	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
-	if !k.HasSupply(ctx, l.Denom) {
+	if !k.BankKeeper.HasSupply(ctx, l.Denom) {
 		return types.NewErrCodeInvalidField("denom", "denom doesn't have a supply")
 	}
 
@@ -306,7 +305,7 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, m
 // For new chains, this function only sets up the basic module structure.
 // Actual ledger data should be imported during upgrades, not during genesis.
 // This ensures that new chains start with a clean slate and data is only imported when explicitly intended through upgrade handlers.
-func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	if state == nil {
 		return
 	}
@@ -320,7 +319,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *ledger.GenesisState) {
 // DestroyLedger removes a ledger and all its associated entries from the state store.
 // This function performs a complete cleanup by removing the ledger and all its entries.
 // It emits an event to notify other modules of the ledger destruction.
-func (k Keeper) DestroyLedger(ctx sdk.Context, lk *ledger.LedgerKey) error {
+func (k Keeper) DestroyLedger(ctx sdk.Context, lk *types.LedgerKey) error {
 	// Check if the ledger exists before attempting to destroy it.
 	if !k.HasLedger(ctx, lk) {
 		return types.NewErrCodeInvalidField("ledger", "ledger doesn't exist")
@@ -383,7 +382,7 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, lk *ledger.LedgerKey) error {
 //   - Returns (nil, err) if an error occurs during retrieval
 //   - Returns (&ledger, nil) if the ledger is found successfully
 //   - The returned ledger will have its Key field set to the provided key
-func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledger, error) {
+func (k Keeper) GetLedger(ctx sdk.Context, key *types.LedgerKey) (*types.Ledger, error) {
 	keyStr := key.String()
 
 	// Lookup the ledger in the state store using the key string.
@@ -406,7 +405,7 @@ func (k Keeper) GetLedger(ctx sdk.Context, key *ledger.LedgerKey) (*ledger.Ledge
 // RequireGetLedger retrieves a ledger and requires it to exist.
 // This function is similar to GetLedger but returns an error if the ledger is not found.
 // It's used when the ledger must exist for the operation to proceed.
-func (k Keeper) RequireGetLedger(ctx sdk.Context, lk *ledger.LedgerKey) (*ledger.Ledger, error) {
+func (k Keeper) RequireGetLedger(ctx sdk.Context, lk *types.LedgerKey) (*types.Ledger, error) {
 	ledger, err := k.GetLedger(ctx, lk)
 	if err != nil {
 		return nil, err
@@ -420,7 +419,7 @@ func (k Keeper) RequireGetLedger(ctx sdk.Context, lk *ledger.LedgerKey) (*ledger
 
 // HasLedger checks if a ledger exists for the given key.
 // This function provides a quick existence check without retrieving the full ledger data.
-func (k Keeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
+func (k Keeper) HasLedger(ctx sdk.Context, key *types.LedgerKey) bool {
 	keyStr := key.String()
 
 	has, _ := k.Ledgers.Has(ctx, keyStr)
@@ -430,7 +429,7 @@ func (k Keeper) HasLedger(ctx sdk.Context, key *ledger.LedgerKey) bool {
 // GetLedgerClass retrieves a ledger class by its ID.
 // This function looks up a ledger class and returns the complete class configuration.
 // It returns nil if the ledger class doesn't exist.
-func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error) {
+func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*types.LedgerClass, error) {
 	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -444,7 +443,7 @@ func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*ledg
 // RequireGetLedgerClass retrieves a ledger class and requires it to exist.
 // This function is similar to GetLedgerClass but returns an error if the class is not found.
 // It's used when the ledger class must exist for the operation to proceed.
-func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassId string) (*ledger.LedgerClass, error) {
+func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassId string) (*types.LedgerClass, error) {
 	ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
 	if err != nil {
 		return nil, err
@@ -458,15 +457,15 @@ func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassId string)
 // GetLedgerClassEntryTypes retrieves all entry types for a given ledger class.
 // This function walks through all entry type definitions associated with the ledger class.
 // Entry types define what kinds of transactions can be recorded in ledgers of this class.
-func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassEntryType, error) {
+func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*types.LedgerClassEntryType, error) {
 	// Create a prefix range to find all entry types for this ledger class.
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 
 	// Initialize a slice to collect all entry types.
-	entryTypes := make([]*ledger.LedgerClassEntryType, 0)
+	entryTypes := make([]*types.LedgerClassEntryType, 0)
 
 	// Walk through all entry type records that match the ledger class prefix.
-	err := k.LedgerClassEntryTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value ledger.LedgerClassEntryType) (stop bool, err error) {
+	err := k.LedgerClassEntryTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value types.LedgerClassEntryType) (stop bool, err error) {
 		entryTypes = append(entryTypes, &value)
 		return false, nil
 	})
@@ -480,15 +479,15 @@ func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId stri
 // GetLedgerClassStatusTypes retrieves all status types for a given ledger class.
 // This function walks through all status type definitions associated with the ledger class.
 // Status types define the possible states that ledger entries can have.
-func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassStatusType, error) {
+func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*types.LedgerClassStatusType, error) {
 	// Create a prefix range to find all status types for this ledger class.
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 
 	// Initialize a slice to collect all status types.
-	statusTypes := make([]*ledger.LedgerClassStatusType, 0)
+	statusTypes := make([]*types.LedgerClassStatusType, 0)
 
 	// Walk through all status type records that match the ledger class prefix.
-	err := k.LedgerClassStatusTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value ledger.LedgerClassStatusType) (stop bool, err error) {
+	err := k.LedgerClassStatusTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value types.LedgerClassStatusType) (stop bool, err error) {
 		statusTypes = append(statusTypes, &value)
 		return false, nil
 	})
@@ -502,15 +501,15 @@ func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId str
 // GetLedgerClassBucketTypes retrieves all bucket types for a given ledger class.
 // This function walks through all bucket type definitions associated with the ledger class.
 // Bucket types define how funds are categorized and organized within ledgers.
-func (k Keeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*ledger.LedgerClassBucketType, error) {
+func (k Keeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*types.LedgerClassBucketType, error) {
 	// Create a prefix range to find all bucket types for this ledger class.
 	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
 
 	// Initialize a slice to collect all bucket types.
-	bucketTypes := make([]*ledger.LedgerClassBucketType, 0)
+	bucketTypes := make([]*types.LedgerClassBucketType, 0)
 
 	// Walk through all bucket type records that match the ledger class prefix.
-	err := k.LedgerClassBucketTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value ledger.LedgerClassBucketType) (stop bool, err error) {
+	err := k.LedgerClassBucketTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value types.LedgerClassBucketType) (stop bool, err error) {
 		bucketTypes = append(bucketTypes, &value)
 		return false, nil
 	})

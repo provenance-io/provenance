@@ -1,61 +1,193 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	"github.com/provenance-io/provenance/x/ledger/types"
 )
 
 // ExportGenesis exports the current keeper state of the ledger module.
 // This exports data in the format that matches test.json for bulk import.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
-	state := &ledger.GenesisState{}
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	// Generate the initial genesis state.
+	state := &types.GenesisState{}
 
-	// Group ledgers and entries by ledger key to create LedgerToEntries
-	ledgerToEntriesMap := make(map[string]*ledger.LedgerToEntries)
+	// Ledger Classes
+	k.ExportLedgerClasses(ctx, state)
+	k.ExportLedgerClassEntryTypes(ctx, state)
+	k.ExportLedgerClassStatusTypes(ctx, state)
+	k.ExportLedgerClassBucketTypes(ctx, state)
 
-	// Export ledgers
+	// Ledgers
+	k.ExportLedgers(ctx, state)
+	k.ExportLedgerEntries(ctx, state)
+	k.ExportStoredSettlementInstructions(ctx, state)
+
+	return state
+}
+
+// Mutates the GenesisState value for LedgerClasses to match the exported data from the keeper's LedgerClasses collection.
+func (k Keeper) ExportLedgerClasses(ctx sdk.Context, genesis *types.GenesisState) {
+	// Get all ledger classes.
+	ledgerClassIter, err := k.LedgerClasses.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer ledgerClassIter.Close()
+
+	ledgerClasses := make([]types.LedgerClass, 0)
+	for ; ledgerClassIter.Valid(); ledgerClassIter.Next() {
+		_, err := ledgerClassIter.Key()
+		if err != nil {
+			panic(err)
+		}
+		ledgerClass, err := ledgerClassIter.Value()
+		if err != nil {
+			panic(err)
+		}
+
+		ledgerClasses = append(ledgerClasses, ledgerClass)
+	}
+
+	genesis.LedgerClasses = ledgerClasses
+}
+
+// Mutates the GenesisState value for LedgerClassEntryTypes to match the exported data from the keeper's LedgerClassEntryTypes collection.
+func (k Keeper) ExportLedgerClassEntryTypes(ctx sdk.Context, genesis *types.GenesisState) {
+	// Get all entry types.
+	entryTypeIter, err := k.LedgerClassEntryTypes.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer entryTypeIter.Close()
+
+	entryTypes := make([]types.GenesisLedgerClassEntryType, 0)
+	for ; entryTypeIter.Valid(); entryTypeIter.Next() {
+		key, err := entryTypeIter.Key()
+		if err != nil {
+			panic(err)
+		}
+		entryType, err := entryTypeIter.Value()
+		if err != nil {
+			panic(err)
+		}
+
+		entryTypes = append(entryTypes, types.GenesisLedgerClassEntryType{
+			Key: &types.GenesisPair{
+				P1: key.K1(),
+				P2: strconv.Itoa(int(key.K2())),
+			},
+			EntryType: entryType,
+		})
+	}
+
+	genesis.LedgerClassEntryTypes = entryTypes
+}
+
+// Mutates the GenesisState value for LedgerClassStatusTypes to match the exported data from the keeper's LedgerClassStatusTypes collection.
+func (k Keeper) ExportLedgerClassStatusTypes(ctx sdk.Context, genesis *types.GenesisState) {
+	// Get all status types.
+	statusTypeIter, err := k.LedgerClassStatusTypes.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer statusTypeIter.Close()
+
+	statusTypes := make([]types.GenesisLedgerClassStatusType, 0)
+	for ; statusTypeIter.Valid(); statusTypeIter.Next() {
+		key, err := statusTypeIter.Key()
+		if err != nil {
+			panic(err)
+		}
+		statusType, err := statusTypeIter.Value()
+		if err != nil {
+			panic(err)
+		}
+
+		statusTypes = append(statusTypes, types.GenesisLedgerClassStatusType{
+			Key: &types.GenesisPair{
+				P1: key.K1(),
+				P2: strconv.Itoa(int(key.K2())),
+			},
+			StatusType: statusType,
+		})
+	}
+
+	genesis.LedgerClassStatusTypes = statusTypes
+}
+
+// Mutates the GenesisState value for LedgerClassBucketTypes to match the exported data from the keeper's LedgerClassBucketTypes collection.
+func (k Keeper) ExportLedgerClassBucketTypes(ctx sdk.Context, genesis *types.GenesisState) {
+	// Get all bucket types.
+	bucketTypeIter, err := k.LedgerClassBucketTypes.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer bucketTypeIter.Close()
+
+	bucketTypes := make([]types.GenesisLedgerClassBucketType, 0)
+	for ; bucketTypeIter.Valid(); bucketTypeIter.Next() {
+		key, err := bucketTypeIter.Key()
+		if err != nil {
+			panic(err)
+		}
+		bucketType, err := bucketTypeIter.Value()
+		if err != nil {
+			panic(err)
+		}
+
+		bucketTypes = append(bucketTypes, types.GenesisLedgerClassBucketType{
+			Key: &types.GenesisPair{
+				P1: key.K1(),
+				P2: strconv.Itoa(int(key.K2())),
+			},
+			BucketType: bucketType,
+		})
+	}
+
+	genesis.LedgerClassBucketTypes = bucketTypes
+}
+
+// Mutates the GenesisState value for Ledgers to match the exported data from the keeper's Ledgers collection.
+func (k Keeper) ExportLedgers(ctx sdk.Context, genesis *types.GenesisState) {
+	// Get all ledgers.
 	ledgerIter, err := k.Ledgers.Iterate(ctx, nil)
 	if err != nil {
 		panic(err)
 	}
 	defer ledgerIter.Close()
 
+	ledgers := make([]types.GenesisLedger, 0)
 	for ; ledgerIter.Valid(); ledgerIter.Next() {
 		key, err := ledgerIter.Key()
 		if err != nil {
 			panic(err)
 		}
-		ledgerObj, err := ledgerIter.Value()
+		ledger, err := ledgerIter.Value()
 		if err != nil {
 			panic(err)
 		}
 
-		// Reconstruct the ledger key from the storage key
-		ledgerKey, err := ledger.StringToLedgerKey(key)
-		if err != nil {
-			panic(err)
-		}
-
-		// Create ledger key string for grouping
-		ledgerKeyStr := ledgerKey.String()
-
-		// Restore the key to the ledger object
-		ledgerObj.Key = ledgerKey
-
-		ledgerToEntriesMap[ledgerKeyStr] = &ledger.LedgerToEntries{
-			LedgerKey: ledgerKey,
-			Ledger:    &ledgerObj,
-			Entries:   []*ledger.LedgerEntry{},
-		}
+		ledgers = append(ledgers, types.GenesisLedger{
+			Key:    key,
+			Ledger: ledger,
+		})
 	}
 
-	// Export ledger entries and group by ledger key
+	genesis.Ledgers = ledgers
+}
+
+// Mutates the GenesisState value for LedgerEntries to match the exported data from the keeper's LedgerEntries collection.
+func (k Keeper) ExportLedgerEntries(ctx sdk.Context, genesis *types.GenesisState) {
+	// Get all entries.
 	entryIter, err := k.LedgerEntries.Iterate(ctx, nil)
 	if err != nil {
 		panic(err)
 	}
 	defer entryIter.Close()
 
+	entries := make([]types.GenesisLedgerEntry, 0)
 	for ; entryIter.Valid(); entryIter.Next() {
 		key, err := entryIter.Key()
 		if err != nil {
@@ -66,19 +198,47 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *ledger.GenesisState {
 			panic(err)
 		}
 
-		// Extract ledger key from the storage key
-		ledgerKeyStr := key.K1()
+		entries = append(entries, types.GenesisLedgerEntry{
+			Key: &types.GenesisPair{
+				P1: key.K1(),
+				P2: key.K2(),
+			},
+			Entry: entry,
+		})
+	}
 
-		// Add entry to the appropriate LedgerToEntries
-		if ledgerToEntries, exists := ledgerToEntriesMap[ledgerKeyStr]; exists {
-			ledgerToEntries.Entries = append(ledgerToEntries.Entries, &entry)
+	genesis.LedgerEntries = entries
+}
+
+// Mutates the GenesisState value for SettlementInstructions to match the exported data from the keeper's FundTransfersWithSettlement collection.
+func (k Keeper) ExportStoredSettlementInstructions(ctx sdk.Context, genesis *types.GenesisState) {
+	// Get all settlement instructions.
+	settlementIter, err := k.FundTransfersWithSettlement.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer settlementIter.Close()
+
+	settlements := make([]types.GenesisStoredSettlementInstructions, 0)
+
+	for ; settlementIter.Valid(); settlementIter.Next() {
+		key, err := settlementIter.Key()
+		if err != nil {
+			panic(err)
 		}
+		settlement, err := settlementIter.Value()
+		if err != nil {
+			panic(err)
+		}
+
+		settlements = append(settlements, types.GenesisStoredSettlementInstructions{
+			Key: &types.GenesisPair{
+				P1: key.K1(),
+				P2: key.K2(),
+			},
+			SettlementInstructions: settlement,
+		})
 	}
 
-	// Convert map to slice
-	for _, ledgerToEntries := range ledgerToEntriesMap {
-		state.LedgerToEntries = append(state.LedgerToEntries, *ledgerToEntries)
-	}
-
-	return state
+	genesis.SettlementInstructions = settlements
 }

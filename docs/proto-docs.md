@@ -352,7 +352,14 @@
     - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
   
 - [provenance/ledger/v1/genesis.proto](#provenance_ledger_v1_genesis-proto)
+    - [GenesisLedger](#provenance-ledger-v1-GenesisLedger)
+    - [GenesisLedgerClassBucketType](#provenance-ledger-v1-GenesisLedgerClassBucketType)
+    - [GenesisLedgerClassEntryType](#provenance-ledger-v1-GenesisLedgerClassEntryType)
+    - [GenesisLedgerClassStatusType](#provenance-ledger-v1-GenesisLedgerClassStatusType)
+    - [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry)
+    - [GenesisPair](#provenance-ledger-v1-GenesisPair)
     - [GenesisState](#provenance-ledger-v1-GenesisState)
+    - [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions)
   
 - [provenance/trigger/v1/tx.proto](#provenance_trigger_v1_tx-proto)
     - [MsgCreateTriggerRequest](#provenance-trigger-v1-MsgCreateTriggerRequest)
@@ -5156,11 +5163,11 @@ This is used to identify the specific update that caused the event to be emitted
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `UPDATE_TYPE_UNSPECIFIED` | `0` |  |
-| `UPDATE_TYPE_STATUS` | `1` |  |
-| `UPDATE_TYPE_INTEREST_RATE` | `2` |  |
-| `UPDATE_TYPE_PAYMENT` | `3` |  |
-| `UPDATE_TYPE_MATURITY_DATE` | `4` |  |
+| `UPDATE_TYPE_UNSPECIFIED` | `0` | The update type is unspecified. |
+| `UPDATE_TYPE_STATUS` | `1` | The status of the ledger was updated. |
+| `UPDATE_TYPE_INTEREST_RATE` | `2` | The interest rate of the ledger was updated. |
+| `UPDATE_TYPE_PAYMENT` | `3` | The payment of the ledger was updated. |
+| `UPDATE_TYPE_MATURITY_DATE` | `4` | The maturity date of the ledger was updated. |
 
 
  <!-- end enums -->
@@ -5882,6 +5889,106 @@ FundingTransferStatus represents the current status of a funding transfer.
 
 
 
+<a name="provenance-ledger-v1-GenesisLedger"></a>
+
+### GenesisLedger
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerClassBucketType"></a>
+
+### GenesisLedgerClassBucketType
+GenesisLedgerClassBucketType is a single ledger class bucket type with its key. This is used for the genesis state
+import/export so that we
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerClassEntryType"></a>
+
+### GenesisLedgerClassEntryType
+GenesisLedgerClassEntryType is a single ledger class entry type with its key. This is used for the genesis state
+import/export so that we can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerClassStatusType"></a>
+
+### GenesisLedgerClassStatusType
+GenesisLedgerClassStatusType is a single ledger class status type with its key. This is used for the genesis state
+import/export so that we
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerEntry"></a>
+
+### GenesisLedgerEntry
+GenesisLedgerEntry is a single ledger entry with its key. This is used for the genesis state import/export so that we
+can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisPair"></a>
+
+### GenesisPair
+GenesisPair represents a simple pair of strings that can be used as the key for a collections export.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `p1` | [string](#string) |  |  |
+| `p2` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-GenesisState"></a>
 
 ### GenesisState
@@ -5892,6 +5999,30 @@ This structure matches the test.json format for bulk import.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | Ledgers with their entries - matches the test.json structure. |
+| `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | Ledger classes configuration |
+| `ledger_class_entry_types` | [GenesisLedgerClassEntryType](#provenance-ledger-v1-GenesisLedgerClassEntryType) | repeated | Ledger class entry types configuration |
+| `ledger_class_status_types` | [GenesisLedgerClassStatusType](#provenance-ledger-v1-GenesisLedgerClassStatusType) | repeated | Ledger class status types configuration |
+| `ledger_class_bucket_types` | [GenesisLedgerClassBucketType](#provenance-ledger-v1-GenesisLedgerClassBucketType) | repeated | Ledger class bucket types configuration |
+| `ledgers` | [GenesisLedger](#provenance-ledger-v1-GenesisLedger) | repeated | Ledgers |
+| `ledger_entries` | [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry) | repeated | Ledger entries |
+| `settlement_instructions` | [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions) | repeated | Settlement instructions for fund transfers |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisStoredSettlementInstructions"></a>
+
+### GenesisStoredSettlementInstructions
+GenesisStoredSettlementInstructions is a single settlement instruction with its key. This is used for the genesis
+state import/export so that we can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `settlement_instructions` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) |  |  |
 
 
 

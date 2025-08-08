@@ -36,16 +36,16 @@ message EventLedgerUpdated {
 // This is used to identify the specific update that caused the event to be emitted.
 enum UpdateType {
   // The update type is unspecified.
-  UPDATE_TYPE_UNSPECIFIED   = 0;
+  UPDATE_TYPE_UNSPECIFIED = 0;
 
   // The status of the ledger was updated.
-  UPDATE_TYPE_STATUS        = 1;
+  UPDATE_TYPE_STATUS = 1;
 
   // The interest rate of the ledger was updated.
   UPDATE_TYPE_INTEREST_RATE = 2;
 
   // The payment of the ledger was updated.
-  UPDATE_TYPE_PAYMENT       = 3;
+  UPDATE_TYPE_PAYMENT = 3;
 
   // The maturity date of the ledger was updated.
   UPDATE_TYPE_MATURITY_DATE = 4;
