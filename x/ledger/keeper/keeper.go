@@ -55,8 +55,8 @@ type Keeper struct {
 	// Bucket types define how funds are categorized and organized within ledgers.
 	LedgerClassBucketTypes collections.Map[collections.Pair[string, int32], types.LedgerClassBucketType]
 
-	BankKeeper     // Provides access to bank module for token transfers and balances
-	RegistryKeeper // Provides access to registry module for NFT ownership and role management
+	BankKeeper     BankKeeper     // Provides access to bank module for token transfers and balances
+	RegistryKeeper RegistryKeeper // Provides access to registry module for NFT ownership and role management
 }
 
 // NewKeeper creates and configures a new ledger keeper instance.
