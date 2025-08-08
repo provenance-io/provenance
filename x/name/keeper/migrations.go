@@ -77,7 +77,6 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 			ctx.Logger().Error("failed to set record in nameRecords", "name", item.name, "address", item.record.Address, "error", err)
 			return fmt.Errorf("failed to migrate name record %s: %w", item.name, err)
 		}
-		ctx.Logger().Info("Record written to collections", "name", item.name, "address", item.record.Address)
 	}
 	ctx.Logger().Info(fmt.Sprintf("Successfully migrated %d name records to collections", len(recordsToMigrate)))
 
