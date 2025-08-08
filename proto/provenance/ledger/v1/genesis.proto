@@ -15,35 +15,31 @@ message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // Ledgers with their entries - matches the test.json structure.
-  repeated LedgerToEntries ledger_to_entries = 1
-      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerToEntries,omitempty"];
-
   // Ledger classes configuration
-  repeated LedgerClass ledger_classes = 2
+  repeated LedgerClass ledger_classes = 1
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClasses,omitempty"];
 
   // Ledger class entry types configuration
-  repeated GenesisLedgerClassEntryType ledger_class_entry_types = 3
+  repeated GenesisLedgerClassEntryType ledger_class_entry_types = 2
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClassEntryTypes,omitempty"];
 
   // Ledger class status types configuration
-  repeated GenesisLedgerClassStatusType ledger_class_status_types = 4
+  repeated GenesisLedgerClassStatusType ledger_class_status_types = 3
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClassStatusTypes,omitempty"];
 
   // Ledger class bucket types configuration
-  repeated GenesisLedgerClassBucketType ledger_class_bucket_types = 5
+  repeated GenesisLedgerClassBucketType ledger_class_bucket_types = 4
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClassBucketTypes,omitempty"];
 
   // Ledgers
-  repeated GenesisLedger ledgers = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgers,omitempty"];
+  repeated GenesisLedger ledgers = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgers,omitempty"];
 
   // Ledger entries
-  repeated GenesisLedgerEntry ledger_entries = 7
+  repeated GenesisLedgerEntry ledger_entries = 6
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerEntries,omitempty"];
 
   // Settlement instructions for fund transfers
-  repeated GenesisStoredSettlementInstructions settlement_instructions = 8
+  repeated GenesisStoredSettlementInstructions settlement_instructions = 7
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "settlementInstructions,omitempty"];
 }
 
