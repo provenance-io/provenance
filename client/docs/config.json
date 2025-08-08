@@ -350,9 +350,13 @@
       },
       "paths": {
         "exclude": [
-          "cosmos/nft/.*",
           "cosmos/params/.*"
         ]
+      },
+      "operationIds": {
+        "rename": {
+          "Supply": "NftSupply"
+        }
       }
     }
   ]
