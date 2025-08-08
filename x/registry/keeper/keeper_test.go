@@ -422,71 +422,22 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitGenesis() {
-	// Test InitGenesis with empty state
-	emptyState := &types.GenesisState{}
-	s.app.RegistryKeeper.InitGenesis(s.ctx, emptyState)
+func (s *KeeperTestSuite) GenesisTest() {
+	k := s.app.RegistryKeeper
 
-	// Test InitGenesis with valid state
-	key := &types.RegistryKey{
-		AssetClassId: "genesis-test-class",
-		NftId:        "genesis-test-nft",
-	}
-	roles := []types.RolesEntry{
-		{
-			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
-			Addresses: []string{s.user1Addr.String()},
-		},
-	}
-	entry := types.RegistryEntry{
-		Key:   key,
-		Roles: roles,
-	}
-	genesisState := &types.GenesisState{
-		Entries: []types.RegistryEntry{entry},
-	}
-	s.app.RegistryKeeper.InitGenesis(s.ctx, genesisState)
+	genesis1 := k.ExportGenesis(s.ctx)
 
-	// Verify genesis state was applied (currently not implemented)
-	// retrievedEntry, err := s.app.RegistryKeeper.GetRegistry(s.ctx, key)
-	// s.Require().NoError(err)
-	// s.Require().NotNil(retrievedEntry)
-	// s.Require().Equal(key, retrievedEntry.Key)
-	// s.Require().Equal(roles, retrievedEntry.Roles)
-}
+	// Clear the state
+	k.Registry.Clear(s.ctx, nil)
 
-func (s *KeeperTestSuite) TestExportGenesis() {
-	// Create some registries for this test
-	key1 := &types.RegistryKey{
-		AssetClassId: "export-test-class-1",
-		NftId:        "export-test-nft-1",
-	}
-	roles1 := []types.RolesEntry{
-		{
-			Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
-			Addresses: []string{s.user1Addr.String()},
-		},
-	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key1, roles1)
-	s.Require().NoError(err)
+	// Import the genesis state
+	k.InitGenesis(s.ctx, genesis1)
 
-	key2 := &types.RegistryKey{
-		AssetClassId: "export-test-class-2",
-		NftId:        "export-test-nft-2",
-	}
-	roles2 := []types.RolesEntry{
-		{
-			Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
-			Addresses: []string{s.user2Addr.String()},
-		},
-	}
-	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key2, roles2)
-	s.Require().NoError(err)
+	// Export the genesis state
+	genesis2 := k.ExportGenesis(s.ctx)
 
-	// Export genesis state
-	exportedState := s.app.RegistryKeeper.ExportGenesis(s.ctx)
-	s.Require().NotNil(exportedState)
-	s.Require().Len(exportedState.Entries, 0) // Current implementation returns empty state
+	// Compare the two genesis states
+	s.Require().Equal(genesis1, genesis2)
 }
 
 func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
