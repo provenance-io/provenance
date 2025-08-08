@@ -19,6 +19,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var _ module.AppModule = AppModule{}
+var _ module.AppModuleBasic = AppModuleBasic{}
+
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
@@ -40,6 +43,30 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // RegisterCodec registers the module's types.
 func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	// Register any concrete types if needed.
+}
+
+func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
+
+// Register the protobuf message types and services with the sdk.
+func (AppModuleBasic) RegisterInterfaces(r types.InterfaceRegistry) {
+	msgservice.RegisterMsgServiceDesc(r, &registrytypes.Msg_serviceDesc)
+}
+
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
+	err := registrytypes.RegisterQueryHandlerClient(context.Background(), mux, registrytypes.NewQueryClient(ctx))
+	if err != nil {
+		panic(err)
+	}
+}
+
+// DefaultGenesis returns default genesis state as raw bytes.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(&registrytypes.GenesisState{})
+}
+
+// ValidateGenesis validates the genesis state.
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	return nil
 }
 
 // AppModule implements an application module for the registry module.
@@ -65,16 +92,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	return nil
 }
 
-// DefaultGenesis returns default genesis state as raw bytes.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(&registrytypes.GenesisState{})
-}
-
-// ValidateGenesis validates the genesis state.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
-}
-
 // Satisfy the AppModule interface.
 func (AppModule) IsAppModule()                                {}
 func (AppModule) IsOnePerModuleType()                         {}
@@ -84,16 +101,4 @@ func (AppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	registrytypes.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 	registrytypes.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
-}
-
-// Register the protobuf message types and services with the sdk.
-func (AppModule) RegisterInterfaces(r types.InterfaceRegistry) {
-	msgservice.RegisterMsgServiceDesc(r, &registrytypes.Msg_serviceDesc)
-}
-
-func (AppModule) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
-	err := registrytypes.RegisterQueryHandlerClient(context.Background(), mux, registrytypes.NewQueryClient(ctx))
-	if err != nil {
-		panic(err)
-	}
 }

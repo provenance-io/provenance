@@ -579,8 +579,10 @@
   
     - [Query](#provenance-registry-v1-Query)
   
-- [provenance/registry/v1/registry.proto](#provenance_registry_v1_registry-proto)
+- [provenance/registry/v1/genesis.proto](#provenance_registry_v1_genesis-proto)
     - [GenesisState](#provenance-registry-v1-GenesisState)
+  
+- [provenance/registry/v1/registry.proto](#provenance_registry_v1_registry-proto)
     - [RegistryBulkUpdate](#provenance-registry-v1-RegistryBulkUpdate)
     - [RegistryBulkUpdateEntry](#provenance-registry-v1-RegistryBulkUpdateEntry)
     - [RegistryEntry](#provenance-registry-v1-RegistryEntry)
@@ -5998,7 +6000,6 @@ This structure matches the test.json format for bulk import.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | Ledgers with their entries - matches the test.json structure. |
 | `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | Ledger classes configuration |
 | `ledger_class_entry_types` | [GenesisLedgerClassEntryType](#provenance-ledger-v1-GenesisLedgerClassEntryType) | repeated | Ledger class entry types configuration |
 | `ledger_class_status_types` | [GenesisLedgerClassStatusType](#provenance-ledger-v1-GenesisLedgerClassStatusType) | repeated | Ledger class status types configuration |
@@ -6006,6 +6007,7 @@ This structure matches the test.json format for bulk import.
 | `ledgers` | [GenesisLedger](#provenance-ledger-v1-GenesisLedger) | repeated | Ledgers |
 | `ledger_entries` | [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry) | repeated | Ledger entries |
 | `settlement_instructions` | [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions) | repeated | Settlement instructions for fund transfers |
+| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | Ledgers to entries |
 
 
 
@@ -8792,10 +8794,10 @@ This service provides read-only access to registry data and role verification.
 
 
 
-<a name="provenance_registry_v1_registry-proto"></a>
+<a name="provenance_registry_v1_genesis-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/registry/v1/registry.proto
+## provenance/registry/v1/genesis.proto
 
 
 
@@ -8812,6 +8814,22 @@ This contains all the registry entries that exist when the blockchain is first i
 
 
 
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_registry-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/registry.proto
 
 
 

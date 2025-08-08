@@ -212,9 +212,30 @@ func (k Keeper) GetRegistry(ctx sdk.Context, key *types.RegistryKey) (*types.Reg
 }
 
 func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
-	// Initialize genesis state
+	for _, entry := range state.Entries {
+		k.Registry.Set(ctx, entry.Key.String(), entry)
+	}
 }
 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	return &types.GenesisState{}
+	genesis := types.GenesisState{}
+
+	registryEntriesIter, err := k.Registry.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer registryEntriesIter.Close()
+
+	registryEntries := make([]types.RegistryEntry, 0)
+	for ; registryEntriesIter.Valid(); registryEntriesIter.Next() {
+		registryEntry, err := registryEntriesIter.Value()
+		if err != nil {
+			panic(err)
+		}
+
+		registryEntries = append(registryEntries, registryEntry)
+	}
+
+	genesis.Entries = registryEntries
+	return &genesis
 }
