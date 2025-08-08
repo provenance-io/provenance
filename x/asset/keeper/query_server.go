@@ -120,7 +120,7 @@ func (q queryServer) ListAssetClasses(ctx context.Context, req *types.QueryListA
 	resp := &types.QueryListAssetClassesResponse{}
 
 	// Convert NFT classes to Asset classes
-	var allAssetClasses []*types.AssetClass
+	allAssetClasses := make([]*types.AssetClass, 0, len(classes))
 	for _, class := range classes {
 		assetClass := &types.AssetClass{
 			Id:          class.Id,

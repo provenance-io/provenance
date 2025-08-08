@@ -4,16 +4,17 @@ import (
 	"context"
 	"fmt"
 
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
+
 	sdkmath "cosmossdk.io/math"
 	nft "cosmossdk.io/x/nft"
+
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/asset/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
-
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type msgServer struct {
@@ -65,7 +66,7 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeAssetClassCreated,
-			sdk.NewAttribute(types.AttributeKeyAssetClassId, class.Id),
+			sdk.NewAttribute(types.AttributeKeyAssetClassID, class.Id),
 			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
 			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
@@ -113,11 +114,11 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 
 		// Convert string to Any type
 		strMsg := &wrapperspb.StringValue{Value: msg.Asset.Data}
-		any, err := cdctypes.NewAnyWithValue(strMsg)
+		anyValue, err := cdctypes.NewAnyWithValue(strMsg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create Any from data: %w", err)
 		}
-		token.Data = any
+		token.Data = anyValue
 	}
 
 	// Get the asset module account address as the owner
@@ -147,8 +148,8 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeAssetCreated,
-			sdk.NewAttribute(types.AttributeKeyAssetClassId, msg.Asset.ClassId),
-			sdk.NewAttribute(types.AttributeKeyAssetId, msg.Asset.Id),
+			sdk.NewAttribute(types.AttributeKeyAssetClassID, msg.Asset.ClassId),
+			sdk.NewAttribute(types.AttributeKeyAssetID, msg.Asset.Id),
 			sdk.NewAttribute(types.AttributeKeyOwner, owner.String()),
 		),
 	)
@@ -158,7 +159,6 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 
 // CreatePool creates a new pool marker
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
-
 	// Create the marker
 	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.FromAddress)
 	if err != nil {
@@ -197,7 +197,6 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 
 // CreateTokenization creates a new tokenization marker
 func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
-
 	// Create the marker
 	marker, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
 	if err != nil {
@@ -223,8 +222,8 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 			types.EventTypeTokenizationCreated,
 			sdk.NewAttribute(types.AttributeKeyTokenizationDenom, msg.Denom.Denom),
 			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Denom.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyAssetClassId, msg.Asset.ClassId),
-			sdk.NewAttribute(types.AttributeKeyAssetId, msg.Asset.Id),
+			sdk.NewAttribute(types.AttributeKeyAssetClassID, msg.Asset.ClassId),
+			sdk.NewAttribute(types.AttributeKeyAssetID, msg.Asset.Id),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
 		),
 	)
@@ -296,7 +295,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSecuritizationCreated,
-			sdk.NewAttribute(types.AttributeKeySecuritizationId, msg.Id),
+			sdk.NewAttribute(types.AttributeKeySecuritizationID, msg.Id),
 			sdk.NewAttribute(types.AttributeKeyTrancheCount, fmt.Sprintf("%d", len(msg.Tranches))),
 			sdk.NewAttribute(types.AttributeKeyPoolCount, fmt.Sprintf("%d", len(msg.Pools))),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),

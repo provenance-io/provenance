@@ -78,7 +78,7 @@ func (s *MsgServerTestSuite) TestCreateAssetClass() {
 	s.Require().NotNil(event, "EventAssetClassCreated should be emitted")
 
 	// Verify event attributes
-	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassId)
+	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
 	s.Require().Equal("asset-class-1", assetClassIdAttr.Value)
 
@@ -150,11 +150,11 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 	s.Require().NotNil(event, "EventAssetCreated should be emitted")
 
 	// Verify event attributes
-	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassId)
+	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
 	s.Require().Equal("asset-class-2", assetClassIdAttr.Value)
 
-	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetId)
+	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetID)
 	s.Require().NotNil(assetIdAttr, "asset_id attribute should be present")
 	s.Require().Equal("asset-1", assetIdAttr.Value)
 
@@ -310,11 +310,11 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
 	s.Require().Equal("500", poolAmountAttr.Value)
 
-	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassId)
+	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
 	s.Require().Equal("asset-class-token", assetClassIdAttr.Value)
 
-	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetId)
+	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetID)
 	s.Require().NotNil(assetIdAttr, "asset_id attribute should be present")
 	s.Require().Equal("asset-token-1", assetIdAttr.Value)
 
@@ -431,7 +431,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 	s.Require().NotNil(event, "EventSecuritizationCreated should be emitted")
 
 	// Verify event attributes
-	securitizationIdAttr := s.findAttributeByKey(event, types.AttributeKeySecuritizationId)
+	securitizationIdAttr := s.findAttributeByKey(event, types.AttributeKeySecuritizationID)
 	s.Require().NotNil(securitizationIdAttr, "securitization_id attribute should be present")
 	s.Require().Equal("sec-1", securitizationIdAttr.Value)
 

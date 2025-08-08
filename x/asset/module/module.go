@@ -3,23 +3,23 @@ package module
 import (
 	"context"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
 	"cosmossdk.io/core/appmodule"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
-	"github.com/provenance-io/provenance/x/exchange"
-
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/provenance-io/provenance/x/asset/client/cli"
-	assetkeeper "github.com/provenance-io/provenance/x/asset/keeper"
+	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/simulation"
 	"github.com/provenance-io/provenance/x/asset/types"
+	"github.com/provenance-io/provenance/x/exchange"
 )
 
 var (
@@ -35,12 +35,12 @@ type AppModuleBasic struct {
 
 type AppModule struct {
 	AppModuleBasic
-	keeper assetkeeper.Keeper
+	keeper keeper.Keeper
 	router baseapp.MessageRouter
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper assetkeeper.Keeper, router baseapp.MessageRouter) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, router baseapp.MessageRouter) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -83,8 +83,8 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), assetkeeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), assetkeeper.NewQueryServerImpl(am.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
 }
 
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
@@ -96,6 +96,6 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[exchange.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations()
 }

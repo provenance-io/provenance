@@ -3,10 +3,11 @@ package cli
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/asset/types"
 )
@@ -104,7 +105,7 @@ func GetCmdListAssetClasses() *cobra.Command {
 		Example: fmt.Sprintf(`$ %[1]s query asset list-classes
 $ %[1]s query asset list-classes --page=2 --limit=50
 `, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
