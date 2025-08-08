@@ -36,7 +36,7 @@ var (
 
 // NameRecordIndexes defines indexes for name records
 type NameRecordIndexes struct {
-	// AddrIndex maps (address, name) -> empty, like bank module's pattern
+	// AddrIndex maps (address, name) -> empty
 	AddrIndex *indexes.Multi[collections.Pair[[]byte, string], string, NameRecord]
 }
 
@@ -60,7 +60,7 @@ func (c HashedStringKeyCodec) Decode(buffer []byte) (int, string, error) {
 	return len(buffer), base64.StdEncoding.EncodeToString(buffer), nil
 }
 
-func (c HashedStringKeyCodec) Size(key string) int {
+func (c HashedStringKeyCodec) Size(_ string) int {
 	return sha256.Size
 }
 
@@ -95,7 +95,7 @@ func (c HashedStringKeyCodec) DecodeNonTerminal(buffer []byte) (int, string, err
 	return len(buffer), base64.StdEncoding.EncodeToString(buffer), nil
 }
 
-func (c HashedStringKeyCodec) SizeNonTerminal(key string) int {
+func (c HashedStringKeyCodec) SizeNonTerminal(_ string) int {
 	return sha256.Size
 }
 
@@ -122,7 +122,7 @@ func GetAddressKeyPrefix(addr sdk.AccAddress) ([]byte, error) {
 	if err := sdk.VerifyAddressFormat(addr); err != nil {
 		return nil, err
 	}
-	key := append([]byte{}, AddressKeyPrefix...) // safe copy
+	key := append([]byte{}, AddressKeyPrefix...)
 	key = append(key, address.MustLengthPrefix(addr)...)
 	return key, nil
 }
