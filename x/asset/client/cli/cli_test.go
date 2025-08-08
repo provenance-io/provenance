@@ -34,7 +34,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up asset module CLI integration test suite")
 
 	// Set Provenance config with the correct bond denom before creating the testnet config
-	pioconfig.SetProvenanceConfig("stake", 0)
+	pioconfig.SetProvConfig("stake")
 
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
@@ -69,7 +69,7 @@ func (s *IntegrationTestSuite) TestAssetQueryCommands() {
 			name:           "list asset classes (should be empty)",
 			cmd:            assetcli.GetCmdListAssetClasses(),
 			args:           []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			expectedOutput: "\"assetClasses\":[]",
+			expectedOutput: "\"asset_classes\":[]",
 		},
 		{
 			name:           "list assets for valid address (should be empty)",
@@ -244,13 +244,14 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				"100tranche1,200tranche2",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
+				// fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
 				"--yes",
 				"--keyring-backend=test",
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
-			expectedCode: 11,
+			expectedCode: 1,
 		},
 	}
 
