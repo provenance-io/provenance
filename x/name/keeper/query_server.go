@@ -111,5 +111,6 @@ func safeUint64ToInt(u uint64) int {
 	if u > uint64(maxInt) {
 		return maxInt
 	}
+	// #nosec G115 -- safe conversion due to explicit bound check above
 	return int(u)
 }
