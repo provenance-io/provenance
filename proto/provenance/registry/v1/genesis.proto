@@ -1,0 +1,18 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/registry/types";
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "provenance/registry/v1/registry.proto";
+
+// GenesisState defines the registry module's genesis state.
+// This contains all the registry entries that exist when the blockchain is first initialized.
+message GenesisState {
+  // entries is the list of registry entries.
+  // These entries define the initial state of the registry module.
+  repeated RegistryEntry entries = 1 [(gogoproto.nullable) = false];
+}

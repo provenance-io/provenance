@@ -7,6 +7,27 @@
   },
   "apis": [
     {
+      "url": "./tmp-swagger-gen/provenance/asset/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Asset"
+        ]
+      },
+      "operationIds": {
+        "rename": {
+          "Params": "AssetParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/asset/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Asset"
+        ]
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
       "tags": {
         "add": [
@@ -124,6 +145,27 @@
       "tags": {
         "add": [
           "IBC"
+        ]
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/ledger/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Ledger"
+        ]
+      },
+      "operationIds": {
+        "rename": {
+          "Params": "LedgerParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/ledger/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Ledger"
         ]
       }
     },
@@ -260,6 +302,27 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/provenance/registry/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Registry"
+        ]
+      },
+      "operationIds": {
+        "rename": {
+          "Params": "RegistryParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/registry/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Registry"
+        ]
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/provenance/trigger/v1/query.swagger.json",
       "tags": {
         "add": [
@@ -287,9 +350,13 @@
       },
       "paths": {
         "exclude": [
-          "cosmos/nft/.*",
           "cosmos/params/.*"
         ]
+      },
+      "operationIds": {
+        "rename": {
+          "Supply": "NftSupply"
+        }
       }
     }
   ]
