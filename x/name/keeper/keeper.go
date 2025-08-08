@@ -390,20 +390,17 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 	if exists && !isModifiable {
 		return types.ErrNameAlreadyBound
 	}
-	// If isModifiable = true, allow overwriting existing records
 
 	record := types.NewNameRecord(normalizedName, addr, restrict)
 	if err := record.Validate(); err != nil {
 		return err
 	}
 
-	// Set the record (will overwrite if isModifiable = true)
 	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
 		return err
 	}
 
-	nameBoundEvent := types.NewEventNameBound(addr.String(), normalizedName, restrict)
-	return ctx.EventManager().EmitTypedEvent(nameBoundEvent)
+	return nil
 }
 
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
