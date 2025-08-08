@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/types"

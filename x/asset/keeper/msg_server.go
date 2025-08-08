@@ -8,6 +8,7 @@ import (
 	nft "cosmossdk.io/x/nft"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/asset/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"

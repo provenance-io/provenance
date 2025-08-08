@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
 func TestValidateReceiverAddress(t *testing.T) {

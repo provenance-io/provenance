@@ -6,9 +6,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/cobra"
+
 	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/types"
-	"github.com/spf13/cobra"
 )
 
 // CmdQuery returns the cli query commands for the registry module

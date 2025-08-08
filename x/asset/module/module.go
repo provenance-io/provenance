@@ -10,10 +10,12 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/spf13/cobra"
 
+	"github.com/provenance-io/provenance/x/exchange"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/provenance-io/provenance/x/asset/client/cli"
 	assetkeeper "github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/simulation"
@@ -33,8 +35,8 @@ type AppModuleBasic struct {
 
 type AppModule struct {
 	AppModuleBasic
-	keeper        assetkeeper.Keeper
-	router        baseapp.MessageRouter
+	keeper assetkeeper.Keeper
+	router baseapp.MessageRouter
 }
 
 // NewAppModule creates a new AppModule object

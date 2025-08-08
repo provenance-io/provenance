@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/trigger/keeper"

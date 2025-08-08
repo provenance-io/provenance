@@ -3,15 +3,16 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	
-	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/xeipuuv/gojsonschema"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 

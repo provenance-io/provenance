@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	metadataTypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 

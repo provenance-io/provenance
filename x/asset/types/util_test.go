@@ -8,8 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/stretchr/testify/require"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestUtil(t *testing.T) {
@@ -240,7 +241,7 @@ func TestNewDefaultMarker(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, marker)
-				
+
 				// Verify marker properties
 				require.Equal(t, tt.denom.Denom, marker.GetDenom())
 				require.Equal(t, tt.denom.Amount, marker.GetSupply().Amount)

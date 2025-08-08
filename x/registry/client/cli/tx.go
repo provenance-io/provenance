@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/types"
 )

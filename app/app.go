@@ -214,7 +214,7 @@ var (
 		triggertypes.ModuleName:   nil,
 		oracletypes.ModuleName:    nil,
 		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
-		nft.ModuleName:           nil,
+		nft.ModuleName:            nil,
 	}
 )
 
@@ -903,7 +903,7 @@ func New(
 		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
 		assettypes.ModuleName,
-		
+
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,

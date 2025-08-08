@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 

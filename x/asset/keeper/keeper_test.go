@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/types"
@@ -16,8 +17,8 @@ import (
 
 type KeeperTestSuite struct {
 	suite.Suite
-	app *app.App
-	ctx sdk.Context
+	app       *app.App
+	ctx       sdk.Context
 	user1Addr sdk.AccAddress
 }
 
@@ -71,4 +72,4 @@ func (s *KeeperTestSuite) TestGetModuleAddress() {
 	)
 	addr := k.GetModuleAddress()
 	s.Require().NotNil(addr)
-} 
+}

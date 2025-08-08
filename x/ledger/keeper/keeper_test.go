@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+
 	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
 
 	"github.com/provenance-io/provenance/app"

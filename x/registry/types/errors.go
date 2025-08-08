@@ -22,6 +22,7 @@ package types
 
 import (
 	cerrs "cosmossdk.io/errors"
+
 	"github.com/provenance-io/provenance/x/registry"
 )
 

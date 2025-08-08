@@ -196,7 +196,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Assets:        []*AssetKey{},
+				Assets:      []*AssetKey{},
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
@@ -272,7 +272,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Asset:         nil,
+				Asset:       nil,
 				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
@@ -420,4 +420,4 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 			}
 		})
 	}
-} 
+}

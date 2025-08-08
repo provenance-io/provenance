@@ -9,10 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/provenance-io/provenance/x/ledger/helper"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/provenance-io/provenance/x/ledger/helper"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 // CmdTx creates the tx command (and sub-commands) for the exchange module.
