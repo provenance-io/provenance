@@ -3,6 +3,7 @@ package keeper
 import (
 	"strconv"
 
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ledger/types"
 )
@@ -241,4 +242,99 @@ func (k Keeper) ExportStoredSettlementInstructions(ctx sdk.Context, genesis *typ
 	}
 
 	genesis.SettlementInstructions = settlements
+}
+
+func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
+	if state == nil {
+		return
+	}
+
+	k.ImportLedgerClasses(ctx, state)
+	k.ImportLedgerClassEntryTypes(ctx, state)
+	k.ImportLedgerClassStatusTypes(ctx, state)
+	k.ImportLedgerClassBucketTypes(ctx, state)
+	k.ImportLedgers(ctx, state)
+	k.ImportLedgerEntries(ctx, state)
+	k.ImportStoredSettlementInstructions(ctx, state)
+}
+
+func (k Keeper) ImportLedgerClasses(ctx sdk.Context, state *types.GenesisState) {
+	for _, ledgerClass := range state.LedgerClasses {
+		if err := k.LedgerClasses.Set(ctx, ledgerClass.LedgerClassId, ledgerClass); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (k Keeper) ImportLedgerClassEntryTypes(ctx sdk.Context, state *types.GenesisState) {
+	for _, l := range state.LedgerClassEntryTypes {
+		// Parse the second key as an integer.
+		id, err := strconv.Atoi(l.Key.P2)
+		if err != nil {
+			panic(err)
+		}
+
+		key := collections.Join(l.Key.P1, int32(id))
+		if err := k.LedgerClassEntryTypes.Set(ctx, key, l.EntryType); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (k Keeper) ImportLedgerClassStatusTypes(ctx sdk.Context, state *types.GenesisState) {
+	for _, l := range state.LedgerClassStatusTypes {
+		// Parse the second key as an integer.
+		id, err := strconv.Atoi(l.Key.P2)
+		if err != nil {
+			panic(err)
+		}
+
+		key := collections.Join(l.Key.P1, int32(id))
+		if err := k.LedgerClassStatusTypes.Set(ctx, key, l.StatusType); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (k Keeper) ImportLedgerClassBucketTypes(ctx sdk.Context, state *types.GenesisState) {
+	for _, l := range state.LedgerClassBucketTypes {
+		// Parse the second key as an integer.
+		id, err := strconv.Atoi(l.Key.P2)
+		if err != nil {
+			panic(err)
+		}
+
+		key := collections.Join(l.Key.P1, int32(id))
+		if err := k.LedgerClassBucketTypes.Set(ctx, key, l.BucketType); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (k Keeper) ImportLedgers(ctx sdk.Context, state *types.GenesisState) {
+	for _, l := range state.Ledgers {
+		if err := k.Ledgers.Set(ctx, l.Key, l.Ledger); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (k Keeper) ImportLedgerEntries(ctx sdk.Context, state *types.GenesisState) {
+	for _, le := range state.LedgerEntries {
+
+		key := collections.Join(le.Key.P1, le.Key.P2)
+
+		if err := k.LedgerEntries.Set(ctx, key, le.Entry); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (k Keeper) ImportStoredSettlementInstructions(ctx sdk.Context, state *types.GenesisState) {
+	for _, si := range state.SettlementInstructions {
+		key := collections.Join(si.Key.P1, si.Key.P2)
+		if err := k.FundTransfersWithSettlement.Set(ctx, key, si.SettlementInstructions); err != nil {
+			panic(err)
+		}
+	}
 }

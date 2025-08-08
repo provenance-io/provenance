@@ -301,21 +301,6 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, m
 	return nil
 }
 
-// InitGenesis initializes the genesis state for the ledger module.
-// For new chains, this function only sets up the basic module structure.
-// Actual ledger data should be imported during upgrades, not during genesis.
-// This ensures that new chains start with a clean slate and data is only imported when explicitly intended through upgrade handlers.
-func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
-	if state == nil {
-		return
-	}
-
-	// For new chains, we only set up the basic module structure.
-	// Actual ledger data should be imported during upgrades, not during genesis.
-	// This ensures that new chains start with a clean slate and data is only
-	// imported when explicitly intended through upgrade handlers.
-}
-
 // DestroyLedger removes a ledger and all its associated entries from the state store.
 // This function performs a complete cleanup by removing the ledger and all its entries.
 // It emits an event to notify other modules of the ledger destruction.
