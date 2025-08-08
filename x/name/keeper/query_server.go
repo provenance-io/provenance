@@ -37,6 +37,7 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 // ReverseLookup using CollectionsPaginate with a custom filtered approach
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
+	const maxInt = int(^uint(0) >> 1)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, types.ErrInvalidAddress
@@ -62,25 +63,27 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 
 	if pageReq != nil {
 		if pageReq.Limit > 0 {
-			limit = int(pageReq.Limit)
+			if pageReq.Limit > uint64(maxInt) {
+				limit = maxInt
+			} else {
+				limit = int(pageReq.Limit)
+			}
 		}
 
 		if len(pageReq.Key) > 0 {
 			pageKey := string(pageReq.Key)
-
-			found := false
 			for i, name := range allNames {
 				if name == pageKey {
 					start = i + 1
-					found = true
 					break
 				}
 			}
-			if !found {
-				start = 0
-			}
 		} else {
-			start = int(pageReq.Offset)
+			if pageReq.Offset > uint64(maxInt) {
+				start = maxInt
+			} else {
+				start = int(pageReq.Offset)
+			}
 		}
 	}
 
