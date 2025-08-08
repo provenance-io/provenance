@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -15,17 +14,17 @@ const (
 // Validate validates the RegistryKey
 func (m *RegistryKey) Validate() error {
 	if m == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("registry key cannot be nil")
+		return NewErrCodeInvalidField("registry key", "registry key cannot be nil")
 	}
 
 	// Validate NFT ID
 	if strings.TrimSpace(m.NftId) == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("nft_id cannot be empty")
+		return NewErrCodeInvalidField("nft_id", "nft_id cannot be empty")
 	}
 
 	// Validate Asset Class ID
 	if strings.TrimSpace(m.AssetClassId) == "" {
-		return sdkerrors.ErrInvalidRequest.Wrap("asset_class_id cannot be empty")
+		return NewErrCodeInvalidField("asset_class_id", "asset_class_id cannot be empty")
 	}
 
 	return nil
@@ -34,22 +33,21 @@ func (m *RegistryKey) Validate() error {
 // Validate validates the RegistryEntry
 func (m *RegistryEntry) Validate() error {
 	if m == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("registry entry cannot be nil")
+		return NewErrCodeInvalidField("registry entry", "registry entry cannot be nil")
 	}
 
 	if err := m.Key.Validate(); err != nil {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid key: %s", err)
+		return NewErrCodeInvalidField("key", err.Error())
 	}
 
 	// Validate roles
 	if len(m.Roles) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("roles cannot be empty")
+		return NewErrCodeInvalidField("roles", "roles cannot be empty")
 	}
 
-	// Check for duplicate roles
-	for i, role := range m.Roles {
+	for _, role := range m.Roles {
 		if err := role.Validate(); err != nil {
-			return sdkerrors.ErrInvalidRequest.Wrapf("invalid role at index %d: %s", i, err)
+			return NewErrCodeInvalidField("role", err.Error())
 		}
 	}
 
@@ -59,7 +57,7 @@ func (m *RegistryEntry) Validate() error {
 // Validate validates the RolesEntry
 func (m *RolesEntry) Validate() error {
 	if m == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("roles entry cannot be nil")
+		return NewErrCodeInvalidField("roles entry", "roles entry cannot be nil")
 	}
 
 	if err := m.Role.Validate(); err != nil {
@@ -68,20 +66,20 @@ func (m *RolesEntry) Validate() error {
 
 	// Validate addresses
 	if len(m.Addresses) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("addresses cannot be empty")
+		return NewErrCodeInvalidField("addresses", "addresses cannot be empty")
 	}
 
 	// Check for duplicate addresses
 	seen := make(map[string]bool)
-	for i, address := range m.Addresses {
+	for _, address := range m.Addresses {
 		if strings.TrimSpace(address) == "" {
-			return sdkerrors.ErrInvalidAddress.Wrapf("address at index %d cannot be empty", i)
+			return NewErrCodeInvalidField("address", "address cannot be empty")
 		}
 		if _, err := sdk.AccAddressFromBech32(address); err != nil {
-			return sdkerrors.ErrInvalidAddress.Wrapf("invalid address at index %d: %s", i, err)
+			return NewErrCodeInvalidField("address", address)
 		}
 		if seen[address] {
-			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate address at index %d: %s", i, address)
+			return NewErrCodeInvalidField("address", address)
 		}
 		seen[address] = true
 	}
@@ -91,12 +89,12 @@ func (m *RolesEntry) Validate() error {
 
 func (m *RegistryRole) Validate() error {
 	if _, ok := RegistryRole_value[m.String()]; !ok {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid role: %s", m.String())
+		return NewErrCodeInvalidField("role", m.String())
 	}
 
 	// Validate role
 	if *m == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
-		return sdkerrors.ErrInvalidRequest.Wrap("role cannot be unspecified")
+		return NewErrCodeInvalidField("role", "role cannot be unspecified")
 	}
 
 	return nil
@@ -105,9 +103,9 @@ func (m *RegistryRole) Validate() error {
 // Validate validates the GenesisState
 func (m *GenesisState) Validate() error {
 	// Validate entries
-	for i, entry := range m.Entries {
+	for _, entry := range m.Entries {
 		if err := entry.Validate(); err != nil {
-			return sdkerrors.ErrInvalidRequest.Wrapf("invalid entry at index %d: %s", i, err)
+			return NewErrCodeInvalidField("entry", err.Error())
 		}
 	}
 
@@ -118,12 +116,12 @@ func (m *GenesisState) Validate() error {
 func (m *RegistryBulkUpdate) Validate() error {
 	// Validate entries
 	if len(m.Entries) == 0 {
-		return sdkerrors.ErrInvalidRequest.Wrap("entries cannot be empty")
+		return NewErrCodeInvalidField("entries", "entries cannot be empty")
 	}
 
-	for i, entry := range m.Entries {
+	for _, entry := range m.Entries {
 		if err := entry.Validate(); err != nil {
-			return sdkerrors.ErrInvalidRequest.Wrapf("invalid entry at index %d: %s", i, err)
+			return NewErrCodeInvalidField("entry", err.Error())
 		}
 	}
 
@@ -133,20 +131,20 @@ func (m *RegistryBulkUpdate) Validate() error {
 // Validate validates the RegistryBulkUpdateEntry
 func (m *RegistryBulkUpdateEntry) Validate() error {
 	if m == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("registry bulk update entry cannot be nil")
+		return NewErrCodeInvalidField("registry bulk update entry", "registry bulk update entry cannot be nil")
 	}
 
 	// Validate key
 	if m.Key == nil {
-		return sdkerrors.ErrInvalidRequest.Wrap("key cannot be nil")
+		return NewErrCodeInvalidField("key", "key cannot be nil")
 	}
 	if err := m.Key.Validate(); err != nil {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid key: %s", err)
+		return NewErrCodeInvalidField("key", err.Error())
 	}
 
 	for _, entry := range m.Entries {
 		if err := entry.Validate(); err != nil {
-			return sdkerrors.ErrInvalidRequest.Wrapf("invalid entry: %s", err)
+			return NewErrCodeInvalidField("entry", err.Error())
 		}
 	}
 

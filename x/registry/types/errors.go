@@ -37,6 +37,7 @@ const (
 	ErrCodeInvalidHrp             ErrCode = "INVALID_HRP"
 	ErrCodeInvalidKey             ErrCode = "INVALID_KEY"
 	ErrCodeAddressDoesNotHaveRole ErrCode = "ADDRESS_DOES_NOT_HAVE_ROLE"
+	ErrCodeInvalidField           ErrCode = "INVALID_FIELD"
 )
 
 var (
@@ -49,6 +50,7 @@ var (
 	ErrInvalidHrp             = cerrs.Register(registry.ModuleName, 7, "invalid hrp")
 	ErrInvalidKey             = cerrs.Register(registry.ModuleName, 8, "invalid key")
 	ErrAddressDoesNotHaveRole = cerrs.Register(registry.ModuleName, 9, "address does not have role")
+	ErrInvalidField           = cerrs.Register(registry.ModuleName, 10, "invalid field")
 )
 
 func NewErrCodeRegistryAlreadyExists(key string) error {
@@ -85,4 +87,8 @@ func NewErrCodeInvalidHrp(hrp string) error {
 
 func NewErrCodeInvalidKey(key string) error {
 	return cerrs.Wrapf(ErrInvalidKey, "invalid key: %s", key)
+}
+
+func NewErrCodeInvalidField(field, value string) error {
+	return cerrs.Wrapf(ErrInvalidField, "invalid field: %s, value: %s", field, value)
 }
