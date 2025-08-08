@@ -209,8 +209,7 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 	var records []types.NameRecord
 
 	addressStr := address.String()
-
-	err := k.nameRecords.Walk(ctx, nil, func(nameKey string, record types.NameRecord) (bool, error) {
+	err := k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
 		if record.Address == addressStr {
 			records = append(records, record)
 		}
@@ -239,18 +238,13 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 }
 
 func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(record types.NameRecord) error) error {
-	ctx.Logger().Debug("IterateRecords called", "prefix", fmt.Sprintf("%x", prefix))
-
 	count := 0
-	err := k.nameRecords.Walk(ctx, nil, func(nameKey string, record types.NameRecord) (bool, error) {
+	err := k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
 		count++
-		if prefix != nil {
-			if bytes.Equal(prefix, types.NameKeyPrefix) {
-			} else {
-				nameBytes := []byte(record.Name)
-				if !bytes.HasPrefix(nameBytes, prefix) {
-					return false, nil // skip this record
-				}
+		if prefix != nil && !bytes.Equal(prefix, types.NameKeyPrefix) {
+			nameBytes := []byte(record.Name)
+			if !bytes.HasPrefix(nameBytes, prefix) {
+				return false, nil
 			}
 		}
 		if err := handle(record); err != nil {
@@ -260,7 +254,6 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 		return false, nil
 	})
 
-	ctx.Logger().Debug("IterateRecords completed", "totalFound", count, "error", err)
 	return err
 }
 
@@ -319,7 +312,10 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 		addrBz := key[2 : 2+addrLen]
 		nameHash := key[2+addrLen:]
 
-		nameKey := append(types.NameKeyPrefix, nameHash...)
+		nameKey := make([]byte, 0, len(types.NameKeyPrefix)+len(nameHash))
+		nameKey = append(nameKey, types.NameKeyPrefix...)
+		nameKey = append(nameKey, nameHash...)
+
 		exists, err := store.Has(nameKey)
 		if err != nil || !exists {
 			toDelete = append(toDelete, key)
@@ -360,7 +356,9 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 
 	logger.Info(fmt.Sprintf("Found %d invalid entries, deleting", len(toDelete)))
 	for _, key := range toDelete {
-		store.Delete(key)
+		if err := store.Delete(key); err != nil {
+			logger.Error("failed to delete invalid index entry", "key", fmt.Sprintf("%x", key), "error", err)
+		}
 	}
 	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
 }
