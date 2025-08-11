@@ -92,8 +92,6 @@ jobs:
         id: meta
         with:
           images: us-central1-docker.pkg.dev/provlabs-test/docker/provenance
-          flavor: |
-            prefix=heighliner-,onlatest=true
           tags: |
             type=edge
             type=ref,event=pr
