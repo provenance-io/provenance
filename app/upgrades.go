@@ -541,7 +541,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddMarkerRequest", feeDefCoin(3000)),
 
 		// Msgs that cost $5.00.
-		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateClassRequest", feeDefCoin(5000)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateLedgerClassRequest", feeDefCoin(5000)),
 
 		// Msgs that cost $17.00.
 		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgRegisterNFT", feeDefCoin(17000)),
