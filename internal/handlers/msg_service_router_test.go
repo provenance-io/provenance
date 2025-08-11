@@ -670,6 +670,11 @@ func TestHandlersConsumeMsgs(t *testing.T) {
 		"/provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest",
 		"/provenance.oracle.v1.QueryOracleRequest",
 		"/provenance.oracle.v1.QueryOracleResponse",
+		"/provenance.smartaccounts.v1.EC2PublicKeyData",
+		"/provenance.smartaccounts.v1.EdDSAPublicKeyData",
+		"/provenance.smartaccounts.v1.PublicKeyData",
+		"/provenance.smartaccounts.v1.SmartAccountQueryRequest",
+		"/provenance.smartaccounts.v1.SmartAccountResponse",
 	}
 	slices.Sort(expNoHandlers)
 	var actNoHandlers []string

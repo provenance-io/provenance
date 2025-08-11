@@ -29,4 +29,7 @@ const (
 	DefaultWeightSendOracleQuery int = 75
 	// Ibc Rate Limiter
 	DefaultWeightIBCRLUpdateParams int = 100
+	// Smart Accounts
+	DefaultWeightMsgRegisterWebAuthnCredential int = 50
+	DefaultWeightMsgRegisterCosmosCredential   int = 50
 )

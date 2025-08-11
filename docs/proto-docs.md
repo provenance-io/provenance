@@ -403,6 +403,53 @@
 - [provenance/flatfees/v1/genesis.proto](#provenance_flatfees_v1_genesis-proto)
     - [GenesisState](#provenance-flatfees-v1-GenesisState)
   
+- [provenance/smartaccounts/v1/tx.proto](#provenance_smartaccounts_v1_tx-proto)
+    - [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential)
+    - [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse)
+    - [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential)
+    - [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse)
+    - [MsgRegisterFido2Credential](#provenance-smartaccounts-v1-MsgRegisterFido2Credential)
+    - [MsgRegisterFido2CredentialResponse](#provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse)
+    - [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams)
+    - [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse)
+  
+    - [Msg](#provenance-smartaccounts-v1-Msg)
+  
+- [provenance/smartaccounts/v1/events.proto](#provenance_smartaccounts_v1_events-proto)
+    - [EventCosmosCredentialAdd](#provenance-smartaccounts-v1-EventCosmosCredentialAdd)
+    - [EventCredentialDelete](#provenance-smartaccounts-v1-EventCredentialDelete)
+    - [EventFido2CredentialAdd](#provenance-smartaccounts-v1-EventFido2CredentialAdd)
+    - [EventSmartAccountInit](#provenance-smartaccounts-v1-EventSmartAccountInit)
+  
+- [provenance/smartaccounts/v1/provenanceaccount.proto](#provenance_smartaccounts_v1_provenanceaccount-proto)
+    - [BaseCredential](#provenance-smartaccounts-v1-BaseCredential)
+    - [Credential](#provenance-smartaccounts-v1-Credential)
+    - [Fido2Authenticator](#provenance-smartaccounts-v1-Fido2Authenticator)
+    - [K256Authenticator](#provenance-smartaccounts-v1-K256Authenticator)
+    - [MsgInit](#provenance-smartaccounts-v1-MsgInit)
+    - [MsgInitResponse](#provenance-smartaccounts-v1-MsgInitResponse)
+    - [Params](#provenance-smartaccounts-v1-Params)
+    - [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount)
+    - [SessionAuthenticator](#provenance-smartaccounts-v1-SessionAuthenticator)
+  
+    - [CredentialType](#provenance-smartaccounts-v1-CredentialType)
+  
+- [provenance/smartaccounts/v1/query.proto](#provenance_smartaccounts_v1_query-proto)
+    - [QueryParamsRequest](#provenance-smartaccounts-v1-QueryParamsRequest)
+    - [QueryParamsResponse](#provenance-smartaccounts-v1-QueryParamsResponse)
+    - [SmartAccountQueryRequest](#provenance-smartaccounts-v1-SmartAccountQueryRequest)
+    - [SmartAccountResponse](#provenance-smartaccounts-v1-SmartAccountResponse)
+  
+    - [Query](#provenance-smartaccounts-v1-Query)
+  
+- [provenance/smartaccounts/v1/genesis.proto](#provenance_smartaccounts_v1_genesis-proto)
+    - [GenesisState](#provenance-smartaccounts-v1-GenesisState)
+  
+- [provenance/smartaccounts/v1/webauthn_key_types.proto](#provenance_smartaccounts_v1_webauthn_key_types-proto)
+    - [EC2PublicKeyData](#provenance-smartaccounts-v1-EC2PublicKeyData)
+    - [EdDSAPublicKeyData](#provenance-smartaccounts-v1-EdDSAPublicKeyData)
+    - [PublicKeyData](#provenance-smartaccounts-v1-PublicKeyData)
+  
 - [provenance/oracle/v1/tx.proto](#provenance_oracle_v1_tx-proto)
     - [MsgSendQueryOracleRequest](#provenance-oracle-v1-MsgSendQueryOracleRequest)
     - [MsgSendQueryOracleResponse](#provenance-oracle-v1-MsgSendQueryOracleResponse)
@@ -6314,6 +6361,607 @@ GenesisState contains a set of the flat fees module data, persisted from the sto
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines all the parameters of the module. |
 | `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the fees defined for specific msg types. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_smartaccounts_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/smartaccounts/v1/tx.proto
+
+
+
+<a name="provenance-smartaccounts-v1-MsgDeleteCredential"></a>
+
+### MsgDeleteCredential
+MsgDeleteCredential defines a method for deleting a credential.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
+| `credential_number` | [uint64](#uint64) |  | credential number is the credential number assigned to the credential in the provenance smart account module. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgDeleteCredentialResponse"></a>
+
+### MsgDeleteCredentialResponse
+MsgDeleteCredentialResponse defines the response structure for executing a
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `credential_number` | [uint64](#uint64) |  | credential_number is the credential number that was deleted. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgRegisterCosmosCredential"></a>
+
+### MsgRegisterCosmosCredential
+MsgRegisterCosmosCredential defines a method for registering a Cosmos credential.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
+| `pubkey` | [google.protobuf.Any](#google-protobuf-Any) |  | pubkey for which the secp256k1 keypair being registered. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse"></a>
+
+### MsgRegisterCosmosCredentialResponse
+MsgRegisterCosmosCredentialResponse defines the response structure for executing a
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `credential_number` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgRegisterFido2Credential"></a>
+
+### MsgRegisterFido2Credential
+MsgRegisterFido2Credential is used to initialize a provenance smart account with fido2 credentials.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
+| `encoded_attestation` | [string](#string) |  |  |
+| `user_identifier` | [string](#string) |  | You must store the user ID separately when initiating registration and retrieve it later. This is the fido2 user identifier for the authenticator. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse"></a>
+
+### MsgRegisterFido2CredentialResponse
+MsgRegisterFido2CredentialResponse is returned after successfully registering a WebAuthn credential.
+It contains information about the newly registered credential and the associated smart account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `credential_number` | [uint64](#uint64) |  | credential_number is a globally unique identifier assigned to the newly registered credential. This number can be used in future operations like credential deletion. |
+| `provenance_account` | [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount) |  | provenanceaccount contains the full smart account data after the registration, including all credentials associated with the account and its current state. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgUpdateParams"></a>
+
+### MsgUpdateParams
+MsgUpdateParams is the Msg/UpdateParams request type.
+
+Since: cosmos-sdk 0.47
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority is the address of the governance account. |
+| `params` | [Params](#provenance-smartaccounts-v1-Params) |  | params defines the parameters to update.<br>NOTE: All parameters must be supplied. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgUpdateParamsResponse"></a>
+
+### MsgUpdateParamsResponse
+MsgUpdateParamsResponse defines the response structure for executing a
+MsgUpdateParams message.
+
+Since: cosmos-sdk 0.47
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-smartaccounts-v1-Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `UpdateParams` | [MsgUpdateParams](#provenance-smartaccounts-v1-MsgUpdateParams) | [MsgUpdateParamsResponse](#provenance-smartaccounts-v1-MsgUpdateParamsResponse) | UpdateParams defines a governance operation for updating the parameters for smart account module only. |
+| `RegisterFido2Credential` | [MsgRegisterFido2Credential](#provenance-smartaccounts-v1-MsgRegisterFido2Credential) | [MsgRegisterFido2CredentialResponse](#provenance-smartaccounts-v1-MsgRegisterFido2CredentialResponse) | RegisterFido2Credential defines a method for registering a Fido2 credential. |
+| `RegisterCosmosCredential` | [MsgRegisterCosmosCredential](#provenance-smartaccounts-v1-MsgRegisterCosmosCredential) | [MsgRegisterCosmosCredentialResponse](#provenance-smartaccounts-v1-MsgRegisterCosmosCredentialResponse) | RegisterCosmosCredential defines a method for registering a Cosmos credential. |
+| `DeleteCredential` | [MsgDeleteCredential](#provenance-smartaccounts-v1-MsgDeleteCredential) | [MsgDeleteCredentialResponse](#provenance-smartaccounts-v1-MsgDeleteCredentialResponse) | DeleteCredential defines a method for deleting a credential. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_smartaccounts_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/smartaccounts/v1/events.proto
+
+
+
+<a name="provenance-smartaccounts-v1-EventCosmosCredentialAdd"></a>
+
+### EventCosmosCredentialAdd
+Event emitted when a Cosmos credential is added to a smart account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `credential_number` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-EventCredentialDelete"></a>
+
+### EventCredentialDelete
+Event emitted when a credential is deleted from a smart account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `credential_number` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-EventFido2CredentialAdd"></a>
+
+### EventFido2CredentialAdd
+Event emitted when a WebAuthn credential is added to a smart account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `credential_number` | [uint64](#uint64) |  |  |
+| `credential_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-EventSmartAccountInit"></a>
+
+### EventSmartAccountInit
+Events
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `credential_count` | [uint64](#uint64) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_smartaccounts_v1_provenanceaccount-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/smartaccounts/v1/provenanceaccount.proto
+
+
+
+<a name="provenance-smartaccounts-v1-BaseCredential"></a>
+
+### BaseCredential
+Credential message
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `credential_number` | [uint64](#uint64) |  | assigned globally unique in order of creation (like BaseAccount.account_number) |
+| `public_key` | [google.protobuf.Any](#google-protobuf-Any) |  | this is the public key of the credential The public key portion of a Relying Party-specific credential key pair, generated by an authenticator and returned to a Relying Party at registration time (see also public key credential). The private key portion of the credential key pair is known as the credential private key. Note that in the case of self attestation, the credential key pair is also used as the attestation key pair, see self attestation for details. |
+| `variant` | [CredentialType](#provenance-smartaccounts-v1-CredentialType) |  | see CredentialType enum |
+| `create_time` | [int64](#int64) |  | Seconds since UNIX epoch timestamp |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-Credential"></a>
+
+### Credential
+Credential is a credential that can be used to authenticate a smart account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_credential` | [BaseCredential](#provenance-smartaccounts-v1-BaseCredential) |  |  |
+| `fido2_authenticator` | [Fido2Authenticator](#provenance-smartaccounts-v1-Fido2Authenticator) |  |  |
+| `k256_authenticator` | [K256Authenticator](#provenance-smartaccounts-v1-K256Authenticator) |  |  |
+| `session_authenticator` | [SessionAuthenticator](#provenance-smartaccounts-v1-SessionAuthenticator) |  |  |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-Fido2Authenticator"></a>
+
+### Fido2Authenticator
+Fido2Authenticator is a Fido2 authenticator.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | A probabilistically-unique byte sequence identifying a public key credential source and its authentication assertions. The credential id (from the id attribute) is the base64url encoding of the data contained in the [[identifier]] internal slot. |
+| `username` | [string](#string) |  | this is the username of the credential |
+| `aaguid` | [bytes](#bytes) |  | Note on why to store aaGuid The AAGUID itself doesn’t directly identify a user but could potentially be used to infer the device type or model. Storing the AAGUID is not mandatory but is useful for enforcing security policies, auditing, and accessing device metadata. because of privacy, for now store it. |
+| `credential_creation_response` | [string](#string) |  | This is the response returned by the browser after a WebAuthn credential is created using navigator.credentials.create(). base64 encoded string |
+| `rp_id` | [string](#string) |  | store the rp id |
+| `rp_origin` | [string](#string) |  | store the rp origin |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-K256Authenticator"></a>
+
+### K256Authenticator
+K256Authenticator is a K256 authenticator.
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgInit"></a>
+
+### MsgInit
+MsgInit is used to initialize a provenance account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is the address of the sender of this message. |
+| `credentials` | [Credential](#provenance-smartaccounts-v1-Credential) | repeated | list of credential types supported by the account at least one has to be provided. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-MsgInitResponse"></a>
+
+### MsgInitResponse
+MsgInitResponse is the response returned after smart account initialization.
+For now, This is empty.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account_address` | [string](#string) |  | account_address is the address of the newly created account. |
+| `sequence` | [uint64](#uint64) |  | sequence is the current sequence of the account. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-Params"></a>
+
+### Params
+Params defines the set of module parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `enabled` | [bool](#bool) |  | check if the smart account module is enabled. |
+| `max_credential_allowed` | [uint32](#uint32) |  | max_credential_allowed is the max number of smart credentials allowed per base account. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-ProvenanceAccount"></a>
+
+### ProvenanceAccount
+ProvenanceAccount is a Type Of Smart Account assumes presence of a BaseAccount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_account` | [cosmos.auth.v1beta1.BaseAccount](#cosmos-auth-v1beta1-BaseAccount) |  | address is the address of the account. This will be the same as the base account based on discussion on Jan30th, 2025. string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"]; Makes inheritance explicit Provides access to BaseAccount fields (account_number, sequence, etc.) Follows Cosmos SDK conventions Simplifies implementation of account interfaces |
+| `smart_account_number` | [uint64](#uint64) |  | smart_account_number is the global sequence number. |
+| `credentials` | [Credential](#provenance-smartaccounts-v1-Credential) | repeated | list of credential types supported by the account |
+| `is_smart_account_only_authentication` | [bool](#bool) |  | set to false but if set to true only smart account authentication is allowed. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-SessionAuthenticator"></a>
+
+### SessionAuthenticator
+Only valid for the duration of the session, public key for now is only k256 based.
+This is NOT IMPLEMENTED right now, but should be implemented for Session level credentials.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `end_session_height` | [int64](#int64) |  | block height at which it is invalidated |
+| `timed_out` | [bool](#bool) |  | seconds component of block consensus timestamp |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance-smartaccounts-v1-CredentialType"></a>
+
+### CredentialType
+Enum for credential type
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `CREDENTIAL_TYPE_UNSPECIFIED` | `0` | Unspecified credential type |
+| `CREDENTIAL_TYPE_ED25519` | `1` | ED25519 credential type |
+| `CREDENTIAL_TYPE_K256` | `2` | K256 credential type, this will the usual cosmos credential |
+| `CREDENTIAL_TYPE_P256` | `3` | P256 credential type |
+| `CREDENTIAL_TYPE_WEBAUTHN` | `4` | WebAuthn credential type |
+| `CREDENTIAL_TYPE_WEBAUTHN_UV` | `5` | WebAuthn with UV credential type |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_smartaccounts_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/smartaccounts/v1/query.proto
+
+
+
+<a name="provenance-smartaccounts-v1-QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-smartaccounts-v1-Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-SmartAccountQueryRequest"></a>
+
+### SmartAccountQueryRequest
+SmartAccountQueryRequest is the request type for the Query/AccountQuery RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the account to be queried. this is the base account address. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-SmartAccountResponse"></a>
+
+### SmartAccountResponse
+SmartAccountQueryResponse is the response type for the Query/AccountQuery RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `provenanceaccount` | [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount) |  | provenance account is the smart account associated with the account. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-smartaccounts-v1-Query"></a>
+
+### Query
+Query defines the Query service for the x/accounts module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `SmartAccount` | [SmartAccountQueryRequest](#provenance-smartaccounts-v1-SmartAccountQueryRequest) | [SmartAccountResponse](#provenance-smartaccounts-v1-SmartAccountResponse) | SmartAccountQuery runs a query to retrieve the state object of a smart account. |
+| `Params` | [QueryParamsRequest](#provenance-smartaccounts-v1-QueryParamsRequest) | [QueryParamsResponse](#provenance-smartaccounts-v1-QueryParamsResponse) | Params queries all parameters of the module. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_smartaccounts_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/smartaccounts/v1/genesis.proto
+
+
+
+<a name="provenance-smartaccounts-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState defines the accounts' module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-smartaccounts-v1-Params) |  | params defines all the parameters of the module. |
+| `accounts` | [ProvenanceAccount](#provenance-smartaccounts-v1-ProvenanceAccount) | repeated | A collection of smart accounts to create on start |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_smartaccounts_v1_webauthn_key_types-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/smartaccounts/v1/webauthn_key_types.proto
+
+
+
+<a name="provenance-smartaccounts-v1-EC2PublicKeyData"></a>
+
+### EC2PublicKeyData
+EC2PublicKeyData represents the EC2 public key data for WebAuthn credentials.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `public_key_data` | [PublicKeyData](#provenance-smartaccounts-v1-PublicKeyData) |  | Embedding PublicKeyData |
+| `curve` | [int64](#int64) |  | Curve: If the key type is EC2, the curve on which we derive the signature from. |
+| `x_coord` | [bytes](#bytes) |  | XCoord: A byte string 32 bytes in length that holds the x coordinate of the key. |
+| `y_coord` | [bytes](#bytes) |  | YCoord: A byte string 32 bytes in length that holds the y coordinate of the key. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-EdDSAPublicKeyData"></a>
+
+### EdDSAPublicKeyData
+EdDSAPublicKeyData represents the EdDSA public key data for WebAuthn credentials.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `public_key_data` | [PublicKeyData](#provenance-smartaccounts-v1-PublicKeyData) |  | Embedding PublicKeyData |
+| `curve` | [int64](#int64) |  | Curve: Curve for OKP |
+| `x_coord` | [bytes](#bytes) |  | XCoord: A byte string that holds the x coordinate of the key. |
+
+
+
+
+
+
+<a name="provenance-smartaccounts-v1-PublicKeyData"></a>
+
+### PublicKeyData
+PublicKeyData represents the public key data for WebAuthn credentials.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `public_key` | [bytes](#bytes) |  | Decode the results to int by default. |
+| `key_type` | [int64](#int64) |  | The type of key created. Should be OKP, EC2, ( RSA not supported). |
+| `algorithm` | [int64](#int64) |  | A COSEAlgorithmIdentifier for the algorithm used to derive the key signature. |
 
 
 

@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package provenance.smartaccounts.v1;
+
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+import "provenance/smartaccounts/v1/provenanceaccount.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/smartaccounts/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // UpdateParams defines a governance operation for updating the parameters for smart account module only.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  // RegisterFido2Credential defines a method for registering a Fido2 credential.
+  rpc RegisterFido2Credential(MsgRegisterFido2Credential) returns (MsgRegisterFido2CredentialResponse);
+  // RegisterCosmosCredential defines a method for registering a Cosmos credential.
+  rpc RegisterCosmosCredential(MsgRegisterCosmosCredential) returns (MsgRegisterCosmosCredentialResponse);
+  // DeleteCredential defines a method for deleting a credential.
+  rpc DeleteCredential(MsgDeleteCredential) returns (MsgDeleteCredentialResponse);
+}
+
+// MsgRegisterFido2Credential is used to initialize a provenance smart account with fido2 credentials.
+message MsgRegisterFido2Credential {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the address of the sender of this message.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  string encoded_attestation = 2;
+  // You must store the user ID separately when initiating registration and retrieve it later.
+  // This is the fido2 user identifier for the authenticator.
+  string user_identifier = 3;
+}
+
+// MsgDeleteCredential defines a method for deleting a credential.
+message MsgDeleteCredential {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the address of the sender of this message.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // credential number is the credential number assigned to the credential in the provenance smart account module.
+  uint64 credential_number = 2;
+}
+// MsgDeleteCredentialResponse defines the response structure for executing a
+message MsgDeleteCredentialResponse {
+  // credential_number is the credential number that was deleted.
+  uint64 credential_number = 1;
+}
+
+// MsgRegisterCosmosCredential defines a method for registering a Cosmos credential.
+message MsgRegisterCosmosCredential {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the address of the sender of this message.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // pubkey for which the secp256k1 keypair being registered.
+  google.protobuf.Any pubkey = 2;
+}
+
+// MsgRegisterFido2CredentialResponse is returned after successfully registering a WebAuthn credential.
+// It contains information about the newly registered credential and the associated smart account.
+message MsgRegisterFido2CredentialResponse {
+  // credential_number is a globally unique identifier assigned to the newly registered credential.
+  // This number can be used in future operations like credential deletion.
+  uint64 credential_number = 1;
+
+  // provenanceaccount contains the full smart account data after the registration,
+  // including all credentials associated with the account and its current state.
+  ProvenanceAccount provenance_account = 2;
+}
+
+// MsgRegisterCosmosCredentialResponse defines the response structure for executing a
+message MsgRegisterCosmosCredentialResponse {
+  uint64 credential_number = 1;
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the governance account.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParamsResponse {}

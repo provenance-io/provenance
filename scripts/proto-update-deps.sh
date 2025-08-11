@@ -27,7 +27,9 @@ COSMWASM_V1BETA1_TARBALL_URL='github.com/CosmWasm/wasmd/tarball/v0.17.0'  # Back
 COSMWASM_CUR_TARBALL_URL="$( go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::; s: :/tarball/:;' )"
 IBC_PORT_V1_QUERY_URL='https://raw.githubusercontent.com/cosmos/ibc-go/v2.3.1/proto/ibc/core/port/v1/query.proto' # Backwards compatibility.
 IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v8 | sed 's:.* => ::; s: :/tarball/:; s:/v8::;')"
-COSMOS_TARBALL_URL="$( go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::; s: :/tarball/:;' )"
+# The second sed command is to handle go pseudo-versions (e.g. v0.50.14-pio-1.0.20250709232656-8c43178897fe)
+# by stripping the tag and timestamp, leaving only the commit hash for the tarball URL.
+COSMOS_TARBALL_URL="$( go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::; s: :/tarball/:;' | sed -E 's:(/tarball/)v.*-([0-9a-f]{12}):\1\2:' )"
 COMETBFT_TARBALL_URL="$( go list -m github.com/cometbft/cometbft | sed 's:.* => ::; s: :/tarball/:;' )"
 
 # gnu tar on ubuntu requires the '--wildcards' flag
