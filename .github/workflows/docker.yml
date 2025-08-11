@@ -2,15 +2,16 @@ name: Docker Build and Push
 # Build & Push builds the simapp docker image on every push to master
 # and pushes the image to a private Google Artifact Registry.
 on:
-  pull_request:
-    paths:
-      - docker/blockchain/Dockerfile
-      - .github/workflows/docker.yml
+  # pull_request:
+  #   paths:
+  #     - docker/blockchain/Dockerfile
+  #     - .github/workflows/docker.yml
   push:
     branches:
       - main
     tags:
       - '**'
+  workflow_dispatch:
 
 permissions:
   id-token: write
