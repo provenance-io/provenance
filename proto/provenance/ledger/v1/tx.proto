@@ -54,8 +54,8 @@ service Msg {
   // Add a bucket type to a ledger class
   rpc AddLedgerClassBucketType(MsgAddLedgerClassBucketTypeRequest) returns (MsgAddLedgerClassBucketTypeResponse);
 
-  // Bulk import ledger data from genesis state
-  rpc BulkImport(MsgBulkImportRequest) returns (MsgBulkImportResponse);
+  // Bulk create ledgers and entries
+  rpc BulkCreate(MsgBulkCreateRequest) returns (MsgBulkCreateResponse);
 }
 
 // MsgCreateRequest represents a request to create a new ledger.
@@ -284,16 +284,16 @@ message MsgAddLedgerClassBucketTypeRequest {
 // MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type.
 message MsgAddLedgerClassBucketTypeResponse {}
 
-// MsgBulkImportRequest represents a request to bulk import ledger data from genesis state.
-message MsgBulkImportRequest {
+// MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
+message MsgBulkCreateRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The authority/signer that is bulk importing the ledger data
   string authority = 1;
 
   // The genesis state to bulk import
-  GenesisState genesis_state = 2;
+  repeated LedgerToEntries ledger_to_entries = 2;
 }
 
-// MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state.
-message MsgBulkImportResponse {}
+// MsgBulkCreateResponse represents the response from bulk creating ledgers and entries.
+message MsgBulkCreateResponse {}

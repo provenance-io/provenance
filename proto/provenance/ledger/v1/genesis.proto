@@ -41,10 +41,6 @@ message GenesisState {
   // Settlement instructions for fund transfers
   repeated GenesisStoredSettlementInstructions settlement_instructions = 7
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "settlementInstructions,omitempty"];
-
-  // Ledgers to entries
-  repeated LedgerToEntries ledger_to_entries = 8
-      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgersToEntries,omitempty"];
 }
 
 // GenesisLedgerClassEntryType is a single ledger class entry type with its key. This is used for the genesis state

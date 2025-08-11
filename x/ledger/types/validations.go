@@ -320,3 +320,22 @@ func (bb *BucketBalance) Validate() error {
 
 	return nil
 }
+
+// Validate validates the LedgerToEntries type
+func (lte *LedgerToEntries) Validate() error {
+	if err := lte.LedgerKey.Validate(); err != nil {
+		return err
+	}
+
+	if len(lte.Entries) == 0 {
+		return NewErrCodeMissingField("entries")
+	}
+
+	for _, entry := range lte.Entries {
+		if err := entry.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

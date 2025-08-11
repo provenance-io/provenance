@@ -270,8 +270,8 @@
     - [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse)
     - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
     - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
-    - [MsgBulkImportRequest](#provenance-ledger-v1-MsgBulkImportRequest)
-    - [MsgBulkImportResponse](#provenance-ledger-v1-MsgBulkImportResponse)
+    - [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest)
+    - [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse)
     - [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest)
     - [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse)
     - [MsgCreateRequest](#provenance-ledger-v1-MsgCreateRequest)
@@ -4749,26 +4749,26 @@ MsgAppendResponse represents the response from appending entries to a ledger.
 
 
 
-<a name="provenance-ledger-v1-MsgBulkImportRequest"></a>
+<a name="provenance-ledger-v1-MsgBulkCreateRequest"></a>
 
-### MsgBulkImportRequest
-MsgBulkImportRequest represents a request to bulk import ledger data from genesis state.
+### MsgBulkCreateRequest
+MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | The authority/signer that is bulk importing the ledger data |
-| `genesis_state` | [GenesisState](#provenance-ledger-v1-GenesisState) |  | The genesis state to bulk import |
+| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | The genesis state to bulk import |
 
 
 
 
 
 
-<a name="provenance-ledger-v1-MsgBulkImportResponse"></a>
+<a name="provenance-ledger-v1-MsgBulkCreateResponse"></a>
 
-### MsgBulkImportResponse
-MsgBulkImportResponse represents the response from bulk importing ledger data from genesis state.
+### MsgBulkCreateResponse
+MsgBulkCreateResponse represents the response from bulk creating ledgers and entries.
 
 
 
@@ -5046,7 +5046,7 @@ Msg defines the ledger module Msg service.
 | `AddLedgerClassStatusType` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | Add a status type to a ledger class |
 | `AddLedgerClassEntryType` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | Add an entry type to a ledger class |
 | `AddLedgerClassBucketType` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | Add a bucket type to a ledger class |
-| `BulkImport` | [MsgBulkImportRequest](#provenance-ledger-v1-MsgBulkImportRequest) | [MsgBulkImportResponse](#provenance-ledger-v1-MsgBulkImportResponse) | Bulk import ledger data from genesis state |
+| `BulkCreate` | [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest) | [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse) | Bulk create ledgers and entries |
 
  <!-- end services -->
 
@@ -6008,7 +6008,6 @@ This structure matches the test.json format for bulk import.
 | `ledgers` | [GenesisLedger](#provenance-ledger-v1-GenesisLedger) | repeated | Ledgers |
 | `ledger_entries` | [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry) | repeated | Ledger entries |
 | `settlement_instructions` | [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions) | repeated | Settlement instructions for fund transfers |
-| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | Ledgers to entries |
 
 
 

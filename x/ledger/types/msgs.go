@@ -23,7 +23,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgAddLedgerClassStatusTypeRequest)(nil),
 	(*MsgAddLedgerClassEntryTypeRequest)(nil),
 	(*MsgAddLedgerClassBucketTypeRequest)(nil),
-	(*MsgBulkImportRequest)(nil),
+	(*MsgBulkCreateRequest)(nil),
 }
 
 // Note: Authority address validation is performed in the message server to avoid duplicate bech32 conversions.
@@ -306,14 +306,16 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic implements the sdk.Msg interface for MsgBulkImportRequest
-func (m MsgBulkImportRequest) ValidateBasic() error {
+// ValidateBasic implements the sdk.Msg interface for MsgBulkCreateRequest
+func (m MsgBulkCreateRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return err
 	}
 
-	if m.GenesisState == nil {
-		return NewErrCodeInvalidField("genesis_state", "cannot be nil")
+	for _, ledgerToEntries := range m.LedgerToEntries {
+		if err := ledgerToEntries.Validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil

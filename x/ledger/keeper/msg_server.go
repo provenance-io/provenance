@@ -270,14 +270,19 @@ func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *types.M
 	return &types.MsgAddLedgerClassBucketTypeResponse{}, nil
 }
 
-func (k *MsgServer) BulkImport(goCtx context.Context, req *types.MsgBulkImportRequest) (*types.MsgBulkImportResponse, error) {
+func (k *MsgServer) BulkCreate(goCtx context.Context, req *types.MsgBulkCreateRequest) (*types.MsgBulkCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO Add authority check
+	// Authority has to be able to add ledgers and entries for every key.
+	for _, ledgerToEntries := range req.LedgerToEntries {
+		if err := k.RequireAuthority(ctx, req.Authority, ledgerToEntries.LedgerKey.ToRegistryKey()); err != nil {
+			return nil, err
+		}
+	}
 
-	if err := k.BulkImportLedgerData(ctx, *req.GenesisState); err != nil {
+	if err := k.Keeper.BulkCreate(ctx, req.LedgerToEntries); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgBulkImportResponse{}, nil
+	return &types.MsgBulkCreateResponse{}, nil
 }

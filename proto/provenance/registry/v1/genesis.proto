@@ -6,7 +6,6 @@ option java_package        = "io.provenance.registry.v1";
 option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 import "provenance/registry/v1/registry.proto";
 
 // GenesisState defines the registry module's genesis state.
