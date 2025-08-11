@@ -7,6 +7,6 @@ var (
 	ledgerClassEntryTypesPrefix       = []byte{0x04}
 	ledgerClassStatusTypesPrefix      = []byte{0x05}
 	ledgerClassBucketTypesPrefix      = []byte{0x06}
-	fundTransfersPrefix               = []byte{0x07} // Reserved for future use...
+	_                                 = []byte{0x07} // fundTransfersPrefix reserved for future use
 	fundTransfersWithSettlementPrefix = []byte{0x08}
 )

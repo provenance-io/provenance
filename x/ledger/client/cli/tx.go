@@ -6,11 +6,12 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
@@ -55,19 +56,19 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				return err
 			}
 
-			assetClassId := args[0]
-			nftId := args[1]
-			ledgerClassId := args[2]
-			statusTypeId, _ := strconv.ParseInt(args[3], 10, 32)
+			assetClassID := args[0]
+			nftID := args[1]
+			ledgerClassID := args[2]
+			statusTypeID, _ := strconv.ParseInt(args[3], 10, 32)
 
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{
 				Key: &ledger.LedgerKey{
-					AssetClassId: assetClassId,
-					NftId:        nftId,
+					AssetClassId: assetClassID,
+					NftId:        nftID,
 				},
-				LedgerClassId: ledgerClassId,
-				StatusTypeId:  int32(statusTypeId),
+				LedgerClassId: ledgerClassID,
+				StatusTypeId:  int32(statusTypeID), //nolint:gosec // Controlled conversion
 			}
 
 			// Get optional fields from flags
@@ -75,7 +76,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			if nextPmtDateStr != "" {
 				nextPmtDate, err := helper.StrToDate(nextPmtDateStr)
 				if err != nil {
-					return fmt.Errorf("invalid --next-pmt-date: %v", err)
+					return fmt.Errorf("invalid --next-pmt-date: %w", err)
 				}
 				ledgerObj.NextPmtDate = helper.DaysSinceEpoch(nextPmtDate.UTC())
 			}
@@ -94,7 +95,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			if maturityDateStr != "" {
 				maturityDate, err := helper.StrToDate(maturityDateStr)
 				if err != nil {
-					return fmt.Errorf("invalid --maturity-date: %v", err)
+					return fmt.Errorf("invalid --maturity-date: %w", err)
 				}
 				ledgerObj.MaturityDate = helper.DaysSinceEpoch(maturityDate.UTC())
 			}
@@ -197,13 +198,13 @@ func CmdDestroy() *cobra.Command {
 				return err
 			}
 
-			assetClassId := args[0]
-			nftId := args[1]
+			assetClassID := args[0]
+			nftID := args[1]
 
 			msg := &ledger.MsgDestroyRequest{
 				Key: &ledger.LedgerKey{
-					AssetClassId: assetClassId,
-					NftId:        nftId,
+					AssetClassId: assetClassID,
+					NftId:        nftID,
 				},
 				Authority: clientCtx.FromAddress.String(),
 			}
@@ -256,8 +257,8 @@ where the json is formatted as follows:
 				return err
 			}
 
-			assetClassId := args[0]
-			nftId := args[1]
+			assetClassID := args[0]
+			nftID := args[1]
 
 			jsonData, err := os.ReadFile(args[2])
 			if err != nil {
@@ -272,14 +273,16 @@ where the json is formatted as follows:
 			entries := make([]*ledger.LedgerEntry, 0, len(rawEntries))
 			for _, rawEntry := range rawEntries {
 				var entry ledger.LedgerEntry
-				clientCtx.Codec.UnmarshalJSON(rawEntry, &entry)
+				if err := clientCtx.Codec.UnmarshalJSON(rawEntry, &entry); err != nil {
+					return err
+				}
 				entries = append(entries, &entry)
 			}
 
 			msg := &ledger.MsgAppendRequest{
 				Key: &ledger.LedgerKey{
-					AssetClassId: assetClassId,
-					NftId:        nftId,
+					AssetClassId: assetClassID,
+					NftId:        nftID,
 				},
 				Entries:   entries,
 				Authority: clientCtx.FromAddress.String(),
@@ -307,14 +310,14 @@ func CmdCreateLedgerClass() *cobra.Command {
 				return err
 			}
 
-			ledgerClassId := args[0]
-			assetClassId := args[1]
+			ledgerClassID := args[0]
+			assetClassID := args[1]
 			denom := args[2]
 
 			msg := &ledger.MsgCreateLedgerClassRequest{
 				LedgerClass: &ledger.LedgerClass{
-					LedgerClassId:     ledgerClassId,
-					AssetClassId:      assetClassId,
+					LedgerClassId:     ledgerClassID,
+					AssetClassId:      assetClassID,
 					Denom:             denom,
 					MaintainerAddress: clientCtx.FromAddress.String(),
 				},
@@ -343,18 +346,18 @@ func CmdAddLedgerClassStatusType() *cobra.Command {
 				return err
 			}
 
-			ledgerClassId := args[0]
+			ledgerClassID := args[0]
 			id, err := strconv.ParseInt(args[1], 10, 32)
 			if err != nil {
-				return fmt.Errorf("invalid <id>: %v", err)
+				return fmt.Errorf("invalid <id>: %w", err)
 			}
 			code := args[2]
 			description := args[3]
 
 			msg := &ledger.MsgAddLedgerClassStatusTypeRequest{
-				LedgerClassId: ledgerClassId,
+				LedgerClassId: ledgerClassID,
 				StatusType: &ledger.LedgerClassStatusType{
-					Id:          int32(id),
+					Id:          int32(id), //nolint:gosec // Controlled conversion
 					Code:        code,
 					Description: description,
 				},
@@ -383,18 +386,18 @@ func CmdAddLedgerClassEntryType() *cobra.Command {
 				return err
 			}
 
-			ledgerClassId := args[0]
+			ledgerClassID := args[0]
 			id, err := strconv.ParseInt(args[1], 10, 32)
 			if err != nil {
-				return fmt.Errorf("invalid <id>: %v", err)
+				return fmt.Errorf("invalid <id>: %w", err)
 			}
 			code := args[2]
 			description := args[3]
 
 			msg := &ledger.MsgAddLedgerClassEntryTypeRequest{
-				LedgerClassId: ledgerClassId,
+				LedgerClassId: ledgerClassID,
 				EntryType: &ledger.LedgerClassEntryType{
-					Id:          int32(id),
+					Id:          int32(id), //nolint:gosec // Controlled conversion
 					Code:        code,
 					Description: description,
 				},
@@ -423,18 +426,18 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 				return err
 			}
 
-			ledgerClassId := args[0]
+			ledgerClassID := args[0]
 			id, err := strconv.ParseInt(args[1], 10, 32)
 			if err != nil {
-				return fmt.Errorf("invalid <id>: %v", err)
+				return fmt.Errorf("invalid <id>: %w", err)
 			}
 			code := args[2]
 			description := args[3]
 
 			msg := &ledger.MsgAddLedgerClassBucketTypeRequest{
-				LedgerClassId: ledgerClassId,
+				LedgerClassId: ledgerClassID,
 				BucketType: &ledger.LedgerClassBucketType{
-					Id:          int32(id),
+					Id:          int32(id), //nolint:gosec // Controlled conversion
 					Code:        code,
 					Description: description,
 				},
@@ -474,7 +477,9 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 			transfers := make([]*ledger.FundTransferWithSettlement, 0, len(rawTransfers))
 			for _, rawTransfer := range rawTransfers {
 				var transfer ledger.FundTransferWithSettlement
-				clientCtx.Codec.UnmarshalJSON(rawTransfer, &transfer)
+				if err := clientCtx.Codec.UnmarshalJSON(rawTransfer, &transfer); err != nil {
+					return err
+				}
 				transfers = append(transfers, &transfer)
 			}
 

@@ -13,10 +13,10 @@ const (
 	ledgerKeyHrp = "ledger"
 )
 
-func NewLedgerKey(assetClassId string, nftId string) *LedgerKey {
+func NewLedgerKey(assetClassID string, nftID string) *LedgerKey {
 	return &LedgerKey{
-		AssetClassId: assetClassId,
-		NftId:        nftId,
+		AssetClassId: assetClassID,
+		NftId:        nftID,
 	}
 }
 
@@ -58,20 +58,20 @@ func StringToLedgerKey(s string) (*LedgerKey, error) {
 }
 
 // Implement Compare() for LedgerEntry
-func (a *LedgerEntry) Compare(b *LedgerEntry) int {
+func (le *LedgerEntry) Compare(b *LedgerEntry) int {
 	// First compare effective date (ISO8601 string)
-	if a.EffectiveDate < b.EffectiveDate {
+	if le.EffectiveDate < b.EffectiveDate {
 		return -1
 	}
-	if a.EffectiveDate > b.EffectiveDate {
+	if le.EffectiveDate > b.EffectiveDate {
 		return 1
 	}
 
 	// Then compare sequence number
-	if a.Sequence < b.Sequence {
+	if le.Sequence < b.Sequence {
 		return -1
 	}
-	if a.Sequence > b.Sequence {
+	if le.Sequence > b.Sequence {
 		return 1
 	}
 

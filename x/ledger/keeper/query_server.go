@@ -7,10 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
-var _ ledger.QueryServer = LedgerQueryServer{}
+var _ types.QueryServer = LedgerQueryServer{}
 
 type LedgerQueryServer struct {
 	k Keeper
@@ -22,7 +21,7 @@ func NewLedgerQueryServer(k Keeper) LedgerQueryServer {
 	}
 }
 
-func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *ledger.QueryLedgerRequest) (*ledger.QueryLedgerResponse, error) {
+func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *types.QueryLedgerRequest) (*types.QueryLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	l, err := qs.k.GetLedger(ctx, req.Key)
@@ -34,14 +33,14 @@ func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *ledger.QueryLedge
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	resp := ledger.QueryLedgerResponse{
+	resp := types.QueryLedgerResponse{
 		Ledger: l,
 	}
 
 	return &resp, nil
 }
 
-func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *ledger.QueryLedgerEntriesRequest) (*ledger.QueryLedgerEntriesResponse, error) {
+func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *types.QueryLedgerEntriesRequest) (*types.QueryLedgerEntriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	entries, err := qs.k.ListLedgerEntries(ctx, req.Key)
@@ -53,18 +52,16 @@ func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *ledger.Que
 		return nil, types.NewErrCodeNotFound("ledger entries")
 	}
 
-	resp := ledger.QueryLedgerEntriesResponse{}
+	resp := types.QueryLedgerEntriesResponse{}
 
 	// Add entries to the response.
-	for _, entry := range entries {
-		resp.Entries = append(resp.Entries, entry)
-	}
+	resp.Entries = append(resp.Entries, entries...)
 
 	return &resp, nil
 }
 
 // GetBalancesAsOf returns the balances for a specific NFT as of a given date
-func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *ledger.QueryLedgerBalancesAsOfRequest) (*ledger.QueryLedgerBalancesAsOfResponse, error) {
+func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *types.QueryLedgerBalancesAsOfRequest) (*types.QueryLedgerBalancesAsOfResponse, error) {
 	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
@@ -84,13 +81,13 @@ func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *ledger.
 		return nil, types.NewErrCodeNotFound("balances")
 	}
 
-	return &ledger.QueryLedgerBalancesAsOfResponse{
+	return &types.QueryLedgerBalancesAsOfResponse{
 		BucketBalances: balances,
 	}, nil
 }
 
 // GetLedgerEntry returns a specific ledger entry for an NFT
-func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *ledger.QueryLedgerEntryRequest) (*ledger.QueryLedgerEntryResponse, error) {
+func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *types.QueryLedgerEntryRequest) (*types.QueryLedgerEntryResponse, error) {
 	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
@@ -104,56 +101,56 @@ func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *ledger.QueryLe
 		return nil, types.NewErrCodeNotFound("ledger entry")
 	}
 
-	return &ledger.QueryLedgerEntryResponse{
+	return &types.QueryLedgerEntryResponse{
 		Entry: entry,
 	}, nil
 }
 
-func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *ledger.QueryLedgerClassEntryTypesRequest) (*ledger.QueryLedgerClassEntryTypesResponse, error) {
-	types, err := qs.k.GetLedgerClassEntryTypes(ctx, req.LedgerClassId)
+func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *types.QueryLedgerClassEntryTypesRequest) (*types.QueryLedgerClassEntryTypesResponse, error) {
+	entryTypes, err := qs.k.GetLedgerClassEntryTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ledger.QueryLedgerClassEntryTypesResponse{
-		EntryTypes: types,
+	return &types.QueryLedgerClassEntryTypesResponse{
+		EntryTypes: entryTypes,
 	}, nil
 }
 
-func (qs LedgerQueryServer) LedgerClassStatusTypes(ctx context.Context, req *ledger.QueryLedgerClassStatusTypesRequest) (*ledger.QueryLedgerClassStatusTypesResponse, error) {
-	types, err := qs.k.GetLedgerClassStatusTypes(ctx, req.LedgerClassId)
+func (qs LedgerQueryServer) LedgerClassStatusTypes(ctx context.Context, req *types.QueryLedgerClassStatusTypesRequest) (*types.QueryLedgerClassStatusTypesResponse, error) {
+	statusTypes, err := qs.k.GetLedgerClassStatusTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ledger.QueryLedgerClassStatusTypesResponse{
-		StatusTypes: types,
+	return &types.QueryLedgerClassStatusTypesResponse{
+		StatusTypes: statusTypes,
 	}, nil
 }
 
-func (qs LedgerQueryServer) LedgerClassBucketTypes(ctx context.Context, req *ledger.QueryLedgerClassBucketTypesRequest) (*ledger.QueryLedgerClassBucketTypesResponse, error) {
-	types, err := qs.k.GetLedgerClassBucketTypes(ctx, req.LedgerClassId)
+func (qs LedgerQueryServer) LedgerClassBucketTypes(ctx context.Context, req *types.QueryLedgerClassBucketTypesRequest) (*types.QueryLedgerClassBucketTypesResponse, error) {
+	bucketTypes, err := qs.k.GetLedgerClassBucketTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ledger.QueryLedgerClassBucketTypesResponse{
-		BucketTypes: types,
+	return &types.QueryLedgerClassBucketTypesResponse{
+		BucketTypes: bucketTypes,
 	}, nil
 }
 
-func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *ledger.QueryLedgerClassRequest) (*ledger.QueryLedgerClassResponse, error) {
+func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *types.QueryLedgerClassRequest) (*types.QueryLedgerClassResponse, error) {
 	ledgerClass, err := qs.k.GetLedgerClass(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ledger.QueryLedgerClassResponse{
+	return &types.QueryLedgerClassResponse{
 		LedgerClass: ledgerClass,
 	}, nil
 }
 
-func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *ledger.QueryLedgerSettlementsRequest) (*ledger.QueryLedgerSettlementsResponse, error) {
+func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *types.QueryLedgerSettlementsRequest) (*types.QueryLedgerSettlementsResponse, error) {
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
@@ -162,12 +159,12 @@ func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *ledger.Q
 		return nil, err
 	}
 
-	return &ledger.QueryLedgerSettlementsResponse{
+	return &types.QueryLedgerSettlementsResponse{
 		Settlements: settlements,
 	}, nil
 }
 
-func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context, req *ledger.QueryLedgerSettlementsByCorrelationIdRequest) (*ledger.QueryLedgerSettlementsByCorrelationIdResponse, error) {
+func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context, req *types.QueryLedgerSettlementsByCorrelationIdRequest) (*types.QueryLedgerSettlementsByCorrelationIdResponse, error) {
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
@@ -176,7 +173,7 @@ func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context
 		return nil, err
 	}
 
-	return &ledger.QueryLedgerSettlementsByCorrelationIdResponse{
+	return &types.QueryLedgerSettlementsByCorrelationIdResponse{
 		Settlements: settlements,
 	}, nil
 }

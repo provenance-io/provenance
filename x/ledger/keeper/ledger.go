@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
@@ -46,9 +47,9 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
 // AddClassEntryType adds a new entry type to an existing ledger class.
 // This function validates that the entry type doesn't already exist for the given class.
 // Entry types define what kinds of transactions can be recorded in ledgers of this class.
-func (k Keeper) AddClassEntryType(ctx sdk.Context, ledgerClassId string, l types.LedgerClassEntryType) error {
+func (k Keeper) AddClassEntryType(ctx sdk.Context, ledgerClassID string, l types.LedgerClassEntryType) error {
 	// Create the composite key for the entry type.
-	key := collections.Join(ledgerClassId, l.Id)
+	key := collections.Join(ledgerClassID, l.Id)
 
 	// Check if the entry type already exists to prevent duplicates.
 	has, err := k.LedgerClassEntryTypes.Has(ctx, key)
@@ -70,9 +71,9 @@ func (k Keeper) AddClassEntryType(ctx sdk.Context, ledgerClassId string, l types
 // AddClassStatusType adds a new status type to an existing ledger class.
 // This function validates that the status type doesn't already exist for the given class.
 // Status types define the possible states that ledger entries can have.
-func (k Keeper) AddClassStatusType(ctx sdk.Context, ledgerClassId string, l types.LedgerClassStatusType) error {
+func (k Keeper) AddClassStatusType(ctx sdk.Context, ledgerClassID string, l types.LedgerClassStatusType) error {
 	// Create the composite key for the status type.
-	key := collections.Join(ledgerClassId, l.Id)
+	key := collections.Join(ledgerClassID, l.Id)
 
 	// Check if the status type already exists to prevent duplicates.
 	has, err := k.LedgerClassStatusTypes.Has(ctx, key)
@@ -95,9 +96,9 @@ func (k Keeper) AddClassStatusType(ctx sdk.Context, ledgerClassId string, l type
 // AddClassBucketType adds a new bucket type to an existing ledger class.
 // This function validates that the bucket type doesn't already exist for the given class.
 // Bucket types define how funds are categorized and organized within ledgers.
-func (k Keeper) AddClassBucketType(ctx sdk.Context, ledgerClassId string, l types.LedgerClassBucketType) error {
+func (k Keeper) AddClassBucketType(ctx sdk.Context, ledgerClassID string, l types.LedgerClassBucketType) error {
 	// Create the composite key for the bucket type.
-	key := collections.Join(ledgerClassId, l.Id)
+	key := collections.Join(ledgerClassID, l.Id)
 
 	// Check if the bucket type already exists to prevent duplicates.
 	has, err := k.LedgerClassBucketTypes.Has(ctx, key)
@@ -119,9 +120,9 @@ func (k Keeper) AddClassBucketType(ctx sdk.Context, ledgerClassId string, l type
 // IsLedgerClassMaintainer checks if the given address is the maintainer of a ledger class.
 // This function validates that the maintainer address matches the one stored in the ledger class.
 // Only maintainers can modify ledger class configurations.
-func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, ledgerClassId string) bool {
+func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, ledgerClassID string) bool {
 	// Validate that the maintainer address matches the one in the ledger class.
-	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
+	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassID)
 	return err == nil && ledgerClass.MaintainerAddress == maintainerAddr
 }
 
@@ -172,7 +173,9 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	keyStr := l.Key.String()
 
 	// Emit the ledger created event to notify other modules.
-	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerCreated(l.Key))
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerCreated(l.Key)); err != nil {
+		return err
+	}
 
 	// Empty out the key to avoid storing it in the ledger and the key field.
 	l.Key = nil
@@ -188,7 +191,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 // UpdateLedgerStatus updates the status type of an existing ledger.
 // This function validates that the new status type exists for the ledger's class.
 // Status changes can reflect the current state of the ledger (e.g., active, suspended, closed).
-func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusTypeId int32) error {
+func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusTypeID int32) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
@@ -196,7 +199,7 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusT
 	}
 
 	// Validate that the status type exists for this ledger class.
-	hasLedgerClassStatusType, err := k.LedgerClassStatusTypes.Has(ctx, collections.Join(ledger.LedgerClassId, statusTypeId))
+	hasLedgerClassStatusType, err := k.LedgerClassStatusTypes.Has(ctx, collections.Join(ledger.LedgerClassId, statusTypeID))
 	if err != nil {
 		return err
 	}
@@ -205,7 +208,7 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusT
 	}
 
 	// Update the ledger status with the new status type.
-	ledger.StatusTypeId = statusTypeId
+	ledger.StatusTypeId = statusTypeID
 
 	keyStr := ledger.Key.String()
 
@@ -215,7 +218,9 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusT
 	}
 
 	// Emit the ledger updated event.
-	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_STATUS))
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_STATUS)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -243,7 +248,9 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, lk *types.LedgerKey, i
 	}
 
 	// Emit the ledger updated event.
-	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_INTEREST_RATE))
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_INTEREST_RATE)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -271,7 +278,9 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPm
 	}
 
 	// Emit the ledger updated event.
-	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_PAYMENT))
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_PAYMENT)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -297,7 +306,9 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, m
 	}
 
 	// Emit the ledger updated event.
-	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_MATURITY_DATE))
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_MATURITY_DATE)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -346,7 +357,9 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, lk *types.LedgerKey) error {
 	}
 
 	// Emit the ledger destroyed event to notify other modules.
-	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerDestroyed(lk))
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerDestroyed(lk)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -415,8 +428,8 @@ func (k Keeper) HasLedger(ctx sdk.Context, key *types.LedgerKey) bool {
 // GetLedgerClass retrieves a ledger class by its ID.
 // This function looks up a ledger class and returns the complete class configuration.
 // It returns nil if the ledger class doesn't exist.
-func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*types.LedgerClass, error) {
-	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassId)
+func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassID string) (*types.LedgerClass, error) {
+	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassID)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, nil
@@ -429,8 +442,8 @@ func (k Keeper) GetLedgerClass(ctx context.Context, ledgerClassId string) (*type
 // RequireGetLedgerClass retrieves a ledger class and requires it to exist.
 // This function is similar to GetLedgerClass but returns an error if the class is not found.
 // It's used when the ledger class must exist for the operation to proceed.
-func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassId string) (*types.LedgerClass, error) {
-	ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassId)
+func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassID string) (*types.LedgerClass, error) {
+	ledgerClass, err := k.GetLedgerClass(ctx, ledgerClassID)
 	if err != nil {
 		return nil, err
 	}
@@ -443,15 +456,15 @@ func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassId string)
 // GetLedgerClassEntryTypes retrieves all entry types for a given ledger class.
 // This function walks through all entry type definitions associated with the ledger class.
 // Entry types define what kinds of transactions can be recorded in ledgers of this class.
-func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId string) ([]*types.LedgerClassEntryType, error) {
+func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassID string) ([]*types.LedgerClassEntryType, error) {
 	// Create a prefix range to find all entry types for this ledger class.
-	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
+	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassID)
 
 	// Initialize a slice to collect all entry types.
 	entryTypes := make([]*types.LedgerClassEntryType, 0)
 
 	// Walk through all entry type records that match the ledger class prefix.
-	err := k.LedgerClassEntryTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value types.LedgerClassEntryType) (stop bool, err error) {
+	err := k.LedgerClassEntryTypes.Walk(ctx, prefix, func(_ collections.Pair[string, int32], value types.LedgerClassEntryType) (stop bool, err error) {
 		entryTypes = append(entryTypes, &value)
 		return false, nil
 	})
@@ -465,15 +478,15 @@ func (k Keeper) GetLedgerClassEntryTypes(ctx context.Context, ledgerClassId stri
 // GetLedgerClassStatusTypes retrieves all status types for a given ledger class.
 // This function walks through all status type definitions associated with the ledger class.
 // Status types define the possible states that ledger entries can have.
-func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId string) ([]*types.LedgerClassStatusType, error) {
+func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassID string) ([]*types.LedgerClassStatusType, error) {
 	// Create a prefix range to find all status types for this ledger class.
-	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
+	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassID)
 
 	// Initialize a slice to collect all status types.
 	statusTypes := make([]*types.LedgerClassStatusType, 0)
 
 	// Walk through all status type records that match the ledger class prefix.
-	err := k.LedgerClassStatusTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value types.LedgerClassStatusType) (stop bool, err error) {
+	err := k.LedgerClassStatusTypes.Walk(ctx, prefix, func(_ collections.Pair[string, int32], value types.LedgerClassStatusType) (stop bool, err error) {
 		statusTypes = append(statusTypes, &value)
 		return false, nil
 	})
@@ -487,15 +500,15 @@ func (k Keeper) GetLedgerClassStatusTypes(ctx context.Context, ledgerClassId str
 // GetLedgerClassBucketTypes retrieves all bucket types for a given ledger class.
 // This function walks through all bucket type definitions associated with the ledger class.
 // Bucket types define how funds are categorized and organized within ledgers.
-func (k Keeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassId string) ([]*types.LedgerClassBucketType, error) {
+func (k Keeper) GetLedgerClassBucketTypes(ctx context.Context, ledgerClassID string) ([]*types.LedgerClassBucketType, error) {
 	// Create a prefix range to find all bucket types for this ledger class.
-	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassId)
+	prefix := collections.NewPrefixedPairRange[string, int32](ledgerClassID)
 
 	// Initialize a slice to collect all bucket types.
 	bucketTypes := make([]*types.LedgerClassBucketType, 0)
 
 	// Walk through all bucket type records that match the ledger class prefix.
-	err := k.LedgerClassBucketTypes.Walk(ctx, prefix, func(key collections.Pair[string, int32], value types.LedgerClassBucketType) (stop bool, err error) {
+	err := k.LedgerClassBucketTypes.Walk(ctx, prefix, func(_ collections.Pair[string, int32], value types.LedgerClassBucketType) (stop bool, err error) {
 		bucketTypes = append(bucketTypes, &value)
 		return false, nil
 	})

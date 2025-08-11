@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/ledger/helper"
@@ -84,14 +85,14 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 // Parameters:
 // - ctx: The SDK context for state operations
 // - ledgerKey: The ledger identifier
-// - correlationId: The unique identifier of the entry to update
+// - correlationID: The unique identifier of the entry to update
 // - balanceAmounts: New bucket balance amounts
 // - appliedAmounts: New applied amounts for the entry
 //
 // Returns an error if the entry doesn't exist or if the update fails.
-func (k Keeper) UpdateEntryBalances(ctx sdk.Context, ledgerKey *types.LedgerKey, correlationId string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
+func (k Keeper) UpdateEntryBalances(ctx sdk.Context, ledgerKey *types.LedgerKey, correlationID string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Retrieve the existing entry to ensure it exists before updating.
-	existingEntry, err := k.GetLedgerEntry(ctx, ledgerKey, correlationId)
+	existingEntry, err := k.GetLedgerEntry(ctx, ledgerKey, correlationID)
 	if err != nil {
 		return err
 	}
@@ -111,7 +112,7 @@ func (k Keeper) UpdateEntryBalances(ctx sdk.Context, ledgerKey *types.LedgerKey,
 
 	// Store the updated entry back to the state store.
 	ledgerKeyStr := ledgerKey.String()
-	err = k.LedgerEntries.Set(ctx, collections.Join(ledgerKeyStr, correlationId), *existingEntry)
+	err = k.LedgerEntries.Set(ctx, collections.Join(ledgerKeyStr, correlationID), *existingEntry)
 	if err != nil {
 		return err
 	}
@@ -195,10 +196,12 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 
 	// Emit the ledger entry added event to notify other modules of the new entry.
 	// This allows for proper event handling and external integrations.
-	ctx.EventManager().EmitTypedEvent(types.NewEventLedgerEntryAdded(
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerEntryAdded(
 		ledgerKey,
 		le.CorrelationId,
-	))
+	)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -222,7 +225,7 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, key *types.LedgerKey) ([]
 	entries := make([]*types.LedgerEntry, 0)
 
 	// Walk through all entry records that match the ledger prefix.
-	err := k.LedgerEntries.Walk(ctx, prefix, func(key collections.Pair[string, string], value types.LedgerEntry) (stop bool, err error) {
+	err := k.LedgerEntries.Walk(ctx, prefix, func(_ collections.Pair[string, string], value types.LedgerEntry) (stop bool, err error) {
 		entries = append(entries, &value)
 		return false, nil
 	})

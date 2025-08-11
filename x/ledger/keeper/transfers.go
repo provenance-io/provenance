@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
@@ -71,7 +72,9 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 
 	// Emit an event to notify other modules of the completed transfer.
 	// This allows for proper event handling and external integrations.
-	ctx.EventManager().EmitTypedEvent(types.NewEventFundTransferWithSettlement(transfer.Key, transfer.LedgerEntryCorrelationId))
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventFundTransferWithSettlement(transfer.Key, transfer.LedgerEntryCorrelationId)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -88,7 +91,7 @@ func (k Keeper) GetAllSettlements(ctx context.Context, keyStr *string) ([]*types
 
 	// Walk through all settlement records that match the ledger prefix.
 	// This collects all settlement instructions for the specified ledger.
-	err := k.FundTransfersWithSettlement.Walk(ctx, prefix, func(key collections.Pair[string, string], value types.StoredSettlementInstructions) (stop bool, err error) {
+	err := k.FundTransfersWithSettlement.Walk(ctx, prefix, func(_ collections.Pair[string, string], value types.StoredSettlementInstructions) (stop bool, err error) {
 		existingTransfers = append(existingTransfers, &value)
 		return false, nil
 	})
@@ -102,9 +105,9 @@ func (k Keeper) GetAllSettlements(ctx context.Context, keyStr *string) ([]*types
 // GetSettlements retrieves settlement instructions for a specific ledger entry.
 // This function looks up settlement records by ledger key and correlation ID.
 // It returns nil if no settlements exist for the specified entry.
-func (k Keeper) GetSettlements(ctx context.Context, keyStr *string, correlationId string) (*types.StoredSettlementInstructions, error) {
+func (k Keeper) GetSettlements(ctx context.Context, keyStr *string, correlationID string) (*types.StoredSettlementInstructions, error) {
 	// Create the composite key for the specific settlement record.
-	searchKey := collections.Join(*keyStr, correlationId)
+	searchKey := collections.Join(*keyStr, correlationID)
 
 	// Retrieve the settlement instructions from the state store.
 	settlements, err := k.FundTransfersWithSettlement.Get(ctx, searchKey)

@@ -59,7 +59,7 @@ func NewErrCodeAlreadyExists(field string) error {
 }
 
 func NewErrCodeInternal(msg string) error {
-	return cerrs.Wrapf(ErrInternal, msg)
+	return cerrs.Wrapf(ErrInternal, "%s", msg)
 }
 
 func NewErrCodeNotFound(key string) error {

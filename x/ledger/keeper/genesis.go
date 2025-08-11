@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
@@ -275,7 +276,7 @@ func (k Keeper) ImportLedgerClassEntryTypes(ctx sdk.Context, state *types.Genesi
 			panic(err)
 		}
 
-		key := collections.Join(l.Key.P1, int32(id))
+		key := collections.Join(l.Key.P1, int32(id)) //nolint:gosec // Controlled conversion
 		if err := k.LedgerClassEntryTypes.Set(ctx, key, l.EntryType); err != nil {
 			panic(err)
 		}
@@ -290,7 +291,7 @@ func (k Keeper) ImportLedgerClassStatusTypes(ctx sdk.Context, state *types.Genes
 			panic(err)
 		}
 
-		key := collections.Join(l.Key.P1, int32(id))
+		key := collections.Join(l.Key.P1, int32(id)) //nolint:gosec // Controlled conversion
 		if err := k.LedgerClassStatusTypes.Set(ctx, key, l.StatusType); err != nil {
 			panic(err)
 		}
@@ -305,7 +306,7 @@ func (k Keeper) ImportLedgerClassBucketTypes(ctx sdk.Context, state *types.Genes
 			panic(err)
 		}
 
-		key := collections.Join(l.Key.P1, int32(id))
+		key := collections.Join(l.Key.P1, int32(id)) //nolint:gosec // Controlled conversion
 		if err := k.LedgerClassBucketTypes.Set(ctx, key, l.BucketType); err != nil {
 			panic(err)
 		}
@@ -322,7 +323,6 @@ func (k Keeper) ImportLedgers(ctx sdk.Context, state *types.GenesisState) {
 
 func (k Keeper) ImportLedgerEntries(ctx sdk.Context, state *types.GenesisState) {
 	for _, le := range state.LedgerEntries {
-
 		key := collections.Join(le.Key.P1, le.Key.P2)
 
 		if err := k.LedgerEntries.Set(ctx, key, le.Entry); err != nil {

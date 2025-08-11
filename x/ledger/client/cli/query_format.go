@@ -32,7 +32,7 @@ type LedgerPlainText struct {
 // LedgerEntryPlainText represents a ledger entry in plain text format
 type LedgerEntryPlainText struct {
 	// Correlation ID for tracking ledger entries with external systems (max 50 characters)
-	CorrelationId string `json:"correlation_id,omitempty"`
+	CorrelationID string `json:"correlation_id,omitempty"`
 	// Sequence number of the ledger entry (less than 100)
 	// This field is used to maintain the correct order of entries when multiple entries
 	// share the same effective date. Entries are sorted first by effective date, then by sequence.

@@ -118,7 +118,6 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 	if err == nil {
 		// The authority owns the asset, and there is no registered servicer
 		return true, nil
-
 	}
 
 	return false, err
