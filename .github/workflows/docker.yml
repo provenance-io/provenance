@@ -12,6 +12,10 @@ on:
     tags:
       - '**'
 
+permissions:
+  id-token: write
+  contents: read
+
 # Set concurrency for this workflow to cancel in-progress jobs if retriggered.
 # The github.ref is only available when triggered by a PR so fall back to github.run_id for other cases.
 # The github.run_id is unique for each run, giving each such invocation it's own unique concurrency group.
