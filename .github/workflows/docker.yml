@@ -1,6 +1,6 @@
 name: Docker Build and Push
 # Build & Push builds the simapp docker image on every push to master
-# and pushes the image to https://hub.docker.com/u/provenanceio
+# and pushes the image to a private Google Artifact Registry.
 on:
   pull_request:
     paths:
@@ -11,9 +11,6 @@ on:
       - main
     tags:
       - '**'
-
-env:
-  DOCKER_IMAGE: "provenanceio/provenance"
 
 # Set concurrency for this workflow to cancel in-progress jobs if retriggered.
 # The github.ref is only available when triggered by a PR so fall back to github.run_id for other cases.
@@ -36,7 +33,7 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ${{ env.DOCKER_IMAGE }}
+          images: us-central1-docker.pkg.dev/provlabs-test/docker/provenance
           flavor: |
             prefix=heighliner-,onlatest=true
           tags: |
@@ -44,10 +41,18 @@ jobs:
             type=ref,event=pr
             type=ref,event=tag
 
+      - uses: google-github-actions/auth@v1
+        id: auth
+        with:
+          token_format: access_token
+          workload_identity_provider: projects/815721530660/locations/global/workloadIdentityPools/gha-runner-pool/providers/gha-runner-pool-provider
+          service_account: gha-runner@provlabs-test.iam.gserviceaccount.com
+
       - uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
       # lock to "linux/amd64" only for now since cross compilation is throwing errors
       - uses: strangelove-ventures/heighliner-build-action@main
@@ -56,7 +61,7 @@ jobs:
           chain: provenance
           local: true
           tag: ${{ steps.meta.outputs.version }}
-          registry: provenanceio
+          registry: us-central1-docker.pkg.dev
           platform: linux/amd64
           dockerfile: cosmos
           build-target: |
@@ -86,16 +91,26 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ${{ env.DOCKER_IMAGE }}
+          images: us-central1-docker.pkg.dev/provlabs-test/docker/provenance
+          flavor: |
+            prefix=heighliner-,onlatest=true
           tags: |
             type=edge
             type=ref,event=pr
             type=ref,event=tag
 
+      - uses: google-github-actions/auth@v1
+        id: auth
+        with:
+          token_format: access_token
+          workload_identity_provider: projects/815721530660/locations/global/workloadIdentityPools/gha-runner-pool/providers/gha-runner-pool-provider
+          service_account: gha-runner@provlabs-test.iam.gserviceaccount.com
+
       - uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
       - uses: docker/build-push-action@v6
         with:
