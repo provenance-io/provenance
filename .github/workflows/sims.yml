@@ -24,7 +24,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -50,7 +50,7 @@ jobs:
     if: needs.setup.outputs.should-run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Output setup
         run: |
           echo " should-run: [${{ needs.setup.outputs.should-run }}]"
@@ -83,7 +83,7 @@ jobs:
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Define test-logs
         id: test-logs
         run: |
@@ -135,7 +135,7 @@ jobs:
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Define test-logs
         id: test-logs
         run: |
@@ -172,7 +172,7 @@ jobs:
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Define test-logs
         id: test-logs
         run: |

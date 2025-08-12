@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Buf setup action
         uses: bufbuild/buf-setup-action@v1.50.0
       - name: Buf push 'third_party/proto'
