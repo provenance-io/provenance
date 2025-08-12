@@ -36,7 +36,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-metrics v0.5.4
-	github.com/provlabs/vault v0.0.0-20250804162107-fe449f718ba8
+	github.com/provlabs/vault v0.0.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.9.1
@@ -365,7 +365,6 @@ replace (
 
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
 	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.52.0-pio-1
-	github.com/ProvLabs/vault => ../vault
 
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.14-pio-2
 
@@ -384,6 +383,8 @@ replace (
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
+
+	github.com/provlabs/vault => github.com/provlabs/vault v0.0.0-20250812211805-2f9e3496d919
 
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
