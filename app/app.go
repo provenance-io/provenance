@@ -15,6 +15,10 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
+	vaultmodule "github.com/provlabs/vault"
+	vaultkeeper "github.com/provlabs/vault/keeper"
+	vaulttypes "github.com/provlabs/vault/types"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
 
@@ -125,10 +129,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
-
-	vaultmodule "github.com/provlabs/vault"
-	vaultkeeper "github.com/provlabs/vault/keeper"
-	vaulttypes "github.com/provlabs/vault/types"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/client/docs"
