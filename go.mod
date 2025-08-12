@@ -385,8 +385,7 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 
 	// milestone-1 tag of the vault
-	github.com/provlabs/vault => github.com/provlabs/vault v0.0.0-20250812211805-2f9e3496d919
-
+	github.com/provlabs/vault => github.com/provlabs/vault v0.0.0-20250812224138-b3a6b5f790ec
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
