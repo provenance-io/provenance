@@ -34,7 +34,7 @@ func CmdQuery() *cobra.Command {
 // GetCmdQueryRegistry returns the command for querying a registry entry
 func GetCmdQueryRegistry() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "registry <asset_class_id> <nft_id>",
+		Use:   "get <asset_class_id> <nft_id>",
 		Short: "Query a registry entry by key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
