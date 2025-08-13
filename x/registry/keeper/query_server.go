@@ -27,6 +27,10 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegist
 		return nil, err
 	}
 
+	if reg == nil {
+		return nil, nil
+	}
+
 	return &types.QueryGetRegistryResponse{Registry: *reg}, nil
 }
 
