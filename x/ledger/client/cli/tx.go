@@ -37,6 +37,7 @@ func CmdTx() *cobra.Command {
 		CmdAddLedgerClassEntryType(),
 		CmdAddLedgerClassBucketType(),
 		CmdTransferFundsWithSettlement(),
+		CmdBulkCreate(),
 	)
 
 	return cmd
@@ -486,6 +487,51 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 			msg := &ledger.MsgTransferFundsWithSettlementRequest{
 				Authority: clientCtx.FromAddress.String(),
 				Transfers: transfers,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdBulkCreate returns the command for creating ledgers and entries in bulk
+func CmdBulkCreate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bulk-create <ledger_entries_json_file",
+		Short: "Create ledgers and entries in bulk",
+		Example: `$ provenanced tx ledger bulk-create data.json --from mykey`,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonData, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			var rawEntries []json.RawMessage
+			if err := json.Unmarshal(jsonData, &rawEntries); err != nil {
+				return fmt.Errorf("failed to unmarshal JSON array: %w", err)
+			}
+
+			ledgerToEntries := make([]*ledger.LedgerToEntries, 0, len(rawEntries))
+			for _, rawEntry := range rawEntries {
+				var entry ledger.LedgerToEntries
+				if err := clientCtx.Codec.UnmarshalJSON(rawEntry, &entry); err != nil {
+					return err
+				}
+				ledgerToEntries = append(ledgerToEntries, &entry)
+			}
+
+			msg := &ledger.MsgBulkCreateRequest{
+				Authority: clientCtx.FromAddress.String(),
+				LedgerToEntries: ledgerToEntries,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
