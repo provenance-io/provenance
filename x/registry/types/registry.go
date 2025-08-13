@@ -1,6 +1,7 @@
 package types
 
 import (
+	fmt "fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -152,9 +153,10 @@ func (m *RegistryBulkUpdateEntry) Validate() error {
 }
 
 // Combine the asset class id and nft id into a bech32 string.
-// Using bech32 here just allows us a readable identifier for the registry.
-func (m RegistryKey) String() string {
-	joined := strings.Join([]string{m.AssetClassId, m.NftId}, ":")
+// Using bech32 here just allows us a readable identifier for the ledger.
+func (rk RegistryKey) String() string {
+	// Use null byte as delimiter
+	joined := rk.AssetClassId + "\x00" + rk.NftId
 
 	b32, err := bech32.ConvertAndEncode(registryKeyHrp, []byte(joined))
 	if err != nil {
@@ -164,6 +166,7 @@ func (m RegistryKey) String() string {
 	return b32
 }
 
+// Convert a bech32 string to a LedgerKey.
 func StringToRegistryKey(s string) (*RegistryKey, error) {
 	hrp, b, err := bech32.DecodeAndConvert(s)
 	if err != nil {
@@ -171,12 +174,13 @@ func StringToRegistryKey(s string) (*RegistryKey, error) {
 	}
 
 	if hrp != registryKeyHrp {
-		return nil, NewErrCodeInvalidHrp(hrp)
+		return nil, fmt.Errorf("invalid hrp: %s", hrp)
 	}
 
-	parts := strings.Split(string(b), ":")
+	// Split by null byte delimiter
+	parts := strings.Split(string(b), "\x00")
 	if len(parts) != 2 {
-		return nil, NewErrCodeInvalidKey(s)
+		return nil, fmt.Errorf("invalid key: %s", s)
 	}
 
 	return &RegistryKey{
