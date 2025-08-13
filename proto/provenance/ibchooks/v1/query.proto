@@ -9,12 +9,14 @@ option java_multiple_files = true;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/ibchooks/v1/params.proto";
+import "cosmos/query/v1/query.proto";
 
 // Query defines the gRPC querier service for attribute module.
 service Query {
   // Params queries params of the ihchooks module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/ibchooks/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/ibchooks/v1/params";
   }
 }
 

@@ -11,23 +11,27 @@ import "google/api/annotations.proto";
 import "provenance/flatfees/v1/flatfees.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/query/v1/query.proto";
 
 // Query defines the gRPC querier service for flatfees module.
 service Query {
   // Params returns the parameters for the x/flatfees module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/flatfees/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/flatfees/v1/params";
   }
 
   // AllMsgFees returns info on all msg types that have a customized msg fee.
   rpc AllMsgFees(QueryAllMsgFeesRequest) returns (QueryAllMsgFeesResponse) {
-    option (google.api.http).get = "/provenance/flatfees/v1/msgfee/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/flatfees/v1/msgfee/all";
   }
 
   // MsgFee will return information about what it will cost to execute a given msg type.
   // If the provided msg type does not have a specific fee defined, the default is returned.
   rpc MsgFee(QueryMsgFeeRequest) returns (QueryMsgFeeResponse) {
-    option (google.api.http).get = "/provenance/flatfees/v1/msgfee";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/flatfees/v1/msgfee";
   }
 
   // CalculateTxFees simulates executing a transaction for estimating gas usage and fees.
