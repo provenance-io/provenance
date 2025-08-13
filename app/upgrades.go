@@ -1,8 +1,13 @@
 package app
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"embed"
+	"encoding/json"
 	"fmt"
+	"io"
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -15,6 +20,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -43,7 +49,7 @@ type appUpgrade struct {
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"bouvardia-rc1": { // Upgrade for v1.26.0-rc1.
-		Added:   []string{flatfeestypes.StoreKey},
+		Added:   []string{flatfeestypes.StoreKey, ledgerTypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -58,6 +64,9 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
+				return nil, err
+			}
+			if err = importLedgerData(ctx, app.LedgerKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -77,6 +86,9 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
+				return nil, err
+			}
+			if err = importLedgerData(ctx, app.LedgerKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -305,6 +317,8 @@ var (
 	_ = pruneIBCExpiredConsensusStates
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
+	//go:embed upgrade_data/*
+	upgradeDataFS embed.FS
 )
 
 // FlatFeesKeeper has the flatfees keeper methods needed for setting up flat fees.
@@ -549,4 +563,103 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		// Msgs that cost $18.00.
 		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateAsset", feeDefCoin(18000)),
 	}
+}
+
+// LedgerKeeper has the ledger keeper methods needed for bulk creating ledgers and entries.
+// Part of the bouvardia upgrade.
+type LedgerKeeper interface {
+	BulkCreate(ctx sdk.Context, ledgers []*ledgerTypes.LedgerToEntries) error
+}
+
+// importLedgerData bulk creates ledgers and entries.
+func importLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
+	ctx.Logger().Info("Bulk creating ledgers and entries.")
+
+	// Import ledger data from embedded files
+	ledgers, err := loadLedgerDataFromFiles()
+	if err != nil {
+		return fmt.Errorf("failed to load ledger data: %w", err)
+	}
+
+	// Validate all ledger data before importing
+	if err := validateLedgerData(ledgers); err != nil {
+		return fmt.Errorf("ledger data validation failed: %w", err)
+	}
+
+	ctx.Logger().Info("Importing ledger data", "count", len(ledgers))
+	return lk.BulkCreate(ctx, ledgers)
+}
+
+// validateLedgerData validates all ledger entries before importing
+func validateLedgerData(ledgers []*ledgerTypes.LedgerToEntries) error {
+	for i, ledger := range ledgers {
+		if err := ledger.Validate(); err != nil {
+			return fmt.Errorf("invalid ledger at index %d: %w", i, err)
+		}
+	}
+	return nil
+}
+
+// loadLedgerDataFromFiles loads ledger data from embedded gzipped files in the upgrade_data directory
+func loadLedgerDataFromFiles() ([]*ledgerTypes.LedgerToEntries, error) {
+	var allLedgers []*ledgerTypes.LedgerToEntries
+
+	// Read all files in the upgrade_data directory
+	entries, err := upgradeDataFS.ReadDir("upgrade_data")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read upgrade_data directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !isGzippedFile(entry.Name()) {
+			continue
+		}
+
+		filePath := fmt.Sprintf("upgrade_data/%s", entry.Name())
+		ledgers, err := loadLedgerDataFromGzippedFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load data from %s: %w", entry.Name(), err)
+		}
+
+		allLedgers = append(allLedgers, ledgers...)
+	}
+
+	return allLedgers, nil
+}
+
+// loadLedgerDataFromGzippedFile loads ledger data from a specific gzipped JSON file
+func loadLedgerDataFromGzippedFile(filePath string) ([]*ledgerTypes.LedgerToEntries, error) {
+	data, err := upgradeDataFS.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
+	}
+
+	// Create gzip reader
+	reader := bytes.NewReader(data)
+	gzReader, err := gzip.NewReader(reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gzip reader for %s: %w", filePath, err)
+	}
+	defer gzReader.Close()
+
+	// Read all uncompressed data
+	uncompressedData, err := io.ReadAll(gzReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read uncompressed data from %s: %w", filePath, err)
+	}
+
+	var ledgersData struct {
+		LedgerToEntries []*ledgerTypes.LedgerToEntries `json:"ledgerToEntries"`
+	}
+
+	if err := json.Unmarshal(uncompressedData, &ledgersData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON from %s: %w", filePath, err)
+	}
+
+	return ledgersData.LedgerToEntries, nil
+}
+
+// isGzippedFile checks if a filename has a .json.gz extension
+func isGzippedFile(filename string) bool {
+	return len(filename) > 8 && filename[len(filename)-8:] == ".json.gz"
 }
