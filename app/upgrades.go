@@ -589,7 +589,7 @@ func importLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	return nil
 }
 
-// streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency
+// streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
 func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
 
@@ -599,7 +599,7 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 		return fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
 
-	// Create gzip reader for streaming decompression
+	// Create gzip reader for streaming decompression.
 	reader := bytes.NewReader(data)
 	gzReader, err := gzip.NewReader(reader)
 	if err != nil {
@@ -607,10 +607,10 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	}
 	defer gzReader.Close()
 
-	// Use JSON decoder for streaming JSON parsing
+	// Use JSON decoder for streaming JSON parsing.
 	decoder := json.NewDecoder(gzReader)
 
-	// Expect the start of a JSON object
+	// Expect the start of a JSON object.
 	token, err := decoder.Token()
 	if err != nil {
 		return fmt.Errorf("failed to read JSON token from %s: %w", filePath, err)
@@ -620,9 +620,9 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 		return fmt.Errorf("expected JSON object start '{' in %s, got %v", filePath, token)
 	}
 
-	// Process each field in the GenesisState object
+	// Process each field in the GenesisState object.
 	for decoder.More() {
-		// Get the field name
+		// Get the field name.
 		fieldToken, err := decoder.Token()
 		if err != nil {
 			return fmt.Errorf("failed to read field name from %s: %w", filePath, err)
@@ -633,13 +633,13 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 			return fmt.Errorf("expected field name string in %s, got %v", filePath, fieldToken)
 		}
 
-		// Process each field based on its name
+		// Process each field based on its name.
 		if err := processGenesisField(ctx, lk, decoder, fieldName); err != nil {
 			return fmt.Errorf("failed to process field %s in %s: %w", fieldName, filePath, err)
 		}
 	}
 
-	// Expect the end of the JSON object
+	// Expect the end of the JSON object.
 	token, err = decoder.Token()
 	if err != nil {
 		return fmt.Errorf("failed to read JSON token from %s: %w", filePath, err)
@@ -652,7 +652,7 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	return nil
 }
 
-// processGenesisField processes a single field from the GenesisState JSON
+// processGenesisField processes a single field from the GenesisState JSON.
 func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
 	switch fieldName {
 	case "ledgerClasses":
