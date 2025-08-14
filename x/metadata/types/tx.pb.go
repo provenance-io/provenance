@@ -2259,8 +2259,8 @@ var xxx_messageInfo_MsgP8EMemorializeContractResponse proto.InternalMessageInfo
 type MsgAddNetAssetValuesRequest struct {
 	ScopeId string   `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty"`
 	Signers []string `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
-	// Net asset values to set. When using the special `usd` denom, the amount
-	// represents milli-USD units (musd) where 1000 = $1.00 USD
+	// Net asset values to set. When using the special "usd" denom, the amount
+	// represents milli-USD (musd) units where 1000 = $1.00 USD
 	NetAssetValues []NetAssetValue `protobuf:"bytes,3,rep,name=net_asset_values,json=netAssetValues,proto3" json:"net_asset_values"`
 }
 
@@ -2589,9 +2589,9 @@ type MsgClient interface {
 	// SetAccountData associates some basic data with a metadata address.
 	// Currently, only scope ids are supported.
 	SetAccountData(ctx context.Context, in *MsgSetAccountDataRequest, opts ...grpc.CallOption) (*MsgSetAccountDataResponse, error)
-	// AddNetAssetValues set the net asset value for a scope.
-	// Note: When settting NAVs with "usd" denom, amounts are in milli-usd (musd)
-	// units where 1000 =$1.00 USD
+	// AddNetAssetValues sets the net asset value for a scope.
+	// Note: When setting NAVs with the "usd" denom, amounts are in milli-USD (musd)
+	// units where 1000 = $1.00 USD
 	AddNetAssetValues(ctx context.Context, in *MsgAddNetAssetValuesRequest, opts ...grpc.CallOption) (*MsgAddNetAssetValuesResponse, error)
 }
 
@@ -2868,9 +2868,9 @@ type MsgServer interface {
 	// SetAccountData associates some basic data with a metadata address.
 	// Currently, only scope ids are supported.
 	SetAccountData(context.Context, *MsgSetAccountDataRequest) (*MsgSetAccountDataResponse, error)
-	// AddNetAssetValues set the net asset value for a scope.
-	// Note: When settting NAVs with "usd" denom, amounts are in milli-usd (musd)
-	// units where 1000 =$1.00 USD
+	// AddNetAssetValues sets the net asset value for a scope.
+	// Note: When setting NAVs with the "usd" denom, amounts are in milli-USD (musd)
+	// units where 1000 = $1.00 USD
 	AddNetAssetValues(context.Context, *MsgAddNetAssetValuesRequest) (*MsgAddNetAssetValuesResponse, error)
 }
 
