@@ -2,6 +2,8 @@ package app
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -32,6 +34,7 @@ import (
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 type UpgradeTestSuite struct {
@@ -1375,4 +1378,78 @@ func (s *UpgradeTestSuite) TestImportLedgerData() {
 	}
 
 	s.T().Log("Successfully imported ledger data")
+}
+
+func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
+	// Load the actual genesis data from the gzipped file using the same method as the upgrade handler
+	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
+
+	// Read the gzipped file data
+	data, err := upgradeDataFS.ReadFile(filePath)
+	if err != nil {
+		s.T().Logf("Note: No ledger genesis file found at %s: %v", filePath, err)
+		s.T().Skip("Skipping test - no ledger genesis data file available")
+		return
+	}
+
+	// Create gzip reader for decompression
+	reader := bytes.NewReader(data)
+	gzReader, err := gzip.NewReader(reader)
+	if err != nil {
+		s.T().Fatalf("Failed to create gzip reader for %s: %v", filePath, err)
+	}
+	defer gzReader.Close()
+
+	// Decode the entire JSON into a GenesisState
+	var genesisState ledgerTypes.GenesisState
+	decoder := json.NewDecoder(gzReader)
+	if err := decoder.Decode(&genesisState); err != nil {
+		s.T().Fatalf("Failed to decode genesis state from %s: %v", filePath, err)
+	}
+
+	// Validate each ledger class
+	for i, ledgerClass := range genesisState.LedgerClasses {
+		err := ledgerClass.Validate()
+		s.Require().NoError(err, "LedgerClass %d validation failed", i)
+	}
+
+	// Validate each ledger class entry type
+	for i, entryType := range genesisState.LedgerClassEntryTypes {
+		err := entryType.EntryType.Validate()
+		s.Require().NoError(err, "LedgerClassEntryType %d validation failed", i)
+	}
+
+	// Validate each ledger class status type
+	for i, statusType := range genesisState.LedgerClassStatusTypes {
+		err := statusType.StatusType.Validate()
+		s.Require().NoError(err, "LedgerClassStatusType %d validation failed", i)
+	}
+
+	// Validate each ledger class bucket type
+	for i, bucketType := range genesisState.LedgerClassBucketTypes {
+		err := bucketType.BucketType.Validate()
+		s.Require().NoError(err, "LedgerClassBucketType %d validation failed", i)
+	}
+
+	// Validate each ledger
+	for i, genesisLedger := range genesisState.Ledgers {
+		err := genesisLedger.Ledger.Validate()
+		s.Require().NoError(err, "Ledger %d validation failed", i)
+	}
+
+	// Validate each ledger entry
+	for i, genesisEntry := range genesisState.LedgerEntries {
+		err := genesisEntry.Entry.Validate()
+		s.Require().NoError(err, "LedgerEntry %d validation failed", i)
+	}
+
+	// Validate each settlement instruction
+	for i, settlement := range genesisState.SettlementInstructions {
+		for j, instruction := range settlement.SettlementInstructions.SettlementInstructions {
+			err := instruction.Validate()
+			s.Require().NoError(err, "SettlementInstruction %d.%d validation failed", i, j)
+		}
+	}
+
+	s.T().Log("Successfully validated all ledger genesis state components")
 }
