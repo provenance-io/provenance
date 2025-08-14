@@ -1354,22 +1354,16 @@ func TestLogCostGrid(t *testing.T) {
 	t.Logf("Defined Costs at various conversion factors:\n%s\n%s\n%s", headLine, string(hrBz), strings.Join(lines, "\n"))
 }
 
-func (s *UpgradeTestSuite) TestLoadLedgerDataFromFiles() {
-	// Test that the ledger data loading function works correctly
-	ledgers, err := loadLedgerDataFromFiles()
+func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
+	// Test that the streaming ledger data import function works correctly
+	// This test will only work if the gzipped file exists
+	err := streamImportLedgerData(s.ctx, s.app.LedgerKeeper)
 	if err != nil {
 		s.T().Logf("Note: No ledger data files found or error loading: %v", err)
 		return // This is expected if no data files exist
 	}
-	
-	s.T().Logf("Loaded %d ledger entries from files", len(ledgers))
-	
-	// Validate all loaded ledgers
-	for i, ledger := range ledgers {
-		if err := ledger.Validate(); err != nil {
-			s.T().Errorf("Invalid ledger at index %d: %v", i, err)
-		}
-	}
+
+	s.T().Log("Successfully stream imported ledger data")
 }
 
 func (s *UpgradeTestSuite) TestImportLedgerData() {
@@ -1379,6 +1373,6 @@ func (s *UpgradeTestSuite) TestImportLedgerData() {
 		s.T().Logf("Note: Import ledger data failed (expected if no data): %v", err)
 		return // This is expected if no data files exist
 	}
-	
+
 	s.T().Log("Successfully imported ledger data")
 }

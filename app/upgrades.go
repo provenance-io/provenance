@@ -7,7 +7,6 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"io"
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -317,8 +316,6 @@ var (
 	_ = pruneIBCExpiredConsensusStates
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
-	//go:embed upgrade_data/*
-	upgradeDataFS embed.FS
 )
 
 // FlatFeesKeeper has the flatfees keeper methods needed for setting up flat fees.
@@ -565,101 +562,170 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 	}
 }
 
-// LedgerKeeper has the ledger keeper methods needed for bulk creating ledgers and entries.
-// Part of the bouvardia upgrade.
+//go:embed upgrade_data/*
+var upgradeDataFS embed.FS
+
+// LedgerKeeper has the ledger keeper methods needed for creating ledgers and entries.
 type LedgerKeeper interface {
-	BulkCreate(ctx sdk.Context, ledgers []*ledgerTypes.LedgerToEntries) error
+	ImportLedgerClasses(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassEntryTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassStatusTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassBucketTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgers(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerEntries(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportStoredSettlementInstructions(ctx sdk.Context, state *ledgerTypes.GenesisState)
 }
 
-// importLedgerData bulk creates ledgers and entries.
+// importLedgerData creates ledgers and entries from embedded genesis data using streaming.
 func importLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
-	ctx.Logger().Info("Bulk creating ledgers and entries.")
+	ctx.Logger().Info("Starting streaming import of ledger data.")
 
-	// Import ledger data from embedded files
-	ledgers, err := loadLedgerDataFromFiles()
-	if err != nil {
-		return fmt.Errorf("failed to load ledger data: %w", err)
+	// Process the gzipped genesis file using streaming
+	if err := streamImportLedgerData(ctx, lk); err != nil {
+		return fmt.Errorf("failed to stream import ledger data: %w", err)
 	}
 
-	// Validate all ledger data before importing
-	if err := validateLedgerData(ledgers); err != nil {
-		return fmt.Errorf("ledger data validation failed: %w", err)
-	}
-
-	ctx.Logger().Info("Importing ledger data", "count", len(ledgers))
-	return lk.BulkCreate(ctx, ledgers)
-}
-
-// validateLedgerData validates all ledger entries before importing
-func validateLedgerData(ledgers []*ledgerTypes.LedgerToEntries) error {
-	for i, ledger := range ledgers {
-		if err := ledger.Validate(); err != nil {
-			return fmt.Errorf("invalid ledger at index %d: %w", i, err)
-		}
-	}
+	ctx.Logger().Info("Completed streaming import of ledger data.")
 	return nil
 }
 
-// loadLedgerDataFromFiles loads ledger data from embedded gzipped files in the upgrade_data directory
-func loadLedgerDataFromFiles() ([]*ledgerTypes.LedgerToEntries, error) {
-	var allLedgers []*ledgerTypes.LedgerToEntries
+// streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency
+func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
+	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
 
-	// Read all files in the upgrade_data directory
-	entries, err := upgradeDataFS.ReadDir("upgrade_data")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read upgrade_data directory: %w", err)
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() || !isGzippedFile(entry.Name()) {
-			continue
-		}
-
-		filePath := fmt.Sprintf("upgrade_data/%s", entry.Name())
-		ledgers, err := loadLedgerDataFromGzippedFile(filePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load data from %s: %w", entry.Name(), err)
-		}
-
-		allLedgers = append(allLedgers, ledgers...)
-	}
-
-	return allLedgers, nil
-}
-
-// loadLedgerDataFromGzippedFile loads ledger data from a specific gzipped JSON file
-func loadLedgerDataFromGzippedFile(filePath string) ([]*ledgerTypes.LedgerToEntries, error) {
+	// Read the gzipped file data
 	data, err := upgradeDataFS.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
+		return fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
 
-	// Create gzip reader
+	// Create gzip reader for streaming decompression
 	reader := bytes.NewReader(data)
 	gzReader, err := gzip.NewReader(reader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gzip reader for %s: %w", filePath, err)
+		return fmt.Errorf("failed to create gzip reader for %s: %w", filePath, err)
 	}
 	defer gzReader.Close()
 
-	// Read all uncompressed data
-	uncompressedData, err := io.ReadAll(gzReader)
+	// Use JSON decoder for streaming JSON parsing
+	decoder := json.NewDecoder(gzReader)
+
+	// Expect the start of a JSON object
+	token, err := decoder.Token()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read uncompressed data from %s: %w", filePath, err)
+		return fmt.Errorf("failed to read JSON token from %s: %w", filePath, err)
 	}
 
-	var ledgersData struct {
-		LedgerToEntries []*ledgerTypes.LedgerToEntries `json:"ledgerToEntries"`
+	if delim, ok := token.(json.Delim); !ok || delim != '{' {
+		return fmt.Errorf("expected JSON object start '{' in %s, got %v", filePath, token)
 	}
 
-	if err := json.Unmarshal(uncompressedData, &ledgersData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON from %s: %w", filePath, err)
+	// Process each field in the GenesisState object
+	for decoder.More() {
+		// Get the field name
+		fieldToken, err := decoder.Token()
+		if err != nil {
+			return fmt.Errorf("failed to read field name from %s: %w", filePath, err)
+		}
+
+		fieldName, ok := fieldToken.(string)
+		if !ok {
+			return fmt.Errorf("expected field name string in %s, got %v", filePath, fieldToken)
+		}
+
+		// Process each field based on its name
+		if err := processGenesisField(ctx, lk, decoder, fieldName); err != nil {
+			return fmt.Errorf("failed to process field %s in %s: %w", fieldName, filePath, err)
+		}
 	}
 
-	return ledgersData.LedgerToEntries, nil
+	// Expect the end of the JSON object
+	token, err = decoder.Token()
+	if err != nil {
+		return fmt.Errorf("failed to read JSON token from %s: %w", filePath, err)
+	}
+
+	if delim, ok := token.(json.Delim); !ok || delim != '}' {
+		return fmt.Errorf("expected JSON object end '}' in %s, got %v", filePath, token)
+	}
+
+	return nil
 }
 
-// isGzippedFile checks if a filename has a .json.gz extension
-func isGzippedFile(filename string) bool {
-	return len(filename) > 8 && filename[len(filename)-8:] == ".json.gz"
+// processGenesisField processes a single field from the GenesisState JSON
+func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
+	switch fieldName {
+	case "ledgerClasses":
+		var ledgerClasses []ledgerTypes.LedgerClass
+		if err := decoder.Decode(&ledgerClasses); err != nil {
+			return fmt.Errorf("failed to decode ledgerClasses: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClasses: ledgerClasses}
+		lk.ImportLedgerClasses(ctx, genesis)
+		ctx.Logger().Info("Imported ledger classes", "count", len(ledgerClasses))
+
+	case "ledgerClassEntryTypes":
+		var entryTypes []ledgerTypes.GenesisLedgerClassEntryType
+		if err := decoder.Decode(&entryTypes); err != nil {
+			return fmt.Errorf("failed to decode ledgerClassEntryTypes: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClassEntryTypes: entryTypes}
+		lk.ImportLedgerClassEntryTypes(ctx, genesis)
+		ctx.Logger().Info("Imported ledger class entry types", "count", len(entryTypes))
+
+	case "ledgerClassStatusTypes":
+		var statusTypes []ledgerTypes.GenesisLedgerClassStatusType
+		if err := decoder.Decode(&statusTypes); err != nil {
+			return fmt.Errorf("failed to decode ledgerClassStatusTypes: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClassStatusTypes: statusTypes}
+		lk.ImportLedgerClassStatusTypes(ctx, genesis)
+		ctx.Logger().Info("Imported ledger class status types", "count", len(statusTypes))
+
+	case "ledgerClassBucketTypes":
+		var bucketTypes []ledgerTypes.GenesisLedgerClassBucketType
+		if err := decoder.Decode(&bucketTypes); err != nil {
+			return fmt.Errorf("failed to decode ledgerClassBucketTypes: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClassBucketTypes: bucketTypes}
+		lk.ImportLedgerClassBucketTypes(ctx, genesis)
+		ctx.Logger().Info("Imported ledger class bucket types", "count", len(bucketTypes))
+
+	case "ledgers":
+		var ledgers []ledgerTypes.GenesisLedger
+		if err := decoder.Decode(&ledgers); err != nil {
+			return fmt.Errorf("failed to decode ledgers: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{Ledgers: ledgers}
+		lk.ImportLedgers(ctx, genesis)
+		ctx.Logger().Info("Imported ledgers", "count", len(ledgers))
+
+	case "ledgerEntries":
+		var entries []ledgerTypes.GenesisLedgerEntry
+		if err := decoder.Decode(&entries); err != nil {
+			return fmt.Errorf("failed to decode ledgerEntries: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerEntries: entries}
+		lk.ImportLedgerEntries(ctx, genesis)
+		ctx.Logger().Info("Imported ledger entries", "count", len(entries))
+
+	case "settlementInstructions":
+		var settlements []ledgerTypes.GenesisStoredSettlementInstructions
+		if err := decoder.Decode(&settlements); err != nil {
+			return fmt.Errorf("failed to decode settlementInstructions: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{SettlementInstructions: settlements}
+		lk.ImportStoredSettlementInstructions(ctx, genesis)
+		ctx.Logger().Info("Imported settlement instructions", "count", len(settlements))
+
+	default:
+		// Skip unknown fields by decoding and discarding them
+		var value interface{}
+		if err := decoder.Decode(&value); err != nil {
+			return fmt.Errorf("failed to skip unknown field %s: %w", fieldName, err)
+		}
+		ctx.Logger().Info("Skipped unknown field", "field", fieldName)
+	}
+
+	return nil
 }

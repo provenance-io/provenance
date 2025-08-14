@@ -4,47 +4,47 @@ This directory contains gzipped JSON data files that are embedded into the binar
 
 ## File Format
 
-All data files must be gzipped JSON files with the following structure:
+All data files must be gzipped JSON files containing a `ledgerTypes.GenesisState` object with the following structure:
 
 ```json
 {
-  "ledgerToEntries": [
-    {
-      "ledgerKey": {
-        "nftId": "string",
-        "assetClassId": "string"
-      },
-      "ledger": {
-        // Ledger object structure
-      },
-      "entries": [
-        // Array of ledger entries
-      ]
-    }
+  "ledgerClasses": [
+    // Array of ledger class definitions
+  ],
+  "ledgerClassEntryTypes": [
+    // Array of ledger class entry type definitions
+  ],
+  "ledgerClassStatusTypes": [
+    // Array of ledger class status type definitions
+  ],
+  "ledgerClassBucketTypes": [
+    // Array of ledger class bucket type definitions
+  ],
+  "ledgers": [
+    // Array of ledger definitions
+  ],
+  "ledgerEntries": [
+    // Array of ledger entries
+  ],
+  "settlementInstructions": [
+    // Array of settlement instructions
   ]
 }
 ```
 
 ## File Naming Convention
 
-- Use descriptive names that indicate the upgrade and data type
-- Include version information if applicable
-- Use snake_case for file names
-- **All files must have `.json.gz` extension**
-- Examples:
-  - `bouvardia_ledger_data.json.gz`
-  - `bouvardia_entries_chunk1.json.gz`
-  - `future_upgrade_placeholder.json.gz`
+- The file must be named `bouvardia_ledger_genesis.json.gz`
+- This is the single gzipped GenesisState file for the bouvardia upgrade
+- The file must have `.json.gz` extension
 
 ## Adding New Data Files
 
-1. Create a new JSON file with the desired data
-2. Compress it using gzip: `gzip -c your_file.json > your_file.json.gz`
+1. Create a new JSON file with the desired GenesisState data
+2. Compress it using gzip: `gzip -c bouvardia_ledger_genesis.json > bouvardia_ledger_genesis.json.gz`
 3. Place the `.json.gz` file in this directory
-4. Follow the naming convention above
-5. Ensure the JSON structure matches the expected format
-6. Test the data loading by running the upgrade handler
-7. Update this README if adding new data types
+4. Ensure the JSON structure matches the expected GenesisState format
+5. Test the data loading by running the upgrade handler
 
 ## Validation
 
