@@ -7221,7 +7221,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated |  |
+| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated | Net asset values to set. When using the special `usd` denom, the amount represents milli-USD units (musd) where 1000 = $1.00 USD |
 
 
 
@@ -7924,7 +7924,7 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance-marker-v1-MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance-marker-v1-MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority |
-| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a marker |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a marker. Note: When settting NAVs with "usd" denom, amounts are in milli-usd (musd) units where 1000 =$1.00 USD |
 | `SetAdministratorProposal` | [MsgSetAdministratorProposalRequest](#provenance-marker-v1-MsgSetAdministratorProposalRequest) | [MsgSetAdministratorProposalResponse](#provenance-marker-v1-MsgSetAdministratorProposalResponse) | SetAdministratorProposal sets administrators with specific access on the marker |
 | `RemoveAdministratorProposal` | [MsgRemoveAdministratorProposalRequest](#provenance-marker-v1-MsgRemoveAdministratorProposalRequest) | [MsgRemoveAdministratorProposalResponse](#provenance-marker-v1-MsgRemoveAdministratorProposalResponse) | RemoveAdministratorProposal removes administrators with specific access on the marker |
 | `ChangeStatusProposal` | [MsgChangeStatusProposalRequest](#provenance-marker-v1-MsgChangeStatusProposalRequest) | [MsgChangeStatusProposalResponse](#provenance-marker-v1-MsgChangeStatusProposalResponse) | ChangeStatusProposal is a governance proposal change marker status |
@@ -9576,7 +9576,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  |  |
 | `signers` | [string](#string) | repeated |  |
-| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated |  |
+| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated | Net asset values to set. When using the special `usd` denom, the amount represents milli-USD units (musd) where 1000 = $1.00 USD |
 
 
 
@@ -10354,7 +10354,7 @@ Msg defines the Metadata Msg service.
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance-metadata-v1-MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance-metadata-v1-MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance-metadata-v1-MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance-metadata-v1-MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-metadata-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-metadata-v1-MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. |
-| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a scope |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a scope. Note: When settting NAVs with "usd" denom, amounts are in milli-usd (musd) units where 1000 =$1.00 USD |
 
  <!-- end services -->
 
