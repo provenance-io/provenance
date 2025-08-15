@@ -6,14 +6,14 @@ import io.provenance.flatfees.v1.QueryGrpc.QueryBlockingStub as BlockingMsgFees
 import io.provenance.flatfees.v1.QueryGrpcKt.QueryCoroutineStub as CoroutineMsgFees
 
 /**
- * Get a coin balance in the account at the supplied address.
+ * Query all configured flat message fees.
  *
  * @return A list of [MsgFee]
  */
 fun BlockingMsgFees.getAllMsgFees(): List<MsgFee> = allMsgFees(QueryAllMsgFeesRequest.getDefaultInstance()).msgFeesList
 
 /**
- * Get a coin balance in the account at the supplied address.
+ * Query all configured flat message fees.
  *
  * @return A list of [MsgFee]
  */
