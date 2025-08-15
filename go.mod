@@ -384,8 +384,8 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 
-	// milestone-1 tag of the vault
-	github.com/provlabs/vault => github.com/provlabs/vault v0.0.0-20250812224138-b3a6b5f790ec
+	// milestone-2 tag of the vault
+	github.com/provlabs/vault => github.com/provlabs/vault v0.0.0-20250815144855-c433475bf4ea
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
