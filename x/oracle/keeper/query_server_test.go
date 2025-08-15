@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/oracle/keeper"
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
