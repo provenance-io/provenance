@@ -1,6 +1,6 @@
 # Ledger Concepts
 
-The ledger module manages financial tracking for NFTs and metadata scopes. There are several key concepts that define how financial activities are tracked and managed: ledger classes, ledgers, entries, balance buckets, and settlements. Each ledger has a unique identifier and maintains historical records of all financial activities.
+The `x/ledger` module manages financial tracking for NFTs and metadata scopes. There are several key concepts that define how financial activities are tracked and managed: ledger classes, ledgers, entries, balance buckets, and settlements. Each ledger has a unique identifier and maintains historical records of all financial activities.
 
 <!-- TOC -->
 - [Ledger Concepts](#ledger-concepts)
@@ -124,7 +124,7 @@ Examples of potential ledger statuses:
 
 ## Settlements
 
-Settlements represent fund transfer instructions with associated settlement logic. They allow for complex financial operations that require multiple steps or external system coordination.
+Settlements represent fund transfer instructions with associated settlement logic. They allow owners or servicers of assets to record transfers of tokens against a ledger entry. 
 
 ### Settlement Instructions
 - `settlement_instructions`: Array of settlement instructions for fund transfers
@@ -171,8 +171,7 @@ The module provides query endpoints to:
 - Access historical ledger entries
 - View current balances and financial status
 - Get ledger class configurations and types
-- Query settlement instructions
-- Track entry status and balances
+- Query settlements that have been record
 
 ## Key Generation
 
@@ -184,7 +183,7 @@ Ledger identifiers are generated using bech32 encoding:
 
 ## Balance Calculation
 
-Balances are calculated dynamically rather than stored separately:
+Balance is determined by querying the balance of each bucket as of the effective date queried.
 - Process all ledger entries up to a specific date
 - Use the `balance_amounts` field from the most recent entry
 - Ensure chronological ordering by effective date and sequence

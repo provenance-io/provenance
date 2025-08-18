@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,14 +19,21 @@ func (m *RegistryKey) Validate() error {
 		return NewErrCodeInvalidField("registry key", "registry key cannot be nil")
 	}
 
-	// Validate NFT ID
-	if strings.TrimSpace(m.NftId) == "" {
-		return NewErrCodeInvalidField("nft_id", "nft_id cannot be empty")
+	if err := lenCheck("nft_id", &m.NftId, 1, 128); err != nil {
+		return err
 	}
 
-	// Validate Asset Class ID
-	if strings.TrimSpace(m.AssetClassId) == "" {
-		return NewErrCodeInvalidField("asset_class_id", "asset_class_id cannot be empty")
+	if err := lenCheck("asset_class_id", &m.AssetClassId, 1, 128); err != nil {
+		return err
+	}
+
+	// Verify that the nft_id and asset_class_id do not contain a null byte
+	if strings.Contains(m.NftId, "\x00") {
+		return NewErrCodeInvalidField("nft_id", "must not contain a null byte")
+	}
+
+	if strings.Contains(m.AssetClassId, "\x00") {
+		return NewErrCodeInvalidField("asset_class_id", "must not contain a null byte")
 	}
 
 	return nil
@@ -187,4 +195,29 @@ func StringToRegistryKey(s string) (*RegistryKey, error) {
 		AssetClassId: parts[0],
 		NftId:        parts[1],
 	}, nil
+}
+
+// lenCheck checks if the string is nil or empty and if it is, returns a missing field error.
+// It also checks if the string is less than the minimum length or greater than the maximum length and returns an invalid field error.
+func lenCheck(field string, s *string, minLength int, maxLength int) error {
+	if s == nil {
+		return NewErrCodeInvalidField(field, "value cannot be nil")
+	}
+
+	trimmed := strings.TrimSpace(*s)
+
+	// empty string
+	if trimmed == "" {
+		return NewErrCodeInvalidField(field, "value cannot be empty")
+	}
+
+	if len(trimmed) < minLength {
+		return NewErrCodeInvalidField(field, "must be greater than or equal to "+strconv.Itoa(minLength)+" characters")
+	}
+
+	if len(trimmed) > maxLength {
+		return NewErrCodeInvalidField(field, "must be less than or equal to "+strconv.Itoa(maxLength)+" characters")
+	}
+
+	return nil
 }
