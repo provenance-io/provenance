@@ -132,14 +132,14 @@ The module uses the following collections for state storage:
 
 5. **Ledgers**: Stores ledger information for each asset
    - Prefix: `"ledgers"`
-   - Key: joined `asset_class_id` `\x00` `nft_id`
+   - Key: joined `asset_class_id | \x00 | nft_id`
      - bech32
      - hrp: `ledger`
    - Value: `Ledger`
 
 6. **LedgerEntries**: Stores historical ledger entries for each asset
    - Prefix: `"ledger_entries"`
-   - Key: `nft_id + asset_class_id + correlation_id`
+   - Key:  `bech32(ledger_key) + correlation_id`
    - Value: `LedgerEntry`
 
 7. **LedgerBalances**: Stores current balances for each asset
