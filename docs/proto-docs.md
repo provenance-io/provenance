@@ -5900,7 +5900,6 @@ can avoid non-deterministic maps in the genesis functions.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
 | `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
 
 

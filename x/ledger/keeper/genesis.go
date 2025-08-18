@@ -172,8 +172,13 @@ func (k Keeper) ExportLedgers(ctx sdk.Context, genesis *types.GenesisState) {
 			panic(err)
 		}
 
+		// Because the ledger key was removed for storage efficiency reasons, we need to reconstruct it from the key.
+		ledger.Key, err = types.StringToLedgerKey(key)
+		if err != nil {
+			panic(err)
+		}
+
 		ledgers = append(ledgers, types.GenesisLedger{
-			Key:    key,
 			Ledger: ledger,
 		})
 	}
@@ -315,7 +320,11 @@ func (k Keeper) ImportLedgerClassBucketTypes(ctx sdk.Context, state *types.Genes
 
 func (k Keeper) ImportLedgers(ctx sdk.Context, state *types.GenesisState) {
 	for _, l := range state.Ledgers {
-		if err := k.Ledgers.Set(ctx, l.Key, l.Ledger); err != nil {
+		// Remove the key from the ledger to avoid storing it twice. Easy optimization.
+		key := l.Ledger.Key.String()
+		l.Ledger.Key = nil
+
+		if err := k.Ledgers.Set(ctx, key, l.Ledger); err != nil {
 			panic(err)
 		}
 	}

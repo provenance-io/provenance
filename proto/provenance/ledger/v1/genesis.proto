@@ -67,7 +67,6 @@ message GenesisLedgerClassBucketType {
 // GenesisLedger is a single ledger type with its key. This is used for the genesis state import/export so that we
 // can avoid non-deterministic maps in the genesis functions.
 message GenesisLedger {
-  string key    = 1 [(gogoproto.jsontag) = "key,omitempty"];
   Ledger ledger = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledger,omitempty"];
 }
 
