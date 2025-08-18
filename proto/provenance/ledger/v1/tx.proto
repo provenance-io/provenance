@@ -8,7 +8,6 @@ option java_multiple_files = true;
 import "cosmos/msg/v1/msg.proto";
 import "provenance/ledger/v1/ledger.proto";
 import "provenance/ledger/v1/ledger_settlement.proto";
-import "provenance/ledger/v1/genesis.proto";
 
 // Msg defines the ledger module Msg service.
 service Msg {
