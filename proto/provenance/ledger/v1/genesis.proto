@@ -73,7 +73,7 @@ message GenesisLedger {
 // GenesisLedgerEntry is a single ledger entry with its key. This is used for the genesis state import/export so that we
 // can avoid non-deterministic maps in the genesis functions.
 message GenesisLedgerEntry {
-  GenesisPair key   = 1 [(gogoproto.jsontag) = "key,omitempty"];
+  LedgerKey   key   = 1 [(gogoproto.jsontag) = "key,omitempty"];
   LedgerEntry entry = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "entry,omitempty"];
 }
 

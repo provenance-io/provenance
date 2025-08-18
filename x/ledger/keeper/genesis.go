@@ -206,11 +206,13 @@ func (k Keeper) ExportLedgerEntries(ctx sdk.Context, genesis *types.GenesisState
 			panic(err)
 		}
 
+		ledgerKey, err := types.StringToLedgerKey(key.K1())
+		if err != nil {
+			panic(err)
+		}
+
 		entries = append(entries, types.GenesisLedgerEntry{
-			Key: &types.GenesisPair{
-				P1: key.K1(),
-				P2: key.K2(),
-			},
+			Key:   ledgerKey,
 			Entry: entry,
 		})
 	}
@@ -332,7 +334,7 @@ func (k Keeper) ImportLedgers(ctx sdk.Context, state *types.GenesisState) {
 
 func (k Keeper) ImportLedgerEntries(ctx sdk.Context, state *types.GenesisState) {
 	for _, le := range state.LedgerEntries {
-		key := collections.Join(le.Key.P1, le.Key.P2)
+		key := collections.Join(le.Key.String(), le.Entry.CorrelationId)
 
 		if err := k.LedgerEntries.Set(ctx, key, le.Entry); err != nil {
 			panic(err)

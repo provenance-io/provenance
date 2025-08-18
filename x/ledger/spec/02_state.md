@@ -3,11 +3,13 @@
 The Ledger module maintains several types of state to track financial activities and balances for assets (NFTs or Metadata Scopes). The state is organized into collections that store ledger classes, ledgers, entries, and balances.
 
 <!-- TOC -->
+- [Ledger State](#ledger-state)
   - [Ledger Class](#ledger-class)
   - [Ledger](#ledger)
   - [Ledger Entries](#ledger-entries)
   - [Balances](#balances)
   - [State Storage](#state-storage)
+    - [KV Store Structure](#kv-store-structure)
 
 ## Ledger Class
 
@@ -130,7 +132,9 @@ The module uses the following collections for state storage:
 
 5. **Ledgers**: Stores ledger information for each asset
    - Prefix: `"ledgers"`
-   - Key: `nft_id + asset_class_id`
+   - Key: joined `asset_class_id` `\x00` `nft_id`
+     - bech32
+     - hrp: `ledger`
    - Value: `Ledger`
 
 6. **LedgerEntries**: Stores historical ledger entries for each asset

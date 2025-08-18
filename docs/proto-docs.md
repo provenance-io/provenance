@@ -5967,7 +5967,7 @@ can avoid non-deterministic maps in the genesis functions.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
 | `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
 
 
