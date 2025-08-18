@@ -7,21 +7,22 @@ The Ledger module provides several message types for creating and managing ledge
   - [Entry Management](#entry-management)
   - [Class Management](#class-management)
   - [Transfer Management](#transfer-management)
+  - [Bulk Operations](#bulk-operations)
   - [Message Validation](#message-validation)
 
 ## Ledger Management
 
-### MsgCreateLedger
+### MsgCreate
 
-`MsgCreateLedger` creates a new ledger for an asset.
+`MsgCreate` creates a new ledger for an asset.
 
 ```protobuf
-message MsgCreateLedgerRequest {
+message MsgCreateRequest {
     Ledger ledger = 1;
     string authority = 2;
 }
 
-message MsgCreateLedgerResponse {}
+message MsgCreateResponse {}
 ```
 
 #### Fields
@@ -42,121 +43,30 @@ message MsgCreateLedgerResponse {}
 
 #### CLI Command
 ```bash
-provenanced tx ledger create [ledger-fields...] --from [authority]
+provenanced tx ledger create <asset_class_id> <nft_id> <ledger_class_id> <status_type_id> [flags] --from <authority>
 ```
 
-### MsgUpdateLedgerStatus
+**Flags:**
+- `--next-pmt-date`: Next payment date (YYYY-MM-DD)
+- `--next-pmt-amt`: Next payment amount
+- `--interest-rate`: Interest rate (10000000 = 10.000000%)
+- `--maturity-date`: Maturity date (YYYY-MM-DD)
+- `--day-count-convention`: Day count convention (actual-365, actual-360, thirty-360, actual-actual, days-365, days-360)
+- `--interest-accrual-method`: Interest accrual method (simple, compound, daily, monthly, quarterly, annual, continuous)
+- `--payment-frequency`: Payment frequency (daily, weekly, monthly, quarterly, annually)
 
-`MsgUpdateLedgerStatus` updates the status of an existing ledger.
+### MsgDestroy
+
+`MsgDestroy` removes a ledger and all associated data.
 
 ```protobuf
-message MsgUpdateLedgerStatusRequest {
-    LedgerKey key = 1;
-    int32 status_type_id = 2;
-    string authority = 3;
-}
-
-message MsgUpdateLedgerStatusResponse {}
-```
-
-#### Fields
-- `key`: The unique identifier for the ledger
-  - `nft_id`: The NFT or Scope identifier
-  - `asset_class_id`: The Scope Specification ID or NFT Class ID
-- `status_type_id`: The new status type ID
-- `authority`: The address of the authority who is updating the status
-
-#### CLI Command
-```bash
-provenanced tx ledger update-status [nft-id] [asset-class-id] [status-type-id] --from [authority]
-```
-
-### MsgUpdateLedgerInterestRate
-
-`MsgUpdateLedgerInterestRate` updates the interest rate of an existing ledger.
-
-```protobuf
-message MsgUpdateLedgerInterestRateRequest {
-    LedgerKey key = 1;
-    int32 interest_rate = 2;
-    string authority = 3;
-}
-
-message MsgUpdateLedgerInterestRateResponse {}
-```
-
-#### Fields
-- `key`: The unique identifier for the ledger
-- `interest_rate`: The new interest rate (10000000 = 10.000000%)
-- `authority`: The address of the authority who is updating the interest rate
-
-#### CLI Command
-```bash
-provenanced tx ledger update-interest-rate [nft-id] [asset-class-id] [interest-rate] --from [authority]
-```
-
-### MsgUpdateLedgerPayment
-
-`MsgUpdateLedgerPayment` updates the payment schedule of an existing ledger.
-
-```protobuf
-message MsgUpdateLedgerPaymentRequest {
-    LedgerKey key = 1;
-    int32 next_pmt_date = 2;
-    int64 next_pmt_amt = 3;
-    string authority = 4;
-}
-
-message MsgUpdateLedgerPaymentResponse {}
-```
-
-#### Fields
-- `key`: The unique identifier for the ledger
-- `next_pmt_date`: The new next payment date in epoch days
-- `next_pmt_amt`: The new next payment amount
-- `authority`: The address of the authority who is updating the payment
-
-#### CLI Command
-```bash
-provenanced tx ledger update-payment [nft-id] [asset-class-id] [next-pmt-date] [next-pmt-amt] --from [authority]
-```
-
-### MsgUpdateLedgerMaturityDate
-
-`MsgUpdateLedgerMaturityDate` updates the maturity date of an existing ledger.
-
-```protobuf
-message MsgUpdateLedgerMaturityDateRequest {
-    LedgerKey key = 1;
-    int32 maturity_date = 2;
-    string authority = 3;
-}
-
-message MsgUpdateLedgerMaturityDateResponse {}
-```
-
-#### Fields
-- `key`: The unique identifier for the ledger
-- `maturity_date`: The new maturity date in epoch days
-- `authority`: The address of the authority who is updating the maturity date
-
-#### CLI Command
-```bash
-provenanced tx ledger update-maturity-date [nft-id] [asset-class-id] [maturity-date] --from [authority]
-```
-
-### MsgDestroyLedger
-
-`MsgDestroyLedger` removes a ledger and all associated data.
-
-```protobuf
-message MsgDestroyLedgerRequest {
+message MsgDestroyRequest {
     string nft_id = 1;
     string asset_class_id = 2;
     string authority = 3;
 }
 
-message MsgDestroyLedgerResponse {}
+message MsgDestroyResponse {}
 ```
 
 #### Fields
@@ -166,24 +76,24 @@ message MsgDestroyLedgerResponse {}
 
 #### CLI Command
 ```bash
-provenanced tx ledger destroy [nft-id] [asset-class-id] --from [authority]
+provenanced tx ledger destroy <asset_class_id> <nft_id> --from <authority>
 ```
 
 ## Entry Management
 
-### MsgAppendLedgerEntry
+### MsgAppend
 
-`MsgAppendLedgerEntry` adds one or more new entries to an existing ledger.
+`MsgAppend` adds one or more new entries to an existing ledger.
 
 ```protobuf
-message MsgAppendLedgerEntryRequest {
+message MsgAppendRequest {
     string nft_id = 1;
     string asset_class_id = 2;
     repeated LedgerEntry entries = 3;
     string authority = 4;
 }
 
-message MsgAppendLedgerEntryResponse {}
+message MsgAppendResponse {}
 ```
 
 #### Fields
@@ -201,44 +111,17 @@ message MsgAppendLedgerEntryResponse {}
   - `applied_amounts`: List of amounts applied to different buckets
     - `bucket_type_id`: The bucket type ID
     - `applied_amt`: Amount applied to this bucket
-  - `bucket_balances`: Current balances for each bucket
+  - `balance_amounts`: Current balances for each bucket after this entry
     - `bucket_type_id`: The bucket type ID
-    - `balance`: Current balance in this bucket
+    - `balance_amt`: Current balance in this bucket
 - `authority`: The address of the authority who is appending the entries
 
 #### CLI Command
-Only allows a single entry, use the RPC endpoint to add multiple entries in a single call.
 ```bash
-provenanced tx ledger append [nft-id] [asset-class-id] [entries-fields...] --from [authority]
+provenanced tx ledger append <asset_class_id> <nft_id> <json_file_path> --from <authority>
 ```
 
-### MsgUpdateLedgerBalances
-
-`MsgUpdateLedgerBalances` updates the balances of an existing ledger.
-
-```protobuf
-message MsgUpdateLedgerBalancesRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    repeated BucketBalance bucket_balances = 3;
-    string authority = 4;
-}
-
-message MsgUpdateLedgerBalancesResponse {}
-```
-
-#### Fields
-- `nft_id`: The NFT or Scope identifier
-- `asset_class_id`: The Scope Specification ID or NFT Class ID
-- `bucket_balances`: List of bucket balances to update
-  - `bucket_type_id`: The bucket type ID
-  - `balance`: The new balance for this bucket
-- `authority`: The address of the authority who is updating the balances
-
-#### CLI Command
-```bash
-provenanced tx ledger update-balances [nft-id] [asset-class-id] [bucket-balances...] --from [authority]
-```
+**Note:** The JSON file should contain an array of ledger entries with the required fields.
 
 ## Class Management
 
@@ -265,7 +148,7 @@ message MsgCreateLedgerClassResponse {}
 
 #### CLI Command
 ```bash
-provenanced tx ledger create-class [ledger-class-fields...] --from [authority]
+provenanced tx ledger create-class <ledger_class_id> <asset_class_id> <denom> --from <authority>
 ```
 
 ### MsgAddLedgerClassEntryType
@@ -292,7 +175,7 @@ message MsgAddLedgerClassEntryTypeResponse {}
 
 #### CLI Command
 ```bash
-provenanced tx ledger add-entry-type [ledger-class-id] [entry-type-fields...] --from [authority]
+provenanced tx ledger add-entry-type <ledger_class_id> <id> <code> <description> --from <authority>
 ```
 
 ### MsgAddLedgerClassStatusType
@@ -319,7 +202,7 @@ message MsgAddLedgerClassStatusTypeResponse {}
 
 #### CLI Command
 ```bash
-provenanced tx ledger add-status-type [ledger-class-id] [status-type-fields...] --from [authority]
+provenanced tx ledger add-status-type <ledger_class_id> <id> <code> <description> --from <authority>
 ```
 
 ### MsgAddLedgerClassBucketType
@@ -346,7 +229,7 @@ message MsgAddLedgerClassBucketTypeResponse {}
 
 #### CLI Command
 ```bash
-provenanced tx ledger add-bucket-type [ledger-class-id] [bucket-type-fields...] --from [authority]
+provenanced tx ledger add-bucket-type <ledger_class_id> <id> <code> <description> --from <authority>
 ```
 
 ## Transfer Management
@@ -357,34 +240,63 @@ provenanced tx ledger add-bucket-type [ledger-class-id] [bucket-type-fields...] 
 
 ```protobuf
 message MsgTransferFundsWithSettlementRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    string correlation_id = 3;
-    string settlement_instructions = 4;
-    string authority = 5;
+    repeated FundTransferWithSettlement transfers = 1;
+    string authority = 2;
 }
 
 message MsgTransferFundsWithSettlementResponse {}
 ```
 
 #### Fields
-- `nft_id`: The NFT or Scope identifier
-- `asset_class_id`: The Scope Specification ID or NFT Class ID
-- `correlation_id`: The correlation ID for the transfer
-- `settlement_instructions`: The settlement instructions
+- `transfers`: List of fund transfers with settlement instructions
+  - `nft_id`: The NFT or Scope identifier
+  - `asset_class_id`: The Scope Specification ID or NFT Class ID
+  - `correlation_id`: The correlation ID for the transfer
+  - `settlement_instructions`: The settlement instructions
 - `authority`: The address of the authority who is performing the transfer
 
 #### CLI Command
 ```bash
-provenanced tx ledger transfer-funds [nft-id] [asset-class-id] [correlation-id] [settlement-instructions] --from [authority]
+provenanced tx ledger xfer <fund_transfers_json_file> --from <authority>
 ```
+
+**Note:** The JSON file should contain an array of fund transfer objects with the required fields.
+
+## Bulk Operations
+
+### MsgBulkCreate
+
+`MsgBulkCreate` creates multiple ledgers and entries in a single transaction.
+
+```protobuf
+message MsgBulkCreateRequest {
+    repeated LedgerToEntries ledger_to_entries = 1;
+    string authority = 2;
+}
+
+message MsgBulkCreateResponse {}
+```
+
+#### Fields
+- `ledger_to_entries`: List of ledgers with their associated entries
+  - `ledger_key`: The unique identifier for the ledger
+  - `ledger`: The ledger configuration
+  - `entries`: List of ledger entries to create
+- `authority`: The address of the authority who is performing the bulk creation
+
+#### CLI Command
+```bash
+provenanced tx ledger bulk-create <ledger_entries_json_file> --from <authority>
+```
+
+**Note:** The JSON file should contain an array of ledger-to-entries objects with the required fields.
 
 ## Message Validation
 
 All messages are validated before processing:
 
 ### Ledger Management
-1. **MsgCreateLedger**
+1. **MsgCreate**
    - Ledger configuration must be valid
    - Asset identifiers must be valid
    - Ledger class must exist
@@ -392,38 +304,14 @@ All messages are validated before processing:
    - Dates must be in correct format
    - Amounts must be valid
 
-2. **MsgUpdateLedgerStatus**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Status type must be valid
-   - Authority must have permission
-
-3. **MsgUpdateLedgerInterestRate**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Interest rate must be valid
-   - Authority must have permission
-
-4. **MsgUpdateLedgerPayment**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Payment date and amount must be valid
-   - Authority must have permission
-
-5. **MsgUpdateLedgerMaturityDate**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Maturity date must be valid
-   - Authority must have permission
-
-6. **MsgDestroyLedger**
+2. **MsgDestroy**
    - Asset identifiers must be valid
    - Ledger must exist
    - Authority must have permission
    - All associated data must be properly cleaned up
 
 ### Entry Management
-1. **MsgAppendLedgerEntry**
+1. **MsgAppend**
    - Asset identifiers must be valid
    - Ledger must exist
    - Entries must be valid
@@ -432,13 +320,6 @@ All messages are validated before processing:
    - Sequences must be valid
    - Bucket types must be valid
    - Amounts must be valid
-
-2. **MsgUpdateLedgerBalances**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Bucket types must be valid
-   - Authority must have permission
-   - Balances must be valid
 
 ### Class Management
 1. **MsgCreateLedgerClass**
@@ -469,4 +350,11 @@ All messages are validated before processing:
    - Ledger must exist
    - Correlation ID must be valid
    - Settlement instructions must be valid
-   - Authority must have permission 
+   - Authority must have permission
+
+### Bulk Operations
+1. **MsgBulkCreate**
+   - All ledger configurations must be valid
+   - All entries must be valid
+   - Authority must have permission
+   - Transaction size must be within limits 

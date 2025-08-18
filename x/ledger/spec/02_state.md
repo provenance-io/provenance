@@ -1,6 +1,6 @@
 # Ledger State
 
-The Ledger module maintains several types of state to track financial activities and balances for assets (NFTs or Metadata Scopes). The state is organized into collections that store ledger classes, ledgers, entries, and balances.
+The Ledger module maintains several types of state to track financial activities and balances for assets (NFTs or Metadata Scopes). The state is organized into collections that store ledger classes, ledgers, entries, and settlements. The module uses the Cosmos SDK Collections framework for efficient state management.
 
 <!-- TOC -->
 - [Ledger State](#ledger-state)
@@ -9,7 +9,9 @@ The Ledger module maintains several types of state to track financial activities
   - [Ledger Entries](#ledger-entries)
   - [Balances](#balances)
   - [State Storage](#state-storage)
-    - [KV Store Structure](#kv-store-structure)
+    - [Collections Structure](#collections-structure)
+    - [Key Generation](#key-generation)
+    - [Balance Calculation](#balance-calculation)
 
 ## Ledger Class
 
@@ -81,73 +83,100 @@ message LedgerEntry {
     int32 effective_date = 8;            // Effective date in epoch days
     string total_amt = 9;                // Total amount of the entry
     repeated LedgerBucketAmount applied_amounts = 10;  // Amounts applied to different buckets
-    map<int32, BucketBalance> bucket_balances = 11;    // Current balances for each bucket
+    repeated BucketBalance balance_amounts = 11;       // Current balances for each bucket after this entry
 }
 
 message LedgerBucketAmount {
     int32 bucket_type_id = 1;            // The bucket type ID
-    string applied_amt = 2;               // Amount applied to this bucket
+    string applied_amt = 2;              // Amount applied to this bucket
 }
 
 message BucketBalance {
     int32 bucket_type_id = 1;            // The bucket type ID
-    string balance = 2;                   // Current balance in this bucket
+    string balance_amt = 2;              // Current balance in this bucket
 }
 ```
 
 ## Balances
 
-Current balances for configured buckets:
+Balances are calculated on-the-fly from ledger entries rather than stored separately. The `GetBalancesAsOf` function processes all entries up to a specific date to determine the current state of each bucket:
 
 ```protobuf
-message Balances {
+message BucketBalances {
     repeated BucketBalance bucket_balances = 1;  // Current balances for each bucket type
 }
 ```
 
 ## State Storage
 
-### KV Store Structure
-The module uses the following collections for state storage:
+### Collections Structure
+The module uses the Cosmos SDK Collections framework for state storage, which provides type-safe access to the state store:
 
-1. **LedgerClasses**: Stores ledger class configurations
-   - Prefix: `"ledger_classes"`
-   - Key: `ledger_class_id`
-   - Value: `LedgerClass`
-
-2. **LedgerClassEntryTypes**: Stores entry type configurations for each ledger class
-   - Prefix: `"ledger_class_entry_types"`
-   - Key: `ledger_class_id + entry_type_id`
-   - Value: `LedgerClassEntryType`
-
-3. **LedgerClassStatusTypes**: Stores status type configurations for each ledger class
-   - Prefix: `"ledger_class_status_types"`
-   - Key: `ledger_class_id + status_type_id`
-   - Value: `LedgerClassStatusType`
-
-4. **LedgerClassBucketTypes**: Stores bucket type configurations for each ledger class
-   - Prefix: `"ledger_class_bucket_types"`
-   - Key: `ledger_class_id + bucket_type_id`
-   - Value: `LedgerClassBucketType`
-
-5. **Ledgers**: Stores ledger information for each asset
-   - Prefix: `"ledgers"`
-   - Key: joined `asset_class_id | \x00 | nft_id`
-     - bech32
-     - hrp: `ledger`
+1. **Ledgers**: Stores ledger configurations
+   - Collection: `Ledgers`
+   - Key: `ledger_id` (bech32 string)
    - Value: `Ledger`
+   - Prefix: `0x01`
 
-6. **LedgerEntries**: Stores historical ledger entries for each asset
-   - Prefix: `"ledger_entries"`
-   - Key:  `bech32(ledger_key) + correlation_id`
+2. **LedgerEntries**: Stores historical ledger entries
+   - Collection: `LedgerEntries`
+   - Key: `(ledger_id, correlation_id)` pair
    - Value: `LedgerEntry`
+   - Prefix: `0x02`
 
-7. **LedgerBalances**: Stores current balances for each asset
-   - Prefix: `"ledger_balances"`
-   - Key: `nft_id + asset_class_id`
-   - Value: `Balances`
+3. **FundTransfersWithSettlement**: Stores fund transfer settlement instructions
+   - Collection: `FundTransfersWithSettlement`
+   - Key: `(ledger_id, settlement_id)` pair
+   - Value: `StoredSettlementInstructions`
+   - Prefix: `0x08`
 
-8. **FundTransfersWithSettlement**: Stores fund transfer settlement instructions
-   - Prefix: `"fund_transfers_with_settlement"`
-   - Key: `nft_id + asset_class_id + correlation_id`
-   - Value: `StoredSettlementInstructions` 
+4. **LedgerClasses**: Stores ledger class configurations
+   - Collection: `LedgerClasses`
+   - Key: `ledger_class_id` (string)
+   - Value: `LedgerClass`
+   - Prefix: `0x03`
+
+5. **LedgerClassEntryTypes**: Stores entry type configurations for each ledger class
+   - Collection: `LedgerClassEntryTypes`
+   - Key: `(ledger_class_id, entry_type_id)` pair
+   - Value: `LedgerClassEntryType`
+   - Prefix: `0x04`
+
+6. **LedgerClassStatusTypes**: Stores status type configurations for each ledger class
+   - Collection: `LedgerClassStatusTypes`
+   - Key: `(ledger_class_id, status_type_id)` pair
+   - Value: `LedgerClassStatusType`
+   - Prefix: `0x05`
+
+7. **LedgerClassBucketTypes**: Stores bucket type configurations for each ledger class
+   - Collection: `LedgerClassBucketTypes`
+   - Key: `(ledger_class_id, bucket_type_id)` pair
+   - Value: `LedgerClassBucketType`
+   - Prefix: `0x06`
+
+### Key Generation
+
+**Ledger ID Generation**: The ledger ID is generated as a bech32 string using the following process:
+- Combines `asset_class_id` and `nft_id` with a null byte delimiter (`\x00`)
+- Encodes the combined bytes using bech32 with the human-readable part `"ledger"`
+- Example: `ledger1w3jhxapdden8gttrd3shxuedd9jqqcm0wdkk7ue3x44hjwtyw5uxzvnhd3ehg73kvec8svmsx3khzur209ex6dtrvack5amv8pehzl09ezy`
+
+**Entry Keys**: Ledger entries are keyed by `(ledger_id, correlation_id)` pairs, where:
+- `ledger_id` is the bech32-encoded ledger identifier
+- `correlation_id` is the unique identifier for the entry (up to 50 characters)
+
+**Class Configuration Keys**: Class-level configurations use composite keys:
+- Entry types: `(ledger_class_id, entry_type_id)`
+- Status types: `(ledger_class_id, status_type_id)`
+- Bucket types: `(ledger_class_id, bucket_type_id)`
+
+### Balance Calculation
+
+Balances are not stored as separate state but calculated dynamically by:
+1. Retrieving all ledger entries for a specific ledger
+2. Filtering entries by effective date (up to the requested "as of" date)
+3. Processing entries in chronological order
+4. Using the `balance_amounts` field from the most recent entry as of the requested date
+5. Returning the current bucket balances for that point in time
+
+This approach ensures that balances are always consistent with the ledger entries and provides accurate point-in-time financial state information. 

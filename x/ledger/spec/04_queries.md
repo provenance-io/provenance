@@ -6,6 +6,8 @@ The Ledger module provides several query endpoints to access ledger state and in
   - [Ledger Queries](#ledger-queries)
   - [Entry Queries](#entry-queries)
   - [Balance Queries](#balance-queries)
+  - [Class Configuration Queries](#class-configuration-queries)
+  - [Settlement Queries](#settlement-queries)
   - [Query Implementation](#query-implementation)
   - [Error Handling](#error-handling)
   - [Query Usage Examples](#query-usage-examples)
@@ -29,29 +31,12 @@ message QueryLedgerClassResponse {
 Retrieves the ledger configuration for a specific asset:
 
 ```protobuf
-message QueryLedgerConfigRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
+message QueryLedgerRequest {
+    LedgerKey key = 1;  // Contains nft_id and asset_class_id
 }
 
-message QueryLedgerConfigResponse {
+message QueryLedgerResponse {
     Ledger ledger = 1;
-}
-```
-
-### Get Ledger Status
-Retrieves the current status of a ledger:
-
-```protobuf
-message QueryLedgerStatusRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-}
-
-message QueryLedgerStatusResponse {
-    int32 status_type_id = 1;
-    string status_code = 2;
-    string status_description = 3;
 }
 ```
 
@@ -61,15 +46,12 @@ message QueryLedgerStatusResponse {
 Retrieves all ledger entries for a specific asset:
 
 ```protobuf
-message QueryLedgerRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    cosmos.base.query.v1beta1.PageRequest pagination = 3;
+message QueryLedgerEntriesRequest {
+    LedgerKey key = 1;  // Contains nft_id and asset_class_id
 }
 
-message QueryLedgerResponse {
+message QueryLedgerEntriesResponse {
     repeated LedgerEntry entries = 1;
-    cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 ```
 
@@ -78,9 +60,8 @@ Retrieves a specific ledger entry by asset identifier and correlation ID:
 
 ```protobuf
 message QueryLedgerEntryRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    string correlation_id = 3;  // Free-form string up to 50 characters
+    LedgerKey key = 1;              // Contains nft_id and asset_class_id
+    string correlation_id = 2;       // Free-form string up to 50 characters
 }
 
 message QueryLedgerEntryResponse {
@@ -88,66 +69,88 @@ message QueryLedgerEntryResponse {
 }
 ```
 
-### Get Ledger Entries by Type
-Retrieves ledger entries filtered by entry type:
-
-```protobuf
-message QueryLedgerEntriesByTypeRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    int32 entry_type_id = 3;
-    cosmos.base.query.v1beta1.PageRequest pagination = 4;
-}
-
-message QueryLedgerEntriesByTypeResponse {
-    repeated LedgerEntry entries = 1;
-    cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-```
-
 ## Balance Queries
-
-### Get Current Balances
-Retrieves the current balances for a specific asset:
-
-```protobuf
-message QueryBalancesRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-}
-
-message QueryBalancesResponse {
-    Balances balances = 1;
-}
-```
 
 ### Get Balances As Of Date
 Retrieves the balances for a specific asset as of a given date:
 
 ```protobuf
-message QueryBalancesAsOfRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    string as_of_date = 3;  // Date in ISO 8601 format: YYYY-MM-DD
+message QueryLedgerBalancesAsOfRequest {
+    LedgerKey key = 1;              // Contains nft_id and asset_class_id
+    string as_of_date = 2;          // Date in ISO 8601 format: YYYY-MM-DD
 }
 
-message QueryBalancesAsOfResponse {
-    Balances balances = 1;
+message QueryLedgerBalancesAsOfResponse {
+    BucketBalances bucket_balances = 1;
 }
 ```
 
-### Get Balance by Bucket Type
-Retrieves the balance for a specific bucket type:
+## Class Configuration Queries
+
+### Get Ledger Class Entry Types
+Retrieves all entry types configured for a specific ledger class:
 
 ```protobuf
-message QueryBalanceByBucketRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    int32 bucket_type_id = 3;
+message QueryLedgerClassEntryTypesRequest {
+    string ledger_class_id = 1;
 }
 
-message QueryBalanceByBucketResponse {
-    BucketBalance balance = 1;
+message QueryLedgerClassEntryTypesResponse {
+    repeated LedgerClassEntryType entry_types = 1;
+}
+```
+
+### Get Ledger Class Status Types
+Retrieves all status types configured for a specific ledger class:
+
+```protobuf
+message QueryLedgerClassStatusTypesRequest {
+    string ledger_class_id = 1;
+}
+
+message QueryLedgerClassStatusTypesResponse {
+    repeated LedgerClassStatusType status_types = 1;
+}
+```
+
+### Get Ledger Class Bucket Types
+Retrieves all bucket types configured for a specific ledger class:
+
+```protobuf
+message QueryLedgerClassBucketTypesRequest {
+    string ledger_class_id = 1;
+}
+
+message QueryLedgerClassBucketTypesResponse {
+    repeated LedgerClassBucketType bucket_types = 1;
+}
+```
+
+## Settlement Queries
+
+### Get Ledger Settlements
+Retrieves all settlements for a specific ledger:
+
+```protobuf
+message QueryLedgerSettlementsRequest {
+    LedgerKey key = 1;  // Contains nft_id and asset_class_id
+}
+
+message QueryLedgerSettlementsResponse {
+    repeated StoredSettlementInstructions settlements = 1;
+}
+```
+
+### Get Ledger Settlements By Correlation ID
+Retrieves settlements by correlation ID:
+
+```protobuf
+message QueryLedgerSettlementsByCorrelationIdRequest {
+    string correlation_id = 1;
+}
+
+message QueryLedgerSettlementsByCorrelationIdResponse {
+    repeated StoredSettlementInstructions settlements = 1;
 }
 ```
 
@@ -161,48 +164,53 @@ message QueryBalanceByBucketResponse {
 
 ### Ledger Queries
 1. **Get Ledger Configuration**
-   - Validates asset identifiers
+   - Validates ledger key (asset identifiers)
    - Retrieves ledger from store
    - Returns ledger configuration
 
-2. **Get Ledger Status**
-   - Validates asset identifiers
-   - Retrieves ledger from store
-   - Returns current status information
-
 ### Entry Queries
 1. **Get Ledger Entries**
-   - Validates asset identifiers
+   - Validates ledger key (asset identifiers)
    - Retrieves all entries from store
-   - Supports pagination
    - Returns list of entries
 
 2. **Get Ledger Entry**
-   - Validates asset identifiers and correlation ID
+   - Validates ledger key and correlation ID
    - Retrieves specific entry from store
    - Returns entry details
 
-3. **Get Ledger Entries by Type**
-   - Validates asset identifiers and entry type ID
-   - Filters entries by type
-   - Supports pagination
-   - Returns filtered list of entries
-
 ### Balance Queries
-1. **Get Current Balances**
-   - Validates asset identifiers
-   - Retrieves current balances from store
-   - Returns bucket balances
-
-2. **Get Balances As Of Date**
-   - Validates asset identifiers and date format
+1. **Get Balances As Of Date**
+   - Validates ledger key and date format
    - Calculates balances as of specified date
    - Returns bucket balances
 
-3. **Get Balance by Bucket Type**
-   - Validates asset identifiers and bucket type ID
-   - Retrieves balance for specific bucket
-   - Returns bucket balance
+### Class Configuration Queries
+1. **Get Ledger Class Entry Types**
+   - Validates ledger class ID
+   - Retrieves entry types from store
+   - Returns list of entry types
+
+2. **Get Ledger Class Status Types**
+   - Validates ledger class ID
+   - Retrieves status types from store
+   - Returns list of status types
+
+3. **Get Ledger Class Bucket Types**
+   - Validates ledger class ID
+   - Retrieves bucket types from store
+   - Returns list of bucket types
+
+### Settlement Queries
+1. **Get Ledger Settlements**
+   - Validates ledger key
+   - Retrieves settlements from store
+   - Returns list of settlements
+
+2. **Get Ledger Settlements By Correlation ID**
+   - Validates correlation ID
+   - Retrieves settlements by correlation ID
+   - Returns list of settlements
 
 ## Error Handling
 
@@ -245,31 +253,34 @@ Queries may return the following errors:
 ### CLI
 ```bash
 # Get ledger class
-provenanced q ledger class [ledger-class-id]
+provenanced q ledger class <ledger-class-id>
 
 # Get ledger configuration
-provenanced q ledger config [nft-id] [asset-class-id]
-
-# Get ledger status
-provenanced q ledger status [nft-id] [asset-class-id]
+provenanced q ledger get <asset-class-id> <nft-id>
 
 # Get ledger entries
-provenanced q ledger entries [nft-id] [asset-class-id]
+provenanced q ledger entries <asset-class-id> <nft-id>
 
 # Get ledger entry
-provenanced q ledger entry [nft-id] [asset-class-id] [correlation-id]
-
-# Get ledger entries by type
-provenanced q ledger entries-by-type [nft-id] [asset-class-id] [entry-type-id]
-
-# Get current balances
-provenanced q ledger balances [nft-id] [asset-class-id]
+provenanced q ledger entry <asset-class-id> <nft-id> <correlation-id>
 
 # Get balances as of date
-provenanced q ledger balances-as-of [nft-id] [asset-class-id] [as-of-date]
+provenanced q ledger balances-as-of <asset-class-id> <nft-id> <as-of-date>
 
-# Get balance by bucket type
-provenanced q ledger balance-by-bucket [nft-id] [asset-class-id] [bucket-type-id]
+# Get ledger class entry types
+provenanced q ledger entry-types <ledger-class-id>
+
+# Get ledger class status types
+provenanced q ledger status-types <ledger-class-id>
+
+# Get ledger class bucket types
+provenanced q ledger bucket-types <ledger-class-id>
+
+# Get all settlements for a ledger
+provenanced q ledger settlements <asset-class-id> <nft-id>
+
+# Get settlements by correlation ID
+provenanced q ledger settlements-by-correlation <correlation-id>
 ```
 
 ### REST
@@ -278,63 +289,40 @@ provenanced q ledger balance-by-bucket [nft-id] [asset-class-id] [bucket-type-id
 GET /provenance/ledger/v1/class/{ledger_class_id}
 
 # Get ledger configuration
-GET /provenance/ledger/v1/config?nft_id={nft_id}&asset_class_id={asset_class_id}
-
-# Get ledger status
-GET /provenance/ledger/v1/status?nft_id={nft_id}&asset_class_id={asset_class_id}
+GET /provenance/ledger/v1/ledger?key.asset_class_id={asset_class_id}&key.nft_id={nft_id}
 
 # Get ledger entries
-GET /provenance/ledger/v1/entries?nft_id={nft_id}&asset_class_id={asset_class_id}
+GET /provenance/ledger/v1/ledger/{asset_class_id}/{nft_id}/entries
 
 # Get ledger entry
-GET /provenance/ledger/v1/ledger/{nft_id}/{asset_class_id}/entry/{correlation_id}
-
-# Get ledger entries by type
-GET /provenance/ledger/v1/entries-by-type?nft_id={nft_id}&asset_class_id={asset_class_id}&entry_type_id={entry_type_id}
-
-# Get current balances
-GET /provenance/ledger/v1/ledger/{nft_id}/{asset_class_id}/balances
+GET /provenance/ledger/v1/ledger/{asset_class_id}/{nft_id}/entry/{correlation_id}
 
 # Get balances as of date
-GET /provenance/ledger/v1/ledger/{nft_id}/{asset_class_id}/balances/{as_of_date}
+GET /provenance/ledger/v1/ledger/{asset_class_id}/{nft_id}/balances/{as_of_date}
 
-# Get balance by bucket type
-GET /provenance/ledger/v1/ledger/{nft_id}/{asset_class_id}/balance/{bucket_type_id}
-```
+# Get ledger class entry types
+GET /provenance/ledger/v1/class/{ledger_class_id}/entry-types
 
-## Pagination
+# Get ledger class status types
+GET /provenance/ledger/v1/class/{ledger_class_id}/status-types
 
-All list queries support pagination using the Cosmos SDK pagination system:
+# Get ledger class bucket types
+GET /provenance/ledger/v1/class/{ledger_class_id}/bucket-types
 
-```protobuf
-message PageRequest {
-    string key = 1;
-    uint64 offset = 2;
-    uint64 limit = 3;
-    bool count_total = 4;
-    bool reverse = 5;
-}
+# Get ledger settlements
+GET /provenance/ledger/v1/ledger/{asset_class_id}/{nft_id}/settlements
 
-message PageResponse {
-    string next_key = 1;
-    uint64 total = 2;
-}
-```
-
-Example pagination usage:
-```bash
-# Get first page
-provenanced query ledger entries [nft_id] [asset_class_id] --limit=10
-
-# Get next page using the next_key from previous response
-provenanced query ledger entries [nft_id] [asset_class_id] --limit=10 --page-key=[next_key]
+# Get settlements by correlation ID
+GET /provenance/ledger/v1/settlements/correlation/{correlation_id}
 ```
 
 ## Notes
 
 - All dates should be provided in ISO8601 format (e.g., "2024-01-01")
-- The balances query will return the cumulative balances up to and including the specified date
+- The balances query calculates cumulative balances up to and including the specified date
 - Entries are sorted by effective date when calculating balances
 - The module maintains balances in configurable buckets as defined by the ledger class
 - Correlation IDs are free-form strings up to 50 characters, used to track and correlate ledger entries with external systems
-- Interest rates are stored with 6 decimal places (10000000 = 10.000000%) 
+- Interest rates are stored with 6 decimal places (10000000 = 10.000000%)
+- Ledger keys are bech32-encoded strings that combine asset class ID and NFT ID
+- Balances are calculated on-the-fly from ledger entries rather than stored separately 

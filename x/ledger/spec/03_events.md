@@ -35,6 +35,27 @@ message EventLedgerUpdated {
 
   // nft id of the ledger (scope id or nft id)
   string nft_id = 2;
+
+  // What type of data update caused this event to be emitted
+  UpdateType update_type = 3;
+}
+
+// UpdateType is the type of data update that caused the EventLedgerUpdated event to be emitted
+enum UpdateType {
+  // The update type is unspecified
+  UPDATE_TYPE_UNSPECIFIED = 0;
+
+  // The status of the ledger was updated
+  UPDATE_TYPE_STATUS = 1;
+
+  // The interest rate of the ledger was updated
+  UPDATE_TYPE_INTEREST_RATE = 2;
+
+  // The payment of the ledger was updated
+  UPDATE_TYPE_PAYMENT = 3;
+
+  // The maturity date of the ledger was updated
+  UPDATE_TYPE_MATURITY_DATE = 4;
 }
 ```
 
@@ -101,6 +122,7 @@ Additional attributes specific to each event type:
 ### EventLedgerUpdated
 - `asset_class_id`: The Scope Specification ID or NFT Class ID
 - `nft_id`: The NFT or Scope identifier
+- `update_type`: The specific type of update that occurred (status, interest rate, payment, or maturity date)
 
 ### EventLedgerEntryAdded
 - `asset_class_id`: The Scope Specification ID or NFT Class ID
@@ -136,6 +158,10 @@ Events are indexed for efficient querying:
    - All events related to a specific correlation ID
    - Used for tracking specific transactions
 
+5. **By Update Type**
+   - All ledger update events of a specific type
+   - Used for monitoring specific types of ledger changes
+
 ## Event Processing
 
 Events are processed in the following order:
@@ -162,7 +188,7 @@ Events can be used to:
 1. **Real-time Monitoring**
    - Track financial activities as they occur
    - Monitor ledger creation and updates
-   - Track entry additions
+   - Track entry additions and fund transfers
 
 2. **External System Integration**
    - Update accounting systems
@@ -179,6 +205,11 @@ Events can be used to:
    - Execute settlement instructions
    - Track transfer status
 
+5. **Change Tracking**
+   - Monitor specific types of ledger updates
+   - Track configuration changes
+   - Maintain change history
+
 ## Event Subscription
 
 Events can be subscribed to using:
@@ -190,16 +221,32 @@ Events can be subscribed to using:
 
 Events are implemented as protobuf messages in the `provenance.ledger.v1` package. The events are emitted by the keeper methods and can be consumed by external systems through the standard Cosmos SDK event system.
 
-### Event Emission Example
+### Event Emission Examples
 
 ```go
 // Example of emitting an EventLedgerCreated
-ctx.EventManager().EmitEvent(
-    sdk.NewEvent(
-        "ledger_created",
-        sdk.NewAttribute("asset_class_id", assetClassID),
-        sdk.NewAttribute("nft_id", nftID),
-    ),
+ctx.EventManager().EmitTypedEvent(
+    types.NewEventLedgerCreated(ledgerKey),
+)
+
+// Example of emitting an EventLedgerUpdated with update type
+ctx.EventManager().EmitTypedEvent(
+    types.NewEventLedgerUpdated(ledgerKey, types.UpdateType_UPDATE_TYPE_STATUS),
+)
+
+// Example of emitting an EventLedgerEntryAdded
+ctx.EventManager().EmitTypedEvent(
+    types.NewEventLedgerEntryAdded(ledgerKey, correlationID),
+)
+
+// Example of emitting an EventFundTransferWithSettlement
+ctx.EventManager().EmitTypedEvent(
+    types.NewEventFundTransferWithSettlement(ledgerKey, correlationID),
+)
+
+// Example of emitting an EventLedgerDestroyed
+ctx.EventManager().EmitTypedEvent(
+    types.NewEventLedgerDestroyed(ledgerKey),
 )
 ```
 
@@ -209,7 +256,7 @@ ctx.EventManager().EmitEvent(
 // Example of consuming events
 func (k Keeper) AfterTx(ctx sdk.Context, tx sdk.Tx, events []abci.Event) {
     for _, event := range events {
-        if event.Type == "ledger_created" {
+        if event.Type == "provenance.ledger.v1.EventLedgerCreated" {
             // Process ledger created event
             for _, attr := range event.Attributes {
                 switch string(attr.Key) {
@@ -219,7 +266,29 @@ func (k Keeper) AfterTx(ctx sdk.Context, tx sdk.Tx, events []abci.Event) {
                     nftID := string(attr.Value)
                 }
             }
+        } else if event.Type == "provenance.ledger.v1.EventLedgerUpdated" {
+            // Process ledger updated event
+            for _, attr := range event.Attributes {
+                switch string(attr.Key) {
+                case "asset_class_id":
+                    assetClassID := string(attr.Value)
+                case "nft_id":
+                    nftID := string(attr.Value)
+                case "update_type":
+                    updateType := string(attr.Value)
+                }
+            }
         }
     }
 }
-``` 
+```
+
+## Notes
+
+- All events include the asset class ID and NFT ID for proper identification
+- The `EventLedgerUpdated` event includes an `update_type` field to specify what was changed
+- Events are emitted using the Cosmos SDK typed event system for better type safety
+- No events are emitted for ledger class management operations (create, add types)
+- No events are emitted for bulk operations (they emit individual events for each ledger/entry)
+- Events are emitted synchronously during transaction processing
+- All events are indexed and can be queried through the standard Cosmos SDK event system 
