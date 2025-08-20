@@ -191,12 +191,6 @@ message BucketBalance {
   ];
 }
 
-// Ledgers represents a collection of ledgers with their entries, used for conversion and bulk operations.
-message Ledgers {
-  // The ledgers with their entries.
-  repeated LedgerToEntries ledger_to_entries = 1 [(gogoproto.jsontag) = "ledgerToEntries,omitempty"];
-}
-
 // LedgerToEntries represents a ledger with its associated entries
 message LedgerToEntries {
   // The ledger key identifying the ledger.
