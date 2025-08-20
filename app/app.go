@@ -176,9 +176,9 @@ import (
 	"github.com/provenance-io/provenance/x/quarantine"
 	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
 	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
-	"github.com/provenance-io/provenance/x/registry"
 	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
 	registrymodule "github.com/provenance-io/provenance/x/registry/module"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
@@ -403,7 +403,7 @@ func New(
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
-		registry.StoreKey,
+		registrytypes.StoreKey,
 		ledger.StoreKey,
 		exchange.StoreKey,
 		nft.StoreKey,
@@ -610,7 +610,7 @@ func New(
 		appCodec, keys[hold.StoreKey], app.AccountKeeper, app.BankKeeper,
 	)
 
-	app.RegistryKeeper = registrykeeper.NewKeeper(appCodec, keys[registry.StoreKey], runtime.NewKVStoreService(keys[registry.StoreKey]), app.NFTKeeper, app.MetadataKeeper)
+	app.RegistryKeeper = registrykeeper.NewKeeper(appCodec, keys[registrytypes.StoreKey], runtime.NewKVStoreService(keys[registrytypes.StoreKey]), app.NFTKeeper, app.MetadataKeeper)
 
 	app.LedgerKeeper = ledgerkeeper.NewKeeper(appCodec, keys[ledger.StoreKey], runtime.NewKVStoreService(keys[ledger.StoreKey]), app.BankKeeper, app.RegistryKeeper)
 
@@ -899,7 +899,7 @@ func New(
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
 		hold.ModuleName,
-		registry.ModuleName,
+		registrytypes.ModuleName,
 		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
 		assettypes.ModuleName,
@@ -943,7 +943,7 @@ func New(
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
 		nft.ModuleName,
-		registry.ModuleName,
+		registrytypes.ModuleName,
 		ledger.ModuleName,
 
 		ibcratelimit.ModuleName,

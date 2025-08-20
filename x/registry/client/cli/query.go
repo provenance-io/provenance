@@ -9,15 +9,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
-	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
 // CmdQuery returns the cli query commands for the registry module
 func CmdQuery() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                        registry.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", registry.ModuleName),
+		Use:                        types.ModuleName,
+		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

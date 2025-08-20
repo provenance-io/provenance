@@ -9,14 +9,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
 // CmdTx returns the transaction commands for the registry module
 func CmdTx() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                        registry.ModuleName,
+		Use:                        types.ModuleName,
 		Short:                      "Registry transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,

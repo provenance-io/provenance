@@ -22,8 +22,6 @@ package types
 
 import (
 	cerrs "cosmossdk.io/errors"
-
-	"github.com/provenance-io/provenance/x/registry"
 )
 
 type ErrCode string
@@ -42,16 +40,16 @@ const (
 )
 
 var (
-	ErrRegistryAlreadyExists  = cerrs.Register(registry.ModuleName, 1, "registry already exists")
-	ErrNFTNotFound            = cerrs.Register(registry.ModuleName, 2, "NFT does not exist")
-	ErrUnauthorized           = cerrs.Register(registry.ModuleName, 3, "unauthorized")
-	ErrInvalidRole            = cerrs.Register(registry.ModuleName, 4, "invalid role")
-	ErrRegistryNotFound       = cerrs.Register(registry.ModuleName, 5, "registry not found")
-	ErrAddressAlreadyHasRole  = cerrs.Register(registry.ModuleName, 6, "address already has role")
-	ErrInvalidHrp             = cerrs.Register(registry.ModuleName, 7, "invalid hrp")
-	ErrInvalidKey             = cerrs.Register(registry.ModuleName, 8, "invalid key")
-	ErrAddressDoesNotHaveRole = cerrs.Register(registry.ModuleName, 9, "address does not have role")
-	ErrInvalidField           = cerrs.Register(registry.ModuleName, 10, "invalid field")
+	ErrRegistryAlreadyExists  = cerrs.Register(ModuleName, 1, "registry already exists")
+	ErrNFTNotFound            = cerrs.Register(ModuleName, 2, "NFT does not exist")
+	ErrUnauthorized           = cerrs.Register(ModuleName, 3, "unauthorized")
+	ErrInvalidRole            = cerrs.Register(ModuleName, 4, "invalid role")
+	ErrRegistryNotFound       = cerrs.Register(ModuleName, 5, "registry not found")
+	ErrAddressAlreadyHasRole  = cerrs.Register(ModuleName, 6, "address already has role")
+	ErrInvalidHrp             = cerrs.Register(ModuleName, 7, "invalid hrp")
+	ErrInvalidKey             = cerrs.Register(ModuleName, 8, "invalid key")
+	ErrAddressDoesNotHaveRole = cerrs.Register(ModuleName, 9, "address does not have role")
+	ErrInvalidField           = cerrs.Register(ModuleName, 10, "invalid field")
 )
 
 func NewErrCodeRegistryAlreadyExists(key string) error {

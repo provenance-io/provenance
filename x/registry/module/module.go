@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	"github.com/provenance-io/provenance/x/registry"
 	"github.com/provenance-io/provenance/x/registry/client/cli"
 	"github.com/provenance-io/provenance/x/registry/keeper"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
@@ -31,7 +30,7 @@ type AppModuleBasic struct {
 
 // Name returns the module name.
 func (AppModuleBasic) Name() string {
-	return registry.ModuleName
+	return registrytypes.ModuleName
 }
 
 // GetTxCmd returns the root tx command for the registry module.

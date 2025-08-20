@@ -18,9 +18,11 @@ import (
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	assetTypes "github.com/provenance-io/provenance/x/asset/types"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	registryTypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -48,7 +50,7 @@ type appUpgrade struct {
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"bouvardia-rc1": { // Upgrade for v1.26.0-rc1.
-		Added:   []string{flatfeestypes.StoreKey, ledgerTypes.StoreKey},
+		Added:   []string{flatfeestypes.StoreKey, assetTypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
