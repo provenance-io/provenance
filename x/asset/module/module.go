@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleBasic      = (*AppModuleBasic)(nil)
 	_ module.AppModuleSimulation = (*AppModule)(nil)
 
 	_ appmodule.AppModule = (*AppModule)(nil)
