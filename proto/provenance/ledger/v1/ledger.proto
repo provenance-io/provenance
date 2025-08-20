@@ -207,27 +207,27 @@ enum DayCountConvention {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified day count convention.
-  DAY_COUNT_CONVENTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "DAY_COUNT_CONVENTION_UNSPECIFIED"];
+  DAY_COUNT_CONVENTION_UNSPECIFIED = 0;
 
   // Actual/365: Uses the actual number of days in the period with a fixed denominator of 365
   // (or sometimes 365.25 to adjust for leap years).
-  DAY_COUNT_CONVENTION_ACTUAL_365 = 1 [(gogoproto.enumvalue_customname) = "DAY_COUNT_CONVENTION_ACTUAL_365"];
+  DAY_COUNT_CONVENTION_ACTUAL_365 = 1;
 
   // Actual/360: Uses the actual number of days in the period but divides by 360.
-  DAY_COUNT_CONVENTION_ACTUAL_360 = 2 [(gogoproto.enumvalue_customname) = "DAY_COUNT_CONVENTION_ACTUAL_360"];
+  DAY_COUNT_CONVENTION_ACTUAL_360 = 2;
 
   // 30/360: Assumes each month has 30 days and the year has 360 days.
-  DAY_COUNT_CONVENTION_THIRTY_360 = 3 [(gogoproto.enumvalue_customname) = "DAY_COUNT_CONVENTION_THIRTY_360"];
+  DAY_COUNT_CONVENTION_THIRTY_360 = 3;
 
   // Actual/Actual: Uses the actual number of days in the period and the actual days in the year
   // (365 or 366, depending on the year).
-  DAY_COUNT_CONVENTION_ACTUAL_ACTUAL = 4 [(gogoproto.enumvalue_customname) = "DAY_COUNT_CONVENTION_ACTUAL_ACTUAL"];
+  DAY_COUNT_CONVENTION_ACTUAL_ACTUAL = 4;
 
   // 365/365: Always uses 365 days in the denominator regardless of leap years.
-  DAY_COUNT_CONVENTION_DAYS_365 = 5 [(gogoproto.enumvalue_customname) = "DAY_COUNT_CONVENTION_DAYS_365"];
+  DAY_COUNT_CONVENTION_DAYS_365 = 5;
 
   // 360/360: Always uses 360 days in both the numerator and denominator.
-  DAY_COUNT_CONVENTION_DAYS_360 = 6 [(gogoproto.enumvalue_customname) = "DAY_COUNT_CONVENTION_DAYS_360"];
+  DAY_COUNT_CONVENTION_DAYS_360 = 6;
 }
 
 // Interest Accrual Methods describing how interest is calculated over time
@@ -236,35 +236,28 @@ enum InterestAccrualMethod {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified interest accrual method.
-  INTEREST_ACCRUAL_METHOD_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_UNSPECIFIED"];
+  INTEREST_ACCRUAL_METHOD_UNSPECIFIED = 0;
 
   // Simple Interest: Calculated only on the principal amount.
-  INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST = 1
-      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST"];
+  INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST = 1;
 
   // Compound Interest: Calculated on both the principal and on previously accumulated interest.
-  INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST = 2
-      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST"];
+  INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST = 2;
 
   // Daily Compounding: Interest is compounded on a daily basis.
-  INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING = 3
-      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING = 3;
 
   // Monthly Compounding: Interest is compounded each month.
-  INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING = 4
-      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING = 4;
 
   // Quarterly Compounding: Interest is compounded every quarter.
-  INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING = 5
-      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING = 5;
 
   // Annually Compounding: Interest is compounded once per year.
-  INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING = 6
-      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING = 6;
 
   // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
-  INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7
-      [(gogoproto.enumvalue_customname) = "INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING"];
+  INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7;
 }
 
 // Payment frequencies for loan repayments
@@ -273,20 +266,20 @@ enum PaymentFrequency {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified payment frequency.
-  PAYMENT_FREQUENCY_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "PAYMENT_FREQUENCY_UNSPECIFIED"];
+  PAYMENT_FREQUENCY_UNSPECIFIED = 0;
 
   // Daily payments.
-  PAYMENT_FREQUENCY_DAILY = 1 [(gogoproto.enumvalue_customname) = "PAYMENT_FREQUENCY_DAILY"];
+  PAYMENT_FREQUENCY_DAILY = 1;
 
   // Weekly or biweekly payments.
-  PAYMENT_FREQUENCY_WEEKLY = 2 [(gogoproto.enumvalue_customname) = "PAYMENT_FREQUENCY_WEEKLY"];
+  PAYMENT_FREQUENCY_WEEKLY = 2;
 
   // Monthly payments (most common for consumer loans and mortgages).
-  PAYMENT_FREQUENCY_MONTHLY = 3 [(gogoproto.enumvalue_customname) = "PAYMENT_FREQUENCY_MONTHLY"];
+  PAYMENT_FREQUENCY_MONTHLY = 3;
 
   // Quarterly payments.
-  PAYMENT_FREQUENCY_QUARTERLY = 4 [(gogoproto.enumvalue_customname) = "PAYMENT_FREQUENCY_QUARTERLY"];
+  PAYMENT_FREQUENCY_QUARTERLY = 4;
 
   // Annual payments.
-  PAYMENT_FREQUENCY_ANNUALLY = 5 [(gogoproto.enumvalue_customname) = "PAYMENT_FREQUENCY_ANNUALLY"];
+  PAYMENT_FREQUENCY_ANNUALLY = 5;
 }
