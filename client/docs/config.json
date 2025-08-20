@@ -7,27 +7,6 @@
   },
   "apis": [
     {
-      "url": "./tmp-swagger-gen/provenance/asset/v1/query.swagger.json",
-      "tags": {
-        "add": [
-          "Asset"
-        ]
-      },
-      "operationIds": {
-        "rename": {
-          "Params": "AssetParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/provenance/asset/v1/tx.swagger.json",
-      "tags": {
-        "add": [
-          "Asset"
-        ]
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
       "tags": {
         "add": [
