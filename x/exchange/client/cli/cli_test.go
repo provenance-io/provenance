@@ -708,7 +708,7 @@ func (s *CmdTestSuite) markAttrsIndexed(events sdk.Events) {
 	}
 }
 
-// assertOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
+// assertGetOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
 // If the provided order is nil, ensures the query returns an order not found error.
 func (s *CmdTestSuite) assertGetOrder(orderID string, order *exchange.Order) (okay bool) {
 	s.T().Helper()
@@ -967,7 +967,7 @@ func (s *CmdTestSuite) assertBalancesFollowup(expBals []banktypes.Balance) func(
 	}
 }
 
-// assertBalancesFollowup returns a follow-up function that asserts that the spendable balances are now as expected.
+// assertSpendableBalancesFollowup returns a follow-up function that asserts that the spendable balances are now as expected.
 func (s *CmdTestSuite) assertSpendableBalancesFollowup(expSpendable []banktypes.Balance) func(*sdk.TxResponse) {
 	return func(_ *sdk.TxResponse) {
 		for _, expBal := range expSpendable {
