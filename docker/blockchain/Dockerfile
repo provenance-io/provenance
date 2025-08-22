@@ -12,6 +12,7 @@ COPY app/ ./app/
 COPY go.* ./
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
+COPY legacy_protos/ ./legacy_protos/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
 COPY testutil/ ./testutil/

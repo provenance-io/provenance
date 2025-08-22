@@ -10,6 +10,7 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
+	nfttypes "cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -159,6 +160,14 @@ func init() {
 	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/Params", &minttypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/Inflation", &minttypes.QueryInflationResponse{})
 	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/AnnualProvisions", &minttypes.QueryAnnualProvisionsResponse{})
+
+	// nft
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Class", &nfttypes.QueryClassResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Classes", &nfttypes.QueryClassesResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/NFT", &nfttypes.QueryNFTResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/NFTs", &nfttypes.QueryNFTsResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Owner", &nfttypes.QueryOwnerResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Supply", &nfttypes.QuerySupplyResponse{})
 
 	// slashing
 	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/Params", &slashingtypes.QueryParamsResponse{})

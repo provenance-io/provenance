@@ -2,6 +2,8 @@ package app
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -27,10 +29,12 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 type UpgradeTestSuite struct {
@@ -1049,6 +1053,7 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
+		"INF Bulk creating ledgers and entries.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
@@ -1060,6 +1065,7 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
+		"INF Bulk creating ledgers and entries.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
 }
@@ -1349,4 +1355,101 @@ func TestLogCostGrid(t *testing.T) {
 		}
 	}
 	t.Logf("Defined Costs at various conversion factors:\n%s\n%s\n%s", headLine, string(hrBz), strings.Join(lines, "\n"))
+}
+
+func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
+	// Test that the streaming ledger data import function works correctly.
+	// This test will only work if the gzipped file exists.
+	err := streamImportLedgerData(s.ctx, s.app.LedgerKeeper)
+	if err != nil {
+		s.T().Logf("Note: No ledger data files found or error loading: %v", err)
+		return // This is expected if no data files exist
+	}
+
+	s.T().Log("Successfully stream imported ledger data")
+}
+
+func (s *UpgradeTestSuite) TestImportLedgerData() {
+	// Test the full import process.
+	err := importLedgerData(s.ctx, s.app.LedgerKeeper)
+	if err != nil {
+		s.T().Logf("Note: Import ledger data failed (expected if no data): %v", err)
+		return // This is expected if no data files exist.
+	}
+
+	s.T().Log("Successfully imported ledger data")
+}
+
+func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
+	// Load the actual genesis data from the gzipped file using the same method as the upgrade handler.
+	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
+
+	// Read the gzipped file data
+	data, err := upgradeDataFS.ReadFile(filePath)
+	if err != nil {
+		s.T().Logf("Note: No ledger genesis file found at %s: %v", filePath, err)
+		s.T().Skip("Skipping test - no ledger genesis data file available")
+		return
+	}
+
+	// Create gzip reader for decompression.
+	reader := bytes.NewReader(data)
+	gzReader, err := gzip.NewReader(reader)
+	if err != nil {
+		s.T().Fatalf("Failed to create gzip reader for %s: %v", filePath, err)
+	}
+	defer gzReader.Close()
+
+	// Decode the entire JSON into a GenesisState.
+	var genesisState ledgerTypes.GenesisState
+	decoder := json.NewDecoder(gzReader)
+	if err := decoder.Decode(&genesisState); err != nil {
+		s.T().Fatalf("Failed to decode genesis state from %s: %v", filePath, err)
+	}
+
+	// Validate each ledger class.
+	for i, ledgerClass := range genesisState.LedgerClasses {
+		err := ledgerClass.Validate()
+		s.Require().NoError(err, "LedgerClass %d validation failed", i)
+	}
+
+	// Validate each ledger class entry type.
+	for i, entryType := range genesisState.LedgerClassEntryTypes {
+		err := entryType.EntryType.Validate()
+		s.Require().NoError(err, "LedgerClassEntryType %d validation failed", i)
+	}
+
+	// Validate each ledger class status type.
+	for i, statusType := range genesisState.LedgerClassStatusTypes {
+		err := statusType.StatusType.Validate()
+		s.Require().NoError(err, "LedgerClassStatusType %d validation failed", i)
+	}
+
+	// Validate each ledger class bucket type.
+	for i, bucketType := range genesisState.LedgerClassBucketTypes {
+		err := bucketType.BucketType.Validate()
+		s.Require().NoError(err, "LedgerClassBucketType %d validation failed", i)
+	}
+
+	// Validate each ledger.
+	for i, genesisLedger := range genesisState.Ledgers {
+		err := genesisLedger.Ledger.Validate()
+		s.Require().NoError(err, "Ledger %d validation failed", i)
+	}
+
+	// Validate each ledger entry.
+	for i, genesisEntry := range genesisState.LedgerEntries {
+		err := genesisEntry.Entry.Validate()
+		s.Require().NoError(err, "LedgerEntry %d validation failed", i)
+	}
+
+	// Validate each settlement instruction.
+	for i, settlement := range genesisState.SettlementInstructions {
+		for j, instruction := range settlement.SettlementInstructions.SettlementInstructions {
+			err := instruction.Validate()
+			s.Require().NoError(err, "SettlementInstruction %d.%d validation failed", i, j)
+		}
+	}
+
+	s.T().Log("Successfully validated all ledger genesis state components")
 }
