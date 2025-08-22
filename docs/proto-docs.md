@@ -10875,6 +10875,12 @@ PartyType are the different roles parties on a contract may use
 | `PARTY_TYPE_PROVENANCE` | `8` | PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action |
 | `PARTY_TYPE_CONTROLLER` | `10` | PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote) |
 | `PARTY_TYPE_VALIDATOR` | `11` | PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain |
+| `PARTY_TYPE_GENERIC_1` | `12` | PARTY_TYPE_GENERIC_# are placeholder types for the user-defined roles. |
+| `PARTY_TYPE_GENERIC_2` | `13` |  |
+| `PARTY_TYPE_GENERIC_3` | `14` |  |
+| `PARTY_TYPE_GENERIC_4` | `15` |  |
+| `PARTY_TYPE_GENERIC_5` | `16` |  |
+| `PARTY_TYPE_GENERIC_6` | `17` |  |
 
 
  <!-- end enums -->
