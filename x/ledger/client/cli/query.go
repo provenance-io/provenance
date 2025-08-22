@@ -79,10 +79,10 @@ func GetCmd() *cobra.Command {
 			plainText := LedgerPlainText{
 				Key:                        req.Key,
 				Status:                     strconv.Itoa(int(l.Ledger.StatusTypeId)),
-				NextPmtDate:                helper.EpochDaysToISO8601(l.Ledger.NextPmtDate),
+				NextPmtDate:                helper.EpochDaysToYMD(l.Ledger.NextPmtDate),
 				NextPmtAmt:                 strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
 				InterestRate:               strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
-				MaturityDate:               helper.EpochDaysToISO8601(l.Ledger.MaturityDate),
+				MaturityDate:               helper.EpochDaysToYMD(l.Ledger.MaturityDate),
 				InterestDayCountConvention: l.Ledger.InterestDayCountConvention,
 				InterestAccrualMethod:      l.Ledger.InterestAccrualMethod,
 				PaymentFrequency:           l.Ledger.PaymentFrequency,
@@ -228,8 +228,8 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					CorrelationID:  entry.CorrelationId,
 					Sequence:       entry.Sequence,
 					Type:           entryType,
-					PostedDate:     helper.EpochDaysToISO8601(entry.PostedDate),
-					EffectiveDate:  helper.EpochDaysToISO8601(entry.EffectiveDate),
+					PostedDate:     helper.EpochDaysToYMD(entry.PostedDate),
+					EffectiveDate:  helper.EpochDaysToYMD(entry.EffectiveDate),
 					TotalAmt:       entry.TotalAmt.String(),
 					AppliedAmounts: appliedAmts,
 				}

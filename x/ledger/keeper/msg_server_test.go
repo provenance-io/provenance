@@ -629,8 +629,8 @@ func (s *MsgServerTestSuite) TestUpdateInterestRate() {
 
 // TestUpdatePayment tests the UpdatePayment message server method
 func (s *MsgServerTestSuite) TestUpdatePayment() {
-	nextPmtDate, err := helper.StrToDate("2024-01-15")
-	s.Require().NoError(err, "StrToDate error")
+	nextPmtDate, err := helper.ParseYMD("2024-01-15")
+	s.Require().NoError(err, "ParseYMD error")
 
 	tests := []struct {
 		name    string
@@ -681,8 +681,8 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 
 // TestUpdateMaturityDate tests the UpdateMaturityDate message server method
 func (s *MsgServerTestSuite) TestUpdateMaturityDate() {
-	maturityDate, err := helper.StrToDate("2025-12-31")
-	s.Require().NoError(err, "StrToDate error")
+	maturityDate, err := helper.ParseYMD("2025-12-31")
+	s.Require().NoError(err, "ParseYMD error")
 
 	tests := []struct {
 		name    string

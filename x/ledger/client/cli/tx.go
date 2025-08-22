@@ -75,7 +75,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			// Get optional fields from flags
 			nextPmtDateStr, _ := cmd.Flags().GetString("next-pmt-date")
 			if nextPmtDateStr != "" {
-				nextPmtDate, err := helper.StrToDate(nextPmtDateStr)
+				nextPmtDate, err := helper.ParseYMD(nextPmtDateStr)
 				if err != nil {
 					return fmt.Errorf("invalid --next-pmt-date: %w", err)
 				}
@@ -94,7 +94,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 
 			maturityDateStr, _ := cmd.Flags().GetString("maturity-date")
 			if maturityDateStr != "" {
-				maturityDate, err := helper.StrToDate(maturityDateStr)
+				maturityDate, err := helper.ParseYMD(maturityDateStr)
 				if err != nil {
 					return fmt.Errorf("invalid --maturity-date: %w", err)
 				}
@@ -500,10 +500,10 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 // CmdBulkCreate returns the command for creating ledgers and entries in bulk
 func CmdBulkCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bulk-create <ledger_entries_json_file",
-		Short: "Create ledgers and entries in bulk",
+		Use:     "bulk-create <ledger_entries_json_file",
+		Short:   "Create ledgers and entries in bulk",
 		Example: `$ provenanced tx ledger bulk-create data.json --from mykey`,
-		Args:  cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -530,7 +530,7 @@ func CmdBulkCreate() *cobra.Command {
 			}
 
 			msg := &ledger.MsgBulkCreateRequest{
-				Authority: clientCtx.FromAddress.String(),
+				Authority:       clientCtx.FromAddress.String(),
 				LedgerToEntries: ledgerToEntries,
 			}
 

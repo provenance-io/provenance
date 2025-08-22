@@ -2,20 +2,19 @@ package helper
 
 import "time"
 
-// StrPtr returns a pointer to the string s.
-func StrPtr(s string) *string {
-	return &s
-}
-
+// DaysSinceEpoch calculates the number of days between the given date and the Unix epoch (January 1, 1970).
 func DaysSinceEpoch(date time.Time) int32 {
-	return int32(date.Sub(time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)).Hours() / 24)
+	d := date.Sub(time.Unix(0, 0))
+	return int32(d / (24 * time.Hour)) //nolint:gosec // 24 * time.Hour is 86.4e12, so this always fits.
 }
 
-func EpochDaysToISO8601(days int32) string {
+// EpochDaysToYMD converts a number of days since the Unix epoch (January 1, 1970) to a date string (YYYY-MM-DD).
+func EpochDaysToYMD(days int32) string {
 	t := time.Unix(int64(days)*86400, 0).UTC()
 	return t.Format("2006-01-02")
 }
 
-func StrToDate(dateStr string) (time.Time, error) {
+// ParseYMD parses a date string in the format "YYYY-MM-DD" and returns a time.Time object or an error if invalid.
+func ParseYMD(dateStr string) (time.Time, error) {
 	return time.Parse("2006-01-02", dateStr)
 }
