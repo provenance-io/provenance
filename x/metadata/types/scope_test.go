@@ -306,6 +306,13 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 			[]Party{user1Owner},
 			"",
 		},
+		{
+			"should successfully add generic party type owner",
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			[]Party{{Address: "addr2", Role: PartyType_PARTY_TYPE_GENERIC_1}},
+			[]Party{user1Owner, {Address: "addr2", Role: PartyType_PARTY_TYPE_GENERIC_1}},
+			"",
+		},
 	}
 
 	for _, tc := range tests {
@@ -721,6 +728,50 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 			"",
 		},
 		{
+			"valid session with generic party type 1",
+			NewSession("session_with_generic_1", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_1}}, nil),
+			"",
+		},
+		{
+			"valid session with generic party type 2",
+			NewSession("session_with_generic_2", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_2}}, nil),
+			"",
+		},
+		{
+			"valid session with generic party type 3",
+			NewSession("session_with_generic_3", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_3}}, nil),
+			"",
+		},
+		{
+			"valid session with generic party type 4",
+			NewSession("session_with_generic_4", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_4}}, nil),
+			"",
+		},
+		{
+			"valid session with generic party type 5",
+			NewSession("session_with_generic_5", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_5}}, nil),
+			"",
+		},
+		{
+			"valid session with generic party type 6",
+			NewSession("session_with_generic_6", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_6}}, nil),
+			"",
+		},
+		{
+			"valid session with mixed party types including generics",
+			NewSession("session_mixed_parties", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE},
+				{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Role: PartyType_PARTY_TYPE_GENERIC_1},
+				{Address: "cosmos1xcy3els9ua75kdm783c3qu0rfa2eplesldfevn", Role: PartyType_PARTY_TYPE_GENERIC_3}}, nil),
+			"",
+		},
+		{
 			"invalid session, invalid prefix",
 			NewSession("my_perfect_session", recordID, contractSpec, []Party{
 				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
@@ -912,6 +963,66 @@ func (s *ScopeTestSuite) TestParty_ValidateBasic() {
 		{
 			name:   "good addr good party not optional",
 			party:  Party{Address: addr, Role: 3, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 1 optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_1, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 1 not optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_1, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 2 optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_2, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 2 not optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_2, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 3 optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_3, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 3 not optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_3, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 4 optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_4, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 4 not optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_4, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 5 optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_5, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 5 not optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_5, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 6 optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_6, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "valid generic party type 6 not optional",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_GENERIC_6, Optional: false},
 			expErr: "",
 		},
 		{
