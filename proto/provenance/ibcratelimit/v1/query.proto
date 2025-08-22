@@ -4,6 +4,7 @@ package provenance.ibcratelimit.v1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/ibcratelimit/v1/params.proto";
+import "cosmos/query/v1/query.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/ibcratelimit";
 option java_package        = "io.provenance.ibcratelimit.v1";
@@ -14,7 +15,8 @@ service Query {
   // Params defines a gRPC query method that returns the ibcratelimit module's
   // parameters.
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/provenance/ibcratelimit/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/ibcratelimit/v1/params";
   }
 }
 

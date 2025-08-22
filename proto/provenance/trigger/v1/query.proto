@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "provenance/trigger/v1/trigger.proto";
+import "cosmos/query/v1/query.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
 option java_package        = "io.provenance.trigger.v1";
@@ -14,11 +15,13 @@ option java_multiple_files = true;
 service Query {
   // TriggerByID returns a trigger matching the ID.
   rpc TriggerByID(QueryTriggerByIDRequest) returns (QueryTriggerByIDResponse) {
-    option (google.api.http).get = "/provenance/trigger/v1/triggers/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/trigger/v1/triggers/{id}";
   }
   // Triggers returns the list of triggers.
   rpc Triggers(QueryTriggersRequest) returns (QueryTriggersResponse) {
-    option (google.api.http).get = "/provenance/trigger/v1/triggers";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/trigger/v1/triggers";
   }
 }
 

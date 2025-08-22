@@ -18,6 +18,7 @@ import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/params.proto";
 import "provenance/exchange/v1/payments.proto";
 import "provenance/exchange/v1/tx.proto";
+import "cosmos/query/v1/query.proto";
 
 // Query is the service for exchange module's query endpoints.
 service Query {
@@ -28,12 +29,14 @@ service Query {
 
   // GetOrder looks up an order by id.
   rpc GetOrder(QueryGetOrderRequest) returns (QueryGetOrderResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/order/{order_id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/order/{order_id}";
   }
 
   // GetOrderByExternalID looks up an order by market id and external id.
   rpc GetOrderByExternalID(QueryGetOrderByExternalIDRequest) returns (QueryGetOrderByExternalIDResponse) {
-    option (google.api.http) = {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http)                   = {
       get: "/provenance/exchange/v1/orders/market/{market_id}/{external_id}"
       additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/order/{external_id}"}
     };
@@ -41,7 +44,8 @@ service Query {
 
   // GetMarketOrders looks up the orders in a market.
   rpc GetMarketOrders(QueryGetMarketOrdersRequest) returns (QueryGetMarketOrdersResponse) {
-    option (google.api.http) = {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http)                   = {
       get: "/provenance/exchange/v1/orders/market/{market_id}"
       additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/orders"}
     };
@@ -49,33 +53,39 @@ service Query {
 
   // GetOwnerOrders looks up the orders from the provided owner address.
   rpc GetOwnerOrders(QueryGetOwnerOrdersRequest) returns (QueryGetOwnerOrdersResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/orders/owner/{owner}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/orders/owner/{owner}";
   }
 
   // GetAssetOrders looks up the orders for a specific asset denom.
   rpc GetAssetOrders(QueryGetAssetOrdersRequest) returns (QueryGetAssetOrdersResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/orders/asset/{asset}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/orders/asset/{asset}";
   }
 
   // GetAllOrders gets all orders in the exchange module.
   rpc GetAllOrders(QueryGetAllOrdersRequest) returns (QueryGetAllOrdersResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/orders";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/orders";
   }
 
   // GetCommitment gets the funds in an account that are committed to the market.
   rpc GetCommitment(QueryGetCommitmentRequest) returns (QueryGetCommitmentResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}/commitment/{account}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/market/{market_id}/commitment/{account}";
   }
 
   // GetAccountCommitments gets all the funds in an account that are committed to any market.
   // Optionally, you can filter the results for a specific denomination using the `denom` query parameter.
   rpc GetAccountCommitments(QueryGetAccountCommitmentsRequest) returns (QueryGetAccountCommitmentsResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/commitments/account/{account}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/commitments/account/{account}";
   }
 
   // GetMarketCommitments gets all the funds committed to a market from any account.
   rpc GetMarketCommitments(QueryGetMarketCommitmentsRequest) returns (QueryGetMarketCommitmentsResponse) {
-    option (google.api.http) = {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http)                   = {
       get: "/provenance/exchange/v1/commitments/market/{market_id}"
       additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/commitments"}
     };
@@ -83,22 +93,26 @@ service Query {
 
   // GetAllCommitments gets all fund committed to any market from any account.
   rpc GetAllCommitments(QueryGetAllCommitmentsRequest) returns (QueryGetAllCommitmentsResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/commitments";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/commitments";
   }
 
   // GetMarket returns all the information and details about a market.
   rpc GetMarket(QueryGetMarketRequest) returns (QueryGetMarketResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/market/{market_id}";
   }
 
   // GetAllMarkets returns brief information about each market.
   rpc GetAllMarkets(QueryGetAllMarketsRequest) returns (QueryGetAllMarketsResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/markets";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/markets";
   }
 
   // Params returns the exchange module parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/params";
   }
 
   // CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
@@ -136,17 +150,20 @@ service Query {
 
   // GetPaymentsWithSource gets all payments with a specific source account.
   rpc GetPaymentsWithSource(QueryGetPaymentsWithSourceRequest) returns (QueryGetPaymentsWithSourceResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/payments/source/{source}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/payments/source/{source}";
   }
 
   // GetPaymentsWithTarget gets all payments with a specific target account.
   rpc GetPaymentsWithTarget(QueryGetPaymentsWithTargetRequest) returns (QueryGetPaymentsWithTargetResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/payments/target/{target}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/payments/target/{target}";
   }
 
   // GetAllPayments gets all payments.
   rpc GetAllPayments(QueryGetAllPaymentsRequest) returns (QueryGetAllPaymentsResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/payments";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/exchange/v1/payments";
   }
 
   // PaymentFeeCalc calculates the fees that must be paid for creating or accepting a specific payment.
