@@ -5,15 +5,14 @@ package types
 
 import (
 	fmt "fmt"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
-
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -90,12 +89,17 @@ const (
 	PartyType_PARTY_TYPE_CONTROLLER PartyType = 10
 	// PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
 	PartyType_PARTY_TYPE_VALIDATOR PartyType = 11
-	// PARTY_TYPE_GENERIC_# are placeholder types for the user-defined roles.
+	// PARTY_TYPE_GENERIC_1 are placeholder types for the user-defined role.
 	PartyType_PARTY_TYPE_GENERIC_1 PartyType = 12
+	// PARTY_TYPE_GENERIC_2 are placeholder types for the user-defined role.
 	PartyType_PARTY_TYPE_GENERIC_2 PartyType = 13
+	// PARTY_TYPE_GENERIC_3 are placeholder types for the user-defined role.
 	PartyType_PARTY_TYPE_GENERIC_3 PartyType = 14
+	// PARTY_TYPE_GENERIC_4 are placeholder types for the user-defined role.
 	PartyType_PARTY_TYPE_GENERIC_4 PartyType = 15
+	// PARTY_TYPE_GENERIC_5 are placeholder types for the user-defined role.
 	PartyType_PARTY_TYPE_GENERIC_5 PartyType = 16
+	// PARTY_TYPE_GENERIC_6 are placeholder types for the user-defined role.
 	PartyType_PARTY_TYPE_GENERIC_6 PartyType = 17
 )
 
