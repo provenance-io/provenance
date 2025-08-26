@@ -1,6 +1,8 @@
 package handlers_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"testing"
@@ -9,6 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil/assertions"
 
 	. "github.com/provenance-io/provenance/internal/handlers"
 )
@@ -21,6 +29,182 @@ func assertEqualFloats(t *testing.T, expected, actual float32, precision uint16,
 	exp := fmt.Sprintf(ffmt, expected)
 	act := fmt.Sprintf(ffmt, actual)
 	return assert.Equal(t, exp, act, msgAndArgs...)
+}
+
+// newErr returns the provided msg wrapped as an error, or if the provided msg is empty, nil is returned.
+func newErr(msg string) error {
+	if len(msg) == 0 {
+		return nil
+	}
+	return errors.New(msg)
+}
+
+type MockStakingKeeper struct {
+	ValCount     int
+	Validator    *stakingtypes.Validator
+	LastValPower int64
+	TotalBonded  sdkmath.Int
+
+	GetLastValidatorsError     string
+	GetValidatorError          string
+	GetLastValidatorPowerError string
+	TotalBondedTokensError     string
+
+	ExpectGetLastValidatorsCall     bool
+	ExpectGetValidatorCall          bool
+	ExpectGetLastValidatorPowerCall bool
+	ExpectPowerReductionCall        bool
+	ExpectTotalBondedTokensCall     bool
+
+	GetLastValidatorsCalls    int
+	GetValidatorArgs          []sdk.ValAddress
+	GetLastValidatorPowerArgs []sdk.ValAddress
+	PowerReductionCalls       int
+	TotalBondedTokensCalls    int
+}
+
+var _ StakingKeeper = (*MockStakingKeeper)(nil)
+
+func NewMockStakingKeeper(valCount int, lastValPower int64) *MockStakingKeeper {
+	return &MockStakingKeeper{
+		ValCount:     valCount,
+		LastValPower: lastValPower,
+		TotalBonded:  sdkmath.NewIntFromUint64(10_000_000_000_000000000),
+
+		ExpectGetLastValidatorsCall:     true,
+		ExpectGetValidatorCall:          true,
+		ExpectGetLastValidatorPowerCall: true,
+		ExpectPowerReductionCall:        true,
+		ExpectTotalBondedTokensCall:     true,
+	}
+}
+
+// WithValidator sets up a validator with the provided number of tokens to be returned when GetValidator is called.
+// Since the PowerReduction is constant, the newPower will be tokens/1,000,000, so if targeting a specific newPower,
+// use newPower * 1,000,000 for the tokens.
+func (m *MockStakingKeeper) WithValidator(tokens sdkmath.Int) *MockStakingKeeper {
+	m.Validator = &stakingtypes.Validator{Status: stakingtypes.Bonded, Tokens: tokens}
+	return m
+}
+
+func (m *MockStakingKeeper) WithTotalBonded(totalBonded sdkmath.Int) *MockStakingKeeper {
+	m.TotalBonded = totalBonded
+	return m
+}
+
+func (m *MockStakingKeeper) WithGetLastValidatorsError(err string) *MockStakingKeeper {
+	m.GetLastValidatorsError = err
+	return m
+}
+
+func (m *MockStakingKeeper) WithGetValidatorError(err string) *MockStakingKeeper {
+	m.GetValidatorError = err
+	return m
+}
+
+func (m *MockStakingKeeper) WithGetLastValidatorPowerError(err string) *MockStakingKeeper {
+	m.GetLastValidatorPowerError = err
+	return m
+}
+
+func (m *MockStakingKeeper) WithTotalBondedTokensError(err string) *MockStakingKeeper {
+	m.TotalBondedTokensError = err
+	return m
+}
+
+func (m *MockStakingKeeper) ExpectOnlyToGetLastValidators() *MockStakingKeeper {
+	m.ExpectGetLastValidatorsCall = true
+	m.ExpectGetValidatorCall = false
+	m.ExpectGetLastValidatorPowerCall = false
+	m.ExpectPowerReductionCall = false
+	m.ExpectTotalBondedTokensCall = false
+	return m
+}
+
+func (m *MockStakingKeeper) ExpectOnlyToGetValidator() *MockStakingKeeper {
+	m.ExpectGetLastValidatorsCall = true
+	m.ExpectGetValidatorCall = true
+	m.ExpectGetLastValidatorPowerCall = false
+	m.ExpectPowerReductionCall = false
+	m.ExpectTotalBondedTokensCall = false
+	return m
+}
+
+func (m *MockStakingKeeper) ExpectOnlyToPowerReduction() *MockStakingKeeper {
+	m.ExpectGetLastValidatorsCall = true
+	m.ExpectGetValidatorCall = true
+	m.ExpectGetLastValidatorPowerCall = true
+	m.ExpectPowerReductionCall = true
+	m.ExpectTotalBondedTokensCall = false
+	return m
+}
+
+func (m *MockStakingKeeper) ExpectAllCalls() *MockStakingKeeper {
+	m.ExpectGetLastValidatorsCall = true
+	m.ExpectGetValidatorCall = true
+	m.ExpectGetLastValidatorPowerCall = true
+	m.ExpectPowerReductionCall = true
+	m.ExpectTotalBondedTokensCall = true
+	return m
+}
+
+func (m *MockStakingKeeper) GetLastValidators(_ context.Context) ([]stakingtypes.Validator, error) {
+	m.GetLastValidatorsCalls++
+	// We only use this to get a count of validators, so I'm not bothering to set any of their info.
+	rv := make([]stakingtypes.Validator, m.ValCount)
+	return rv, newErr(m.GetLastValidatorsError)
+}
+
+func (m *MockStakingKeeper) GetValidator(_ context.Context, valAddr sdk.ValAddress) (stakingtypes.Validator, error) {
+	m.GetValidatorArgs = append(m.GetValidatorArgs, valAddr)
+	var rv stakingtypes.Validator
+	if m.Validator != nil {
+		rv = *m.Validator
+	}
+	err := newErr(m.GetValidatorError)
+	if m.Validator == nil && err == nil {
+		err = errors.New("no mocked validator")
+	}
+	return rv, err
+}
+
+func (m *MockStakingKeeper) GetLastValidatorPower(_ context.Context, valAddr sdk.ValAddress) (int64, error) {
+	m.GetLastValidatorPowerArgs = append(m.GetLastValidatorPowerArgs, valAddr)
+	return m.LastValPower, newErr(m.GetLastValidatorPowerError)
+}
+
+func (m *MockStakingKeeper) PowerReduction(_ context.Context) sdkmath.Int {
+	m.PowerReductionCalls++
+	return sdk.DefaultPowerReduction
+}
+
+func (m *MockStakingKeeper) TotalBondedTokens(_ context.Context) (sdkmath.Int, error) {
+	m.TotalBondedTokensCalls++
+	return m.TotalBonded, newErr(m.TotalBondedTokensError)
+}
+
+func boolInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+func (m *MockStakingKeeper) AssertCalls(t *testing.T, valAddr sdk.ValAddress) bool {
+	var expGetValidatorArgs, expGetLastValidatorPowerArgs []sdk.ValAddress
+	if m.ExpectGetValidatorCall {
+		expGetValidatorArgs = append(expGetValidatorArgs, valAddr)
+	}
+	if m.ExpectGetLastValidatorPowerCall {
+		expGetLastValidatorPowerArgs = append(expGetLastValidatorPowerArgs, valAddr)
+	}
+
+	assert.Equal(t, boolInt(m.ExpectGetLastValidatorsCall), m.GetLastValidatorsCalls, "Calls made to GetLastValidators")
+	assert.Equal(t, expGetValidatorArgs, m.GetValidatorArgs, "Calls made to GetValidator")
+	assert.Equal(t, expGetLastValidatorPowerArgs, m.GetLastValidatorPowerArgs, "Calls made to GetLastValidatorPower")
+	assert.Equal(t, boolInt(m.ExpectPowerReductionCall), m.PowerReductionCalls, "Calls made to PowerReduction")
+	assert.Equal(t, boolInt(m.ExpectTotalBondedTokensCall), m.TotalBondedTokensCalls, "Calls made to TotalBondedTokens")
+	return true
 }
 
 func TestRestrictionOptions_CalcMaxValPct(t *testing.T) {
@@ -602,6 +786,120 @@ func TestCalcsTogether(t *testing.T) {
 					break
 				}
 			}
+		})
+	}
+}
+
+func TestStakingRestrictionHooks_AfterDelegationModified(t *testing.T) {
+	tests := []struct {
+		name    string
+		k       *MockStakingKeeper
+		opts    *RestrictionOptions
+		chainID string
+		expErr  string
+	}{
+		{
+			name:   "0 validators",
+			k:      NewMockStakingKeeper(0, 100).ExpectOnlyToGetLastValidators(),
+			expErr: "",
+		},
+		{
+			name:   "error getting last validators",
+			k:      NewMockStakingKeeper(0, 100).ExpectOnlyToGetLastValidators(),
+			expErr: "",
+		},
+		{
+			name:   "1 validator",
+			k:      NewMockStakingKeeper(1, 100).ExpectOnlyToGetLastValidators(),
+			expErr: "",
+		},
+		{
+			name:   "2 validators",
+			k:      NewMockStakingKeeper(2, 100).ExpectOnlyToGetLastValidators(),
+			expErr: "",
+		},
+		{
+			name:   "3 validators",
+			k:      NewMockStakingKeeper(3, 100).ExpectOnlyToGetLastValidators(),
+			expErr: "",
+		},
+		{
+			name: "4 validators for simapp",
+			k: NewMockStakingKeeper(4, 100).
+				WithGetValidatorError("should not have even tried to get me").
+				ExpectOnlyToGetLastValidators(),
+			chainID: pioconfig.SimAppChainID,
+			expErr:  "",
+		},
+		{
+			name: "validator does not exist",
+			k: NewMockStakingKeeper(4, 100).
+				ExpectOnlyToGetValidator(),
+			expErr: "",
+		},
+		{
+			name: "power going down",
+			k: NewMockStakingKeeper(10, 100).
+				WithValidator(sdkmath.NewInt(99_999_999)).
+				ExpectOnlyToPowerReduction(),
+			expErr: "",
+		},
+		{
+			name: "power staying same",
+			k: NewMockStakingKeeper(10, 100).
+				WithValidator(sdkmath.NewInt(100_000_000)).
+				ExpectOnlyToPowerReduction(),
+			expErr: "",
+		},
+		{
+			name: "error getting last power",
+			k: NewMockStakingKeeper(10, 0).
+				WithValidator(sdkmath.NewInt(100_000_000)).
+				WithGetLastValidatorPowerError("should never be seen").
+				ExpectAllCalls(),
+			expErr: "",
+		},
+		{
+			name: "too much now bonded",
+			// 5b * 5.5/50 = 550,000,000 max per validator
+			k: NewMockStakingKeeper(50, 100).
+				WithTotalBonded(sdkmath.NewInt(5_000_000_000)).
+				WithValidator(sdkmath.NewInt(550_000_001)).
+				ExpectAllCalls(),
+			expErr: "validator bonded tokens of 550000001 exceeds max of 550000000 (= 11.00% of 5000000000 total across 50 validators): invalid request",
+		},
+		{
+			name: "now max bonded",
+			// 5b * 5.5/50 = 550,000,000 max per validator
+			k: NewMockStakingKeeper(50, 100).
+				WithTotalBonded(sdkmath.NewInt(5_000_000_000)).
+				WithValidator(sdkmath.NewInt(550_000_000)).
+				ExpectAllCalls(),
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.opts == nil {
+				tc.opts = DefaultRestrictionOptions
+			}
+			ctx := sdk.Context{}
+			if len(tc.chainID) > 0 {
+				ctx = ctx.WithChainID(tc.chainID)
+			}
+
+			h := NewStakingRestrictionHooks(tc.k, *tc.opts)
+			accAddr := sdk.AccAddress("accaddr_____________")
+			valAddr := sdk.ValAddress("valaddr_____________")
+
+			var err error
+			testFunc := func() {
+				err = h.AfterDelegationModified(ctx, accAddr, valAddr)
+			}
+			require.NotPanics(t, testFunc, "AfterDelegationModified")
+			assertions.AssertErrorValue(t, err, tc.expErr, "AfterDelegationModified error")
+			tc.k.AssertCalls(t, valAddr)
 		})
 	}
 }

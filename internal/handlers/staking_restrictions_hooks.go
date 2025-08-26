@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -65,15 +64,23 @@ func CalcMaxValBond(totalBond sdkmath.Int, maxValPct float32) sdkmath.Int {
 	return totalBond.MulRaw(int64(maxValPct * 1_000_000)).QuoRaw(1_000_000)
 }
 
+type StakingKeeper interface {
+	GetLastValidators(ctx context.Context) (validators []stakingtypes.Validator, err error)
+	GetValidator(ctx context.Context, valAddr sdk.ValAddress) (validator stakingtypes.Validator, err error)
+	GetLastValidatorPower(ctx context.Context, valAddr sdk.ValAddress) (power int64, err error)
+	PowerReduction(ctx context.Context) sdkmath.Int
+	TotalBondedTokens(ctx context.Context) (total sdkmath.Int, err error)
+}
+
 // StakingRestrictionHooks wrapper struct for staking keeper.
 type StakingRestrictionHooks struct {
-	k    *stakingkeeper.Keeper
+	k    StakingKeeper
 	opts RestrictionOptions
 }
 
 // NewStakingRestrictionHooks configures a hook that validates changes to delegation modifications and
 // prevents concentration of voting power beyond configured limits on active validators.
-func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions) StakingRestrictionHooks {
+func NewStakingRestrictionHooks(k StakingKeeper, opts RestrictionOptions) StakingRestrictionHooks {
 	return StakingRestrictionHooks{k, opts}
 }
 
