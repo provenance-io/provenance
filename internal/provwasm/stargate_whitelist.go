@@ -27,18 +27,21 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
+	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/sanction"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -210,6 +213,12 @@ func init() {
 	// provenance queries
 	// ==========================================================
 
+	// asset
+	setWhitelistedQuery("/provenance.asset.v1.Query/Asset", &assettypes.QueryAssetResponse{})
+	setWhitelistedQuery("/provenance.asset.v1.Query/Assets", &assettypes.QueryAssetsResponse{})
+	setWhitelistedQuery("/provenance.asset.v1.Query/AssetClass", &assettypes.QueryAssetClassResponse{})
+	setWhitelistedQuery("/provenance.asset.v1.Query/AssetClasses", &assettypes.QueryAssetClassesResponse{})
+
 	// attribute
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Params", &attributetypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attribute", &attributetypes.QueryAttributeResponse{})
@@ -252,6 +261,18 @@ func init() {
 
 	// ibchooks
 	setWhitelistedQuery("/provenance.ibchooks.v1.Query/Params", &ibchookstypes.QueryParamsResponse{})
+
+	// ledger
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClass", &ledger.QueryLedgerClassResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassEntryTypes", &ledger.QueryLedgerClassEntryTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassStatusTypes", &ledger.QueryLedgerClassStatusTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassBucketTypes", &ledger.QueryLedgerClassBucketTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/Ledger", &ledger.QueryLedgerResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntries", &ledger.QueryLedgerEntriesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntry", &ledger.QueryLedgerEntryResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerBalancesAsOf", &ledger.QueryLedgerBalancesAsOfResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlements", &ledger.QueryLedgerSettlementsResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlementsByCorrelationID", &ledger.QueryLedgerSettlementsByCorrelationIDResponse{})
 
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
@@ -309,6 +330,10 @@ func init() {
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/QuarantinedFunds", &quarantine.QueryQuarantinedFundsResponse{})
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/AutoResponses", &quarantine.QueryAutoResponsesResponse{})
+
+	// registry
+	setWhitelistedQuery("/provenance.registry.v1.Query/GetRegistry", &registrytypes.QueryGetRegistryResponse{})
+	setWhitelistedQuery("/provenance.registry.v1.Query/HasRole", &registrytypes.QueryHasRoleResponse{})
 
 	// sanction
 	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/IsSanctioned", &sanction.QueryIsSanctionedResponse{})
