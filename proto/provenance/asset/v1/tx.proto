@@ -30,12 +30,15 @@ service Msg {
 
 // MsgCreateAsset is the message type for creating a new asset.
 message MsgCreateAsset {
+  option (cosmos.msg.v1.signer) = "owner";
   option (cosmos.msg.v1.signer) = "signer";
 
   // asset defines the asset to be created.
   Asset asset = 1;
+  // owner defines the address to set as the created asset.
+  string owner = 2;
   // signer defines the address of the message sender.
-  string signer = 2;
+  string signer = 3;
 }
 
 // MsgCreateAssetResponse is the response type for the CreateAsset RPC method.

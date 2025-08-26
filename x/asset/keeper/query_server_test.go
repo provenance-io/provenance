@@ -83,6 +83,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			UriHash: "asset1hash",
 			Data:    `{"name": "Asset 1", "value": 100}`,
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
@@ -96,6 +97,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			UriHash: "asset2hash",
 			Data:    `{"name": "Asset 2", "value": 200}`,
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
@@ -108,6 +110,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			Uri:     "https://example.com/asset3",
 			UriHash: "asset3hash",
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset3Msg)
@@ -121,6 +124,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			Uri:     "https://example.com/asset4",
 			UriHash: "asset4hash",
 		},
+		Owner:  s.user2Addr.String(),
 		Signer: s.user2Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset4Msg)

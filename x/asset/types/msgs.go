@@ -33,6 +33,10 @@ func (msg MsgCreateAsset) ValidateBasic() error {
 		return fmt.Errorf("invalid data: %w", err)
 	}
 
+	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+		return fmt.Errorf("invalid owner: %w", err)
+	}
+
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return fmt.Errorf("invalid signer: %w", err)
 	}

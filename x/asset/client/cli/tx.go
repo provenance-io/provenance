@@ -38,11 +38,11 @@ func GetTxCmd() *cobra.Command {
 // GetCmdCreateAsset returns the command for creating an asset
 func GetCmdCreateAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-asset <class-id> <id> <uri> <uri-hash> <data>",
+		Use:     "create-asset <class-id> <id> <uri> <uri-hash> <data> <owner>",
 		Short:   "Create a new asset",
 		Long:    `Create a new asset in the specified asset class.`,
-		Example: `  provenanced tx asset create-asset "real-estate" "property-001" "https://example.com/metadata.json" "abc123" '{"location": "New York", "value": 500000}'`,
-		Args:    cobra.ExactArgs(5),
+		Example: `  provenanced tx asset create-asset "real-estate" "property-001" "https://example.com/metadata.json" "abc123" '{"location": "New York", "value": 500000}' "tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx"`,
+		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -59,6 +59,7 @@ func GetCmdCreateAsset() *cobra.Command {
 
 			msg := &types.MsgCreateAsset{
 				Asset:  asset,
+				Owner:  args[5],
 				Signer: clientCtx.GetFromAddress().String(),
 			}
 

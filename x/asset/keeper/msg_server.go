@@ -73,13 +73,13 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 		token.Data = anyValue
 	}
 
-	// Get the asset module account address as the owner
-	owner, err := sdk.AccAddressFromBech32(msg.Signer)
+	// Get the owner address
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, fmt.Errorf("invalid owner address: %w", err)
 	}
 
-	// Mint the NFT with the module account as owner
+	// Mint the NFT with the owner address
 	err = m.nftKeeper.Mint(ctx, token, owner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to mint NFT: %w", err)

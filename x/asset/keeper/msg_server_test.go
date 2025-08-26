@@ -139,6 +139,7 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 			UriHash: "abc123",
 			Data:    `{"name": "Test Asset", "description": "A test asset"}`,
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, msg)
@@ -188,6 +189,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 			Uri:     "https://example.com/asset1",
 			UriHash: "abc123",
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
@@ -200,6 +202,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 			Uri:     "https://example.com/asset2",
 			UriHash: "def456",
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
@@ -273,6 +276,7 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 			Uri:     "https://example.com/asset-token",
 			UriHash: "abc123",
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, assetMsg)
@@ -351,6 +355,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			Uri:     "https://example.com/asset1",
 			UriHash: "abc123",
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
@@ -363,6 +368,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			Uri:     "https://example.com/asset2",
 			UriHash: "def456",
 		},
+		Owner:  s.user1Addr.String(),
 		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
