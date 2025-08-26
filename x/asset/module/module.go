@@ -19,7 +19,6 @@ import (
 	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/simulation"
 	"github.com/provenance-io/provenance/x/asset/types"
-	"github.com/provenance-io/provenance/x/exchange"
 )
 
 var (
@@ -92,9 +91,7 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RegisterStoreDecoder registers a decoder for asset module's types
-func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[exchange.StoreKey] = simulation.NewDecodeStore(am.cdc)
-}
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {}
 
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations()
