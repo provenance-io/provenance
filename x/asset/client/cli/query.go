@@ -36,7 +36,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdAsset returns the command for getting an asset.
 func GetCmdAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "asset [class-id] [asset-id]",
+		Use:     "asset <class-id> <asset-id>",
 		Short:   "Get an asset by class id and asset id",
 		Example: fmt.Sprintf(`$ %s query asset asset my-asset-class my-asset`, version.AppName),
 		Args:    cobra.ExactArgs(2),
@@ -63,7 +63,7 @@ func GetCmdAsset() *cobra.Command {
 // GetCmdAssets returns the command for listing all assets.
 func GetCmdAssets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "assets <address> <class-id>",
+		Use:   "assets <class-id> <address>",
 		Short: "List all assets optionally filtered by class-id and/or address",
 		Example: fmt.Sprintf(`$ %[1]s query asset assets my-asset-class pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 $ %[1]s query asset assets my-asset-class pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
@@ -119,7 +119,7 @@ $ %[1]s query asset assets my-asset-class pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf3
 // GetCmdAssetClass returns the command for getting an asset class.
 func GetCmdAssetClass() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "class [id]",
+		Use:     "class <id>",
 		Short:   "Get an asset class by id",
 		Example: fmt.Sprintf(`$ %s query asset class my-asset-class`, version.AppName),
 		Args:    cobra.ExactArgs(1),
