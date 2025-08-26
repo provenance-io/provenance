@@ -17,7 +17,6 @@ import (
 
 	"github.com/provenance-io/provenance/x/asset/client/cli"
 	"github.com/provenance-io/provenance/x/asset/keeper"
-	"github.com/provenance-io/provenance/x/asset/simulation"
 	"github.com/provenance-io/provenance/x/asset/types"
 )
 
@@ -88,13 +87,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
 }
 
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
+func (am AppModule) GenerateGenesisState(_ *module.SimulationState) {}
 
 // RegisterStoreDecoder registers a decoder for asset module's types
 func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations()
+	return nil
 }
