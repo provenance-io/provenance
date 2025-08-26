@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
-
 	sdkmath "cosmossdk.io/math"
 	nft "cosmossdk.io/x/nft"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/asset/types"
@@ -65,8 +62,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 		}
 
 		// Convert string to Any type
-		strMsg := &wrapperspb.StringValue{Value: msg.Asset.Data}
-		anyValue, err := cdctypes.NewAnyWithValue(strMsg)
+		anyValue, err := types.StringToAny(msg.Asset.Data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create Any from data: %w", err)
 		}
@@ -126,8 +122,7 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 	// If there's data, add it to the class
 	if msg.AssetClass.Data != "" {
 		// Convert string to Any type
-		strMsg := &wrapperspb.StringValue{Value: msg.AssetClass.Data}
-		anyMsg, err := cdctypes.NewAnyWithValue(strMsg)
+		anyMsg, err := types.StringToAny(msg.AssetClass.Data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create Any from data: %w", err)
 		}

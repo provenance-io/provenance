@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -15,15 +15,21 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-// AnyToString extracts a string value from an Any type that contains a StringValue
-func AnyToString(_ codec.BinaryCodec, anyMsg *cdctypes.Any) (string, error) {
-	// Convert to proto Any so we can use UnmarshalTo
-	stdAny := &wrapperspb.StringValue{}
-	err := proto.Unmarshal(anyMsg.Value, stdAny)
-	if err != nil {
+// AnyToString extracts a string value from an Any type that contains a StringValue using the provided codec.
+func AnyToString(cdc codec.BinaryCodec, anyMsg *cdctypes.Any) (string, error) {
+	if anyMsg == nil {
+		return "", nil
+	}
+
+	var unpacked proto.Message
+	if err := cdc.UnpackAny(anyMsg, &unpacked); err != nil {
 		return "", err
 	}
-	return stdAny.Value, nil
+	sv, ok := unpacked.(*wrapperspb.StringValue)
+	if !ok {
+		return "", fmt.Errorf("expected StringValue, got %T", unpacked)
+	}
+	return sv.Value, nil
 }
 
 // StringToAny converts a string to an Any type by wrapping it in a StringValue
@@ -139,25 +145,13 @@ func validateAgainstSchema(schema map[string]interface{}, value interface{}) err
 		return nil
 
 	case "integer":
-		var f float64
-		switch n := value.(type) {
-		case float64:
-			f = n
-		case int:
-			f = float64(n)
-		case int64:
-			f = float64(n)
-		case uint64:
-			f = float64(n)
-		default:
-			return fmt.Errorf("expected integer")
-		}
-		if f != float64(int64(f)) {
+		f, ok := numericToUint64(value)
+		if !ok {
 			return fmt.Errorf("expected integer")
 		}
 		// minimum
 		if minVal, ok := schema["minimum"]; ok {
-			minn, ok := numericToFloat64(minVal)
+			minn, ok := numericToUint64(minVal)
 			if !ok {
 				return fmt.Errorf("invalid minimum")
 			}
@@ -173,6 +167,7 @@ func validateAgainstSchema(schema map[string]interface{}, value interface{}) err
 	}
 }
 
+// toStringSlice converts a value to a slice of strings
 func toStringSlice(v interface{}) ([]string, error) {
 	if v == nil {
 		return nil, nil
@@ -195,30 +190,28 @@ func toStringSlice(v interface{}) ([]string, error) {
 	return out, nil
 }
 
-func numericToFloat64(v interface{}) (float64, bool) {
+// numericToUint64 converts a numeric value to a uint64
+func numericToUint64(v interface{}) (uint64, bool) {
 	switch n := v.(type) {
-	case float64:
-		return n, true
-	case float32:
-		return float64(n), true
-	case int:
-		return float64(n), true
-	case int64:
-		return float64(n), true
-	case int32:
-		return float64(n), true
-	case uint:
-		return float64(n), true
 	case uint64:
-		return float64(n), true
+		return n, true
+	case int:
+		return uint64(n), true
+	case int32:
+		return uint64(n), true
+	case int64:
+		return uint64(n), true
+	case uint:
+		return uint64(n), true
 	case uint32:
-		return float64(n), true
+		return uint64(n), true
 	default:
 		return 0, false
 	}
 }
 
-func NewDefaultMarker(denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
+// NewDefaultMarker creates a new default marker account for a given denom and from address
+func NewDefaultMarker(token sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
 	// Get the from address
 	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
 	if err != nil {
@@ -226,10 +219,10 @@ func NewDefaultMarker(denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccou
 	}
 
 	// Create a new marker account
-	markerAddr := markertypes.MustGetMarkerAddress(denom.Denom)
+	markerAddr := markertypes.MustGetMarkerAddress(token.Denom)
 	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markerAddr),
-		denom,
+		token,
 		fromAcc,
 		[]markertypes.AccessGrant{
 			{
