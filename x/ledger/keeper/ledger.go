@@ -172,16 +172,17 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	// We omit the nftAddress out of the data we store intentionally as a minor optimization since it is also our data key.
 	keyStr := l.Key.String()
 
-	// Emit the ledger created event to notify other modules.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerCreated(l.Key)); err != nil {
-		return err
-	}
-
 	// Empty out the key to avoid storing it in the ledger and the key field.
+	key := l.Key
 	l.Key = nil
 
 	// Store the ledger in the state store.
 	if err := k.Ledgers.Set(ctx, keyStr, l); err != nil {
+		return err
+	}
+
+	// Emit the ledger created event to notify other modules.
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerCreated(key)); err != nil {
 		return err
 	}
 
@@ -212,13 +213,17 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusT
 
 	keyStr := ledger.Key.String()
 
+	// Empty out the key to avoid storing it in the ledger and the key field.
+	key := ledger.Key
+	ledger.Key = nil
+
 	// Store the updated ledger in the state store.
 	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_STATUS)); err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_STATUS)); err != nil {
 		return err
 	}
 
@@ -242,13 +247,17 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, lk *types.LedgerKey, i
 
 	keyStr := ledger.Key.String()
 
+	// Empty out the key to avoid storing it in the ledger and the key field.
+	key := ledger.Key
+	ledger.Key = nil
+
 	// Store the updated ledger in the state store.
 	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_INTEREST_RATE)); err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_INTEREST_RATE)); err != nil {
 		return err
 	}
 
@@ -272,13 +281,17 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPm
 
 	keyStr := ledger.Key.String()
 
+	// Empty out the key to avoid storing it in the ledger and the key field.
+	key := ledger.Key
+	ledger.Key = nil
+
 	// Store the updated ledger in the state store.
 	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_PAYMENT)); err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_PAYMENT)); err != nil {
 		return err
 	}
 
@@ -300,13 +313,17 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, m
 
 	keyStr := ledger.Key.String()
 
+	// Empty out the key to avoid storing it in the ledger and the key field.
+	key := ledger.Key
+	ledger.Key = nil
+
 	// Store the updated ledger in the state store.
 	if err := k.Ledgers.Set(ctx, keyStr, *ledger); err != nil {
 		return err
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(ledger.Key, types.UpdateType_UPDATE_TYPE_MATURITY_DATE)); err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_MATURITY_DATE)); err != nil {
 		return err
 	}
 
