@@ -122,3 +122,23 @@ func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNF
 
 	return &types.MsgUnregisterNFTResponse{}, nil
 }
+
+func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistryBulkUpdate) (*types.MsgRegistryBulkUpdateResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// Upsert each provided registry entry using the keeper's create function
+	// which performs the underlying set operation on the registry store.
+	for _, entry := range msg.Entries {
+		// Validate that the authority owns the NFT
+		nftOwner := k.keeper.GetNFTOwner(sdkCtx, &entry.Key.AssetClassId, &entry.Key.NftId)
+		if nftOwner == nil || nftOwner.String() != msg.Authority {
+			return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
+		}
+
+		if err := k.keeper.CreateRegistry(sdkCtx, entry.Key, entry.Roles); err != nil {
+			return nil, err
+		}
+	}
+
+	return &types.MsgRegistryBulkUpdateResponse{}, nil
+}

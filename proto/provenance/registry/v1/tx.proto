@@ -30,6 +30,10 @@ service Msg {
   // UnregisterNFT unregisters an NFT from the registry.
   // This removes the entire registry entry for the specified key.
   rpc UnregisterNFT(MsgUnregisterNFT) returns (MsgUnregisterNFTResponse);
+
+  // RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
+  // This creates multiple registry entries, or updates if one exists.
+  rpc RegistryBulkUpdate(MsgRegistryBulkUpdate) returns (MsgRegistryBulkUpdateResponse);
 }
 
 // MsgRegisterNFT represents a message to register a new NFT in the registry.
@@ -123,3 +127,21 @@ message MsgUnregisterNFT {
 // MsgUnregisterNFTResponse defines the response for UnregisterNFT.
 // This is an empty response indicating successful unregistration.
 message MsgUnregisterNFTResponse {}
+
+// MsgRegistryBulkUpdate represents a bulk update operation for multiple registry entries.
+// This allows for efficient batch processing of registry modifications.
+message MsgRegistryBulkUpdate {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that is authorized to register NFTs.
+  // This address must have the appropriate permissions to create registry entries.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // entries is the list of bulk update entries to be processed.
+  // Each entry contains the registry entry to be updated.
+  repeated RegistryEntry entries = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgRegistryBulkUpdateResponse defines the response for RegistryBulkUpdate.
+// This is an empty response indicating successful bulk update.
+message MsgRegistryBulkUpdateResponse {}
