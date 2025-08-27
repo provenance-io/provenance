@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/registry/types"
 )
@@ -18,7 +19,7 @@ import (
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	schema   collections.Schema
-	Registry collections.Map[string, types.RegistryEntry]
+	Registry collections.Map[collections.Pair[string, string], types.RegistryEntry]
 
 	NFTKeeper      NFTKeeper
 	MetadataKeeper MetadataKeeper
@@ -31,8 +32,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 	rk := Keeper{
 		cdc: cdc,
 
-		Registry: collections.NewMap(sb, collections.NewPrefix(registryPrefix), "registry",
-			collections.StringKey, codec.CollValue[types.RegistryEntry](cdc)),
+		Registry: collections.NewMap(
+			sb,
+			collections.NewPrefix(registryPrefix),
+			"registry",
+			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
+			codec.CollValue[types.RegistryEntry](cdc),
+		),
 
 		NFTKeeper:      nftKeeper,
 		MetadataKeeper: metaDataKeeper,
@@ -61,7 +67,7 @@ func (k Keeper) CreateDefaultRegistry(ctx sdk.Context, ownerAddrStr string, key 
 }
 
 func (k Keeper) CreateRegistry(ctx sdk.Context, key *types.RegistryKey, roles []types.RolesEntry) error {
-	return k.Registry.Set(ctx, key.String(), types.RegistryEntry{
+	return k.Registry.Set(ctx, collections.Join(key.AssetClassId, key.NftId), types.RegistryEntry{
 		Key:   key,
 		Roles: roles,
 	})
@@ -72,9 +78,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 		return types.NewErrCodeInvalidRole(role.String())
 	}
 
-	keyStr := key.String()
-
-	registryEntry, err := k.Registry.Get(ctx, keyStr)
+	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
 	if err != nil {
 		return types.NewErrCodeRegistryNotFound(fmt.Sprintf("class id: %s, nft id: %s", key.AssetClassId, key.NftId))
 	}
@@ -105,7 +109,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 	registryEntry.Roles[roleI].Addresses = append(registryEntry.Roles[roleI].Addresses, addrs...)
 
 	// Store the updated entry.
-	if err = k.Registry.Set(ctx, keyStr, registryEntry); err != nil {
+	if err = k.Registry.Set(ctx, collections.Join(key.AssetClassId, key.NftId), registryEntry); err != nil {
 		return fmt.Errorf("failed to set registry entry: %w", err)
 	}
 
@@ -113,9 +117,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 }
 
 func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.RegistryRole, addrs []string) error {
-	keyStr := key.String()
-
-	registryEntry, err := k.Registry.Get(ctx, keyStr)
+	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
 	if err != nil {
 		return types.NewErrCodeRegistryNotFound(fmt.Sprintf("class id: %s, nft id: %s", key.AssetClassId, key.NftId))
 	}
@@ -160,7 +162,8 @@ func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.R
 		}
 	}
 
-	if err = k.Registry.Set(ctx, keyStr, registryEntry); err != nil {
+	// Save the updated registry entry
+	if err := k.Registry.Set(ctx, collections.Join(key.AssetClassId, key.NftId), registryEntry); err != nil {
 		return err
 	}
 
@@ -168,9 +171,7 @@ func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.R
 }
 
 func (k Keeper) HasRole(ctx sdk.Context, key *types.RegistryKey, role types.RegistryRole, address string) (bool, error) {
-	keyStr := key.String()
-
-	registryEntry, err := k.Registry.Get(ctx, keyStr)
+	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
 	if err != nil {
 		return false, err
 	}
@@ -193,9 +194,7 @@ func (k Keeper) HasRole(ctx sdk.Context, key *types.RegistryKey, role types.Regi
 
 // GetRegistry returns a registry entry for a given key. If the registry entry is not found, it returns nil, nil.
 func (k Keeper) GetRegistry(ctx sdk.Context, key *types.RegistryKey) (*types.RegistryEntry, error) {
-	keyStr := key.String()
-
-	registryEntry, err := k.Registry.Get(ctx, keyStr)
+	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
 	if err != nil {
 		// Eat the not found error as it is expected, and return nil.
 		if errors.Is(err, collections.ErrNotFound) {
@@ -206,4 +205,24 @@ func (k Keeper) GetRegistry(ctx sdk.Context, key *types.RegistryKey) (*types.Reg
 	}
 
 	return &registryEntry, nil
+}
+
+// GetRegistries returns the registries paginated
+func (k Keeper) GetRegistries(ctx sdk.Context, pagination *query.PageRequest, assetClassID string) ([]types.RegistryEntry, error) {
+	var opts []func(opt *query.CollectionsPaginateOptions[collections.Pair[string, string]])
+	if len(assetClassID) > 0 {
+		opts = append(opts, query.WithCollectionPaginationPairPrefix[string, string](assetClassID))
+	}
+	ptrs, _, err := query.CollectionPaginate(ctx, k.Registry, pagination, func(_ collections.Pair[string, string], entry types.RegistryEntry) (*types.RegistryEntry, error) {
+		return &entry, nil
+	}, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]types.RegistryEntry, len(ptrs))
+	for i, p := range ptrs {
+		entries[i] = *p
+	}
+	return entries, nil
 }

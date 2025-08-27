@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -106,6 +108,15 @@ func validateAddresses(addrs []string) error {
 func (m *QueryGetRegistryRequest) ValidateBasic() error {
 	if err := m.Key.Validate(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ValidateBasic validates the QueryGetRegistriesRequest
+func (m *QueryGetRegistriesRequest) ValidateBasic() error {
+	if strings.TrimSpace(m.AssetClassId) == "" {
+		return NewErrCodeInvalidField("asset_class_id", "asset_class_id cannot be empty if provided")
 	}
 
 	return nil

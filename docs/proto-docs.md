@@ -360,11 +360,13 @@
     - [GenesisState](#provenance-ledger-v1-GenesisState)
     - [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions)
   
-- [provenance/trigger/v1/tx.proto](#provenance_trigger_v1_tx-proto)
-    - [MsgCreateTriggerRequest](#provenance-trigger-v1-MsgCreateTriggerRequest)
-    - [MsgCreateTriggerResponse](#provenance-trigger-v1-MsgCreateTriggerResponse)
-    - [MsgDestroyTriggerRequest](#provenance-trigger-v1-MsgDestroyTriggerRequest)
-    - [MsgDestroyTriggerResponse](#provenance-trigger-v1-MsgDestroyTriggerResponse)
+- [provenance/registry/v1/query.proto](#provenance_registry_v1_query-proto)
+    - [QueryGetRegistriesRequest](#provenance-registry-v1-QueryGetRegistriesRequest)
+    - [QueryGetRegistriesResponse](#provenance-registry-v1-QueryGetRegistriesResponse)
+    - [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest)
+    - [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse)
+    - [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest)
+    - [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse)
   
     - [Msg](#provenance-trigger-v1-Msg)
   

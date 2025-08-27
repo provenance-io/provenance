@@ -24,6 +24,7 @@ func CmdQuery() *cobra.Command {
 
 	cmd.AddCommand(
 		GetCmdQueryRegistry(),
+		GetCmdQueryRegistries(),
 		GetCmdQueryHasRole(),
 	)
 
@@ -58,6 +59,47 @@ func GetCmdQueryRegistry() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryRegistries returns the command for querying all registry entries
+func GetCmdQueryRegistries() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-all [asset_class_id]",
+		Short: "Query all registry entries, optionally by asset class id",
+		Args:  cobra.RangeArgs(0, 1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var assetClassId string
+			if len(args) == 1 {
+				assetClassId = args[0]
+			}
+			
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.GetRegistries(context.Background(), &types.QueryGetRegistriesRequest{
+				AssetClassId: assetClassId,
+				Pagination:   pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "registries")
 	return cmd
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/registry/keeper"
@@ -420,6 +421,72 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 				}
 			}
 		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetRegistries() {
+	// Initially no registries
+	regs, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "")
+	s.Require().NoError(err)
+	s.Require().Len(regs, 0)
+
+	roles := []types.RolesEntry{
+		{Role: types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{s.user1Addr.String()}},
+	}
+	keys := []*types.RegistryKey{
+		{AssetClassId: "aclass", NftId: "nft1"},
+		{AssetClassId: "aclass", NftId: "nft2"},
+		{AssetClassId: "bclass", NftId: "nft1"},
+		{AssetClassId: "bclass", NftId: "nft2"},
+		{AssetClassId: "cclass", NftId: "nft1"},
+	}
+	for _, k := range keys {
+		s.Require().NoError(s.app.RegistryKeeper.CreateRegistry(s.ctx, k, roles))
+	}
+
+	// Helper to get key strings in order
+	keyStrs := func(es []types.RegistryEntry) []string {
+		out := make([]string, len(es))
+		for i, e := range es {
+			out[i] = e.Key.String()
+		}
+		return out
+	}
+
+	// Get all (no pagination) to determine canonical ordering
+	allRegs, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "")
+	s.Require().NoError(err)
+	s.Require().Len(allRegs, len(keys))
+
+	// Limit-only pagination
+	page1, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Limit: 2}, "")
+	s.Require().NoError(err)
+	s.Require().Equal(keyStrs(allRegs[:2]), keyStrs(page1))
+
+	// Offset + limit pagination
+	page2, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Offset: 2, Limit: 2}, "")
+	s.Require().NoError(err)
+	s.Require().Equal(keyStrs(allRegs[2:4]), keyStrs(page2))
+
+	// Offset beyond range
+	pageEmpty, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Offset: uint64(len(keys)), Limit: 5}, "")
+	s.Require().NoError(err)
+	s.Require().Len(pageEmpty, 0)
+
+	// Reverse order
+	rev, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Limit: uint64(len(keys)), Reverse: true}, "")
+	s.Require().NoError(err)
+	expectRev := make([]types.RegistryEntry, len(allRegs))
+	for i := range allRegs {
+		expectRev[i] = allRegs[len(allRegs)-1-i]
+	}
+	s.Require().Equal(keyStrs(expectRev), keyStrs(rev))
+
+	// Filter by asset_class_id
+	classARegs, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "aclass")
+	s.Require().NoError(err)
+	for _, e := range classARegs {
+		s.Require().Equal("aclass", e.Key.AssetClassId)
 	}
 }
 

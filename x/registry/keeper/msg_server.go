@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/registry/types"
@@ -23,15 +24,13 @@ func NewMsgServer(keeper Keeper) types.MsgServer {
 func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (*types.MsgRegisterNFTResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	keyStr := msg.Key.String()
-
 	// Already exists check
-	has, err := k.keeper.Registry.Has(sdkCtx, keyStr)
+	has, err := k.keeper.Registry.Has(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId))
 	if err != nil {
 		return nil, err
 	}
 	if has {
-		return nil, types.NewErrCodeRegistryAlreadyExists(keyStr)
+		return nil, types.NewErrCodeRegistryAlreadyExists(msg.Key.String())
 	}
 
 	// Validate that the NFT exists
@@ -58,15 +57,13 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*types.MsgGrantRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	keyStr := msg.Key.String()
-
 	// ensure the registry exists
-	has, err := k.keeper.Registry.Has(sdkCtx, keyStr)
+	has, err := k.keeper.Registry.Has(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId))
 	if err != nil {
 		return nil, err
 	}
 	if !has {
-		return nil, types.NewErrCodeRegistryNotFound(keyStr)
+		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
 	// Validate that the authority owns the NFT
@@ -88,15 +85,13 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*types.MsgRevokeRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	keyStr := msg.Key.String()
-
 	// ensure the registry exists
-	has, err := k.keeper.Registry.Has(sdkCtx, keyStr)
+	has, err := k.keeper.Registry.Has(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId))
 	if err != nil {
 		return nil, err
 	}
 	if !has {
-		return nil, types.NewErrCodeRegistryNotFound(keyStr)
+		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
 	// Validate that the authority owns the NFT

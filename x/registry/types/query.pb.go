@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -125,6 +126,110 @@ func (m *QueryGetRegistryResponse) GetRegistry() RegistryEntry {
 	return RegistryEntry{}
 }
 
+// QueryGetRegistriesRequest is the paginated request type for the Query/GetRegistries RPC method.
+type QueryGetRegistriesRequest struct {
+	// asset_class_id is the Scope Specification ID or NFT Class ID.
+	// This identifies the class or specification that the NFTs belong to.
+	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGetRegistriesRequest) Reset()         { *m = QueryGetRegistriesRequest{} }
+func (m *QueryGetRegistriesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetRegistriesRequest) ProtoMessage()    {}
+func (*QueryGetRegistriesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{2}
+}
+func (m *QueryGetRegistriesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetRegistriesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetRegistriesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetRegistriesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetRegistriesRequest.Merge(m, src)
+}
+func (m *QueryGetRegistriesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetRegistriesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetRegistriesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetRegistriesRequest proto.InternalMessageInfo
+
+func (m *QueryGetRegistriesRequest) GetAssetClassId() string {
+	if m != nil {
+		return m.AssetClassId
+	}
+	return ""
+}
+
+func (m *QueryGetRegistriesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryGetRegistriesResponse is the paginated response type for the Query/GetRegistries RPC method.
+// It contains the complete registry entry for the requested key.
+type QueryGetRegistriesResponse struct {
+	// registries is the collection of registry entries.
+	// This includes all roles and addresses associated with the specified NFT and asset class.
+	Registries []RegistryEntry `protobuf:"bytes,1,rep,name=registries,proto3" json:"registries"`
+}
+
+func (m *QueryGetRegistriesResponse) Reset()         { *m = QueryGetRegistriesResponse{} }
+func (m *QueryGetRegistriesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetRegistriesResponse) ProtoMessage()    {}
+func (*QueryGetRegistriesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{3}
+}
+func (m *QueryGetRegistriesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetRegistriesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetRegistriesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetRegistriesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetRegistriesResponse.Merge(m, src)
+}
+func (m *QueryGetRegistriesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetRegistriesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetRegistriesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetRegistriesResponse proto.InternalMessageInfo
+
+func (m *QueryGetRegistriesResponse) GetRegistries() []RegistryEntry {
+	if m != nil {
+		return m.Registries
+	}
+	return nil
+}
+
 // QueryHasRoleRequest is the request type for the Query/HasRole RPC method.
 // It contains the information needed to verify if an address has a specific role.
 type QueryHasRoleRequest struct {
@@ -143,7 +248,7 @@ func (m *QueryHasRoleRequest) Reset()         { *m = QueryHasRoleRequest{} }
 func (m *QueryHasRoleRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryHasRoleRequest) ProtoMessage()    {}
 func (*QueryHasRoleRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c166c561e401a2eb, []int{2}
+	return fileDescriptor_c166c561e401a2eb, []int{4}
 }
 func (m *QueryHasRoleRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -205,7 +310,7 @@ func (m *QueryHasRoleResponse) Reset()         { *m = QueryHasRoleResponse{} }
 func (m *QueryHasRoleResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryHasRoleResponse) ProtoMessage()    {}
 func (*QueryHasRoleResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c166c561e401a2eb, []int{3}
+	return fileDescriptor_c166c561e401a2eb, []int{5}
 }
 func (m *QueryHasRoleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -244,6 +349,8 @@ func (m *QueryHasRoleResponse) GetHasRole() bool {
 func init() {
 	proto.RegisterType((*QueryGetRegistryRequest)(nil), "provenance.registry.v1.QueryGetRegistryRequest")
 	proto.RegisterType((*QueryGetRegistryResponse)(nil), "provenance.registry.v1.QueryGetRegistryResponse")
+	proto.RegisterType((*QueryGetRegistriesRequest)(nil), "provenance.registry.v1.QueryGetRegistriesRequest")
+	proto.RegisterType((*QueryGetRegistriesResponse)(nil), "provenance.registry.v1.QueryGetRegistriesResponse")
 	proto.RegisterType((*QueryHasRoleRequest)(nil), "provenance.registry.v1.QueryHasRoleRequest")
 	proto.RegisterType((*QueryHasRoleResponse)(nil), "provenance.registry.v1.QueryHasRoleResponse")
 }
@@ -253,37 +360,45 @@ func init() {
 }
 
 var fileDescriptor_c166c561e401a2eb = []byte{
-	// 465 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0x41, 0x8b, 0xd3, 0x40,
-	0x18, 0x86, 0x3b, 0xdb, 0xd5, 0xd6, 0x59, 0xf0, 0x30, 0x2e, 0x9a, 0x2d, 0x12, 0x4b, 0x74, 0xa1,
-	0xa0, 0x66, 0x6c, 0x55, 0xf0, 0x5c, 0x94, 0x15, 0xbd, 0xac, 0x11, 0x2f, 0x7a, 0x28, 0xb3, 0xe9,
-	0x67, 0x1a, 0x1a, 0x67, 0xb2, 0x33, 0xd3, 0x62, 0x28, 0xbd, 0x78, 0xf4, 0x24, 0xf8, 0x07, 0xfc,
-	0x21, 0x5e, 0xbc, 0xed, 0x71, 0xc1, 0x8b, 0x27, 0x91, 0xd6, 0x1f, 0x22, 0x99, 0x24, 0xbb, 0x5d,
-	0x34, 0xa6, 0xb0, 0xb7, 0x4c, 0xf2, 0x3e, 0xef, 0x3c, 0x99, 0x2f, 0xc1, 0x4e, 0x2c, 0xc5, 0x14,
-	0x38, 0xe3, 0x3e, 0x50, 0x09, 0x41, 0xa8, 0xb4, 0x4c, 0xe8, 0xb4, 0x4b, 0x0f, 0x27, 0x20, 0x13,
-	0x37, 0x96, 0x42, 0x0b, 0x72, 0xf5, 0x34, 0xe3, 0x16, 0x19, 0x77, 0xda, 0x6d, 0x6d, 0x07, 0x22,
-	0x10, 0x26, 0x42, 0xd3, 0xab, 0x2c, 0xdd, 0xda, 0x2d, 0x69, 0x3c, 0x21, 0xb3, 0xd8, 0xf5, 0x40,
-	0x88, 0x20, 0x02, 0xca, 0xe2, 0x90, 0x32, 0xce, 0x85, 0x66, 0x3a, 0x14, 0x5c, 0x65, 0x4f, 0x9d,
-	0x7d, 0x7c, 0xed, 0x45, 0x6a, 0xb0, 0x07, 0xda, 0xcb, 0x39, 0x0f, 0x0e, 0x27, 0xa0, 0x34, 0x79,
-	0x88, 0xeb, 0x63, 0x48, 0x2c, 0xd4, 0x46, 0x9d, 0xad, 0xde, 0x4d, 0xf7, 0xdf, 0x6e, 0x6e, 0x41,
-	0x3d, 0x87, 0xc4, 0x4b, 0xf3, 0x8e, 0x8f, 0xad, 0xbf, 0x1b, 0x55, 0x2c, 0xb8, 0x02, 0xb2, 0x87,
-	0x9b, 0x05, 0x9b, 0xf7, 0xee, 0x56, 0xf5, 0x3e, 0xe1, 0x5a, 0x26, 0xfd, 0xcd, 0xa3, 0x9f, 0x37,
-	0x6a, 0xde, 0x09, 0xec, 0x7c, 0x41, 0xf8, 0x8a, 0xd9, 0xe5, 0x29, 0x53, 0x9e, 0x88, 0xe0, 0x7c,
-	0xce, 0xc4, 0xc2, 0x0d, 0x36, 0x1c, 0x4a, 0x50, 0xca, 0xda, 0x68, 0xa3, 0xce, 0x25, 0xaf, 0x58,
-	0x92, 0x47, 0x78, 0x53, 0x8a, 0x08, 0xac, 0x7a, 0x1b, 0x75, 0x2e, 0xf7, 0x6e, 0x55, 0x35, 0x1a,
-	0x17, 0x43, 0x38, 0x5d, 0xbc, 0x7d, 0xd6, 0x30, 0x3f, 0x83, 0x1d, 0xdc, 0x1c, 0x31, 0x35, 0x30,
-	0xad, 0xa9, 0x67, 0xd3, 0x6b, 0x8c, 0xb2, 0x48, 0xef, 0x63, 0x1d, 0x5f, 0x30, 0x0c, 0xf9, 0x8a,
-	0xf0, 0xd6, 0xca, 0x01, 0x12, 0x5a, 0xb6, 0x71, 0xc9, 0xf0, 0x5a, 0xf7, 0xd6, 0x07, 0x32, 0x2f,
-	0xe7, 0xd9, 0x87, 0xef, 0xbf, 0x3f, 0x6f, 0x3c, 0x26, 0x7d, 0x5a, 0xf1, 0x5d, 0xd1, 0xd9, 0x18,
-	0x12, 0x97, 0x29, 0x05, 0x7a, 0xe0, 0x47, 0x4c, 0xa9, 0x41, 0x38, 0x9c, 0x67, 0x37, 0xf9, 0x5b,
-	0x9d, 0x2e, 0xc8, 0x37, 0x84, 0x1b, 0xf9, 0x7b, 0x93, 0xdb, 0xff, 0x35, 0x39, 0x3b, 0xbf, 0xd6,
-	0x9d, 0xf5, 0xc2, 0xb9, 0xf2, 0x1b, 0xa3, 0xfc, 0x8a, 0xbc, 0x2c, 0x53, 0x2e, 0x0e, 0xba, 0x5a,
-	0x99, 0xce, 0xf2, 0x89, 0xcf, 0xe9, 0x2c, 0x25, 0xe6, 0xfd, 0xf1, 0xd1, 0xc2, 0x46, 0xc7, 0x0b,
-	0x1b, 0xfd, 0x5a, 0xd8, 0xe8, 0xd3, 0xd2, 0xae, 0x1d, 0x2f, 0xed, 0xda, 0x8f, 0xa5, 0x5d, 0xc3,
-	0x3b, 0xa1, 0x28, 0xd1, 0xdc, 0x47, 0xaf, 0x1f, 0x04, 0xa1, 0x1e, 0x4d, 0x0e, 0x5c, 0x5f, 0xbc,
-	0x5b, 0xb1, 0xba, 0x1b, 0x8a, 0x55, 0xc7, 0xf7, 0xa7, 0x96, 0x3a, 0x89, 0x41, 0x1d, 0x5c, 0x34,
-	0x7f, 0xe3, 0xfd, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xf9, 0x52, 0x70, 0x6d, 0x26, 0x04, 0x00,
-	0x00,
+	// 594 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0xc7, 0xb3, 0x6d, 0x20, 0x61, 0x0b, 0x3d, 0x2c, 0x15, 0x38, 0x16, 0x32, 0x91, 0x69, 0x51,
+	0xc4, 0x87, 0x17, 0x07, 0x90, 0x38, 0x87, 0x8f, 0x02, 0xbd, 0x04, 0x23, 0x2e, 0x70, 0x88, 0x36,
+	0xce, 0xe2, 0x58, 0x49, 0xbd, 0xae, 0x77, 0x13, 0x61, 0x45, 0xb9, 0x70, 0xe3, 0x86, 0xc4, 0x0b,
+	0xf4, 0x05, 0x78, 0x03, 0x2e, 0xdc, 0x7a, 0xac, 0xc4, 0x85, 0x13, 0x42, 0x09, 0x0f, 0x82, 0xbc,
+	0x5e, 0xe7, 0x03, 0x1a, 0x92, 0x8a, 0x9b, 0x3d, 0x9e, 0xff, 0xcc, 0x6f, 0x66, 0xfe, 0x09, 0x34,
+	0xc3, 0x88, 0xf5, 0x69, 0x40, 0x02, 0x97, 0xe2, 0x88, 0x7a, 0x3e, 0x17, 0x51, 0x8c, 0xfb, 0x36,
+	0x3e, 0xe8, 0xd1, 0x28, 0xb6, 0xc2, 0x88, 0x09, 0x86, 0x2e, 0x4d, 0x73, 0xac, 0x2c, 0xc7, 0xea,
+	0xdb, 0xfa, 0x0d, 0x97, 0xf1, 0x7d, 0xc6, 0x71, 0x93, 0x70, 0x9a, 0x0a, 0x70, 0xdf, 0x6e, 0x52,
+	0x41, 0x6c, 0x1c, 0x12, 0xcf, 0x0f, 0x88, 0xf0, 0x59, 0x90, 0xd6, 0xd0, 0xb7, 0x3c, 0xe6, 0x31,
+	0xf9, 0x88, 0x93, 0x27, 0x15, 0xbd, 0xe2, 0x31, 0xe6, 0x75, 0x29, 0x26, 0xa1, 0x8f, 0x49, 0x10,
+	0x30, 0x21, 0x25, 0x5c, 0x7d, 0xdd, 0x59, 0xc0, 0x36, 0x61, 0x90, 0x69, 0x66, 0x1d, 0x5e, 0x7e,
+	0x91, 0x34, 0xdf, 0xa5, 0xc2, 0x51, 0x5f, 0x1c, 0x7a, 0xd0, 0xa3, 0x5c, 0xa0, 0xfb, 0x70, 0xbd,
+	0x43, 0x63, 0x0d, 0x94, 0x41, 0x65, 0xa3, 0x7a, 0xcd, 0x3a, 0x79, 0x0e, 0x2b, 0x53, 0xed, 0xd1,
+	0xd8, 0x49, 0xf2, 0x4d, 0x17, 0x6a, 0x7f, 0x57, 0xe4, 0x21, 0x0b, 0x38, 0x45, 0xbb, 0xb0, 0x98,
+	0x69, 0x55, 0xdd, 0x9d, 0x65, 0x75, 0x1f, 0x07, 0x22, 0x8a, 0x6b, 0xf9, 0xa3, 0x1f, 0x57, 0x73,
+	0xce, 0x44, 0x6c, 0x7e, 0x00, 0xb0, 0xf4, 0x47, 0x17, 0x9f, 0xf2, 0x8c, 0x7c, 0x1b, 0x6e, 0x12,
+	0xce, 0xa9, 0x68, 0xb8, 0x5d, 0xc2, 0x79, 0xc3, 0x6f, 0xc9, 0x66, 0xe7, 0x9c, 0xf3, 0x32, 0xfa,
+	0x30, 0x09, 0x3e, 0x6b, 0xa1, 0x27, 0x10, 0x4e, 0x37, 0xad, 0xb9, 0x12, 0xe7, 0xba, 0x95, 0x9e,
+	0xc5, 0x4a, 0xce, 0x62, 0xa5, 0x77, 0x54, 0x67, 0xb1, 0xea, 0xc4, 0xa3, 0xaa, 0x83, 0x33, 0xa3,
+	0x34, 0x7d, 0xa8, 0x9f, 0x84, 0xa2, 0x46, 0xde, 0x83, 0x30, 0x9a, 0x44, 0x35, 0x50, 0x5e, 0x3f,
+	0xed, 0xd0, 0x33, 0x72, 0xf3, 0x10, 0xc0, 0x8b, 0xb2, 0xd7, 0x53, 0xc2, 0x1d, 0xd6, 0xa5, 0xff,
+	0x77, 0x2a, 0xa4, 0xc1, 0x02, 0x69, 0xb5, 0x22, 0xca, 0xb9, 0xb6, 0x26, 0x17, 0x94, 0xbd, 0xa2,
+	0x07, 0x30, 0x1f, 0xb1, 0x2e, 0xd5, 0xd6, 0xcb, 0xa0, 0xb2, 0x59, 0xdd, 0x5e, 0x56, 0x51, 0xb2,
+	0x48, 0x85, 0x69, 0xc3, 0xad, 0x79, 0x42, 0xb5, 0x87, 0x12, 0x2c, 0xb6, 0x09, 0x6f, 0xc8, 0xaa,
+	0x09, 0x67, 0xd1, 0x29, 0xb4, 0xd3, 0x94, 0xea, 0xe7, 0x3c, 0x3c, 0x23, 0x35, 0xe8, 0x0b, 0x80,
+	0x1b, 0x33, 0xbe, 0x41, 0x78, 0x51, 0xe3, 0x05, 0x9e, 0xd5, 0xef, 0xac, 0x2e, 0x48, 0xb9, 0xcc,
+	0xe7, 0xef, 0xbf, 0xfd, 0xfa, 0xb4, 0xf6, 0x08, 0xd5, 0xf0, 0x92, 0x1f, 0x0c, 0x1e, 0x74, 0x68,
+	0x6c, 0xcd, 0xfb, 0x6a, 0x98, 0x06, 0x83, 0xb7, 0x22, 0x79, 0x41, 0x87, 0x00, 0x5e, 0x98, 0x73,
+	0x01, 0xb2, 0x57, 0xe4, 0x99, 0x9a, 0x57, 0xaf, 0x9e, 0x46, 0xa2, 0x86, 0xa8, 0xc8, 0x21, 0x4c,
+	0x54, 0x5e, 0x36, 0x04, 0xfa, 0x0a, 0x60, 0x41, 0x9d, 0x06, 0xdd, 0xfc, 0x67, 0xa7, 0x79, 0x8b,
+	0xe9, 0xb7, 0x56, 0x4b, 0x56, 0x40, 0x6f, 0x24, 0xd0, 0x2b, 0xf4, 0x72, 0x11, 0x50, 0xe6, 0x85,
+	0xe5, 0x5b, 0xc5, 0x03, 0x65, 0xca, 0x21, 0x1e, 0x24, 0x8a, 0x61, 0xad, 0x73, 0x34, 0x32, 0xc0,
+	0xf1, 0xc8, 0x00, 0x3f, 0x47, 0x06, 0xf8, 0x38, 0x36, 0x72, 0xc7, 0x63, 0x23, 0xf7, 0x7d, 0x6c,
+	0xe4, 0x60, 0xc9, 0x67, 0x0b, 0x30, 0xeb, 0xe0, 0xf5, 0x3d, 0xcf, 0x17, 0xed, 0x5e, 0xd3, 0x72,
+	0xd9, 0xfe, 0x0c, 0xd5, 0x6d, 0x9f, 0xcd, 0x32, 0xbe, 0x9b, 0x52, 0x8a, 0x38, 0xa4, 0xbc, 0x79,
+	0x56, 0xfe, 0x4f, 0xde, 0xfd, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x51, 0x92, 0x54, 0x00, 0xec, 0x05,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -301,6 +416,9 @@ type QueryClient interface {
 	// GetRegistry returns the registry entry for a given key.
 	// This method retrieves the complete registry entry including all roles and addresses.
 	GetRegistry(ctx context.Context, in *QueryGetRegistryRequest, opts ...grpc.CallOption) (*QueryGetRegistryResponse, error)
+	// GetRegistries returns all registry entries, optionally filtered by asset class ID.
+	// This method retrieves the complete registry entries including all roles and addresses.
+	GetRegistries(ctx context.Context, in *QueryGetRegistriesRequest, opts ...grpc.CallOption) (*QueryGetRegistriesResponse, error)
 	// HasRole returns true if the address has the specified role for the given key.
 	HasRole(ctx context.Context, in *QueryHasRoleRequest, opts ...grpc.CallOption) (*QueryHasRoleResponse, error)
 }
@@ -322,6 +440,15 @@ func (c *queryClient) GetRegistry(ctx context.Context, in *QueryGetRegistryReque
 	return out, nil
 }
 
+func (c *queryClient) GetRegistries(ctx context.Context, in *QueryGetRegistriesRequest, opts ...grpc.CallOption) (*QueryGetRegistriesResponse, error) {
+	out := new(QueryGetRegistriesResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/GetRegistries", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) HasRole(ctx context.Context, in *QueryHasRoleRequest, opts ...grpc.CallOption) (*QueryHasRoleResponse, error) {
 	out := new(QueryHasRoleResponse)
 	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/HasRole", in, out, opts...)
@@ -336,6 +463,9 @@ type QueryServer interface {
 	// GetRegistry returns the registry entry for a given key.
 	// This method retrieves the complete registry entry including all roles and addresses.
 	GetRegistry(context.Context, *QueryGetRegistryRequest) (*QueryGetRegistryResponse, error)
+	// GetRegistries returns all registry entries, optionally filtered by asset class ID.
+	// This method retrieves the complete registry entries including all roles and addresses.
+	GetRegistries(context.Context, *QueryGetRegistriesRequest) (*QueryGetRegistriesResponse, error)
 	// HasRole returns true if the address has the specified role for the given key.
 	HasRole(context.Context, *QueryHasRoleRequest) (*QueryHasRoleResponse, error)
 }
@@ -346,6 +476,9 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) GetRegistry(ctx context.Context, req *QueryGetRegistryRequest) (*QueryGetRegistryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRegistry not implemented")
+}
+func (*UnimplementedQueryServer) GetRegistries(ctx context.Context, req *QueryGetRegistriesRequest) (*QueryGetRegistriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRegistries not implemented")
 }
 func (*UnimplementedQueryServer) HasRole(ctx context.Context, req *QueryHasRoleRequest) (*QueryHasRoleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HasRole not implemented")
@@ -369,6 +502,24 @@ func _Query_GetRegistry_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GetRegistry(ctx, req.(*QueryGetRegistryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetRegistries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetRegistriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetRegistries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/GetRegistries",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetRegistries(ctx, req.(*QueryGetRegistriesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -399,6 +550,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRegistry",
 			Handler:    _Query_GetRegistry_Handler,
+		},
+		{
+			MethodName: "GetRegistries",
+			Handler:    _Query_GetRegistries_Handler,
 		},
 		{
 			MethodName: "HasRole",
@@ -474,6 +629,87 @@ func (m *QueryGetRegistryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	}
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetRegistriesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetRegistriesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetRegistriesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.AssetClassId) > 0 {
+		i -= len(m.AssetClassId)
+		copy(dAtA[i:], m.AssetClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AssetClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetRegistriesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetRegistriesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetRegistriesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Registries) > 0 {
+		for iNdEx := len(m.Registries) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Registries[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -589,6 +825,38 @@ func (m *QueryGetRegistryResponse) Size() (n int) {
 	_ = l
 	l = m.Registry.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryGetRegistriesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AssetClassId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetRegistriesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Registries) > 0 {
+		for _, e := range m.Registries {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -775,6 +1043,208 @@ func (m *QueryGetRegistryResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Registry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetRegistriesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetRegistriesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetRegistriesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetRegistriesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetRegistriesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetRegistriesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Registries", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Registries = append(m.Registries, RegistryEntry{})
+			if err := m.Registries[len(m.Registries)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
