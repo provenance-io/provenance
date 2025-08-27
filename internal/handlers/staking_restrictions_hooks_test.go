@@ -183,6 +183,7 @@ func (m *MockStakingKeeper) TotalBondedTokens(_ context.Context) (sdkmath.Int, e
 	return m.TotalBonded, newErr(m.TotalBondedTokensError)
 }
 
+// boolInt returns 1 if true, 0 if false.
 func boolInt(b bool) int {
 	if b {
 		return 1
@@ -216,13 +217,13 @@ func TestRestrictionOptions_CalcMaxValPct(t *testing.T) {
 	}{
 		{
 			name:     "default options: zero validators",
-			valCount: 0, // gets a division by zero, which it then thinks is larger than the max.
+			valCount: 0, // Gets a division by zero, which it then thinks is larger than the max.
 			exp:      DefaultMaxCapPercent,
 		},
 		{
 			name:     "unlimited options: zero validators",
 			this:     UnlimitedRestrictionOptions,
-			valCount: 0, // gets a division by zero, which it then thinks is larger than the max.
+			valCount: 0, // Gets a division by zero, which it then thinks is larger than the max.
 			exp:      1.0,
 		},
 		{
@@ -232,7 +233,7 @@ func TestRestrictionOptions_CalcMaxValPct(t *testing.T) {
 				MaxBondedCapPercent:      12.98,
 				MinBondedCapPercent:      3.4,
 			},
-			valCount: 0, // gets a division by zero, which it then thinks is larger than the max.
+			valCount: 0, // Gets a division by zero, which it then thinks is larger than the max.
 			exp:      12.98,
 		},
 		{
@@ -387,7 +388,7 @@ func TestRestrictionOptions_CalcMaxValPct(t *testing.T) {
 }
 
 func TestCalcMaxValBond(t *testing.T) {
-	// newInt is a way to create an int from a string (for when it's bigger than an int64).
+	// newInt is a way to create an Int from a string (for when it's bigger than an int64).
 	newInt := func(amt string) sdkmath.Int {
 		rv, ok := sdkmath.NewIntFromString(amt)
 		require.True(t, ok, "NewIntFromString(%s)", amt)
@@ -450,7 +451,7 @@ func TestCalcMaxValBond(t *testing.T) {
 		{
 			name:      "difficult float 1/3 + 1/10",
 			totalBond: oneBil,
-			maxValPct: float32(1)/3 + float32(1)/10, // should be 0.34333..., but impossible to represent as float.
+			maxValPct: float32(1)/3 + float32(1)/10, // should be 0.4333..., but impossible to represent as float.
 			exp:       sdkmath.NewInt(433_333_000),
 		},
 		{
@@ -804,8 +805,11 @@ func TestStakingRestrictionHooks_AfterDelegationModified(t *testing.T) {
 			expErr: "",
 		},
 		{
-			name:   "error getting last validators",
-			k:      NewMockStakingKeeper(0, 100).ExpectOnlyToGetLastValidators(),
+			name: "error getting last validators",
+			k: NewMockStakingKeeper(0, 100).
+				WithGetLastValidatorsError("this should be ignored").
+				WithGetValidatorError("should not have even tried to get me").
+				ExpectOnlyToGetLastValidators(),
 			expErr: "",
 		},
 		{
