@@ -1,6 +1,6 @@
 name: Docker Build and Push
 # Build & Push builds the simapp docker image on every push to master
-# and pushes the image to https://hub.docker.com/u/provenanceio
+# and pushes the image to https://hub.docker.com/u/provenanceio and ghcr.io/provenance-io/provenance
 on:
   pull_request:
     paths:
@@ -17,6 +17,7 @@ on:
 
 env:
   DOCKER_IMAGE: "provenanceio/provenance"
+  GHCR_IMAGE: "ghcr.io/provenance-io/provenance"
 
 # Set concurrency for this workflow to cancel in-progress jobs if retriggered.
 # The github.ref is only available when triggered by a PR so fall back to github.run_id for other cases.
@@ -40,6 +41,7 @@ jobs:
         id: meta
         with:
           images: ${{ env.DOCKER_IMAGE }}
+                  ${{ env.GHCR_IMAGE }}
           flavor: |
             prefix=heighliner-,onlatest=true
           tags: |
@@ -51,6 +53,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # lock to "linux/amd64" only for now since cross compilation is throwing errors
       - uses: strangelove-ventures/heighliner-build-action@main
@@ -71,8 +79,29 @@ jobs:
             - "BUILD_TAGS=muslc musl dynamic"
           skip: ${{ github.event_name == 'pull_request' }}
 
+      # Mirror the heighliner image from Docker Hub to GHCR (registry-to-registry, no local pull)
+      - name: Mirror heighliner image to GHCR
+        if: github.event_name != 'pull_request'
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+
+          # Mirror exact version tag, which already includes the heighliner- prefix
+          docker buildx imagetools create \
+            --tag ghcr.io/provenance-io/provenance:${VERSION} \
+            provenanceio/provenance:${VERSION}
+
+          # Optionally mirror heighliner-latest when building on main
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            docker buildx imagetools create \
+              --tag ghcr.io/provenance-io/provenance:heighliner-latest \
+              provenanceio/provenance:heighliner-latest
+          fi
+
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v5
 
@@ -90,6 +119,7 @@ jobs:
         id: meta
         with:
           images: ${{ env.DOCKER_IMAGE }}
+                  ${{ env.GHCR_IMAGE }}
           tags: |
             type=edge
             type=ref,event=pr
@@ -99,6 +129,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: docker/build-push-action@v6
         with:
