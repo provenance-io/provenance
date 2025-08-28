@@ -41,7 +41,18 @@ jobs:
         id: meta
         with:
           images: ${{ env.DOCKER_IMAGE }}
-                  ${{ env.GHCR_IMAGE }}
+          flavor: |
+            prefix=heighliner-,onlatest=true
+          tags: |
+            type=edge
+            type=ref,event=pr
+            type=ref,event=tag
+            
+      - uses: docker/metadata-action@v5
+        id: meta-ghcr
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        with:
+          images: ${{ env.GHCR_IMAGE }}
           flavor: |
             prefix=heighliner-,onlatest=true
           tags: |
@@ -53,8 +64,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+        
       - uses: docker/login-action@v3
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -81,21 +93,27 @@ jobs:
 
       # Mirror the heighliner image from Docker Hub to GHCR (registry-to-registry, no local pull)
       - name: Mirror heighliner image to GHCR
-        if: github.event_name != 'pull_request'
+        if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name != 'pull_request'
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
-
-          # Mirror exact version tag, which already includes the heighliner- prefix
-          docker buildx imagetools create \
-            --tag ghcr.io/provenance-io/provenance:${VERSION} \
-            provenanceio/provenance:${VERSION}
-
-          # Optionally mirror heighliner-latest when building on main
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            docker buildx imagetools create \
-              --tag ghcr.io/provenance-io/provenance:heighliner-latest \
-              provenanceio/provenance:heighliner-latest
-          fi
+          # Use the GHCR tags from metadata
+          GHCR_TAGS="${{ steps.meta-ghcr.outputs.tags }}"
+          DOCKERHUB_TAGS="${{ steps.meta.outputs.tags }}"
+          
+          echo "Mirroring heighliner images to GHCR..."
+          echo "Docker Hub tags: $DOCKERHUB_TAGS"
+          echo "GHCR tags: $GHCR_TAGS"
+          
+          # Convert Docker Hub tags to GHCR tags and mirror
+          echo "$DOCKERHUB_TAGS" | while IFS= read -r dockerhub_tag; do
+            if [[ "$dockerhub_tag" == "provenanceio/provenance:"* ]]; then
+              # Extract the tag suffix
+              TAG_SUFFIX="${dockerhub_tag#provenanceio/provenance:}"
+              GHCR_TAG="ghcr.io/provenance-io/provenance:${TAG_SUFFIX}"
+              
+              echo "Mirroring $dockerhub_tag to $GHCR_TAG"
+              docker buildx imagetools create --tag "$GHCR_TAG" "$dockerhub_tag"
+            fi
+          done
 
   docker:
     runs-on: ubuntu-latest
@@ -119,11 +137,22 @@ jobs:
         id: meta
         with:
           images: ${{ env.DOCKER_IMAGE }}
-                  ${{ env.GHCR_IMAGE }}
           tags: |
             type=edge
             type=ref,event=pr
             type=ref,event=tag
+
+      - uses: docker/metadata-action@v5
+        id: meta-ghcr
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        with:
+          images: ${{ env.GHCR_IMAGE }}
+          tags: |
+            type=edge
+            type=ref,event=pr
+            type=ref,event=tag
+          labels: |
+            org.opencontainers.image.source=https://github.com/provenance-io/provenance
 
       - uses: docker/login-action@v3
         with:
@@ -131,6 +160,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - uses: docker/login-action@v3
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -146,3 +176,17 @@ jobs:
           file: docker/blockchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
+      
+      - name: Build and push to GHCR
+        if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: run
+          build-args: |
+            VERSION=${{ steps.meta-ghcr.outputs.version }}
+          platforms: linux/amd64,linux/arm64
+          file: docker/blockchain/Dockerfile
+          push: true
+          tags: ${{ steps.meta-ghcr.outputs.tags }}
+          labels: ${{ steps.meta-ghcr.outputs.labels }}
