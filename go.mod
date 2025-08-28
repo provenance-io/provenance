@@ -226,7 +226,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.14-pio-1
 
 	// Replace iavl to fix the node stop/start app hash problem. This can be removed once upstream is off v1.1.2
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.0
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
 
 	// TODO: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
