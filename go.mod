@@ -237,6 +237,9 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 
+	// replace broken legacy_protos
+	github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1 => ./legacy_protos/cosmwasm/wasm/v1beta1
+
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
