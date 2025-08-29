@@ -40,12 +40,12 @@ func (msg MsgCreateAsset) ValidateBasic() error {
 		return validateJSON(msg.Asset.Data)
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
+	if msg.Signer == "" {
+		return fmt.Errorf("signer cannot be empty")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
@@ -69,12 +69,12 @@ func (msg MsgCreateAssetClass) ValidateBasic() error {
 		return validateJSONSchema(msg.AssetClass.Data)
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
+	if msg.Signer == "" {
+		return fmt.Errorf("signer cannot be empty")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
@@ -106,12 +106,12 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		}
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
+	if msg.Signer == "" {
+		return fmt.Errorf("signer cannot be empty")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
@@ -135,12 +135,12 @@ func (msg MsgCreateTokenization) ValidateBasic() error {
 		return fmt.Errorf("asset id cannot be empty")
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
+	if msg.Signer == "" {
+		return fmt.Errorf("signer cannot be empty")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
@@ -175,12 +175,12 @@ func (msg MsgCreateSecuritization) ValidateBasic() error {
 		}
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
+	if msg.Signer == "" {
+		return fmt.Errorf("signer cannot be empty")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
@@ -233,7 +233,7 @@ func validateJSONSchema(data string) error {
 
 // GetSigners implements Msg
 func (msg MsgCreateAsset) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}
@@ -242,7 +242,7 @@ func (msg MsgCreateAsset) GetSigners() []sdk.AccAddress {
 
 // GetSigners implements Msg
 func (msg MsgCreateAssetClass) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}
@@ -251,7 +251,7 @@ func (msg MsgCreateAssetClass) GetSigners() []sdk.AccAddress {
 
 // GetSigners implements Msg
 func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}
@@ -260,7 +260,7 @@ func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
 
 // GetSigners implements Msg
 func (msg MsgCreateTokenization) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}
@@ -269,7 +269,7 @@ func (msg MsgCreateTokenization) GetSigners() []sdk.AccAddress {
 
 // GetSigners implements Msg
 func (msg MsgCreateSecuritization) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}

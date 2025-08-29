@@ -54,7 +54,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			UriHash:     "hash1",
 			Data:        `{"schema": "test"}`,
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err := msgServer.CreateAssetClass(s.ctx, assetClassMsg1)
 	s.Require().NoError(err)
@@ -69,7 +69,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			Uri:         "https://example.com/class2",
 			UriHash:     "hash2",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAssetClass(s.ctx, assetClassMsg2)
 	s.Require().NoError(err)
@@ -83,7 +83,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			UriHash: "asset1hash",
 			Data:    `{"name": "Asset 1", "value": 100}`,
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
 	s.Require().NoError(err)
@@ -96,7 +96,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			UriHash: "asset2hash",
 			Data:    `{"name": "Asset 2", "value": 200}`,
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
 	s.Require().NoError(err)
@@ -108,7 +108,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			Uri:     "https://example.com/asset3",
 			UriHash: "asset3hash",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset3Msg)
 	s.Require().NoError(err)
@@ -121,7 +121,7 @@ func (s *QueryServerTestSuite) setupAssetClassAndAssets() {
 			Uri:     "https://example.com/asset4",
 			UriHash: "asset4hash",
 		},
-		FromAddress: s.user2Addr.String(),
+		Signer: s.user2Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset4Msg)
 	s.Require().NoError(err)

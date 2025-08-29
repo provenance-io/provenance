@@ -69,7 +69,7 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 			sdk.NewAttribute(types.AttributeKeyAssetClassID, class.Id),
 			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
 			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
 		),
 	)
 
@@ -123,7 +123,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	}
 
 	// Get the asset module account address as the owner
-	owner, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	owner, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		return nil, fmt.Errorf("invalid owner address: %w", err)
 	}
@@ -161,7 +161,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 // CreatePool creates a new pool marker
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	// Create the marker
-	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.FromAddress)
+	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.Signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pool marker: %w", err)
 	}
@@ -173,8 +173,8 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 		if err != nil {
 			return nil, fmt.Errorf("failed to get owner of asset: %w", err)
 		}
-		if ownerResp.Owner != msg.FromAddress {
-			return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, ownerResp.Owner, msg.FromAddress)
+		if ownerResp.Owner != msg.Signer {
+			return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, ownerResp.Owner, msg.Signer)
 		}
 
 		// Transfer the nft to the pool marker address
@@ -192,7 +192,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 			sdk.NewAttribute(types.AttributeKeyPoolDenom, msg.Pool.Denom),
 			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Pool.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyAssetCount, fmt.Sprintf("%d", len(msg.Assets))),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
 		),
 	)
 
@@ -202,7 +202,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 // CreateTokenization creates a new tokenization marker
 func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
 	// Create the marker
-	marker, err := m.createMarker(goCtx, msg.Denom, msg.FromAddress)
+	marker, err := m.createMarker(goCtx, msg.Denom, msg.Signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tokenization marker: %w", err)
 	}
@@ -212,8 +212,8 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 	if err != nil {
 		return nil, fmt.Errorf("failed to get owner of asset: %w", err)
 	}
-	if ownerResp.Owner != msg.FromAddress {
-		return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", msg.Asset.ClassId, msg.Asset.Id, ownerResp.Owner, msg.FromAddress)
+	if ownerResp.Owner != msg.Signer {
+		return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", msg.Asset.ClassId, msg.Asset.Id, ownerResp.Owner, msg.Signer)
 	}
 
 	// Transfer the Asset to the tokenization marker address
@@ -231,7 +231,7 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Denom.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyAssetClassID, msg.Asset.ClassId),
 			sdk.NewAttribute(types.AttributeKeyAssetID, msg.Asset.Id),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
 		),
 	)
 
@@ -243,14 +243,14 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Create the securitization marker
-	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s", msg.Id), sdkmath.NewInt(0)), msg.FromAddress)
+	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s", msg.Id), sdkmath.NewInt(0)), msg.Signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
 	}
 
 	// Create the tranches
 	for _, tranche := range msg.Tranches {
-		_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s.tranche.%s", msg.Id, tranche.Denom), tranche.Amount), msg.FromAddress)
+		_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s.tranche.%s", msg.Id, tranche.Denom), tranche.Amount), msg.Signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create tranche marker: %w", err)
 		}
@@ -305,7 +305,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 			sdk.NewAttribute(types.AttributeKeySecuritizationID, msg.Id),
 			sdk.NewAttribute(types.AttributeKeyTrancheCount, fmt.Sprintf("%d", len(msg.Tranches))),
 			sdk.NewAttribute(types.AttributeKeyPoolCount, fmt.Sprintf("%d", len(msg.Pools))),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
 		),
 	)
 

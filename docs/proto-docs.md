@@ -12016,7 +12016,7 @@ MsgCreateAsset is the message type for creating a new asset.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset` | [Asset](#provenance-asset-v1-Asset) |  | asset defines the asset to be created. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12032,7 +12032,7 @@ MsgCreateAssetClass is the message type for creating a new asset class.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class defines the asset class to be created. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12069,7 +12069,7 @@ MsgCreatePool is the message type for creating a new pool.
 | ----- | ---- | ----- | ----------- |
 | `pool` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | pool defines the pool to be created. |
 | `assets` | [AssetKey](#provenance-asset-v1-AssetKey) | repeated | assets defines the list of assets by keys to be included in the pool. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12097,7 +12097,7 @@ MsgCreateSecuritization is the message type for creating a new securitization.
 | `id` | [string](#string) |  | id defines the unique identifier for the securitization. |
 | `pools` | [string](#string) | repeated | pools defines the list of pool identifiers to be included in the securitization. |
 | `tranches` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | tranches defines the list of tranches for the securitization. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12124,7 +12124,7 @@ MsgCreateTokenization is the message type for creating a new tokenization.
 | ----- | ---- | ----- | ----------- |
 | `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | denom defines the denomination for the tokenization. |
 | `asset` | [AssetKey](#provenance-asset-v1-AssetKey) |  | asset defines the asset by key to be tokenized. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
