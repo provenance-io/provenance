@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 			err:     "",
 		},
 		{
-			name:    "invalid - destroy a non existant trigger",
+			name:    "invalid - destroy a non existent trigger",
 			request: types.NewDestroyTriggerRequest(owner[0], 100),
 			err:     "trigger not found",
 		},
