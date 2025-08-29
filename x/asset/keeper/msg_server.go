@@ -80,7 +80,8 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Verify the asset class exists
-	if !m.nftKeeper.HasClass(ctx, msg.Asset.ClassId) {
+	_, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
+	if err != nil {
 		return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
 	}
 
@@ -96,12 +97,12 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	if msg.Asset.Data != "" {
 		// Validate the data against the Class schema if it exists
 		// otherwise it's an invalid Class id
-		class, ok := m.nftKeeper.GetClass(ctx, msg.Asset.ClassId)
-		if !ok {
+		class, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
+		if err != nil {
 			return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
 		}
 
-		jsonSchema, err := types.AnyToJSONSchema(m.cdc, class.Data)
+		jsonSchema, err := types.AnyToJSONSchema(m.cdc, class.Class.Data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert class data to JSON schema: %w", err)
 		}
@@ -168,9 +169,12 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	// Get the nfts
 	for _, asset := range msg.Assets {
 		// Get the owner of the nft and verify it matches the from address
-		owner := m.nftKeeper.GetOwner(goCtx, asset.ClassId, asset.Id)
-		if owner.String() != msg.FromAddress {
-			return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, owner.String(), msg.FromAddress)
+		ownerResp, err := m.nftKeeper.Owner(goCtx, &nft.QueryOwnerRequest{ClassId: asset.ClassId, Id: asset.Id})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get owner of asset: %w", err)
+		}
+		if ownerResp.Owner != msg.FromAddress {
+			return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, ownerResp.Owner, msg.FromAddress)
 		}
 
 		// Transfer the nft to the pool marker address
@@ -204,9 +208,12 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 	}
 
 	// Verify the Asset exists and is owned by the from address
-	owner := m.nftKeeper.GetOwner(goCtx, msg.Asset.ClassId, msg.Asset.Id)
-	if owner.String() != msg.FromAddress {
-		return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", msg.Asset.ClassId, msg.Asset.Id, owner.String(), msg.FromAddress)
+	ownerResp, err := m.nftKeeper.Owner(goCtx, &nft.QueryOwnerRequest{ClassId: msg.Asset.ClassId, Id: msg.Asset.Id})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get owner of asset: %w", err)
+	}
+	if ownerResp.Owner != msg.FromAddress {
+		return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", msg.Asset.ClassId, msg.Asset.Id, ownerResp.Owner, msg.FromAddress)
 	}
 
 	// Transfer the Asset to the tokenization marker address

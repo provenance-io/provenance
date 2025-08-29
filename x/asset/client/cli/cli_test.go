@@ -59,49 +59,112 @@ func (s *IntegrationTestSuite) TestAssetQueryCommands() {
 	clientCtx := s.testnet.Validators[0].ClientCtx
 	valAddr := s.testnet.Validators[0].Address.String()
 
-	testCases := []struct {
-		name           string
-		cmd            *cobra.Command
-		args           []string
-		expectedOutput string
-		expectErr      bool
-	}{
-		{
-			name:           "list asset classes (should be empty)",
-			cmd:            assetcli.GetCmdListAssetClasses(),
-			args:           []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			expectedOutput: "\"asset_classes\":[]",
-		},
-		{
-			name:           "list assets for valid address (should be empty)",
-			cmd:            assetcli.GetCmdListAssets(),
-			args:           []string{valAddr, fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			expectedOutput: "\"assets\":[]",
-		},
-		{
-			name:           "get class with invalid id",
-			cmd:            assetcli.GetCmdGetClass(),
-			args:           []string{"notaclassid", fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			expectedOutput: "",
-			expectErr:      true,
-		},
+	// Arrange: create classes and one asset to cover valid/empty states.
+	{
+		// Class with no assets.
+		args := []string{
+			"cli-class-empty",
+			"Empty Class",
+			"EMPTY",
+			"Class with no assets",
+			"https://example.com/empty",
+			"empty-hash",
+			"",
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
+			"--yes",
+			"--keyring-backend=test",
+		}
+		testcli.NewTxExecutor(assetcli.GetCmdCreateAssetClass(), args).
+			WithExpErr(false).
+			WithExpCode(0).
+			Execute(s.T(), s.testnet)
+	}
+	{
+		// Class with one asset owned by validator.
+		args := []string{
+			"cli-class-1",
+			"Test Class",
+			"TST",
+			"Class with one asset",
+			"https://example.com/class1",
+			"class1-hash",
+			"",
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
+			"--yes",
+			"--keyring-backend=test",
+		}
+		testcli.NewTxExecutor(assetcli.GetCmdCreateAssetClass(), args).
+			WithExpErr(false).
+			WithExpCode(0).
+			Execute(s.T(), s.testnet)
+
+		args = []string{
+			"cli-class-1",
+			"cli-asset-1",
+			"https://example.com/asset1",
+			"asset1-hash",
+			"",
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
+			"--yes",
+			"--keyring-backend=test",
+		}
+		testcli.NewTxExecutor(assetcli.GetCmdCreateAsset(), args).
+			WithExpErr(false).
+			WithExpCode(0).
+			Execute(s.T(), s.testnet)
 	}
 
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				if tc.expectedOutput != "" {
-					s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), strings.ReplaceAll(tc.expectedOutput, "\n", ""))
-				}
-			}
-		})
+	// Asset (single) — valid and invalid data.
+	{
+		// Valid: existing asset.
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAsset(), []string{"cli-class-1", "cli-asset-1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().NoError(err)
+		s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), "\"asset\":{\"class_id\":\"cli-class-1\",\"id\":\"cli-asset-1\"")
+
+		// Invalid: non-existent asset id.
+		_, err = clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAsset(), []string{"cli-class-1", "does-not-exist", fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().Error(err)
 	}
 
-	// TODO: Add more advanced query tests after creating assets/classes
+	// Assets (list) — valid and invalid data.
+	{
+		// Valid: address with assets.
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssets(), []string{valAddr, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().NoError(err)
+		s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), "\"id\":\"cli-asset-1\"")
+
+		// Valid: class-id and address with no assets.
+		out, err = clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssets(), []string{"cli-class-empty", valAddr, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().NoError(err)
+		s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), "\"assets\":[]")
+
+		// Invalid: address format.
+		_, err = clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssets(), []string{"cli-class-1", "badaddress", fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().Error(err)
+	}
+
+	// Class — valid and invalid data.
+	{
+		// Valid: class with asset.
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssetClass(), []string{"cli-class-1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().NoError(err)
+		s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), "\"class\":{\"id\":\"cli-class-1\"")
+
+		// Valid: class without assets.
+		out, err = clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssetClass(), []string{"cli-class-empty", fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().NoError(err)
+		s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), "\"class\":{\"id\":\"cli-class-empty\"")
+
+		// Invalid: non-existent class id.
+		_, err = clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssetClass(), []string{"does-not-exist", fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		s.Require().Error(err)
+	}
 }
 
 func (s *IntegrationTestSuite) TestAssetTxCommands() {

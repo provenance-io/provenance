@@ -10,29 +10,27 @@ import (
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
-// BaseRegistryKeeper defines the expected base registry keeper interface
+// BaseRegistryKeeper defines the expected base registry keeper interface.
 type BaseRegistryKeeper interface {
 	CreateDefaultRegistry(ctx sdk.Context, authorityAddr string, key *registrytypes.RegistryKey) error
 }
 
-// NFTKeeper defines the expected NFT keeper interface
+// NFTKeeper defines the expected NFT keeper interface.
 type NFTKeeper interface {
-	// SaveClass saves an NFT class
+	// SaveClass saves an NFT class.
 	SaveClass(ctx context.Context, class nft.Class) error
-	// HasClass checks if an NFT class exists
-	HasClass(ctx context.Context, classID string) bool
-	// GetClass returns an NFT class by ID
-	GetClass(ctx context.Context, classID string) (nft.Class, bool)
-	// GetClasses returns all NFT classes
-	GetClasses(ctx context.Context) []*nft.Class
-	// GetNFTsOfClass returns all NFTs of a class
-	GetNFTsOfClass(ctx context.Context, classID string) []nft.NFT
-	// GetOwner returns the owner of an NFT
-	GetOwner(ctx context.Context, classID, nftID string) sdk.AccAddress
-	// Mint mints an NFT
+	// Mint mints an NFT.
 	Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error
-	// GetNFT returns an NFT by class and ID
-	GetNFT(ctx context.Context, classID, nftID string) (nft.NFT, bool)
-	// Transfer transfers an NFT from one account to another
+	// Owner returns the owner of an NFT.
+	Owner(ctx context.Context, r *nft.QueryOwnerRequest) (*nft.QueryOwnerResponse, error)
+	// Transfer transfers an NFT from one account to another.
 	Transfer(ctx context.Context, classID, nftID string, receiver sdk.AccAddress) error
+	// NFTs queries NFTs with NFT module pagination logic.
+	NFTs(ctx context.Context, r *nft.QueryNFTsRequest) (*nft.QueryNFTsResponse, error)
+	// Classes queries classes with NFT module pagination logic.
+	Classes(ctx context.Context, r *nft.QueryClassesRequest) (*nft.QueryClassesResponse, error)
+	// Class queries a single class by id using NFT module query server.
+	Class(ctx context.Context, r *nft.QueryClassRequest) (*nft.QueryClassResponse, error)
+	// NFT queries a single NFT by class id and nft id using NFT module query server.
+	NFT(ctx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTResponse, error)
 }
