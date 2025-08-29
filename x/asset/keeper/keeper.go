@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/x/asset/types"
 )
@@ -15,6 +14,7 @@ import (
 type Keeper struct {
 	cdc            codec.BinaryCodec
 	router         baseapp.MessageRouter
+	moduleAccount  sdk.AccAddress
 	markerKeeper   types.MarkerKeeper
 	nftKeeper      types.NFTKeeper
 	registryKeeper types.BaseRegistryKeeper
@@ -24,6 +24,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	router baseapp.MessageRouter,
+	moduleAccount sdk.AccAddress,
 	markerKeeper types.MarkerKeeper,
 	nftKeeper types.NFTKeeper,
 	registryKeeper types.BaseRegistryKeeper,
@@ -39,6 +40,7 @@ func NewKeeper(
 	return Keeper{
 		cdc:            cdc,
 		router:         router,
+		moduleAccount:  moduleAccount,
 		markerKeeper:   markerKeeper,
 		nftKeeper:      nftKeeper,
 		registryKeeper: registryKeeper,
@@ -52,5 +54,5 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetModuleAddress returns the module account address
 func (k Keeper) GetModuleAddress() sdk.AccAddress {
-	return authtypes.NewModuleAddress(types.ModuleName)
+	return k.moduleAccount
 }

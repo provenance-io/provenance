@@ -615,7 +615,7 @@ func New(
 	app.LedgerKeeper = ledgerkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[ledger.StoreKey]), app.BankKeeper, app.RegistryKeeper)
 
 	app.AssetKeeper = assetkeeper.NewKeeper(
-		appCodec, app.BaseApp.MsgServiceRouter(), app.MarkerKeeper, app.NFTKeeper, app.RegistryKeeper,
+		appCodec, app.BaseApp.MsgServiceRouter(), authtypes.NewModuleAddress(assettypes.ModuleName), app.MarkerKeeper, app.NFTKeeper, app.RegistryKeeper,
 	)
 
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(

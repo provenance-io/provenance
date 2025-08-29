@@ -9,9 +9,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/asset/keeper"
+	assettypes "github.com/provenance-io/provenance/x/asset/types"
 )
 
 type KeeperTestSuite struct {
@@ -36,6 +38,7 @@ func (s *KeeperTestSuite) TestNewKeeper() {
 	k := keeper.NewKeeper(
 		s.app.AppCodec(),
 		s.app.BaseApp.MsgServiceRouter(),
+		authtypes.NewModuleAddress(assettypes.ModuleName),
 		s.app.MarkerKeeper,
 		s.app.NFTKeeper,
 		s.app.RegistryKeeper,
@@ -47,6 +50,7 @@ func (s *KeeperTestSuite) TestLogger() {
 	k := keeper.NewKeeper(
 		s.app.AppCodec(),
 		s.app.BaseApp.MsgServiceRouter(),
+		authtypes.NewModuleAddress(assettypes.ModuleName),
 		s.app.MarkerKeeper,
 		s.app.NFTKeeper,
 		s.app.RegistryKeeper,
@@ -59,6 +63,7 @@ func (s *KeeperTestSuite) TestGetModuleAddress() {
 	k := keeper.NewKeeper(
 		s.app.AppCodec(),
 		s.app.BaseApp.MsgServiceRouter(),
+		authtypes.NewModuleAddress(assettypes.ModuleName),
 		s.app.MarkerKeeper,
 		s.app.NFTKeeper,
 		s.app.RegistryKeeper,
