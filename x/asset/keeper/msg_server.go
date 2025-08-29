@@ -26,56 +26,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateAssetClass) (*types.MsgCreateAssetClassResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// Create NFT class from asset class
-	class := nft.Class{
-		Id:          msg.AssetClass.Id,
-		Name:        msg.AssetClass.Name,
-		Symbol:      msg.AssetClass.Symbol,
-		Description: msg.AssetClass.Description,
-		Uri:         msg.AssetClass.Uri,
-		UriHash:     msg.AssetClass.UriHash,
-	}
-
-	// If there's data, add it to the class
-	if msg.AssetClass.Data != "" {
-		// Convert string to Any type
-		strMsg := &wrapperspb.StringValue{Value: msg.AssetClass.Data}
-		anyMsg, err := cdctypes.NewAnyWithValue(strMsg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create Any from data: %w", err)
-		}
-		class.Data = anyMsg
-
-		// Validate the data is valid JSON schema
-		_, err = types.AnyToJSONSchema(m.cdc, anyMsg)
-		if err != nil {
-			return nil, fmt.Errorf("invalid data: %w", err)
-		}
-	}
-
-	// Save the NFT class
-	err := m.nftKeeper.SaveClass(ctx, class)
-	if err != nil {
-		return nil, fmt.Errorf("failed to save NFT class: %w", err)
-	}
-
-	// Emit event for asset class creation
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeAssetClassCreated,
-			sdk.NewAttribute(types.AttributeKeyAssetClassID, class.Id),
-			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
-			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
-		),
-	)
-
-	return &types.MsgCreateAssetClassResponse{}, nil
-}
-
+// CreateAsset creates a new asset. It creates an NFT and a default registry for the asset and validates the data against the class schema.
 func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset) (*types.MsgCreateAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -158,7 +109,58 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	return &types.MsgCreateAssetResponse{}, nil
 }
 
-// CreatePool creates a new pool marker
+// CreateAssetClass creates a new asset class. It creates an NFT class and validates the json schema data field.
+func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateAssetClass) (*types.MsgCreateAssetClassResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Create NFT class from asset class
+	class := nft.Class{
+		Id:          msg.AssetClass.Id,
+		Name:        msg.AssetClass.Name,
+		Symbol:      msg.AssetClass.Symbol,
+		Description: msg.AssetClass.Description,
+		Uri:         msg.AssetClass.Uri,
+		UriHash:     msg.AssetClass.UriHash,
+	}
+
+	// If there's data, add it to the class
+	if msg.AssetClass.Data != "" {
+		// Convert string to Any type
+		strMsg := &wrapperspb.StringValue{Value: msg.AssetClass.Data}
+		anyMsg, err := cdctypes.NewAnyWithValue(strMsg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Any from data: %w", err)
+		}
+		class.Data = anyMsg
+
+		// Validate the data is valid JSON schema
+		_, err = types.AnyToJSONSchema(m.cdc, anyMsg)
+		if err != nil {
+			return nil, fmt.Errorf("invalid data: %w", err)
+		}
+	}
+
+	// Save the NFT class
+	err := m.nftKeeper.SaveClass(ctx, class)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save NFT class: %w", err)
+	}
+
+	// Emit event for asset class creation
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAssetClassCreated,
+			sdk.NewAttribute(types.AttributeKeyAssetClassID, class.Id),
+			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
+			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
+		),
+	)
+
+	return &types.MsgCreateAssetClassResponse{}, nil
+}
+
+// CreatePool creates a new pool marker. It creates a marker for the pool and transfers the assets to the pool marker.
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	// Create the marker
 	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.Signer)
@@ -198,7 +200,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
-// CreateTokenization creates a new tokenization marker
+// CreateTokenization creates a new tokenization marker. It creates a marker for the tokenization and transfers the asset to the tokenization marker.
 func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
 	// Create the marker
 	marker, err := m.createMarker(goCtx, msg.Token, msg.Signer)
@@ -236,7 +238,7 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 	return &types.MsgCreateTokenizationResponse{}, nil
 }
 
-// CreateSecuritization creates a new securitization marker and tranches
+// CreateSecuritization creates a new securitization marker and tranches. It creates a marker for the securitization and tranches and transfers the assets to the securitization marker.
 func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCreateSecuritization) (*types.MsgCreateSecuritizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -310,11 +312,11 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	return &types.MsgCreateSecuritizationResponse{}, nil
 }
 
-// CreatePool creates a new pool marker
-func (m msgServer) createMarker(goCtx context.Context, denom sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
+// createMarker creates a new marker. It creates a marker for the token and address.
+func (m msgServer) createMarker(goCtx context.Context, token sdk.Coin, addr string) (*markertypes.MarkerAccount, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	marker, err := types.NewDefaultMarker(denom, fromAddr)
+	marker, err := types.NewDefaultMarker(token, addr)
 	if err != nil {
 		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to create marker: %w", err)
 	}
