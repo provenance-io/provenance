@@ -235,13 +235,9 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 	s.Require().NotNil(event, "EventPoolCreated should be emitted")
 
 	// Verify event attributes
-	poolDenomAttr := s.findAttributeByKey(event, types.AttributeKeyPoolDenom)
-	s.Require().NotNil(poolDenomAttr, "pool_denom attribute should be present")
-	s.Require().Equal("pooltoken", poolDenomAttr.Value)
-
-	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolAmount)
-	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
-	s.Require().Equal("1000", poolAmountAttr.Value)
+	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPool)
+	s.Require().NotNil(poolAmountAttr, "pool attribute should be present")
+	s.Require().Equal("1000pooltoken", poolAmountAttr.Value)
 
 	assetCountAttr := s.findAttributeByKey(event, types.AttributeKeyAssetCount)
 	s.Require().NotNil(assetCountAttr, "asset_count attribute should be present")
@@ -286,7 +282,7 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 
 	msg := &types.MsgCreateTokenization{
-		Denom: sdk.NewCoin("tokenization", sdkmath.NewInt(500)),
+		Token: sdk.NewCoin("tokenization", sdkmath.NewInt(500)),
 		Asset: &types.AssetKey{
 			ClassId: "asset-class-token",
 			Id:      "asset-token-1",
@@ -302,13 +298,9 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	s.Require().NotNil(event, "EventTokenizationCreated should be emitted")
 
 	// Verify event attributes
-	tokenizationDenomAttr := s.findAttributeByKey(event, types.AttributeKeyTokenizationDenom)
-	s.Require().NotNil(tokenizationDenomAttr, "tokenization_denom attribute should be present")
-	s.Require().Equal("tokenization", tokenizationDenomAttr.Value)
-
-	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolAmount)
-	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
-	s.Require().Equal("500", poolAmountAttr.Value)
+	tokenizationTokenAttr := s.findAttributeByKey(event, types.AttributeKeyTokenization)
+	s.Require().NotNil(tokenizationTokenAttr, "tokenization_token attribute should be present")
+	s.Require().Equal("500tokenization", tokenizationTokenAttr.Value)
 
 	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")

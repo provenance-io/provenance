@@ -182,7 +182,7 @@ func GetCmdCreateTokenization() *cobra.Command {
 			}
 
 			msg := &types.MsgCreateTokenization{
-				Denom:  coin,
+				Token:  coin,
 				Asset:  asset,
 				Signer: clientCtx.GetFromAddress().String(),
 			}

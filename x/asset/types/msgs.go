@@ -119,8 +119,8 @@ func (msg MsgCreatePool) ValidateBasic() error {
 
 // ValidateBasic implements Msg
 func (msg MsgCreateTokenization) ValidateBasic() error {
-	if err := msg.Denom.Validate(); err != nil {
-		return fmt.Errorf("invalid denom: %w", err)
+	if err := msg.Token.Validate(); err != nil {
+		return fmt.Errorf("invalid token: %w", err)
 	}
 
 	if msg.Asset == nil {

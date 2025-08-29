@@ -189,8 +189,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypePoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolDenom, msg.Pool.Denom),
-			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Pool.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyPool, msg.Pool.String()),
 			sdk.NewAttribute(types.AttributeKeyAssetCount, fmt.Sprintf("%d", len(msg.Assets))),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
 		),
@@ -202,7 +201,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 // CreateTokenization creates a new tokenization marker
 func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
 	// Create the marker
-	marker, err := m.createMarker(goCtx, msg.Denom, msg.Signer)
+	marker, err := m.createMarker(goCtx, msg.Token, msg.Signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tokenization marker: %w", err)
 	}
@@ -227,8 +226,7 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTokenizationCreated,
-			sdk.NewAttribute(types.AttributeKeyTokenizationDenom, msg.Denom.Denom),
-			sdk.NewAttribute(types.AttributeKeyPoolAmount, msg.Denom.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyTokenization, msg.Token.String()),
 			sdk.NewAttribute(types.AttributeKeyAssetClassID, msg.Asset.ClassId),
 			sdk.NewAttribute(types.AttributeKeyAssetID, msg.Asset.Id),
 			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),

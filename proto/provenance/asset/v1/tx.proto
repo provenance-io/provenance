@@ -73,8 +73,8 @@ message MsgCreatePoolResponse {}
 message MsgCreateTokenization {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // denom defines the denomination for the tokenization.
-  cosmos.base.v1beta1.Coin denom = 1 [(gogoproto.nullable) = false];
+  // token defines the new token supply and symbol.
+  cosmos.base.v1beta1.Coin token = 1 [(gogoproto.nullable) = false];
   // asset defines the asset by key to be tokenized.
   AssetKey asset = 2;
   // signer defines the address of the message sender.

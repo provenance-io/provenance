@@ -12122,7 +12122,7 @@ MsgCreateTokenization is the message type for creating a new tokenization.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | denom defines the denomination for the tokenization. |
+| `token` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | token defines the new token supply and symbol. |
 | `asset` | [AssetKey](#provenance-asset-v1-AssetKey) |  | asset defines the asset by key to be tokenized. |
 | `signer` | [string](#string) |  | signer defines the address of the message sender. |
 

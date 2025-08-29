@@ -238,7 +238,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -253,7 +253,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid denom",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -268,7 +268,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 		{
 			name: "nil asset",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -280,7 +280,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 		{
 			name: "empty asset class_id",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -295,7 +295,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 		{
 			name: "empty asset id",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -310,7 +310,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 		{
 			name: "empty signer",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
