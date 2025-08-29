@@ -8,7 +8,6 @@ import (
 // NewDecodeStore returns a new store decoder for the asset state.
 func NewDecodeStore(_ codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(_, _ kv.Pair) string {
-		// TODO write NewDecodeStore
-		return "not implemented"
+		return "asset module uses NFT module storage"
 	}
 }
