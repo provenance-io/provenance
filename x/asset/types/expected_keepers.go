@@ -7,12 +7,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
-// BaseRegistryKeeper defines the expected base registry keeper interface.
-type BaseRegistryKeeper interface {
-	CreateDefaultRegistry(ctx sdk.Context, authorityAddr string, key *registrytypes.RegistryKey) error
+// MarkerKeeper defines the expected marker keeper interface.
+type MarkerKeeper interface {
+	AddFinalizeAndActivateMarker(ctx sdk.Context, marker markertypes.MarkerAccountI) error
+	GetMarkerByDenom(ctx sdk.Context, denom string) (markertypes.MarkerAccountI, error)
+	SetMarker(ctx sdk.Context, marker markertypes.MarkerAccountI)
 }
 
 // NFTKeeper defines the expected NFT keeper interface.
@@ -33,4 +36,9 @@ type NFTKeeper interface {
 	Class(ctx context.Context, r *nft.QueryClassRequest) (*nft.QueryClassResponse, error)
 	// NFT queries a single NFT by class id and nft id using NFT module query server.
 	NFT(ctx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTResponse, error)
+}
+
+// BaseRegistryKeeper defines the expected base registry keeper interface.
+type BaseRegistryKeeper interface {
+	CreateDefaultRegistry(ctx sdk.Context, authorityAddr string, key *registrytypes.RegistryKey) error
 }
