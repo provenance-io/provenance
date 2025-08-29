@@ -2,7 +2,6 @@ package types
 
 import (
 	"strconv"
-	"strings"
 
 	"cosmossdk.io/math"
 
@@ -162,7 +161,7 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("correlation_id", &m.CorrelationId, 1, 50); err != nil {
+	if err := lenCheck("correlation_id", m.CorrelationId, 1, 50); err != nil {
 		return err
 	}
 
@@ -250,7 +249,7 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("ledger_class_id", &m.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, 50); err != nil {
 		return err
 	}
 
@@ -271,7 +270,7 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("ledger_class_id", &m.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, 50); err != nil {
 		return err
 	}
 
@@ -292,7 +291,7 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("ledger_class_id", &m.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, 50); err != nil {
 		return err
 	}
 
@@ -337,25 +336,20 @@ func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*LedgerBucketAmoun
 	return nil
 }
 
-// lenCheck checks if the string is nil or empty and if it is, returns a missing field error.
-// It also checks if the string is less than the minimum length or greater than the maximum length and returns an invalid field error.
-func lenCheck(field string, s *string, minLength int, maxLength int) error {
-	if s == nil {
+// lenCheck returns an error if the provided str is shorter or longer than the provided bounds.
+// If minLength > 0 and str is empty, a missing field error is returned. Otherwise, if str
+// is shorter than minLength or longer than maxLength, an invalid field error is returned.
+func lenCheck(field string, str string, minLength int, maxLength int) error {
+	// Empty string check only if there's a min length.
+	if minLength > 0 && str == "" {
 		return NewErrCodeMissingField(field)
 	}
 
-	trimmed := strings.TrimSpace(*s)
-
-	// empty string
-	if trimmed == "" {
-		return NewErrCodeMissingField(field)
-	}
-
-	if len(trimmed) < minLength {
+	if len(str) < minLength {
 		return NewErrCodeInvalidField(field, "must be greater than or equal to "+strconv.Itoa(minLength)+" characters")
 	}
 
-	if len(trimmed) > maxLength {
+	if len(str) > maxLength {
 		return NewErrCodeInvalidField(field, "must be less than or equal to "+strconv.Itoa(maxLength)+" characters")
 	}
 
