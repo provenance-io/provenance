@@ -73,6 +73,8 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"bouvardia": { // Upgrade for v1.26.0.
+		Added:   []string{flatfeestypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey},
+		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
