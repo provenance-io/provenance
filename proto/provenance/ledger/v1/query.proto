@@ -59,9 +59,9 @@ service Query {
     option (google.api.http).get = "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements";
   }
 
-  // LedgerSettlementsByCorrelationId returns settlements by correlation id
-  rpc LedgerSettlementsByCorrelationId(QueryLedgerSettlementsByCorrelationIdRequest)
-      returns (QueryLedgerSettlementsByCorrelationIdResponse) {
+  // LedgerSettlementsByCorrelationID returns settlements by correlation id
+  rpc LedgerSettlementsByCorrelationID(QueryLedgerSettlementsByCorrelationIDRequest)
+      returns (QueryLedgerSettlementsByCorrelationIDResponse) {
     option (google.api.http).get =
         "/provenance/ledger/v1/ledger/{key.asset_class_id}/{key.nft_id}/settlements/{correlation_id}";
   }
@@ -168,14 +168,14 @@ message QueryLedgerSettlementsResponse {
   repeated StoredSettlementInstructions settlements = 1;
 }
 
-// QueryLedgerSettlementsByCorrelationIdRequest
-message QueryLedgerSettlementsByCorrelationIdRequest {
+// QueryLedgerSettlementsByCorrelationIDRequest
+message QueryLedgerSettlementsByCorrelationIDRequest {
   LedgerKey key = 1;
   // The correlation ID to query settlements for.
   string correlation_id = 2;
 }
 
-// QueryLedgerSettlementsByCorrelationIdResponse
-message QueryLedgerSettlementsByCorrelationIdResponse {
+// QueryLedgerSettlementsByCorrelationIDResponse
+message QueryLedgerSettlementsByCorrelationIDResponse {
   StoredSettlementInstructions settlements = 1;
 }

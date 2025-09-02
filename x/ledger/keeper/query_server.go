@@ -164,7 +164,7 @@ func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *types.Qu
 	}, nil
 }
 
-func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context, req *types.QueryLedgerSettlementsByCorrelationIdRequest) (*types.QueryLedgerSettlementsByCorrelationIdResponse, error) {
+func (qs LedgerQueryServer) LedgerSettlementsByCorrelationID(ctx context.Context, req *types.QueryLedgerSettlementsByCorrelationIDRequest) (*types.QueryLedgerSettlementsByCorrelationIDResponse, error) {
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
@@ -173,7 +173,7 @@ func (qs LedgerQueryServer) LedgerSettlementsByCorrelationId(ctx context.Context
 		return nil, err
 	}
 
-	return &types.QueryLedgerSettlementsByCorrelationIdResponse{
+	return &types.QueryLedgerSettlementsByCorrelationIDResponse{
 		Settlements: settlements,
 	}, nil
 }

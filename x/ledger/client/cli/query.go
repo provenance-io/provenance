@@ -485,7 +485,7 @@ func GetSettlementsByCorrelationIDCmd() *cobra.Command {
 			correlationID := args[2]
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			res, err := queryClient.LedgerSettlementsByCorrelationId(cmd.Context(), &ledger.QueryLedgerSettlementsByCorrelationIdRequest{
+			res, err := queryClient.LedgerSettlementsByCorrelationID(cmd.Context(), &ledger.QueryLedgerSettlementsByCorrelationIDRequest{
 				Key: &ledger.LedgerKey{
 					AssetClassId: assetClassID,
 					NftId:        nftID,

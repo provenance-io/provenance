@@ -145,11 +145,11 @@ message QueryLedgerSettlementsResponse {
 Retrieves settlements by correlation ID:
 
 ```protobuf
-message QueryLedgerSettlementsByCorrelationIdRequest {
+message QueryLedgerSettlementsByCorrelationIDRequest {
     string correlation_id = 1;
 }
 
-message QueryLedgerSettlementsByCorrelationIdResponse {
+message QueryLedgerSettlementsByCorrelationIDResponse {
     repeated StoredSettlementInstructions settlements = 1;
 }
 ```
