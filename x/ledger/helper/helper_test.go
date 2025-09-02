@@ -99,7 +99,7 @@ func TestDaysSinceEpoch(t *testing.T) {
 		},
 		{
 			name: "non-utc with 03:59:59",
-			date: time.Date(2025, 6, 9, 3, 59, 0, 0, nonUTCLocation),
+			date: time.Date(2025, 6, 9, 3, 59, 59, 0, nonUTCLocation),
 			exp:  20247,
 		},
 		{
