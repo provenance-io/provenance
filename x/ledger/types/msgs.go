@@ -74,12 +74,12 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100000000 (0-1000%)")
 	}
 
-	if _, ok := DayCountConvention_name[int32(m.InterestDayCountConvention)]; !ok {
-		return NewErrCodeInvalidField("interest_day_count_convention", "invalid interest day count convention")
+	if err := m.InterestDayCountConvention.Validate(); err != nil {
+		return ErrInvalidField.Wrap(err.Error())
 	}
 
-	if _, ok := InterestAccrualMethod_name[int32(m.InterestAccrualMethod)]; !ok {
-		return NewErrCodeInvalidField("interest_accrual_method", "invalid interest accrual method")
+	if err := m.InterestAccrualMethod.Validate(); err != nil {
+		return ErrInvalidField.Wrap(err.Error())
 	}
 
 	return nil

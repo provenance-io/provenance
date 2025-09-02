@@ -50,3 +50,18 @@ func (si *SettlementInstruction) Validate() error {
 
 	return nil
 }
+
+// UnmarshalJSON implements json.Unmarshaler for FundingTransferStatus.
+func (s *FundingTransferStatus) UnmarshalJSON(data []byte) error {
+	value, err := enumUnmarshalJSON(data, FundingTransferStatus_value, FundingTransferStatus_name)
+	if err != nil {
+		return err
+	}
+	*s = FundingTransferStatus(value)
+	return nil
+}
+
+// Validate returns an error if this FundingTransferStatus isn't a defined enum entry.
+func (s FundingTransferStatus) Validate() error {
+	return enumValidateExists(s, FundingTransferStatus_name)
+}

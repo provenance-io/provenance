@@ -228,16 +228,16 @@ func (l *Ledger) Validate() error {
 		return NewErrCodeInvalidField("maturity_date", "must be after 1970-01-01")
 	}
 
-	if _, ok := DayCountConvention_name[int32(l.InterestDayCountConvention)]; !ok {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest day count convention: %d", l.InterestDayCountConvention)
+	if err := l.InterestDayCountConvention.Validate(); err != nil {
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if _, ok := InterestAccrualMethod_name[int32(l.InterestAccrualMethod)]; !ok {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid interest accrual method: %d", l.InterestAccrualMethod)
+	if err := l.InterestAccrualMethod.Validate(); err != nil {
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if _, ok := PaymentFrequency_name[int32(l.PaymentFrequency)]; !ok {
-		return sdkerrors.ErrInvalidRequest.Wrapf("invalid payment frequency: %d", l.PaymentFrequency)
+	if err := l.PaymentFrequency.Validate(); err != nil {
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	return nil
@@ -359,4 +359,49 @@ func (lte *LedgerToEntries) Validate() error {
 	}
 
 	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler for DayCount.
+func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
+	value, err := enumUnmarshalJSON(data, DayCountConvention_value, DayCountConvention_name)
+	if err != nil {
+		return err
+	}
+	*d = DayCountConvention(value)
+	return nil
+}
+
+// Validate returns an error if this DayCountConvention isn't a defined enum entry.
+func (d DayCountConvention) Validate() error {
+	return enumValidateExists(d, DayCountConvention_name)
+}
+
+// UnmarshalJSON implements json.Unmarshaler for InterestAccrual.
+func (i *InterestAccrualMethod) UnmarshalJSON(data []byte) error {
+	value, err := enumUnmarshalJSON(data, InterestAccrualMethod_value, InterestAccrualMethod_name)
+	if err != nil {
+		return err
+	}
+	*i = InterestAccrualMethod(value)
+	return nil
+}
+
+// Validate returns an error if this InterestAccrualMethod isn't a defined enum entry.
+func (i InterestAccrualMethod) Validate() error {
+	return enumValidateExists(i, InterestAccrualMethod_name)
+}
+
+// UnmarshalJSON implements json.Unmarshaler for PaymentFrequency.
+func (p *PaymentFrequency) UnmarshalJSON(data []byte) error {
+	value, err := enumUnmarshalJSON(data, PaymentFrequency_value, PaymentFrequency_name)
+	if err != nil {
+		return err
+	}
+	*p = PaymentFrequency(value)
+	return nil
+}
+
+// Validate returns an error if this PaymentFrequency isn't a defined enum entry.
+func (p PaymentFrequency) Validate() error {
+	return enumValidateExists(p, PaymentFrequency_name)
 }

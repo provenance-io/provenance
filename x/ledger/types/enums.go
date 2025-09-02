@@ -6,89 +6,44 @@ import (
 	"strings"
 )
 
-// UnmarshalJSON implements json.Unmarshaler for DayCount
-func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
+// enumUnmarshalJSON unmarshals an enum entry from either a JSON string or number.
+// As a string, the name prefix is optional. I.e. "PAYMENT_FREQUENCY_DAILY" can be provided as just "DAILY".
+// It is not an error to get the _UNSPECIFIED value.
+func enumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]string) (int32, error) {
+	var namePrefix string
 	// Try to unmarshal as string first
 	var str string
 	if err := json.Unmarshal(data, &str); err == nil {
 		// Convert string to enum value
 		str = strings.ToUpper(str)
-		if value, exists := DayCountConvention_value[str]; exists {
-			*d = DayCountConvention(value)
-			return nil
+		if value, exists := values[str]; exists {
+			return value, nil
 		}
-		// Try without DAY_COUNT_ prefix
-		if value, exists := DayCountConvention_value["DAY_COUNT_"+str]; exists {
-			*d = DayCountConvention(value)
-			return nil
+		namePrefix = strings.TrimSuffix(names[0], "UNSPECIFIED") // E.g. DAY_COUNT_CONVENTION_
+		// Try without enum prefix
+		if value, exists := values[namePrefix+str]; exists {
+			return value, nil
 		}
-		return fmt.Errorf("unknown DayCount string value: %s", str)
+		return 0, fmt.Errorf("unknown %s string value: %s", strings.ToLower(strings.TrimSuffix(namePrefix, "_")), str)
 	}
 
 	// Try to unmarshal as integer
 	var num int32
 	if err := json.Unmarshal(data, &num); err == nil {
-		*d = DayCountConvention(num)
-		return nil
+		if _, exists := names[num]; exists {
+			return num, nil
+		}
+		return 0, fmt.Errorf("unknown %s integer value: %d", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), num)
 	}
 
-	return fmt.Errorf("DayCount must be a string or integer, got: %s", string(data))
+	return 0, fmt.Errorf("%s must be a string or integer, got: %s", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), string(data))
 }
 
-// UnmarshalJSON implements json.Unmarshaler for InterestAccrual
-func (i *InterestAccrualMethod) UnmarshalJSON(data []byte) error {
-	// Try to unmarshal as string first
-	var str string
-	if err := json.Unmarshal(data, &str); err == nil {
-		// Convert string to enum value
-		str = strings.ToUpper(str)
-		if value, exists := InterestAccrualMethod_value[str]; exists {
-			*i = InterestAccrualMethod(value)
-			return nil
-		}
-		// Try without INTEREST_ACCRUAL_ prefix
-		if value, exists := InterestAccrualMethod_value["INTEREST_ACCRUAL_"+str]; exists {
-			*i = InterestAccrualMethod(value)
-			return nil
-		}
-		return fmt.Errorf("unknown InterestAccrual string value: %s", str)
+// enumValidateExists returns an error if the provided value is not contained in the provided names map.
+// It does NOT return an error on the zero (_UNSPECIFIED) value.
+func enumValidateExists[E ~int32](value E, names map[int32]string) error {
+	if _, exists := names[int32(value)]; !exists {
+		return fmt.Errorf("unknown %s enum value: %d", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), value)
 	}
-
-	// Try to unmarshal as integer
-	var num int32
-	if err := json.Unmarshal(data, &num); err == nil {
-		*i = InterestAccrualMethod(num)
-		return nil
-	}
-
-	return fmt.Errorf("InterestAccrual must be a string or integer, got: %s", string(data))
-}
-
-// UnmarshalJSON implements json.Unmarshaler for PaymentFrequency
-func (p *PaymentFrequency) UnmarshalJSON(data []byte) error {
-	// Try to unmarshal as string first
-	var str string
-	if err := json.Unmarshal(data, &str); err == nil {
-		// Convert string to enum value
-		str = strings.ToUpper(str)
-		if value, exists := PaymentFrequency_value[str]; exists {
-			*p = PaymentFrequency(value)
-			return nil
-		}
-		// Try without LEDGER_PAYMENT_FREQUENCY_ prefix
-		if value, exists := PaymentFrequency_value["LEDGER_PAYMENT_FREQUENCY_"+str]; exists {
-			*p = PaymentFrequency(value)
-			return nil
-		}
-		return fmt.Errorf("unknown PaymentFrequency string value: %s", str)
-	}
-
-	// Try to unmarshal as integer
-	var num int32
-	if err := json.Unmarshal(data, &num); err == nil {
-		*p = PaymentFrequency(num)
-		return nil
-	}
-
-	return fmt.Errorf("PaymentFrequency must be a string or integer, got: %s", string(data))
+	return nil
 }
