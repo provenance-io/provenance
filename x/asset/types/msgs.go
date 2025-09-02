@@ -55,7 +55,7 @@ func (msg MsgCreateAssetClass) ValidateBasic() error {
 
 	if err := validateJSONSchema(msg.AssetClass.Data); err != nil {
 		return fmt.Errorf("invalid data: %w", err)
-}
+	}
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return fmt.Errorf("invalid signer: %w", err)
 	}

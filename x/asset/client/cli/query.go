@@ -35,7 +35,6 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdAsset returns the command for getting an asset.
 func GetCmdAsset() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:     "asset [class-id] [asset-id]",
 		Short:   "Get an asset by class id and asset id",

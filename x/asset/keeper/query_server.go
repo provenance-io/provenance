@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	nfttypes "cosmossdk.io/x/nft"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	nfttypes "cosmossdk.io/x/nft"
 	"github.com/provenance-io/provenance/x/asset/types"
 )
 
