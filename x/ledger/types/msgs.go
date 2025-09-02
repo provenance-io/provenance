@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strconv"
 
 	"cosmossdk.io/math"
@@ -30,7 +31,7 @@ var AllRequestMsgs = []sdk.Msg{
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateRequest
 func (m MsgCreateRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -43,7 +44,7 @@ func (m MsgCreateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateStatusRequest
 func (m MsgUpdateStatusRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -60,7 +61,7 @@ func (m MsgUpdateStatusRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateInterestRateRequest
 func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -86,7 +87,7 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdatePaymentRequest
 func (m MsgUpdatePaymentRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -113,7 +114,7 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateMaturityDateRequest
 func (m MsgUpdateMaturityDateRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -130,7 +131,7 @@ func (m MsgUpdateMaturityDateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAppendRequest
 func (m MsgAppendRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -153,7 +154,7 @@ func (m MsgAppendRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateBalancesRequest
 func (m MsgUpdateBalancesRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -194,7 +195,7 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgTransferFundsWithSettlementRequest
 func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -213,7 +214,7 @@ func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgDestroyRequest
 func (m MsgDestroyRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -226,7 +227,7 @@ func (m MsgDestroyRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateLedgerClassRequest
 func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -245,7 +246,7 @@ func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassStatusTypeRequest
 func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -266,7 +267,7 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassEntryTypeRequest
 func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -287,7 +288,7 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassBucketTypeRequest
 func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -308,7 +309,7 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgBulkCreateRequest
 func (m MsgBulkCreateRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}
 
@@ -353,5 +354,20 @@ func lenCheck(field string, str string, minLength int, maxLength int) error {
 		return NewErrCodeInvalidField(field, "must be less than or equal to "+strconv.Itoa(maxLength)+" characters")
 	}
 
+	return nil
+}
+
+// validateAccAddress returns an error if the provided addr string isn't a valid bech32 address string.
+// The field is used in the content of the error.
+func validateAccAddress(field, addr string) error {
+	// Length check first so we can give it a missing field error.
+	if len(addr) == 0 {
+		return NewErrCodeMissingField(field)
+	}
+	// Now make sure it has the right format for an invalid field error.
+	_, err := sdk.AccAddressFromBech32(addr)
+	if err != nil {
+		return NewErrCodeInvalidField(field, fmt.Sprintf("invalid acc address: %v", err))
+	}
 	return nil
 }

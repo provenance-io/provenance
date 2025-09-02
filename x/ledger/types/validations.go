@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -122,7 +120,7 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	// Validate amounts are non-negative
-	if le.TotalAmt.IsNegative() {
+	if le.TotalAmt.IsNil() || le.TotalAmt.IsNegative() {
 		return NewErrCodeInvalidField("total_amt", "must be a non-negative integer")
 	}
 
@@ -176,8 +174,8 @@ func (lc *LedgerClass) Validate() error {
 		return NewErrCodeInvalidField("denom", fmt.Sprintf("must be a valid coin denomination: %v", err))
 	}
 
-	if _, err := sdk.AccAddressFromBech32(lc.MaintainerAddress); err != nil {
-		return NewErrCodeInvalidField("maintainer_address", "must be a valid bech32 address")
+	if err := validateAccAddress("maintainer_address", lc.MaintainerAddress); err != nil {
+		return err
 	}
 
 	return nil
@@ -261,28 +259,20 @@ func (ft *FundTransferWithSettlement) Validate() error {
 
 // Validate validates the SettlementInstruction type
 func (si *SettlementInstruction) Validate() error {
+	if err := si.Amount.Validate(); err != nil {
+		return NewErrCodeInvalidField("amount", err.Error())
+	}
 	if si.Amount.IsNegative() {
 		return NewErrCodeInvalidField("amount", "must be a non-negative integer")
 	}
 
-	// Validate amount has reasonable bounds
-	if si.Amount.Amount.GT(math.NewInt(1000000000000000)) { // 1 quadrillion as reasonable max
-		return NewErrCodeInvalidField("amount", "amount too large")
-	}
-
-	if si.Memo != "" {
-		if len(si.Memo) > 50 {
-			return NewErrCodeInvalidField("memo", "must be less than 50 characters")
-		}
-	}
-
-	if si.RecipientAddress == "" {
-		return NewErrCodeMissingField("recipient_address")
+	if err := lenCheck("memo", si.Memo, 0, 50); err != nil {
+		return err
 	}
 
 	// Validate recipient address format
-	if _, err := sdk.AccAddressFromBech32(si.RecipientAddress); err != nil {
-		return NewErrCodeInvalidField("recipient_address", "must be a valid bech32 address")
+	if err := validateAccAddress("recipient_address", si.RecipientAddress); err != nil {
+		return err
 	}
 
 	// Validate status enum
@@ -299,7 +289,7 @@ func (lba *LedgerBucketAmount) Validate() error {
 		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
 	}
 
-	if lba.AppliedAmt.LT(math.NewInt(0)) {
+	if lba.AppliedAmt.IsNil() || lba.AppliedAmt.IsNegative() {
 		return NewErrCodeInvalidField("applied_amt", "must be a non-negative integer")
 	}
 
@@ -312,7 +302,7 @@ func (bb *BucketBalance) Validate() error {
 		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
 	}
 
-	if bb.BalanceAmt.LT(math.NewInt(0)) {
+	if bb.BalanceAmt.IsNil() || bb.BalanceAmt.IsNegative() {
 		return NewErrCodeInvalidField("balance_amt", "must be a non-negative integer")
 	}
 
@@ -323,6 +313,10 @@ func (bb *BucketBalance) Validate() error {
 func (lte *LedgerToEntries) Validate() error {
 	if err := lte.LedgerKey.Validate(); err != nil {
 		return err
+	}
+
+	if err := lte.Ledger.Validate(); err != nil {
+		return NewErrCodeInvalidField("ledger", err.Error())
 	}
 
 	if len(lte.Entries) == 0 {
