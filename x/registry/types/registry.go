@@ -1,7 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
 	"strconv"
 	"strings"
 
@@ -13,17 +12,31 @@ const (
 	registryKeyHrp = "reg"
 )
 
+// Combine the asset class id and nft id into a bech32 string.
+// Using bech32 here just allows us a readable identifier for the ledger.
+func (m RegistryKey) String() string {
+	// Use null byte as delimiter
+	joined := m.AssetClassId + "\x00" + m.NftId
+
+	b32, err := bech32.ConvertAndEncode(registryKeyHrp, []byte(joined))
+	if err != nil {
+		panic(err)
+	}
+
+	return b32
+}
+
 // Validate validates the RegistryKey
 func (m *RegistryKey) Validate() error {
 	if m == nil {
 		return NewErrCodeInvalidField("registry key", "registry key cannot be nil")
 	}
 
-	if err := lenCheck("nft_id", &m.NftId, 1, 128); err != nil {
+	if err := lenCheck("nft_id", m.NftId, 1, 128); err != nil {
 		return err
 	}
 
-	if err := lenCheck("asset_class_id", &m.AssetClassId, 1, 128); err != nil {
+	if err := lenCheck("asset_class_id", m.AssetClassId, 1, 128); err != nil {
 		return err
 	}
 
@@ -160,62 +173,19 @@ func (m *RegistryBulkUpdateEntry) Validate() error {
 	return nil
 }
 
-// Combine the asset class id and nft id into a bech32 string.
-// Using bech32 here just allows us a readable identifier for the ledger.
-func (rk RegistryKey) String() string {
-	// Use null byte as delimiter
-	joined := rk.AssetClassId + "\x00" + rk.NftId
-
-	b32, err := bech32.ConvertAndEncode(registryKeyHrp, []byte(joined))
-	if err != nil {
-		panic(err)
-	}
-
-	return b32
-}
-
-// Convert a bech32 string to a LedgerKey.
-func StringToRegistryKey(s string) (*RegistryKey, error) {
-	hrp, b, err := bech32.DecodeAndConvert(s)
-	if err != nil {
-		return nil, err
-	}
-
-	if hrp != registryKeyHrp {
-		return nil, fmt.Errorf("invalid hrp: %s", hrp)
-	}
-
-	// Split by null byte delimiter
-	parts := strings.Split(string(b), "\x00")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid key: %s", s)
-	}
-
-	return &RegistryKey{
-		AssetClassId: parts[0],
-		NftId:        parts[1],
-	}, nil
-}
-
 // lenCheck checks if the string is nil or empty and if it is, returns a missing field error.
 // It also checks if the string is less than the minimum length or greater than the maximum length and returns an invalid field error.
-func lenCheck(field string, s *string, minLength int, maxLength int) error {
-	if s == nil {
-		return NewErrCodeInvalidField(field, "value cannot be nil")
-	}
-
-	trimmed := strings.TrimSpace(*s)
-
+func lenCheck(field string, str string, minLength int, maxLength int) error {
 	// empty string
-	if trimmed == "" {
+	if minLength > 0 && str == "" {
 		return NewErrCodeInvalidField(field, "value cannot be empty")
 	}
 
-	if len(trimmed) < minLength {
+	if len(str) < minLength {
 		return NewErrCodeInvalidField(field, "must be greater than or equal to "+strconv.Itoa(minLength)+" characters")
 	}
 
-	if len(trimmed) > maxLength {
+	if len(str) > maxLength {
 		return NewErrCodeInvalidField(field, "must be less than or equal to "+strconv.Itoa(maxLength)+" characters")
 	}
 
