@@ -58,8 +58,8 @@ func GetCmdCreateAsset() *cobra.Command {
 			}
 
 			msg := &types.MsgCreateAsset{
-				Asset:       asset,
-				FromAddress: clientCtx.GetFromAddress().String(),
+				Asset:  asset,
+				Signer: clientCtx.GetFromAddress().String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -95,8 +95,8 @@ func GetCmdCreateAssetClass() *cobra.Command {
 			}
 
 			msg := &types.MsgCreateAssetClass{
-				AssetClass:  assetClass,
-				FromAddress: clientCtx.GetFromAddress().String(),
+				AssetClass: assetClass,
+				Signer:     clientCtx.GetFromAddress().String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -144,9 +144,9 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 			}
 
 			msg := &types.MsgCreatePool{
-				Pool:        &pool,
-				Assets:      assets,
-				FromAddress: clientCtx.GetFromAddress().String(),
+				Pool:   &pool,
+				Assets: assets,
+				Signer: clientCtx.GetFromAddress().String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -182,9 +182,9 @@ func GetCmdCreateTokenization() *cobra.Command {
 			}
 
 			msg := &types.MsgCreateTokenization{
-				Denom:       coin,
-				Asset:       asset,
-				FromAddress: clientCtx.GetFromAddress().String(),
+				Token:  coin,
+				Asset:  asset,
+				Signer: clientCtx.GetFromAddress().String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -231,10 +231,10 @@ The tranches argument should be a comma-separated list of coins.`,
 			}
 
 			msg := &types.MsgCreateSecuritization{
-				Id:          args[0],
-				Pools:       pools,
-				Tranches:    tranches,
-				FromAddress: clientCtx.GetFromAddress().String(),
+				Id:       args[0],
+				Pools:    pools,
+				Tranches: tranches,
+				Signer:   clientCtx.GetFromAddress().String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

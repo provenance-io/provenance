@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 
+	nfttypes "cosmossdk.io/x/nft"
 	"github.com/provenance-io/provenance/x/asset/types"
 )
 
@@ -19,185 +19,79 @@ func NewQueryServerImpl(keeper Keeper) types.QueryServer {
 	return &queryServer{Keeper: keeper}
 }
 
-// ListAssets implements the Query/ListAssets RPC method
-func (q queryServer) ListAssets(ctx context.Context, req *types.QueryListAssets) (*types.QueryListAssetsResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// Convert the address string to an sdk.AccAddress
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+// Asset queries for a specified asset by its class ID and asset ID.
+func (q queryServer) Asset(ctx context.Context, req *types.QueryAssetRequest) (*types.QueryAssetResponse, error) {
+	nftResp, err := q.nftKeeper.NFT(ctx, &nfttypes.QueryNFTRequest{ClassId: req.ClassId, Id: req.Id})
 	if err != nil {
-		return nil, fmt.Errorf("invalid address: %w", err)
+		return nil, err
 	}
-
-	// Get pagination from request
-	var pagination *query.PageRequest
-	if req != nil {
-		pagination = req.Pagination
-	}
-
-	// Get all NFT classes first
-	classes := q.nftKeeper.GetClasses(sdkCtx)
-
-	resp := &types.QueryListAssetsResponse{}
-	var allAssets []*types.Asset
-	var totalCount uint64
-
-	// Collect all assets owned by the address
-	for _, class := range classes {
-		nfts := q.nftKeeper.GetNFTsOfClass(sdkCtx, class.Id)
-
-		for _, nft := range nfts {
-			owner := q.nftKeeper.GetOwner(sdkCtx, class.Id, nft.Id)
-			if !owner.Equals(addr) {
-				continue // Skip NFTs not owned by the address
-			}
-
-			totalCount++
-
-			// Convert NFT to Asset
-			asset := &types.Asset{
-				ClassId: nft.ClassId,
-				Id:      nft.Id,
-				Uri:     nft.Uri,
-				UriHash: nft.UriHash,
-			}
-
-			// If there's data, convert it to string
-			if nft.Data != nil {
-				strValue, err := types.AnyToString(q.cdc, nft.Data)
-				if err == nil {
-					asset.Data = strValue
-				} else {
-					continue // Skip NFTs with invalid data
-				}
-			}
-
-			allAssets = append(allAssets, asset)
+	n := nftResp.Nft
+	asset := &types.Asset{ClassId: n.ClassId, Id: n.Id, Uri: n.Uri, UriHash: n.UriHash}
+	if n.Data != nil {
+		if strValue, err := types.AnyToString(q.cdc, n.Data); err == nil {
+			asset.Data = strValue
 		}
 	}
-
-	// Apply pagination
-	if pagination != nil {
-		start := pagination.Offset
-		end := start + pagination.Limit
-
-		if start >= uint64(len(allAssets)) {
-			start = uint64(len(allAssets))
-		}
-		if end > uint64(len(allAssets)) {
-			end = uint64(len(allAssets))
-		}
-
-		resp.Assets = allAssets[start:end]
-		resp.Pagination = &query.PageResponse{
-			NextKey: nil, // No next key since we're not using key-based pagination
-			Total:   totalCount,
-		}
-	} else {
-		resp.Assets = allAssets
-		resp.Pagination = &query.PageResponse{
-			NextKey: nil,
-			Total:   totalCount,
-		}
-	}
-
-	return resp, nil
+	return &types.QueryAssetResponse{Asset: asset}, nil
 }
 
-// ListAssetClasses implements the Query/ListAssetClasses RPC method
-func (q queryServer) ListAssetClasses(ctx context.Context, req *types.QueryListAssetClasses) (*types.QueryListAssetClassesResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// Get pagination from request
-	var pagination *query.PageRequest
-	if req != nil {
-		pagination = req.Pagination
-	}
-
-	// Get all NFT classes
-	classes := q.nftKeeper.GetClasses(sdkCtx)
-
-	resp := &types.QueryListAssetClassesResponse{}
-
-	// Convert NFT classes to Asset classes
-	allAssetClasses := make([]*types.AssetClass, 0, len(classes))
-	for _, class := range classes {
-		assetClass := &types.AssetClass{
-			Id:          class.Id,
-			Name:        class.Name,
-			Symbol:      class.Symbol,
-			Description: class.Description,
-			Uri:         class.Uri,
-			UriHash:     class.UriHash,
+// Assets queries all assets for a given address.
+func (q queryServer) Assets(ctx context.Context, req *types.QueryAssetsRequest) (*types.QueryAssetsResponse, error) {
+	if req.Owner != "" {
+		if _, err := sdk.AccAddressFromBech32(req.Owner); err != nil {
+			return nil, fmt.Errorf("invalid owner address: %w", err)
 		}
-
-		// If there's data, convert it to string
-		if class.Data != nil {
-			strValue, err := types.AnyToString(q.cdc, class.Data)
-			if err == nil {
-				assetClass.Data = strValue
-			} else {
-				assetClass.Data = "" // fallback to empty string if unpack fails
+	}
+	// Delegate to NFT query server
+	nftReq := &nfttypes.QueryNFTsRequest{Owner: req.Owner, ClassId: req.Id, Pagination: req.Pagination}
+	nftResp, err := q.nftKeeper.NFTs(ctx, nftReq)
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*types.Asset, 0, len(nftResp.Nfts))
+	for _, n := range nftResp.Nfts {
+		asset := &types.Asset{ClassId: n.ClassId, Id: n.Id, Uri: n.Uri, UriHash: n.UriHash}
+		if n.Data != nil {
+			if strValue, err := types.AnyToString(q.cdc, n.Data); err == nil {
+				asset.Data = strValue
 			}
 		}
-
-		allAssetClasses = append(allAssetClasses, assetClass)
+		assets = append(assets, asset)
 	}
-
-	// Apply pagination
-	if pagination != nil {
-		start := pagination.Offset
-		end := start + pagination.Limit
-
-		if start >= uint64(len(allAssetClasses)) {
-			start = uint64(len(allAssetClasses))
-		}
-		if end > uint64(len(allAssetClasses)) {
-			end = uint64(len(allAssetClasses))
-		}
-
-		resp.AssetClasses = allAssetClasses[start:end]
-		resp.Pagination = &query.PageResponse{
-			NextKey: nil, // No next key since we're not using key-based pagination
-			Total:   uint64(len(allAssetClasses)),
-		}
-	} else {
-		resp.AssetClasses = allAssetClasses
-		resp.Pagination = &query.PageResponse{
-			NextKey: nil,
-			Total:   uint64(len(allAssetClasses)),
-		}
-	}
-
-	return resp, nil
+	return &types.QueryAssetsResponse{Assets: assets, Pagination: nftResp.Pagination}, nil
 }
 
-func (q queryServer) GetClass(ctx context.Context, req *types.QueryGetClass) (*types.QueryGetClassResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	nftClassResp, ok := q.nftKeeper.GetClass(sdkCtx, req.Id)
-	if !ok {
-		return nil, fmt.Errorf("class not found")
+// AssetClass queries a specific asset class by its ID.
+func (q queryServer) AssetClass(ctx context.Context, req *types.QueryAssetClassRequest) (*types.QueryAssetClassResponse, error) {
+	nftResp, err := q.nftKeeper.Class(ctx, &nfttypes.QueryClassRequest{ClassId: req.Id})
+	if err != nil {
+		return nil, err
 	}
-
-	queryResp := &types.QueryGetClassResponse{
-		AssetClass: &types.AssetClass{
-			Id:          nftClassResp.Id,
-			Name:        nftClassResp.Name,
-			Symbol:      nftClassResp.Symbol,
-			Description: nftClassResp.Description,
-			Uri:         nftClassResp.Uri,
-			UriHash:     nftClassResp.UriHash,
-		},
-	}
-
-	if nftClassResp.Data != nil {
-		dataString, err := types.AnyToString(q.cdc, nftClassResp.Data)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert Any to string: %w", err)
+	c := nftResp.Class
+	ac := &types.AssetClass{Id: c.Id, Name: c.Name, Symbol: c.Symbol, Description: c.Description, Uri: c.Uri, UriHash: c.UriHash}
+	if c.Data != nil {
+		if strValue, err := types.AnyToString(q.cdc, c.Data); err == nil {
+			ac.Data = strValue
 		}
-		queryResp.AssetClass.Data = dataString
 	}
+	return &types.QueryAssetClassResponse{Class: ac}, nil
+}
 
-	return queryResp, nil
+// AssetClasses queries all asset classes.
+func (q queryServer) AssetClasses(ctx context.Context, req *types.QueryAssetClassesRequest) (*types.QueryAssetClassesResponse, error) {
+	nftResp, err := q.nftKeeper.Classes(ctx, &nfttypes.QueryClassesRequest{Pagination: req.Pagination})
+	if err != nil {
+		return nil, err
+	}
+	classes := make([]*types.AssetClass, 0, len(nftResp.Classes))
+	for _, c := range nftResp.Classes {
+		ac := &types.AssetClass{Id: c.Id, Name: c.Name, Symbol: c.Symbol, Description: c.Description, Uri: c.Uri, UriHash: c.UriHash}
+		if c.Data != nil {
+			if strValue, err := types.AnyToString(q.cdc, c.Data); err == nil {
+				ac.Data = strValue
+			}
+		}
+		classes = append(classes, ac)
+	}
+	return &types.QueryAssetClassesResponse{Classes: classes, Pagination: nftResp.Pagination}, nil
 }

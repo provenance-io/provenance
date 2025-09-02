@@ -9,63 +9,86 @@ import "provenance/asset/v1/asset.proto";
 
 // Query defines the gRPC querier service for the asset module.
 service Query {
-  // ListAssets queries all assets for a given address.
-  rpc ListAssets(QueryListAssets) returns (QueryListAssetsResponse) {
+  // Asset queries for a specified asset by its class ID and asset ID.
+  rpc Asset(QueryAssetRequest) returns (QueryAssetResponse) {
+    option (google.api.http).get = "/provenance/asset/v1/asset/{class_id}/{id}";
+  }
+
+  // Assets queries all assets for a given address.
+  rpc Assets(QueryAssetsRequest) returns (QueryAssetsResponse) {
     option (google.api.http).get = "/provenance/asset/v1/asset";
   }
 
-  // ListAssetClasses queries all asset classes.
-  rpc ListAssetClasses(QueryListAssetClasses) returns (QueryListAssetClassesResponse) {
-    option (google.api.http).get = "/provenance/asset/v1/class";
-  }
-
-  // GetClass queries a specific asset class by its ID.
-  rpc GetClass(QueryGetClass) returns (QueryGetClassResponse) {
+  // Class queries a specific asset class by its ID.
+  rpc AssetClass(QueryAssetClassRequest) returns (QueryAssetClassResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class/{id}";
   }
+
+  // Classes queries all asset classes.
+  rpc AssetClasses(QueryAssetClassesRequest) returns (QueryAssetClassesResponse) {
+    option (google.api.http).get = "/provenance/asset/v1/class";
+  }
 }
 
-// QueryListAssets is the request type for the ListAssets RPC method.
-message QueryListAssets {
-  // address defines the address to query assets for.
-  string address = 1;
+// QueryAssetRequest is the request type for the Query/Asset RPC method.
+message QueryAssetRequest {
+  // class_id associated with the asset.
+  string class_id = 1;
 
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+  // id is a unique identifier of the asset.
+  string id = 2;
 }
 
-// QueryListAssetsResponse is the response type for the ListAssets RPC method.
-message QueryListAssetsResponse {
-  // assets defines the list of assets.
+// QueryAssetResponse is the response type for the Query/Asset RPC method.
+message QueryAssetResponse {
+  // owner is the owner address of the asset.
+  Asset asset = 1;
+}
+
+// QueryAssetsResponse is the response type for the Query/Assets RPC methods.
+message QueryAssetsResponse {
+  // Asset defines the Asset.
   repeated Asset assets = 1;
 
-  // pagination is the resulting pagination parameters.
-  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryListAssetClasses is the request type for the ListAssetClasses RPC method.
-message QueryListAssetClasses {
+// QueryAssetsRequest is the request type for the Query/Assets RPC method.
+message QueryAssetsRequest {
+  // class_id associated with the asset.
+  string id = 1;
+
+  // owner is the owner address of the asset.
+  string owner = 2;
+
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-// QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
-message QueryListAssetClassesResponse {
-  // asset_classes defines the list of asset classes.
-  repeated AssetClass asset_classes = 1;
-
-  // pagination is the resulting pagination parameters.
-  cosmos.base.query.v1beta1.PageResponse pagination = 99;
-}
-
-// QueryGetClass is the request type for the GetClass RPC method.
-message QueryGetClass {
-  // id defines the unique identifier of the asset class to query.
+// QueryAssetClassRequest is the request type for the Query/Class RPC method.
+message QueryAssetClassRequest {
+  // class_id associated with the asset.
   string id = 1;
 }
 
-// QueryGetClassResponse is the response type for the GetClass RPC method.
-message QueryGetClassResponse {
-  // asset_class defines the requested asset class.
-  AssetClass asset_class = 1;
+// QueryAssetClassResponse is the response type for the Query/Class RPC method.
+message QueryAssetClassResponse {
+  // class defines the class of the asset type.
+  AssetClass class = 1;
+}
+
+// QueryAssetClassesRequest is the request type for the Query/Classes RPC method
+message QueryAssetClassesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAssetClassesResponse is the response type for the Query/Classes RPC method.
+message QueryAssetClassesResponse {
+  // class defines the class of the asset type.
+  repeated AssetClass classes = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

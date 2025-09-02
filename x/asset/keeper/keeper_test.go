@@ -9,10 +9,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/asset/keeper"
-	"github.com/provenance-io/provenance/x/asset/types"
+	assettypes "github.com/provenance-io/provenance/x/asset/types"
 )
 
 type KeeperTestSuite struct {
@@ -36,12 +37,11 @@ func (s *KeeperTestSuite) SetupTest() {
 func (s *KeeperTestSuite) TestNewKeeper() {
 	k := keeper.NewKeeper(
 		s.app.AppCodec(),
-		s.app.GetKey(types.ModuleName),
-		s.app.NFTKeeper,
 		s.app.BaseApp.MsgServiceRouter(),
-		s.app.LedgerKeeper,
-		s.app.RegistryKeeper,
+		authtypes.NewModuleAddress(assettypes.ModuleName),
 		s.app.MarkerKeeper,
+		s.app.NFTKeeper,
+		s.app.RegistryKeeper,
 	)
 	s.Require().NotNil(k)
 }
@@ -49,12 +49,11 @@ func (s *KeeperTestSuite) TestNewKeeper() {
 func (s *KeeperTestSuite) TestLogger() {
 	k := keeper.NewKeeper(
 		s.app.AppCodec(),
-		s.app.GetKey(types.ModuleName),
-		s.app.NFTKeeper,
 		s.app.BaseApp.MsgServiceRouter(),
-		s.app.LedgerKeeper,
-		s.app.RegistryKeeper,
+		authtypes.NewModuleAddress(assettypes.ModuleName),
 		s.app.MarkerKeeper,
+		s.app.NFTKeeper,
+		s.app.RegistryKeeper,
 	)
 	logger := k.Logger(s.ctx)
 	s.Require().NotNil(logger)
@@ -63,12 +62,11 @@ func (s *KeeperTestSuite) TestLogger() {
 func (s *KeeperTestSuite) TestGetModuleAddress() {
 	k := keeper.NewKeeper(
 		s.app.AppCodec(),
-		s.app.GetKey(types.ModuleName),
-		s.app.NFTKeeper,
 		s.app.BaseApp.MsgServiceRouter(),
-		s.app.LedgerKeeper,
-		s.app.RegistryKeeper,
+		authtypes.NewModuleAddress(assettypes.ModuleName),
 		s.app.MarkerKeeper,
+		s.app.NFTKeeper,
+		s.app.RegistryKeeper,
 	)
 	addr := k.GetModuleAddress()
 	s.Require().NotNil(addr)

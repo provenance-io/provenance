@@ -67,7 +67,7 @@ func (s *MsgServerTestSuite) TestCreateAssetClass() {
 			Name:   "AssetClass1",
 			Symbol: "AC1",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err := msgServer.CreateAssetClass(s.ctx, msg)
 	s.Require().NoError(err)
@@ -122,7 +122,7 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 				"required": ["name", "description"]
 			}`,
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err := msgServer.CreateAssetClass(s.ctx, assetClassMsg)
 	s.Require().NoError(err)
@@ -139,7 +139,7 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 			UriHash: "abc123",
 			Data:    `{"name": "Test Asset", "description": "A test asset"}`,
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, msg)
 	s.Require().NoError(err)
@@ -175,7 +175,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 			Id:   "asset-class-3",
 			Name: "AssetClass3",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err := msgServer.CreateAssetClass(s.ctx, assetClassMsg)
 	s.Require().NoError(err)
@@ -188,7 +188,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 			Uri:     "https://example.com/asset1",
 			UriHash: "abc123",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
 	s.Require().NoError(err)
@@ -200,7 +200,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 			Uri:     "https://example.com/asset2",
 			UriHash: "def456",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
 	s.Require().NoError(err)
@@ -224,7 +224,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 				Id:      "asset-pool-2",
 			},
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreatePool(s.ctx, msg)
 	s.Require().NoError(err)
@@ -235,13 +235,9 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 	s.Require().NotNil(event, "EventPoolCreated should be emitted")
 
 	// Verify event attributes
-	poolDenomAttr := s.findAttributeByKey(event, types.AttributeKeyPoolDenom)
-	s.Require().NotNil(poolDenomAttr, "pool_denom attribute should be present")
-	s.Require().Equal("pooltoken", poolDenomAttr.Value)
-
-	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolAmount)
-	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
-	s.Require().Equal("1000", poolAmountAttr.Value)
+	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPool)
+	s.Require().NotNil(poolAmountAttr, "pool attribute should be present")
+	s.Require().Equal("1000pooltoken", poolAmountAttr.Value)
 
 	assetCountAttr := s.findAttributeByKey(event, types.AttributeKeyAssetCount)
 	s.Require().NotNil(assetCountAttr, "asset_count attribute should be present")
@@ -264,7 +260,7 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 			Id:   "asset-class-token",
 			Name: "AssetClassToken",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err := msgServer.CreateAssetClass(s.ctx, assetClassMsg)
 	s.Require().NoError(err)
@@ -277,7 +273,7 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 			Uri:     "https://example.com/asset-token",
 			UriHash: "abc123",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, assetMsg)
 	s.Require().NoError(err)
@@ -286,12 +282,12 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 
 	msg := &types.MsgCreateTokenization{
-		Denom: sdk.NewCoin("tokenization", sdkmath.NewInt(500)),
+		Token: sdk.NewCoin("tokenization", sdkmath.NewInt(500)),
 		Asset: &types.AssetKey{
 			ClassId: "asset-class-token",
 			Id:      "asset-token-1",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateTokenization(s.ctx, msg)
 	s.Require().NoError(err)
@@ -302,13 +298,9 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 	s.Require().NotNil(event, "EventTokenizationCreated should be emitted")
 
 	// Verify event attributes
-	tokenizationDenomAttr := s.findAttributeByKey(event, types.AttributeKeyTokenizationDenom)
-	s.Require().NotNil(tokenizationDenomAttr, "tokenization_denom attribute should be present")
-	s.Require().Equal("tokenization", tokenizationDenomAttr.Value)
-
-	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolAmount)
-	s.Require().NotNil(poolAmountAttr, "pool_amount attribute should be present")
-	s.Require().Equal("500", poolAmountAttr.Value)
+	tokenizationTokenAttr := s.findAttributeByKey(event, types.AttributeKeyTokenization)
+	s.Require().NotNil(tokenizationTokenAttr, "tokenization_token attribute should be present")
+	s.Require().Equal("500tokenization", tokenizationTokenAttr.Value)
 
 	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
@@ -346,7 +338,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			Id:   "asset-class-sec",
 			Name: "AssetClassSec",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err := msgServer.CreateAssetClass(s.ctx, assetClassMsg)
 	s.Require().NoError(err)
@@ -359,7 +351,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			Uri:     "https://example.com/asset1",
 			UriHash: "abc123",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset1Msg)
 	s.Require().NoError(err)
@@ -371,7 +363,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			Uri:     "https://example.com/asset2",
 			UriHash: "def456",
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateAsset(s.ctx, asset2Msg)
 	s.Require().NoError(err)
@@ -388,7 +380,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 				Id:      "asset-sec-1",
 			},
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreatePool(s.ctx, pool1Msg)
 	s.Require().NoError(err)
@@ -404,7 +396,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 				Id:      "asset-sec-2",
 			},
 		},
-		FromAddress: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreatePool(s.ctx, pool2Msg)
 	s.Require().NoError(err)
@@ -419,8 +411,8 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 			{Denom: "tranche-a", Amount: sdkmath.NewInt(100)},
 			{Denom: "tranche-b", Amount: sdkmath.NewInt(200)},
 		},
-		Pools:       []string{"pool1", "pool2"},
-		FromAddress: s.user1Addr.String(),
+		Pools:  []string{"pool1", "pool2"},
+		Signer: s.user1Addr.String(),
 	}
 	_, err = msgServer.CreateSecuritization(s.ctx, msg)
 	s.Require().NoError(err)

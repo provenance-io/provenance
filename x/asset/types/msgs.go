@@ -7,12 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ sdk.Msg = &MsgCreateAsset{}
-var _ sdk.Msg = &MsgCreateAssetClass{}
-var _ sdk.Msg = &MsgCreatePool{}
-var _ sdk.Msg = &MsgCreateTokenization{}
-var _ sdk.Msg = &MsgCreateSecuritization{}
-
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateAsset)(nil),
@@ -22,7 +16,6 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateSecuritization)(nil),
 }
 
-// ValidateBasic implements Msg
 func (msg MsgCreateAsset) ValidateBasic() error {
 	if msg.Asset == nil {
 		return fmt.Errorf("asset cannot be nil")
@@ -36,22 +29,17 @@ func (msg MsgCreateAsset) ValidateBasic() error {
 		return fmt.Errorf("id cannot be empty")
 	}
 
-	if msg.Asset.Data != "" {
-		return validateJSON(msg.Asset.Data)
+	if err := validateJSON(msg.Asset.Data); err != nil {
+		return fmt.Errorf("invalid data: %w", err)
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
-	}
-
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
 }
 
-// ValidateBasic implements Msg
 func (msg MsgCreateAssetClass) ValidateBasic() error {
 	if msg.AssetClass == nil {
 		return fmt.Errorf("asset class cannot be nil")
@@ -65,22 +53,16 @@ func (msg MsgCreateAssetClass) ValidateBasic() error {
 		return fmt.Errorf("name cannot be empty")
 	}
 
-	if msg.AssetClass.Data != "" {
-		return validateJSONSchema(msg.AssetClass.Data)
-	}
-
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
-	}
-
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if err := validateJSONSchema(msg.AssetClass.Data); err != nil {
+		return fmt.Errorf("invalid data: %w", err)
+}
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
 }
 
-// ValidateBasic implements Msg
 func (msg MsgCreatePool) ValidateBasic() error {
 	if msg.Pool == nil {
 		return fmt.Errorf("pool cannot be nil")
@@ -106,21 +88,16 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		}
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
-	}
-
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
 }
 
-// ValidateBasic implements Msg
 func (msg MsgCreateTokenization) ValidateBasic() error {
-	if err := msg.Denom.Validate(); err != nil {
-		return fmt.Errorf("invalid denom: %w", err)
+	if err := msg.Token.Validate(); err != nil {
+		return fmt.Errorf("invalid token: %w", err)
 	}
 
 	if msg.Asset == nil {
@@ -135,18 +112,13 @@ func (msg MsgCreateTokenization) ValidateBasic() error {
 		return fmt.Errorf("asset id cannot be empty")
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
-	}
-
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
 }
 
-// ValidateBasic implements Msg
 func (msg MsgCreateSecuritization) ValidateBasic() error {
 	if msg.Id == "" {
 		return fmt.Errorf("id cannot be empty")
@@ -175,12 +147,12 @@ func (msg MsgCreateSecuritization) ValidateBasic() error {
 		}
 	}
 
-	if msg.FromAddress == "" {
-		return fmt.Errorf("from_address cannot be empty")
+	if msg.Signer == "" {
+		return fmt.Errorf("signer cannot be empty")
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return fmt.Errorf("invalid from_address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 
 	return nil
@@ -217,61 +189,10 @@ func validateJSONSchema(data string) error {
 		return fmt.Errorf("data is not a JSON object")
 	}
 
-	// Check for $schema property which is common in JSON schemas
-	if _, hasSchema := schemaMap["$schema"]; !hasSchema {
-		// Not a strict requirement, but log a warning
-		fmt.Println("Warning: Data does not contain $schema property, may not be a valid JSON schema")
-	}
-
 	// Check for type property which is required in JSON schemas
 	if _, hasType := schemaMap["type"]; !hasType {
 		return fmt.Errorf("data is missing required 'type' property for JSON schema")
 	}
 
 	return nil
-}
-
-// GetSigners implements Msg
-func (msg MsgCreateAsset) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
-}
-
-// GetSigners implements Msg
-func (msg MsgCreateAssetClass) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
-}
-
-// GetSigners implements Msg
-func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
-}
-
-// GetSigners implements Msg
-func (msg MsgCreateTokenization) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
-}
-
-// GetSigners implements Msg
-func (msg MsgCreateSecuritization) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
 }

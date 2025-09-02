@@ -21,15 +21,15 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: false,
 		},
 		{
 			name: "nil asset",
 			msg: MsgCreateAsset{
-				Asset:       nil,
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Asset:  nil,
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -40,7 +40,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 					ClassId: "",
 					Id:      "test-id",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -51,29 +51,29 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
 		{
-			name: "empty from_address",
+			name: "empty signer",
 			msg: MsgCreateAsset{
 				Asset: &Asset{
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				FromAddress: "",
+				Signer: "",
 			},
 			wantErr: true,
 		},
 		{
-			name: "invalid from_address",
+			name: "invalid signer",
 			msg: MsgCreateAsset{
 				Asset: &Asset{
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				FromAddress: "invalid-address",
+				Signer: "invalid-address",
 			},
 			wantErr: true,
 		},
@@ -104,15 +104,15 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 					Id:   "test-class",
 					Name: "Test Class",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: false,
 		},
 		{
 			name: "nil asset class",
 			msg: MsgCreateAssetClass{
-				AssetClass:  nil,
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				AssetClass: nil,
+				Signer:     "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -123,7 +123,7 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 					Id:   "",
 					Name: "Test Class",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -134,7 +134,7 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 					Id:   "test-class",
 					Name: "",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -171,7 +171,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 						Id:      "test-id",
 					},
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: false,
 		},
@@ -185,7 +185,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 						Id:      "test-id",
 					},
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -196,8 +196,8 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Assets:      []*AssetKey{},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Assets: []*AssetKey{},
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -211,7 +211,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Assets: []*AssetKey{
 					nil,
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -238,7 +238,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -246,14 +246,14 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: false,
 		},
 		{
 			name: "invalid denom",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -261,26 +261,26 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
 		{
 			name: "nil asset",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
-				Asset:       nil,
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Asset:  nil,
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
 		{
 			name: "empty asset class_id",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -288,14 +288,14 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					ClassId: "",
 					Id:      "test-id",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
 		{
 			name: "empty asset id",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -303,14 +303,14 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "",
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
 		{
-			name: "empty from_address",
+			name: "empty signer",
 			msg: MsgCreateTokenization{
-				Denom: sdk.Coin{
+				Token: sdk.Coin{
 					Denom:  "tokenization",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -318,7 +318,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				FromAddress: "",
+				Signer: "",
 			},
 			wantErr: true,
 		},
@@ -360,7 +360,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 						Amount: sdkmath.NewInt(2000),
 					},
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: false,
 		},
@@ -377,7 +377,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 						Amount: sdkmath.NewInt(1000),
 					},
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -392,7 +392,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 						Amount: sdkmath.NewInt(1000),
 					},
 				},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},
@@ -403,8 +403,8 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				Pools: []string{
 					"pool1",
 				},
-				Tranches:    []*sdk.Coin{},
-				FromAddress: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Tranches: []*sdk.Coin{},
+				Signer:   "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
 		},

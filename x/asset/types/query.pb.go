@@ -29,26 +29,26 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryListAssets is the request type for the ListAssets RPC method.
-type QueryListAssets struct {
-	// address defines the address to query assets for.
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+// QueryAssetRequest is the request type for the Query/Asset RPC method.
+type QueryAssetRequest struct {
+	// class_id associated with the asset.
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	// id is a unique identifier of the asset.
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *QueryListAssets) Reset()         { *m = QueryListAssets{} }
-func (m *QueryListAssets) String() string { return proto.CompactTextString(m) }
-func (*QueryListAssets) ProtoMessage()    {}
-func (*QueryListAssets) Descriptor() ([]byte, []int) {
+func (m *QueryAssetRequest) Reset()         { *m = QueryAssetRequest{} }
+func (m *QueryAssetRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetRequest) ProtoMessage()    {}
+func (*QueryAssetRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c4a7021ac5dbbfdd, []int{0}
 }
-func (m *QueryListAssets) XXX_Unmarshal(b []byte) error {
+func (m *QueryAssetRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryListAssets) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAssetRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryListAssets.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAssetRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -58,252 +58,50 @@ func (m *QueryListAssets) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *QueryListAssets) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryListAssets.Merge(m, src)
+func (m *QueryAssetRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetRequest.Merge(m, src)
 }
-func (m *QueryListAssets) XXX_Size() int {
+func (m *QueryAssetRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryListAssets) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryListAssets.DiscardUnknown(m)
+func (m *QueryAssetRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryListAssets proto.InternalMessageInfo
+var xxx_messageInfo_QueryAssetRequest proto.InternalMessageInfo
 
-func (m *QueryListAssets) GetAddress() string {
+func (m *QueryAssetRequest) GetClassId() string {
 	if m != nil {
-		return m.Address
+		return m.ClassId
 	}
 	return ""
 }
 
-func (m *QueryListAssets) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryListAssetsResponse is the response type for the ListAssets RPC method.
-type QueryListAssetsResponse struct {
-	// assets defines the list of assets.
-	Assets []*Asset `protobuf:"bytes,1,rep,name=assets,proto3" json:"assets,omitempty"`
-	// pagination is the resulting pagination parameters.
-	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *QueryListAssetsResponse) Reset()         { *m = QueryListAssetsResponse{} }
-func (m *QueryListAssetsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryListAssetsResponse) ProtoMessage()    {}
-func (*QueryListAssetsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c4a7021ac5dbbfdd, []int{1}
-}
-func (m *QueryListAssetsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryListAssetsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryListAssetsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryListAssetsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryListAssetsResponse.Merge(m, src)
-}
-func (m *QueryListAssetsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryListAssetsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryListAssetsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryListAssetsResponse proto.InternalMessageInfo
-
-func (m *QueryListAssetsResponse) GetAssets() []*Asset {
-	if m != nil {
-		return m.Assets
-	}
-	return nil
-}
-
-func (m *QueryListAssetsResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryListAssetClasses is the request type for the ListAssetClasses RPC method.
-type QueryListAssetClasses struct {
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *QueryListAssetClasses) Reset()         { *m = QueryListAssetClasses{} }
-func (m *QueryListAssetClasses) String() string { return proto.CompactTextString(m) }
-func (*QueryListAssetClasses) ProtoMessage()    {}
-func (*QueryListAssetClasses) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c4a7021ac5dbbfdd, []int{2}
-}
-func (m *QueryListAssetClasses) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryListAssetClasses) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryListAssetClasses.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryListAssetClasses) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryListAssetClasses.Merge(m, src)
-}
-func (m *QueryListAssetClasses) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryListAssetClasses) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryListAssetClasses.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryListAssetClasses proto.InternalMessageInfo
-
-func (m *QueryListAssetClasses) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
-type QueryListAssetClassesResponse struct {
-	// asset_classes defines the list of asset classes.
-	AssetClasses []*AssetClass `protobuf:"bytes,1,rep,name=asset_classes,json=assetClasses,proto3" json:"asset_classes,omitempty"`
-	// pagination is the resulting pagination parameters.
-	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *QueryListAssetClassesResponse) Reset()         { *m = QueryListAssetClassesResponse{} }
-func (m *QueryListAssetClassesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryListAssetClassesResponse) ProtoMessage()    {}
-func (*QueryListAssetClassesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c4a7021ac5dbbfdd, []int{3}
-}
-func (m *QueryListAssetClassesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryListAssetClassesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryListAssetClassesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryListAssetClassesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryListAssetClassesResponse.Merge(m, src)
-}
-func (m *QueryListAssetClassesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryListAssetClassesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryListAssetClassesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryListAssetClassesResponse proto.InternalMessageInfo
-
-func (m *QueryListAssetClassesResponse) GetAssetClasses() []*AssetClass {
-	if m != nil {
-		return m.AssetClasses
-	}
-	return nil
-}
-
-func (m *QueryListAssetClassesResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryGetClass is the request type for the GetClass RPC method.
-type QueryGetClass struct {
-	// id defines the unique identifier of the asset class to query.
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-}
-
-func (m *QueryGetClass) Reset()         { *m = QueryGetClass{} }
-func (m *QueryGetClass) String() string { return proto.CompactTextString(m) }
-func (*QueryGetClass) ProtoMessage()    {}
-func (*QueryGetClass) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c4a7021ac5dbbfdd, []int{4}
-}
-func (m *QueryGetClass) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetClass) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetClass.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetClass) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetClass.Merge(m, src)
-}
-func (m *QueryGetClass) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetClass) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetClass.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetClass proto.InternalMessageInfo
-
-func (m *QueryGetClass) GetId() string {
+func (m *QueryAssetRequest) GetId() string {
 	if m != nil {
 		return m.Id
 	}
 	return ""
 }
 
-// QueryGetClassResponse is the response type for the GetClass RPC method.
-type QueryGetClassResponse struct {
-	// asset_class defines the requested asset class.
-	AssetClass *AssetClass `protobuf:"bytes,1,opt,name=asset_class,json=assetClass,proto3" json:"asset_class,omitempty"`
+// QueryAssetResponse is the response type for the Query/Asset RPC method.
+type QueryAssetResponse struct {
+	// owner is the owner address of the asset.
+	Asset *Asset `protobuf:"bytes,1,opt,name=asset,proto3" json:"asset,omitempty"`
 }
 
-func (m *QueryGetClassResponse) Reset()         { *m = QueryGetClassResponse{} }
-func (m *QueryGetClassResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetClassResponse) ProtoMessage()    {}
-func (*QueryGetClassResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c4a7021ac5dbbfdd, []int{5}
+func (m *QueryAssetResponse) Reset()         { *m = QueryAssetResponse{} }
+func (m *QueryAssetResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetResponse) ProtoMessage()    {}
+func (*QueryAssetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c4a7021ac5dbbfdd, []int{1}
 }
-func (m *QueryGetClassResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryAssetResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAssetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetClassResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAssetResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -313,69 +111,388 @@ func (m *QueryGetClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *QueryGetClassResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetClassResponse.Merge(m, src)
+func (m *QueryAssetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetResponse.Merge(m, src)
 }
-func (m *QueryGetClassResponse) XXX_Size() int {
+func (m *QueryAssetResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetClassResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetClassResponse.DiscardUnknown(m)
+func (m *QueryAssetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetClassResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryAssetResponse proto.InternalMessageInfo
 
-func (m *QueryGetClassResponse) GetAssetClass() *AssetClass {
+func (m *QueryAssetResponse) GetAsset() *Asset {
 	if m != nil {
-		return m.AssetClass
+		return m.Asset
+	}
+	return nil
+}
+
+// QueryAssetsResponse is the response type for the Query/Assets RPC methods.
+type QueryAssetsResponse struct {
+	// Asset defines the Asset.
+	Assets []*Asset `protobuf:"bytes,1,rep,name=assets,proto3" json:"assets,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAssetsResponse) Reset()         { *m = QueryAssetsResponse{} }
+func (m *QueryAssetsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetsResponse) ProtoMessage()    {}
+func (*QueryAssetsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c4a7021ac5dbbfdd, []int{2}
+}
+func (m *QueryAssetsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAssetsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAssetsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAssetsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetsResponse.Merge(m, src)
+}
+func (m *QueryAssetsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAssetsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAssetsResponse proto.InternalMessageInfo
+
+func (m *QueryAssetsResponse) GetAssets() []*Asset {
+	if m != nil {
+		return m.Assets
+	}
+	return nil
+}
+
+func (m *QueryAssetsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryAssetsRequest is the request type for the Query/Assets RPC method.
+type QueryAssetsRequest struct {
+	// class_id associated with the asset.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// owner is the owner address of the asset.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAssetsRequest) Reset()         { *m = QueryAssetsRequest{} }
+func (m *QueryAssetsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetsRequest) ProtoMessage()    {}
+func (*QueryAssetsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c4a7021ac5dbbfdd, []int{3}
+}
+func (m *QueryAssetsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAssetsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAssetsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAssetsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetsRequest.Merge(m, src)
+}
+func (m *QueryAssetsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAssetsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAssetsRequest proto.InternalMessageInfo
+
+func (m *QueryAssetsRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *QueryAssetsRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *QueryAssetsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryAssetClassRequest is the request type for the Query/Class RPC method.
+type QueryAssetClassRequest struct {
+	// class_id associated with the asset.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *QueryAssetClassRequest) Reset()         { *m = QueryAssetClassRequest{} }
+func (m *QueryAssetClassRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetClassRequest) ProtoMessage()    {}
+func (*QueryAssetClassRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c4a7021ac5dbbfdd, []int{4}
+}
+func (m *QueryAssetClassRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAssetClassRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAssetClassRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAssetClassRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetClassRequest.Merge(m, src)
+}
+func (m *QueryAssetClassRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAssetClassRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetClassRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAssetClassRequest proto.InternalMessageInfo
+
+func (m *QueryAssetClassRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+// QueryAssetClassResponse is the response type for the Query/Class RPC method.
+type QueryAssetClassResponse struct {
+	// class defines the class of the asset type.
+	Class *AssetClass `protobuf:"bytes,1,opt,name=class,proto3" json:"class,omitempty"`
+}
+
+func (m *QueryAssetClassResponse) Reset()         { *m = QueryAssetClassResponse{} }
+func (m *QueryAssetClassResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetClassResponse) ProtoMessage()    {}
+func (*QueryAssetClassResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c4a7021ac5dbbfdd, []int{5}
+}
+func (m *QueryAssetClassResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAssetClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAssetClassResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAssetClassResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetClassResponse.Merge(m, src)
+}
+func (m *QueryAssetClassResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAssetClassResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetClassResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAssetClassResponse proto.InternalMessageInfo
+
+func (m *QueryAssetClassResponse) GetClass() *AssetClass {
+	if m != nil {
+		return m.Class
+	}
+	return nil
+}
+
+// QueryAssetClassesRequest is the request type for the Query/Classes RPC method
+type QueryAssetClassesRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAssetClassesRequest) Reset()         { *m = QueryAssetClassesRequest{} }
+func (m *QueryAssetClassesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetClassesRequest) ProtoMessage()    {}
+func (*QueryAssetClassesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c4a7021ac5dbbfdd, []int{6}
+}
+func (m *QueryAssetClassesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAssetClassesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAssetClassesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAssetClassesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetClassesRequest.Merge(m, src)
+}
+func (m *QueryAssetClassesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAssetClassesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetClassesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAssetClassesRequest proto.InternalMessageInfo
+
+func (m *QueryAssetClassesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryAssetClassesResponse is the response type for the Query/Classes RPC method.
+type QueryAssetClassesResponse struct {
+	// class defines the class of the asset type.
+	Classes []*AssetClass `protobuf:"bytes,1,rep,name=classes,proto3" json:"classes,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAssetClassesResponse) Reset()         { *m = QueryAssetClassesResponse{} }
+func (m *QueryAssetClassesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAssetClassesResponse) ProtoMessage()    {}
+func (*QueryAssetClassesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c4a7021ac5dbbfdd, []int{7}
+}
+func (m *QueryAssetClassesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAssetClassesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAssetClassesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAssetClassesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAssetClassesResponse.Merge(m, src)
+}
+func (m *QueryAssetClassesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAssetClassesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAssetClassesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAssetClassesResponse proto.InternalMessageInfo
+
+func (m *QueryAssetClassesResponse) GetClasses() []*AssetClass {
+	if m != nil {
+		return m.Classes
+	}
+	return nil
+}
+
+func (m *QueryAssetClassesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterType((*QueryListAssets)(nil), "provenance.asset.v1.QueryListAssets")
-	proto.RegisterType((*QueryListAssetsResponse)(nil), "provenance.asset.v1.QueryListAssetsResponse")
-	proto.RegisterType((*QueryListAssetClasses)(nil), "provenance.asset.v1.QueryListAssetClasses")
-	proto.RegisterType((*QueryListAssetClassesResponse)(nil), "provenance.asset.v1.QueryListAssetClassesResponse")
-	proto.RegisterType((*QueryGetClass)(nil), "provenance.asset.v1.QueryGetClass")
-	proto.RegisterType((*QueryGetClassResponse)(nil), "provenance.asset.v1.QueryGetClassResponse")
+	proto.RegisterType((*QueryAssetRequest)(nil), "provenance.asset.v1.QueryAssetRequest")
+	proto.RegisterType((*QueryAssetResponse)(nil), "provenance.asset.v1.QueryAssetResponse")
+	proto.RegisterType((*QueryAssetsResponse)(nil), "provenance.asset.v1.QueryAssetsResponse")
+	proto.RegisterType((*QueryAssetsRequest)(nil), "provenance.asset.v1.QueryAssetsRequest")
+	proto.RegisterType((*QueryAssetClassRequest)(nil), "provenance.asset.v1.QueryAssetClassRequest")
+	proto.RegisterType((*QueryAssetClassResponse)(nil), "provenance.asset.v1.QueryAssetClassResponse")
+	proto.RegisterType((*QueryAssetClassesRequest)(nil), "provenance.asset.v1.QueryAssetClassesRequest")
+	proto.RegisterType((*QueryAssetClassesResponse)(nil), "provenance.asset.v1.QueryAssetClassesResponse")
 }
 
 func init() { proto.RegisterFile("provenance/asset/v1/query.proto", fileDescriptor_c4a7021ac5dbbfdd) }
 
 var fileDescriptor_c4a7021ac5dbbfdd = []byte{
-	// 492 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x4f, 0x6f, 0xd3, 0x30,
-	0x18, 0xc6, 0xeb, 0x4e, 0x0c, 0x78, 0xcb, 0x00, 0x19, 0x21, 0xaa, 0x68, 0xa4, 0x23, 0x42, 0xac,
-	0xaa, 0xc0, 0x56, 0xc2, 0x17, 0xe0, 0x9f, 0xd8, 0x01, 0x0e, 0x90, 0x1b, 0x5c, 0x26, 0x37, 0xb1,
-	0x82, 0xa5, 0x2d, 0xce, 0x6a, 0xb7, 0x62, 0x42, 0x5c, 0x80, 0x0f, 0x80, 0x84, 0xb4, 0x6f, 0x01,
-	0x9f, 0x83, 0xe3, 0x24, 0x2e, 0x1c, 0x51, 0xcb, 0x07, 0x41, 0x71, 0xdc, 0x34, 0x1b, 0x89, 0x96,
-	0xc3, 0x8e, 0xad, 0x1f, 0x3f, 0xcf, 0xef, 0x79, 0xf3, 0x26, 0x30, 0xc8, 0x26, 0x72, 0xc6, 0x53,
-	0x96, 0x46, 0x9c, 0x32, 0xa5, 0xb8, 0xa6, 0x33, 0x9f, 0x1e, 0x4c, 0xf9, 0xe4, 0x90, 0x64, 0x13,
-	0xa9, 0x25, 0xbe, 0xb1, 0x12, 0x10, 0x23, 0x20, 0x33, 0xdf, 0x19, 0x45, 0x52, 0xed, 0x4b, 0x45,
-	0xc7, 0x4c, 0xf1, 0x42, 0x4d, 0x67, 0xfe, 0x98, 0x6b, 0xe6, 0xd3, 0x8c, 0x25, 0x22, 0x65, 0x5a,
-	0xc8, 0xb4, 0x30, 0x70, 0x36, 0x13, 0x29, 0x93, 0x3d, 0x4e, 0x59, 0x26, 0x28, 0x4b, 0x53, 0xa9,
-	0xcd, 0xa1, 0xb2, 0xa7, 0xb5, 0xf9, 0x45, 0x8e, 0x11, 0x78, 0x0a, 0xae, 0xbd, 0xce, 0x03, 0x5e,
-	0x0a, 0xa5, 0x1f, 0xe7, 0xff, 0x2b, 0xdc, 0x87, 0x8b, 0x2c, 0x8e, 0x27, 0x5c, 0xa9, 0x3e, 0xda,
-	0x42, 0xc3, 0xcb, 0xe1, 0xf2, 0x27, 0x7e, 0x0e, 0xb0, 0xca, 0xef, 0x47, 0x5b, 0x68, 0xd8, 0x0b,
-	0xee, 0x91, 0x02, 0x96, 0xe4, 0xb0, 0xa4, 0xa8, 0x66, 0x61, 0xc9, 0x2b, 0x96, 0xf0, 0x90, 0x1f,
-	0x4c, 0xb9, 0xd2, 0x61, 0xe5, 0xa6, 0x77, 0x84, 0xe0, 0xd6, 0xa9, 0xd4, 0x90, 0xab, 0x4c, 0xa6,
-	0x8a, 0xe3, 0x00, 0xd6, 0x0d, 0x5f, 0x1e, 0xbe, 0x36, 0xec, 0x05, 0x0e, 0xa9, 0x99, 0x10, 0x31,
-	0x97, 0x42, 0xab, 0xc4, 0x3b, 0x35, 0x5c, 0xdb, 0x67, 0x72, 0x15, 0x81, 0x27, 0xc0, 0x76, 0xe1,
-	0xe6, 0x49, 0xae, 0xa7, 0x7b, 0x79, 0xc4, 0xf9, 0x35, 0xff, 0x81, 0xe0, 0x76, 0x6d, 0x42, 0xd9,
-	0xff, 0x19, 0x6c, 0x98, 0x56, 0xbb, 0x51, 0x71, 0x60, 0xc7, 0x30, 0x68, 0x1e, 0x83, 0x71, 0x08,
-	0xaf, 0xb0, 0x2a, 0xef, 0xb9, 0x4d, 0x64, 0x00, 0x1b, 0x86, 0x77, 0xc7, 0x7a, 0xe3, 0xab, 0xd0,
-	0x15, 0xb1, 0x5d, 0x8c, 0xae, 0x88, 0xbd, 0x37, 0x76, 0x64, 0x4b, 0x41, 0x59, 0xe4, 0x11, 0xf4,
-	0x2a, 0x45, 0xcc, 0x8d, 0x16, 0x35, 0x60, 0x55, 0x23, 0xf8, 0xbe, 0x06, 0x17, 0x8c, 0x37, 0xfe,
-	0x82, 0x00, 0x2a, 0x1b, 0x7a, 0xb7, 0xd6, 0xe5, 0xd4, 0x46, 0x39, 0xf7, 0xdb, 0xa8, 0x96, 0xb8,
-	0x9e, 0xf7, 0xe9, 0xd7, 0xdf, 0x6f, 0xdd, 0x4d, 0xec, 0xd0, 0xc6, 0x57, 0x06, 0x1f, 0x21, 0xb8,
-	0xfe, 0xdf, 0x6a, 0x8c, 0x5a, 0xc4, 0x58, 0xad, 0x13, 0xb4, 0xd7, 0xb6, 0x04, 0x33, 0xc3, 0xc5,
-	0x9f, 0x11, 0x5c, 0x2a, 0x9f, 0x90, 0xd7, 0x1c, 0xb2, 0xd4, 0x38, 0xa3, 0xb3, 0x35, 0x25, 0xc0,
-	0xb6, 0x01, 0xb8, 0x83, 0x07, 0xcd, 0x00, 0xf4, 0x83, 0x88, 0x3f, 0x3e, 0x79, 0xf1, 0x73, 0xee,
-	0xa2, 0xe3, 0xb9, 0x8b, 0xfe, 0xcc, 0x5d, 0xf4, 0x75, 0xe1, 0x76, 0x8e, 0x17, 0x6e, 0xe7, 0xf7,
-	0xc2, 0xed, 0xbc, 0xf5, 0x13, 0xa1, 0xdf, 0x4d, 0xc7, 0x24, 0x92, 0xfb, 0x15, 0x93, 0x07, 0x42,
-	0x56, 0x2d, 0xdf, 0x5b, 0x53, 0x7d, 0x98, 0x71, 0x35, 0x5e, 0x37, 0xdf, 0xa7, 0x87, 0xff, 0x02,
-	0x00, 0x00, 0xff, 0xff, 0xa4, 0x3d, 0xf2, 0x06, 0x42, 0x05, 0x00, 0x00,
+	// 569 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0xc1, 0x6e, 0xd3, 0x4c,
+	0x14, 0x85, 0x33, 0xe9, 0x9f, 0xfc, 0x70, 0x8b, 0x90, 0x98, 0x22, 0x48, 0xad, 0xca, 0x29, 0x5e,
+	0x34, 0x51, 0x69, 0x67, 0xb0, 0x11, 0x0b, 0x36, 0x48, 0x80, 0x54, 0x84, 0xd8, 0x94, 0x2c, 0xd9,
+	0xa0, 0x71, 0x3c, 0x32, 0x96, 0x5a, 0x8f, 0x9b, 0x71, 0x02, 0x55, 0x55, 0x21, 0x75, 0xcd, 0xa2,
+	0xc0, 0x03, 0xf0, 0x26, 0xac, 0x59, 0x56, 0x62, 0xc3, 0x12, 0x25, 0x3c, 0x08, 0xca, 0xcc, 0x38,
+	0x76, 0xa8, 0x23, 0x47, 0x88, 0xa5, 0xed, 0x73, 0xef, 0xf9, 0xe6, 0xdc, 0x3b, 0x86, 0x76, 0x32,
+	0x10, 0x23, 0x1e, 0xb3, 0xb8, 0xcf, 0x29, 0x93, 0x92, 0xa7, 0x74, 0xe4, 0xd2, 0xa3, 0x21, 0x1f,
+	0x1c, 0x93, 0x64, 0x20, 0x52, 0x81, 0xd7, 0x72, 0x01, 0x51, 0x02, 0x32, 0x72, 0xad, 0xed, 0xbe,
+	0x90, 0x87, 0x42, 0x52, 0x9f, 0x49, 0xae, 0xd5, 0x74, 0xe4, 0xfa, 0x3c, 0x65, 0x2e, 0x4d, 0x58,
+	0x18, 0xc5, 0x2c, 0x8d, 0x44, 0xac, 0x1b, 0x58, 0x1b, 0xa1, 0x10, 0xe1, 0x01, 0xa7, 0x2c, 0x89,
+	0x28, 0x8b, 0x63, 0x91, 0xaa, 0x8f, 0xd2, 0x7c, 0x2d, 0xf5, 0xd7, 0x3e, 0x4a, 0xe0, 0x3c, 0x82,
+	0x1b, 0x2f, 0xa7, 0x06, 0x8f, 0xa7, 0xef, 0x7a, 0xfc, 0x68, 0xc8, 0x65, 0x8a, 0xd7, 0xe1, 0x4a,
+	0xff, 0x80, 0x49, 0xf9, 0x3a, 0x0a, 0x5a, 0x68, 0x13, 0x75, 0xaf, 0xf6, 0xfe, 0x57, 0xcf, 0xcf,
+	0x03, 0x7c, 0x1d, 0xea, 0x51, 0xd0, 0xaa, 0xab, 0x97, 0xf5, 0x28, 0x70, 0xf6, 0x00, 0x17, 0xeb,
+	0x65, 0x22, 0x62, 0xc9, 0xf1, 0x3d, 0x68, 0x28, 0x13, 0x55, 0xbd, 0xea, 0x59, 0xa4, 0xe4, 0x94,
+	0x44, 0x97, 0x68, 0xa1, 0xf3, 0x09, 0xc1, 0x5a, 0xde, 0x48, 0xce, 0x3a, 0x79, 0xd0, 0x54, 0x02,
+	0xd9, 0x42, 0x9b, 0x2b, 0x15, 0xad, 0x8c, 0x12, 0x3f, 0x03, 0xc8, 0x63, 0x52, 0xac, 0xab, 0x5e,
+	0x87, 0xe8, 0x4c, 0xc9, 0x34, 0x53, 0xa2, 0x27, 0x60, 0x32, 0x25, 0xfb, 0x2c, 0xe4, 0x99, 0x61,
+	0xaf, 0x50, 0xea, 0x9c, 0xa1, 0xe2, 0xe9, 0x64, 0x16, 0x8f, 0xce, 0x00, 0x65, 0x19, 0xe0, 0x9b,
+	0xd0, 0x10, 0x6f, 0x63, 0x3e, 0x30, 0xb1, 0xe8, 0x07, 0xbc, 0x37, 0x47, 0xb1, 0xa2, 0x28, 0xb6,
+	0x2a, 0x29, 0x94, 0xc3, 0x1c, 0x44, 0x17, 0x6e, 0xe5, 0x0c, 0x4f, 0xa7, 0x63, 0x58, 0xc0, 0xe1,
+	0xec, 0xc3, 0xed, 0x4b, 0x4a, 0x13, 0xe3, 0x03, 0x68, 0xa8, 0x09, 0x9a, 0x81, 0xb4, 0x17, 0xa7,
+	0xa8, 0xeb, 0xb4, 0xda, 0xf1, 0xa1, 0xf5, 0x47, 0x47, 0x3e, 0x73, 0x9f, 0x3f, 0x1f, 0xfa, 0xeb,
+	0xf3, 0x7d, 0x41, 0xb0, 0x5e, 0x62, 0x62, 0xc0, 0x1f, 0x82, 0x5e, 0x3d, 0x9e, 0x2d, 0x40, 0x25,
+	0x7a, 0xa6, 0xff, 0x67, 0x6b, 0xe0, 0x7d, 0xfd, 0x0f, 0x1a, 0x8a, 0x10, 0x7f, 0x40, 0xd0, 0x50,
+	0x56, 0x78, 0xab, 0x14, 0xe3, 0xd2, 0x55, 0xb2, 0x3a, 0x95, 0x3a, 0x6d, 0xe8, 0x78, 0x67, 0xdf,
+	0x7f, 0x7d, 0xae, 0xef, 0xe0, 0x6d, 0xba, 0xf0, 0xca, 0xd2, 0x93, 0xec, 0x56, 0x9e, 0xd2, 0x93,
+	0x28, 0x38, 0xc5, 0xef, 0xa1, 0xa9, 0x37, 0x13, 0x57, 0xd9, 0x64, 0x53, 0xb3, 0xba, 0xd5, 0x42,
+	0x03, 0xe4, 0x28, 0xa0, 0x0d, 0x6c, 0x2d, 0x06, 0xc2, 0xe7, 0x08, 0x20, 0x8f, 0x1e, 0xdf, 0xad,
+	0x68, 0x5e, 0xdc, 0x5e, 0x6b, 0x67, 0x39, 0xb1, 0xa1, 0xe9, 0x28, 0x9a, 0x3b, 0xb8, 0x5d, 0x4a,
+	0xa3, 0x72, 0xd1, 0x99, 0x7c, 0x44, 0x70, 0xad, 0xb8, 0x49, 0x78, 0x77, 0x19, 0x9f, 0xd9, 0x5a,
+	0x5b, 0x64, 0x59, 0xf9, 0x52, 0x31, 0x29, 0xb0, 0x27, 0x2f, 0xbe, 0x8d, 0x6d, 0x74, 0x31, 0xb6,
+	0xd1, 0xcf, 0xb1, 0x8d, 0xce, 0x27, 0x76, 0xed, 0x62, 0x62, 0xd7, 0x7e, 0x4c, 0xec, 0xda, 0x2b,
+	0x37, 0x8c, 0xd2, 0x37, 0x43, 0x9f, 0xf4, 0xc5, 0x61, 0xa1, 0x7e, 0x37, 0x12, 0xc5, 0x6e, 0xef,
+	0x4c, 0xbf, 0xf4, 0x38, 0xe1, 0xd2, 0x6f, 0xaa, 0x1f, 0xf7, 0xfd, 0xdf, 0x01, 0x00, 0x00, 0xff,
+	0xff, 0x43, 0x4a, 0x2b, 0xb2, 0x5b, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -390,12 +507,14 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// ListAssets queries all assets for a given address.
-	ListAssets(ctx context.Context, in *QueryListAssets, opts ...grpc.CallOption) (*QueryListAssetsResponse, error)
-	// ListAssetClasses queries all asset classes.
-	ListAssetClasses(ctx context.Context, in *QueryListAssetClasses, opts ...grpc.CallOption) (*QueryListAssetClassesResponse, error)
-	// GetClass queries a specific asset class by its ID.
-	GetClass(ctx context.Context, in *QueryGetClass, opts ...grpc.CallOption) (*QueryGetClassResponse, error)
+	// Asset queries for a specified asset by its class ID and asset ID.
+	Asset(ctx context.Context, in *QueryAssetRequest, opts ...grpc.CallOption) (*QueryAssetResponse, error)
+	// Assets queries all assets for a given address.
+	Assets(ctx context.Context, in *QueryAssetsRequest, opts ...grpc.CallOption) (*QueryAssetsResponse, error)
+	// Class queries a specific asset class by its ID.
+	AssetClass(ctx context.Context, in *QueryAssetClassRequest, opts ...grpc.CallOption) (*QueryAssetClassResponse, error)
+	// Classes queries all asset classes.
+	AssetClasses(ctx context.Context, in *QueryAssetClassesRequest, opts ...grpc.CallOption) (*QueryAssetClassesResponse, error)
 }
 
 type queryClient struct {
@@ -406,27 +525,36 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) ListAssets(ctx context.Context, in *QueryListAssets, opts ...grpc.CallOption) (*QueryListAssetsResponse, error) {
-	out := new(QueryListAssetsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.asset.v1.Query/ListAssets", in, out, opts...)
+func (c *queryClient) Asset(ctx context.Context, in *QueryAssetRequest, opts ...grpc.CallOption) (*QueryAssetResponse, error) {
+	out := new(QueryAssetResponse)
+	err := c.cc.Invoke(ctx, "/provenance.asset.v1.Query/Asset", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) ListAssetClasses(ctx context.Context, in *QueryListAssetClasses, opts ...grpc.CallOption) (*QueryListAssetClassesResponse, error) {
-	out := new(QueryListAssetClassesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.asset.v1.Query/ListAssetClasses", in, out, opts...)
+func (c *queryClient) Assets(ctx context.Context, in *QueryAssetsRequest, opts ...grpc.CallOption) (*QueryAssetsResponse, error) {
+	out := new(QueryAssetsResponse)
+	err := c.cc.Invoke(ctx, "/provenance.asset.v1.Query/Assets", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) GetClass(ctx context.Context, in *QueryGetClass, opts ...grpc.CallOption) (*QueryGetClassResponse, error) {
-	out := new(QueryGetClassResponse)
-	err := c.cc.Invoke(ctx, "/provenance.asset.v1.Query/GetClass", in, out, opts...)
+func (c *queryClient) AssetClass(ctx context.Context, in *QueryAssetClassRequest, opts ...grpc.CallOption) (*QueryAssetClassResponse, error) {
+	out := new(QueryAssetClassResponse)
+	err := c.cc.Invoke(ctx, "/provenance.asset.v1.Query/AssetClass", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AssetClasses(ctx context.Context, in *QueryAssetClassesRequest, opts ...grpc.CallOption) (*QueryAssetClassesResponse, error) {
+	out := new(QueryAssetClassesResponse)
+	err := c.cc.Invoke(ctx, "/provenance.asset.v1.Query/AssetClasses", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -435,82 +563,105 @@ func (c *queryClient) GetClass(ctx context.Context, in *QueryGetClass, opts ...g
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// ListAssets queries all assets for a given address.
-	ListAssets(context.Context, *QueryListAssets) (*QueryListAssetsResponse, error)
-	// ListAssetClasses queries all asset classes.
-	ListAssetClasses(context.Context, *QueryListAssetClasses) (*QueryListAssetClassesResponse, error)
-	// GetClass queries a specific asset class by its ID.
-	GetClass(context.Context, *QueryGetClass) (*QueryGetClassResponse, error)
+	// Asset queries for a specified asset by its class ID and asset ID.
+	Asset(context.Context, *QueryAssetRequest) (*QueryAssetResponse, error)
+	// Assets queries all assets for a given address.
+	Assets(context.Context, *QueryAssetsRequest) (*QueryAssetsResponse, error)
+	// Class queries a specific asset class by its ID.
+	AssetClass(context.Context, *QueryAssetClassRequest) (*QueryAssetClassResponse, error)
+	// Classes queries all asset classes.
+	AssetClasses(context.Context, *QueryAssetClassesRequest) (*QueryAssetClassesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) ListAssets(ctx context.Context, req *QueryListAssets) (*QueryListAssetsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAssets not implemented")
+func (*UnimplementedQueryServer) Asset(ctx context.Context, req *QueryAssetRequest) (*QueryAssetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Asset not implemented")
 }
-func (*UnimplementedQueryServer) ListAssetClasses(ctx context.Context, req *QueryListAssetClasses) (*QueryListAssetClassesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAssetClasses not implemented")
+func (*UnimplementedQueryServer) Assets(ctx context.Context, req *QueryAssetsRequest) (*QueryAssetsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Assets not implemented")
 }
-func (*UnimplementedQueryServer) GetClass(ctx context.Context, req *QueryGetClass) (*QueryGetClassResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetClass not implemented")
+func (*UnimplementedQueryServer) AssetClass(ctx context.Context, req *QueryAssetClassRequest) (*QueryAssetClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AssetClass not implemented")
+}
+func (*UnimplementedQueryServer) AssetClasses(ctx context.Context, req *QueryAssetClassesRequest) (*QueryAssetClassesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AssetClasses not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_ListAssets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryListAssets)
+func _Query_Asset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAssetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ListAssets(ctx, in)
+		return srv.(QueryServer).Asset(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.asset.v1.Query/ListAssets",
+		FullMethod: "/provenance.asset.v1.Query/Asset",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ListAssets(ctx, req.(*QueryListAssets))
+		return srv.(QueryServer).Asset(ctx, req.(*QueryAssetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ListAssetClasses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryListAssetClasses)
+func _Query_Assets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAssetsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ListAssetClasses(ctx, in)
+		return srv.(QueryServer).Assets(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.asset.v1.Query/ListAssetClasses",
+		FullMethod: "/provenance.asset.v1.Query/Assets",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ListAssetClasses(ctx, req.(*QueryListAssetClasses))
+		return srv.(QueryServer).Assets(ctx, req.(*QueryAssetsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetClass)
+func _Query_AssetClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAssetClassRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GetClass(ctx, in)
+		return srv.(QueryServer).AssetClass(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.asset.v1.Query/GetClass",
+		FullMethod: "/provenance.asset.v1.Query/AssetClass",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetClass(ctx, req.(*QueryGetClass))
+		return srv.(QueryServer).AssetClass(ctx, req.(*QueryAssetClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AssetClasses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAssetClassesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AssetClasses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.asset.v1.Query/AssetClasses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AssetClasses(ctx, req.(*QueryAssetClassesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -521,23 +672,27 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListAssets",
-			Handler:    _Query_ListAssets_Handler,
+			MethodName: "Asset",
+			Handler:    _Query_Asset_Handler,
 		},
 		{
-			MethodName: "ListAssetClasses",
-			Handler:    _Query_ListAssetClasses_Handler,
+			MethodName: "Assets",
+			Handler:    _Query_Assets_Handler,
 		},
 		{
-			MethodName: "GetClass",
-			Handler:    _Query_GetClass_Handler,
+			MethodName: "AssetClass",
+			Handler:    _Query_AssetClass_Handler,
+		},
+		{
+			MethodName: "AssetClasses",
+			Handler:    _Query_AssetClasses_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provenance/asset/v1/query.proto",
 }
 
-func (m *QueryListAssets) Marshal() (dAtA []byte, err error) {
+func (m *QueryAssetRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -547,41 +702,34 @@ func (m *QueryListAssets) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryListAssets) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAssetRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryListAssets) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAssetRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Id)))
 		i--
-		dAtA[i] = 0x6
-		i--
-		dAtA[i] = 0x9a
+		dAtA[i] = 0x12
 	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ClassId)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryListAssetsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAssetResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -591,12 +739,47 @@ func (m *QueryListAssetsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryListAssetsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAssetResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryListAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAssetResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Asset != nil {
+		{
+			size, err := m.Asset.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAssetsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAssetsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -611,9 +794,7 @@ func (m *QueryListAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x6
-		i--
-		dAtA[i] = 0x9a
+		dAtA[i] = 0x12
 	}
 	if len(m.Assets) > 0 {
 		for iNdEx := len(m.Assets) - 1; iNdEx >= 0; iNdEx-- {
@@ -632,7 +813,7 @@ func (m *QueryListAssetsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryListAssetClasses) Marshal() (dAtA []byte, err error) {
+func (m *QueryAssetsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -642,12 +823,12 @@ func (m *QueryListAssetClasses) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryListAssetClasses) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAssetsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryListAssetClasses) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAssetsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -662,14 +843,26 @@ func (m *QueryListAssetClasses) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x6
+		dAtA[i] = 0x1a
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
 		i--
-		dAtA[i] = 0x9a
+		dAtA[i] = 0x12
+	}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Id)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryListAssetClassesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAssetClassRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -679,63 +872,12 @@ func (m *QueryListAssetClassesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryListAssetClassesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAssetClassRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryListAssetClassesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x6
-		i--
-		dAtA[i] = 0x9a
-	}
-	if len(m.AssetClasses) > 0 {
-		for iNdEx := len(m.AssetClasses) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.AssetClasses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetClass) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetClass) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetClass) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAssetClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -750,7 +892,7 @@ func (m *QueryGetClass) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetClassResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAssetClassResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -760,19 +902,19 @@ func (m *QueryGetClassResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetClassResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAssetClassResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAssetClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.AssetClass != nil {
+	if m.Class != nil {
 		{
-			size, err := m.AssetClass.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Class.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -781,6 +923,90 @@ func (m *QueryGetClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAssetClassesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAssetClassesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAssetClassesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAssetClassesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAssetClassesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAssetClassesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Classes) > 0 {
+		for iNdEx := len(m.Classes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Classes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -796,24 +1022,37 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryListAssets) Size() (n int) {
+func (m *QueryAssetRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
+	l = len(m.ClassId)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *QueryListAssetsResponse) Size() (n int) {
+func (m *QueryAssetResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Asset != nil {
+		l = m.Asset.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAssetsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -827,44 +1066,33 @@ func (m *QueryListAssetsResponse) Size() (n int) {
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *QueryListAssetClasses) Size() (n int) {
+func (m *QueryAssetsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *QueryListAssetClassesResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.AssetClasses) > 0 {
-		for _, e := range m.AssetClasses {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryGetClass) Size() (n int) {
+func (m *QueryAssetClassRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -877,14 +1105,46 @@ func (m *QueryGetClass) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetClassResponse) Size() (n int) {
+func (m *QueryAssetClassResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.AssetClass != nil {
-		l = m.AssetClass.Size()
+	if m.Class != nil {
+		l = m.Class.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAssetClassesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAssetClassesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Classes) > 0 {
+		for _, e := range m.Classes {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -896,7 +1156,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryListAssets) Unmarshal(dAtA []byte) error {
+func (m *QueryAssetRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -919,15 +1179,15 @@ func (m *QueryListAssets) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryListAssets: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAssetRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryListAssets: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAssetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -955,11 +1215,93 @@ func (m *QueryListAssets) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Address = string(dAtA[iNdEx:postIndex])
+			m.ClassId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 99:
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAssetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAssetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAssetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Asset", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -986,10 +1328,10 @@ func (m *QueryListAssets) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageRequest{}
+			if m.Asset == nil {
+				m.Asset = &Asset{}
 			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Asset.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1014,7 +1356,7 @@ func (m *QueryListAssets) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryListAssetsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAssetsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1037,10 +1379,10 @@ func (m *QueryListAssetsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryListAssetsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAssetsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryListAssetsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAssetsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1077,7 +1419,7 @@ func (m *QueryListAssetsResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 99:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -1134,7 +1476,7 @@ func (m *QueryListAssetsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryListAssetClasses) Unmarshal(dAtA []byte) error {
+func (m *QueryAssetsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1157,13 +1499,77 @@ func (m *QueryListAssetClasses) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryListAssetClasses: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAssetsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryListAssetClasses: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAssetsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 99:
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -1220,7 +1626,7 @@ func (m *QueryListAssetClasses) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryListAssetClassesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAssetClassRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1243,130 +1649,10 @@ func (m *QueryListAssetClassesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryListAssetClassesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAssetClassRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryListAssetClassesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetClasses", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AssetClasses = append(m.AssetClasses, &AssetClass{})
-			if err := m.AssetClasses[len(m.AssetClasses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 99:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageResponse{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetClass) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetClass: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetClass: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAssetClassRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1422,7 +1708,7 @@ func (m *QueryGetClass) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGetClassResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAssetClassResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1445,15 +1731,15 @@ func (m *QueryGetClassResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetClassResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAssetClassResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAssetClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetClass", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Class", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1480,10 +1766,216 @@ func (m *QueryGetClassResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.AssetClass == nil {
-				m.AssetClass = &AssetClass{}
+			if m.Class == nil {
+				m.Class = &AssetClass{}
 			}
-			if err := m.AssetClass.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Class.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAssetClassesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAssetClassesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAssetClassesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAssetClassesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAssetClassesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAssetClassesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Classes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Classes = append(m.Classes, &AssetClass{})
+			if err := m.Classes[len(m.Classes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -782,16 +782,6 @@
 - [provenance/asset/v1/genesis.proto](#provenance_asset_v1_genesis-proto)
     - [GenesisState](#provenance-asset-v1-GenesisState)
   
-- [provenance/asset/v1/query.proto](#provenance_asset_v1_query-proto)
-    - [QueryGetClass](#provenance-asset-v1-QueryGetClass)
-    - [QueryGetClassResponse](#provenance-asset-v1-QueryGetClassResponse)
-    - [QueryListAssetClasses](#provenance-asset-v1-QueryListAssetClasses)
-    - [QueryListAssetClassesResponse](#provenance-asset-v1-QueryListAssetClassesResponse)
-    - [QueryListAssets](#provenance-asset-v1-QueryListAssets)
-    - [QueryListAssetsResponse](#provenance-asset-v1-QueryListAssetsResponse)
-  
-    - [Query](#provenance-asset-v1-Query)
-  
 - [provenance/asset/v1/tx.proto](#provenance_asset_v1_tx-proto)
     - [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset)
     - [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass)
@@ -805,6 +795,18 @@
     - [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse)
   
     - [Msg](#provenance-asset-v1-Msg)
+  
+- [provenance/asset/v1/query.proto](#provenance_asset_v1_query-proto)
+    - [QueryAssetClassRequest](#provenance-asset-v1-QueryAssetClassRequest)
+    - [QueryAssetClassResponse](#provenance-asset-v1-QueryAssetClassResponse)
+    - [QueryAssetClassesRequest](#provenance-asset-v1-QueryAssetClassesRequest)
+    - [QueryAssetClassesResponse](#provenance-asset-v1-QueryAssetClassesResponse)
+    - [QueryAssetRequest](#provenance-asset-v1-QueryAssetRequest)
+    - [QueryAssetResponse](#provenance-asset-v1-QueryAssetResponse)
+    - [QueryAssetsRequest](#provenance-asset-v1-QueryAssetsRequest)
+    - [QueryAssetsResponse](#provenance-asset-v1-QueryAssetsResponse)
+  
+    - [Query](#provenance-asset-v1-Query)
   
 - [provenance/flatfees/v1/flatfees.proto](#provenance_flatfees_v1_flatfees-proto)
     - [ConversionFactor](#provenance-flatfees-v1-ConversionFactor)
@@ -11998,127 +12000,6 @@ GenesisState defines the asset module's genesis state.
 
 
 
-<a name="provenance_asset_v1_query-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/asset/v1/query.proto
-
-
-
-<a name="provenance-asset-v1-QueryGetClass"></a>
-
-### QueryGetClass
-QueryGetClass is the request type for the GetClass RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  | id defines the unique identifier of the asset class to query. |
-
-
-
-
-
-
-<a name="provenance-asset-v1-QueryGetClassResponse"></a>
-
-### QueryGetClassResponse
-QueryGetClassResponse is the response type for the GetClass RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class defines the requested asset class. |
-
-
-
-
-
-
-<a name="provenance-asset-v1-QueryListAssetClasses"></a>
-
-### QueryListAssetClasses
-QueryListAssetClasses is the request type for the ListAssetClasses RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-asset-v1-QueryListAssetClassesResponse"></a>
-
-### QueryListAssetClassesResponse
-QueryListAssetClassesResponse is the response type for the ListAssetClasses RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | asset_classes defines the list of asset classes. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the resulting pagination parameters. |
-
-
-
-
-
-
-<a name="provenance-asset-v1-QueryListAssets"></a>
-
-### QueryListAssets
-QueryListAssets is the request type for the ListAssets RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address defines the address to query assets for. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance-asset-v1-QueryListAssetsResponse"></a>
-
-### QueryListAssetsResponse
-QueryListAssetsResponse is the response type for the ListAssets RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated | assets defines the list of assets. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the resulting pagination parameters. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="provenance-asset-v1-Query"></a>
-
-### Query
-Query defines the gRPC querier service for the asset module.
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `ListAssets` | [QueryListAssets](#provenance-asset-v1-QueryListAssets) | [QueryListAssetsResponse](#provenance-asset-v1-QueryListAssetsResponse) | ListAssets queries all assets for a given address. |
-| `ListAssetClasses` | [QueryListAssetClasses](#provenance-asset-v1-QueryListAssetClasses) | [QueryListAssetClassesResponse](#provenance-asset-v1-QueryListAssetClassesResponse) | ListAssetClasses queries all asset classes. |
-| `GetClass` | [QueryGetClass](#provenance-asset-v1-QueryGetClass) | [QueryGetClassResponse](#provenance-asset-v1-QueryGetClassResponse) | GetClass queries a specific asset class by its ID. |
-
- <!-- end services -->
-
-
-
 <a name="provenance_asset_v1_tx-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -12135,7 +12016,7 @@ MsgCreateAsset is the message type for creating a new asset.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset` | [Asset](#provenance-asset-v1-Asset) |  | asset defines the asset to be created. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12151,7 +12032,7 @@ MsgCreateAssetClass is the message type for creating a new asset class.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class defines the asset class to be created. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12188,7 +12069,7 @@ MsgCreatePool is the message type for creating a new pool.
 | ----- | ---- | ----- | ----------- |
 | `pool` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | pool defines the pool to be created. |
 | `assets` | [AssetKey](#provenance-asset-v1-AssetKey) | repeated | assets defines the list of assets by keys to be included in the pool. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12216,7 +12097,7 @@ MsgCreateSecuritization is the message type for creating a new securitization.
 | `id` | [string](#string) |  | id defines the unique identifier for the securitization. |
 | `pools` | [string](#string) | repeated | pools defines the list of pool identifiers to be included in the securitization. |
 | `tranches` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | tranches defines the list of tranches for the securitization. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12241,9 +12122,9 @@ MsgCreateTokenization is the message type for creating a new tokenization.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | denom defines the denomination for the tokenization. |
+| `token` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | token defines the new token supply and symbol. |
 | `asset` | [AssetKey](#provenance-asset-v1-AssetKey) |  | asset defines the asset by key to be tokenized. |
-| `from_address` | [string](#string) |  | from_address defines the address of the message sender. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 
 
@@ -12278,6 +12159,160 @@ Msg defines the asset module's message service.
 | `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a new pool. |
 | `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a new tokenization. |
 | `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates a new securitization. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/query.proto
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassRequest"></a>
+
+### QueryAssetClassRequest
+QueryAssetClassRequest is the request type for the Query/Class RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | class_id associated with the asset. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassResponse"></a>
+
+### QueryAssetClassResponse
+QueryAssetClassResponse is the response type for the Query/Class RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | class defines the class of the asset type. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassesRequest"></a>
+
+### QueryAssetClassesRequest
+QueryAssetClassesRequest is the request type for the Query/Classes RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassesResponse"></a>
+
+### QueryAssetClassesResponse
+QueryAssetClassesResponse is the response type for the Query/Classes RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | class defines the class of the asset type. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetRequest"></a>
+
+### QueryAssetRequest
+QueryAssetRequest is the request type for the Query/Asset RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id associated with the asset. |
+| `id` | [string](#string) |  | id is a unique identifier of the asset. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetResponse"></a>
+
+### QueryAssetResponse
+QueryAssetResponse is the response type for the Query/Asset RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset` | [Asset](#provenance-asset-v1-Asset) |  | owner is the owner address of the asset. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetsRequest"></a>
+
+### QueryAssetsRequest
+QueryAssetsRequest is the request type for the Query/Assets RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | class_id associated with the asset. |
+| `owner` | [string](#string) |  | owner is the owner address of the asset. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetsResponse"></a>
+
+### QueryAssetsResponse
+QueryAssetsResponse is the response type for the Query/Assets RPC methods.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated | Asset defines the Asset. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-asset-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for the asset module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `Asset` | [QueryAssetRequest](#provenance-asset-v1-QueryAssetRequest) | [QueryAssetResponse](#provenance-asset-v1-QueryAssetResponse) | Asset queries for a specified asset by its class ID and asset ID. |
+| `Assets` | [QueryAssetsRequest](#provenance-asset-v1-QueryAssetsRequest) | [QueryAssetsResponse](#provenance-asset-v1-QueryAssetsResponse) | Assets queries all assets for a given address. |
+| `AssetClass` | [QueryAssetClassRequest](#provenance-asset-v1-QueryAssetClassRequest) | [QueryAssetClassResponse](#provenance-asset-v1-QueryAssetClassResponse) | Class queries a specific asset class by its ID. |
+| `AssetClasses` | [QueryAssetClassesRequest](#provenance-asset-v1-QueryAssetClassesRequest) | [QueryAssetClassesResponse](#provenance-asset-v1-QueryAssetClassesResponse) | Classes queries all asset classes. |
 
  <!-- end services -->
 
