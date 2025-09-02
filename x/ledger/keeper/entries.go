@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"maps"
 	"slices"
 	"time"
 
@@ -309,21 +310,10 @@ func (k Keeper) GetBalancesAsOf(ctx context.Context, key *types.LedgerKey, asOfD
 	}
 
 	// Convert the map to a slice for return.
-	bucketBalancesList := make([]*types.BucketBalance, 0)
-	for _, balance := range bucketBalances {
-		bucketBalancesList = append(bucketBalancesList, balance)
+	bucketBalancesList := make([]*types.BucketBalance, len(bucketBalances))
+	for i, bt := range slices.Sorted(maps.Keys(bucketBalances)) {
+		bucketBalancesList[i] = bucketBalances[bt]
 	}
-
-	// Sort by bucket type ID to ensure consistent ordering.
-	slices.SortFunc(bucketBalancesList, func(a, b *types.BucketBalance) int {
-		if a.BucketTypeId < b.BucketTypeId {
-			return -1
-		}
-		if a.BucketTypeId > b.BucketTypeId {
-			return 1
-		}
-		return 0
-	})
 
 	return &types.BucketBalances{
 		BucketBalances: bucketBalancesList,
