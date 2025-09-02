@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -121,7 +122,7 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	// Validate amounts are non-negative
-	if le.TotalAmt.LT(math.NewInt(0)) {
+	if le.TotalAmt.IsNegative() {
 		return NewErrCodeInvalidField("total_amt", "must be a non-negative integer")
 	}
 
@@ -143,6 +144,8 @@ func (le *LedgerEntry) Validate() error {
 	return nil
 }
 
+var alNumRx = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
+
 // Validate validates the LedgerClass type
 func (lc *LedgerClass) Validate() error {
 	if err := lenCheck("ledger_class_id", lc.LedgerClassId, 1, 50); err != nil {
@@ -150,7 +153,7 @@ func (lc *LedgerClass) Validate() error {
 	}
 
 	// Verify that the ledger class only contains alphanumeric and dashes
-	if !regexp.MustCompile(`^[a-zA-Z0-9-]+$`).MatchString(lc.LedgerClassId) {
+	if !alNumRx.MatchString(lc.LedgerClassId) {
 		return NewErrCodeInvalidField("ledger_class_id", "must only contain alphanumeric and dashes")
 	}
 
@@ -159,22 +162,18 @@ func (lc *LedgerClass) Validate() error {
 	}
 
 	// Validate asset_class_id format (should be a valid UUID or similar format)
-	if !regexp.MustCompile(`^[a-zA-Z0-9-]+$`).MatchString(lc.AssetClassId) {
+	if !alNumRx.MatchString(lc.AssetClassId) {
 		return NewErrCodeInvalidField("asset_class_id", "must only contain alphanumeric and dashes")
 	}
 
-	if err := lenCheck("denom", lc.Denom, 1, 128); err != nil {
+	// Check denom length first for nicer error messages.
+	if err := lenCheck("denom", lc.Denom, 2, 128); err != nil {
 		return err
 	}
 
 	// Validate denom format (should be a valid coin denomination)
-	if !regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9/]{2,127}$`).MatchString(lc.Denom) {
-		return NewErrCodeInvalidField("denom", "must be a valid coin denomination")
-	}
-
-	maintainerAddress := lc.MaintainerAddress
-	if err := lenCheck("maintainer_address", maintainerAddress, 1, 256); err != nil {
-		return err
+	if err := sdk.ValidateDenom(lc.Denom); err != nil {
+		return NewErrCodeInvalidField("denom", fmt.Sprintf("must be a valid coin denomination: %v", err))
 	}
 
 	if _, err := sdk.AccAddressFromBech32(lc.MaintainerAddress); err != nil {
