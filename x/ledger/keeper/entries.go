@@ -49,7 +49,6 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 	for _, le := range entries {
 		// Validate that posted dates are not in the future.
 		// This prevents entries from being posted with future timestamps.
-		// TODO: this could be wrong depending on the timezone of the caller...
 		if le.PostedDate > blockTimeDays {
 			return types.NewErrCodeInvalidField("posted_date", "cannot be in the future")
 		}
