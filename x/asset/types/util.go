@@ -157,12 +157,12 @@ func validateAgainstSchema(schema map[string]interface{}, value interface{}) err
 		}
 		// minimum
 		if minVal, ok := schema["minimum"]; ok {
-			min, ok := numericToFloat64(minVal)
+			minn, ok := numericToFloat64(minVal)
 			if !ok {
 				return fmt.Errorf("invalid minimum")
 			}
-			if f < min {
-				return fmt.Errorf("value %v is less than minimum %v", f, min)
+			if f < minn {
+				return fmt.Errorf("value %v is less than minimum %v", f, minn)
 			}
 		}
 		return nil

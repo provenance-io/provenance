@@ -143,16 +143,16 @@ func (m MsgAppendRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("entries", "cannot be empty")
 	}
 
-	corIds := make(map[string]int)
+	corIDs := make(map[string]int)
 	for i, e := range m.Entries {
 		if err := e.Validate(); err != nil {
 			return err
 		}
-		if j, known := corIds[e.CorrelationId]; known {
+		if j, known := corIDs[e.CorrelationId]; known {
 			return NewErrCodeInvalidField("entries",
 				fmt.Sprintf("correlation id %q duplicated at indexes %d and %d", e.CorrelationId, j, i))
 		}
-		corIds[e.CorrelationId] = i
+		corIDs[e.CorrelationId] = i
 	}
 
 	return nil
