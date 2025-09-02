@@ -1074,25 +1074,25 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// LedgerClass returns the ledger class for a given ledger class id
+	// LedgerClass returns the ledger class for a given ledger class id.
 	LedgerClass(ctx context.Context, in *QueryLedgerClassRequest, opts ...grpc.CallOption) (*QueryLedgerClassResponse, error)
-	// LedgerClassEntryTypes returns the entry types for a given ledger class id
+	// LedgerClassEntryTypes returns the entry types for a given ledger class id.
 	LedgerClassEntryTypes(ctx context.Context, in *QueryLedgerClassEntryTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassEntryTypesResponse, error)
-	// LedgerClassStatusTypes returns the status types for a given ledger class id
+	// LedgerClassStatusTypes returns the status types for a given ledger class id.
 	LedgerClassStatusTypes(ctx context.Context, in *QueryLedgerClassStatusTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassStatusTypesResponse, error)
-	// LedgerClassBucketTypes returns the bucket types for a given ledger class id
+	// LedgerClassBucketTypes returns the bucket types for a given ledger class id.
 	LedgerClassBucketTypes(ctx context.Context, in *QueryLedgerClassBucketTypesRequest, opts ...grpc.CallOption) (*QueryLedgerClassBucketTypesResponse, error)
-	// Ledger returns the ledger for a given ledger key
+	// Ledger returns the ledger for a given ledger key.
 	Ledger(ctx context.Context, in *QueryLedgerRequest, opts ...grpc.CallOption) (*QueryLedgerResponse, error)
-	// LedgerEntries returns the entries for a given ledger key
+	// LedgerEntries returns the entries for a given ledger key.
 	LedgerEntries(ctx context.Context, in *QueryLedgerEntriesRequest, opts ...grpc.CallOption) (*QueryLedgerEntriesResponse, error)
-	// LedgerEntry returns a specific ledger entry for an NFT
+	// LedgerEntry returns a specific ledger entry for an NFT.
 	LedgerEntry(ctx context.Context, in *QueryLedgerEntryRequest, opts ...grpc.CallOption) (*QueryLedgerEntryResponse, error)
-	// LedgerBalancesAsOf returns the balances for a specific NFT as of a given date
+	// LedgerBalancesAsOf returns the balances for a specific NFT as of a given date.
 	LedgerBalancesAsOf(ctx context.Context, in *QueryLedgerBalancesAsOfRequest, opts ...grpc.CallOption) (*QueryLedgerBalancesAsOfResponse, error)
-	// LedgerSettlements returns all settlements for a ledger
+	// LedgerSettlements returns all settlements for a ledger.
 	LedgerSettlements(ctx context.Context, in *QueryLedgerSettlementsRequest, opts ...grpc.CallOption) (*QueryLedgerSettlementsResponse, error)
-	// LedgerSettlementsByCorrelationID returns settlements by correlation id
+	// LedgerSettlementsByCorrelationID returns settlements by correlation id.
 	LedgerSettlementsByCorrelationID(ctx context.Context, in *QueryLedgerSettlementsByCorrelationIDRequest, opts ...grpc.CallOption) (*QueryLedgerSettlementsByCorrelationIDResponse, error)
 }
 
@@ -1196,25 +1196,25 @@ func (c *queryClient) LedgerSettlementsByCorrelationID(ctx context.Context, in *
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// LedgerClass returns the ledger class for a given ledger class id
+	// LedgerClass returns the ledger class for a given ledger class id.
 	LedgerClass(context.Context, *QueryLedgerClassRequest) (*QueryLedgerClassResponse, error)
-	// LedgerClassEntryTypes returns the entry types for a given ledger class id
+	// LedgerClassEntryTypes returns the entry types for a given ledger class id.
 	LedgerClassEntryTypes(context.Context, *QueryLedgerClassEntryTypesRequest) (*QueryLedgerClassEntryTypesResponse, error)
-	// LedgerClassStatusTypes returns the status types for a given ledger class id
+	// LedgerClassStatusTypes returns the status types for a given ledger class id.
 	LedgerClassStatusTypes(context.Context, *QueryLedgerClassStatusTypesRequest) (*QueryLedgerClassStatusTypesResponse, error)
-	// LedgerClassBucketTypes returns the bucket types for a given ledger class id
+	// LedgerClassBucketTypes returns the bucket types for a given ledger class id.
 	LedgerClassBucketTypes(context.Context, *QueryLedgerClassBucketTypesRequest) (*QueryLedgerClassBucketTypesResponse, error)
-	// Ledger returns the ledger for a given ledger key
+	// Ledger returns the ledger for a given ledger key.
 	Ledger(context.Context, *QueryLedgerRequest) (*QueryLedgerResponse, error)
-	// LedgerEntries returns the entries for a given ledger key
+	// LedgerEntries returns the entries for a given ledger key.
 	LedgerEntries(context.Context, *QueryLedgerEntriesRequest) (*QueryLedgerEntriesResponse, error)
-	// LedgerEntry returns a specific ledger entry for an NFT
+	// LedgerEntry returns a specific ledger entry for an NFT.
 	LedgerEntry(context.Context, *QueryLedgerEntryRequest) (*QueryLedgerEntryResponse, error)
-	// LedgerBalancesAsOf returns the balances for a specific NFT as of a given date
+	// LedgerBalancesAsOf returns the balances for a specific NFT as of a given date.
 	LedgerBalancesAsOf(context.Context, *QueryLedgerBalancesAsOfRequest) (*QueryLedgerBalancesAsOfResponse, error)
-	// LedgerSettlements returns all settlements for a ledger
+	// LedgerSettlements returns all settlements for a ledger.
 	LedgerSettlements(context.Context, *QueryLedgerSettlementsRequest) (*QueryLedgerSettlementsResponse, error)
-	// LedgerSettlementsByCorrelationID returns settlements by correlation id
+	// LedgerSettlementsByCorrelationID returns settlements by correlation id.
 	LedgerSettlementsByCorrelationID(context.Context, *QueryLedgerSettlementsByCorrelationIDRequest) (*QueryLedgerSettlementsByCorrelationIDResponse, error)
 }
 
