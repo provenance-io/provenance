@@ -44,7 +44,7 @@ func (k Keeper) RequireAuthority(ctx sdk.Context, addr string, key *registrytype
 func assertOwner(ctx sdk.Context, k RegistryKeeper, authorityAddr string, ledgerKey *types.LedgerKey) error {
 	// Check if the authority has ownership of the NFT
 	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
-	if nftOwner == nil || nftOwner.String() != authorityAddr {
+	if len(nftOwner) == 0 || nftOwner.String() != authorityAddr {
 		return types.NewErrCodeUnauthorized("authority is not the nft owner")
 	}
 
