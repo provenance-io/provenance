@@ -144,7 +144,7 @@ func (le *LedgerEntry) Validate() error {
 	return nil
 }
 
-var alNumRx = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
+var alNumDashRx = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
 
 // Validate validates the LedgerClass type
 func (lc *LedgerClass) Validate() error {
@@ -153,7 +153,7 @@ func (lc *LedgerClass) Validate() error {
 	}
 
 	// Verify that the ledger class only contains alphanumeric and dashes
-	if !alNumRx.MatchString(lc.LedgerClassId) {
+	if !alNumDashRx.MatchString(lc.LedgerClassId) {
 		return NewErrCodeInvalidField("ledger_class_id", "must only contain alphanumeric and dashes")
 	}
 
@@ -162,7 +162,7 @@ func (lc *LedgerClass) Validate() error {
 	}
 
 	// Validate asset_class_id format (should be a valid UUID or similar format)
-	if !alNumRx.MatchString(lc.AssetClassId) {
+	if !alNumDashRx.MatchString(lc.AssetClassId) {
 		return NewErrCodeInvalidField("asset_class_id", "must only contain alphanumeric and dashes")
 	}
 
