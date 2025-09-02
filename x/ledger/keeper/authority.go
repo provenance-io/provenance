@@ -108,7 +108,7 @@ func assertAuthority(ctx sdk.Context, k RegistryKeeper, authorityAddr string, rk
 
 			// Since there is a registered servicer, the owner is not authorized.
 			// This enforces the delegation model where servicers have exclusive rights.
-			return false, types.NewErrCodeUnauthorized("owner is not theregistered servicer")
+			return false, types.NewErrCodeUnauthorized("owner is not the registered servicer")
 		}
 	}
 
