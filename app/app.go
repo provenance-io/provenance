@@ -393,7 +393,6 @@ func New(
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
-		assettypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
 		flatfeestypes.StoreKey,
