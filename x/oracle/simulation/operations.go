@@ -58,6 +58,7 @@ func ProposalMsgs(simState module.SimulationState, k keeper.Keeper) []simtypes.W
 	}
 }
 
+// SimulatePropMsgUpdateOracle simulates a governance proposal to update the oracle.
 func SimulatePropMsgUpdateOracle(k keeper.Keeper) simtypes.MsgSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 		// change it to a new random account.

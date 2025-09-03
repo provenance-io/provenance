@@ -1,3 +1,4 @@
+// Package simulation provides simulation support for the quarantine module.
 package simulation
 
 import (

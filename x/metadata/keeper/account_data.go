@@ -1,3 +1,4 @@
+// Package keeper provides logic for managing metadata-related state.
 package keeper
 
 import (

@@ -1,3 +1,4 @@
+// Package keeper implements the state management for the msgfees module.
 package keeper
 
 import (
