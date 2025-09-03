@@ -13,6 +13,7 @@ import (
 	hold "github.com/provenance-io/provenance/x/hold"
 )
 
+// HoldAccountHolds is the key used in simulation to track held accounts.
 const HoldAccountHolds = "hold-account-holds"
 
 // RandomAccountHolds randomly selects accounts with an existing balance to place a hold of a random amount.

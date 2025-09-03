@@ -1,3 +1,4 @@
+// Package params handles app encoding.
 package params
 
 import (

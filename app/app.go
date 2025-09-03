@@ -1,3 +1,4 @@
+// Package app initializes and configures the main application.
 package app
 
 import (
@@ -430,7 +431,7 @@ func New(
 	}
 
 	// Register State listening services.
-	if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys); err != nil {
+	if err := app.RegisterStreamingServices(appOpts, app.keys); err != nil {
 		app.Logger().Error("failed to register streaming plugin", "error", err)
 		os.Exit(1)
 	}
@@ -488,7 +489,7 @@ func New(
 	)
 
 	app.CircuitKeeper = circuitkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[circuittypes.StoreKey]), govAuthority, app.AccountKeeper.AddressCodec())
-	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)
+	app.SetCircuitBreaker(&app.CircuitKeeper)
 
 	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), app.StakingKeeper, app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, govAuthority)
 
@@ -527,7 +528,7 @@ func New(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper).SetBankKeeper(app.BankKeeper)
 
-	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
+	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
@@ -656,7 +657,7 @@ func New(
 	app.ICQKeeper = icqkeeper.NewKeeper(
 		appCodec, keys[icqtypes.StoreKey],
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
-		app.ScopedICQKeeper, app.BaseApp.GRPCQueryRouter(), govAuthority,
+		app.ScopedICQKeeper, app.GRPCQueryRouter(), govAuthority,
 	)
 	icqModule := icq.NewAppModule(app.ICQKeeper, nil)
 	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
@@ -735,7 +736,7 @@ func New(
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, app.DistrKeeper, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
+		app.StakingKeeper, app.DistrKeeper, app.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
 	)
 
 	// Set legacy router for backwards compatibility with gov v1beta1
@@ -991,7 +992,7 @@ func New(
 	app.mm.SetOrderMigrations(moduleMigrationOrder...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
-	app.configurator = module.NewConfigurator(app.appCodec, app.BaseApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	if err := app.mm.RegisterServices(app.configurator); err != nil {
 		panic(err)
 	}
@@ -1327,7 +1328,7 @@ func (app *App) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *App) RegisterTendermintService(clientCtx client.Context) {
-	cmtservice.RegisterTendermintService(clientCtx, app.BaseApp.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
+	cmtservice.RegisterTendermintService(clientCtx, app.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
 }
 
 // RegisterNodeService registers the node query server.
