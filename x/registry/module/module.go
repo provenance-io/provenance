@@ -14,8 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
-
 	"github.com/provenance-io/provenance/x/registry/client/cli"
 	"github.com/provenance-io/provenance/x/registry/keeper"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
@@ -50,8 +48,8 @@ func (AppModuleBasic) RegisterCodec(_ *codec.LegacyAmino) {
 func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 // Register the protobuf message types and services with the sdk.
-func (AppModuleBasic) RegisterInterfaces(r types.InterfaceRegistry) {
-	msgservice.RegisterMsgServiceDesc(r, &registrytypes.Msg_serviceDesc)
+func (AppModuleBasic) RegisterInterfaces(registry types.InterfaceRegistry) {
+	registrytypes.RegisterInterfaces(registry)
 }
 
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
