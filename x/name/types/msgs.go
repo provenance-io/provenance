@@ -17,6 +17,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParamsRequest)(nil),
 }
 
+// NewMsgBindNameRequest creates a new MsgBindNameRequest instance.
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
 	return &MsgBindNameRequest{
 		Parent: parent,
@@ -24,6 +25,7 @@ func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
 	}
 }
 
+// ValidateBasic implements basic validation for MsgBindNameRequest.
 func (msg MsgBindNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Parent.Name) == "" {
 		return fmt.Errorf("parent name cannot be empty")
@@ -43,12 +45,14 @@ func (msg MsgBindNameRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgDeleteNameRequest creates a new MsgDeleteNameRequest instance.
 func NewMsgDeleteNameRequest(record NameRecord) *MsgDeleteNameRequest {
 	return &MsgDeleteNameRequest{
 		Record: record,
 	}
 }
 
+// ValidateBasic implements basic validation for MsgDeleteNameRequest.
 func (msg MsgDeleteNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
 		return fmt.Errorf("name cannot be empty")
@@ -59,6 +63,7 @@ func (msg MsgDeleteNameRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgModifyNameRequest creates a new MsgModifyNameRequest instance.
 func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress, restricted bool) *MsgModifyNameRequest {
 	return &MsgModifyNameRequest{
 		Authority: authority,
@@ -66,6 +71,7 @@ func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress
 	}
 }
 
+// ValidateBasic implements basic validation for MsgModifyNameRequest.
 func (msg MsgModifyNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
 		return fmt.Errorf("name cannot be empty")
@@ -79,6 +85,7 @@ func (msg MsgModifyNameRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgCreateRootNameRequest creates a new MsgCreateRootNameRequest instance.
 func NewMsgCreateRootNameRequest(authority string, name string, address string, restricted bool) *MsgCreateRootNameRequest {
 	return &MsgCreateRootNameRequest{
 		Authority: authority,
@@ -90,6 +97,7 @@ func NewMsgCreateRootNameRequest(authority string, name string, address string, 
 	}
 }
 
+// ValidateBasic implements basic validation for MsgCreateRootNameRequest.
 func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return ErrInvalidAddress
@@ -103,6 +111,7 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgUpdateParamsRequest creates a new MsgUpdateParamsRequest instance.
 func NewMsgUpdateParamsRequest(
 	maxSegmentLength uint32,
 	minSegmentLength uint32,
@@ -121,6 +130,7 @@ func NewMsgUpdateParamsRequest(
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateParamsRequest.
 func (msg MsgUpdateParamsRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	return err

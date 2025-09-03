@@ -352,6 +352,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *App) GenesisState {
 	return genesisState
 }
 
+// GenerateAccountStrategy defines a strategy for generating accounts.
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
 // createRandomAccounts is a strategy used by addTestAddrs() in order to generated addresses in random order.
@@ -459,7 +460,7 @@ func initAccountWithCoins(app *App, ctx sdk.Context, addr sdk.AccAddress, coins 
 		panic(err)
 	}
 }
-
+// TestAddr returns a test account address.
 func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHexUnsafe(addr)
 	if err != nil {

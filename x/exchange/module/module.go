@@ -1,3 +1,4 @@
+// Package module defines the app module for the exchange functionality.
 package module
 
 import (
@@ -33,10 +34,12 @@ var (
 	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
+// AppModuleBasic defines the basic application module for the exchange module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
+// Name returns the exchange module's name.
 func (AppModuleBasic) Name() string {
 	return exchange.ModuleName
 }
@@ -80,11 +83,13 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // RegisterLegacyAminoCodec registers the exchange module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
+// AppModule implements the full application module for the exchange module.
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule instance.
 func NewAppModule(cdc codec.Codec, exchangeKeeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},

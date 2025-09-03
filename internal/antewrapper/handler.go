@@ -24,7 +24,7 @@ type HandlerOptions struct {
 	TxSigningHandlerMap    *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
-
+// NewAnteHandler creates a new ante handler.
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("account keeper is required for ante builder")

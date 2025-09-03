@@ -1,3 +1,4 @@
+// Package protocompat provides utilities for protobuf compatibility.
 package protocompat
 
 import (
@@ -22,8 +23,10 @@ var (
 	protov2MarshalOpts = protov2.MarshalOptions{Deterministic: true}
 )
 
+// Handler handles protobuf compatibility operations.
 type Handler = func(ctx context.Context, request, response protoiface.MessageV1) error
 
+// MakeHybridHandler creates a new hybrid protobuf compatibility handler.
 func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
