@@ -4,6 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgRegisterNFT)(nil),
+	(*MsgGrantRole)(nil),
+	(*MsgRevokeRole)(nil),
+	(*MsgUnregisterNFT)(nil),
+}
+
 // ValidateBasic validates the MsgRegisterNFT message
 func (m *MsgRegisterNFT) ValidateBasic() error {
 	// Verify the authority is a valid address
