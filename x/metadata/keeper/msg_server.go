@@ -652,13 +652,13 @@ func (k msgServer) BindOSLocator(
 	if strings.TrimSpace(msg.Locator.EncryptionKey) != "" {
 		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
 	}
-	if k.Keeper.OSLocatorExists(ctx, ownerAddress) {
+	if k.OSLocatorExists(ctx, ownerAddress) {
 		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	// Bind owner to URI
-	if err := k.Keeper.SetOSLocator(ctx, ownerAddress, encryptionKey, msg.Locator.LocatorUri); err != nil {
+	if err := k.SetOSLocator(ctx, ownerAddress, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -683,18 +683,18 @@ func (k msgServer) DeleteOSLocator(
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+	if !k.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+	if !k.VerifyCorrectOwner(ctx, ownerAddr) {
 		ctx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete os locator.")
 	}
 
 	// Delete
-	if err := k.Keeper.RemoveOSLocator(ctx, ownerAddr); err != nil {
+	if err := k.RemoveOSLocator(ctx, ownerAddr); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -723,12 +723,12 @@ func (k msgServer) ModifyOSLocator(
 		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
 	}
 
-	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+	if !k.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+	if !k.VerifyCorrectOwner(ctx, ownerAddr) {
 		ctx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete os locator.")
 	}

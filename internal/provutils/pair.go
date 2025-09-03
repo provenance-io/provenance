@@ -1,3 +1,4 @@
+// Package provutils provides utility functions and types for Provenance.
 package provutils
 
 import "fmt"

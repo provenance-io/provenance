@@ -148,6 +148,7 @@ func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// NewMsgWriteScopeResponse creates a response message for writing a scope.
 func NewMsgWriteScopeResponse(scopeID MetadataAddress) *MsgWriteScopeResponse {
 	return &MsgWriteScopeResponse{
 		ScopeIdInfo: GetScopeIDInfo(scopeID),
@@ -448,6 +449,7 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// NewMsgWriteSessionResponse creates a response message for writing a session.
 func NewMsgWriteSessionResponse(sessionID MetadataAddress) *MsgWriteSessionResponse {
 	return &MsgWriteSessionResponse{
 		SessionIdInfo: GetSessionIDInfo(sessionID),
@@ -514,6 +516,7 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// NewMsgWriteRecordResponse creates a response message for writing a record.
 func NewMsgWriteRecordResponse(recordID MetadataAddress) *MsgWriteRecordResponse {
 	return &MsgWriteRecordResponse{
 		RecordIdInfo: GetRecordIDInfo(recordID),
@@ -587,6 +590,7 @@ func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// NewMsgWriteScopeSpecificationResponse creates a response message for writing a scope specification.
 func NewMsgWriteScopeSpecificationResponse(scopeSpecID MetadataAddress) *MsgWriteScopeSpecificationResponse {
 	return &MsgWriteScopeSpecificationResponse{
 		ScopeSpecIdInfo: GetScopeSpecIDInfo(scopeSpecID),
@@ -660,6 +664,7 @@ func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// NewMsgWriteContractSpecificationResponse creates a response message for writing a record specification.
 func NewMsgWriteContractSpecificationResponse(contractSpecID MetadataAddress) *MsgWriteContractSpecificationResponse {
 	return &MsgWriteContractSpecificationResponse{
 		ContractSpecIdInfo: GetContractSpecIDInfo(contractSpecID),
@@ -784,6 +789,7 @@ func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// NewMsgWriteRecordSpecificationResponse creates a response message for writing a contract specification.
 func NewMsgWriteRecordSpecificationResponse(recordSpecID MetadataAddress) *MsgWriteRecordSpecificationResponse {
 	return &MsgWriteRecordSpecificationResponse{
 		RecordSpecIdInfo: GetRecordSpecIDInfo(recordSpecID),
@@ -812,12 +818,14 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 
 // ------------------  MsgWriteP8EContractSpecRequest  ------------------
 
+// ValidateBasic performs basic validation of the MsgWriteP8EContractSpecRequest.
 func (msg MsgWriteP8EContractSpecRequest) ValidateBasic() error {
 	return errors.New("deprecated and unusable")
 }
 
 // ------------------  MsgP8EMemorializeContractRequest  ------------------
 
+// ValidateBasic performs basic validation of the MsgWriteP8EContractSpecRequest.
 func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
 	return errors.New("deprecated and unusable")
 }
@@ -847,6 +855,7 @@ func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
 
 // ------------------  MsgDeleteOSLocatorRequest  ------------------
 
+// NewMsgDeleteOSLocatorRequest creates a new message to delete an object store locator.
 func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorRequest {
 	return &MsgDeleteOSLocatorRequest{
 		Locator: obj,
@@ -870,6 +879,7 @@ func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
 
 // ------------------  MsgModifyOSLocatorRequest  ------------------
 
+// NewMsgModifyOSLocatorRequest creates a new message to modify an object store locator.
 func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorRequest {
 	return &MsgModifyOSLocatorRequest{
 		Locator: obj,
@@ -916,6 +926,7 @@ func (msg MsgSetAccountDataRequest) GetSignerStrs() []string {
 
 // ------------------  MsgAddNetAssetValuesRequest  ------------------
 
+// NewMsgAddNetAssetValuesRequest creates a message to add net asset values to a scope.
 func NewMsgAddNetAssetValuesRequest(scopeID string, signers []string, netAssetValues []NetAssetValue) *MsgAddNetAssetValuesRequest {
 	return &MsgAddNetAssetValuesRequest{
 		ScopeId:        scopeID,
@@ -929,6 +940,7 @@ func (msg MsgAddNetAssetValuesRequest) GetSignerStrs() []string {
 	return msg.Signers
 }
 
+// ValidateBasic implements basic validation for MsgAddNetAssetValuesRequest.
 func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	if len(msg.NetAssetValues) == 0 {
 		return fmt.Errorf("net asset value list cannot be empty")
@@ -970,6 +982,7 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 
 // ------------------  SessionIdComponents  ------------------
 
+// GetSessionAddr returns the session address from the session ID components.
 func (msg *SessionIdComponents) GetSessionAddr() (MetadataAddress, error) {
 	var scopeUUID, sessionUUID *uuid.UUID
 	if len(msg.SessionUuid) > 0 {

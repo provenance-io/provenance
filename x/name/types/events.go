@@ -14,6 +14,7 @@ const (
 	KeyAttributeAddress string = "address"
 )
 
+// NewEventNameBound creates a new event for a name being bound.
 func NewEventNameBound(address string, name string, restricted bool) *EventNameBound {
 	return &EventNameBound{
 		Address:    address,
@@ -22,6 +23,7 @@ func NewEventNameBound(address string, name string, restricted bool) *EventNameB
 	}
 }
 
+// NewEventNameUnbound creates a new event for a name being unbound.
 func NewEventNameUnbound(address string, name string, restricted bool) *EventNameUnbound {
 	return &EventNameUnbound{
 		Address:    address,
@@ -30,6 +32,7 @@ func NewEventNameUnbound(address string, name string, restricted bool) *EventNam
 	}
 }
 
+// NewEventNameUpdate creates a new event for a name update.
 func NewEventNameUpdate(address string, name string, restricted bool) *EventNameUpdate {
 	return &EventNameUpdate{
 		Address:    address,

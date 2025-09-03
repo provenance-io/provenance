@@ -1,3 +1,4 @@
+// Package keeper contains state management and business logic for the oracle module.
 package keeper
 
 import (

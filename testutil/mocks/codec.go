@@ -1,3 +1,4 @@
+// Package mocks contains mock codecs used in test utilities.
 package mocks
 
 import (
@@ -69,6 +70,7 @@ func (c *MockCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	return c.Codec.MarshalJSON(o)
 }
 
+// MustMarshalJSON mocks JSON marshaling and panics on error.
 func (c *MockCodec) MustMarshalJSON(o proto.Message) []byte {
 	if len(c.MarshalJSONErrs) > 0 {
 		errMsg := c.MarshalJSONErrs[0]
@@ -80,6 +82,7 @@ func (c *MockCodec) MustMarshalJSON(o proto.Message) []byte {
 	return c.Codec.MustMarshalJSON(o)
 }
 
+// UnmarshalJSON mocks JSON unmarshaling.
 func (c *MockCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	if len(c.UnmarshalJSONErrs) > 0 {
 		errMsg := c.UnmarshalJSONErrs[0]
@@ -91,6 +94,7 @@ func (c *MockCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	return c.Codec.UnmarshalJSON(bz, ptr)
 }
 
+// MustUnmarshalJSON mocks JSON unmarshaling and panics on error.
 func (c *MockCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	if len(c.UnmarshalJSONErrs) > 0 {
 		errMsg := c.UnmarshalJSONErrs[0]
