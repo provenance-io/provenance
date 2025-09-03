@@ -12,6 +12,7 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
+// SendRestrictionFn returns a function that checks if an address is allowed to send tokens.
 func (k Keeper) SendRestrictionFn(ctx context.Context, fromAddr, toAddr sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
 	if !sanction.HasBypass(ctx) && k.IsSanctionedAddr(ctx, fromAddr) {
 		return nil, errors.ErrSanctionedAccount.Wrapf("cannot send from %s", fromAddr.String())

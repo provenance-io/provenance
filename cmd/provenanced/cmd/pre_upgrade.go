@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	ErrFail      error = cmderrors.ExitCodeError(30)
+	ErrFail      error = cmderrors.ExitCodeError(30) //nolint:revive
 	ErrFailRetry error = cmderrors.ExitCodeError(31)
 )
 

@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// Port defines the simulation key for oracle port ID.
 	Port = "port"
 )
 

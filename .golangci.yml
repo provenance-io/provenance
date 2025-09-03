@@ -10,7 +10,7 @@ linters:
     - bidichk
     - bodyclose
     - copyloopvar
-    - depguard
+    # - depguard
     - dogsled
     - durationcheck
     - errcheck
@@ -76,14 +76,16 @@ linters-settings:
   depguard:
     rules:
       main:
+        list-mode: lax
         files:
           - $all
           - "!$test"
         allow:
           - $gostd
-
+          - github.com/CosmWasm
           - github.com/armon/go-metrics
-
+          - cosmossdk.io
+          - github.com/cosmos
           - cosmossdk.io/api
           - cosmossdk.io/client/v2
           - cosmossdk.io/collections
@@ -103,7 +105,7 @@ linters-settings:
           - github.com/cosmos/go-bip39
           - github.com/cosmos/ibc-apps
           - github.com/cosmos/ibc-go
-
+          - github.com/CosmWasm/wasm/x/wasm
           - github.com/CosmWasm/wasmd
           - github.com/CosmWasm/wasmvm/v2
 

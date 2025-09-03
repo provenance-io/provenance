@@ -38,6 +38,7 @@ func DefaultParams() Params {
 	)
 }
 
+// Validate validates the Params struct for the marker module.
 func (p Params) Validate() error {
 	exp := p.UnrestrictedDenomRegex
 	if len(exp) > 0 && (exp[0:1] == "^" || exp[len(exp)-1:] == "$") {
@@ -47,6 +48,7 @@ func (p Params) Validate() error {
 	return err
 }
 
+// StringToBigInt converts a string to a big.Int value.
 func StringToBigInt(val string) sdkmath.Int {
 	res, ok := sdkmath.NewIntFromString(val)
 	if !ok {

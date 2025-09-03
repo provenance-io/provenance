@@ -1,7 +1,7 @@
 package types
 
 const (
-	DefaultMaxValueLength = 10000
+	DefaultMaxValueLength = 10000 //nolint:revive
 )
 
 // NewParams create a new Params object

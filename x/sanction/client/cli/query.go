@@ -1,3 +1,4 @@
+// Package cli provides CLI commands for querying the sanction module.
 package cli
 
 import (

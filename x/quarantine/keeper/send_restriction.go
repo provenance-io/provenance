@@ -12,6 +12,7 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
+// SendRestrictionFn returns a function that restricts sending based on quarantine status.
 func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	// bypass if the context says to.
 	if quarantine.HasBypass(goCtx) {

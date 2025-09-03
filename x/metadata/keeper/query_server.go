@@ -1028,6 +1028,7 @@ func (k Keeper) GetByAddr(c context.Context, req *types.GetByAddrRequest) (*type
 	return retval, nil
 }
 
+// OSLocatorParams returns the OS locator parameters.
 func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParamsRequest) (*types.OSLocatorParamsResponse, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "query", "OSLocatorParams")
 	ctx := sdk.UnwrapSDKContext(c)
@@ -1039,6 +1040,7 @@ func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParam
 	return resp, nil
 }
 
+// OSLocator returns the OS locator for the given ID.
 func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "query", "OSLocator")
 	if request == nil {
@@ -1065,6 +1067,7 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 	return &retval, nil
 }
 
+// OSLocatorsByURI returns a list of OS locators by their URI.
 func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsByURIRequest) (*types.OSLocatorsByURIResponse, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "query", "OSLocatorsByURI")
 	retval := types.OSLocatorsByURIResponse{}
@@ -1111,6 +1114,7 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 	return &retval, nil
 }
 
+// OSLocatorsByScope returns OS locators for the specified scope.
 func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocatorsByScopeRequest) (*types.OSLocatorsByScopeResponse, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "query", "OSLocatorsByScope")
 	if request == nil {
@@ -1136,6 +1140,7 @@ func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocators
 	return &retval, nil
 }
 
+// OSAllLocators returns all available OS locators.
 func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "query", "OSAllLocators")
 	retval := types.OSAllLocatorsResponse{}
@@ -1163,6 +1168,7 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 	return &retval, nil
 }
 
+// AccountData returns metadata associated with an account.
 func (k Keeper) AccountData(c context.Context, req *types.AccountDataRequest) (*types.AccountDataResponse, error) {
 	if req == nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
@@ -1182,6 +1188,7 @@ func (k Keeper) AccountData(c context.Context, req *types.AccountDataRequest) (*
 	return &types.AccountDataResponse{Value: value}, nil
 }
 
+// IsBase64 checks whether a string is valid base64.
 func IsBase64(s string) bool {
 	_, err := b64.StdEncoding.DecodeString(s)
 	return err == nil
@@ -1334,7 +1341,7 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 	return types.RecordSpecMetadataAddress(uid, name), nil
 }
 
-// NetAssetValues query for returning net asset values for a marker
+// ScopeNetAssetValues query for returning net asset values for a marker
 func (k Keeper) ScopeNetAssetValues(c context.Context, req *types.QueryScopeNetAssetValuesRequest) (*types.QueryScopeNetAssetValuesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 

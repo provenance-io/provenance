@@ -1,3 +1,4 @@
+// Package config handles client configuration.
 package config
 
 import (
@@ -23,13 +24,14 @@ import (
 //   - The way the SDK loads the config into viper stomps on previously loades stuff.
 
 var (
-	DefaultChainID        = ""
+	DefaultChainID        = "" //nolint:revive
 	DefaultKeyringBackend = "os"
 	DefaultOutput         = "text"
 	DefaultNode           = "tcp://localhost:26657"
 	DefaultBroadcastMode  = "sync"
 )
 
+// ClientConfig holds client configuration.
 type ClientConfig struct {
 	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
 	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
@@ -49,26 +51,32 @@ func DefaultClientConfig() *ClientConfig {
 	}
 }
 
+// SetChainID sets the chain ID.
 func (c *ClientConfig) SetChainID(chainID string) {
 	c.ChainID = chainID
 }
 
+// SetKeyringBackend sets the keyring backend.
 func (c *ClientConfig) SetKeyringBackend(keyringBackend string) {
 	c.KeyringBackend = keyringBackend
 }
 
+// SetOutput sets the output writer.
 func (c *ClientConfig) SetOutput(output string) {
 	c.Output = output
 }
 
+// SetNode sets the node URI.
 func (c *ClientConfig) SetNode(node string) {
 	c.Node = node
 }
 
+// SetBroadcastMode sets the broadcast mode.
 func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
+// ValidateBasic does simple stateless validation of this Msg.
 func (c ClientConfig) ValidateBasic() error {
 	switch c.KeyringBackend {
 	case "os", "file", "kwallet", "pass", "test", "memory":

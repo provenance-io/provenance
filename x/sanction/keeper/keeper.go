@@ -16,6 +16,7 @@ import (
 	"github.com/provenance-io/provenance/x/sanction/errors"
 )
 
+// Keeper handles all state-related operations for the sanction module.
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
@@ -31,6 +32,7 @@ type Keeper struct {
 	msgExecLegacyContentTypeURL string
 }
 
+// NewKeeper creates a new Keeper instance for the sanction module.
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,

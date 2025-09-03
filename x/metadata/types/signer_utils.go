@@ -114,6 +114,7 @@ func (p *PartyDetails) Copy() *PartyDetails {
 	return rv
 }
 
+// SetAddress sets the address for the party.
 func (p *PartyDetails) SetAddress(address string) {
 	if p.address != address {
 		p.acc = nil
@@ -121,6 +122,7 @@ func (p *PartyDetails) SetAddress(address string) {
 	p.address = address
 }
 
+// GetAddress returns the address of the party.
 func (p *PartyDetails) GetAddress() string {
 	if len(p.address) == 0 && len(p.acc) > 0 {
 		p.address = p.acc.String()
@@ -128,6 +130,7 @@ func (p *PartyDetails) GetAddress() string {
 	return p.address
 }
 
+// SetAcc sets the account reference for the party.
 func (p *PartyDetails) SetAcc(addr sdk.AccAddress) {
 	if !bytes.Equal(p.acc, addr) {
 		p.address = ""
@@ -135,6 +138,7 @@ func (p *PartyDetails) SetAcc(addr sdk.AccAddress) {
 	p.acc = addr
 }
 
+// GetAcc returns the account reference of the party.
 func (p *PartyDetails) GetAcc() sdk.AccAddress {
 	if len(p.acc) == 0 && len(p.address) > 0 {
 		p.acc, _ = sdk.AccAddressFromBech32(p.address)
@@ -142,30 +146,37 @@ func (p *PartyDetails) GetAcc() sdk.AccAddress {
 	return p.acc
 }
 
+// SetRole assigns a role to the party.
 func (p *PartyDetails) SetRole(role PartyType) {
 	p.role = role
 }
 
+// GetRole returns the role of the party.
 func (p *PartyDetails) GetRole() PartyType {
 	return p.role
 }
 
+// SetOptional marks the party as optional.
 func (p *PartyDetails) SetOptional(optional bool) {
 	p.optional = optional
 }
 
+// MakeRequired marks the party as required.
 func (p *PartyDetails) MakeRequired() {
 	p.optional = false
 }
 
+// GetOptional returns whether the party is optional.
 func (p *PartyDetails) GetOptional() bool {
 	return p.optional
 }
 
+// IsRequired returns true if the party is marked as required.
 func (p *PartyDetails) IsRequired() bool {
 	return !p.optional
 }
 
+// SetSigner assigns a signer to the party.
 func (p *PartyDetails) SetSigner(signer string) {
 	if p.signer != signer {
 		p.signerAcc = nil
@@ -173,6 +184,7 @@ func (p *PartyDetails) SetSigner(signer string) {
 	p.signer = signer
 }
 
+// GetSigner returns the signer assigned to the party.
 func (p *PartyDetails) GetSigner() string {
 	if len(p.signer) == 0 && len(p.signerAcc) > 0 {
 		p.signer = p.signerAcc.String()
@@ -180,6 +192,7 @@ func (p *PartyDetails) GetSigner() string {
 	return p.signer
 }
 
+// SetSignerAcc sets the account reference for the signer.
 func (p *PartyDetails) SetSignerAcc(signerAddr sdk.AccAddress) {
 	if !bytes.Equal(p.signerAcc, signerAddr) {
 		p.signer = ""
@@ -187,6 +200,7 @@ func (p *PartyDetails) SetSignerAcc(signerAddr sdk.AccAddress) {
 	p.signerAcc = signerAddr
 }
 
+// GetSignerAcc returns the account reference of the signer.
 func (p *PartyDetails) GetSignerAcc() sdk.AccAddress {
 	if len(p.signerAcc) == 0 && len(p.signer) > 0 {
 		p.signerAcc, _ = sdk.AccAddressFromBech32(p.signer)
@@ -194,18 +208,22 @@ func (p *PartyDetails) GetSignerAcc() sdk.AccAddress {
 	return p.signerAcc
 }
 
+// HasSigner checks if a signer has been set.
 func (p *PartyDetails) HasSigner() bool {
 	return len(p.signer) > 0 || len(p.signerAcc) > 0
 }
 
+// CanBeUsed returns true if the party can be used as a signer.
 func (p *PartyDetails) CanBeUsed() bool {
 	return p.canBeUsedBySpec
 }
 
+// MarkAsUsed marks the party as used.
 func (p *PartyDetails) MarkAsUsed() {
 	p.usedBySpec = true
 }
 
+// IsUsed returns true if the party has been used.
 func (p *PartyDetails) IsUsed() bool {
 	return p.usedBySpec
 }

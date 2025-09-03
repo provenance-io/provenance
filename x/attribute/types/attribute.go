@@ -1,3 +1,4 @@
+// Package types defines core types, constants, and events for the attribute module
 package types
 
 import (

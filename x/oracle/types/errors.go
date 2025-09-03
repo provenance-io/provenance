@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	ErrInvalidPacketTimeout = cerrs.Register(ModuleName, 3, "invalid packet timeout")
+	ErrInvalidPacketTimeout = cerrs.Register(ModuleName, 3, "invalid packet timeout") //nolint:revive
 	ErrInvalidVersion       = cerrs.Register(ModuleName, 4, "invalid version")
 	ErrMissingOracleAddress = cerrs.Register(ModuleName, 5, "missing oracle address")
 )

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewParams returns a new Params instance for ibchooks.
 func NewParams(allowedAsyncAckContracts []string) Params {
 	return Params{
 		AllowedAsyncAckContracts: allowedAsyncAckContracts,

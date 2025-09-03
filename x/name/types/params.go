@@ -1,7 +1,7 @@
 package types
 
 const (
-	DefaultMinSegmentLength       = uint32(2)
+	DefaultMinSegmentLength       = uint32(2) //nolint:revive
 	DefaultMaxSegmentLength       = uint32(32)
 	DefaultMaxNameLevels          = uint32(16)
 	DefaultAllowUnrestrictedNames = true

@@ -1,3 +1,4 @@
+// Package exchange contains types and functionality for the exchange module.
 package exchange
 
 import (

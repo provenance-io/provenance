@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	// FlagConcreteType is the CLI flag for specifying the concrete attribute type.
 	FlagConcreteType = "concrete-type"
 )
 

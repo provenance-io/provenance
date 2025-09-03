@@ -1,3 +1,4 @@
+// Package simulation contains simulation logic for the trigger module.
 package simulation
 
 import (

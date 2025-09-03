@@ -1,3 +1,4 @@
+// Package keeper implements the core logic for the exchange module's state management.
 package keeper
 
 import (
@@ -417,7 +418,7 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	return nil
 }
 
-// TransferCommitment transfers committed funds from one market to another.
+// TransferCommitments transfers committed funds from one market to another.
 func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentRequest) error {
 	account, err := sdk.AccAddressFromBech32(req.Account)
 	if err != nil {

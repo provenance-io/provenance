@@ -49,6 +49,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParamsRequest)(nil),
 }
 
+// NewMsgFinalizeRequest creates a new MsgFinalizeRequest instance.
 func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
 	return &MsgFinalizeRequest{
 		Denom:         denom,
@@ -56,10 +57,12 @@ func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeReque
 	}
 }
 
+// ValidateBasic implements basic validation for MsgFinalizeRequest.
 func (msg MsgFinalizeRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
+// NewMsgActivateRequest creates a new MsgActivateRequest instance.
 func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest {
 	return &MsgActivateRequest{
 		Denom:         denom,
@@ -67,10 +70,12 @@ func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateReque
 	}
 }
 
+// ValidateBasic implements basic validation for MsgFinalizeRequest.
 func (msg MsgActivateRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
+// NewMsgCancelRequest creates a new MsgCancelRequest instance.
 func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 	return &MsgCancelRequest{
 		Denom:         denom,
@@ -78,10 +83,12 @@ func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 	}
 }
 
+// ValidateBasic implements basic validation for MsgFinalizeRequest.
 func (msg MsgCancelRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
+// NewMsgDeleteRequest creates a new MsgDeleteRequest instance.
 func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 	return &MsgDeleteRequest{
 		Denom:         denom,
@@ -89,10 +96,12 @@ func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 	}
 }
 
+// ValidateBasic implements basic validation for MsgFinalizeRequest.
 func (msg MsgDeleteRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
+// NewMsgMintRequest creates a new MsgMintRequest instance.
 func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin, recipient sdk.AccAddress) *MsgMintRequest {
 	msg := &MsgMintRequest{
 		Administrator: admin.String(),
@@ -104,6 +113,7 @@ func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin, recipient sdk.AccA
 	return msg
 }
 
+// ValidateBasic implements basic validation for MsgFinalizeRequest.
 func (msg MsgMintRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
@@ -116,6 +126,7 @@ func (msg MsgMintRequest) ValidateBasic() error {
 	return msg.Amount.Validate()
 }
 
+// NewMsgBurnRequest creates a new MsgBurnRequest instance.
 func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest {
 	return &MsgBurnRequest{
 		Administrator: admin.String(),
@@ -123,6 +134,7 @@ func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest {
 	}
 }
 
+// ValidateBasic implements basic validation for MsgFinalizeRequest.
 func (msg MsgBurnRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
@@ -131,6 +143,7 @@ func (msg MsgBurnRequest) ValidateBasic() error {
 	return msg.Amount.Validate()
 }
 
+// NewMsgAddAccessRequest creates a new MsgAddAccessRequest instance.
 func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest {
 	return &MsgAddAccessRequest{
 		Denom:         denom,
@@ -139,6 +152,7 @@ func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGra
 	}
 }
 
+// ValidateBasic implements basic validation for MsgAddAccessRequest.
 func (msg MsgAddAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -146,6 +160,7 @@ func (msg MsgAddAccessRequest) ValidateBasic() error {
 	return ValidateGrants(msg.Access...)
 }
 
+// NewDeleteAccessRequest creates a new DeleteAccessRequest instance.
 func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccAddress) *MsgDeleteAccessRequest {
 	return &MsgDeleteAccessRequest{
 		Denom:          denom,
@@ -154,6 +169,7 @@ func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccA
 	}
 }
 
+// ValidateBasic implements basic validation for MsgDeleteAccessRequest.
 func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -162,6 +178,7 @@ func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	return err
 }
 
+// NewMsgWithdrawRequest creates a new MsgWithdrawRequest instance.
 func NewMsgWithdrawRequest(
 	admin sdk.AccAddress, toAddress sdk.AccAddress, denom string, amount sdk.Coins,
 ) *MsgWithdrawRequest {
@@ -176,6 +193,7 @@ func NewMsgWithdrawRequest(
 	}
 }
 
+// ValidateBasic implements basic validation for MsgWithdrawRequest.
 func (msg MsgWithdrawRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -192,6 +210,7 @@ func (msg MsgWithdrawRequest) ValidateBasic() error {
 	return msg.Amount.Validate()
 }
 
+// NewMsgAddMarkerRequest creates a new MsgAddMarkerRequest instance.
 func NewMsgAddMarkerRequest(
 	denom string,
 	totalSupply sdkmath.Int,
@@ -220,6 +239,7 @@ func NewMsgAddMarkerRequest(
 	}
 }
 
+// ValidateBasic implements basic validation for MsgAddMarkerRequest.
 func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
 	if len(msg.Manager) == 0 && msg.Status == StatusProposed {
@@ -254,6 +274,7 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgTransferRequest creates a new MsgTransferRequest instance.
 func NewMsgTransferRequest(
 	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin,
 ) *MsgTransferRequest {
@@ -265,6 +286,7 @@ func NewMsgTransferRequest(
 	}
 }
 
+// ValidateBasic implements basic validation for MsgTransferRequest.
 func (msg MsgTransferRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
@@ -278,6 +300,7 @@ func (msg MsgTransferRequest) ValidateBasic() error {
 	return msg.Amount.Validate()
 }
 
+// NewMsgIbcTransferRequest creates a new MsgIbcTransferRequest instance.
 func NewMsgIbcTransferRequest(
 	administrator string,
 	sourcePort,
@@ -312,6 +335,7 @@ func (msg MsgIbcTransferRequest) ValidateBasic() error {
 	return msg.Transfer.ValidateBasic()
 }
 
+// NewSetDenomMetadataRequest creates a new SetDenomMetadataRequest instance.
 func NewSetDenomMetadataRequest(
 	metadata banktypes.Metadata, admin sdk.AccAddress,
 ) *MsgSetDenomMetadataRequest {
@@ -321,6 +345,7 @@ func NewSetDenomMetadataRequest(
 	}
 }
 
+// ValidateBasic implements basic validation for MsgSetDenomMetadataRequest.
 func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 	if len(msg.Administrator) == 0 {
 		return errors.New("invalid set denom metadata request: administrator cannot be empty")
@@ -334,6 +359,7 @@ func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgGrantAllowance creates a new MsgGrantAllowance instance.
 func NewMsgGrantAllowance(
 	denom string, admin sdk.AccAddress, grantee sdk.AccAddress, allowance feegranttypes.FeeAllowanceI,
 ) (*MsgGrantAllowanceRequest, error) {
@@ -354,6 +380,7 @@ func NewMsgGrantAllowance(
 	}, nil
 }
 
+// ValidateBasic implements basic validation for MsgGrantAllowanceRequest.
 func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	if msg.Denom == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("missing marker denom")
@@ -373,6 +400,7 @@ func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
+// NewMsgRevokeGrantAllowance creates a new MsgRevokeGrantAllowance instance.
 func NewMsgRevokeGrantAllowance(denom string, admin sdk.AccAddress, grantee sdk.AccAddress) *MsgRevokeGrantAllowanceRequest {
 	return &MsgRevokeGrantAllowanceRequest{
 		Denom:         denom,
@@ -381,6 +409,7 @@ func NewMsgRevokeGrantAllowance(denom string, admin sdk.AccAddress, grantee sdk.
 	}
 }
 
+// ValidateBasic implements basic validation for MsgRevokeGrantAllowanceRequest.
 func (msg MsgRevokeGrantAllowanceRequest) ValidateBasic() error {
 	if msg.Denom == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("missing marker denom")
@@ -411,6 +440,7 @@ func (msg MsgGrantAllowanceRequest) GetFeeAllowanceI() (feegranttypes.FeeAllowan
 	return allowance, nil
 }
 
+// NewMsgAddFinalizeActivateMarkerRequest creates a new MsgAddFinalizeActivateMarkerRequest instance.
 func NewMsgAddFinalizeActivateMarkerRequest(
 	denom string,
 	totalSupply sdkmath.Int,
@@ -440,6 +470,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	}
 }
 
+// ValidateBasic implements basic validation for MsgAddFinalizeActivateMarkerRequest.
 func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	markerCoin := sdk.Coin{
 		Denom:  msg.Amount.Denom,
@@ -471,6 +502,7 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgSupplyIncreaseProposalRequest creates a new MsgSupplyIncreaseProposalRequest instance.
 func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, authority string) *MsgSupplyIncreaseProposalRequest {
 	return &MsgSupplyIncreaseProposalRequest{
 		Amount:        amount,
@@ -479,6 +511,7 @@ func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, 
 	}
 }
 
+// ValidateBasic implements basic validation for MsgSupplyIncreaseProposalRequest.
 func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 	err := msg.Amount.Validate()
 	if err != nil {
@@ -500,6 +533,7 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgUpdateRequiredAttributesRequest creates a new MsgUpdateRequiredAttributesRequest instance.
 func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.AccAddress, removeRequiredAttributes, addRequiredAttributes []string) *MsgUpdateRequiredAttributesRequest {
 	return &MsgUpdateRequiredAttributesRequest{
 		Denom:                    denom,
@@ -509,6 +543,7 @@ func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.A
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateRequiredAttributesRequest.
 func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -532,6 +567,7 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	return err
 }
 
+// NewMsgUpdateForcedTransferRequest creates a new MsgUpdateForcedTransferRequest instance.
 func NewMsgUpdateForcedTransferRequest(denom string, allowForcedTransfer bool, authority sdk.AccAddress) *MsgUpdateForcedTransferRequest {
 	return &MsgUpdateForcedTransferRequest{
 		Denom:               denom,
@@ -540,6 +576,7 @@ func NewMsgUpdateForcedTransferRequest(denom string, allowForcedTransfer bool, a
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateForcedTransferRequest.
 func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -550,6 +587,7 @@ func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgSetAccountDataRequest creates a new MsgSetAccountDataRequest instance.
 func NewMsgSetAccountDataRequest(denom, value string, signer sdk.AccAddress) *MsgSetAccountDataRequest {
 	return &MsgSetAccountDataRequest{
 		Denom:  denom,
@@ -558,6 +596,7 @@ func NewMsgSetAccountDataRequest(denom, value string, signer sdk.AccAddress) *Ms
 	}
 }
 
+// ValidateBasic implements basic validation for MsgSetAccountDataRequest.
 func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return fmt.Errorf("invalid signer: %w", err)
@@ -568,6 +607,7 @@ func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
+// NewMsgUpdateSendDenyListRequest creates a new MsgUpdateSendDenyListRequest instance.
 func NewMsgUpdateSendDenyListRequest(denom string, authority sdk.AccAddress, removeDenyAddresses, addDenyAddresses []string) *MsgUpdateSendDenyListRequest {
 	return &MsgUpdateSendDenyListRequest{
 		Denom:                 denom,
@@ -577,6 +617,7 @@ func NewMsgUpdateSendDenyListRequest(denom string, authority sdk.AccAddress, rem
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateSendDenyListRequest.
 func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -603,6 +644,7 @@ func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
 	return err
 }
 
+// NewMsgAddNetAssetValuesRequest creates a new MsgAddNetAssetValuesRequest with the given parameters.
 func NewMsgAddNetAssetValuesRequest(denom, administrator string, netAssetValues []NetAssetValue) *MsgAddNetAssetValuesRequest {
 	return &MsgAddNetAssetValuesRequest{
 		Denom:          denom,
@@ -611,6 +653,7 @@ func NewMsgAddNetAssetValuesRequest(denom, administrator string, netAssetValues 
 	}
 }
 
+// ValidateBasic implements basic validation for MsgAddNetAssetValuesRequest.
 func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -640,6 +683,7 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	return err
 }
 
+// NewMsgSupplyDecreaseProposalRequest creates a new MsgSupplyDecreaseProposalRequest with the given parameters.
 func NewMsgSupplyDecreaseProposalRequest(amount sdk.Coin, authority string) *MsgSupplyDecreaseProposalRequest {
 	return &MsgSupplyDecreaseProposalRequest{
 		Amount:    amount,
@@ -647,6 +691,7 @@ func NewMsgSupplyDecreaseProposalRequest(amount sdk.Coin, authority string) *Msg
 	}
 }
 
+// ValidateBasic implements basic validation for MsgSupplyDecreaseProposalRequest.
 func (msg MsgSupplyDecreaseProposalRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
@@ -658,6 +703,7 @@ func (msg MsgSupplyDecreaseProposalRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgSetAdministratorProposalRequest creates a new MsgSetAdministratorProposalRequest with the given parameters.
 func NewMsgSetAdministratorProposalRequest(denom string, accessGrant []AccessGrant, authority string) *MsgSetAdministratorProposalRequest {
 	return &MsgSetAdministratorProposalRequest{
 		Denom:     denom,
@@ -666,6 +712,7 @@ func NewMsgSetAdministratorProposalRequest(denom string, accessGrant []AccessGra
 	}
 }
 
+// ValidateBasic implements basic validation for MsgSetAdministratorProposalRequest.
 func (msg MsgSetAdministratorProposalRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
@@ -679,6 +726,7 @@ func (msg MsgSetAdministratorProposalRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgRemoveAdministratorProposalRequest creates a new MsgRemoveAdministratorProposalRequest with the given parameters.
 func NewMsgRemoveAdministratorProposalRequest(denom string, removedAddress []string, authority string) *MsgRemoveAdministratorProposalRequest {
 	return &MsgRemoveAdministratorProposalRequest{
 		Denom:          denom,
@@ -687,6 +735,7 @@ func NewMsgRemoveAdministratorProposalRequest(denom string, removedAddress []str
 	}
 }
 
+// ValidateBasic implements basic validation for MsgRemoveAdministratorProposalRequest.
 func (msg MsgRemoveAdministratorProposalRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
@@ -700,6 +749,7 @@ func (msg MsgRemoveAdministratorProposalRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgChangeStatusProposalRequest creates a new MsgChangeStatusProposalRequest with the given parameters.
 func NewMsgChangeStatusProposalRequest(denom string, status MarkerStatus, authority string) *MsgChangeStatusProposalRequest {
 	return &MsgChangeStatusProposalRequest{
 		Denom:     denom,
@@ -708,6 +758,7 @@ func NewMsgChangeStatusProposalRequest(denom string, status MarkerStatus, author
 	}
 }
 
+// ValidateBasic implements basic validation for MsgChangeStatusProposalRequest.
 func (msg MsgChangeStatusProposalRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -716,6 +767,7 @@ func (msg MsgChangeStatusProposalRequest) ValidateBasic() error {
 	return err
 }
 
+// NewMsgWithdrawEscrowProposalRequest creates a new MsgWithdrawEscrowProposalRequest with the given parameters.
 func NewMsgWithdrawEscrowProposalRequest(denom string, amount sdk.Coins, targetAddress, authority string) *MsgWithdrawEscrowProposalRequest {
 	return &MsgWithdrawEscrowProposalRequest{
 		Denom:         denom,
@@ -725,6 +777,7 @@ func NewMsgWithdrawEscrowProposalRequest(denom string, amount sdk.Coins, targetA
 	}
 }
 
+// ValidateBasic implements basic validation for MsgWithdrawEscrowProposalRequest.
 func (msg MsgWithdrawEscrowProposalRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -741,6 +794,7 @@ func (msg MsgWithdrawEscrowProposalRequest) ValidateBasic() error {
 	return err
 }
 
+// NewMsgSetDenomMetadataProposalRequest creates a new MsgSetDenomMetadataProposalRequest with the given parameters.
 func NewMsgSetDenomMetadataProposalRequest(metadata banktypes.Metadata, authority string) *MsgSetDenomMetadataProposalRequest {
 	return &MsgSetDenomMetadataProposalRequest{
 		Metadata:  metadata,
@@ -748,6 +802,7 @@ func NewMsgSetDenomMetadataProposalRequest(metadata banktypes.Metadata, authorit
 	}
 }
 
+// ValidateBasic implements basic validation for MsgSetDenomMetadataProposalRequest.
 func (msg MsgSetDenomMetadataProposalRequest) ValidateBasic() error {
 	if err := msg.Metadata.Validate(); err != nil {
 		return err
@@ -756,6 +811,7 @@ func (msg MsgSetDenomMetadataProposalRequest) ValidateBasic() error {
 	return err
 }
 
+// NewMsgUpdateParamsRequest creates a new MsgUpdateParamsRequest with the given parameters.
 func NewMsgUpdateParamsRequest(
 	enableGovernance bool,
 	unrestrictedDenomRegex string,
@@ -772,6 +828,7 @@ func NewMsgUpdateParamsRequest(
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateParamsRequest.
 func (msg MsgUpdateParamsRequest) ValidateBasic() error {
 	if err := msg.Params.Validate(); err != nil {
 		return err

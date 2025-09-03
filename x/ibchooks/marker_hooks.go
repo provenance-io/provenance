@@ -20,10 +20,12 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
+// MarkerHooks handles marker-specific IBC hook logic.
 type MarkerHooks struct {
 	MarkerKeeper *markerkeeper.Keeper
 }
 
+// NewMarkerHooks creates a new instance of MarkerHooks.
 func NewMarkerHooks(markerkeeper *markerkeeper.Keeper) MarkerHooks {
 	return MarkerHooks{
 		MarkerKeeper: markerkeeper,

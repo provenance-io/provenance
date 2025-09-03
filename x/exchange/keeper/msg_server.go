@@ -16,6 +16,7 @@ type MsgServer struct {
 	Keeper
 }
 
+// NewMsgServer returns a new message server for the exchange module.
 func NewMsgServer(k Keeper) exchange.MsgServer {
 	return MsgServer{
 		Keeper: k,

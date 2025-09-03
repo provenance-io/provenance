@@ -17,6 +17,7 @@ func NewOSLocatorRecord(ownerAddr, encryptionKey sdk.AccAddress, uri string) Obj
 	}
 }
 
+// Validate checks if the ObjectStoreLocator fields are valid.
 func (r ObjectStoreLocator) Validate() error {
 	if strings.TrimSpace(r.Owner) == "" {
 		return fmt.Errorf("owner address cannot be empty")

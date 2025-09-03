@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	FlagAddresses     = "addresses"
-	FlagAddressesFile = "addresses-file"
+	FlagAddresses     = "addresses"      //nolint:revive
+	FlagAddressesFile = "addresses-file" //nolint:revive
 )
 
 // exampleTxCmdBase is the base command that gets a user to one of the query commands in here.

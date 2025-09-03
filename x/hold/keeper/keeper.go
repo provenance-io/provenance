@@ -21,6 +21,7 @@ import (
 	"github.com/provenance-io/provenance/x/hold"
 )
 
+// Keeper manages state operations for the hold module.
 type Keeper struct {
 	cdc           codec.BinaryCodec
 	storeKey      storetypes.StoreKey
@@ -29,6 +30,7 @@ type Keeper struct {
 	authority     string
 }
 
+// NewKeeper creates a new instance of the hold module Keeper.
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
 	rv := Keeper{
 		cdc:           cdc,

@@ -1,3 +1,4 @@
+// Package cli contains helpers to execute CLI commands in tests.
 package cli
 
 import (

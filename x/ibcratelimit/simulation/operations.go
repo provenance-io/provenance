@@ -31,6 +31,7 @@ func ProposalMsgs(simState module.SimulationState, k *keeper.Keeper) []simtypes.
 	}
 }
 
+// SimulatePropMsgUpdateParams simulates a governance proposal to update rate limit parameters.
 func SimulatePropMsgUpdateParams(k *keeper.Keeper) simtypes.MsgSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 		// change it to a new random account.

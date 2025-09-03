@@ -10,6 +10,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// Params returns the ibchooks module parameters.
 func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	c := sdk.UnwrapSDKContext(ctx)
 	return &types.QueryParamsResponse{Params: k.GetParams(c)}, nil

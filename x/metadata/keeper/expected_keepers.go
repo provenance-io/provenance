@@ -36,6 +36,7 @@ type MarkerKeeper interface {
 	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 }
 
+// BankKeeper defines the expected interface for the bank keeper.
 type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error

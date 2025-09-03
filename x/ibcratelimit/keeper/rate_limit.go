@@ -67,7 +67,7 @@ func (k Keeper) buildWasmExecMsg(msgType string, packet exported.PacketI) ([]byt
 	}
 
 	var asJSON []byte
-	switch {
+	switch { //nolint:staticcheck // QF1001: intentional logic for clarity
 	case msgType == ibcratelimit.MsgSendPacket:
 		msg := ibcratelimit.SendPacketMsg{SendPacket: ibcratelimit.PacketMsg{
 			Packet: unwrapped,

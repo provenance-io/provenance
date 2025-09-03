@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	TriggerID        = "trigger_id"
-	QueueStart       = "trigger_queue_start"
+	TriggerID        = "trigger_id"          //nolint:revive
+	QueueStart       = "trigger_queue_start" //nolint:revive
 	NumIniTrig       = "num_ini_trig"
 	NumIniTrigQueued = "num_ini_trig_queued"
 	Triggers         = "triggers"

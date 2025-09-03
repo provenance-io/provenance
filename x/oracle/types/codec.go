@@ -1,3 +1,4 @@
+// Package types contains types and codec definitions for the oracle module.
 package types
 
 import (

@@ -112,6 +112,7 @@ func GetDeleteNameCmd() *cobra.Command {
 	return cmd
 }
 
+// GetModifyNameCmd returns the command to modify a name.
 func GetModifyNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "modify-name [name] [new_owner] (--unrestrict) [flags]",

@@ -69,6 +69,7 @@ func GetAddressKeyPrefix(addr sdk.AccAddress) (key []byte, err error) {
 	return
 }
 
+// ValidateAddress checks if the given address is valid.
 func ValidateAddress(address sdk.AccAddress) error {
 	return sdk.VerifyAddressFormat(address)
 }

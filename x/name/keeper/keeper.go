@@ -372,6 +372,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
 }
 
+// CreateRootName creates a new root name entry in the keeper.
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
 	// err is suppressed because it returns an error on not found.  TODO - Remove use of error for not found
 	existing, _ := k.GetRecordByName(ctx, name)

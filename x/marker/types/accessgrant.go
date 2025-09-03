@@ -1,3 +1,4 @@
+// Package types contains the definitions for marker module types.
 package types
 
 import (

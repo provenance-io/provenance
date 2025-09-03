@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// MaximumActions defines the maximum number of actions allowed per trigger.
 	MaximumActions uint64 = 5
 )
 

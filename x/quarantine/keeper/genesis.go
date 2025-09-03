@@ -1,3 +1,4 @@
+// Package keeper contains state management logic for the quarantine module.
 package keeper
 
 import (

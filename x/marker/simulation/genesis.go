@@ -1,3 +1,4 @@
+// Package simulation provides simulation utilities for the marker module.
 package simulation
 
 // DONTCOVER

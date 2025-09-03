@@ -16,6 +16,7 @@ import (
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
+// Keeper manages the state and operations of the oracle module.
 type Keeper struct {
 	cdc      *codec.ProtoCodec
 	storeKey storetypes.StoreKey
@@ -31,6 +32,7 @@ type Keeper struct {
 	authority string
 }
 
+// NewKeeper creates a new Keeper instance for the oracle module.
 func NewKeeper(
 	cdc *codec.ProtoCodec,
 	storeKey,

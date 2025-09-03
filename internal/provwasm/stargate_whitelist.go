@@ -374,6 +374,7 @@ func setWhitelistedQuery(queryPath string, protoType proto.Message) {
 	stargateWhitelist.Store(queryPath, protoType)
 }
 
+// GetStargateWhitelistedPaths returns the list of whitelisted paths.
 func GetStargateWhitelistedPaths() (keys []string) {
 	// Iterate over the map and collect the keys
 	stargateWhitelist.Range(func(key, _ interface{}) bool {

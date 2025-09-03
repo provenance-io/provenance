@@ -43,7 +43,7 @@ var (
 	// The values are all lower-case.
 	SIPrefixName map[SIPrefix]string
 
-	// SIPrefixSymbolMap is used to look up the SIPrefix enum entry for a name.
+	// SIPrefixNameMap is used to look up the SIPrefix enum entry for a name.
 	// The keys are all lower-case.
 	// Some SIPrefix values might appear more than once in this map, e.g. "" and "none" are both for SI_PREFIX_NONE.
 	SIPrefixNameMap map[string]SIPrefix
@@ -226,7 +226,7 @@ func (p SIPrefix) GetExponentString() string {
 	return fmt.Sprintf("1e%+d", int(p))
 }
 
-// Get the Exponent value of this SIPrefix.
+// GetExponent get the exponent value of this SIPrefix.
 // Examples, SI_PREFIX_PETA is 15 and SI_PREFIX_MICRO is -6.
 func (p SIPrefix) GetExponent() int {
 	return int(p)

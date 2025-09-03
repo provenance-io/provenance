@@ -17,6 +17,7 @@ type SignersWrapper struct {
 	converted  bool
 }
 
+// NewSignersWrapper creates a new SignersWrapper.
 func NewSignersWrapper(signers []string) *SignersWrapper {
 	return &SignersWrapper{signers: signers}
 }

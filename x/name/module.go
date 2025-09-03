@@ -1,3 +1,4 @@
+// Package name implements the app module for the name functionality.
 package name
 
 import (

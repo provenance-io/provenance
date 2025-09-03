@@ -11,11 +11,13 @@ import (
 
 var _ porttypes.Middleware = &IBCMiddleware{}
 
+// IBCMiddleware wraps an IBC module to provide middleware functionality.
 type IBCMiddleware struct {
 	App            porttypes.IBCModule
 	ICS4Middleware *ICS4Middleware
 }
 
+// NewIBCMiddleware creates a new IBCMiddleware instance.
 func NewIBCMiddleware(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCMiddleware {
 	return IBCMiddleware{
 		App:            app,
@@ -254,6 +256,7 @@ func (im IBCMiddleware) WriteAcknowledgement(
 	return im.ICS4Middleware.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
+// GetAppVersion returns the app version for the IBCMiddleware.
 func (im IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
 	return im.ICS4Middleware.GetAppVersion(ctx, portID, channelID)
 }
