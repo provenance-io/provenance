@@ -13,12 +13,12 @@ import (
 var docGenCmdStart = fmt.Sprintf("%s docgen", version.AppName)
 
 const (
-	FlagMarkdown = "markdown"
+	FlagMarkdown = "markdown" //nolint:revive
 	FlagYaml     = "yaml"
 	FlagRst      = "rst"
 	FlagManpage  = "manpage"
 )
-
+// GetDocGenCmd returns the command to generate documentation.
 func GetDocGenCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "docgen <target directory> (--markdown) (--yaml) (--rst) (--manpages) [flags]",

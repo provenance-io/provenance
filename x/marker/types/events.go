@@ -42,7 +42,7 @@ const (
 	// EventTelemetryKeyWithdraw withdraw telemetry metrics key
 	EventTelemetryKeyWithdraw string = "withdraw"
 )
-
+// NewEventMarkerAdd creates a new EventMarkerAdd event.
 func NewEventMarkerAdd(denom string, address string, amount string, status string, manager string, markerType string) *EventMarkerAdd {
 	return &EventMarkerAdd{
 		Denom:      denom,
@@ -53,7 +53,7 @@ func NewEventMarkerAdd(denom string, address string, amount string, status strin
 		MarkerType: markerType,
 	}
 }
-
+// NewEventMarkerAddAccess creates a new EventMarkerAddAccess event.
 func NewEventMarkerAddAccess(accessGrant AccessGrantI, denom string, administrator string) *EventMarkerAddAccess {
 	accessList := accessGrant.GetAccessList()
 	permissions := make([]string, len(accessList))
@@ -72,7 +72,7 @@ func NewEventMarkerAddAccess(accessGrant AccessGrantI, denom string, administrat
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerDeleteAccess creates a new EventMarkerDeleteAccess event.
 func NewEventMarkerDeleteAccess(removeAddress string, denom string, administrator string) *EventMarkerDeleteAccess {
 	return &EventMarkerDeleteAccess{
 		RemoveAddress: removeAddress,
@@ -80,35 +80,35 @@ func NewEventMarkerDeleteAccess(removeAddress string, denom string, administrato
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerFinalize creates a new EventMarkerFinalize event.
 func NewEventMarkerFinalize(denom string, administrator string) *EventMarkerFinalize {
 	return &EventMarkerFinalize{
 		Denom:         denom,
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerActivate creates a new EventMarkerActivate event.
 func NewEventMarkerActivate(denom string, administrator string) *EventMarkerActivate {
 	return &EventMarkerActivate{
 		Denom:         denom,
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerCancel creates a new EventMarkerCancel event.
 func NewEventMarkerCancel(denom string, administrator string) *EventMarkerCancel {
 	return &EventMarkerCancel{
 		Denom:         denom,
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerDelete creates a new EventMarkerDelete event.
 func NewEventMarkerDelete(denom string, administrator string) *EventMarkerDelete {
 	return &EventMarkerDelete{
 		Denom:         denom,
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerMint creates a new EventMarkerMint event.
 func NewEventMarkerMint(amount string, denom string, administrator string) *EventMarkerMint {
 	return &EventMarkerMint{
 		Amount:        amount,
@@ -116,7 +116,7 @@ func NewEventMarkerMint(amount string, denom string, administrator string) *Even
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerBurn creates a new EventMarkerBurn event.
 func NewEventMarkerBurn(amount string, denom string, administrator string) *EventMarkerBurn {
 	return &EventMarkerBurn{
 		Amount:        amount,
@@ -124,7 +124,7 @@ func NewEventMarkerBurn(amount string, denom string, administrator string) *Even
 		Administrator: administrator,
 	}
 }
-
+// NewEventMarkerWithdraw creates a new EventMarkerWithdraw event.
 func NewEventMarkerWithdraw(coins string, denom string, administrator string, toAddress string) *EventMarkerWithdraw {
 	return &EventMarkerWithdraw{
 		Coins:         coins,
@@ -133,7 +133,7 @@ func NewEventMarkerWithdraw(coins string, denom string, administrator string, to
 		ToAddress:     toAddress,
 	}
 }
-
+// NewEventMarkerTransfer creates a new EventMarkerTransfer event.
 func NewEventMarkerTransfer(amount string, denom string, administrator string, toAddress string, fromAddress string) *EventMarkerTransfer {
 	return &EventMarkerTransfer{
 		Amount:        amount,
@@ -143,7 +143,7 @@ func NewEventMarkerTransfer(amount string, denom string, administrator string, t
 		FromAddress:   fromAddress,
 	}
 }
-
+// NewEventMarkerIbcTransfer creates a new EventMarkerTransfer event.
 func NewEventMarkerIbcTransfer(amount string, denom string, administrator string, fromAddress string) *EventMarkerTransfer {
 	return &EventMarkerTransfer{
 		Amount:        amount,
@@ -152,7 +152,7 @@ func NewEventMarkerIbcTransfer(amount string, denom string, administrator string
 		FromAddress:   fromAddress,
 	}
 }
-
+// NewEventMarkerSetDenomMetadata creates a new EventMarkerSetDenomMetadata event.
 func NewEventMarkerSetDenomMetadata(metadata banktypes.Metadata, administrator string) *EventMarkerSetDenomMetadata {
 	metadataDenomUnits := make([]*EventDenomUnit, len(metadata.DenomUnits))
 	for i, du := range metadata.DenomUnits {

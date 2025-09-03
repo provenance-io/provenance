@@ -10,6 +10,7 @@ import (
 
 var _ porttypes.ICS4Wrapper = &ICS4Middleware{}
 
+// ICS4Middleware provides middleware for ICS4 channel logic.
 type ICS4Middleware struct {
 	channel porttypes.ICS4Wrapper
 
@@ -17,6 +18,7 @@ type ICS4Middleware struct {
 	Hooks Hooks
 }
 
+// NewICS4Middleware creates a new ICS4Middleware instance.
 func NewICS4Middleware(channel porttypes.ICS4Wrapper, hooks Hooks) ICS4Middleware {
 	return ICS4Middleware{
 		channel: channel,
@@ -24,6 +26,7 @@ func NewICS4Middleware(channel porttypes.ICS4Wrapper, hooks Hooks) ICS4Middlewar
 	}
 }
 
+// SendPacket sends an IBC packet with middleware processing.
 func (i ICS4Middleware) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
@@ -60,6 +63,7 @@ func (i ICS4Middleware) SendPacket(
 	return seq, err
 }
 
+// WriteAcknowledgement writes the packet acknowledgement with middleware logic.
 func (i ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement) error {
 	if hook, ok := i.Hooks.(WriteAcknowledgementOverrideHooks); ok {
 		return hook.WriteAcknowledgementOverride(i, ctx, chanCap, packet, ack)
@@ -76,6 +80,7 @@ func (i ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilit
 	return err
 }
 
+// GetAppVersion returns the app version for ICS4Middleware.
 func (i ICS4Middleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
 	if hook, ok := i.Hooks.(GetAppVersionOverrideHooks); ok {
 		return hook.GetAppVersionOverride(i, ctx, portID, channelID)

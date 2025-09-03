@@ -1,3 +1,4 @@
+// Package cli provides CLI commands for querying marker state.
 package cli
 
 import (

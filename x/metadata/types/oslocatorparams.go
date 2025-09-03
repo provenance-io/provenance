@@ -1,6 +1,7 @@
 package types
 
 const (
+	// DefaultMaxURILength defines the default maximum length for a URI.
 	DefaultMaxURILength = 2048
 )
 
