@@ -1,12 +1,28 @@
-package types
+package types_test
 
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	"github.com/provenance-io/provenance/testutil"
+
+	. "github.com/provenance-io/provenance/x/asset/types"
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgCreateAsset{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgCreateAssetClass{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgCreatePool{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgCreateTokenization{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgCreateSecuritization{Signer: signer} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
 
 func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 	tests := []struct {
@@ -21,7 +37,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				Owner: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Owner:  "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: false,
@@ -66,7 +82,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				Owner: "",
+				Owner:  "",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
@@ -78,7 +94,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 					ClassId: "test-class",
 					Id:      "test-id",
 				},
-				Owner: "invalid-address",
+				Owner:  "invalid-address",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
 			wantErr: true,
