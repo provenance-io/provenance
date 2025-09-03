@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/asset/types";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "provenance/asset/v1/asset.proto";
 
 // Msg defines the asset module's message service.
@@ -30,7 +31,6 @@ service Msg {
 
 // MsgCreateAsset is the message type for creating a new asset.
 message MsgCreateAsset {
-  option (cosmos.msg.v1.signer) = "owner";
   option (cosmos.msg.v1.signer) = "signer";
 
   // asset defines the asset to be created.
@@ -38,7 +38,7 @@ message MsgCreateAsset {
   // owner defines the address to set as the created asset.
   string owner = 2;
   // signer defines the address of the message sender.
-  string signer = 3;
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreateAssetResponse is the response type for the CreateAsset RPC method.
@@ -51,7 +51,7 @@ message MsgCreateAssetClass {
   // asset_class defines the asset class to be created.
   AssetClass asset_class = 1;
   // signer defines the address of the message sender.
-  string signer = 2;
+  string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreateAssetClassResponse is the response type for the CreateAssetClass RPC method.
@@ -66,7 +66,7 @@ message MsgCreatePool {
   // assets defines the list of assets by keys to be included in the pool.
   repeated AssetKey assets = 2;
   // signer defines the address of the message sender.
-  string signer = 3;
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreatePoolResponse is the response type for the CreatePool RPC method.
@@ -81,7 +81,7 @@ message MsgCreateTokenization {
   // asset defines the asset by key to be tokenized.
   AssetKey asset = 2;
   // signer defines the address of the message sender.
-  string signer = 3;
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreateTokenizationResponse is the response type for the CreateTokenization RPC method.
@@ -98,7 +98,7 @@ message MsgCreateSecuritization {
   // tranches defines the list of tranches for the securitization.
   repeated cosmos.base.v1beta1.Coin tranches = 3;
   // signer defines the address of the message sender.
-  string signer = 4;
+  string signer = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreateSecuritizationResponse is the response type for the CreateSecuritization RPC method.

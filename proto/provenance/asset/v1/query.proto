@@ -45,15 +45,6 @@ message QueryAssetResponse {
   Asset asset = 1;
 }
 
-// QueryAssetsResponse is the response type for the Query/Assets RPC methods.
-message QueryAssetsResponse {
-  // Asset defines the Asset.
-  repeated Asset assets = 1;
-
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
 // QueryAssetsRequest is the request type for the Query/Assets RPC method.
 message QueryAssetsRequest {
   // class_id associated with the asset.
@@ -63,7 +54,16 @@ message QueryAssetsRequest {
   string owner = 2;
 
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryAssetsResponse is the response type for the Query/Assets RPC methods.
+message QueryAssetsResponse {
+  // Asset defines the Asset.
+  repeated Asset assets = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryAssetClassRequest is the request type for the Query/Class RPC method.
@@ -81,7 +81,7 @@ message QueryAssetClassResponse {
 // QueryAssetClassesRequest is the request type for the Query/Classes RPC method
 message QueryAssetClassesRequest {
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryAssetClassesResponse is the response type for the Query/Classes RPC method.
@@ -90,5 +90,5 @@ message QueryAssetClassesResponse {
   repeated AssetClass classes = 1;
 
   // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
