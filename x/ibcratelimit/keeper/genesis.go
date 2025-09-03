@@ -1,3 +1,4 @@
+// Package keeper handles state management and business logic for ibcratelimit.
 package keeper
 
 import (

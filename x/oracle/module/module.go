@@ -1,3 +1,4 @@
+// Package oracle defines the app module implementation for the oracle module.
 package oracle
 
 import (

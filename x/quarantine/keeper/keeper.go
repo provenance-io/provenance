@@ -14,6 +14,7 @@ import (
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
+// Keeper handles the quarantine module's state operations.
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
@@ -23,6 +24,7 @@ type Keeper struct {
 	fundsHolder sdk.AccAddress
 }
 
+// NewKeeper creates a new Keeper instance for the quarantine module.
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper quarantine.BankKeeper, fundsHolder sdk.AccAddress) Keeper {
 	if len(fundsHolder) == 0 {
 		fundsHolder = authtypes.NewModuleAddress(quarantine.ModuleName)

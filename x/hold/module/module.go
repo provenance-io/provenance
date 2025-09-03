@@ -1,3 +1,4 @@
+// Package module provides the hold module implementation.
 package module
 
 import (
@@ -33,11 +34,13 @@ var (
 	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
+// AppModule implements the hold module AppModule interface.
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule object.
 func NewAppModule(cdc codec.Codec, holdKeeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -51,10 +54,12 @@ func (AppModule) IsOnePerModuleType() {}
 // IsAppModule is a dummy function that satisfies the AppModule interface.
 func (AppModule) IsAppModule() {}
 
+// AppModuleBasic defines the basic application module used by the hold module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
+// Name returns the hold module's name.
 func (AppModuleBasic) Name() string {
 	return hold.ModuleName
 }

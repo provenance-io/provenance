@@ -244,7 +244,7 @@ func (k Keeper) ClearSendDeny(ctx sdk.Context, markerAddr sdk.AccAddress) {
 	}
 }
 
-// IterateMarkers  iterates all markers with the given handler function.
+// IterateSendDeny  iterates all markers with the given handler function.
 func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendKeyPrefix)

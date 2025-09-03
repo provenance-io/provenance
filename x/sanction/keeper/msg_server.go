@@ -13,6 +13,7 @@ import (
 
 var _ sanction.MsgServer = Keeper{}
 
+// Sanction handles the sanctioning of an address.
 func (k Keeper) Sanction(goCtx context.Context, req *sanction.MsgSanction) (*sanction.MsgSanctionResponse, error) {
 	if req.Authority != k.authority {
 		return nil, gov.ErrInvalidSigner.Wrapf("expected %q got %q", k.authority, req.Authority)
@@ -32,6 +33,7 @@ func (k Keeper) Sanction(goCtx context.Context, req *sanction.MsgSanction) (*san
 	return &sanction.MsgSanctionResponse{}, nil
 }
 
+// Unsanction handles the removal of a sanction from an address.
 func (k Keeper) Unsanction(goCtx context.Context, req *sanction.MsgUnsanction) (*sanction.MsgUnsanctionResponse, error) {
 	if req.Authority != k.authority {
 		return nil, gov.ErrInvalidSigner.Wrapf("expected %q got %q", k.authority, req.Authority)
@@ -51,6 +53,7 @@ func (k Keeper) Unsanction(goCtx context.Context, req *sanction.MsgUnsanction) (
 	return &sanction.MsgUnsanctionResponse{}, nil
 }
 
+// UpdateParams updates the parameters of the sanction module.
 func (k Keeper) UpdateParams(goCtx context.Context, req *sanction.MsgUpdateParams) (*sanction.MsgUpdateParamsResponse, error) {
 	if req.Authority != k.authority {
 		return nil, gov.ErrInvalidSigner.Wrapf("expected %q got %q", k.authority, req.Authority)
