@@ -24,15 +24,18 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
+// TestChain represents a test blockchain for IBC testing.
 type TestChain struct {
 	*ibctesting.TestChain
 }
 
+// SetupTestingApp initializes the testing app and returns a test chain instance.
 func SetupTestingApp(t *testing.T) (ibctesting.TestingApp, map[string]json.RawMessage) {
 	provenanceApp := provenanceapp.Setup(t)
 	return provenanceApp, provenanceApp.DefaultGenesis()
 }
 
+// StoreContractCounterDirect stores a counter contract directly on the test chain.
 func (chain *TestChain) StoreContractCounterDirect(suite *suite.Suite) uint64 {
 	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.CounterWasm())
 	suite.Require().NoError(err, "counter contract direct code load failed", err)
@@ -40,6 +43,7 @@ func (chain *TestChain) StoreContractCounterDirect(suite *suite.Suite) uint64 {
 	return codeID
 }
 
+// StoreContractEchoDirect stores an echo contract directly on the test chain.
 func (chain *TestChain) StoreContractEchoDirect(suite *suite.Suite) uint64 {
 	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.EchoWasm())
 	suite.Require().NoError(err, "echo contract direct code load failed", err)
@@ -47,6 +51,7 @@ func (chain *TestChain) StoreContractEchoDirect(suite *suite.Suite) uint64 {
 	return codeID
 }
 
+// StoreContractRateLimiterDirect stores a rate limiter contract directly on the test chain.
 func (chain *TestChain) StoreContractRateLimiterDirect(suite *suite.Suite) uint64 {
 	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.RateLimiterWasm())
 	suite.Require().NoError(err, "rate limiter contract direct code load failed")
@@ -54,6 +59,7 @@ func (chain *TestChain) StoreContractRateLimiterDirect(suite *suite.Suite) uint6
 	return codeID
 }
 
+// InstantiateContract instantiates a contract on the test chain.
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
 	addr, err := contracts.InstantiateContract(chain.GetProvenanceApp(), chain.GetContext(), msg, codeID)
 	suite.Require().NoError(err, "contract instantiation failed", err)
@@ -61,11 +67,13 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, code
 	return addr
 }
 
+// PinContract pins a contract to prevent garbage collection on the test chain.
 func (chain *TestChain) PinContract(suite *suite.Suite, codeID uint64) {
 	err := contracts.PinContract(chain.GetProvenanceApp(), chain.GetContext(), codeID)
 	suite.Require().NoError(err, "contract pin failed")
 }
 
+// QueryContract queries a contract on the test chain.
 func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
 	state, err := contracts.QueryContract(chain.GetProvenanceApp(), chain.GetContext(), contract, key)
 	suite.Require().NoError(err, "contract query failed", err)
@@ -73,6 +81,7 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	return state
 }
 
+// RegisterRateLimiterContract registers a rate limiter contract on the test chain.
 func (chain *TestChain) RegisterRateLimiterContract(suite *suite.Suite, addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("cosmos", addr)
 	suite.Require().NoError(err)
