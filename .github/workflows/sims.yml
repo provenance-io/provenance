@@ -61,7 +61,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev wget curl build-essential cmake gcc sqlite3
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
@@ -90,7 +90,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
@@ -142,7 +142,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
@@ -179,7 +179,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
