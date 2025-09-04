@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	metadataTypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -23,7 +21,7 @@ func (k Keeper) HasNFT(ctx sdk.Context, assetClassID, nftID *string) bool {
 
 // AssetClassExists checks if an asset class exists in either the metadata or nft module.
 func (k Keeper) AssetClassExists(ctx sdk.Context, assetClassID *string) bool {
-	metadataAddress, isMetadataScope := metadataScopeID(*assetClassID)
+	metadataAddress, isMetadataScope := metadataScopeSpecID(*assetClassID)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		_, found := k.MetadataKeeper.GetScopeSpecification(sdkCtx, metadataAddress)
@@ -51,14 +49,21 @@ func (k Keeper) GetNFTOwner(ctx sdk.Context, assetClassID, nftID *string) sdk.Ac
 }
 
 // metadataScopeID returns the metadata address for a given bech32 string.
+// The bool is true if it's for a scope, false if other or invalid.
 func metadataScopeID(bech32String string) (metadataTypes.MetadataAddress, bool) {
-	// Do a bech32 decode if the prefix is "scope1" or "scopespec1"
-	if strings.HasPrefix(bech32String, "scope1") || strings.HasPrefix(bech32String, "scopespec1") {
-		metadataAddress, err := metadataTypes.MetadataAddressFromBech32(bech32String)
-		if err != nil {
-			return nil, false
-		}
-		return metadataAddress, true
+	addr, hrp, err := metadataTypes.ParseMetadataAddressFromBech32(bech32String)
+	if err != nil {
+		return nil, false
 	}
-	return nil, false
+	return addr, hrp == metadataTypes.PrefixScope
+}
+
+// metadataScopeSpecID returns the metadata address for a given bech32 string.
+// The bool is true if it's for a scope spec, false if other or invalid.
+func metadataScopeSpecID(bech32String string) (metadataTypes.MetadataAddress, bool) {
+	addr, hrp, err := metadataTypes.ParseMetadataAddressFromBech32(bech32String)
+	if err != nil {
+		return nil, false
+	}
+	return addr, hrp == metadataTypes.PrefixScopeSpecification
 }
