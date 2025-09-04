@@ -66,7 +66,8 @@ func GetCmdQueryHasRole() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "has-role <asset_class_id> <nft_id> <role> <address>",
 		Short: "Query if an address has a role for a given key",
-		Args:  cobra.ExactArgs(4),
+		// TODO[danny]: Create Long message that utilizes ValidRolesString() to list the roles available.
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -74,9 +75,9 @@ func GetCmdQueryHasRole() *cobra.Command {
 			}
 
 			// convert arg[2] to a registry.RegistryRole enum value
-			role, ok := types.RegistryRole_value[args[2]]
-			if !ok {
-				return fmt.Errorf("invalid role: %s", args[2])
+			role, err := types.ParseRegistryRole(args[2])
+			if err != nil {
+				return err
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
@@ -85,7 +86,7 @@ func GetCmdQueryHasRole() *cobra.Command {
 					AssetClassId: args[0],
 					NftId:        args[1],
 				},
-				Role:    types.RegistryRole(role),
+				Role:    role,
 				Address: args[3],
 			})
 			if err != nil {

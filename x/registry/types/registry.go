@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -112,17 +115,48 @@ func (m *RolesEntry) Validate() error {
 	return nil
 }
 
-func (m *RegistryRole) Validate() error {
-	if _, ok := RegistryRole_value[m.String()]; !ok {
+func (m RegistryRole) Validate() error {
+	if _, ok := RegistryRole_name[int32(m)]; !ok {
 		return NewErrCodeInvalidField("role", m.String())
 	}
 
-	// Validate role
-	if *m == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+	if m == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
 		return NewErrCodeInvalidField("role", "role cannot be unspecified")
 	}
 
 	return nil
+}
+
+// ParseRegistryRole converts the provided string into a RegistryRole. The "REGISTRY_ROLE_" prefix is optional.
+func ParseRegistryRole(str string) (RegistryRole, error) {
+	name := strings.ToUpper(str)
+	if !strings.HasPrefix(name, "REGISTRY_ROLE_") {
+		name = "REGISTRY_ROLE_" + name
+	}
+	role, ok := RegistryRole_value[name]
+	if !ok {
+		return RegistryRole_REGISTRY_ROLE_UNSPECIFIED, fmt.Errorf("invalid role: %q", str)
+	}
+	rv := RegistryRole(role)
+	if rv == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+		return rv, fmt.Errorf("role cannot be unspecified")
+	}
+	return rv, nil
+}
+
+// ValidRolesString returns a string containing all of the registry roles string values.
+func ValidRolesString() string {
+	roles := make([]string, 0, len(RegistryRole_name)-1)
+	for _, roleID := range slices.Sorted(maps.Keys(RegistryRole_name)) {
+		if roleID == 0 {
+			continue
+		}
+		roles = append(roles, strings.TrimPrefix(RegistryRole_name[roleID], "REGISTRY_ROLE_"))
+	}
+	for _, role := range RegistryRole_value {
+		roles = append(roles, RegistryRole(role).String())
+	}
+	return strings.Join(roles, "  ")
 }
 
 // Validate validates the GenesisState

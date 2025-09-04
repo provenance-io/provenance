@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -66,16 +64,17 @@ func CmdGrantRole() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant-role <asset_class_id> <nft_id> <role> <address>",
 		Short: "Grant a role to an address",
-		Args:  cobra.MinimumNArgs(4),
+		// TODO[danny]: Create Long message that utilizes ValidRolesString() to list the roles available.
+		Args: cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			role, ok := types.RegistryRole_value[args[2]]
-			if !ok {
-				return fmt.Errorf("invalid role: %s", args[2])
+			role, err := types.ParseRegistryRole(args[2])
+			if err != nil {
+				return err
 			}
 
 			msg := types.MsgGrantRole{
@@ -84,7 +83,7 @@ func CmdGrantRole() *cobra.Command {
 					AssetClassId: args[0],
 					NftId:        args[1],
 				},
-				Role:      types.RegistryRole(role),
+				Role:      role,
 				Addresses: []string{args[3]},
 			}
 
@@ -101,7 +100,8 @@ func CmdRevokeRole() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke-role <asset_class_id> <nft_id> <role> <address>",
 		Short: "Revoke a role from an address",
-		Args:  cobra.MinimumNArgs(4),
+		// TODO[danny]: Create Long message that utilizes ValidRolesString() to list the roles available.
+		Args: cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -109,9 +109,9 @@ func CmdRevokeRole() *cobra.Command {
 			}
 
 			// convert arg[2] to a registry.RegistryRole enum value
-			role, ok := types.RegistryRole_value[args[2]]
-			if !ok {
-				return fmt.Errorf("invalid role: %s", args[2])
+			role, err := types.ParseRegistryRole(args[2])
+			if err != nil {
+				return err
 			}
 
 			msg := types.MsgRevokeRole{
@@ -120,7 +120,7 @@ func CmdRevokeRole() *cobra.Command {
 					AssetClassId: args[0],
 					NftId:        args[1],
 				},
-				Role:      types.RegistryRole(role),
+				Role:      role,
 				Addresses: args[3:],
 			}
 
