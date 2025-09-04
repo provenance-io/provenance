@@ -533,7 +533,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		// Msgs that cost $1.00.
 		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgSubmitProposal", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgStoreCode", feeDefCoin(1000)),
-		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateRequest", feeDefCoin(1000)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateLedgerRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteScopeRequest", feeDefCoin(1000)),

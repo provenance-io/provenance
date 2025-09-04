@@ -11,7 +11,7 @@ import (
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
-		func(signer string) sdk.Msg { return &MsgCreateRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgCreateLedgerRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateStatusRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateInterestRateRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdatePaymentRequest{Authority: signer} },

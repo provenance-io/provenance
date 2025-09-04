@@ -17,12 +17,12 @@ The Ledger module provides several message types for creating and managing ledge
 `MsgCreate` creates a new ledger for an asset.
 
 ```protobuf
-message MsgCreateRequest {
+message MsgCreateLedgerRequest {
     Ledger ledger = 1;
     string authority = 2;
 }
 
-message MsgCreateResponse {}
+message MsgCreateLedgerResponse {}
 ```
 
 #### Fields

@@ -55,7 +55,7 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBa
 	return &types.MsgUpdateBalancesResponse{}, nil
 }
 
-func (k *MsgServer) Create(goCtx context.Context, req *types.MsgCreateRequest) (*types.MsgCreateResponse, error) {
+func (k *MsgServer) CreateLedger(goCtx context.Context, req *types.MsgCreateLedgerRequest) (*types.MsgCreateLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if k.HasLedger(ctx, req.Ledger.Key) {
@@ -69,7 +69,7 @@ func (k *MsgServer) Create(goCtx context.Context, req *types.MsgCreateRequest) (
 		return nil, err
 	}
 
-	return &types.MsgCreateResponse{}, nil
+	return &types.MsgCreateLedgerResponse{}, nil
 }
 
 func (k *MsgServer) UpdateStatus(goCtx context.Context, req *types.MsgUpdateStatusRequest) (*types.MsgUpdateStatusResponse, error) {

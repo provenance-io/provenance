@@ -162,7 +162,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				}
 			}
 
-			msg := &ledger.MsgCreateRequest{
+			msg := &ledger.MsgCreateLedgerRequest{
 				Ledger:    ledgerObj,
 				Authority: clientCtx.FromAddress.String(),
 			}

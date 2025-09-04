@@ -6,6 +6,7 @@ option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
 import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "provenance/ledger/v1/ledger.proto";
 import "provenance/ledger/v1/ledger_settlement.proto";
 
@@ -14,7 +15,7 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
 
   // Create a new NFT ledger.
-  rpc Create(MsgCreateRequest) returns (MsgCreateResponse);
+  rpc CreateLedger(MsgCreateLedgerRequest) returns (MsgCreateLedgerResponse);
 
   // Update Status.
   rpc UpdateStatus(MsgUpdateStatusRequest) returns (MsgUpdateStatusResponse);
@@ -57,18 +58,18 @@ service Msg {
   rpc BulkCreate(MsgBulkCreateRequest) returns (MsgBulkCreateResponse);
 }
 
-// MsgCreateRequest represents a request to create a new ledger.
-message MsgCreateRequest {
+// MsgCreateLedgerRequest represents a request to create a new ledger.
+message MsgCreateLedgerRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The ledger to create.
   Ledger ledger = 1;
   // The authority address that can create ledgers.
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgCreateResponse represents the response from creating a ledger.
-message MsgCreateResponse {}
+// MsgCreateLedgerResponse represents the response from creating a ledger.
+message MsgCreateLedgerResponse {}
 
 // MsgUpdateStatusRequest represents a request to update the status of a ledger.
 message MsgUpdateStatusRequest {
@@ -78,7 +79,7 @@ message MsgUpdateStatusRequest {
   LedgerKey key = 1;
 
   // The authority/signer that is updating the status
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The new status type id of the ledger
   int32 status_type_id = 3;
@@ -95,7 +96,7 @@ message MsgUpdateInterestRateRequest {
   LedgerKey key = 1;
 
   // The authority/signer that is updating the interest rate
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The new interest rate of the ledger
   int32 interest_rate = 3;
@@ -118,7 +119,7 @@ message MsgUpdatePaymentRequest {
   LedgerKey key = 1;
 
   // The authority/signer that is updating the payment
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The new next payment amount of the ledger
   int64 next_pmt_amt = 3;
@@ -141,7 +142,7 @@ message MsgUpdateMaturityDateRequest {
   LedgerKey key = 1;
 
   // The authority/signer that is updating the maturity date
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The new maturity date in days since epoch
   int32 maturity_date = 3;
@@ -161,7 +162,7 @@ message MsgAppendRequest {
   repeated LedgerEntry entries = 2;
 
   // The authority/signer that is appending the entries
-  string authority = 3;
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgAppendResponse represents the response from appending entries to a ledger.
@@ -175,7 +176,7 @@ message MsgUpdateBalancesRequest {
   LedgerKey key = 1;
 
   // The authority/signer that is updating the balances
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The correlation id of the ledger entry
   string correlation_id = 3;
@@ -195,7 +196,7 @@ message MsgTransferFundsWithSettlementRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The authority/signer that is transferring the funds
-  string authority = 1;
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The transfers to be made
   repeated FundTransferWithSettlement transfers = 2;
@@ -212,7 +213,7 @@ message MsgDestroyRequest {
   LedgerKey key = 1;
 
   // The authority/signer that is destroying the ledger
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgDestroyResponse represents the response from destroying a ledger.
@@ -226,7 +227,7 @@ message MsgCreateLedgerClassRequest {
   LedgerClass ledger_class = 1;
 
   // The authority/signer that is creating the ledger class
-  string authority = 2;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreateLedgerClassResponse represents the response from creating a ledger class.
@@ -243,7 +244,7 @@ message MsgAddLedgerClassStatusTypeRequest {
   LedgerClassStatusType status_type = 2;
 
   // The authority/signer that is adding the status type
-  string authority = 3;
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type.
@@ -260,7 +261,7 @@ message MsgAddLedgerClassEntryTypeRequest {
   LedgerClassEntryType entry_type = 2;
 
   // The authority/signer that is adding the entry type
-  string authority = 3;
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type.
@@ -277,7 +278,7 @@ message MsgAddLedgerClassBucketTypeRequest {
   LedgerClassBucketType bucket_type = 2;
 
   // The authority/signer that is adding the bucket type
-  string authority = 3;
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type.
@@ -288,7 +289,7 @@ message MsgBulkCreateRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // The authority/signer that is bulk importing the ledger data
-  string authority = 1;
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The genesis state to bulk import
   repeated LedgerToEntries ledger_to_entries = 2;

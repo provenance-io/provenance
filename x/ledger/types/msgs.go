@@ -11,7 +11,7 @@ import (
 
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
-	(*MsgCreateRequest)(nil),
+	(*MsgCreateLedgerRequest)(nil),
 	(*MsgUpdateStatusRequest)(nil),
 	(*MsgUpdateInterestRateRequest)(nil),
 	(*MsgUpdatePaymentRequest)(nil),
@@ -29,8 +29,8 @@ var AllRequestMsgs = []sdk.Msg{
 
 // Note: Authority address validation is performed in the message server to avoid duplicate bech32 conversions.
 
-// ValidateBasic implements the sdk.Msg interface for MsgCreateRequest
-func (m MsgCreateRequest) ValidateBasic() error {
+// ValidateBasic implements the sdk.Msg interface for MsgCreateLedgerRequest
+func (m MsgCreateLedgerRequest) ValidateBasic() error {
 	if err := validateAccAddress("authority", m.Authority); err != nil {
 		return err
 	}

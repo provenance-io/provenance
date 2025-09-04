@@ -366,8 +366,8 @@ func (s *MsgServerTestSuite) TestCreate() {
 		name            string
 		mintNFTs        []nft.NFT
 		registryEntries []registrytypes.RolesEntry
-		req             *ledger.MsgCreateRequest
-		expResp         *ledger.MsgCreateResponse
+		req             *ledger.MsgCreateLedgerRequest
+		expResp         *ledger.MsgCreateLedgerResponse
 		expErr          error
 	}{
 		{
@@ -378,7 +378,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 					Id:      s.validNFT.Id + "1",
 				},
 			},
-			req: &ledger.MsgCreateRequest{
+			req: &ledger.MsgCreateLedgerRequest{
 				// Use a new ledger key to avoid already exist errors
 				Ledger: &ledger.Ledger{
 					Key: &ledger.LedgerKey{
@@ -390,7 +390,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 				},
 				Authority: nftOwner.String(),
 			},
-			expResp: &ledger.MsgCreateResponse{},
+			expResp: &ledger.MsgCreateLedgerResponse{},
 		},
 		{
 			name: "successful create with registry",
@@ -406,7 +406,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 					Addresses: []string{nftServicer.String()},
 				},
 			},
-			req: &ledger.MsgCreateRequest{
+			req: &ledger.MsgCreateLedgerRequest{
 				// Use a new ledger key to avoid already exist errors
 				Ledger: &ledger.Ledger{
 					Key: &ledger.LedgerKey{
@@ -419,7 +419,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 				// Note that we authorize with the servicer address, not the owner address
 				Authority: nftServicer.String(),
 			},
-			expResp: &ledger.MsgCreateResponse{},
+			expResp: &ledger.MsgCreateLedgerResponse{},
 		},
 		{
 			name: "unauthorized create no registry",
@@ -429,7 +429,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 					Id:      s.validNFT.Id + "3",
 				},
 			},
-			req: &ledger.MsgCreateRequest{
+			req: &ledger.MsgCreateLedgerRequest{
 				Ledger: &ledger.Ledger{
 					Key: &ledger.LedgerKey{
 						AssetClassId: s.validNFTClass.Id,
@@ -457,7 +457,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 					Addresses: []string{nftServicer.String()},
 				},
 			},
-			req: &ledger.MsgCreateRequest{
+			req: &ledger.MsgCreateLedgerRequest{
 				Ledger: &ledger.Ledger{
 					Key: &ledger.LedgerKey{
 						AssetClassId: s.validNFTClass.Id,
@@ -473,7 +473,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 		},
 		{
 			name: "duplicate ledger",
-			req: &ledger.MsgCreateRequest{
+			req: &ledger.MsgCreateLedgerRequest{
 				Ledger:    s.existingLedger,
 				Authority: nftOwner.String(),
 			},
@@ -501,7 +501,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 			}
 
 			msgServer := keeper.NewMsgServer(s.keeper)
-			resp, err := msgServer.Create(s.ctx, tc.req)
+			resp, err := msgServer.CreateLedger(s.ctx, tc.req)
 
 			if tc.expErr != nil {
 				s.Require().ErrorIs(err, tc.expErr)
