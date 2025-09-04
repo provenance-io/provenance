@@ -19,42 +19,7 @@ func NewMsgServer(k Keeper) types.MsgServer {
 	return &ms
 }
 
-func (k *MsgServer) Append(goCtx context.Context, req *types.MsgAppendRequest) (*types.MsgAppendResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if !k.HasLedger(ctx, req.Key) {
-		return nil, types.NewErrCodeNotFound("ledger")
-	}
-
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
-		return nil, err
-	}
-
-	if err := k.AppendEntries(ctx, req.Key, req.Entries); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgAppendResponse{}, nil
-}
-
-func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBalancesRequest) (*types.MsgUpdateBalancesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if !k.HasLedger(ctx, req.Key) {
-		return nil, types.NewErrCodeNotFound("ledger")
-	}
-
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
-		return nil, err
-	}
-
-	if err := k.UpdateEntryBalances(ctx, req.Key, req.CorrelationId, req.BalanceAmounts, req.AppliedAmounts); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgUpdateBalancesResponse{}, nil
-}
-
+// CreateLedger creates a new NFT ledger.
 func (k *MsgServer) CreateLedger(goCtx context.Context, req *types.MsgCreateLedgerRequest) (*types.MsgCreateLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -72,6 +37,7 @@ func (k *MsgServer) CreateLedger(goCtx context.Context, req *types.MsgCreateLedg
 	return &types.MsgCreateLedgerResponse{}, nil
 }
 
+// UpdateStatus updates the Status of a ledger.
 func (k *MsgServer) UpdateStatus(goCtx context.Context, req *types.MsgUpdateStatusRequest) (*types.MsgUpdateStatusResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -90,6 +56,7 @@ func (k *MsgServer) UpdateStatus(goCtx context.Context, req *types.MsgUpdateStat
 	return &types.MsgUpdateStatusResponse{}, nil
 }
 
+// UpdateInterestRate updates the interest rate of a ledger.
 func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *types.MsgUpdateInterestRateRequest) (*types.MsgUpdateInterestRateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -108,6 +75,7 @@ func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *types.MsgUpda
 	return &types.MsgUpdateInterestRateResponse{}, nil
 }
 
+// UpdatePayment updates the payment amount, next payment date, and payment frequency of a ledger.
 func (k *MsgServer) UpdatePayment(goCtx context.Context, req *types.MsgUpdatePaymentRequest) (*types.MsgUpdatePaymentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -126,6 +94,7 @@ func (k *MsgServer) UpdatePayment(goCtx context.Context, req *types.MsgUpdatePay
 	return &types.MsgUpdatePaymentResponse{}, nil
 }
 
+// UpdateMaturityDate updates the maturity date of a ledger.
 func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *types.MsgUpdateMaturityDateRequest) (*types.MsgUpdateMaturityDateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -144,6 +113,45 @@ func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *types.MsgUpda
 	return &types.MsgUpdateMaturityDateResponse{}, nil
 }
 
+// Append adds an entry to a ledger.
+func (k *MsgServer) Append(goCtx context.Context, req *types.MsgAppendRequest) (*types.MsgAppendResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, types.NewErrCodeNotFound("ledger")
+	}
+
+	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+		return nil, err
+	}
+
+	if err := k.AppendEntries(ctx, req.Key, req.Entries); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgAppendResponse{}, nil
+}
+
+// UpdateBalances updates the balances for a ledger entry, allowing for retroactive adjustments to be applied.
+func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBalancesRequest) (*types.MsgUpdateBalancesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.HasLedger(ctx, req.Key) {
+		return nil, types.NewErrCodeNotFound("ledger")
+	}
+
+	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+		return nil, err
+	}
+
+	if err := k.UpdateEntryBalances(ctx, req.Key, req.CorrelationId, req.BalanceAmounts, req.AppliedAmounts); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateBalancesResponse{}, nil
+}
+
+// TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions.
 func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *types.MsgTransferFundsWithSettlementRequest) (*types.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -168,6 +176,7 @@ func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *type
 	return &types.MsgTransferFundsWithSettlementResponse{}, nil
 }
 
+// Destroy destroys a ledger by NFT address.
 func (k *MsgServer) Destroy(goCtx context.Context, req *types.MsgDestroyRequest) (*types.MsgDestroyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -186,7 +195,7 @@ func (k *MsgServer) Destroy(goCtx context.Context, req *types.MsgDestroyRequest)
 	return &types.MsgDestroyResponse{}, nil
 }
 
-// CreateLedgerClass handles the MsgCreateLedgerClassRequest message
+// CreateLedgerClass creates a new ledger class.
 func (k *MsgServer) CreateLedgerClass(goCtx context.Context, req *types.MsgCreateLedgerClassRequest) (*types.MsgCreateLedgerClassResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -200,7 +209,7 @@ func (k *MsgServer) CreateLedgerClass(goCtx context.Context, req *types.MsgCreat
 	return &types.MsgCreateLedgerClassResponse{}, nil
 }
 
-// AddLedgerClassStatusType handles the MsgAddLedgerClassStatusTypeRequest message
+// AddLedgerClassStatusType adds a status type to a ledger class.
 func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *types.MsgAddLedgerClassStatusTypeRequest) (*types.MsgAddLedgerClassStatusTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -224,7 +233,7 @@ func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *types.M
 	return &types.MsgAddLedgerClassStatusTypeResponse{}, nil
 }
 
-// AddLedgerClassEntryType handles the MsgAddLedgerClassEntryTypeRequest message
+// AddLedgerClassEntryType adds an entry type to a ledger class.
 func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *types.MsgAddLedgerClassEntryTypeRequest) (*types.MsgAddLedgerClassEntryTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -247,7 +256,7 @@ func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *types.Ms
 	return &types.MsgAddLedgerClassEntryTypeResponse{}, nil
 }
 
-// AddLedgerClassBucketType handles the MsgAddLedgerClassBucketTypeRequest message
+// AddLedgerClassBucketType adds a bucket type to a ledger class.
 func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *types.MsgAddLedgerClassBucketTypeRequest) (*types.MsgAddLedgerClassBucketTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -270,6 +279,7 @@ func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *types.M
 	return &types.MsgAddLedgerClassBucketTypeResponse{}, nil
 }
 
+// BulkCreate creates ledgers and entries in bulk.
 func (k *MsgServer) BulkCreate(goCtx context.Context, req *types.MsgBulkCreateRequest) (*types.MsgBulkCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

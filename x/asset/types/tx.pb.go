@@ -608,15 +608,16 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// CreateAsset creates a new asset.
+	// CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
 	CreateAsset(ctx context.Context, in *MsgCreateAsset, opts ...grpc.CallOption) (*MsgCreateAssetResponse, error)
-	// CreateAssetClass creates a new asset class.
+	// CreateAssetClass creates an NFT class and validates the json schema data field.
 	CreateAssetClass(ctx context.Context, in *MsgCreateAssetClass, opts ...grpc.CallOption) (*MsgCreateAssetClassResponse, error)
-	// CreatePool creates a new pool.
+	// CreatePool creates a marker for the pool and transfers the assets to the pool marker.
 	CreatePool(ctx context.Context, in *MsgCreatePool, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
-	// CreateTokenization creates a new tokenization.
+	// CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker.
 	CreateTokenization(ctx context.Context, in *MsgCreateTokenization, opts ...grpc.CallOption) (*MsgCreateTokenizationResponse, error)
-	// CreateSecuritization creates a new securitization.
+	// CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the
+	// securitization marker.
 	CreateSecuritization(ctx context.Context, in *MsgCreateSecuritization, opts ...grpc.CallOption) (*MsgCreateSecuritizationResponse, error)
 }
 
@@ -675,15 +676,16 @@ func (c *msgClient) CreateSecuritization(ctx context.Context, in *MsgCreateSecur
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// CreateAsset creates a new asset.
+	// CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
 	CreateAsset(context.Context, *MsgCreateAsset) (*MsgCreateAssetResponse, error)
-	// CreateAssetClass creates a new asset class.
+	// CreateAssetClass creates an NFT class and validates the json schema data field.
 	CreateAssetClass(context.Context, *MsgCreateAssetClass) (*MsgCreateAssetClassResponse, error)
-	// CreatePool creates a new pool.
+	// CreatePool creates a marker for the pool and transfers the assets to the pool marker.
 	CreatePool(context.Context, *MsgCreatePool) (*MsgCreatePoolResponse, error)
-	// CreateTokenization creates a new tokenization.
+	// CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker.
 	CreateTokenization(context.Context, *MsgCreateTokenization) (*MsgCreateTokenizationResponse, error)
-	// CreateSecuritization creates a new securitization.
+	// CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the
+	// securitization marker.
 	CreateSecuritization(context.Context, *MsgCreateSecuritization) (*MsgCreateSecuritizationResponse, error)
 }
 

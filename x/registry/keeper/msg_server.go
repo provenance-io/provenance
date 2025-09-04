@@ -18,6 +18,8 @@ func NewMsgServer(keeper Keeper) types.MsgServer {
 	return &msgServer{keeper: keeper}
 }
 
+// RegisterNFT registers a new NFT in the registry.
+// This creates a new registry entry with the specified roles and addresses.
 func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (*types.MsgRegisterNFTResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -50,6 +52,8 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 	return &types.MsgRegisterNFTResponse{}, nil
 }
 
+// GrantRole grants a role to one or more addresses.
+// This adds the specified addresses to the role for the given registry key.
 func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*types.MsgGrantRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -78,6 +82,8 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 	return &types.MsgGrantRoleResponse{}, nil
 }
 
+// RevokeRole revokes a role from one or more addresses.
+// This removes the specified addresses from the role for the given registry key.
 func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*types.MsgRevokeRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -105,6 +111,8 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 	return &types.MsgRevokeRoleResponse{}, nil
 }
 
+// UnregisterNFT unregisters an NFT from the registry.
+// This removes the entire registry entry for the specified key.
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

@@ -5034,20 +5034,20 @@ Msg defines the ledger module Msg service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `CreateLedger` | [MsgCreateLedgerRequest](#provenance-ledger-v1-MsgCreateLedgerRequest) | [MsgCreateLedgerResponse](#provenance-ledger-v1-MsgCreateLedgerResponse) | Create a new NFT ledger. |
-| `UpdateStatus` | [MsgUpdateStatusRequest](#provenance-ledger-v1-MsgUpdateStatusRequest) | [MsgUpdateStatusResponse](#provenance-ledger-v1-MsgUpdateStatusResponse) | Update Status. |
-| `UpdateInterestRate` | [MsgUpdateInterestRateRequest](#provenance-ledger-v1-MsgUpdateInterestRateRequest) | [MsgUpdateInterestRateResponse](#provenance-ledger-v1-MsgUpdateInterestRateResponse) | Update Interest Rate. |
-| `UpdatePayment` | [MsgUpdatePaymentRequest](#provenance-ledger-v1-MsgUpdatePaymentRequest) | [MsgUpdatePaymentResponse](#provenance-ledger-v1-MsgUpdatePaymentResponse) | Update Payment Amount, Next Payment Date, and Payment Frequency. |
-| `UpdateMaturityDate` | [MsgUpdateMaturityDateRequest](#provenance-ledger-v1-MsgUpdateMaturityDateRequest) | [MsgUpdateMaturityDateResponse](#provenance-ledger-v1-MsgUpdateMaturityDateResponse) | Update Maturity Date. |
-| `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append a ledger entry. |
-| `UpdateBalances` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied. |
-| `TransferFundsWithSettlement` | [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest) | [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse) | Process multiple fund transfers with manual settlement instructions. |
-| `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy a ledger by NFT address. |
-| `CreateLedgerClass` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | Create a new ledger class. |
-| `AddLedgerClassStatusType` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | Add a status type to a ledger class. |
-| `AddLedgerClassEntryType` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | Add an entry type to a ledger class. |
-| `AddLedgerClassBucketType` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | Add a bucket type to a ledger class. |
-| `BulkCreate` | [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest) | [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse) | Bulk create ledgers and entries. |
+| `CreateLedger` | [MsgCreateLedgerRequest](#provenance-ledger-v1-MsgCreateLedgerRequest) | [MsgCreateLedgerResponse](#provenance-ledger-v1-MsgCreateLedgerResponse) | CreateLedger creates a new NFT ledger. |
+| `UpdateStatus` | [MsgUpdateStatusRequest](#provenance-ledger-v1-MsgUpdateStatusRequest) | [MsgUpdateStatusResponse](#provenance-ledger-v1-MsgUpdateStatusResponse) | UpdateStatus updates the Status of a ledger. |
+| `UpdateInterestRate` | [MsgUpdateInterestRateRequest](#provenance-ledger-v1-MsgUpdateInterestRateRequest) | [MsgUpdateInterestRateResponse](#provenance-ledger-v1-MsgUpdateInterestRateResponse) | UpdateInterestRate updates the interest rate of a ledger. |
+| `UpdatePayment` | [MsgUpdatePaymentRequest](#provenance-ledger-v1-MsgUpdatePaymentRequest) | [MsgUpdatePaymentResponse](#provenance-ledger-v1-MsgUpdatePaymentResponse) | UpdatePayment updates the payment amount, next payment date, and payment frequency of a ledger. |
+| `UpdateMaturityDate` | [MsgUpdateMaturityDateRequest](#provenance-ledger-v1-MsgUpdateMaturityDateRequest) | [MsgUpdateMaturityDateResponse](#provenance-ledger-v1-MsgUpdateMaturityDateResponse) | UpdateMaturityDate updates the maturity date of a ledger. |
+| `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append adds an entry to a ledger. |
+| `UpdateBalances` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | UpdateBalances updates the balances for a ledger entry, allowing for retroactive adjustments to be applied. |
+| `TransferFundsWithSettlement` | [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest) | [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse) | TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions. |
+| `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy destroys a ledger by NFT address. |
+| `CreateLedgerClass` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | CreateLedgerClass creates a new ledger class. |
+| `AddLedgerClassStatusType` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | AddLedgerClassStatusType adds a status type to a ledger class. |
+| `AddLedgerClassEntryType` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | AddLedgerClassEntryType adds an entry type to a ledger class. |
+| `AddLedgerClassBucketType` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | AddLedgerClassBucketType adds a bucket type to a ledger class. |
+| `BulkCreate` | [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest) | [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse) | BulkCreate creates ledgers and entries in bulk. |
 
  <!-- end services -->
 
@@ -7299,11 +7299,11 @@ Msg defines the asset module's message service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) | CreateAsset creates a new asset. |
-| `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) | CreateAssetClass creates a new asset class. |
-| `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a new pool. |
-| `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a new tokenization. |
-| `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates a new securitization. |
+| `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) | CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema. |
+| `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) | CreateAssetClass creates an NFT class and validates the json schema data field. |
+| `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a marker for the pool and transfers the assets to the pool marker. |
+| `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker. |
+| `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the securitization marker. |
 
  <!-- end services -->
 
@@ -7526,10 +7526,10 @@ Query defines the gRPC querier service for the asset module.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `Asset` | [QueryAssetRequest](#provenance-asset-v1-QueryAssetRequest) | [QueryAssetResponse](#provenance-asset-v1-QueryAssetResponse) | Asset queries for a specified asset by its class ID and asset ID. |
-| `Assets` | [QueryAssetsRequest](#provenance-asset-v1-QueryAssetsRequest) | [QueryAssetsResponse](#provenance-asset-v1-QueryAssetsResponse) | Assets queries all assets for a given address. |
-| `AssetClass` | [QueryAssetClassRequest](#provenance-asset-v1-QueryAssetClassRequest) | [QueryAssetClassResponse](#provenance-asset-v1-QueryAssetClassResponse) | Class queries a specific asset class by its ID. |
-| `AssetClasses` | [QueryAssetClassesRequest](#provenance-asset-v1-QueryAssetClassesRequest) | [QueryAssetClassesResponse](#provenance-asset-v1-QueryAssetClassesResponse) | Classes queries all asset classes. |
+| `Asset` | [QueryAssetRequest](#provenance-asset-v1-QueryAssetRequest) | [QueryAssetResponse](#provenance-asset-v1-QueryAssetResponse) | Asset gets a specified asset by its class ID and asset ID. |
+| `Assets` | [QueryAssetsRequest](#provenance-asset-v1-QueryAssetsRequest) | [QueryAssetsResponse](#provenance-asset-v1-QueryAssetsResponse) | Assets gets all assets for a given address and class. |
+| `AssetClass` | [QueryAssetClassRequest](#provenance-asset-v1-QueryAssetClassRequest) | [QueryAssetClassResponse](#provenance-asset-v1-QueryAssetClassResponse) | AssetClass gets a specific asset class by its ID. |
+| `AssetClasses` | [QueryAssetClassesRequest](#provenance-asset-v1-QueryAssetClassesRequest) | [QueryAssetClassesResponse](#provenance-asset-v1-QueryAssetClassesResponse) | AssetClasses gets all asset classes. |
 
  <!-- end services -->
 
@@ -8807,7 +8807,7 @@ This service provides read-only access to registry data and role verification.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | `GetRegistry` | [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest) | [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse) | GetRegistry returns the registry entry for a given key. This method retrieves the complete registry entry including all roles and addresses. |
-| `HasRole` | [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest) | [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse) | HasRole returns true if the address has the specified role for the given key. This method provides a quick way to verify if an address has a specific role. |
+| `HasRole` | [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest) | [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse) | HasRole returns true if the address has the specified role for the given key. |
 
  <!-- end services -->
 

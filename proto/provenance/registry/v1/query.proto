@@ -19,7 +19,6 @@ service Query {
   }
 
   // HasRole returns true if the address has the specified role for the given key.
-  // This method provides a quick way to verify if an address has a specific role.
   rpc HasRole(QueryHasRoleRequest) returns (QueryHasRoleResponse) {
     option (google.api.http).get =
         "/provenance/registry/v1/has_role/{key.asset_class_id}/{key.nft_id}/{address}/{role}";

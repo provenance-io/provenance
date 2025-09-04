@@ -13,19 +13,20 @@ import "provenance/asset/v1/asset.proto";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // CreateAsset creates a new asset.
+  // CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
   rpc CreateAsset(MsgCreateAsset) returns (MsgCreateAssetResponse);
 
-  // CreateAssetClass creates a new asset class.
+  // CreateAssetClass creates an NFT class and validates the json schema data field.
   rpc CreateAssetClass(MsgCreateAssetClass) returns (MsgCreateAssetClassResponse);
 
-  // CreatePool creates a new pool.
+  // CreatePool creates a marker for the pool and transfers the assets to the pool marker.
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
-  // CreateTokenization creates a new tokenization.
+  // CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker.
   rpc CreateTokenization(MsgCreateTokenization) returns (MsgCreateTokenizationResponse);
 
-  // CreateSecuritization creates a new securitization.
+  // CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the
+  // securitization marker.
   rpc CreateSecuritization(MsgCreateSecuritization) returns (MsgCreateSecuritizationResponse);
 }
 

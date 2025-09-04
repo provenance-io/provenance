@@ -1586,33 +1586,33 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// Create a new NFT ledger.
+	// CreateLedger creates a new NFT ledger.
 	CreateLedger(ctx context.Context, in *MsgCreateLedgerRequest, opts ...grpc.CallOption) (*MsgCreateLedgerResponse, error)
-	// Update Status.
+	// UpdateStatus updates the Status of a ledger.
 	UpdateStatus(ctx context.Context, in *MsgUpdateStatusRequest, opts ...grpc.CallOption) (*MsgUpdateStatusResponse, error)
-	// Update Interest Rate.
+	// UpdateInterestRate updates the interest rate of a ledger.
 	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
-	// Update Payment Amount, Next Payment Date, and Payment Frequency.
+	// UpdatePayment updates the payment amount, next payment date, and payment frequency of a ledger.
 	UpdatePayment(ctx context.Context, in *MsgUpdatePaymentRequest, opts ...grpc.CallOption) (*MsgUpdatePaymentResponse, error)
-	// Update Maturity Date.
+	// UpdateMaturityDate updates the maturity date of a ledger.
 	UpdateMaturityDate(ctx context.Context, in *MsgUpdateMaturityDateRequest, opts ...grpc.CallOption) (*MsgUpdateMaturityDateResponse, error)
-	// Append a ledger entry.
+	// Append adds an entry to a ledger.
 	Append(ctx context.Context, in *MsgAppendRequest, opts ...grpc.CallOption) (*MsgAppendResponse, error)
-	// Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied.
+	// UpdateBalances updates the balances for a ledger entry, allowing for retroactive adjustments to be applied.
 	UpdateBalances(ctx context.Context, in *MsgUpdateBalancesRequest, opts ...grpc.CallOption) (*MsgUpdateBalancesResponse, error)
-	// Process multiple fund transfers with manual settlement instructions.
+	// TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions.
 	TransferFundsWithSettlement(ctx context.Context, in *MsgTransferFundsWithSettlementRequest, opts ...grpc.CallOption) (*MsgTransferFundsWithSettlementResponse, error)
-	// Destroy a ledger by NFT address.
+	// Destroy destroys a ledger by NFT address.
 	Destroy(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error)
-	// Create a new ledger class.
+	// CreateLedgerClass creates a new ledger class.
 	CreateLedgerClass(ctx context.Context, in *MsgCreateLedgerClassRequest, opts ...grpc.CallOption) (*MsgCreateLedgerClassResponse, error)
-	// Add a status type to a ledger class.
+	// AddLedgerClassStatusType adds a status type to a ledger class.
 	AddLedgerClassStatusType(ctx context.Context, in *MsgAddLedgerClassStatusTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassStatusTypeResponse, error)
-	// Add an entry type to a ledger class.
+	// AddLedgerClassEntryType adds an entry type to a ledger class.
 	AddLedgerClassEntryType(ctx context.Context, in *MsgAddLedgerClassEntryTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassEntryTypeResponse, error)
-	// Add a bucket type to a ledger class.
+	// AddLedgerClassBucketType adds a bucket type to a ledger class.
 	AddLedgerClassBucketType(ctx context.Context, in *MsgAddLedgerClassBucketTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassBucketTypeResponse, error)
-	// Bulk create ledgers and entries.
+	// BulkCreate creates ledgers and entries in bulk.
 	BulkCreate(ctx context.Context, in *MsgBulkCreateRequest, opts ...grpc.CallOption) (*MsgBulkCreateResponse, error)
 }
 
@@ -1752,33 +1752,33 @@ func (c *msgClient) BulkCreate(ctx context.Context, in *MsgBulkCreateRequest, op
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// Create a new NFT ledger.
+	// CreateLedger creates a new NFT ledger.
 	CreateLedger(context.Context, *MsgCreateLedgerRequest) (*MsgCreateLedgerResponse, error)
-	// Update Status.
+	// UpdateStatus updates the Status of a ledger.
 	UpdateStatus(context.Context, *MsgUpdateStatusRequest) (*MsgUpdateStatusResponse, error)
-	// Update Interest Rate.
+	// UpdateInterestRate updates the interest rate of a ledger.
 	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
-	// Update Payment Amount, Next Payment Date, and Payment Frequency.
+	// UpdatePayment updates the payment amount, next payment date, and payment frequency of a ledger.
 	UpdatePayment(context.Context, *MsgUpdatePaymentRequest) (*MsgUpdatePaymentResponse, error)
-	// Update Maturity Date.
+	// UpdateMaturityDate updates the maturity date of a ledger.
 	UpdateMaturityDate(context.Context, *MsgUpdateMaturityDateRequest) (*MsgUpdateMaturityDateResponse, error)
-	// Append a ledger entry.
+	// Append adds an entry to a ledger.
 	Append(context.Context, *MsgAppendRequest) (*MsgAppendResponse, error)
-	// Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied.
+	// UpdateBalances updates the balances for a ledger entry, allowing for retroactive adjustments to be applied.
 	UpdateBalances(context.Context, *MsgUpdateBalancesRequest) (*MsgUpdateBalancesResponse, error)
-	// Process multiple fund transfers with manual settlement instructions.
+	// TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions.
 	TransferFundsWithSettlement(context.Context, *MsgTransferFundsWithSettlementRequest) (*MsgTransferFundsWithSettlementResponse, error)
-	// Destroy a ledger by NFT address.
+	// Destroy destroys a ledger by NFT address.
 	Destroy(context.Context, *MsgDestroyRequest) (*MsgDestroyResponse, error)
-	// Create a new ledger class.
+	// CreateLedgerClass creates a new ledger class.
 	CreateLedgerClass(context.Context, *MsgCreateLedgerClassRequest) (*MsgCreateLedgerClassResponse, error)
-	// Add a status type to a ledger class.
+	// AddLedgerClassStatusType adds a status type to a ledger class.
 	AddLedgerClassStatusType(context.Context, *MsgAddLedgerClassStatusTypeRequest) (*MsgAddLedgerClassStatusTypeResponse, error)
-	// Add an entry type to a ledger class.
+	// AddLedgerClassEntryType adds an entry type to a ledger class.
 	AddLedgerClassEntryType(context.Context, *MsgAddLedgerClassEntryTypeRequest) (*MsgAddLedgerClassEntryTypeResponse, error)
-	// Add a bucket type to a ledger class.
+	// AddLedgerClassBucketType adds a bucket type to a ledger class.
 	AddLedgerClassBucketType(context.Context, *MsgAddLedgerClassBucketTypeRequest) (*MsgAddLedgerClassBucketTypeResponse, error)
-	// Bulk create ledgers and entries.
+	// BulkCreate creates ledgers and entries in bulk.
 	BulkCreate(context.Context, *MsgBulkCreateRequest) (*MsgBulkCreateResponse, error)
 }
 

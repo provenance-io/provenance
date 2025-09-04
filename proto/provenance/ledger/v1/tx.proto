@@ -14,47 +14,47 @@ import "provenance/ledger/v1/ledger_settlement.proto";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // Create a new NFT ledger.
+  // CreateLedger creates a new NFT ledger.
   rpc CreateLedger(MsgCreateLedgerRequest) returns (MsgCreateLedgerResponse);
 
-  // Update Status.
+  // UpdateStatus updates the Status of a ledger.
   rpc UpdateStatus(MsgUpdateStatusRequest) returns (MsgUpdateStatusResponse);
 
-  // Update Interest Rate.
+  // UpdateInterestRate updates the interest rate of a ledger.
   rpc UpdateInterestRate(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
 
-  // Update Payment Amount, Next Payment Date, and Payment Frequency.
+  // UpdatePayment updates the payment amount, next payment date, and payment frequency of a ledger.
   rpc UpdatePayment(MsgUpdatePaymentRequest) returns (MsgUpdatePaymentResponse);
 
-  // Update Maturity Date.
+  // UpdateMaturityDate updates the maturity date of a ledger.
   rpc UpdateMaturityDate(MsgUpdateMaturityDateRequest) returns (MsgUpdateMaturityDateResponse);
 
-  // Append a ledger entry.
+  // Append adds an entry to a ledger.
   rpc Append(MsgAppendRequest) returns (MsgAppendResponse);
 
-  // Balances can be updated for a ledger entry allowing for retroactive adjustments to be applied.
+  // UpdateBalances updates the balances for a ledger entry, allowing for retroactive adjustments to be applied.
   rpc UpdateBalances(MsgUpdateBalancesRequest) returns (MsgUpdateBalancesResponse);
 
-  // Process multiple fund transfers with manual settlement instructions.
+  // TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions.
   rpc TransferFundsWithSettlement(MsgTransferFundsWithSettlementRequest)
       returns (MsgTransferFundsWithSettlementResponse);
 
-  // Destroy a ledger by NFT address.
+  // Destroy destroys a ledger by NFT address.
   rpc Destroy(MsgDestroyRequest) returns (MsgDestroyResponse);
 
-  // Create a new ledger class.
+  // CreateLedgerClass creates a new ledger class.
   rpc CreateLedgerClass(MsgCreateLedgerClassRequest) returns (MsgCreateLedgerClassResponse);
 
-  // Add a status type to a ledger class.
+  // AddLedgerClassStatusType adds a status type to a ledger class.
   rpc AddLedgerClassStatusType(MsgAddLedgerClassStatusTypeRequest) returns (MsgAddLedgerClassStatusTypeResponse);
 
-  // Add an entry type to a ledger class.
+  // AddLedgerClassEntryType adds an entry type to a ledger class.
   rpc AddLedgerClassEntryType(MsgAddLedgerClassEntryTypeRequest) returns (MsgAddLedgerClassEntryTypeResponse);
 
-  // Add a bucket type to a ledger class.
+  // AddLedgerClassBucketType adds a bucket type to a ledger class.
   rpc AddLedgerClassBucketType(MsgAddLedgerClassBucketTypeRequest) returns (MsgAddLedgerClassBucketTypeResponse);
 
-  // Bulk create ledgers and entries.
+  // BulkCreate creates ledgers and entries in bulk.
   rpc BulkCreate(MsgBulkCreateRequest) returns (MsgBulkCreateResponse);
 }
 

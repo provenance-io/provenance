@@ -9,22 +9,22 @@ import "provenance/asset/v1/asset.proto";
 
 // Query defines the gRPC querier service for the asset module.
 service Query {
-  // Asset queries for a specified asset by its class ID and asset ID.
+  // Asset gets a specified asset by its class ID and asset ID.
   rpc Asset(QueryAssetRequest) returns (QueryAssetResponse) {
     option (google.api.http).get = "/provenance/asset/v1/asset/{class_id}/{id}";
   }
 
-  // Assets queries all assets for a given address.
+  // Assets gets all assets for a given address and class.
   rpc Assets(QueryAssetsRequest) returns (QueryAssetsResponse) {
     option (google.api.http).get = "/provenance/asset/v1/asset";
   }
 
-  // Class queries a specific asset class by its ID.
+  // AssetClass gets a specific asset class by its ID.
   rpc AssetClass(QueryAssetClassRequest) returns (QueryAssetClassResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class/{id}";
   }
 
-  // Classes queries all asset classes.
+  // AssetClasses gets all asset classes.
   rpc AssetClasses(QueryAssetClassesRequest) returns (QueryAssetClassesResponse) {
     option (google.api.http).get = "/provenance/asset/v1/class";
   }

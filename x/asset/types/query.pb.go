@@ -506,13 +506,13 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Asset queries for a specified asset by its class ID and asset ID.
+	// Asset gets a specified asset by its class ID and asset ID.
 	Asset(ctx context.Context, in *QueryAssetRequest, opts ...grpc.CallOption) (*QueryAssetResponse, error)
-	// Assets queries all assets for a given address.
+	// Assets gets all assets for a given address and class.
 	Assets(ctx context.Context, in *QueryAssetsRequest, opts ...grpc.CallOption) (*QueryAssetsResponse, error)
-	// Class queries a specific asset class by its ID.
+	// AssetClass gets a specific asset class by its ID.
 	AssetClass(ctx context.Context, in *QueryAssetClassRequest, opts ...grpc.CallOption) (*QueryAssetClassResponse, error)
-	// Classes queries all asset classes.
+	// AssetClasses gets all asset classes.
 	AssetClasses(ctx context.Context, in *QueryAssetClassesRequest, opts ...grpc.CallOption) (*QueryAssetClassesResponse, error)
 }
 
@@ -562,13 +562,13 @@ func (c *queryClient) AssetClasses(ctx context.Context, in *QueryAssetClassesReq
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Asset queries for a specified asset by its class ID and asset ID.
+	// Asset gets a specified asset by its class ID and asset ID.
 	Asset(context.Context, *QueryAssetRequest) (*QueryAssetResponse, error)
-	// Assets queries all assets for a given address.
+	// Assets gets all assets for a given address and class.
 	Assets(context.Context, *QueryAssetsRequest) (*QueryAssetsResponse, error)
-	// Class queries a specific asset class by its ID.
+	// AssetClass gets a specific asset class by its ID.
 	AssetClass(context.Context, *QueryAssetClassRequest) (*QueryAssetClassResponse, error)
-	// Classes queries all asset classes.
+	// AssetClasses gets all asset classes.
 	AssetClasses(context.Context, *QueryAssetClassesRequest) (*QueryAssetClassesResponse, error)
 }
 

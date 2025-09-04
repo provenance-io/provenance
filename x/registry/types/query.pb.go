@@ -302,7 +302,6 @@ type QueryClient interface {
 	// This method retrieves the complete registry entry including all roles and addresses.
 	GetRegistry(ctx context.Context, in *QueryGetRegistryRequest, opts ...grpc.CallOption) (*QueryGetRegistryResponse, error)
 	// HasRole returns true if the address has the specified role for the given key.
-	// This method provides a quick way to verify if an address has a specific role.
 	HasRole(ctx context.Context, in *QueryHasRoleRequest, opts ...grpc.CallOption) (*QueryHasRoleResponse, error)
 }
 
@@ -338,7 +337,6 @@ type QueryServer interface {
 	// This method retrieves the complete registry entry including all roles and addresses.
 	GetRegistry(context.Context, *QueryGetRegistryRequest) (*QueryGetRegistryResponse, error)
 	// HasRole returns true if the address has the specified role for the given key.
-	// This method provides a quick way to verify if an address has a specific role.
 	HasRole(context.Context, *QueryHasRoleRequest) (*QueryHasRoleResponse, error)
 }
 

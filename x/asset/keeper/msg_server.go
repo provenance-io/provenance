@@ -23,7 +23,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// CreateAsset creates a new asset. It creates an NFT and a default registry for the asset and validates the data against the class schema.
+// CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
 func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset) (*types.MsgCreateAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -105,7 +105,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	return &types.MsgCreateAssetResponse{}, nil
 }
 
-// CreateAssetClass creates a new asset class. It creates an NFT class and validates the json schema data field.
+// CreateAssetClass creates an NFT class and validates the json schema data field.
 func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateAssetClass) (*types.MsgCreateAssetClassResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -155,7 +155,7 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 	return &types.MsgCreateAssetClassResponse{}, nil
 }
 
-// CreatePool creates a new pool marker. It creates a marker for the pool and transfers the assets to the pool marker.
+// CreatePool creates a marker for the pool and transfers the assets to the pool marker.
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	// Create the marker
 	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.Signer)
@@ -195,7 +195,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
-// CreateTokenization creates a new tokenization marker. It creates a marker for the tokenization and transfers the asset to the tokenization marker.
+// CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker.
 func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreateTokenization) (*types.MsgCreateTokenizationResponse, error) {
 	// Create the marker
 	marker, err := m.createMarker(goCtx, msg.Token, msg.Signer)
@@ -233,7 +233,7 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 	return &types.MsgCreateTokenizationResponse{}, nil
 }
 
-// CreateSecuritization creates a new securitization marker and tranches. It creates a marker for the securitization and tranches and transfers the assets to the securitization marker.
+// CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the securitization marker.
 func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCreateSecuritization) (*types.MsgCreateSecuritizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

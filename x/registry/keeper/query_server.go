@@ -18,7 +18,8 @@ func NewQueryServer(keeper Keeper) *QueryServer {
 	return &QueryServer{keeper: keeper}
 }
 
-// GetRegistry returns the registry for a given key
+// GetRegistry returns the registry entry for a given key.
+// This method retrieves the complete registry entry including all roles and addresses.
 func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegistryRequest) (*types.QueryGetRegistryResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -34,7 +35,7 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegist
 	return &types.QueryGetRegistryResponse{Registry: *reg}, nil
 }
 
-// HasRole returns true if the address has the role for the given key
+// HasRole returns true if the address has the specified role for the given key.
 func (qs QueryServer) HasRole(ctx context.Context, req *types.QueryHasRoleRequest) (*types.QueryHasRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
