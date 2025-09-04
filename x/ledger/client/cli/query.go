@@ -93,7 +93,7 @@ func GetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(json))
+			cmd.Println(string(json))
 
 			return nil
 		},
@@ -244,7 +244,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(json))
+			cmd.Println(string(json))
 
 			return nil
 		},
@@ -293,7 +293,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(json))
+			cmd.Println(string(json))
 
 			return nil
 		},
@@ -493,7 +493,6 @@ func GetSettlementsByCorrelationIDCmd() *cobra.Command {
 				CorrelationId: correlationID,
 			})
 			if err != nil {
-				fmt.Println("error", err)
 				return err
 			}
 
