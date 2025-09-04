@@ -1,6 +1,6 @@
 package keeper_test
 
-func (s *TestSuite) GenesisTest() {
+func (s *TestSuite) TestGenesis() {
 	genesis1 := s.keeper.ExportGenesis(s.ctx)
 
 	// Clear the state
