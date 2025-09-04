@@ -40,7 +40,8 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 	}
 
 	// Validate that the authority owns the NFT
-	if nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId); nftOwner == nil || nftOwner.String() != msg.Authority {
+	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
+	if len(nftOwner) == 0 || nftOwner.String() != msg.Authority {
 		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
 	}
 
@@ -70,7 +71,7 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 
 	// Validate that the authority owns the NFT
 	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
-	if nftOwner == nil || nftOwner.String() != msg.Authority {
+	if len(nftOwner) == 0 || nftOwner.String() != msg.Authority {
 		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
 	}
 
@@ -100,7 +101,7 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 
 	// Validate that the authority owns the NFT
 	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
-	if nftOwner == nil || nftOwner.String() != msg.Authority {
+	if len(nftOwner) == 0 || nftOwner.String() != msg.Authority {
 		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
 	}
 
@@ -118,7 +119,7 @@ func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNF
 
 	// Validate that the authority owns the NFT
 	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
-	if nftOwner == nil || nftOwner.String() != msg.Authority {
+	if len(nftOwner) == 0 || nftOwner.String() != msg.Authority {
 		return nil, types.NewErrCodeUnauthorized("authority does not own the NFT")
 	}
 
