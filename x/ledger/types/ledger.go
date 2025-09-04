@@ -12,11 +12,22 @@ import (
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
+const (
+	MaxLenLedgerClassID = 50
+	MaxLenCorrelationID = 50
+	MaxLenAssetClassID  = registrytypes.MaxLenAssetClassID
+	MaxLenNFTID         = registrytypes.MaxLenNFTID
+	MaxLenCode          = 50
+	MaxLenDescription   = 100
+	MaxLenDenom         = 128
+	MaxLenMemo          = 50
+)
+
 var alNumDashRx = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
 
 // Validate validates the LedgerClass type
 func (lc *LedgerClass) Validate() error {
-	if err := lenCheck("ledger_class_id", lc.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", lc.LedgerClassId, 1, MaxLenLedgerClassID); err != nil {
 		return err
 	}
 
@@ -25,7 +36,7 @@ func (lc *LedgerClass) Validate() error {
 		return NewErrCodeInvalidField("ledger_class_id", "must only contain alphanumeric and dashes")
 	}
 
-	if err := lenCheck("asset_class_id", lc.AssetClassId, 1, 128); err != nil {
+	if err := lenCheck("asset_class_id", lc.AssetClassId, 1, MaxLenAssetClassID); err != nil {
 		return err
 	}
 
@@ -35,7 +46,7 @@ func (lc *LedgerClass) Validate() error {
 	}
 
 	// Check denom length first for nicer error messages.
-	if err := lenCheck("denom", lc.Denom, 2, 128); err != nil {
+	if err := lenCheck("denom", lc.Denom, 2, MaxLenDenom); err != nil {
 		return err
 	}
 
@@ -57,11 +68,11 @@ func (lcet *LedgerClassEntryType) Validate() error {
 		return NewErrCodeInvalidField("id", "must be a non-negative integer")
 	}
 
-	if err := lenCheck("code", lcet.Code, 1, 50); err != nil {
+	if err := lenCheck("code", lcet.Code, 1, MaxLenCode); err != nil {
 		return err
 	}
 
-	if err := lenCheck("description", lcet.Description, 1, 100); err != nil {
+	if err := lenCheck("description", lcet.Description, 1, MaxLenDescription); err != nil {
 		return err
 	}
 
@@ -74,11 +85,11 @@ func (lcst *LedgerClassStatusType) Validate() error {
 		return NewErrCodeInvalidField("id", "must be a non-negative integer")
 	}
 
-	if err := lenCheck("code", lcst.Code, 1, 50); err != nil {
+	if err := lenCheck("code", lcst.Code, 1, MaxLenCode); err != nil {
 		return err
 	}
 
-	if err := lenCheck("description", lcst.Description, 1, 100); err != nil {
+	if err := lenCheck("description", lcst.Description, 1, MaxLenDescription); err != nil {
 		return err
 	}
 
@@ -173,11 +184,11 @@ func (lk *LedgerKey) Validate() error {
 		return NewErrCodeInvalidField("nft_id", "must not contain a null byte")
 	}
 
-	if err := lenCheck("nft_id", lk.NftId, 1, 128); err != nil {
+	if err := lenCheck("nft_id", lk.NftId, 1, MaxLenNFTID); err != nil {
 		return err
 	}
 
-	if err := lenCheck("asset_class_id", lk.AssetClassId, 1, 128); err != nil {
+	if err := lenCheck("asset_class_id", lk.AssetClassId, 1, MaxLenAssetClassID); err != nil {
 		return err
 	}
 
@@ -199,7 +210,7 @@ func (l *Ledger) Validate() error {
 	}
 
 	// Validate the LedgerClassId field
-	if err := lenCheck("ledger_class_id", l.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", l.LedgerClassId, 1, MaxLenLedgerClassID); err != nil {
 		return err
 	}
 
@@ -249,11 +260,11 @@ func (lcbt *LedgerClassBucketType) Validate() error {
 		return NewErrCodeInvalidField("id", "must be a non-negative integer")
 	}
 
-	if err := lenCheck("code", lcbt.Code, 1, 50); err != nil {
+	if err := lenCheck("code", lcbt.Code, 1, MaxLenCode); err != nil {
 		return err
 	}
 
-	if err := lenCheck("description", lcbt.Description, 1, 100); err != nil {
+	if err := lenCheck("description", lcbt.Description, 1, MaxLenDescription); err != nil {
 		return err
 	}
 
@@ -262,12 +273,12 @@ func (lcbt *LedgerClassBucketType) Validate() error {
 
 // Validate validates the LedgerEntry type
 func (le *LedgerEntry) Validate() error {
-	if err := lenCheck("correlation_id", le.CorrelationId, 1, 50); err != nil {
+	if err := lenCheck("correlation_id", le.CorrelationId, 1, MaxLenCorrelationID); err != nil {
 		return err
 	}
 
 	// Validate reverses_correlation_id if provided
-	if err := lenCheck("reverses_correlation_id", le.ReversesCorrelationId, 0, 50); err != nil {
+	if err := lenCheck("reverses_correlation_id", le.ReversesCorrelationId, 0, MaxLenCorrelationID); err != nil {
 		return err
 	}
 

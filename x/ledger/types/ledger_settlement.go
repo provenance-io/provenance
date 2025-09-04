@@ -11,7 +11,7 @@ func (ft *FundTransferWithSettlement) Validate() error {
 	}
 
 	// Validate that the correlation ID is valid
-	if err := lenCheck("ledger_entry_correlation_id", ft.LedgerEntryCorrelationId, 1, 50); err != nil {
+	if err := lenCheck("ledger_entry_correlation_id", ft.LedgerEntryCorrelationId, 1, MaxLenCorrelationID); err != nil {
 		return err
 	}
 
@@ -34,7 +34,7 @@ func (si *SettlementInstruction) Validate() error {
 		return NewErrCodeInvalidField("amount", "must be a non-negative integer")
 	}
 
-	if err := lenCheck("memo", si.Memo, 0, 50); err != nil {
+	if err := lenCheck("memo", si.Memo, 0, MaxLenMemo); err != nil {
 		return err
 	}
 

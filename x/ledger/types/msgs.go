@@ -168,7 +168,7 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("correlation_id", m.CorrelationId, 1, 50); err != nil {
+	if err := lenCheck("correlation_id", m.CorrelationId, 1, MaxLenCorrelationID); err != nil {
 		return err
 	}
 
@@ -256,7 +256,7 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, MaxLenLedgerClassID); err != nil {
 		return err
 	}
 
@@ -277,7 +277,7 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, MaxLenLedgerClassID); err != nil {
 		return err
 	}
 
@@ -298,7 +298,7 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 		return err
 	}
 
-	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, 50); err != nil {
+	if err := lenCheck("ledger_class_id", m.LedgerClassId, 1, MaxLenLedgerClassID); err != nil {
 		return err
 	}
 

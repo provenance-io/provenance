@@ -10,6 +10,9 @@ import (
 
 const (
 	registryKeyHrp = "reg"
+
+	MaxLenAssetClassID = 128
+	MaxLenNFTID        = 128
 )
 
 // Combine the asset class id and nft id into a bech32 string.
@@ -32,11 +35,11 @@ func (m *RegistryKey) Validate() error {
 		return NewErrCodeInvalidField("registry key", "registry key cannot be nil")
 	}
 
-	if err := lenCheck("nft_id", m.NftId, 1, 128); err != nil {
+	if err := lenCheck("nft_id", m.NftId, 1, MaxLenNFTID); err != nil {
 		return err
 	}
 
-	if err := lenCheck("asset_class_id", m.AssetClassId, 1, 128); err != nil {
+	if err := lenCheck("asset_class_id", m.AssetClassId, 1, MaxLenAssetClassID); err != nil {
 		return err
 	}
 
