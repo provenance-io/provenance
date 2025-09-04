@@ -44,7 +44,7 @@ func (si *SettlementInstruction) Validate() error {
 	}
 
 	// Validate status enum
-	if _, ok := FundingTransferStatus_name[int32(si.Status)]; !ok {
+	if err := si.Status.Validate(); err != nil {
 		return NewErrCodeInvalidField("status", "invalid funding transfer status")
 	}
 

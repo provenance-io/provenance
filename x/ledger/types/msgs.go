@@ -105,7 +105,7 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 		return NewErrCodeInvalidField("next_pmt_date", "must be a positive integer")
 	}
 
-	if _, ok := PaymentFrequency_name[int32(m.PaymentFrequency)]; !ok {
+	if err := m.PaymentFrequency.Validate(); err != nil {
 		return NewErrCodeInvalidField("payment_frequency", "invalid payment frequency")
 	}
 
