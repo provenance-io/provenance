@@ -11,10 +11,10 @@ import (
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
-		func(signer string) sdk.Msg { return &MsgRegisterNFT{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgGrantRole{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgRevokeRole{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgUnregisterNFT{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgRegisterNFT{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgGrantRole{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgRevokeRole{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUnregisterNFT{Signer: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)

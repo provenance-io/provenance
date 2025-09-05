@@ -1,6 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,6 +29,7 @@ func CmdTx() *cobra.Command {
 		CmdGrantRole(),
 		CmdRevokeRole(),
 		CmdUnregisterNFT(),
+		CmdRegistryBulkUpdate(),
 	)
 
 	return cmd
@@ -43,7 +48,7 @@ func CmdRegisterNFT() *cobra.Command {
 			}
 
 			msg := types.MsgRegisterNFT{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -78,7 +83,7 @@ func CmdGrantRole() *cobra.Command {
 			}
 
 			msg := types.MsgGrantRole{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -115,7 +120,7 @@ func CmdRevokeRole() *cobra.Command {
 			}
 
 			msg := types.MsgRevokeRole{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -145,11 +150,48 @@ func CmdUnregisterNFT() *cobra.Command {
 			}
 
 			msg := types.MsgUnregisterNFT{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
 				},
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdRegistryBulkUpdate returns the command to bulk update registry entries
+func CmdRegistryBulkUpdate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bulk-update <entries_json_file>",
+		Short: "Bulk update registry entries",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// read the json file
+			jsonData, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			// unmarshal the json file to []types.RegistryEntry
+			var entries []types.RegistryEntry
+			if err := json.Unmarshal(jsonData, &entries); err != nil {
+				return fmt.Errorf("failed to unmarshal JSON array: %w", err)
+			}
+
+			msg := types.MsgRegistryBulkUpdate{
+				Signer:  clientCtx.GetFromAddress().String(),
+				Entries: entries,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)

@@ -5,9 +5,10 @@ option go_package          = "github.com/provenance-io/provenance/x/registry/typ
 option java_package        = "io.provenance.registry.v1";
 option java_multiple_files = true;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
-import "provenance/registry/v1/registry.proto";
 import "google/api/annotations.proto";
+import "provenance/registry/v1/registry.proto";
 
 // Query defines the gRPC querier service for the registry module.
 // This service provides read-only access to registry data and role verification.
@@ -16,6 +17,12 @@ service Query {
   // This method retrieves the complete registry entry including all roles and addresses.
   rpc GetRegistry(QueryGetRegistryRequest) returns (QueryGetRegistryResponse) {
     option (google.api.http).get = "/provenance/registry/v1/registry/{key.asset_class_id}/{key.nft_id}";
+  }
+
+  // GetRegistries returns all registry entries, optionally filtered by asset class ID.
+  // This method retrieves the complete registry entries including all roles and addresses.
+  rpc GetRegistries(QueryGetRegistriesRequest) returns (QueryGetRegistriesResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/registry";
   }
 
   // HasRole returns true if the address has the specified role for the given key.
@@ -39,6 +46,24 @@ message QueryGetRegistryResponse {
   // registry is the registry entry for the requested key.
   // This includes all roles and addresses associated with the specified NFT and asset class.
   RegistryEntry registry = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryGetRegistriesRequest is the paginated request type for the Query/GetRegistries RPC method.
+message QueryGetRegistriesRequest {
+  // asset_class_id is the Scope Specification ID or NFT Class ID.
+  // This identifies the class or specification that the NFTs belong to.
+  string asset_class_id = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetRegistriesResponse is the paginated response type for the Query/GetRegistries RPC method.
+// It contains the complete registry entry for the requested key.
+message QueryGetRegistriesResponse {
+  // registries is the collection of registry entries.
+  // This includes all roles and addresses associated with the specified NFT and asset class.
+  repeated RegistryEntry registries = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryHasRoleRequest is the request type for the Query/HasRole RPC method.

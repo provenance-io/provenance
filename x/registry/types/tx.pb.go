@@ -33,9 +33,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgRegisterNFT represents a message to register a new NFT in the registry.
 // This message creates a new registry entry with the specified roles and addresses.
 type MsgRegisterNFT struct {
-	// authority is the address that is authorized to register NFTs.
+	// signer is the address that is authorized to register NFTs.
 	// This address must have the appropriate permissions to create registry entries.
-	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
 	// key is the registry key to register.
 	// This contains the NFT ID and asset class ID that uniquely identify the registry entry.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -77,9 +77,9 @@ func (m *MsgRegisterNFT) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterNFT proto.InternalMessageInfo
 
-func (m *MsgRegisterNFT) GetAuthority() string {
+func (m *MsgRegisterNFT) GetSigner() string {
 	if m != nil {
-		return m.Authority
+		return m.Signer
 	}
 	return ""
 }
@@ -139,9 +139,9 @@ var xxx_messageInfo_MsgRegisterNFTResponse proto.InternalMessageInfo
 // MsgGrantRole represents a message to grant a role to one or more addresses.
 // This message adds the specified addresses to an existing role for the given registry key.
 type MsgGrantRole struct {
-	// authority is the address that is authorized to grant the role.
+	// signer is the address that is authorized to grant the role.
 	// This address must have the appropriate permissions to modify role assignments.
-	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
 	// key is the registry key to grant the role to.
 	// This identifies the specific registry entry to modify.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -186,9 +186,9 @@ func (m *MsgGrantRole) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGrantRole proto.InternalMessageInfo
 
-func (m *MsgGrantRole) GetAuthority() string {
+func (m *MsgGrantRole) GetSigner() string {
 	if m != nil {
-		return m.Authority
+		return m.Signer
 	}
 	return ""
 }
@@ -255,9 +255,9 @@ var xxx_messageInfo_MsgGrantRoleResponse proto.InternalMessageInfo
 // MsgRevokeRole represents a message to revoke a role from one or more addresses.
 // This message removes the specified addresses from an existing role for the given registry key.
 type MsgRevokeRole struct {
-	// authority is the address that is authorized to revoke the role.
+	// signer is the address that is authorized to revoke the role.
 	// This address must have the appropriate permissions to modify role assignments.
-	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
 	// key is the registry key to revoke the role from.
 	// This identifies the specific registry entry to modify.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -302,9 +302,9 @@ func (m *MsgRevokeRole) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRevokeRole proto.InternalMessageInfo
 
-func (m *MsgRevokeRole) GetAuthority() string {
+func (m *MsgRevokeRole) GetSigner() string {
 	if m != nil {
-		return m.Authority
+		return m.Signer
 	}
 	return ""
 }
@@ -371,9 +371,9 @@ var xxx_messageInfo_MsgRevokeRoleResponse proto.InternalMessageInfo
 // MsgUnregisterNFT represents a message to unregister an NFT from the registry.
 // This message removes the entire registry entry for the specified key.
 type MsgUnregisterNFT struct {
-	// authority is the address that is authorized to unregister NFTs.
+	// signer is the address that is authorized to unregister NFTs.
 	// This address must have the appropriate permissions to remove registry entries.
-	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
 	// key is the registry key to remove.
 	// This identifies the specific registry entry to delete.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -412,9 +412,9 @@ func (m *MsgUnregisterNFT) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnregisterNFT proto.InternalMessageInfo
 
-func (m *MsgUnregisterNFT) GetAuthority() string {
+func (m *MsgUnregisterNFT) GetSigner() string {
 	if m != nil {
-		return m.Authority
+		return m.Signer
 	}
 	return ""
 }
@@ -464,6 +464,102 @@ func (m *MsgUnregisterNFTResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnregisterNFTResponse proto.InternalMessageInfo
 
+// MsgRegistryBulkUpdate represents a bulk update operation for multiple registry entries.
+// This allows for efficient batch processing of registry modifications.
+type MsgRegistryBulkUpdate struct {
+	// signer is the address that is authorized to register NFTs.
+	// This address must have the appropriate permissions to create registry entries.
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// entries is the list of bulk update entries to be processed.
+	// Each entry contains the registry entry to be updated.
+	Entries []RegistryEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries"`
+}
+
+func (m *MsgRegistryBulkUpdate) Reset()         { *m = MsgRegistryBulkUpdate{} }
+func (m *MsgRegistryBulkUpdate) String() string { return proto.CompactTextString(m) }
+func (*MsgRegistryBulkUpdate) ProtoMessage()    {}
+func (*MsgRegistryBulkUpdate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{8}
+}
+func (m *MsgRegistryBulkUpdate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRegistryBulkUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRegistryBulkUpdate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRegistryBulkUpdate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRegistryBulkUpdate.Merge(m, src)
+}
+func (m *MsgRegistryBulkUpdate) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRegistryBulkUpdate) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRegistryBulkUpdate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRegistryBulkUpdate proto.InternalMessageInfo
+
+func (m *MsgRegistryBulkUpdate) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+func (m *MsgRegistryBulkUpdate) GetEntries() []RegistryEntry {
+	if m != nil {
+		return m.Entries
+	}
+	return nil
+}
+
+// MsgRegistryBulkUpdateResponse defines the response for RegistryBulkUpdate.
+// This is an empty response indicating successful bulk update.
+type MsgRegistryBulkUpdateResponse struct {
+}
+
+func (m *MsgRegistryBulkUpdateResponse) Reset()         { *m = MsgRegistryBulkUpdateResponse{} }
+func (m *MsgRegistryBulkUpdateResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRegistryBulkUpdateResponse) ProtoMessage()    {}
+func (*MsgRegistryBulkUpdateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{9}
+}
+func (m *MsgRegistryBulkUpdateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRegistryBulkUpdateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRegistryBulkUpdateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRegistryBulkUpdateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRegistryBulkUpdateResponse.Merge(m, src)
+}
+func (m *MsgRegistryBulkUpdateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRegistryBulkUpdateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRegistryBulkUpdateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRegistryBulkUpdateResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRegisterNFT)(nil), "provenance.registry.v1.MsgRegisterNFT")
 	proto.RegisterType((*MsgRegisterNFTResponse)(nil), "provenance.registry.v1.MsgRegisterNFTResponse")
@@ -473,45 +569,51 @@ func init() {
 	proto.RegisterType((*MsgRevokeRoleResponse)(nil), "provenance.registry.v1.MsgRevokeRoleResponse")
 	proto.RegisterType((*MsgUnregisterNFT)(nil), "provenance.registry.v1.MsgUnregisterNFT")
 	proto.RegisterType((*MsgUnregisterNFTResponse)(nil), "provenance.registry.v1.MsgUnregisterNFTResponse")
+	proto.RegisterType((*MsgRegistryBulkUpdate)(nil), "provenance.registry.v1.MsgRegistryBulkUpdate")
+	proto.RegisterType((*MsgRegistryBulkUpdateResponse)(nil), "provenance.registry.v1.MsgRegistryBulkUpdateResponse")
 }
 
 func init() { proto.RegisterFile("provenance/registry/v1/tx.proto", fileDescriptor_afab3f18b6d8353c) }
 
 var fileDescriptor_afab3f18b6d8353c = []byte{
-	// 524 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x94, 0x3f, 0x6f, 0xd3, 0x40,
-	0x18, 0xc6, 0x73, 0x75, 0x8a, 0x94, 0x37, 0x34, 0x42, 0x56, 0x48, 0x5d, 0x0f, 0xae, 0x15, 0x5a,
-	0x64, 0x55, 0xc4, 0xa6, 0xe1, 0x8f, 0x10, 0x03, 0x12, 0x91, 0x80, 0x01, 0x05, 0x21, 0x03, 0x0b,
-	0x4b, 0x95, 0xa4, 0xa7, 0xab, 0x15, 0xe2, 0x8b, 0xee, 0xbd, 0x46, 0xf5, 0x56, 0xf1, 0x09, 0xe0,
-	0x43, 0xb0, 0x77, 0xe0, 0x43, 0x74, 0xa3, 0x62, 0x62, 0x42, 0x28, 0x19, 0xfa, 0x31, 0x40, 0xb6,
-	0x63, 0x3b, 0xa6, 0x24, 0xcd, 0x04, 0x03, 0xdb, 0x5d, 0xee, 0xf7, 0xde, 0xf3, 0xbc, 0x4f, 0xfc,
-	0x1e, 0x6c, 0x0e, 0x05, 0x1f, 0x51, 0xbf, 0xe3, 0xf7, 0xa8, 0x23, 0x28, 0xf3, 0x50, 0x8a, 0xc0,
-	0x19, 0xed, 0x3a, 0xf2, 0xc8, 0x1e, 0x0a, 0x2e, 0xb9, 0x5a, 0xcb, 0x00, 0x3b, 0x01, 0xec, 0xd1,
-	0xae, 0x5e, 0x65, 0x9c, 0xf1, 0x08, 0x71, 0xc2, 0x55, 0x4c, 0xeb, 0x1b, 0x3d, 0x8e, 0x03, 0x8e,
-	0x7b, 0xf1, 0x41, 0xbc, 0x99, 0x1e, 0xad, 0xc7, 0x3b, 0x67, 0x80, 0x2c, 0x14, 0x18, 0x20, 0x9b,
-	0x1e, 0x6c, 0xcf, 0xb1, 0x90, 0xaa, 0x45, 0x58, 0xfd, 0x0b, 0x81, 0x4a, 0x1b, 0x99, 0x1b, 0xfd,
-	0x4a, 0xc5, 0x8b, 0xa7, 0xaf, 0xd5, 0xfb, 0x50, 0xea, 0x1c, 0xca, 0x03, 0x2e, 0x3c, 0x19, 0x68,
-	0xc4, 0x24, 0x56, 0xa9, 0xa5, 0x7d, 0xfd, 0xdc, 0xa8, 0x4e, 0x75, 0x1f, 0xef, 0xef, 0x0b, 0x8a,
-	0xf8, 0x4a, 0x0a, 0xcf, 0x67, 0x6e, 0x86, 0xaa, 0xf7, 0x40, 0xe9, 0xd3, 0x40, 0x5b, 0x31, 0x89,
-	0x55, 0x6e, 0xde, 0xb0, 0xff, 0xdc, 0xa1, 0xed, 0x4e, 0xd7, 0xcf, 0x69, 0xe0, 0x86, 0xbc, 0xfa,
-	0x08, 0x56, 0x05, 0x7f, 0x47, 0x51, 0x53, 0x4c, 0xc5, 0x2a, 0x37, 0xeb, 0x73, 0x0b, 0x43, 0xe8,
-	0x89, 0x2f, 0x45, 0xd0, 0x2a, 0x9e, 0x7e, 0xdf, 0x2c, 0xb8, 0x71, 0xd9, 0xc3, 0xca, 0xfb, 0xf3,
-	0x93, 0x9d, 0xcc, 0x46, 0x5d, 0x83, 0x5a, 0xbe, 0x21, 0x97, 0xe2, 0x90, 0xfb, 0x48, 0xeb, 0x3f,
-	0x09, 0x5c, 0x6d, 0x23, 0x7b, 0x26, 0x3a, 0xbe, 0x0c, 0x6f, 0xfb, 0xdb, 0x9d, 0x3e, 0x80, 0x62,
-	0x68, 0x59, 0x53, 0x4c, 0x62, 0x55, 0x9a, 0x5b, 0x97, 0xd5, 0x85, 0x16, 0xdd, 0xa8, 0x22, 0x32,
-	0x1a, 0x9b, 0xa1, 0xa8, 0x15, 0x4d, 0xe5, 0x12, 0xa3, 0x09, 0x7a, 0x21, 0x9b, 0x1a, 0x54, 0x67,
-	0x03, 0x48, 0x93, 0x39, 0x5e, 0x81, 0xb5, 0x28, 0xb4, 0x11, 0xef, 0xd3, 0xff, 0x33, 0x9a, 0x75,
-	0xb8, 0x9e, 0x4b, 0x20, 0xcd, 0xe6, 0x23, 0x81, 0x6b, 0x6d, 0x64, 0x6f, 0x7c, 0xf1, 0xcf, 0x66,
-	0xe4, 0x82, 0x59, 0x1d, 0xb4, 0xdf, 0x2d, 0x25, 0x7e, 0x9b, 0x9f, 0x14, 0x50, 0xda, 0xc8, 0x54,
-	0x0a, 0xe5, 0xd9, 0xa9, 0xbe, 0x39, 0x4f, 0x2c, 0x3f, 0x2c, 0xba, 0xbd, 0x1c, 0x97, 0xc8, 0xa9,
-	0x7b, 0x50, 0xca, 0x06, 0x6a, 0x6b, 0x41, 0x71, 0x4a, 0xe9, 0xb7, 0x96, 0xa1, 0x52, 0x81, 0x2e,
-	0xc0, 0xcc, 0x77, 0xb9, 0xbd, 0xd0, 0x5e, 0x82, 0xe9, 0x8d, 0xa5, 0xb0, 0x54, 0xa3, 0x0f, 0x6b,
-	0xf9, 0xff, 0xd7, 0x5a, 0x50, 0x9f, 0x23, 0xf5, 0xdb, 0xcb, 0x92, 0x89, 0x98, 0xbe, 0x7a, 0x7c,
-	0x7e, 0xb2, 0x43, 0x5a, 0xfd, 0xd3, 0xb1, 0x41, 0xce, 0xc6, 0x06, 0xf9, 0x31, 0x36, 0xc8, 0x87,
-	0x89, 0x51, 0x38, 0x9b, 0x18, 0x85, 0x6f, 0x13, 0xa3, 0x00, 0x1b, 0x1e, 0x9f, 0x73, 0xe9, 0x4b,
-	0xf2, 0xf6, 0x2e, 0xf3, 0xe4, 0xc1, 0x61, 0xd7, 0xee, 0xf1, 0x81, 0x93, 0x41, 0x0d, 0x8f, 0xcf,
-	0xec, 0x9c, 0xa3, 0xec, 0xc9, 0x97, 0xc1, 0x90, 0x62, 0xf7, 0x4a, 0xf4, 0xda, 0xdf, 0xf9, 0x15,
-	0x00, 0x00, 0xff, 0xff, 0x8e, 0x03, 0x34, 0x03, 0x99, 0x06, 0x00, 0x00,
+	// 587 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x95, 0x3d, 0x6f, 0xd3, 0x40,
+	0x18, 0xc7, 0x73, 0x75, 0x5a, 0xd4, 0x27, 0xb4, 0x42, 0x56, 0x48, 0x5d, 0x4b, 0x38, 0x51, 0x68,
+	0x50, 0x54, 0x11, 0xbb, 0x0d, 0x14, 0x21, 0x06, 0x24, 0x22, 0x15, 0x06, 0x14, 0x84, 0x0c, 0x5d,
+	0x58, 0xaa, 0xbc, 0x9c, 0x0e, 0x2b, 0x8d, 0x2f, 0xba, 0xbb, 0x46, 0x35, 0x13, 0x62, 0x62, 0xe4,
+	0x0b, 0x30, 0xf0, 0x0d, 0x3a, 0xf0, 0x19, 0x50, 0xc7, 0x8a, 0x89, 0x09, 0xa1, 0x64, 0xe8, 0x37,
+	0x80, 0x15, 0xf9, 0xdd, 0x46, 0x79, 0x83, 0x01, 0x06, 0x36, 0x5f, 0xee, 0xf7, 0xdc, 0xff, 0xff,
+	0x7f, 0xe2, 0xc7, 0x07, 0xc5, 0x01, 0xa3, 0x43, 0x6c, 0xb7, 0xec, 0x0e, 0x36, 0x18, 0x26, 0x16,
+	0x17, 0xcc, 0x31, 0x86, 0xbb, 0x86, 0x38, 0xd1, 0x07, 0x8c, 0x0a, 0x2a, 0x17, 0x62, 0x40, 0x0f,
+	0x01, 0x7d, 0xb8, 0xab, 0xe6, 0x09, 0x25, 0xd4, 0x43, 0x0c, 0xf7, 0xc9, 0xa7, 0xd5, 0xcd, 0x0e,
+	0xe5, 0x7d, 0xca, 0x0f, 0xfd, 0x0d, 0x7f, 0x11, 0x6c, 0x6d, 0xf8, 0x2b, 0xa3, 0xcf, 0x89, 0x2b,
+	0xd0, 0xe7, 0x24, 0xd8, 0xa8, 0x4c, 0xb1, 0x10, 0xa9, 0x79, 0x58, 0xf9, 0x13, 0x82, 0xf5, 0x26,
+	0x27, 0xa6, 0xf7, 0x2b, 0x66, 0x4f, 0x1e, 0x3e, 0x97, 0x77, 0x60, 0x85, 0x5b, 0xc4, 0xc6, 0x4c,
+	0x41, 0x25, 0x54, 0x5d, 0x6d, 0x28, 0x9f, 0x3f, 0xd6, 0xf2, 0x81, 0xe8, 0x83, 0x6e, 0x97, 0x61,
+	0xce, 0x9f, 0x09, 0x66, 0xd9, 0xc4, 0x0c, 0x38, 0x79, 0x0f, 0xa4, 0x1e, 0x76, 0x94, 0xa5, 0x12,
+	0xaa, 0xe6, 0xea, 0xd7, 0xf5, 0xc9, 0xd9, 0x74, 0x33, 0x78, 0x7e, 0x8c, 0x1d, 0xd3, 0xe5, 0xe5,
+	0xfb, 0xb0, 0xcc, 0xe8, 0x11, 0xe6, 0x8a, 0x54, 0x92, 0xaa, 0xb9, 0x7a, 0x79, 0x6a, 0xa1, 0x0b,
+	0xed, 0xdb, 0x82, 0x39, 0x8d, 0xec, 0xd9, 0xd7, 0x62, 0xc6, 0xf4, 0xcb, 0xee, 0xe5, 0xde, 0x5c,
+	0x9c, 0x6e, 0x07, 0x1e, 0xca, 0x0a, 0x14, 0xd2, 0x39, 0x4c, 0xcc, 0x07, 0xd4, 0xe6, 0xb8, 0xfc,
+	0x1d, 0xc1, 0xe5, 0x26, 0x27, 0x8f, 0x58, 0xcb, 0x16, 0xee, 0x51, 0x7f, 0x2f, 0xe0, 0x5d, 0xc8,
+	0xba, 0x4e, 0x15, 0xa9, 0x84, 0xaa, 0xeb, 0xf5, 0xad, 0x79, 0x75, 0xae, 0x39, 0xd3, 0xab, 0x90,
+	0xef, 0xc0, 0x6a, 0xcb, 0x77, 0x82, 0xb9, 0x92, 0x2d, 0x49, 0x33, 0x5d, 0xc6, 0x68, 0xba, 0x25,
+	0x05, 0xc8, 0x27, 0x73, 0x47, 0x0d, 0xf9, 0x81, 0x60, 0xcd, 0xeb, 0xd5, 0x90, 0xf6, 0xf0, 0x7f,
+	0xd5, 0x91, 0x0d, 0xb8, 0x9a, 0x0a, 0x1e, 0xb5, 0xe4, 0x2d, 0x82, 0x2b, 0x4d, 0x4e, 0x0e, 0x6c,
+	0xf6, 0x0f, 0x06, 0x21, 0xed, 0x51, 0x05, 0xe5, 0x57, 0x27, 0x91, 0xcd, 0xf7, 0x28, 0x08, 0xe0,
+	0x1f, 0xd0, 0x38, 0x3e, 0xea, 0x1d, 0x0c, 0xba, 0x2d, 0xf1, 0x27, 0xff, 0xe0, 0x3e, 0x5c, 0xc2,
+	0xb6, 0x60, 0x16, 0xe6, 0xca, 0x92, 0x37, 0x7f, 0x95, 0x79, 0x7e, 0x93, 0x23, 0x18, 0xd6, 0xa6,
+	0xbd, 0x17, 0xe1, 0xda, 0x44, 0x7b, 0x61, 0x80, 0xfa, 0x87, 0x2c, 0x48, 0x4d, 0x4e, 0x64, 0x0c,
+	0xb9, 0xe4, 0x27, 0xe7, 0xc6, 0x34, 0xe9, 0xf4, 0x48, 0xab, 0xfa, 0x62, 0x5c, 0x28, 0x27, 0x1f,
+	0xc2, 0x6a, 0x3c, 0xf6, 0x5b, 0x33, 0x8a, 0x23, 0x4a, 0xbd, 0xb9, 0x08, 0x15, 0x09, 0xb4, 0x01,
+	0x12, 0x63, 0x54, 0x99, 0x69, 0x2f, 0xc4, 0xd4, 0xda, 0x42, 0x58, 0xa4, 0xd1, 0x83, 0xb5, 0xf4,
+	0x7b, 0x59, 0x9d, 0x51, 0x9f, 0x22, 0xd5, 0x9d, 0x45, 0xc9, 0x48, 0xec, 0x15, 0xc8, 0x13, 0xde,
+	0xae, 0xda, 0xdc, 0xbe, 0x27, 0x71, 0x75, 0xef, 0xb7, 0xf0, 0x50, 0x5b, 0x5d, 0x7e, 0x7d, 0x71,
+	0xba, 0x8d, 0x1a, 0xbd, 0xb3, 0x91, 0x86, 0xce, 0x47, 0x1a, 0xfa, 0x36, 0xd2, 0xd0, 0xbb, 0xb1,
+	0x96, 0x39, 0x1f, 0x6b, 0x99, 0x2f, 0x63, 0x2d, 0x03, 0x9b, 0x16, 0x9d, 0x72, 0xf2, 0x53, 0xf4,
+	0xe2, 0x36, 0xb1, 0xc4, 0xcb, 0xe3, 0xb6, 0xde, 0xa1, 0x7d, 0x23, 0x86, 0x6a, 0x16, 0x4d, 0xac,
+	0x8c, 0x93, 0xf8, 0x2e, 0x14, 0xce, 0x00, 0xf3, 0xf6, 0x8a, 0x77, 0x0d, 0xde, 0xfa, 0x19, 0x00,
+	0x00, 0xff, 0xff, 0x14, 0x84, 0xbd, 0x73, 0xb2, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -538,6 +640,9 @@ type MsgClient interface {
 	// UnregisterNFT unregisters an NFT from the registry.
 	// This removes the entire registry entry for the specified key.
 	UnregisterNFT(ctx context.Context, in *MsgUnregisterNFT, opts ...grpc.CallOption) (*MsgUnregisterNFTResponse, error)
+	// RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
+	// This creates multiple registry entries, or updates if one exists.
+	RegistryBulkUpdate(ctx context.Context, in *MsgRegistryBulkUpdate, opts ...grpc.CallOption) (*MsgRegistryBulkUpdateResponse, error)
 }
 
 type msgClient struct {
@@ -584,6 +689,15 @@ func (c *msgClient) UnregisterNFT(ctx context.Context, in *MsgUnregisterNFT, opt
 	return out, nil
 }
 
+func (c *msgClient) RegistryBulkUpdate(ctx context.Context, in *MsgRegistryBulkUpdate, opts ...grpc.CallOption) (*MsgRegistryBulkUpdateResponse, error) {
+	out := new(MsgRegistryBulkUpdateResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Msg/RegistryBulkUpdate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// RegisterNFT registers a new NFT in the registry.
@@ -598,6 +712,9 @@ type MsgServer interface {
 	// UnregisterNFT unregisters an NFT from the registry.
 	// This removes the entire registry entry for the specified key.
 	UnregisterNFT(context.Context, *MsgUnregisterNFT) (*MsgUnregisterNFTResponse, error)
+	// RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
+	// This creates multiple registry entries, or updates if one exists.
+	RegistryBulkUpdate(context.Context, *MsgRegistryBulkUpdate) (*MsgRegistryBulkUpdateResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -615,6 +732,9 @@ func (*UnimplementedMsgServer) RevokeRole(ctx context.Context, req *MsgRevokeRol
 }
 func (*UnimplementedMsgServer) UnregisterNFT(ctx context.Context, req *MsgUnregisterNFT) (*MsgUnregisterNFTResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnregisterNFT not implemented")
+}
+func (*UnimplementedMsgServer) RegistryBulkUpdate(ctx context.Context, req *MsgRegistryBulkUpdate) (*MsgRegistryBulkUpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistryBulkUpdate not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -693,6 +813,24 @@ func _Msg_UnregisterNFT_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RegistryBulkUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRegistryBulkUpdate)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RegistryBulkUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Msg/RegistryBulkUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RegistryBulkUpdate(ctx, req.(*MsgRegistryBulkUpdate))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.registry.v1.Msg",
@@ -713,6 +851,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnregisterNFT",
 			Handler:    _Msg_UnregisterNFT_Handler,
+		},
+		{
+			MethodName: "RegistryBulkUpdate",
+			Handler:    _Msg_RegistryBulkUpdate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -765,10 +907,10 @@ func (m *MsgRegisterNFT) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Authority) > 0 {
-		i -= len(m.Authority)
-		copy(dAtA[i:], m.Authority)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -844,10 +986,10 @@ func (m *MsgGrantRole) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Authority) > 0 {
-		i -= len(m.Authority)
-		copy(dAtA[i:], m.Authority)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -923,10 +1065,10 @@ func (m *MsgRevokeRole) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Authority) > 0 {
-		i -= len(m.Authority)
-		copy(dAtA[i:], m.Authority)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -988,10 +1130,10 @@ func (m *MsgUnregisterNFT) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Authority) > 0 {
-		i -= len(m.Authority)
-		copy(dAtA[i:], m.Authority)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1021,6 +1163,73 @@ func (m *MsgUnregisterNFTResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRegistryBulkUpdate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRegistryBulkUpdate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRegistryBulkUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Entries) > 0 {
+		for iNdEx := len(m.Entries) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Entries[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRegistryBulkUpdateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRegistryBulkUpdateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRegistryBulkUpdateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1038,7 +1247,7 @@ func (m *MsgRegisterNFT) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Authority)
+	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1070,7 +1279,7 @@ func (m *MsgGrantRole) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Authority)
+	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1105,7 +1314,7 @@ func (m *MsgRevokeRole) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Authority)
+	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1140,7 +1349,7 @@ func (m *MsgUnregisterNFT) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Authority)
+	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1152,6 +1361,34 @@ func (m *MsgUnregisterNFT) Size() (n int) {
 }
 
 func (m *MsgUnregisterNFTResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRegistryBulkUpdate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Entries) > 0 {
+		for _, e := range m.Entries {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgRegistryBulkUpdateResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1197,7 +1434,7 @@ func (m *MsgRegisterNFT) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1225,7 +1462,7 @@ func (m *MsgRegisterNFT) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Authority = string(dAtA[iNdEx:postIndex])
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1399,7 +1636,7 @@ func (m *MsgGrantRole) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1427,7 +1664,7 @@ func (m *MsgGrantRole) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Authority = string(dAtA[iNdEx:postIndex])
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1618,7 +1855,7 @@ func (m *MsgRevokeRole) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1646,7 +1883,7 @@ func (m *MsgRevokeRole) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Authority = string(dAtA[iNdEx:postIndex])
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1837,7 +2074,7 @@ func (m *MsgUnregisterNFT) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1865,7 +2102,7 @@ func (m *MsgUnregisterNFT) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Authority = string(dAtA[iNdEx:postIndex])
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1951,6 +2188,172 @@ func (m *MsgUnregisterNFTResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUnregisterNFTResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRegistryBulkUpdate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRegistryBulkUpdate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRegistryBulkUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entries", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Entries = append(m.Entries, RegistryEntry{})
+			if err := m.Entries[len(m.Entries)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRegistryBulkUpdateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRegistryBulkUpdateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRegistryBulkUpdateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

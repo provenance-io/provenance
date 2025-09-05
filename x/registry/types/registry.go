@@ -9,6 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
+	metadataTypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 const (
@@ -53,6 +55,19 @@ func (m *RegistryKey) Validate() error {
 
 	if strings.Contains(m.AssetClassId, "\x00") {
 		return NewErrCodeInvalidField("asset_class_id", "must not contain a null byte")
+	}
+
+	// Validate NftId is a Scope if metadata address, otherwise it's a valid NFT ID
+	if address, err := metadataTypes.MetadataAddressFromBech32(m.NftId); err == nil {
+		if err := address.ValidateIsScopeAddress(); err != nil {
+			return NewErrCodeInvalidField("nft_id", err.Error())
+		}
+	}
+	// Validate AssetClassId is a Scope Specification if metadata address, otherwise it's a valid NFT Class ID
+	if address, err := metadataTypes.MetadataAddressFromBech32(m.AssetClassId); err == nil {
+		if err := address.ValidateIsScopeSpecificationAddress(); err != nil {
+			return NewErrCodeInvalidField("asset_class_id", err.Error())
+		}
 	}
 
 	return nil
@@ -160,33 +175,14 @@ func ValidRolesString() string {
 }
 
 // Validate validates the RegistryBulkUpdate
-func (m *RegistryBulkUpdate) Validate() error {
-	// Validate entries
-	if len(m.Entries) == 0 {
-		return NewErrCodeInvalidField("entries", "entries cannot be empty")
-	}
-
-	for _, entry := range m.Entries {
-		if err := entry.Validate(); err != nil {
-			return NewErrCodeInvalidField("entry", err.Error())
-		}
-	}
-
-	return nil
-}
-
-// Validate validates the RegistryBulkUpdateEntry
-func (m *RegistryBulkUpdateEntry) Validate() error {
+func (m *MsgRegistryBulkUpdate) Validate() error {
 	if m == nil {
 		return NewErrCodeInvalidField("registry bulk update entry", "registry bulk update entry cannot be nil")
 	}
 
-	// Validate key
-	if m.Key == nil {
-		return NewErrCodeInvalidField("key", "key cannot be nil")
-	}
-	if err := m.Key.Validate(); err != nil {
-		return NewErrCodeInvalidField("key", err.Error())
+	// Validate entries
+	if len(m.Entries) == 0 || len(m.Entries) > 200 {
+		return NewErrCodeInvalidField("entries", "entries cannot be empty or greater than 200")
 	}
 
 	for _, entry := range m.Entries {

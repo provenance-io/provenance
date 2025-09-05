@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,9 +15,9 @@ var AllRequestMsgs = []sdk.Msg{
 
 // ValidateBasic validates the MsgRegisterNFT message
 func (m *MsgRegisterNFT) ValidateBasic() error {
-	// Verify the authority is a valid address
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
-		return NewErrCodeInvalidField("authority", m.Authority)
+	// Verify the signer is a valid address
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return NewErrCodeInvalidField("signer", m.Signer)
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -34,8 +36,8 @@ func (m *MsgRegisterNFT) ValidateBasic() error {
 
 // ValidateBasic validates the MsgGrantRole message
 func (m *MsgGrantRole) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
-		return NewErrCodeInvalidField("authority", m.Authority)
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return NewErrCodeInvalidField("signer", m.Signer)
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -55,9 +57,9 @@ func (m *MsgGrantRole) ValidateBasic() error {
 
 // ValidateBasic validates the MsgRevokeRole message
 func (m *MsgRevokeRole) ValidateBasic() error {
-	// Verify the authority is a valid address
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
-		return NewErrCodeInvalidField("authority", m.Authority)
+	// Verify the signer is a valid address
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return NewErrCodeInvalidField("signer", m.Signer)
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -77,8 +79,8 @@ func (m *MsgRevokeRole) ValidateBasic() error {
 
 // ValidateBasic validates the MsgUnregisterNFT message
 func (m *MsgUnregisterNFT) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
-		return NewErrCodeInvalidField("authority", m.Authority)
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return NewErrCodeInvalidField("signer", m.Signer)
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -106,6 +108,15 @@ func validateAddresses(addrs []string) error {
 func (m *QueryGetRegistryRequest) ValidateBasic() error {
 	if err := m.Key.Validate(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ValidateBasic validates the QueryGetRegistriesRequest
+func (m *QueryGetRegistriesRequest) ValidateBasic() error {
+	if strings.TrimSpace(m.AssetClassId) == "" {
+		return NewErrCodeInvalidField("asset_class_id", "asset_class_id cannot be empty if provided")
 	}
 
 	return nil

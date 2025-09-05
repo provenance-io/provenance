@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/registry/types"
@@ -35,19 +37,29 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegist
 	return &types.QueryGetRegistryResponse{Registry: *reg}, nil
 }
 
+// GetRegistries returns the registries paginated
+func (qs QueryServer) GetRegistries(ctx context.Context, req *types.QueryGetRegistriesRequest) (*types.QueryGetRegistriesResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	registries, err := qs.keeper.GetRegistries(sdkCtx, req.Pagination, req.AssetClassId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryGetRegistriesResponse{Registries: registries}, nil
+}
+
 // HasRole returns true if the address has the specified role for the given key.
 func (qs QueryServer) HasRole(ctx context.Context, req *types.QueryHasRoleRequest) (*types.QueryHasRoleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	keyStr := req.Key.String()
-
 	// ensure the registry exists
-	has, err := qs.keeper.Registry.Has(sdkCtx, keyStr)
+	has, err := qs.keeper.Registry.Has(sdkCtx, collections.Join(req.Key.AssetClassId, req.Key.NftId))
 	if err != nil {
 		return nil, err
 	}
 	if !has {
-		return nil, types.NewErrCodeRegistryNotFound(keyStr)
+		return nil, types.NewErrCodeRegistryNotFound(req.Key.String())
 	}
 
 	hasRole, err := qs.keeper.HasRole(sdkCtx, req.Key, req.Role, req.Address)

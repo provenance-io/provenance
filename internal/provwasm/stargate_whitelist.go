@@ -40,8 +40,8 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/provenance-io/provenance/x/quarantine"
-	"github.com/provenance-io/provenance/x/sanction"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
+	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
