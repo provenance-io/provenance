@@ -1,7 +1,11 @@
 package app
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"embed"
+	"encoding/json"
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
@@ -15,7 +19,9 @@ import (
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	registryTypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -43,7 +49,7 @@ type appUpgrade struct {
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"bouvardia-rc1": { // Upgrade for v1.26.0-rc1.
-		Added:   []string{flatfeestypes.StoreKey},
+		Added:   []string{flatfeestypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -60,10 +66,15 @@ var upgrades = map[string]appUpgrade{
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
+			if err = importLedgerData(ctx, app.LedgerKeeper); err != nil {
+				return nil, err
+			}
 			return vm, nil
 		},
 	},
 	"bouvardia": { // Upgrade for v1.26.0.
+		Added:   []string{flatfeestypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey},
+		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -77,6 +88,9 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
+				return nil, err
+			}
+			if err = importLedgerData(ctx, app.LedgerKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -359,7 +373,6 @@ func MakeFlatFeesParams() flatfeestypes.Params {
 // MakeFlatFeesCosts returns the list of MsgFees that we want to set.
 // Part of the bouvardia upgrade.
 func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
-	// TODO[fees]: Identify the new Msgs being added, how much we want them to cost, and add them to this list.
 	return []*flatfeestypes.MsgFee{
 		// Free Msg types. These are gov-prop-only Msg types. A gov prop costs $2.00 + the cost of each msg in it.
 		// So even though these msgs are free, it'll still cost $2.00 to submit one.
@@ -405,6 +418,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateConversionFactorRequest"),
 		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateMsgFeesRequest"),
 		flatfeestypes.NewMsgFee("/provenance.flatfees.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.hold.v1.MsgUnlockVestingAccountsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibchooks.v1.MsgUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgUpdateParamsRequest"),
@@ -427,8 +441,12 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.oracle.v1.MsgUpdateOracleRequest"),
 
-		// Msgs that cost $0.005
+		// Msgs that cost $0.005.
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddNetAssetValuesRequest", feeDefCoin(5)),
+
+		// Msgs that cost $0.01.
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgDestroyRequest", feeDefCoin(10)),
+		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgRevokeGrantAllowanceRequest", feeDefCoin(10)),
 
 		// Msgs that cost $0.05.
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgExec", feeDefCoin(50)),
@@ -445,18 +463,31 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgDeposit", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgExec", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgWithdrawProposal", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/cosmos.nft.v1beta1.MsgSend", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgAcknowledgement", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/ibc.core.channel.v1.MsgRecvPacket", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgAcceptPaymentRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgCommitFundsRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketTransferCommitmentRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgRejectPaymentsRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAddClassBucketTypeRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAddClassEntryTypeRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAddClassStatusTypeRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateBalancesRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateInterestRateRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateMaturityDateRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdatePaymentRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgUpdateStatusRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgActivateRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddNetAssetValuesRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgFinalizeRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgGrantAllowanceRequest", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSetDenomMetadataRequest", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgGrantRole", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgRevokeRole", feeDefCoin(50)),
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgUnregisterNFT", feeDefCoin(50)),
 
 		// Msgs that cost $0.10.
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgGrant", feeDefCoin(100)),
@@ -474,6 +505,8 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateEnabledRequest", feeDefCoin(100)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest", feeDefCoin(100)),
 		flatfeestypes.NewMsgFee("/provenance.exchange.v1.MsgMarketUpdateUserSettleRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgAppendRequest", feeDefCoin(100)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgTransferFundsWithSettlementRequest", feeDefCoin(100)),
 		flatfeestypes.NewMsgFee("/provenance.trigger.v1.MsgCreateTriggerRequest", feeDefCoin(100)),
 
 		// The default cost is $0.15. All Msg types not in this list will use the default.
@@ -489,6 +522,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgInstantiateContract2", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/ibc.core.client.v1.MsgCreateClient", feeDefCoin(500)),
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateAssetClass", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgMigrateValueOwnerRequest", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgUpdateValueOwnersRequest", feeDefCoin(500)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteContractSpecificationRequest", feeDefCoin(500)),
@@ -499,6 +533,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		// Msgs that cost $1.00.
 		flatfeestypes.NewMsgFee("/cosmos.group.v1.MsgSubmitProposal", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/cosmwasm.wasm.v1.MsgStoreCode", feeDefCoin(1000)),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateLedgerRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecRequest", feeDefCoin(1000)),
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgWriteScopeRequest", feeDefCoin(1000)),
@@ -513,7 +548,187 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/cosmos.gov.v1beta1.MsgSubmitProposal", feeDefCoin(2000)),
 
 		// Msgs that cost $3.00.
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreatePool", feeDefCoin(3000)),
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateSecuritization", feeDefCoin(3000)),
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateTokenization", feeDefCoin(3000)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest", feeDefCoin(3000)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgAddMarkerRequest", feeDefCoin(3000)),
+
+		// Msgs that cost $5.00.
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgCreateLedgerClassRequest", feeDefCoin(5000)),
+
+		// Msgs that cost $17.00.
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgRegisterNFT", feeDefCoin(17000)),
+
+		// Msgs that cost $18.00.
+		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateAsset", feeDefCoin(18000)),
 	}
+}
+
+//go:embed upgrade_data/*
+var upgradeDataFS embed.FS
+
+// LedgerKeeper has the ledger keeper methods needed for creating ledgers and entries.
+type LedgerKeeper interface {
+	ImportLedgerClasses(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassEntryTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassStatusTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassBucketTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgers(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerEntries(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportStoredSettlementInstructions(ctx sdk.Context, state *ledgerTypes.GenesisState)
+}
+
+// importLedgerData creates ledgers and entries from embedded genesis data using streaming.
+func importLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
+	ctx.Logger().Info("Starting streaming import of ledger data.")
+
+	// Process the gzipped genesis file using streaming
+	if err := streamImportLedgerData(ctx, lk); err != nil {
+		return fmt.Errorf("failed to stream import ledger data: %w", err)
+	}
+
+	ctx.Logger().Info("Completed streaming import of ledger data.")
+	return nil
+}
+
+// streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
+func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
+	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
+
+	// Read the gzipped file data
+	data, err := upgradeDataFS.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file %s: %w", filePath, err)
+	}
+
+	// Create gzip reader for streaming decompression.
+	reader := bytes.NewReader(data)
+	gzReader, err := gzip.NewReader(reader)
+	if err != nil {
+		return fmt.Errorf("failed to create gzip reader for %s: %w", filePath, err)
+	}
+	defer gzReader.Close()
+
+	// Use JSON decoder for streaming JSON parsing.
+	decoder := json.NewDecoder(gzReader)
+
+	// Expect the start of a JSON object.
+	token, err := decoder.Token()
+	if err != nil {
+		return fmt.Errorf("failed to read JSON token from %s: %w", filePath, err)
+	}
+
+	if delim, ok := token.(json.Delim); !ok || delim != '{' {
+		return fmt.Errorf("expected JSON object start '{' in %s, got %v", filePath, token)
+	}
+
+	// Process each field in the GenesisState object.
+	for decoder.More() {
+		// Get the field name.
+		fieldToken, err := decoder.Token()
+		if err != nil {
+			return fmt.Errorf("failed to read field name from %s: %w", filePath, err)
+		}
+
+		fieldName, ok := fieldToken.(string)
+		if !ok {
+			return fmt.Errorf("expected field name string in %s, got %v", filePath, fieldToken)
+		}
+
+		// Process each field based on its name.
+		if err := processGenesisField(ctx, lk, decoder, fieldName); err != nil {
+			return fmt.Errorf("failed to process field %s in %s: %w", fieldName, filePath, err)
+		}
+	}
+
+	// Expect the end of the JSON object.
+	token, err = decoder.Token()
+	if err != nil {
+		return fmt.Errorf("failed to read JSON token from %s: %w", filePath, err)
+	}
+
+	if delim, ok := token.(json.Delim); !ok || delim != '}' {
+		return fmt.Errorf("expected JSON object end '}' in %s, got %v", filePath, token)
+	}
+
+	return nil
+}
+
+// processGenesisField processes a single field from the GenesisState JSON.
+func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
+	switch fieldName {
+	case "ledgerClasses":
+		var ledgerClasses []ledgerTypes.LedgerClass
+		if err := decoder.Decode(&ledgerClasses); err != nil {
+			return fmt.Errorf("failed to decode ledgerClasses: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClasses: ledgerClasses}
+		lk.ImportLedgerClasses(ctx, genesis)
+		ctx.Logger().Info("Imported ledger classes", "count", len(ledgerClasses))
+
+	case "ledgerClassEntryTypes":
+		var entryTypes []ledgerTypes.GenesisLedgerClassEntryType
+		if err := decoder.Decode(&entryTypes); err != nil {
+			return fmt.Errorf("failed to decode ledgerClassEntryTypes: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClassEntryTypes: entryTypes}
+		lk.ImportLedgerClassEntryTypes(ctx, genesis)
+		ctx.Logger().Info("Imported ledger class entry types", "count", len(entryTypes))
+
+	case "ledgerClassStatusTypes":
+		var statusTypes []ledgerTypes.GenesisLedgerClassStatusType
+		if err := decoder.Decode(&statusTypes); err != nil {
+			return fmt.Errorf("failed to decode ledgerClassStatusTypes: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClassStatusTypes: statusTypes}
+		lk.ImportLedgerClassStatusTypes(ctx, genesis)
+		ctx.Logger().Info("Imported ledger class status types", "count", len(statusTypes))
+
+	case "ledgerClassBucketTypes":
+		var bucketTypes []ledgerTypes.GenesisLedgerClassBucketType
+		if err := decoder.Decode(&bucketTypes); err != nil {
+			return fmt.Errorf("failed to decode ledgerClassBucketTypes: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerClassBucketTypes: bucketTypes}
+		lk.ImportLedgerClassBucketTypes(ctx, genesis)
+		ctx.Logger().Info("Imported ledger class bucket types", "count", len(bucketTypes))
+
+	case "ledgers":
+		var ledgers []ledgerTypes.GenesisLedger
+		if err := decoder.Decode(&ledgers); err != nil {
+			return fmt.Errorf("failed to decode ledgers: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{Ledgers: ledgers}
+		lk.ImportLedgers(ctx, genesis)
+		ctx.Logger().Info("Imported ledgers", "count", len(ledgers))
+
+	case "ledgerEntries":
+		var entries []ledgerTypes.GenesisLedgerEntry
+		if err := decoder.Decode(&entries); err != nil {
+			return fmt.Errorf("failed to decode ledgerEntries: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{LedgerEntries: entries}
+		lk.ImportLedgerEntries(ctx, genesis)
+		ctx.Logger().Info("Imported ledger entries", "count", len(entries))
+
+	case "settlementInstructions":
+		var settlements []ledgerTypes.GenesisStoredSettlementInstructions
+		if err := decoder.Decode(&settlements); err != nil {
+			return fmt.Errorf("failed to decode settlementInstructions: %w", err)
+		}
+		genesis := &ledgerTypes.GenesisState{SettlementInstructions: settlements}
+		lk.ImportStoredSettlementInstructions(ctx, genesis)
+		ctx.Logger().Info("Imported settlement instructions", "count", len(settlements))
+
+	default:
+		// Skip unknown fields by decoding and discarding them
+		var value interface{}
+		if err := decoder.Decode(&value); err != nil {
+			return fmt.Errorf("failed to skip unknown field %s: %w", fieldName, err)
+		}
+		ctx.Logger().Info("Skipped unknown field", "field", fieldName)
+	}
+
+	return nil
 }
