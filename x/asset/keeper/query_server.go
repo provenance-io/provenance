@@ -44,7 +44,7 @@ func (q queryServer) Assets(ctx context.Context, req *types.QueryAssetsRequest) 
 		}
 	}
 	// Delegate to NFT query server
-	nftReq := &nfttypes.QueryNFTsRequest{Owner: req.Owner, ClassId: req.Id, Pagination: req.Pagination}
+	nftReq := &nfttypes.QueryNFTsRequest{Owner: req.Owner, ClassId: req.ClassId, Pagination: req.Pagination}
 	nftResp, err := q.nftKeeper.NFTs(ctx, nftReq)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (q queryServer) AssetClass(ctx context.Context, req *types.QueryAssetClassR
 			ac.Data = strValue
 		}
 	}
-	return &types.QueryAssetClassResponse{Class: ac}, nil
+	return &types.QueryAssetClassResponse{AssetClass: ac}, nil
 }
 
 // AssetClasses gets all asset classes.
@@ -94,5 +94,5 @@ func (q queryServer) AssetClasses(ctx context.Context, req *types.QueryAssetClas
 		}
 		classes = append(classes, ac)
 	}
-	return &types.QueryAssetClassesResponse{Classes: classes, Pagination: nftResp.Pagination}, nil
+	return &types.QueryAssetClassesResponse{AssetClasses: classes, Pagination: nftResp.Pagination}, nil
 }

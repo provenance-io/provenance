@@ -250,13 +250,13 @@ func (s *QueryServerTestSuite) TestListAssetClasses() {
 
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
-	s.Require().Len(resp.Classes, 2)
+	s.Require().Len(resp.AssetClasses, 2)
 
 	// Verify asset class details
 	foundClass1 := false
 	foundClass2 := false
 
-	for _, assetClass := range resp.Classes {
+	for _, assetClass := range resp.AssetClasses {
 		if assetClass.Id == "asset-class-1" {
 			foundClass1 = true
 			s.Require().Equal("AssetClass1", assetClass.Name)
@@ -323,9 +323,9 @@ func (s *QueryServerTestSuite) TestGetClass() {
 
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
-			s.Require().NotNil(resp.Class)
+			s.Require().NotNil(resp.AssetClass)
 
-			assetClass := resp.Class
+			assetClass := resp.AssetClass
 			s.Require().Equal(tc.classId, assetClass.Id)
 
 			if tc.classId == "asset-class-1" {
@@ -369,7 +369,7 @@ func (s *QueryServerTestSuite) TestListAssetClassesEmptyState() {
 
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
-	s.Require().Len(resp.Classes, 0)
+	s.Require().Len(resp.AssetClasses, 0)
 }
 
 func (s *QueryServerTestSuite) TestListAssetsWithPagination() {
@@ -553,12 +553,12 @@ func (s *QueryServerTestSuite) TestListAssetClassesWithPagination() {
 
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
-			s.Require().Len(resp.Classes, tc.expectedCount)
+			s.Require().Len(resp.AssetClasses, tc.expectedCount)
 			s.Require().NotNil(resp.Pagination)
 			s.Require().Equal(tc.expectedTotal, resp.Pagination.Total)
 
 			// Verify that returned asset classes are valid
-			for _, assetClass := range resp.Classes {
+			for _, assetClass := range resp.AssetClasses {
 				s.Require().NotEmpty(assetClass.Id)
 				s.Require().NotEmpty(assetClass.Name)
 				s.Require().NotEmpty(assetClass.Symbol)
@@ -677,7 +677,7 @@ func (s *QueryServerTestSuite) TestListAssetClassesPaginationEdgeCases() {
 
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
-			s.Require().Len(resp.Classes, tc.expectedCount)
+			s.Require().Len(resp.AssetClasses, tc.expectedCount)
 			s.Require().NotNil(resp.Pagination)
 		})
 	}
@@ -746,14 +746,14 @@ func (s *QueryServerTestSuite) TestListAssetClassesPaginationConsistency() {
 
 	resp1, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req1)
 	s.Require().NoError(err)
-	s.Require().Len(resp1.Classes, 1)
+	s.Require().Len(resp1.AssetClasses, 1)
 
 	resp2, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req2)
 	s.Require().NoError(err)
-	s.Require().Len(resp2.Classes, 1)
+	s.Require().Len(resp2.AssetClasses, 1)
 
 	// Verify that the two responses have different asset classes
-	s.Require().NotEqual(resp1.Classes[0].Id, resp2.Classes[0].Id, "Pagination should return different asset classes")
+	s.Require().NotEqual(resp1.AssetClasses[0].Id, resp2.AssetClasses[0].Id, "Pagination should return different asset classes")
 
 	// Verify total counts are consistent
 	s.Require().Equal(uint64(2), resp1.Pagination.Total)

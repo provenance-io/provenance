@@ -12032,7 +12032,7 @@ QueryAssetClassResponse is the response type for the Query/Class RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | class defines the class of the asset type. |
+| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class is the asset class returned from the query. |
 
 
 
@@ -12062,7 +12062,7 @@ QueryAssetClassesResponse is the response type for the Query/Classes RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | class defines the class of the asset type. |
+| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | asset_classes are the asset classes returned from the query. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response. |
 
 
@@ -12094,7 +12094,7 @@ QueryAssetResponse is the response type for the Query/Asset RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset` | [Asset](#provenance-asset-v1-Asset) |  | owner is the owner address of the asset. |
+| `asset` | [Asset](#provenance-asset-v1-Asset) |  | asset is the asset returned from the query. |
 
 
 
@@ -12109,7 +12109,7 @@ QueryAssetsRequest is the request type for the Query/Assets RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  | class_id associated with the asset. |
+| `class_id` | [string](#string) |  | class_id associated with the asset. |
 | `owner` | [string](#string) |  | owner is the owner address of the asset. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
 
@@ -12126,7 +12126,7 @@ QueryAssetsResponse is the response type for the Query/Assets RPC methods.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated | Asset defines the Asset. |
+| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated | assets are the assets returned from the query. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response. |
 
 

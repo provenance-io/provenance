@@ -99,7 +99,7 @@ $ %[1]s query asset assets my-asset-class pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf3
 			}
 
 			res, err := queryClient.Assets(cmd.Context(), &types.QueryAssetsRequest{
-				Id:         classID,
+				ClassId:    classID,
 				Owner:      owner,
 				Pagination: pageReq,
 			})
