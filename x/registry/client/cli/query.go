@@ -76,18 +76,18 @@ func GetCmdQueryRegistries() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			var assetClassId string
+			var assetClassID string
 			if len(args) == 1 {
-				assetClassId = args[0]
+				assetClassID = args[0]
 			}
-			
+
 			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
 			res, err := queryClient.GetRegistries(context.Background(), &types.QueryGetRegistriesRequest{
-				AssetClassId: assetClassId,
+				AssetClassId: assetClassID,
 				Pagination:   pageReq,
 			})
 			if err != nil {

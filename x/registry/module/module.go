@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/provenance-io/provenance/x/registry/client/cli"
 	"github.com/provenance-io/provenance/x/registry/keeper"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
