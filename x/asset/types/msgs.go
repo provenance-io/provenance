@@ -151,10 +151,6 @@ func (msg MsgCreateSecuritization) ValidateBasic() error {
 		}
 	}
 
-	if msg.Signer == "" {
-		return fmt.Errorf("signer cannot be empty")
-	}
-
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return fmt.Errorf("invalid signer: %w", err)
 	}
