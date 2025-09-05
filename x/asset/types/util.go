@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
