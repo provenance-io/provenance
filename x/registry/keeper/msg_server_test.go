@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
@@ -37,8 +36,6 @@ type MsgServerTestSuite struct {
 	validNFTClass nft.Class
 	validNFT      nft.NFT
 	validNFT2     nft.NFT
-
-	integrationApp *integration.App
 }
 
 func TestMsgServerTestSuite(t *testing.T) {
@@ -81,7 +78,7 @@ func (s *MsgServerTestSuite) TestRegisterNFTGRPC() {
 	servicerRole := types.RegistryRole_REGISTRY_ROLE_SERVICER
 
 	msg := &types.MsgRegisterNFT{
-		Authority: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 		Key: &types.RegistryKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
@@ -111,12 +108,11 @@ func (s *MsgServerTestSuite) TestRegisterNFTGRPC() {
 	s.Require().Equal(s.user1Addr.String(), servicerRoleAddress)
 }
 
-
 func (s *MsgServerTestSuite) TestRegistryBulkUpdateNFTGRPC() {
 	servicerRole := types.RegistryRole_REGISTRY_ROLE_SERVICER
 
 	msg := &types.MsgRegistryBulkUpdate{
-		Authority: s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
 		Entries: []types.RegistryEntry{
 			{
 				Key: &types.RegistryKey{

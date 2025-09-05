@@ -519,7 +519,7 @@ func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
 		{
 			name: "successful registration",
 			msg: &types.MsgRegisterNFT{
-				Authority: s.user1Addr.String(),
+				Signer: s.user1Addr.String(),
 				Key: &types.RegistryKey{
 					AssetClassId: s.validNFTClass.Id,
 					NftId:        s.validNFT.Id,
@@ -546,7 +546,7 @@ func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
 		{
 			name: "duplicate registration",
 			msg: &types.MsgRegisterNFT{
-				Authority: s.user1Addr.String(),
+				Signer: s.user1Addr.String(),
 				Key: &types.RegistryKey{
 					AssetClassId: s.validNFTClass.Id,
 					NftId:        s.validNFT.Id,
@@ -563,7 +563,7 @@ func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
 		{
 			name: "non-existent NFT",
 			msg: &types.MsgRegisterNFT{
-				Authority: s.user1Addr.String(),
+				Signer: s.user1Addr.String(),
 				Key: &types.RegistryKey{
 					AssetClassId: "nonexistent",
 					NftId:        "nonexistent",
@@ -580,7 +580,7 @@ func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
 		{
 			name: "wrong authority",
 			msg: &types.MsgRegisterNFT{
-				Authority: s.user2Addr.String(),
+				Signer: s.user2Addr.String(),
 				Key: &types.RegistryKey{
 					AssetClassId: s.validNFTClass.Id,
 					NftId:        s.validNFT.Id,

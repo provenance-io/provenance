@@ -14326,7 +14326,7 @@ This message adds the specified addresses to an existing role for the given regi
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to grant the role. This address must have the appropriate permissions to modify role assignments. |
+| `signer` | [string](#string) |  | signer is the address that is authorized to grant the role. This address must have the appropriate permissions to modify role assignments. |
 | `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to grant the role to. This identifies the specific registry entry to modify. |
 | `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to grant. This specifies which role type is being assigned to the addresses. |
 | `addresses` | [string](#string) | repeated | addresses is the list of addresses to grant the role to. These addresses will be added to the specified role for the registry key. |
@@ -14356,7 +14356,7 @@ This message creates a new registry entry with the specified roles and addresses
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to register NFTs. This address must have the appropriate permissions to create registry entries. |
+| `signer` | [string](#string) |  | signer is the address that is authorized to register NFTs. This address must have the appropriate permissions to create registry entries. |
 | `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to register. This contains the NFT ID and asset class ID that uniquely identify the registry entry. |
 | `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role. Each role entry defines a role type and the addresses authorized for that role. |
 
@@ -14385,7 +14385,7 @@ This allows for efficient batch processing of registry modifications.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to register NFTs. This address must have the appropriate permissions to create registry entries. |
+| `signer` | [string](#string) |  | signer is the address that is authorized to register NFTs. This address must have the appropriate permissions to create registry entries. |
 | `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of bulk update entries to be processed. Each entry contains the registry entry to be updated. |
 
 
@@ -14413,7 +14413,7 @@ This message removes the specified addresses from an existing role for the given
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to revoke the role. This address must have the appropriate permissions to modify role assignments. |
+| `signer` | [string](#string) |  | signer is the address that is authorized to revoke the role. This address must have the appropriate permissions to modify role assignments. |
 | `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to revoke the role from. This identifies the specific registry entry to modify. |
 | `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to revoke. This specifies which role type is being removed from the addresses. |
 | `addresses` | [string](#string) | repeated | addresses is the list of addresses to revoke the role from. These addresses will be removed from the specified role for the registry key. |
@@ -14443,7 +14443,7 @@ This message removes the entire registry entry for the specified key.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority is the address that is authorized to unregister NFTs. This address must have the appropriate permissions to remove registry entries. |
+| `signer` | [string](#string) |  | signer is the address that is authorized to unregister NFTs. This address must have the appropriate permissions to remove registry entries. |
 | `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to remove. This identifies the specific registry entry to delete. |
 
 

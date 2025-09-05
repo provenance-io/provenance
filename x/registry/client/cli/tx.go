@@ -48,7 +48,7 @@ func CmdRegisterNFT() *cobra.Command {
 			}
 
 			msg := types.MsgRegisterNFT{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -83,7 +83,7 @@ func CmdGrantRole() *cobra.Command {
 			}
 
 			msg := types.MsgGrantRole{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -120,7 +120,7 @@ func CmdRevokeRole() *cobra.Command {
 			}
 
 			msg := types.MsgRevokeRole{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -150,7 +150,7 @@ func CmdUnregisterNFT() *cobra.Command {
 			}
 
 			msg := types.MsgUnregisterNFT{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -190,7 +190,7 @@ func CmdRegistryBulkUpdate() *cobra.Command {
 			}
 
 			msg := types.MsgRegistryBulkUpdate{
-				Authority: clientCtx.GetFromAddress().String(),
+				Signer:  clientCtx.GetFromAddress().String(),
 				Entries: entries,
 			}
 
