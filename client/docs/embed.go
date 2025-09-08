@@ -3,6 +3,7 @@ package docs
 
 import "embed"
 
-//go:embed swagger-ui
 // SwaggerUI holds the embedded Swagger UI files.
+//
+//go:embed swagger-ui
 var SwaggerUI embed.FS

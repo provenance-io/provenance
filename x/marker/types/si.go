@@ -127,7 +127,7 @@ func SIPrefixFromExponent(exp int) (SIPrefix, error) {
 	if exp < math.MinInt32 || exp > math.MaxInt32 {
 		return invalidSIPrefix, fmt.Errorf("exponent [%d] out of bounds for int32", exp)
 	}
-	p := SIPrefix(exp) //nolint:gosec // G115: Made sure this was okay with the above check (implicit cast of int to int32).
+	p := SIPrefix(exp)
 	if p.IsValid() {
 		return p, nil
 	}

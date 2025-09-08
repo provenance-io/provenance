@@ -338,7 +338,7 @@ func ReadFlagMarketOrArg(flagSet *pflag.FlagSet, args []string) (uint32, error) 
 		if err != nil {
 			return 0, fmt.Errorf("could not convert <market id> arg: %w", err)
 		}
-		marketID = uint32(marketID64) //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+		marketID = uint32(marketID64)
 	}
 
 	if marketID == 0 {
@@ -593,7 +593,7 @@ func ParseSplit(val string) (*exchange.DenomSplit, error) {
 
 	return &exchange.DenomSplit{
 		Denom: denom,
-		Split: uint32(amount), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+		Split: uint32(amount),
 	}, nil
 }
 
