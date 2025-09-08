@@ -172,11 +172,6 @@ message LedgerBucketAmount {
   ];
 }
 
-// Balances represents the current balances for principal, interest, and other amounts
-message BucketBalances {
-  repeated BucketBalance bucket_balances = 1 [(gogoproto.jsontag) = "bucketBalances,omitempty"];
-}
-
 // BucketBalance represents the balance for a specific bucket type
 message BucketBalance {
   // The bucket type specified by the LedgerClassBucketType.id.

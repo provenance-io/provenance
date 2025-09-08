@@ -81,7 +81,7 @@ message QueryLedgerBalancesAsOfRequest {
 }
 
 message QueryLedgerBalancesAsOfResponse {
-    BucketBalances bucket_balances = 1;
+    repeated BucketBalance bucket_balances = 1;
 }
 ```
 

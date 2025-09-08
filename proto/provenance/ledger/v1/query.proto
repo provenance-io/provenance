@@ -155,7 +155,8 @@ message QueryLedgerBalancesAsOfRequest {
 
 // QueryLedgerBalancesAsOfResponse
 message QueryLedgerBalancesAsOfResponse {
-  BucketBalances bucket_balances = 1;
+  // BucketBalances represents the current balances for principal, interest, and other amounts
+  repeated BucketBalance bucket_balances = 1;
 }
 
 // QueryLedgerSettlementsRequest

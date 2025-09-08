@@ -124,9 +124,9 @@ func (s *TestSuite) TestGetBalances() {
 	// Get balances
 	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.Key, time.Now().UTC())
 	s.Require().NoError(err, "GetBalances error")
-	s.Require().Equal(3, len(balances.BucketBalances), "number of bucket balances")
+	s.Require().Equal(3, len(balances), "number of bucket balances")
 
-	s.Require().Equal(math.NewInt(910), balances.BucketBalances[0].BalanceAmt)
-	s.Require().Equal(math.NewInt(-300), balances.BucketBalances[1].BalanceAmt)
-	s.Require().Equal(math.NewInt(100), balances.BucketBalances[2].BalanceAmt)
+	s.Require().Equal(math.NewInt(910), balances[0].BalanceAmt)
+	s.Require().Equal(math.NewInt(-300), balances[1].BalanceAmt)
+	s.Require().Equal(math.NewInt(100), balances[2].BalanceAmt)
 }
