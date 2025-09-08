@@ -13,6 +13,7 @@ COPY go.* ./
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
+COPY legacy_protos/ ./legacy_protos/
 COPY vendor/ ./vendor/
 COPY testutil/ ./testutil/
 COPY .git/ ./.git/
