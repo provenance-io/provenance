@@ -13,6 +13,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMsgFeesRequest)(nil),
 }
 
+// ValidateBasic performs basic validation for MsgUpdateParamsRequest.
 func (m MsgUpdateParamsRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority: %w", err)
@@ -23,6 +24,7 @@ func (m MsgUpdateParamsRequest) ValidateBasic() error {
 	return nil
 }
 
+// ValidateBasic performs basic validation for MsgUpdateConversionFactorRequest.
 func (m MsgUpdateConversionFactorRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority: %w", err)
@@ -33,6 +35,7 @@ func (m MsgUpdateConversionFactorRequest) ValidateBasic() error {
 	return nil
 }
 
+// ValidateBasic performs basic validation for MsgUpdateMsgFeesRequest.
 func (m MsgUpdateMsgFeesRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority: %w", err)
