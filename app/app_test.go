@@ -30,10 +30,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	v1beta1 "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	pwasm "github.com/provenance-io/provenance/x/wasm/types"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -554,7 +554,7 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 	cdc := app.GetEncodingConfig().Marshaler
 
 	// Create dummy message
-	oldMsg := &v1beta1.MsgExecuteContract{
+	oldMsg := &pwasm.MsgExecuteContract{
 		Sender:   "pbsmos1abc...",
 		Contract: "pbsmos1def...",
 		Msg:      []byte(`{"do_something":{}}`),
@@ -583,7 +583,7 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 		err := cdc.UnpackAny(msg, &unpacked)
 		require.NoError(t, err, "UnpackAny")
 
-		_, ok := unpacked.(*v1beta1.MsgExecuteContract)
+		_, ok := unpacked.(*pwasm.MsgExecuteContract)
 		require.True(t, ok, "expected v1beta1.MsgExecuteContract")
 	}
 }
