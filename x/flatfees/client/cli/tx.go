@@ -23,6 +23,7 @@ const (
 	FlagUnset = "unset"
 )
 
+// NewTxCmd returns the root CLI transaction command for the flatfees module.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -165,6 +166,7 @@ The denominations in the <default cost> and <base> should be the same.
 	return cmd
 }
 
+// NewCmdUpdateConversionFactor returns a CLI command to update the conversion factor for flat fees.
 func NewCmdUpdateConversionFactor() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "conversion-factor <base>=<converted> <gov prop flags>",
