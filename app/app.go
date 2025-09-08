@@ -517,7 +517,7 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, govAuthority)
 
 	app.FlatFeesKeeper = flatfeeskeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName, app.BaseApp.SimulateProv,
+		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName, app.SimulateProv,
 	)
 
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -1296,12 +1296,12 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *App) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
+	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
 }
 
 // Simulate runs a tx to identify how much of a fee it will cost.
 func (app *App) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	gasInfo, res, ctx, err := app.BaseApp.SimulateProv(txBytes)
+	gasInfo, res, ctx, err := app.SimulateProv(txBytes)
 	if err != nil {
 		return gasInfo, res, err
 	}

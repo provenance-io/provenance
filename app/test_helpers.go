@@ -460,6 +460,7 @@ func initAccountWithCoins(app *App, ctx sdk.Context, addr sdk.AccAddress, coins 
 		panic(err)
 	}
 }
+
 // TestAddr returns a test account address.
 func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHexUnsafe(addr)
@@ -513,15 +514,13 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 
 // MakeTestEncodingConfig creates an encoding config suitable for unit tests.
 func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
-	tempDir, err := os.MkdirTemp("", "tempprovapp")
-	switch {
-	case t != nil:
-		require.NoError(t, err, "failed to create temp dir %q", tempDir)
-	case err != nil:
-		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
-	}
-	defer os.RemoveAll(tempDir)
-
-	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
+	tempDir := t.TempDir()
+	tempApp := New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		simtestutil.NewAppOptionsWithFlagHome(tempDir),
+	)
 	return tempApp.GetEncodingConfig()
 }

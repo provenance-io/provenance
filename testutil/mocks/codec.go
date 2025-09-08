@@ -59,6 +59,9 @@ func (c *MockCodec) WithUnpackAnyErrs(errMsgs ...string) *MockCodec {
 	return c
 }
 
+// MarshalJSON encodes a proto message to JSON using the mock codec.
+//
+//nolint:govet
 func (c *MockCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	if len(c.MarshalJSONErrs) > 0 {
 		errMsg := c.MarshalJSONErrs[0]
@@ -83,6 +86,8 @@ func (c *MockCodec) MustMarshalJSON(o proto.Message) []byte {
 }
 
 // UnmarshalJSON mocks JSON unmarshaling.
+//
+//nolint:govet
 func (c *MockCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	if len(c.UnmarshalJSONErrs) > 0 {
 		errMsg := c.UnmarshalJSONErrs[0]
@@ -106,6 +111,7 @@ func (c *MockCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	c.Codec.MustUnmarshalJSON(bz, ptr)
 }
 
+// UnpackAny unpacks a codectypes.Any into the target interface using the mock codec.
 func (c *MockCodec) UnpackAny(toUnpack *codectypes.Any, iface interface{}) error {
 	if len(c.UnpackAnyErrs) > 0 {
 		errMsg := c.UnpackAnyErrs[0]

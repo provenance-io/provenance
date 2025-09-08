@@ -48,7 +48,7 @@ func NewPioMsgServiceRouter() *PioMsgServiceRouter {
 		hybridHandlers: make(map[string]protocompat.Handler),
 	}
 }
-
+// SetCircuit sets the CircuitBreaker for the PioMsgServiceRouter.
 func (msr *PioMsgServiceRouter) SetCircuit(cb baseapp.CircuitBreaker) {
 	msr.circuitBreaker = cb
 }
@@ -84,7 +84,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 		}
 	}
 }
-
+// HybridHandlerByMsgName returns a handler for the specified message name.
 func (msr *PioMsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	return msr.hybridHandlers[msgName]
 }
