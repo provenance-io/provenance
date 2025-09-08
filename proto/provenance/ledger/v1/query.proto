@@ -43,6 +43,11 @@ service Query {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
   }
 
+  // Ledgers returns a paginated list of ledgers.
+  rpc Ledgers(QueryLedgersRequest) returns (QueryLedgersResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/config";
+  }
+
   // LedgerEntries returns the entries for a given ledger key.
   rpc LedgerEntries(QueryLedgerEntriesRequest) returns (QueryLedgerEntriesResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/entries/{key.asset_class_id}/{key.nft_id}";
@@ -138,6 +143,21 @@ message QueryLedgerRequest {
 message QueryLedgerResponse {
   // The ledger data.
   Ledger ledger = 1;
+}
+
+// QueryLedgersRequest
+message QueryLedgersRequest {
+  // pagination is an  pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryLedgersResponse
+message QueryLedgersResponse {
+  // List of ledgers.
+  repeated Ledger ledgers = 1;
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryLedgerEntriesRequest

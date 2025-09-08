@@ -27,16 +27,17 @@ message QueryLedgerClassResponse {
 }
 ```
 
-### Get Ledger Classes
+### Get All Ledger Classes
 Retrieves the ledger class configuration:
 
 ```protobuf
 message QueryLedgerClassesRequest {
-    string ledger_class_id = 1;
+    cosmos.base.query.v1beta1.PageRequest pagination = 99;   //  Pagination request
 }
 
 message QueryLedgerClassResponse {
-    LedgerClass ledger_class = 1;
+    LedgerClass ledger_classes = 1;                          //  List of ledger classes
+    cosmos.base.query.v1beta1.PageResponse pagination = 99;  //  Pagination response
 }
 ```
 
@@ -50,6 +51,20 @@ message QueryLedgerRequest {
 
 message QueryLedgerResponse {
     Ledger ledger = 1;
+}
+```
+
+### Get All Ledger Configuration
+Retrieves the ledger configuration for a specific asset:
+
+```protobuf
+message QueryLedgersRequest {
+     cosmos.base.query.v1beta1.PageRequest pagination = 99;  //  Pagination request
+}
+
+message QueryLedgesrResponse {
+    repeated Ledger ledgers = 1;                             //  List of ledger configurations
+    cosmos.base.query.v1beta1.PageResponse pagination = 99;  //  Pagination response
 }
 ```
 
@@ -74,7 +89,7 @@ Retrieves a specific ledger entry by asset identifier and correlation ID:
 ```protobuf
 message QueryLedgerEntryRequest {
     LedgerKey key = 1;              // Contains nft_id and asset_class_id
-    string correlation_id = 2;       // Free-form string up to 50 characters
+    string correlation_id = 2;      // Free-form string up to 50 characters
 }
 
 message QueryLedgerEntryResponse {
@@ -175,11 +190,19 @@ message QueryLedgerSettlementsByCorrelationIDResponse {
    - Retrieves ledger class from store
    - Returns ledger class configuration
 
+2. **Get All Ledger Classes**
+   - Retrieves ledger classes from store
+   - Returns ledger class configurations
+
 ### Ledger Queries
 1. **Get Ledger Configuration**
    - Validates ledger key (asset identifiers)
    - Retrieves ledger from store
    - Returns ledger configuration
+
+1. **Get All Ledger Configurations**
+   - Retrieves ledgers from store
+   - Returns ledger configurations
 
 ### Entry Queries
 1. **Get Ledger Entries**

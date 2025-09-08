@@ -434,6 +434,34 @@ func (k Keeper) RequireGetLedger(ctx sdk.Context, lk *types.LedgerKey) (*types.L
 	return ledger, nil
 }
 
+// GetAllLedgers retrieves all ledgers with pagination support.
+// This function provides paginated access to all ledgers in the system.
+// It uses the collections.Paginate function to handle pagination efficiently.
+// Note that ledger keys are not stored in the ledger data but reconstructed from the map keys.
+func (k Keeper) GetAllLedgers(ctx context.Context, pageRequest *query.PageRequest) ([]*types.Ledger, *query.PageResponse, error) {
+	// Use query.CollectionPaginate to handle pagination for the ledgers collection.
+	ledgers, pageRes, err := query.CollectionPaginate(ctx, k.Ledgers, pageRequest, func(keyStr string, value types.Ledger) (*types.Ledger, error) {
+		// Parse the key string back to a LedgerKey and add it to the ledger
+		key, parseErr := types.StringToLedgerKey(keyStr)
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		// Set the key back in the ledger since it's not stored in the value
+		value.Key = key
+		return &value, nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Ensure ledgers is never nil, return empty slice instead
+	if ledgers == nil {
+		ledgers = []*types.Ledger{}
+	}
+
+	return ledgers, pageRes, nil
+}
+
 // HasLedger checks if a ledger exists for the given key.
 // This function provides a quick existence check without retrieving the full ledger data.
 func (k Keeper) HasLedger(ctx sdk.Context, key *types.LedgerKey) bool {

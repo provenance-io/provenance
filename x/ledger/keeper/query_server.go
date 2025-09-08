@@ -102,6 +102,19 @@ func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *types.QueryLedger
 	return &resp, nil
 }
 
+// Ledgers returns a paginated list of all ledgers.
+func (qs LedgerQueryServer) Ledgers(ctx context.Context, req *types.QueryLedgersRequest) (*types.QueryLedgersResponse, error) {
+	ledgers, pageRes, err := qs.k.GetAllLedgers(ctx, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryLedgersResponse{
+		Ledgers:    ledgers,
+		Pagination: pageRes,
+	}, nil
+}
+
 // LedgerEntries returns the entries for a given ledger key.
 func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *types.QueryLedgerEntriesRequest) (*types.QueryLedgerEntriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

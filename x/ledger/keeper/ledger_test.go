@@ -853,3 +853,240 @@ func (s *TestSuite) TestLedgerClassesQueryServer() {
 		})
 	}
 }
+
+func (s *TestSuite) TestGetAllLedgers() {
+	// Create additional ledgers for testing pagination
+	// First, create a second ledger class and NFT
+	nftClass2 := nft.Class{Id: "test-nft-class-id-2"}
+	s.nftKeeper.SaveClass(s.ctx, nftClass2)
+
+	nft2 := nft.NFT{ClassId: nftClass2.Id, Id: "test-nft-id-2"}
+	s.nftKeeper.Mint(s.ctx, nft2, s.addr1)
+
+	ledgerClass2 := ledger.LedgerClass{
+		LedgerClassId:     "test-ledger-class-id-2",
+		AssetClassId:      nftClass2.Id,
+		MaintainerAddress: s.addr1.String(),
+		Denom:             s.bondDenom,
+	}
+	err := s.keeper.AddLedgerClass(s.ctx, ledgerClass2)
+	s.Require().NoError(err, "AddLedgerClass error")
+
+	// Add status types for the new ledger class
+	err = s.keeper.AddClassStatusType(s.ctx, ledgerClass2.LedgerClassId, ledger.LedgerClassStatusType{
+		Id:          1,
+		Code:        "ACTIVE",
+		Description: "Active",
+	})
+	s.Require().NoError(err, "AddClassStatusType error")
+
+	// Create multiple ledgers for testing
+	ledger1 := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        "test-ledger-nft-1",
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+
+	// Mint NFT for ledger1
+	nft1 := nft.NFT{ClassId: s.validNFTClass.Id, Id: "test-ledger-nft-1"}
+	s.nftKeeper.Mint(s.ctx, nft1, s.addr1)
+	err = s.keeper.AddLedger(s.ctx, ledger1)
+	s.Require().NoError(err, "AddLedger error")
+
+	ledger2 := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: nftClass2.Id,
+			NftId:        nft2.Id,
+		},
+		LedgerClassId: ledgerClass2.LedgerClassId,
+		StatusTypeId:  1,
+	}
+	err = s.keeper.AddLedger(s.ctx, ledger2)
+	s.Require().NoError(err, "AddLedger error")
+
+	ledger3 := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        "test-ledger-nft-3",
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+
+	// Mint NFT for ledger3
+	nft3 := nft.NFT{ClassId: s.validNFTClass.Id, Id: "test-ledger-nft-3"}
+	s.nftKeeper.Mint(s.ctx, nft3, s.addr1)
+	err = s.keeper.AddLedger(s.ctx, ledger3)
+	s.Require().NoError(err, "AddLedger error")
+
+	tests := []struct {
+		name          string
+		pageRequest   *query.PageRequest
+		expectedCount int
+		expectedTotal uint64
+		expectError   bool
+	}{
+		{
+			name:          "get all ledgers without pagination",
+			pageRequest:   nil,
+			expectedCount: 3,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "get all ledgers with limit 2",
+			pageRequest:   &query.PageRequest{Limit: 2, CountTotal: true},
+			expectedCount: 2,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "get all ledgers with offset 1 and limit 2",
+			pageRequest:   &query.PageRequest{Offset: 1, Limit: 2, CountTotal: true},
+			expectedCount: 2,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "get all ledgers with offset 2 and limit 5",
+			pageRequest:   &query.PageRequest{Offset: 2, Limit: 5, CountTotal: true},
+			expectedCount: 1,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "get all ledgers with offset beyond total count",
+			pageRequest:   &query.PageRequest{Offset: 10, Limit: 5, CountTotal: true},
+			expectedCount: 0,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+		{
+			name:          "get all ledgers with large limit",
+			pageRequest:   &query.PageRequest{Limit: 100, CountTotal: true},
+			expectedCount: 3,
+			expectedTotal: 3,
+			expectError:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Set default pagination if nil
+			pageReq := tc.pageRequest
+			if pageReq == nil {
+				pageReq = &query.PageRequest{CountTotal: true}
+			}
+
+			ledgers, pageRes, err := s.keeper.GetAllLedgers(s.ctx, pageReq)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().NotNil(ledgers)
+			s.Require().Len(ledgers, tc.expectedCount)
+			if pageRes != nil && pageRes.Total > 0 {
+				s.Require().Equal(tc.expectedTotal, pageRes.Total)
+			}
+
+			// Verify all returned ledgers are valid and have their keys set
+			for _, l := range ledgers {
+				s.Require().NotNil(l)
+				s.Require().NotNil(l.Key)
+				s.Require().NotEmpty(l.Key.AssetClassId)
+				s.Require().NotEmpty(l.Key.NftId)
+				s.Require().NotEmpty(l.LedgerClassId)
+				s.Require().NotZero(l.StatusTypeId)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestLedgersQueryServer() {
+	// Create additional ledger for testing
+	ledger1 := ledger.Ledger{
+		Key: &ledger.LedgerKey{
+			AssetClassId: s.validNFTClass.Id,
+			NftId:        "test-ledger-nft-server",
+		},
+		LedgerClassId: s.validLedgerClass.LedgerClassId,
+		StatusTypeId:  1,
+	}
+
+	// Mint NFT for ledger1
+	nft1 := nft.NFT{ClassId: s.validNFTClass.Id, Id: "test-ledger-nft-server"}
+	s.nftKeeper.Mint(s.ctx, nft1, s.addr1)
+	err := s.keeper.AddLedger(s.ctx, ledger1)
+	s.Require().NoError(err, "AddLedger error")
+
+	// Create query server
+	queryServer := keeper.NewLedgerQueryServer(s.keeper)
+
+	tests := []struct {
+		name        string
+		request     *ledger.QueryLedgersRequest
+		expectError bool
+	}{
+		{
+			name: "valid request without pagination",
+			request: &ledger.QueryLedgersRequest{
+				Pagination: &query.PageRequest{CountTotal: true},
+			},
+			expectError: false,
+		},
+		{
+			name: "valid request with pagination limit",
+			request: &ledger.QueryLedgersRequest{
+				Pagination: &query.PageRequest{Limit: 1, CountTotal: true},
+			},
+			expectError: false,
+		},
+		{
+			name: "valid request with nil pagination",
+			request: &ledger.QueryLedgersRequest{
+				Pagination: nil,
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			resp, err := queryServer.Ledgers(sdk.WrapSDKContext(s.ctx), tc.request)
+
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().NotNil(resp.Ledgers)
+			s.Require().NotNil(resp.Pagination)
+
+			// Verify we have at least one ledger
+			s.Require().GreaterOrEqual(len(resp.Ledgers), 1)
+
+			// If pagination was set with limit 1, should return exactly 1
+			if tc.request.Pagination != nil && tc.request.Pagination.Limit == 1 {
+				s.Require().Len(resp.Ledgers, 1)
+			}
+
+			// Verify all returned ledgers are valid and have their keys set
+			for _, l := range resp.Ledgers {
+				s.Require().NotNil(l)
+				s.Require().NotNil(l.Key)
+				s.Require().NotEmpty(l.Key.AssetClassId)
+				s.Require().NotEmpty(l.Key.NftId)
+				s.Require().NotEmpty(l.LedgerClassId)
+				s.Require().NotZero(l.StatusTypeId)
+			}
+		})
+	}
+}

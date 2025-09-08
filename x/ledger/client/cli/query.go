@@ -34,6 +34,7 @@ func CmdQuery() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		GetCmd(),
+		GetLedgersCmd(),
 		GetLedgerEntriesCmd(),
 		GetBalancesAsOfCmd(),
 		GetLedgerClassEntryTypesCmd(),
@@ -102,6 +103,46 @@ func GetCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 
+	return cmd
+}
+
+// GetLedgersCmd returns the command handler for querying all ledgers with pagination
+func GetLedgersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ledgers",
+		Short: "Query all ledgers with optional pagination",
+		Example: fmt.Sprintf(`$ %s query ledger ledgers
+$ %s query ledger ledgers --limit 10
+$ %s query ledger ledgers --page-key <page_key>`, version.AppName, version.AppName, version.AppName),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := ledger.NewQueryClient(clientCtx)
+
+			req := ledger.QueryLedgersRequest{
+				Pagination: pageReq,
+			}
+
+			resp, err := queryClient.Ledgers(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "ledgers")
 	return cmd
 }
 
