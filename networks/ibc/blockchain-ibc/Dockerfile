@@ -14,7 +14,6 @@ COPY go.* ./
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
-COPY legacy_protos/ ./legacy_protos/
 COPY vendor/ ./vendor/
 
 # Build the binaries
@@ -64,7 +63,6 @@ COPY go.* ./
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
-COPY legacy_protos/ ./legacy_protos/
 COPY vendor/ ./vendor/
 
 # Build the binaries
