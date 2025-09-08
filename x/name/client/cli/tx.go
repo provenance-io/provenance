@@ -273,9 +273,9 @@ func GetUpdateNameParamsCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgUpdateParamsRequest(
-				uint32(maxSegmentLength), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
-				uint32(minSegmentLength), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
-				uint32(maxNameLevels),    //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+				uint32(maxSegmentLength),
+				uint32(minSegmentLength),
+				uint32(maxNameLevels),
 				allowUnrestrictedNames,
 				authority,
 			)
