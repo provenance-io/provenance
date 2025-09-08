@@ -168,9 +168,6 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/cometbft)
-      - prefix(cosmossdk.io)
-      - prefix(github.com/cosmos)
       - prefix(github.com/provenance-io)
       - blank
       - dot
