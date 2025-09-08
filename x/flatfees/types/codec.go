@@ -1,3 +1,4 @@
+// Package types defines the types and codec registration for the flatfees module.
 package types
 
 import (
