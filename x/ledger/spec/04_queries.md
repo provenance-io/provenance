@@ -27,6 +27,19 @@ message QueryLedgerClassResponse {
 }
 ```
 
+### Get Ledger Classes
+Retrieves the ledger class configuration:
+
+```protobuf
+message QueryLedgerClassesRequest {
+    string ledger_class_id = 1;
+}
+
+message QueryLedgerClassResponse {
+    LedgerClass ledger_class = 1;
+}
+```
+
 ### Get Ledger Configuration
 Retrieves the ledger configuration for a specific asset:
 

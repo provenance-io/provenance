@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/ledger/types";
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "provenance/ledger/v1/ledger.proto";
 import "provenance/ledger/v1/ledger_settlement.proto";
@@ -15,6 +16,11 @@ service Query {
   // LedgerClass returns the ledger class for a given ledger class id.
   rpc LedgerClass(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}";
+  }
+
+  // LedgerClasses returns a paginated list of ledger classes.
+  rpc LedgerClasses(QueryLedgerClassesRequest) returns (QueryLedgerClassesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class";
   }
 
   // LedgerClassEntryTypes returns the entry types for a given ledger class id.
@@ -75,6 +81,21 @@ message QueryLedgerClassRequest {
 // QueryLedgerClassResponse
 message QueryLedgerClassResponse {
   LedgerClass ledger_class = 1;
+}
+
+// QueryLedgerClassesRequest
+message QueryLedgerClassesRequest {
+  // pagination is an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryLedgerClassesResponse
+message QueryLedgerClassesResponse {
+  // List of ledger classes.
+  repeated LedgerClass ledger_classes = 1;
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryLedgerClassEntryTypesRequest

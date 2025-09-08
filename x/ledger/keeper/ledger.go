@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
 )
@@ -468,6 +469,26 @@ func (k Keeper) RequireGetLedgerClass(ctx context.Context, ledgerClassID string)
 		return nil, types.NewErrCodeNotFound("ledger class")
 	}
 	return ledgerClass, nil
+}
+
+// GetAllLedgerClasses retrieves all ledger classes with pagination support.
+// This function provides paginated access to all ledger classes in the system.
+// It uses the collections.Paginate function to handle pagination efficiently.
+func (k Keeper) GetAllLedgerClasses(ctx context.Context, pageRequest *query.PageRequest) ([]*types.LedgerClass, *query.PageResponse, error) {
+	// Use query.CollectionPaginate to handle pagination for the ledger classes collection.
+	ledgerClasses, pageRes, err := query.CollectionPaginate(ctx, k.LedgerClasses, pageRequest, func(_ string, value types.LedgerClass) (*types.LedgerClass, error) {
+		return &value, nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Ensure ledgerClasses is never nil, return empty slice instead
+	if ledgerClasses == nil {
+		ledgerClasses = []*types.LedgerClass{}
+	}
+
+	return ledgerClasses, pageRes, nil
 }
 
 // GetLedgerClassEntryTypes retrieves all entry types for a given ledger class.

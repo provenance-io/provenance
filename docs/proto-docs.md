@@ -923,6 +923,8 @@
     - [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse)
     - [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest)
     - [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse)
+    - [QueryLedgerClassesRequest](#provenance-ledger-v1-QueryLedgerClassesRequest)
+    - [QueryLedgerClassesResponse](#provenance-ledger-v1-QueryLedgerClassesResponse)
     - [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest)
     - [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse)
     - [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest)
@@ -13876,6 +13878,37 @@ QueryLedgerClassStatusTypesResponse
 
 
 
+<a name="provenance-ledger-v1-QueryLedgerClassesRequest"></a>
+
+### QueryLedgerClassesRequest
+QueryLedgerClassesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination is an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassesResponse"></a>
+
+### QueryLedgerClassesResponse
+QueryLedgerClassesResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | List of ledger classes. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-QueryLedgerEntriesRequest"></a>
 
 ### QueryLedgerEntriesRequest
@@ -14042,6 +14075,7 @@ Query defines the gRPC querier service for ledger module.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | `LedgerClass` | [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest) | [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse) | LedgerClass returns the ledger class for a given ledger class id. |
+| `LedgerClasses` | [QueryLedgerClassesRequest](#provenance-ledger-v1-QueryLedgerClassesRequest) | [QueryLedgerClassesResponse](#provenance-ledger-v1-QueryLedgerClassesResponse) | LedgerClasses returns a paginated list of ledger classes. |
 | `LedgerClassEntryTypes` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) | LedgerClassEntryTypes returns the entry types for a given ledger class id. |
 | `LedgerClassStatusTypes` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) | LedgerClassStatusTypes returns the status types for a given ledger class id. |
 | `LedgerClassBucketTypes` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) | LedgerClassBucketTypes returns the bucket types for a given ledger class id. |
