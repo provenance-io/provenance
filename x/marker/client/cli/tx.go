@@ -1483,7 +1483,7 @@ func GetCmdSetDenomMetadataProposal() *cobra.Command {
 					},
 					{
 						Denom:    display,
-						Exponent: uint32(exponent), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+						Exponent: uint32(exponent),
 					},
 				},
 				Base:    denom,
