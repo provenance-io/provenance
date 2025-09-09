@@ -35,7 +35,7 @@ func (k msgServer) WriteScope(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteScope")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	transferAgents, err := k.ValidateWriteScope(ctx, msg)
@@ -286,7 +286,7 @@ func (k msgServer) WriteSession(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteSession")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	var existing *types.Session
@@ -315,7 +315,7 @@ func (k msgServer) WriteRecord(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteRecord")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
@@ -371,7 +371,7 @@ func (k msgServer) WriteScopeSpecification(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	var existing *types.ScopeSpecification
@@ -423,7 +423,7 @@ func (k msgServer) WriteContractSpecification(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteContractSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G115: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	var existing *types.ContractSpecification
@@ -569,7 +569,7 @@ func (k msgServer) WriteRecordSpecification(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G115: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()
