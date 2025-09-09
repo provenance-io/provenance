@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -584,7 +585,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 	}
 
 	cmd.Flags().String(FlagPacketTimeoutHeight, "0-1000", "Packet timeout block height. The timeout is disabled when set to 0-0.")
-	cmd.Flags().Uint64(FlagPacketTimeoutTimestamp, uint64((time.Duration(10) * time.Minute).Nanoseconds()), "Packet timeout timestamp in nanoseconds from now. Default is 10 minutes. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(FlagPacketTimeoutTimestamp, uint64((time.Duration(10) * time.Minute).Nanoseconds()), "Packet timeout timestamp in nanoseconds from now. Default is 10 minutes. The timeout is disabled when set to 0.") //nolint:gosec // G115
 	cmd.Flags().Bool(FlagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
 	cmd.Flags().String(FlagMemo, "", "Memo to be sent along with the packet.")
 	flags.AddTxFlagsToCmd(cmd)
@@ -1805,7 +1806,7 @@ From stdin:
 				}
 
 			case strings.HasPrefix(authInput, "@"):
-				filePath := strings.TrimPrefix(authInput, "@")
+				filePath := filepath.Clean(strings.TrimPrefix(authInput, "@"))
 				if filePath == "" {
 					return fmt.Errorf("missing file path after '@'")
 				}

@@ -10,7 +10,7 @@ linters:
     - bidichk
     - bodyclose
     - copyloopvar
-    # - depguard
+    - depguard
     - dogsled
     - durationcheck
     - errcheck
@@ -76,13 +76,15 @@ linters-settings:
   depguard:
     rules:
       main:
-        list-mode: lax
+        list-mode: original
         files:
           - $all
           - "!$test"
         allow:
           - $gostd
           - github.com/CosmWasm
+          - github.com/CosmWasm/wasmd
+          - github.com/CosmWasm/wasmd/x/wasm 
           - github.com/armon/go-metrics
           - cosmossdk.io
           - github.com/cosmos
@@ -105,12 +107,11 @@ linters-settings:
           - github.com/cosmos/go-bip39
           - github.com/cosmos/ibc-apps
           - github.com/cosmos/ibc-go
-          - github.com/CosmWasm/wasm/x/wasm
-          - github.com/CosmWasm/wasmd
           - github.com/CosmWasm/wasmvm/v2
+          - github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1
 
           - github.com/cosmos/gogoproto
-
+          - github.com/cosmos/gogoproto/proto
           - github.com/golang/protobuf/proto
 
           - github.com/google/uuid
@@ -155,6 +156,7 @@ linters-settings:
           - pkg: "github.com/cosmos/cosmos-sdk/x/params"
             desc: "The params module is no more."
       test:
+        list-mode: original
         files:
           - "$test"
         allow:

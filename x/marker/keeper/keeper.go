@@ -302,7 +302,7 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 
 // SetNetAssetValue adds/updates a net asset value to marker
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error {
-	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight()) //nolint:gosec // G115
 	if err := netAssetValue.Validate(); err != nil {
 		return err
 	}

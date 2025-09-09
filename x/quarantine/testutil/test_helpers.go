@@ -59,7 +59,7 @@ func makePrefixedIncAddr(length uint, rootChar uint8, base string, index uint8) 
 	if index > 25 {
 		panic(fmt.Sprintf("index too large; got: %d, max: 30", index))
 	}
-	rv := makeIncAddr(length, uint(1+len(base))+1, rootChar+index)
+	rv := makeIncAddr(length, uint(1+len(base))+1, rootChar+index) //nolint:gosec // G115
 	rv[0] = index
 	copy(rv[1:], base)
 	return rv
