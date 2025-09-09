@@ -11,13 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	cerrs "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -32,10 +28,11 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v8/modules/core/04-channel/client/utils"
-
 	"github.com/provenance-io/provenance/internal/provcli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // FlagType defines the CLI flag for specifying the marker type.

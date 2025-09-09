@@ -4,11 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/runtime/protoiface"
-
 	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,9 +12,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/protocompat"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // This file is basically a copy of the SDK's baseapp/msg_service_router.go file with the following modifications:
@@ -48,6 +45,7 @@ func NewPioMsgServiceRouter() *PioMsgServiceRouter {
 		hybridHandlers: make(map[string]protocompat.Handler),
 	}
 }
+
 // SetCircuit sets the CircuitBreaker for the PioMsgServiceRouter.
 func (msr *PioMsgServiceRouter) SetCircuit(cb baseapp.CircuitBreaker) {
 	msr.circuitBreaker = cb
@@ -84,6 +82,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 		}
 	}
 }
+
 // HybridHandlerByMsgName returns a handler for the specified message name.
 func (msr *PioMsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	return msr.hybridHandlers[msgName]

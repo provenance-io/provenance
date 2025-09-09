@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // SetupCmdTxCreateAsk adds all the flags needed for MakeMsgCreateAsk.

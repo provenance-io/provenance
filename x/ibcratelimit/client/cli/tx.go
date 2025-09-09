@@ -3,15 +3,13 @@ package cli
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/spf13/cobra"
 )
 
 // NewTxCmd is the top-level command for oracle CLI transactions.

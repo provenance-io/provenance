@@ -6,13 +6,11 @@ import (
 	"os"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmsimulation "github.com/CosmWasm/wasmd/x/wasm/simulation"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
-
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -23,7 +21,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
@@ -41,6 +38,7 @@ const (
 	namePrefix = "scsnameprefix"        // must be a string of length 13
 	label      = "tutorialsc"           // must gbe a string of at least length 10 so that the name module doesn't fail on minlength
 )
+
 // Wrapper is a helper type for simulation.
 type Wrapper struct {
 	cdc  codec.Codec
@@ -50,6 +48,7 @@ type Wrapper struct {
 	nk   namekeeper.Keeper
 	wk   *wasmkeeper.Keeper
 }
+
 // NewWrapper creates a new Wrapper instance.
 func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router wasmkeeper.MessageRouter) *Wrapper {
 	return &Wrapper{
@@ -163,6 +162,7 @@ func SimulateMsgBindName(simState module.SimulationState, ak authkeeper.AccountK
 		return op, future, err2
 	}
 }
+
 // SimulateMsgAddMarker simulates adding a marker message.
 func SimulateMsgAddMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
@@ -201,6 +201,7 @@ func SimulateMsgAddMarker(simState module.SimulationState, ak authkeeper.Account
 		return msg2, ops, err
 	}
 }
+
 // SimulateMsgAddAccess simulates adding access to a marker.
 func SimulateMsgAddAccess(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
@@ -216,6 +217,7 @@ func SimulateMsgAddAccess(simState module.SimulationState, ak authkeeper.Account
 		return msg2, ops, err
 	}
 }
+
 // SimulateFinalizeMarker simulates finalizing a marker.
 func SimulateFinalizeMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
@@ -230,6 +232,7 @@ func SimulateFinalizeMarker(simState module.SimulationState, ak authkeeper.Accou
 		return msg2, ops, err
 	}
 }
+
 // SimulateActivateMarker simulates activating a marker.
 func SimulateActivateMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
@@ -244,6 +247,7 @@ func SimulateActivateMarker(simState module.SimulationState, ak authkeeper.Accou
 		return msg2, ops, err
 	}
 }
+
 // SimulateMsgWithdrawRequest simulates a withdraw request message.
 func SimulateMsgWithdrawRequest(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
@@ -261,6 +265,7 @@ func SimulateMsgWithdrawRequest(simState module.SimulationState, ak authkeeper.A
 		return msg2, ops, err
 	}
 }
+
 // SimulateMsgStoreContract simulates storing a contract.
 func SimulateMsgStoreContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
@@ -284,6 +289,7 @@ func SimulateMsgStoreContract(simState module.SimulationState, ak authkeeper.Acc
 		return msg2, ops, storeErr
 	}
 }
+
 // SimulateMsgInstantiateContract simulates contract instantiation.
 func SimulateMsgInstantiateContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
@@ -350,6 +356,7 @@ func SimulateMsgInstantiateContract(simState module.SimulationState, ak authkeep
 		return msg2, ops, instantiateErr
 	}
 }
+
 // SimulateMsgExecuteContract simulates contract execution.
 func SimulateMsgExecuteContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, _, consumer simtypes.Account, contractAddr string) simtypes.Operation {
 	return func(

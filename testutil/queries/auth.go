@@ -6,15 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/provenance-io/provenance/testutil"
+	"github.com/stretchr/testify/assert"
 )
 
 // GetModuleAccountByName executes a query to get a module account by name, requiring everything to be okay.

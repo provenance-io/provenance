@@ -4,7 +4,6 @@ import (
 	"bytes"
 
 	cerrs "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
@@ -14,7 +13,6 @@ import (
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 	ibcerrors "github.com/cosmos/ibc-go/v8/modules/core/errors"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 

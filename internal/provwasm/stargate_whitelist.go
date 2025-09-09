@@ -13,7 +13,8 @@ import (
 	"cosmossdk.io/x/feegrant"
 	nfttypes "cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

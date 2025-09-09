@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/types"
 )

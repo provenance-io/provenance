@@ -18,6 +18,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateParamsRequest)(nil),
 }
+
 // NewMsgAddAttributeRequest creates a new message to add an attribute.
 func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest {
 	return &MsgAddAttributeRequest{
@@ -40,6 +41,7 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value, msg.ExpirationDate, msg.ConcreteType)
 	return a.ValidateBasic()
 }
+
 // NewMsgUpdateAttributeRequest creates a new message to update an attribute.
 func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name string, originalValue []byte, updateValue []byte, origAttrType AttributeType, updatedAttrType AttributeType) *MsgUpdateAttributeRequest {
 	return &MsgUpdateAttributeRequest{
@@ -64,6 +66,7 @@ func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	a := NewAttribute(msg.Name, msg.Account, msg.UpdateAttributeType, msg.UpdateValue, nil, msg.ConcreteType)
 	return a.ValidateBasic()
 }
+
 // NewMsgUpdateAttributeExpirationRequest creates a new message to update attribute expiration.
 func NewMsgUpdateAttributeExpirationRequest(account, name, value string, expirationDate *time.Time, owner sdk.AccAddress) *MsgUpdateAttributeExpirationRequest {
 	return &MsgUpdateAttributeExpirationRequest{
@@ -93,6 +96,7 @@ func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
 	}
 	return nil
 }
+
 // NewMsgDeleteAttributeRequest creates a new message to delete an attribute.
 func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest {
 	return &MsgDeleteAttributeRequest{
@@ -118,6 +122,7 @@ func (msg MsgDeleteAttributeRequest) ValidateBasic() error {
 	}
 	return nil
 }
+
 // NewMsgDeleteDistinctAttributeRequest creates a new message to delete a distinct attribute.
 func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest {
 	return &MsgDeleteDistinctAttributeRequest{

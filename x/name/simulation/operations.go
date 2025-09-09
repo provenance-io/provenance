@@ -12,7 +12,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
 	simappparams "github.com/provenance-io/provenance/app/params"
 	internalrand "github.com/provenance-io/provenance/internal/rand"
 	"github.com/provenance-io/provenance/x/name/keeper"

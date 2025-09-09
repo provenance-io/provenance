@@ -12,17 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/require"
-
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
-
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -41,9 +36,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 )
 
 // DefaultConsensusParams defines the default consensus params used in SimApp testing.

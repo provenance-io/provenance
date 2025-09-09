@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/x/tx/signing"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"cosmossdk.io/x/tx/signing"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.

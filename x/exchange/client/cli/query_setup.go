@@ -4,16 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // SetupCmdQueryOrderFeeCalc adds all the flags needed for MakeQueryOrderFeeCalc.

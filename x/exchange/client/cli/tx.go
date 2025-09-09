@@ -3,13 +3,11 @@ package cli
 import (
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/spf13/cobra"
 )
 
 // CmdTx creates the tx command (and sub-commands) for the exchange module.

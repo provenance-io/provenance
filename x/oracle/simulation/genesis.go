@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	internalrand "github.com/provenance-io/provenance/internal/rand"
 	"github.com/provenance-io/provenance/x/oracle/types"
 )

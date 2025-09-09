@@ -4,9 +4,7 @@ import (
 	"encoding/binary"
 
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 

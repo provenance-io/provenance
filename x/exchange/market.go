@@ -7,10 +7,8 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 

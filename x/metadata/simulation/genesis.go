@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 

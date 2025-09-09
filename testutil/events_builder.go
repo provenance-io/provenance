@@ -4,13 +4,11 @@ package testutil
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 )
 
 // EventsBuilder helps put together a list of events for testing purposes.
