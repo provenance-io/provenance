@@ -66,7 +66,7 @@ var upgrades = map[string]appUpgrade{
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
-			if err = importLedgerData(ctx, app.LedgerKeeper); err != nil {
+			if err = streamImportLedgerData(ctx, app.LedgerKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -90,7 +90,7 @@ var upgrades = map[string]appUpgrade{
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
-			if err = importLedgerData(ctx, app.LedgerKeeper); err != nil {
+			if err = streamImportLedgerData(ctx, app.LedgerKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -579,22 +579,11 @@ type LedgerKeeper interface {
 	ImportStoredSettlementInstructions(ctx sdk.Context, state *ledgerTypes.GenesisState)
 }
 
-// importLedgerData creates ledgers and entries from embedded genesis data using streaming.
-func importLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
-	ctx.Logger().Info("Starting streaming import of ledger data.")
-
-	// Process the gzipped genesis file using streaming
-	if err := streamImportLedgerData(ctx, lk); err != nil {
-		return fmt.Errorf("failed to stream import ledger data: %w", err)
-	}
-
-	ctx.Logger().Info("Completed streaming import of ledger data.")
-	return nil
-}
-
 // streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
 func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
+
+	ctx.Logger().Info("Starting streaming import of ledger data.")
 
 	// Read the gzipped file data
 	data, err := upgradeDataFS.ReadFile(filePath)
@@ -651,6 +640,8 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	if delim, ok := token.(json.Delim); !ok || delim != '}' {
 		return fmt.Errorf("expected JSON object end '}' in %s, got %v", filePath, token)
 	}
+
+	ctx.Logger().Info("Completed streaming import of ledger data.")
 
 	return nil
 }
@@ -722,12 +713,8 @@ func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder
 		ctx.Logger().Info("Imported settlement instructions", "count", len(settlements))
 
 	default:
-		// Skip unknown fields by decoding and discarding them
-		var value interface{}
-		if err := decoder.Decode(&value); err != nil {
-			return fmt.Errorf("failed to skip unknown field %s: %w", fieldName, err)
-		}
-		ctx.Logger().Info("Skipped unknown field", "field", fieldName)
+		// An unknown field is an error
+		return fmt.Errorf("failed with unknown genesis field %s", fieldName)
 	}
 
 	return nil
