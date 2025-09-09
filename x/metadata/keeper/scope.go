@@ -866,7 +866,7 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, metadataDenom, priceDenom stri
 
 // SetNetAssetValue adds/updates a net asset value to scope
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValue types.NetAssetValue, source string) error {
-	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight()) //nolint:gosec // G115
 	if err := netAssetValue.Validate(); err != nil {
 		return err
 	}

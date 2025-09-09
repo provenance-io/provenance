@@ -36,7 +36,7 @@ func (k Keeper) QueryOracle(ctx sdk.Context, query wasmtypes.RawContractMessage,
 	}
 
 	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
-	seq, err := k.SendQuery(ctx, types.PortID, channel, chanCap, reqs, clienttypes.ZeroHeight(), uint64(timeoutTimestamp))
+	seq, err := k.SendQuery(ctx, types.PortID, channel, chanCap, reqs, clienttypes.ZeroHeight(), uint64(timeoutTimestamp)) //nolint:gosec // G115
 	if err != nil {
 		return 0, err
 	}
