@@ -6,6 +6,9 @@ on:
     paths:
       - docker/blockchain/Dockerfile
       - .github/workflows/docker.yml
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
   push:
     branches:
       - main
@@ -27,7 +30,7 @@ jobs:
   heighliner-docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: docker/setup-buildx-action@v3
 
@@ -71,9 +74,9 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
 

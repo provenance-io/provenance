@@ -585,8 +585,8 @@ func TestGetTelemetryGlobalLabels(t *testing.T) {
 			expEnabled:      true,
 			expLogLines: []string{
 				"DBG Error parsing app config to get telemetry config (ignoring). " +
-					"error=\"1 error(s) decoding:\\n\\n* '" + telGlobalLabelsKey + "[0][0]' expected type 'string', " +
-					"got unconvertible type 'struct {}', value: '{}'\" " + funcLogKV,
+					"error=\"decoding failed due to the following error(s):\\n\\n'" + telGlobalLabelsKey + "[0][0]' " +
+					"expected type 'string', got unconvertible type 'struct {}'\" " + funcLogKV,
 				"DBG App option " + telGlobalLabelsKey + " is not [][]string, is struct {} " + funcLogKV +
 					" " + telGlobalLabelsKey + "={}",
 				"DBG Extracted telemetry setup from app options. " + funcLogKV + " " +
