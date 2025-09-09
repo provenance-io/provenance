@@ -27,7 +27,7 @@ jobs:
             scripts/no-now-lint.sh
             .changelog/lint-unreleased.sh
             .changelog/unreleased/**
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         if: env.GIT_DIFF
         with:
           go-version-file: 'go.mod'
