@@ -38,7 +38,7 @@ require (
 	github.com/hashicorp/go-metrics v0.5.4
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cast v1.10.0
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
