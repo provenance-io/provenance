@@ -8,7 +8,6 @@
 * `github.com/sagikazarmark/slog-shim` removed at v0.1.0 [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
 * `github.com/sourcegraph/conc` bumped to v0.3.1-0.20240121214520-5f936abd7ae8 (from v0.3.0) [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
 * `github.com/spf13/afero` bumped to v1.15.0 (from v1.11.0) [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
-* `github.com/spf13/cast` bumped to v1.10.0 (from v1.9.2) [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
 * `github.com/spf13/viper` bumped to v1.21.0 (from v1.19.0) [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
 * `go.uber.org/multierr` removed at v1.11.0 [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
 * `go.yaml.in/yaml/v3` added at v3.0.4 [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
