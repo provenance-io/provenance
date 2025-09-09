@@ -115,7 +115,7 @@ func GetLedgersCmd() *cobra.Command {
 $ %s query ledger ledgers --limit 10
 $ %s query ledger ledgers --page-key <page_key>`, version.AppName, version.AppName, version.AppName),
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -485,7 +485,7 @@ func GetLedgerClassesCmd() *cobra.Command {
 $ %s query ledger classes --limit 10
 $ %s query ledger classes --page-key <page_key>`, version.AppName, version.AppName, version.AppName),
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

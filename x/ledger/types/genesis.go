@@ -9,7 +9,7 @@ func DefaultGenesisState() *GenesisState {
 
 // Validate performs genesis state validation returning an error upon any failure.
 // It calls the Validate function for each entry in the GenesisState.
-func (genesisState GenesisState) Validate() error { 
+func (genesisState GenesisState) Validate() error {
 	// Validate each ledger class.
 	for i, ledgerClass := range genesisState.LedgerClasses {
 		err := ledgerClass.Validate()
@@ -69,4 +69,4 @@ func (genesisState GenesisState) Validate() error {
 	}
 
 	return nil
- }
+}
