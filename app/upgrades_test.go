@@ -1053,7 +1053,7 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
-		"INF Bulk creating ledgers and entries.",
+		"INF Starting streaming import of ledger data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
@@ -1065,7 +1065,7 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Setting up flat fees.",
-		"INF Bulk creating ledgers and entries.",
+		"INF Starting streaming import of ledger data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
 }
@@ -1361,23 +1361,9 @@ func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
 	// Test that the streaming ledger data import function works correctly.
 	// This test will only work if the gzipped file exists.
 	err := streamImportLedgerData(s.ctx, s.app.LedgerKeeper)
-	if err != nil {
-		s.T().Logf("Note: No ledger data files found or error loading: %v", err)
-		return // This is expected if no data files exist
-	}
+	s.Require().NoError(err)
 
 	s.T().Log("Successfully stream imported ledger data")
-}
-
-func (s *UpgradeTestSuite) TestImportLedgerData() {
-	// Test the full import process.
-	err := importLedgerData(s.ctx, s.app.LedgerKeeper)
-	if err != nil {
-		s.T().Logf("Note: Import ledger data failed (expected if no data): %v", err)
-		return // This is expected if no data files exist.
-	}
-
-	s.T().Log("Successfully imported ledger data")
 }
 
 func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
@@ -1407,49 +1393,9 @@ func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
 		s.T().Fatalf("Failed to decode genesis state from %s: %v", filePath, err)
 	}
 
-	// Validate each ledger class.
-	for i, ledgerClass := range genesisState.LedgerClasses {
-		err := ledgerClass.Validate()
-		s.Require().NoError(err, "LedgerClass %d validation failed", i)
-	}
-
-	// Validate each ledger class entry type.
-	for i, entryType := range genesisState.LedgerClassEntryTypes {
-		err := entryType.EntryType.Validate()
-		s.Require().NoError(err, "LedgerClassEntryType %d validation failed", i)
-	}
-
-	// Validate each ledger class status type.
-	for i, statusType := range genesisState.LedgerClassStatusTypes {
-		err := statusType.StatusType.Validate()
-		s.Require().NoError(err, "LedgerClassStatusType %d validation failed", i)
-	}
-
-	// Validate each ledger class bucket type.
-	for i, bucketType := range genesisState.LedgerClassBucketTypes {
-		err := bucketType.BucketType.Validate()
-		s.Require().NoError(err, "LedgerClassBucketType %d validation failed", i)
-	}
-
-	// Validate each ledger.
-	for i, genesisLedger := range genesisState.Ledgers {
-		err := genesisLedger.Ledger.Validate()
-		s.Require().NoError(err, "Ledger %d validation failed", i)
-	}
-
-	// Validate each ledger entry.
-	for i, genesisEntry := range genesisState.LedgerEntries {
-		err := genesisEntry.Entry.Validate()
-		s.Require().NoError(err, "LedgerEntry %d validation failed", i)
-	}
-
-	// Validate each settlement instruction.
-	for i, settlement := range genesisState.SettlementInstructions {
-		for j, instruction := range settlement.SettlementInstructions.SettlementInstructions {
-			err := instruction.Validate()
-			s.Require().NoError(err, "SettlementInstruction %d.%d validation failed", i, j)
-		}
-	}
+	// Validate GenesisState.
+	err = genesisState.Validate()
+	s.Require().NoError(err, "GenesisState validation failed")
 
 	s.T().Log("Successfully validated all ledger genesis state components")
 }
