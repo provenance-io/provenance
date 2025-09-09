@@ -6,14 +6,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
 	"github.com/provenance-io/provenance/x/flatfees/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // NewQueryCmd returns the top-level command for x/flatfees CLI queries.

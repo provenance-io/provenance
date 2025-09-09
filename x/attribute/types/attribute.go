@@ -12,10 +12,8 @@ import (
 	"strings"
 	time "time"
 
-	"github.com/google/uuid"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/google/uuid"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
