@@ -363,7 +363,7 @@ func deleteConfigFile(cmd *cobra.Command, filePath string, verbose bool) error {
 // Errors if the path already exists as a non-directory.
 func EnsureConfigDir(cmd *cobra.Command) error {
 	dir := GetFullPathToConfigDir(cmd)
-	err := os.MkdirAll(dir, os.ModePerm)
+	err := os.MkdirAll(dir, os.ModePerm) //nolint:gosec // G301
 	if err != nil {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
@@ -492,7 +492,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 
 	// Read in the packed config if it exists.
 	packedConf := map[string]string{}
-
+	//nolint:gosec // G304
 	switch packedJSON, rerr := os.ReadFile(packedConfFile); {
 	case os.IsNotExist(rerr):
 		// Packed config file doesn't exist. Do nothing. Just let it use the defaults.
