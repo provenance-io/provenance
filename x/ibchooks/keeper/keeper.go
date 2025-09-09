@@ -7,21 +7,17 @@ import (
 	"fmt"
 	"strings"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-
-	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 

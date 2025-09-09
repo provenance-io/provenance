@@ -4,17 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	dbm "github.com/cometbft/cometbft-db"
-
 	storetypes "cosmossdk.io/store/types"
-
+	dbm "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/provenance-io/provenance/x/hold"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // GetHolds looks up the funds that are on hold for an address.
