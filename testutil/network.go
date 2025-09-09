@@ -8,11 +8,9 @@ import (
 	"testing"
 	"time"
 
-	cmtrand "github.com/cometbft/cometbft/libs/rand"
-
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -24,7 +22,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	provenanceapp "github.com/provenance-io/provenance/app"
 )
 

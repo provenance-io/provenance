@@ -5,13 +5,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/provenance-io/provenance/x/oracle/types"
+	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd is the top-level command for oracle CLI queries.
