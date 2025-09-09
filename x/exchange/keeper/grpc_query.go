@@ -5,21 +5,19 @@ import (
 	"errors"
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"cosmossdk.io/store/prefix"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/provenance-io/provenance/x/exchange"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // QueryServer is an alias for a Keeper that implements the exchange.QueryServer interface.
 type QueryServer struct {
 	Keeper
 }
+
 // NewQueryServer returns a new instance of the exchange module's gRPC query server.
 func NewQueryServer(k Keeper) exchange.QueryServer {
 	return QueryServer{Keeper: k}

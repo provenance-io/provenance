@@ -3,9 +3,7 @@ package handlers
 
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
