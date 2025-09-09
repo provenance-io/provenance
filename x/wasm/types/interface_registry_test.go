@@ -4,21 +4,20 @@ import (
 	"testing"
 
 	wasmv1 "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	v1beta1 "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1"
 )
 
 func Test_InterfaceRegistry_RegisterImplementations(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&wasmv1.MsgExecuteContract{},
-		&v1beta1.MsgExecuteContract{},
+		&MsgExecuteContract{},
 	)
 	cdc := codec.NewProtoCodec(registry)
 	tests := []struct {
@@ -33,7 +32,7 @@ func Test_InterfaceRegistry_RegisterImplementations(t *testing.T) {
 		},
 		{
 			name:    "v1beta1 MsgExecuteContract",
-			msg:     &v1beta1.MsgExecuteContract{},
+			msg:     &MsgExecuteContract{},
 			typeURL: "/cosmwasm.wasm.v1beta1.MsgExecuteContract",
 		},
 	}
@@ -84,7 +83,7 @@ func Test_Decode_MsgExecuteContract(t *testing.T) {
 		},
 		{
 			name:    "v1beta1 MsgExecuteContract",
-			msg:     &v1beta1.MsgExecuteContract{Sender: "cosmos1xyz...", Contract: "cosmos1uvw..."},
+			msg:     &MsgExecuteContract{Sender: "cosmos1xyz...", Contract: "cosmos1uvw..."},
 			typeURL: "/cosmwasm.wasm.v1beta1.MsgExecuteContract",
 		},
 	}
@@ -108,8 +107,8 @@ func Test_Decode_MsgExecuteContract(t *testing.T) {
 				assert.Equal(t, v1msg.Sender, unpackedV1.Sender, "Sender mismatch for v1 MsgExecuteContract")
 				assert.Equal(t, v1msg.Contract, unpackedV1.Contract, "Contract mismatch for v1 MsgExecuteContract")
 			}
-			if beta1msg, ok := tt.msg.(*v1beta1.MsgExecuteContract); ok {
-				unpackedBeta1, _ := unpacked.(*v1beta1.MsgExecuteContract)
+			if beta1msg, ok := tt.msg.(*MsgExecuteContract); ok {
+				unpackedBeta1, _ := unpacked.(*MsgExecuteContract)
 				assert.Equal(t, beta1msg.Sender, unpackedBeta1.Sender, "Sender mismatch for v1beta1 MsgExecuteContract")
 				assert.Equal(t, beta1msg.Contract, unpackedBeta1.Contract, "Contract mismatch for v1beta1 MsgExecuteContract")
 			}
@@ -120,7 +119,7 @@ func Test_Decode_MsgExecuteContract(t *testing.T) {
 func Test_Decode_v1beta1_MsgFromGenesis(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&v1beta1.MsgExecuteContract{},
+		&MsgExecuteContract{},
 		&wasmv1.MsgExecuteContract{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
@@ -128,7 +127,7 @@ func Test_Decode_v1beta1_MsgFromGenesis(t *testing.T) {
 	)
 
 	cdc := codec.NewProtoCodec(registry)
-	oldMsg := &v1beta1.MsgExecuteContract{
+	oldMsg := &MsgExecuteContract{
 		Sender:   "pbmos1abc...",
 		Contract: "pbmos1def...",
 		Msg:      []byte(`{"do_something":{}}`),
@@ -152,7 +151,7 @@ func Test_Decode_v1beta1_MsgFromGenesis(t *testing.T) {
 		var unpacked sdk.Msg
 		err := cdc.UnpackAny(msg, &unpacked)
 		require.NoError(t, err)
-		_, ok := unpacked.(*v1beta1.MsgExecuteContract)
+		_, ok := unpacked.(*MsgExecuteContract)
 		require.True(t, ok, "expected v1beta1.MsgExecuteContract")
 	}
 }

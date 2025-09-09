@@ -6,6 +6,9 @@ on:
     paths:
       - docker/blockchain/Dockerfile
       - .github/workflows/docker.yml
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
   push:
     branches:
       - main
