@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"testing"
 	"time"
@@ -17,7 +18,6 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,10 +30,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	v1beta1 "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	pwasm "github.com/provenance-io/provenance/x/wasm/types"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -528,6 +528,21 @@ func TestParamChangeInGovProp(t *testing.T) {
 	assert.Equal(t, expJSON, propJSON, "proposal JSON")
 }
 
+func Test_v1beta1_MsgExecuteContract_Registered(t *testing.T) {
+	msgIfaceName := "cosmos.base.v1beta1.Msg"
+	msgTypeToFind := "/cosmwasm.wasm.v1beta1.MsgExecuteContract"
+
+	app := Setup(t)
+
+	ifaces := app.interfaceRegistry.ListAllInterfaces()
+	slices.Sort(ifaces)
+	require.Contains(t, ifaces, msgIfaceName, "app.interfaceRegistry.ListAllInterfaces()")
+
+	impls := app.interfaceRegistry.ListImplementations(msgIfaceName)
+	slices.Sort(impls)
+	assert.Contains(t, impls, msgTypeToFind, "app.interfaceRegistry.ListImplementations(%q)", msgIfaceName)
+}
+
 func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 	opts := SetupOptions{
 		Logger:  log.NewTestLogger(t),
@@ -536,15 +551,10 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
 	ctx := app.BaseApp.NewContext(false)
-
-	// Register types
-	registry := sdktypes.NewInterfaceRegistry()
-	registry.RegisterImplementations((*sdk.Msg)(nil), &v1beta1.MsgExecuteContract{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &govtypesv1.Proposal{})
-	cdc := codec.NewProtoCodec(registry)
+	cdc := app.GetEncodingConfig().Marshaler
 
 	// Create dummy message
-	oldMsg := &v1beta1.MsgExecuteContract{
+	oldMsg := &pwasm.MsgExecuteContract{
 		Sender:   "pbsmos1abc...",
 		Contract: "pbsmos1def...",
 		Msg:      []byte(`{"do_something":{}}`),
@@ -573,9 +583,7 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 		err := cdc.UnpackAny(msg, &unpacked)
 		require.NoError(t, err, "UnpackAny")
 
-		_, ok := unpacked.(*v1beta1.MsgExecuteContract)
+		_, ok := unpacked.(*pwasm.MsgExecuteContract)
 		require.True(t, ok, "expected v1beta1.MsgExecuteContract")
 	}
-
-	t.Log(":white_check_mark: Successfully decoded v1beta1.MsgExecuteContract from governance proposal")
 }
