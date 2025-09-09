@@ -64,6 +64,9 @@ message QueryGetRegistriesResponse {
   // registries is the collection of registry entries.
   // This includes all roles and addresses associated with the specified NFT and asset class.
   repeated RegistryEntry registries = 1 [(gogoproto.nullable) = false];
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryHasRoleRequest is the request type for the Query/HasRole RPC method.

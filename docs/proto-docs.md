@@ -14189,6 +14189,7 @@ It contains the complete registry entry for the requested key.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `registries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | registries is the collection of registry entries. This includes all roles and addresses associated with the specified NFT and asset class. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
 
 
 

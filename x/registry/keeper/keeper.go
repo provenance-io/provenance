@@ -208,21 +208,21 @@ func (k Keeper) GetRegistry(ctx sdk.Context, key *types.RegistryKey) (*types.Reg
 }
 
 // GetRegistries returns the registries paginated
-func (k Keeper) GetRegistries(ctx sdk.Context, pagination *query.PageRequest, assetClassID string) ([]types.RegistryEntry, error) {
+func (k Keeper) GetRegistries(ctx sdk.Context, pagination *query.PageRequest, assetClassID string) ([]types.RegistryEntry, *query.PageResponse, error) {
 	var opts []func(opt *query.CollectionsPaginateOptions[collections.Pair[string, string]])
 	if len(assetClassID) > 0 {
 		opts = append(opts, query.WithCollectionPaginationPairPrefix[string, string](assetClassID))
 	}
-	ptrs, _, err := query.CollectionPaginate(ctx, k.Registry, pagination, func(_ collections.Pair[string, string], entry types.RegistryEntry) (*types.RegistryEntry, error) {
+	ptrs, pageRes, err := query.CollectionPaginate(ctx, k.Registry, pagination, func(_ collections.Pair[string, string], entry types.RegistryEntry) (*types.RegistryEntry, error) {
 		return &entry, nil
 	}, opts...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	entries := make([]types.RegistryEntry, len(ptrs))
 	for i, p := range ptrs {
 		entries[i] = *p
 	}
-	return entries, nil
+	return entries, pageRes, nil
 }

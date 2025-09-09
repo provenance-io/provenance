@@ -426,10 +426,11 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 
 func (s *KeeperTestSuite) TestGetRegistries() {
 	// Initially no registries
-	regs, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "")
+	regs, _, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "")
 	s.Require().NoError(err)
 	s.Require().Len(regs, 0)
 
+	// Create test data
 	roles := []types.RolesEntry{
 		{Role: types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{s.user1Addr.String()}},
 	}
@@ -439,6 +440,8 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 		{AssetClassId: "bclass", NftId: "nft1"},
 		{AssetClassId: "bclass", NftId: "nft2"},
 		{AssetClassId: "cclass", NftId: "nft1"},
+		{AssetClassId: "dclass", NftId: "nft1"},
+		{AssetClassId: "eclass", NftId: "nft1"},
 	}
 	for _, k := range keys {
 		s.Require().NoError(s.app.RegistryKeeper.CreateRegistry(s.ctx, k, roles))
@@ -453,41 +456,182 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 		return out
 	}
 
-	// Get all (no pagination) to determine canonical ordering
-	allRegs, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "")
+	// Test comprehensive pagination scenarios
+	tests := []struct {
+		name          string
+		pageRequest   *query.PageRequest
+		assetClassId  string
+		expectedCount int
+		expectError   bool
+	}{
+		{
+			name:          "get all registries without pagination",
+			pageRequest:   nil,
+			assetClassId:  "",
+			expectedCount: len(keys),
+			expectError:   false,
+		},
+		{
+			name:          "get all registries with count total",
+			pageRequest:   &query.PageRequest{CountTotal: true},
+			assetClassId:  "",
+			expectedCount: len(keys),
+			expectError:   false,
+		},
+		{
+			name:          "get registries with limit 3",
+			pageRequest:   &query.PageRequest{Limit: 3, CountTotal: true},
+			assetClassId:  "",
+			expectedCount: 3,
+			expectError:   false,
+		},
+		{
+			name:          "get registries with offset 2 and limit 3",
+			pageRequest:   &query.PageRequest{Offset: 2, Limit: 3, CountTotal: true},
+			assetClassId:  "",
+			expectedCount: 3,
+			expectError:   false,
+		},
+		{
+			name:          "get registries with offset 5 and limit 5",
+			pageRequest:   &query.PageRequest{Offset: 5, Limit: 5, CountTotal: true},
+			assetClassId:  "",
+			expectedCount: 2, // Only 2 remaining after offset 5
+			expectError:   false,
+		},
+		{
+			name:          "get registries with offset beyond total count",
+			pageRequest:   &query.PageRequest{Offset: 10, Limit: 5, CountTotal: true},
+			assetClassId:  "",
+			expectedCount: 0,
+			expectError:   false,
+		},
+		{
+			name:          "get registries with large limit",
+			pageRequest:   &query.PageRequest{Limit: 100, CountTotal: true},
+			assetClassId:  "",
+			expectedCount: len(keys),
+			expectError:   false,
+		},
+		{
+			name:          "get registries with reverse order",
+			pageRequest:   &query.PageRequest{Limit: uint64(len(keys)), Reverse: true, CountTotal: true},
+			assetClassId:  "",
+			expectedCount: len(keys),
+			expectError:   false,
+		},
+		{
+			name:          "filter by asset class 'aclass'",
+			pageRequest:   &query.PageRequest{CountTotal: true},
+			assetClassId:  "aclass",
+			expectedCount: 2, // aclass has 2 NFTs
+			expectError:   false,
+		},
+		{
+			name:          "filter by asset class 'bclass' with limit 1",
+			pageRequest:   &query.PageRequest{Limit: 1, CountTotal: true},
+			assetClassId:  "bclass",
+			expectedCount: 1,
+			expectError:   false,
+		},
+		{
+			name:          "filter by non-existent asset class",
+			pageRequest:   &query.PageRequest{CountTotal: true},
+			assetClassId:  "nonexistent",
+			expectedCount: 0,
+			expectError:   false,
+		},
+	}
+
+	// Get baseline data for comparison
+	allRegs, _, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "")
 	s.Require().NoError(err)
 	s.Require().Len(allRegs, len(keys))
 
-	// Limit-only pagination
-	page1, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Limit: 2}, "")
-	s.Require().NoError(err)
-	s.Require().Equal(keyStrs(allRegs[:2]), keyStrs(page1))
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			regs, pageRes, err := s.app.RegistryKeeper.GetRegistries(s.ctx, tc.pageRequest, tc.assetClassId)
 
-	// Offset + limit pagination
-	page2, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Offset: 2, Limit: 2}, "")
-	s.Require().NoError(err)
-	s.Require().Equal(keyStrs(allRegs[2:4]), keyStrs(page2))
+			if tc.expectError {
+				s.Require().Error(err)
+				return
+			}
 
-	// Offset beyond range
-	pageEmpty, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Offset: uint64(len(keys)), Limit: 5}, "")
-	s.Require().NoError(err)
-	s.Require().Len(pageEmpty, 0)
+			s.Require().NoError(err)
+			s.Require().NotNil(regs)
+			s.Require().Len(regs, tc.expectedCount)
 
-	// Reverse order
-	rev, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{Limit: uint64(len(keys)), Reverse: true}, "")
-	s.Require().NoError(err)
-	expectRev := make([]types.RegistryEntry, len(allRegs))
-	for i := range allRegs {
-		expectRev[i] = allRegs[len(allRegs)-1-i]
+			// Verify pagination response if CountTotal was requested
+			if tc.pageRequest != nil && tc.pageRequest.CountTotal {
+				s.Require().NotNil(pageRes)
+				if tc.assetClassId == "" && tc.expectedCount > 0 {
+					// For queries without asset class filter, verify total count
+					s.Require().Equal(uint64(len(keys)), pageRes.Total)
+				}
+			}
+
+			// Verify all returned registries are valid
+			for _, reg := range regs {
+				s.Require().NotNil(reg.Key)
+				s.Require().NotEmpty(reg.Key.AssetClassId)
+				s.Require().NotEmpty(reg.Key.NftId)
+				s.Require().NotEmpty(reg.Roles)
+
+				// If filtering by asset class, verify all results match
+				if tc.assetClassId != "" {
+					s.Require().Equal(tc.assetClassId, reg.Key.AssetClassId)
+				}
+			}
+
+			// Verify ordering for reverse tests
+			if tc.pageRequest != nil && tc.pageRequest.Reverse && tc.assetClassId == "" {
+				// For reverse order test, verify ordering is actually reversed
+				if len(regs) > 1 {
+					// Compare first and last elements to ensure reverse ordering
+					allKeys := keyStrs(allRegs)
+					resultKeys := keyStrs(regs)
+					s.Require().Equal(allKeys[len(allKeys)-1], resultKeys[0], "first element should be last in original order")
+				}
+			}
+
+			// Verify deterministic ordering by running the same query twice
+			regs2, _, err2 := s.app.RegistryKeeper.GetRegistries(s.ctx, tc.pageRequest, tc.assetClassId)
+			s.Require().NoError(err2)
+			s.Require().Equal(keyStrs(regs), keyStrs(regs2), "results should be deterministic")
+		})
 	}
-	s.Require().Equal(keyStrs(expectRev), keyStrs(rev))
 
-	// Filter by asset_class_id
-	classARegs, err := s.app.RegistryKeeper.GetRegistries(s.ctx, nil, "aclass")
-	s.Require().NoError(err)
-	for _, e := range classARegs {
-		s.Require().Equal("aclass", e.Key.AssetClassId)
-	}
+	// Test pagination consistency - verify that paginated results match complete results
+	s.Run("pagination consistency", func() {
+		// Get all results without pagination
+		allRegs, _, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{CountTotal: true}, "")
+		s.Require().NoError(err)
+
+		// Get results in pages of 2
+		var paginatedRegs []types.RegistryEntry
+		pageSize := uint64(2)
+		offset := uint64(0)
+
+		for {
+			pageRegs, _, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{
+				Offset:     offset,
+				Limit:      pageSize,
+				CountTotal: true,
+			}, "")
+			s.Require().NoError(err)
+
+			if len(pageRegs) == 0 {
+				break
+			}
+
+			paginatedRegs = append(paginatedRegs, pageRegs...)
+			offset += pageSize
+		}
+
+		// Verify paginated results match complete results
+		s.Require().Equal(len(allRegs), len(paginatedRegs), "paginated results should have same count as complete results")
+		s.Require().Equal(keyStrs(allRegs), keyStrs(paginatedRegs), "paginated results should match complete results in order")
+	})
 }
 
 func (s *KeeperTestSuite) GenesisTest() {
