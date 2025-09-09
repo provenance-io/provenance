@@ -34,7 +34,6 @@ type AppModuleBasic struct {
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
-	router baseapp.MessageRouter
 }
 
 // NewAppModule creates a new AppModule object
@@ -42,7 +41,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, router baseapp.MessageR
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		router:         router,
 	}
 }
 
