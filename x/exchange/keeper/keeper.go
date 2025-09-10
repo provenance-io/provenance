@@ -145,7 +145,7 @@ func (k Keeper) GetFeeCollectorName() string {
 func getAllKeys(store storetypes.KVStore, pre []byte) [][]byte {
 	// Using a prefix iterator so that iter.Key() is the whole key (including the prefix).
 	iter := storetypes.KVStorePrefixIterator(store, pre)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	var keys [][]byte
 	for ; iter.Valid(); iter.Next() {
@@ -175,7 +175,7 @@ func iterate(store storetypes.KVStore, keyPrefix []byte, cb func(keySuffix, valu
 	} else {
 		iter = store.Iterator(nil, nil)
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	for ; iter.Valid(); iter.Next() {
 		if cb(iter.Key(), iter.Value()) {

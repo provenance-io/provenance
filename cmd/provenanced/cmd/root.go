@@ -55,7 +55,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	if err != nil {
 		panic(fmt.Errorf("failed to create temp dir: %w", err))
 	}
-	defer os.RemoveAll(tempDir)
+	defer os.RemoveAll(tempDir) //nolint:errcheck
 
 	// These are added to prevent invalid address caching from tempApp.
 	sdk.SetAddrCacheEnabled(false)
@@ -291,7 +291,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		if err != nil {
 			panic(err)
 		}
-		defer reader.Close()
+		defer reader.Close() //nolint:errcheck
 
 		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
 		if err != nil {

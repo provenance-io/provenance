@@ -252,7 +252,7 @@ func (k Keeper) IterateHolds(ctx sdk.Context, addr sdk.AccAddress, process func(
 	store := k.getHoldCoinPrefixStore(ctx, addr)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	var errs []error
 	for ; iter.Valid(); iter.Next() {
@@ -287,8 +287,7 @@ func (k Keeper) IterateAllHolds(ctx sdk.Context, process func(sdk.AccAddress, sd
 	store := k.getAllHoldCoinPrefixStore(ctx)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
-
+	defer iter.Close() //nolint:errcheck
 	var errs []error
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()

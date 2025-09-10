@@ -168,6 +168,8 @@ func (p SIPrefix) IsValid() bool {
 }
 
 // Format implements the fmt.Formatter interface.
+//
+//nolint:errcheck,gosec,staticcheck
 func (p SIPrefix) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

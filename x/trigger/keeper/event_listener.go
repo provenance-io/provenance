@@ -42,7 +42,11 @@ func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle 
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, triggertypes.GetEventListenerPrefix(eventName))
 
-	defer iterator.Close()
+	defer func() {
+		if err := iterator.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close iterator", "error", err)
+		}
+	}()
 	for ; iterator.Valid(); iterator.Next() {
 		triggerID := binary.BigEndian.Uint64(iterator.Key()[41:49])
 		record, err := k.GetTrigger(ctx, triggerID)
