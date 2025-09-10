@@ -238,7 +238,12 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
+	defer func() {
+		if err := iterator.Close(); err != nil {
+			k.Logger(ctx).Error("failed to close iterator", "error", err)
+		}
+	}()
+
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.NameRecord{}
@@ -329,7 +334,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 	iter := storetypes.KVStorePrefixIterator(store, types.AddressKeyPrefix)
 	defer func() {
 		if iter != nil {
-			iter.Close()
+			iter.Close() //nolint:errcheck,gosec
 		}
 	}()
 
@@ -353,7 +358,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 		keepCount++
 	}
 
-	iter.Close()
+	iter.Close() //nolint:errcheck,gosec
 	iter = nil
 
 	if len(toDelete) == 0 {
