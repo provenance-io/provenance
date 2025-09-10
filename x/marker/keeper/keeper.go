@@ -180,7 +180,7 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.MarkerStoreKeyPrefix)
 
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 	for ; iterator.Valid(); iterator.Next() {
 		account := k.authKeeper.GetAccount(ctx, iterator.Value())
 		ma, ok := account.(types.MarkerAccountI)
@@ -247,7 +247,7 @@ func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop 
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendKeyPrefix)
 
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 	for ; iterator.Valid(); iterator.Next() {
 		if handler(iterator.Key()) {
 			break
@@ -261,7 +261,7 @@ func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) []sd
 	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendMarkerPrefix(markerAddr))
 	list := []sdk.AccAddress{}
 
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 	for ; iterator.Valid(); iterator.Next() {
 		_, denied := types.GetDenySendAddresses(iterator.Key())
 		list = append(list, denied)
@@ -371,7 +371,11 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
-	defer it.Close()
+	defer func() {
+		if err := it.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close IterateNetAssetValues", "error", err)
+		}
+	}()
 	for ; it.Valid(); it.Next() {
 		var markerNav types.NetAssetValue
 		err := k.cdc.Unmarshal(it.Value(), &markerNav)
@@ -388,7 +392,11 @@ func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress
 func (k Keeper) IterateAllNetAssetValues(ctx sdk.Context, handler func(sdk.AccAddress, types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValuePrefix)
-	defer it.Close()
+	defer func() {
+		if err := it.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close IterateAllNetAssetValues", "error", err)
+		}
+	}()
 	for ; it.Valid(); it.Next() {
 		markerAddr := types.GetMarkerFromNetAssetValueKey(it.Key())
 		var markerNav types.NetAssetValue
@@ -410,7 +418,7 @@ func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress)
 	for ; it.Valid(); it.Next() {
 		keys = append(keys, it.Key())
 	}
-	it.Close()
+	it.Close() //nolint:errcheck,gosec
 
 	for _, key := range keys {
 		store.Delete(key)
