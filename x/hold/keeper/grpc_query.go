@@ -79,7 +79,7 @@ func (k Keeper) paginateAllHolds(ctx sdk.Context, pageRequest *query.PageRequest
 
 	if len(key) != 0 {
 		iterator := getIterator(prefixStore, key, reverse)
-		defer iterator.Close()
+		defer iterator.Close() //nolint:errcheck
 
 		for ; iterator.Valid(); iterator.Next() {
 			if err := iterator.Error(); err != nil {
@@ -109,7 +109,7 @@ func (k Keeper) paginateAllHolds(ctx sdk.Context, pageRequest *query.PageRequest
 	}
 
 	iterator := getIterator(prefixStore, nil, reverse)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 
 	accumulate := false
 	var numHits uint64
@@ -162,7 +162,7 @@ func getIterator(prefixStore storetypes.KVStore, start []byte, reverse bool) dbm
 		var end []byte
 		if start != nil {
 			itr := prefixStore.Iterator(start, nil)
-			defer itr.Close()
+			defer itr.Close() //nolint:errcheck
 			if itr.Valid() {
 				itr.Next()
 				end = itr.Key()
