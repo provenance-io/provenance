@@ -1816,7 +1816,7 @@ From stdin:
 					// For other errors like permissions or invalid characters, os.Open will return relevant error.
 					return fmt.Errorf("failed to open file %s: %w", filePath, err)
 				}
-				defer f.Close()
+				defer f.Close() //nolint:errcheck
 
 				limitedReader := io.LimitReader(f, maxInputSize+1) // +1 to detect overflow
 				authzJSON, err = io.ReadAll(limitedReader)

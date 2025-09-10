@@ -85,7 +85,11 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 		return err
 	}
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close()
+	defer func() {
+		if err := it.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close IterateSessions", "error", err)
+		}
+	}()
 	for ; it.Valid(); it.Next() {
 		var session types.Session
 		err = k.cdc.Unmarshal(it.Value(), &session)
