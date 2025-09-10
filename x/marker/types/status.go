@@ -102,6 +102,8 @@ func (rt MarkerStatus) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
+//
+//nolint:errcheck,gosec,staticcheck
 func (rt MarkerStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
