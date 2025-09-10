@@ -4,7 +4,13 @@ package cosmwasm.wasm.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1;legacy_protos";
+// This file contains the v1beta1 version of MsgExecuteContract.
+// We have old gov props that used this type of message. In order to read those,
+// this Msg type must be registered. This file exists so that we can generate
+// the go code needed to register it. When go code is generated, it generates
+// an init function that registers this type as a Msg.
+
+option go_package = "github.com/provenance-io/provenance/x/wasm/types";
 
 // MsgExecuteContract defines a message to execute a smart contract.
 message MsgExecuteContract {
