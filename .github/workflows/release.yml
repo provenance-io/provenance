@@ -10,6 +10,7 @@ on:
       - "Makefile"
       - "gon.json"
       - "scripts/**"
+      - "protoBindings/**"
       - ".github/workflows/release.yml"
   push:
     tags:
@@ -63,9 +64,9 @@ jobs:
     name: Build OSX
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Build osx binary
@@ -81,22 +82,24 @@ jobs:
 
   build_linux:
     runs-on: ubuntu-latest
+    container: ubuntu:20.04
     needs:
       - build_init
     name: Build Linux
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
+      GOTOOLCHAIN: local
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Install deps
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+          apt-get update
+          apt-get install -y make zip build-essential ca-certificates libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build linux binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
@@ -116,7 +119,7 @@ jobs:
     name: Protobuf Push
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Buf setup action
         uses: bufbuild/buf-setup-action@v1.50.0
       - name: Buf push 'proto/'
@@ -134,7 +137,7 @@ jobs:
     name: Create Release
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Create release ${{ needs.build_init.outputs.version }}
         uses: actions/create-release@v1
         id: create_release
@@ -158,13 +161,13 @@ jobs:
     name: Attach Release Artifacts
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Download linux zip artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: linux-zip
           path: build/
@@ -221,10 +224,10 @@ jobs:
     name: Java/Kotlin Proto Publishing
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Java Setup
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: 11
@@ -261,7 +264,7 @@ jobs:
     name: NPM Proto Publishing
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Publish
         uses: provenance-io/npm-publish-action@v1.1
         with:

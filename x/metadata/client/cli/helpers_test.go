@@ -294,9 +294,15 @@ func TestParsePartyType(t *testing.T) {
 	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 	controller := types.PartyType_PARTY_TYPE_CONTROLLER
 	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+	generic1 := types.PartyType_PARTY_TYPE_GENERIC_1
+	generic2 := types.PartyType_PARTY_TYPE_GENERIC_2
+	generic3 := types.PartyType_PARTY_TYPE_GENERIC_3
+	generic4 := types.PartyType_PARTY_TYPE_GENERIC_4
+	generic5 := types.PartyType_PARTY_TYPE_GENERIC_5
+	generic6 := types.PartyType_PARTY_TYPE_GENERIC_6
 
 	// If this fails, add some unit tests for the new value(s), then update the expected length here.
-	assert.Len(t, types.PartyType_name, 11, "types.PartyType_name")
+	assert.Len(t, types.PartyType_name, 17, "types.PartyType_name")
 
 	tests := []struct {
 		input  string
@@ -333,6 +339,25 @@ func TestParsePartyType(t *testing.T) {
 		{input: "validator", exp: validator, expErr: ""},
 		{input: "VALIDATOR", exp: validator, expErr: ""},
 		{input: "Validator", exp: validator, expErr: ""},
+		
+		{input: "generic_1", exp: generic1, expErr: ""},
+		{input: "GENERIC_1", exp: generic1, expErr: ""},
+		{input: "Generic_1", exp: generic1, expErr: ""},
+		{input: "generic_2", exp: generic2, expErr: ""},
+		{input: "GENERIC_2", exp: generic2, expErr: ""},
+		{input: "Generic_2", exp: generic2, expErr: ""},
+		{input: "generic_3", exp: generic3, expErr: ""},
+		{input: "GENERIC_3", exp: generic3, expErr: ""},
+		{input: "Generic_3", exp: generic3, expErr: ""},
+		{input: "generic_4", exp: generic4, expErr: ""},
+		{input: "GENERIC_4", exp: generic4, expErr: ""},
+		{input: "Generic_4", exp: generic4, expErr: ""},
+		{input: "generic_5", exp: generic5, expErr: ""},
+		{input: "GENERIC_5", exp: generic5, expErr: ""},
+		{input: "Generic_5", exp: generic5, expErr: ""},
+		{input: "generic_6", exp: generic6, expErr: ""},
+		{input: "GENERIC_6", exp: generic6, expErr: ""},
+		{input: "Generic_6", exp: generic6, expErr: ""},
 
 		{input: "party_type_originator", exp: originator, expErr: ""},
 		{input: "PARTY_TYPE_ORIGINATOR", exp: originator, expErr: ""},
@@ -364,6 +389,25 @@ func TestParsePartyType(t *testing.T) {
 		{input: "party_type_validator", exp: validator, expErr: ""},
 		{input: "PARTY_TYPE_VALIDATOR", exp: validator, expErr: ""},
 		{input: "Party_Type_Validator", exp: validator, expErr: ""},
+
+		{input: "party_type_generic_1", exp: generic1, expErr: ""},
+		{input: "PARTY_TYPE_GENERIC_1", exp: generic1, expErr: ""},
+		{input: "Party_Type_Generic_1", exp: generic1, expErr: ""},
+		{input: "party_type_generic_2", exp: generic2, expErr: ""},
+		{input: "PARTY_TYPE_GENERIC_2", exp: generic2, expErr: ""},
+		{input: "Party_Type_Generic_2", exp: generic2, expErr: ""},
+		{input: "party_type_generic_3", exp: generic3, expErr: ""},
+		{input: "PARTY_TYPE_GENERIC_3", exp: generic3, expErr: ""},
+		{input: "Party_Type_Generic_3", exp: generic3, expErr: ""},
+		{input: "party_type_generic_4", exp: generic4, expErr: ""},
+		{input: "PARTY_TYPE_GENERIC_4", exp: generic4, expErr: ""},
+		{input: "Party_Type_Generic_4", exp: generic4, expErr: ""},
+		{input: "party_type_generic_5", exp: generic5, expErr: ""},
+		{input: "PARTY_TYPE_GENERIC_5", exp: generic5, expErr: ""},
+		{input: "Party_Type_Generic_5", exp: generic5, expErr: ""},
+		{input: "party_type_generic_6", exp: generic6, expErr: ""},
+		{input: "PARTY_TYPE_GENERIC_6", exp: generic6, expErr: ""},
+		{input: "Party_Type_Generic_6", exp: generic6, expErr: ""},
 
 		{input: "unspecified", exp: unspecified, expErr: `unknown party type: "unspecified"`},
 		{input: "UNSPECIFIED", exp: unspecified, expErr: `unknown party type: "UNSPECIFIED"`},
@@ -947,9 +991,14 @@ func TestParsePartyTypes(t *testing.T) {
 	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 	controller := types.PartyType_PARTY_TYPE_CONTROLLER
 	validator := types.PartyType_PARTY_TYPE_VALIDATOR
-
+	generic1 := types.PartyType_PARTY_TYPE_GENERIC_1
+	generic2 := types.PartyType_PARTY_TYPE_GENERIC_2
+	generic3 := types.PartyType_PARTY_TYPE_GENERIC_3
+	generic4 := types.PartyType_PARTY_TYPE_GENERIC_4
+	generic5 := types.PartyType_PARTY_TYPE_GENERIC_5
+	generic6 := types.PartyType_PARTY_TYPE_GENERIC_6
 	// If this fails, update the "one of each" test, then update the expected length here.
-	assert.Len(t, types.PartyType_name, 11, "types.PartyType_name")
+	assert.Len(t, types.PartyType_name, 17, "types.PartyType_name")
 
 	tests := []struct {
 		name   string
@@ -972,11 +1021,29 @@ func TestParsePartyTypes(t *testing.T) {
 			exp:    []types.PartyType{validator, owner},
 			expErr: "",
 		},
+		{
+			name:   "single generic entry",
+			arg:    "generic_1",
+			exp:    []types.PartyType{generic1},
+			expErr: "",
+		},
+		{
+			name:   "two generic entries",
+			arg:    "generic_2,generic_3",
+			exp:    []types.PartyType{generic2, generic3},
+			expErr: "",
+		},
+		{
+			name:   "mixed generic and specific",
+			arg:    "owner,generic_1,validator",
+			exp:    []types.PartyType{owner, generic1, validator},
+			expErr: "",
+		},
 		{name: "two entries first bad", arg: "bad,owner", exp: nil, expErr: `unknown party type: "bad"`},
 		{name: "two entries second bad", arg: "omnibus,bad", exp: nil, expErr: `unknown party type: "bad"`},
 		{
 			name: "one of each",
-			arg:  "controller,investor,provenance,custodian,owner,affiliate,validator,servicer,originator,omnibus",
+			arg:  "controller,investor,provenance,custodian,owner,affiliate,validator,servicer,originator,omnibus,generic_1,generic_2,generic_3,generic_4,generic_5,generic_6",
 			exp: []types.PartyType{
 				controller,
 				investor,
@@ -988,6 +1055,12 @@ func TestParsePartyTypes(t *testing.T) {
 				servicer,
 				originator,
 				omnibus,
+				generic1,
+				generic2,
+				generic3,
+				generic4,
+				generic5,
+				generic6,
 			},
 			expErr: "",
 		},

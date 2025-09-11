@@ -2,19 +2,24 @@ package app
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"maps"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -22,9 +27,10 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
+	"github.com/provenance-io/provenance/testutil/assertions"
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 type UpgradeTestSuite struct {
@@ -273,6 +279,37 @@ func (s *UpgradeTestSuite) GetOperatorAddr(val stakingtypes.ValidatorI) sdk.ValA
 	return addr
 }
 
+// addrCoins associates an address with coins.
+type addrCoins struct {
+	addr sdk.AccAddress
+	bal  sdk.Coins
+}
+
+// getAllSpendable will get the spendable balance of all known accounts (even if the account doesn't have anything in it).
+func (s *UpgradeTestSuite) getAllSpendable() []addrCoins {
+	var rv []addrCoins
+	err := s.app.AccountKeeper.Accounts.Walk(s.ctx, nil, func(addr sdk.AccAddress, _ sdk.AccountI) (stop bool, err error) {
+		bal := s.app.BankKeeper.SpendableCoins(s.ctx, addr)
+		rv = append(rv, addrCoins{addr: addr, bal: bal})
+		return false, nil
+	})
+	s.Require().NoError(err, "error walking accounts to get all balances")
+	return rv
+}
+
+// assertAllSpendable will assert that each of the accounts has the correct spendable balance.
+// Returns true if all spendable balances are as expected.
+func (s *UpgradeTestSuite) assertAllSpendable(expBals []addrCoins) bool {
+	ok := true
+	for i, exp := range expBals {
+		s.Run(fmt.Sprintf("%d: %s", i, exp.addr), func() {
+			act := s.app.BankKeeper.SpendableCoins(s.ctx, exp.addr)
+			ok = s.Assert().Equal(exp.bal.String(), act.String(), "SpendableCoins") && ok
+		})
+	}
+	return ok
+}
+
 func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
 	// handlerKeys are all the keys in the upgrades map defined in upgrades.go.
 	handlerKeys := make([]string, 0, len(upgrades))
@@ -383,7 +420,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 1, "GetAllValidators after setup")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
 		}
@@ -406,7 +443,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -443,7 +480,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -490,7 +527,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 2 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -539,7 +576,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 old unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -576,7 +613,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 empty unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing inactive validator delegations.",
+			LogMsgRemoveInactiveValidatorDelegations,
 			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
@@ -589,19 +626,277 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 }
 
-// TODO: func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase()
+func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase() {
+	stakeCoins := func(amt int64) sdk.Coins {
+		return sdk.Coins{sdk.NewInt64Coin("stake", amt)}
+	}
 
-func (s *UpgradeTestSuite) TestZomp() {
-	expInLog := []string{
-		"INF Unlocking select vesting accounts.",
+	pivotTime := time.Date(2020, 4, 20, 16, 20, 0, 0, time.UTC).UTC()
+	reallyOldTime := time.Date(1999, 12, 31, 59, 59, 59, 999999999, time.UTC).UTC()
+	now := pivotTime.Unix()
+	thePast := pivotTime.Add(time.Hour * 24 * -100).Unix()
+	oneDayAgo := pivotTime.Add(time.Hour * -24).Unix()
+	oneSecAgo := pivotTime.Add(time.Second * -1).Unix()
+	oneSecFromNow := pivotTime.Add(time.Second).Unix()
+	theFuture := pivotTime.Add(time.Hour * 24 * 1000).Unix()
+
+	// newContinuousVestingAccount returns an acctSetup func for creating a continuous vesting account.
+	newContinuousVestingAccount := func(origVest sdk.Coins, startTime, endTime int64) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewContinuousVestingAccount(acct, origVest, startTime, endTime)
+		}
 	}
-	expNotInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Converting accounts to vesting accounts.",
+
+	// newDelayedVestingAccount returns an acctSetup func for creating a delayed vesting account.
+	newDelayedVestingAccount := func(origVest sdk.Coins, endTime int64) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewDelayedVestingAccount(acct, origVest, endTime)
+		}
 	}
-	s.AssertUpgradeHandlerLogs("zomp", expInLog, expNotInLog)
+
+	// newPeriodicVestingAccount returns an acctSetup func for creating a periodic vesting account.
+	newPeriodicVestingAccount := func(origVest sdk.Coins, startTime int64, periods vesting.Periods) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewPeriodicVestingAccount(acct, origVest, startTime, periods)
+		}
+	}
+
+	// newPermanentLockedAccount returns an acctSetup func for creating a permanent locked account.
+	newPermanentLockedAccount := func(origVest sdk.Coins) func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+		return func(acct *authtypes.BaseAccount) (sdk.AccountI, error) {
+			return vesting.NewPermanentLockedAccount(acct, origVest)
+		}
+	}
+
+	tests := []*struct {
+		name      string
+		noPK      bool
+		seq       uint64
+		expConv   bool
+		acctSetup func(baseAcct *authtypes.BaseAccount) (sdk.AccountI, error)
+		addr      sdk.AccAddress
+		baseAcct  *authtypes.BaseAccount
+		origAcct  sdk.AccountI
+		expAcct   sdk.AccountI
+	}{
+		{name: "base account: no pubkey, no sequence", noPK: true, seq: 0},
+		{name: "base account: no pubkey, with sequence", noPK: true, seq: 5},
+		{name: "base account: with pubkey, no sequence", noPK: false, seq: 0},
+		{name: "base account: with pubkey, with sequence", noPK: false, seq: 12},
+		{name: "fee_collector module account", addr: authtypes.NewModuleAddress("fee_collector")},
+		{
+			name: "permanent locked: no pubkey, no sequence",
+			noPK: true, seq: 0,
+			acctSetup: newPermanentLockedAccount(stakeCoins(500000)),
+		},
+		{
+			name: "permanent locked: no pubkey, with sequence",
+			noPK: true, seq: 41,
+			acctSetup: newPermanentLockedAccount(stakeCoins(700000)),
+		},
+		{
+			name: "permanent locked: with pubkey, no sequence",
+			noPK: false, seq: 0,
+			acctSetup: newPermanentLockedAccount(stakeCoins(300000)),
+		},
+		{
+			name: "permanent locked: with pubkey, with sequence",
+			noPK: false, seq: 83,
+			acctSetup: newPermanentLockedAccount(stakeCoins(400000)),
+		},
+		{
+			name: "continuous vesting: finished 1 second ago",
+			seq:  177, expConv: true,
+			acctSetup: newContinuousVestingAccount(stakeCoins(800000), thePast, oneSecAgo),
+		},
+		{
+			name: "continuous vesting: finishes now",
+			seq:  212, expConv: true,
+			acctSetup: newContinuousVestingAccount(stakeCoins(700000), thePast, now),
+		},
+		{
+			name: "continuous vesting: already started, not finished",
+			seq:  41, expConv: false,
+			acctSetup: newContinuousVestingAccount(stakeCoins(600000), thePast, oneSecFromNow),
+		},
+		{
+			name: "continuous vesting: not started yet",
+			seq:  18918, expConv: false,
+			acctSetup: newContinuousVestingAccount(stakeCoins(850000), oneSecFromNow, theFuture),
+		},
+		{
+			name: "delayed vesting: finished 1 second ago",
+			seq:  71, expConv: true,
+			acctSetup: newDelayedVestingAccount(stakeCoins(870000), oneSecAgo),
+		},
+		{
+			name: "delayed vesting: finishes now",
+			noPK: true, seq: 661, expConv: true,
+			acctSetup: newDelayedVestingAccount(stakeCoins(870070), now),
+		},
+		{
+			name: "delayed vesting: finishes in 1 second",
+			seq:  661, expConv: false,
+			acctSetup: newDelayedVestingAccount(stakeCoins(840000), oneSecFromNow),
+		},
+		{
+			name: "periodic vesting: no periods finished",
+			seq:  5551, expConv: false,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500000), thePast, []vesting.Period{
+				{Length: oneSecFromNow - thePast, Amount: stakeCoins(100000)},
+				{Length: theFuture - oneSecFromNow, Amount: stakeCoins(400000)},
+			}),
+		},
+		{
+			name: "periodic vesting: first of two periods finishes now",
+			seq:  3412, expConv: false,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500500), thePast, []vesting.Period{
+				{Length: now - thePast, Amount: stakeCoins(100400)},
+				{Length: theFuture - now, Amount: stakeCoins(400100)},
+			}),
+		},
+		{
+			name: "periodic vesting: finishes in 1 second",
+			seq:  1255, expConv: false,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500050), thePast, []vesting.Period{
+				{Length: oneDayAgo - thePast, Amount: stakeCoins(100040)},
+				{Length: oneSecFromNow - oneDayAgo, Amount: stakeCoins(400010)},
+			}),
+		},
+		{
+			name: "periodic vesting: finishes now",
+			seq:  9811, expConv: true,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(500050), thePast, []vesting.Period{
+				{Length: oneDayAgo - thePast, Amount: stakeCoins(100040)},
+				{Length: now - oneDayAgo, Amount: stakeCoins(400010)},
+			}),
+		},
+		{
+			name: "periodic vesting: finished 1 second ago",
+			seq:  7111, expConv: true,
+			acctSetup: newPeriodicVestingAccount(stakeCoins(505000), thePast, []vesting.Period{
+				{Length: oneDayAgo - thePast, Amount: stakeCoins(102000)},
+				{Length: oneSecAgo - oneDayAgo, Amount: stakeCoins(403000)},
+			}),
+		},
+	}
+
+	// Set up all the tests cases. Set the addr, baseAcct, origAcct, and expAcct fields, creating the accounts as needed.
+	acctBalance := stakeCoins(1000000)
+	expConvCount := 0
+	setupOK := s.Run("account setup", func() {
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				if len(tc.addr) > 0 {
+					tc.origAcct = s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+					// Not doing anything with tc.baseAcct since it shouldn't be needed for this case.
+					tc.expAcct = tc.origAcct
+					return
+				}
+
+				privKey := secp256k1.GenPrivKey()
+				pubKey := privKey.PubKey()
+				tc.addr = sdk.AccAddress(pubKey.Address())
+				err := testutil.FundAccount(s.ctx, s.app.BankKeeper, tc.addr, acctBalance)
+				s.LogIfError(err, "FundAccount(..., %q)", acctBalance.String())
+
+				tc.origAcct = s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+				if !tc.noPK {
+					err = tc.origAcct.SetPubKey(pubKey)
+					s.Require().NoError(err, "acctI.SetPubKey(pubKey)")
+				}
+
+				s.Require().IsType(tc.baseAcct, tc.origAcct, "origAcct after funding")
+				tc.baseAcct = tc.origAcct.(*authtypes.BaseAccount)
+				tc.baseAcct.Sequence = tc.seq
+
+				if tc.acctSetup == nil {
+					tc.origAcct = tc.baseAcct
+				} else {
+					tc.origAcct, err = tc.acctSetup(tc.baseAcct)
+					s.Require().NoError(err, "tc.acctSetup(...)")
+				}
+
+				s.app.AccountKeeper.SetAccount(s.ctx, tc.origAcct)
+
+				tc.expAcct = tc.origAcct
+				if tc.expConv {
+					expConvCount++
+					tc.expAcct = tc.baseAcct
+				}
+			})
+		}
+
+		s.Require().NotZero(expConvCount, "count of accounts expected to be converted.")
+	})
+
+	var err error
+	runner := func() {
+		err = convertFinishedVestingAccountsToBase(s.ctx, s.app)
+	}
+
+	s.Run("no accounts to convert", func() {
+		if !setupOK {
+			s.T().Skip("Skipping due to problem with setup.")
+		}
+		origCtx := s.ctx
+		defer func() {
+			s.ctx = origCtx
+		}()
+		s.ctx = s.ctx.WithBlockTime(reallyOldTime)
+
+		expBals := s.getAllSpendable()
+
+		expInLog := []string{
+			LogMsgConvertFinishedVestingAccountsToBase,
+			"INF No completed vesting accounts found.",
+			"INF Done converting completed vesting accounts into base accounts.",
+		}
+		s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "convertFinishedVestingAccountsToBase")
+		s.Require().NoError(err, "convertFinishedVestingAccountsToBase")
+
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				acct := s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+				s.Require().NotNil(acct, "GetAccount(%q)", tc.addr.String())
+				// Should still be the original since nothing was converted.
+				s.Assert().Equal(tc.origAcct, acct, "GetAccount(%q) result", tc.addr.String())
+			})
+		}
+
+		s.assertAllSpendable(expBals)
+	})
+
+	s.Run("with accounts to convert", func() {
+		if !setupOK {
+			s.T().Skip("Skipping due to problem with setup.")
+		}
+		origCtx := s.ctx
+		defer func() {
+			s.ctx = origCtx
+		}()
+		s.ctx = s.ctx.WithBlockTime(pivotTime)
+
+		expBals := s.getAllSpendable()
+
+		expInLog := []string{
+			LogMsgConvertFinishedVestingAccountsToBase,
+			fmt.Sprintf("INF Found %d completed vesting accounts. Updating them now.", expConvCount),
+			"INF Done converting completed vesting accounts into base accounts.",
+		}
+		s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "convertFinishedVestingAccountsToBase")
+		s.Assert().NoError(err, "convertFinishedVestingAccountsToBase")
+
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				acct := s.app.AccountKeeper.GetAccount(s.ctx, tc.addr)
+				s.Require().NotNil(acct, "GetAccount(%q)", tc.addr.String())
+				s.Assert().Equal(tc.expAcct, acct, "GetAccount(%q) result", tc.addr.String())
+			})
+		}
+
+		s.assertAllSpendable(expBals)
+	})
 }
 
 func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
@@ -621,15 +916,16 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	expect := func(name string, addr sdk.AccAddress, orig, exp sdk.AccountI) {
 		expectedAccts = append(expectedAccts, expectedAcct{name: name, addr: addr, orig: orig, exp: exp})
 	}
-	saveAcct := func(acct sdk.AccountI) {
+	saveAcct := func(acct sdk.AccountI) sdk.AccountI {
 		acct = s.app.AccountKeeper.NewAccount(s.ctx, acct)
 		s.app.AccountKeeper.SetAccount(s.ctx, acct)
+		return s.app.AccountKeeper.GetAccount(s.ctx, acct.GetAddress())
 	}
 
 	baseAddr := newAddr()
 	baseAcct := authtypes.NewBaseAccountWithAddress(baseAddr)
 	baseAcct.Sequence = 5
-	saveAcct(baseAcct)
+	baseAcctI := saveAcct(baseAcct)
 	expect("base", baseAddr, baseAcct, baseAcct)
 
 	vestContAddr := newAddr()
@@ -641,7 +937,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewContinuousVestingAccount")
 	vestContAcct.Sequence = 3
-	saveAcct(vestContAcct)
+	vestContAcctI := saveAcct(vestContAcct)
 	expect("continuous", vestContAddr, vestContAcct, vestContAcct.BaseAccount)
 
 	vestDelAddr := newAddr()
@@ -652,7 +948,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewDelayedVestingAccount")
 	vestDelAcct.Sequence = 12
-	saveAcct(vestDelAcct)
+	vestDelAcctI := saveAcct(vestDelAcct)
 	expect("delayed", vestDelAddr, vestDelAcct, vestDelAcct.BaseAccount)
 
 	vestPerAddr := newAddr()
@@ -667,7 +963,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewPeriodicVestingAccount")
 	vestPerAcct.Sequence = 6
-	saveAcct(vestPerAcct)
+	vestPerAcctI := saveAcct(vestPerAcct)
 	expect("periodic", vestPerAddr, vestPerAcct, vestPerAcct.BaseAccount)
 
 	permLockAddr := newAddr()
@@ -677,7 +973,7 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	)
 	s.Require().NoError(err, "NewPermanentLockedAccount")
 	permLockAcct.Sequence = 19
-	saveAcct(permLockAcct)
+	permLockAcctI := saveAcct(permLockAcct)
 	expect("permanent locked", permLockAddr, permLockAcct, permLockAcct.BaseAccount)
 
 	modAddr := s.app.AccountKeeper.GetModuleAddress("marker")
@@ -691,13 +987,30 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 	expLogLines := []string{
 		"INF Unlocking select vesting accounts.",
 		"INF Identified 7 accounts to unlock.",
-		"INF [1/7]: Cannot unlock account " + baseAddr.String() + ": not a vesting account: *types.BaseAccount.",
-		"DBG [2/7]: Unlocked account: " + vestContAddr.String() + ".",
-		"DBG [3/7]: Unlocked account: " + vestDelAddr.String() + ".",
-		"DBG [4/7]: Unlocked account: " + vestPerAddr.String() + ".",
-		"DBG [5/7]: Unlocked account: " + permLockAddr.String() + ".",
-		"INF [6/7]: Cannot unlock account " + modAddr.String() + ": not a vesting account: *types.ModuleAccount.",
-		"INF [7/7]: Cannot unlock account " + unknownAddr.String() + ": account not found.",
+		fmt.Sprintf("ERR Could not unlock vesting account. "+
+			"error=\"could not unlock account %s: unsupported account type *types.BaseAccount: invalid type\" "+
+			"account_number=%d address=%s module=hold original_type=*types.BaseAccount",
+			baseAddr, baseAcctI.GetAccountNumber(), baseAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.ContinuousVestingAccount",
+			vestContAcctI.GetAccountNumber(), vestContAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.DelayedVestingAccount",
+			vestDelAcctI.GetAccountNumber(), vestDelAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.PeriodicVestingAccount",
+			vestPerAcctI.GetAccountNumber(), vestPerAddr),
+		fmt.Sprintf("INF Unlocked vesting account. "+
+			"account_number=%d address=%s module=hold original_type=*types.PermanentLockedAccount",
+			permLockAcctI.GetAccountNumber(), permLockAddr),
+		fmt.Sprintf("ERR Could not unlock vesting account. "+
+			"error=\"could not unlock account %s: unsupported account type *types.ModuleAccount: invalid type\" "+
+			"account_number=%d address=%s module=hold original_type=*types.ModuleAccount",
+			modAddr, modAcct.GetAccountNumber(), modAddr),
+		fmt.Sprintf("ERR Could not unlock vesting account. "+
+			"error=\"account \\\"%s\\\" does not exist: unknown address\" "+
+			"address=%s module=hold",
+			unknownAddr, unknownAddr),
 		"INF Done unlocking select vesting accounts.",
 		"",
 	}
@@ -719,4 +1032,321 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 			s.Assert().Equal(tc.exp, acctI, "GetAccount result")
 		})
 	}
+}
+
+// Create strings with the log statements that start off the reusable upgrade functions.
+var (
+	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
+	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
+	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
+	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
+)
+
+func (s *UpgradeTestSuite) TestBouvardiaRC1() {
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Setting up flat fees.",
+	}
+	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestBouvardia() {
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Setting up flat fees.",
+	}
+	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
+}
+
+type MockFlatFeesKeeper struct {
+	SetParamsErrs  []string
+	SetParamsCalls []flatfeestypes.Params
+
+	SetMsgFeeErrs  []string
+	SetMsgFeeCalls []*flatfeestypes.MsgFee
+}
+
+var _ FlatFeesKeeper = (*MockFlatFeesKeeper)(nil)
+
+func NewMockFlatFeesKeeper() *MockFlatFeesKeeper {
+	return &MockFlatFeesKeeper{}
+}
+
+func (m *MockFlatFeesKeeper) WithSetParamsErrs(errs ...string) *MockFlatFeesKeeper {
+	m.SetParamsErrs = append(m.SetParamsErrs, errs...)
+	return m
+}
+
+func (m *MockFlatFeesKeeper) WithSetMsgFeeErrs(errs ...string) *MockFlatFeesKeeper {
+	m.SetMsgFeeErrs = append(m.SetMsgFeeErrs, errs...)
+	return m
+}
+
+func (m *MockFlatFeesKeeper) SetParams(_ sdk.Context, params flatfeestypes.Params) error {
+	m.SetParamsCalls = append(m.SetParamsCalls, params)
+	var rv string
+	if len(m.SetParamsErrs) > 0 {
+		rv = m.SetParamsErrs[0]
+		m.SetParamsErrs = m.SetParamsErrs[1:]
+	}
+	if len(rv) > 0 {
+		return errors.New(rv)
+	}
+	return nil
+}
+
+func (m *MockFlatFeesKeeper) SetMsgFee(_ sdk.Context, msgFee flatfeestypes.MsgFee) error {
+	msgFeeCopy := msgFee
+	m.SetMsgFeeCalls = append(m.SetMsgFeeCalls, &msgFeeCopy)
+	var rv string
+	if len(m.SetMsgFeeErrs) > 0 {
+		rv = m.SetMsgFeeErrs[0]
+		m.SetMsgFeeErrs = m.SetMsgFeeErrs[1:]
+	}
+	if len(rv) > 0 {
+		return errors.New(rv)
+	}
+	return nil
+}
+
+func TestSetupFlatFees(t *testing.T) {
+	ctx := sdk.Context{}.WithLogger(log.NewNopLogger())
+	expParams := MakeFlatFeesParams()
+	expCosts := MakeFlatFeesCosts()
+
+	tests := []struct {
+		name    string
+		ffk     *MockFlatFeesKeeper
+		expErr  string
+		expFees []*flatfeestypes.MsgFee
+	}{
+		{
+			name:   "error setting params",
+			ffk:    NewMockFlatFeesKeeper().WithSetParamsErrs("notgonnadoit"),
+			expErr: "could not set x/flatfees params: notgonnadoit",
+		},
+		{
+			name:    "error setting first cost",
+			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("one error to rule them all"),
+			expErr:  "could not set msg fee " + expCosts[0].String() + ": one error to rule them all",
+			expFees: expCosts[0:1],
+		},
+		{
+			name:    "error setting second cost",
+			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("", "oopsies"),
+			expErr:  "could not set msg fee " + expCosts[1].String() + ": oopsies",
+			expFees: expCosts[0:2],
+		},
+		{
+			name:    "error setting 10th cost",
+			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("", "", "", "", "", "", "", "", "", "sproing"),
+			expErr:  "could not set msg fee " + expCosts[9].String() + ": sproing",
+			expFees: expCosts[0:10],
+		},
+		{
+			name: "error setting 125th cost",
+			ffk: NewMockFlatFeesKeeper().
+				WithSetMsgFeeErrs(slices.Repeat([]string{""}, 124)...).
+				WithSetMsgFeeErrs("almosthadit"),
+			expErr:  "could not set msg fee " + expCosts[124].String() + ": almosthadit",
+			expFees: expCosts[0:125],
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.ffk == nil {
+				tc.ffk = NewMockFlatFeesKeeper()
+			}
+
+			var err error
+			testFunc := func() {
+				err = setupFlatFees(ctx, tc.ffk)
+			}
+			require.NotPanics(t, testFunc, "setupFlatFees")
+			assertions.AssertErrorValue(t, err, tc.expErr, "setupFlatFees error")
+
+			// SetParams should always get called exactly once.
+			assert.Len(t, tc.ffk.SetParamsCalls, 1, "Calls made to SetParams(...)")
+			for _, actParams := range tc.ffk.SetParamsCalls {
+				ok := assert.Equal(t, expParams.DefaultCost.String(), actParams.DefaultCost.String(), "params.DefaultCost")
+				ok = assert.Equal(t, expParams.ConversionFactor.String(), actParams.ConversionFactor.String(), "params.ConversionFactor") && ok
+				if ok {
+					assert.Equal(t, expParams, actParams, "params")
+				}
+			}
+
+			expCalls := sliceToStrings(tc.expFees)
+			actCalls := sliceToStrings(tc.ffk.SetMsgFeeCalls)
+			if assert.Equal(t, expCalls, actCalls, "calls made to SetMsgFee (as strings)") {
+				assert.Equal(t, tc.expFees, tc.ffk.SetMsgFeeCalls, "calls made to SetMsgFee")
+			}
+		})
+	}
+}
+
+func sliceToStrings[S ~[]E, E fmt.Stringer](vals S) []string {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]string, len(vals))
+	for i, val := range vals {
+		rv[i] = val.String()
+	}
+	return rv
+}
+
+func TestMakeFlatFeesParams(t *testing.T) {
+	var params flatfeestypes.Params
+	testFunc := func() {
+		params = MakeFlatFeesParams()
+	}
+	require.NotPanics(t, testFunc, "MakeFlatFeesParams()")
+	err := params.Validate()
+	require.NoError(t, err, "params.Validate()")
+	assert.Equal(t, "musd", params.DefaultCost.Denom, "params.DefaultCost.Denom")
+	assert.Equal(t, "musd", params.ConversionFactor.DefinitionAmount.Denom, "params.ConversionFactor.DefinitionAmount.Denom")
+	assert.Equal(t, "nhash", params.ConversionFactor.ConvertedAmount.Denom, "params.ConversionFactor.ConvertedAmount.Denom")
+}
+
+func TestMakeMsgFees(t *testing.T) {
+	var msgFees []*flatfeestypes.MsgFee
+	testFunc := func() {
+		msgFees = MakeFlatFeesCosts()
+	}
+	require.NotPanics(t, testFunc, "MakeFlatFeesCosts()")
+	require.NotNil(t, msgFees, "MakeFlatFeesCosts() result")
+	require.NotEmpty(t, msgFees, "MakeFlatFeesCosts() result")
+
+	for i, msgFee := range msgFees {
+		t.Run(fmt.Sprintf("%d: %s", i, msgFee.MsgTypeUrl), func(t *testing.T) {
+			err := msgFee.Validate()
+			assert.NoError(t, err, "msgFee.Validate()")
+			if len(msgFee.Cost) != 0 {
+				if assert.Len(t, msgFee.Cost, 1, "msgFee.Cost") {
+					assert.Equal(t, flatfeestypes.DefaultFeeDefinitionDenom, msgFee.Cost[0].Denom, "msgFee.Cost[0].Denom")
+				}
+			}
+
+			// Make sure the msg type doesn't appear anywhere else in the list.
+			for j, msgFee2 := range msgFees {
+				if i == j {
+					continue
+				}
+				assert.NotEqual(t, msgFee.MsgTypeUrl, msgFee2.MsgTypeUrl,
+					"MsgTypeUrl of msgFees[%d]=%s and msgFees[%d]=%s", i, msgFee.Cost, j, msgFee2.Cost)
+			}
+		})
+	}
+}
+
+func TestLogCostGrid(t *testing.T) {
+	// This test just outputs (to logs) a table of costs at various conversion factors.
+	// Delete this test with the other bouvardia stuff.
+	// 1 hash = $0.025, so 1000000000nhash = 25musd.
+	// Define the conversion factor musd amounts (per 1 hash).
+	cfVals := []int64{20, 25, 30, 35, 40, 50, 75, 100}
+	// Define a set of costs (in musd) that we always want in the table. All actually used amounts are automatically included.
+	standardCosts := []int64{5, 50, 100, 150, 250, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000}
+
+	// Create the conversion factors.
+	cfs := make([]flatfeestypes.ConversionFactor, len(cfVals))
+	for i, cf := range cfVals {
+		cfs[i] = flatfeestypes.ConversionFactor{
+			DefinitionAmount: sdk.NewInt64Coin("musd", cf),
+			ConvertedAmount:  sdk.NewInt64Coin("nhash", 1000000000),
+		}
+	}
+
+	// Combine the standard costs with all the actual costs without dups.
+	// Start with the standard costs that we always want in the list.
+	allCostAmounts := make(map[int64]bool)
+	for _, amt := range standardCosts {
+		allCostAmounts[amt] = true
+	}
+
+	// Add all the ones actually used, keeping track of them (for later reference).
+	var usedCostAmounts []int64
+	costUsed := make(map[int64]bool)
+	for _, msgFee := range MakeFlatFeesCosts() {
+		amt := msgFee.Cost.AmountOf("musd").Int64()
+		if !costUsed[amt] {
+			usedCostAmounts = append(usedCostAmounts, amt)
+		}
+		costUsed[amt] = true
+		allCostAmounts[amt] = true
+	}
+	// The default isn't in this list, but should still be considered in use.
+	if !costUsed[150] {
+		costUsed[150] = true
+		usedCostAmounts = append(usedCostAmounts, 150)
+	}
+
+	// Get the deduped list of cost amounts, sorted smallest to largest.
+	costAmounts := slices.Sorted(maps.Keys(allCostAmounts))
+	costs := make([]sdk.Coin, len(costAmounts))
+	for i, amt := range costAmounts {
+		costs[i] = sdk.NewInt64Coin("musd", amt)
+	}
+
+	// usdStr converts an amount of musd into a string in the format of "$1.234". The string will always
+	// start with $, then have all needed whole digits and exactly three fractional digits.
+	usdStr := func(musdAmount sdkmath.Int) string {
+		rv := musdAmount.String()
+		if len(rv) < 4 {
+			rv = strings.Repeat("0", 4-len(rv)) + rv
+		}
+		p := len(rv) - 3
+		return "$" + rv[:p] + "." + rv[p:]
+	}
+	// hashStr converts an amount of nhash into a string in the format of "1.23 hash". It will always have
+	// at least one whole digit and exactly two fractional digits, and will always end with " hash".
+	// Extra fractional decimals are simply truncated.
+	hashStr := func(nhashAmount sdkmath.Int) string {
+		rv := nhashAmount.String()
+		if len(rv) < 10 {
+			rv = strings.Repeat("0", 10-len(rv)) + rv
+		}
+		p := len(rv) - 9
+		return rv[:p] + "." + rv[p:p+2] + " hash"
+	}
+
+	// Create a line for each cost amount.
+	lines := make([]string, len(costAmounts))
+	for i, costAmt := range costAmounts {
+		cost := sdk.NewInt64Coin("musd", costAmt)
+		// Create a column for each conversion factor.
+		parts := make([]string, len(cfs))
+		for j, cf := range cfs {
+			convCost := cf.ConvertCoin(cost)
+			parts[j] = fmt.Sprintf("%11s", hashStr(convCost.Amount))
+		}
+		// Put together the whole line.
+		lines[i] = fmt.Sprintf("%8s = %s", usdStr(cost.Amount), strings.Join(parts, " | "))
+		if !costUsed[costAmt] {
+			lines[i] = "x" + strings.TrimPrefix(lines[i], " ")
+		}
+	}
+	head := make([]string, len(cfs))
+	for j, cf := range cfs {
+		head[j] = fmt.Sprintf("%9s", usdStr(cf.DefinitionAmount.Amount)) + "  "
+	}
+	head[0] = "usd/hash = " + head[0]
+	headLine := strings.Join(head, " | ")
+	hrBz := make([]rune, len(headLine))
+	for i, r := range headLine {
+		switch r {
+		case '|':
+			hrBz[i] = '+'
+		default:
+			hrBz[i] = '-'
+		}
+	}
+	t.Logf("Defined Costs at various conversion factors:\n%s\n%s\n%s", headLine, string(hrBz), strings.Join(lines, "\n"))
 }

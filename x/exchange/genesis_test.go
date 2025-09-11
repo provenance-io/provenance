@@ -9,12 +9,10 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	expected := &GenesisState{
 		Params: &Params{
 			DefaultSplit:         DefaultDefaultSplit,
@@ -37,7 +35,6 @@ func TestDefaultGenesisState(t *testing.T) {
 }
 
 func TestGenesisState_Validate(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	addr1 := sdk.AccAddress("addr1_______________").String()
 	addr2 := sdk.AccAddress("addr2_______________").String()
 	addr3 := sdk.AccAddress("addr3_______________").String()

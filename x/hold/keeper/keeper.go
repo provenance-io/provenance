@@ -83,7 +83,7 @@ func (k Keeper) ValidateNewHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.
 	}
 
 	// Not bypassing hold's locked coins here because we're testing about new funds to be put on hold.
-	spendable := k.bankKeeper.SpendableCoins(ctx, addr)
+	spendable := k.getSpendableForDenoms(ctx, addr, funds)
 	for _, toAdd := range funds {
 		if toAdd.IsZero() {
 			continue
@@ -98,6 +98,33 @@ func (k Keeper) ValidateNewHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.
 	}
 
 	return nil
+}
+
+// getSpendableForDenoms gets the spendable balances of the denoms in the provided funds.
+// Only the denoms in the provided funds are used (the amounts are ignored).
+// This is preferable to the bank keeper's SpendableBalances query because that one will
+// iterate over all denoms owned by the address even if we only need to know about one or two.
+func (k Keeper) getSpendableForDenoms(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) sdk.Coins {
+	allLocked := k.bankKeeper.LockedCoins(ctx, addr)
+
+	rv := make(sdk.Coins, 0, len(funds))
+	for _, coin := range funds {
+		bal := k.bankKeeper.GetBalance(ctx, addr, coin.Denom)
+		if !bal.IsPositive() {
+			continue
+		}
+
+		locked := allLocked.AmountOf(coin.Denom)
+		if locked.IsPositive() {
+			if bal.Amount.LTE(locked) {
+				continue
+			}
+			bal.Amount = bal.Amount.Sub(locked)
+		}
+
+		rv = append(rv, bal)
+	}
+	return rv
 }
 
 // AddHold puts the provided funds on hold for the provided account.

@@ -19,6 +19,10 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
+const (
+	FlagConcreteType = "concrete-type"
+)
+
 // NewTxCmd is the top-level command for attribute CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -51,7 +55,7 @@ func NewAddAccountAttributeCmd() *cobra.Command {
 Refer to %s tx name bind --help for more information on how to do this.`, version.AppName),
 		Args: cobra.RangeArgs(4, 5),
 		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"
-		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z`, version.AppName, version.AppName),
+		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" --concrete-type provenance.attributes.v1.TestJSON`, version.AppName, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -82,7 +86,6 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 				attributeType,
 				value,
 			)
-
 			if len(args) == 5 {
 				expireTime, err := time.Parse(time.RFC3339, args[4])
 				if err != nil {
@@ -91,12 +94,12 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 				msg.ExpirationDate = &expireTime
 			}
 
+			msg.ConcreteType, _ = cmd.Flags().GetString(FlagConcreteType)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
+	cmd.Flags().String(FlagConcreteType, "", "Optional concrete type (max 200 characters)")
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
@@ -106,7 +109,7 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value>",
 		Aliases: []string{"u"},
 		Short:   "Update an account attribute on the provenance blockchain",
-		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100`, version.AppName),
+		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100 --concrete-type provenance.attributes.v1.TestJSON`, version.AppName),
 		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -149,12 +152,13 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 				origAttributeType,
 				updateAttributeType,
 			)
+
+			msg.ConcreteType, _ = cmd.Flags().GetString(FlagConcreteType)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
+	cmd.Flags().String(FlagConcreteType, "", "Optional concrete type (max 200 characters)")
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 

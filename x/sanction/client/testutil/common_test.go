@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 5 // enough for voting and maybe sanctioning one.

@@ -14,8 +14,17 @@ import cosmos.bank.v1beta1.QueryGrpcKt.QueryCoroutineStub as CoroutineBank
  * @param denom The denomination of the coin.
  * @return [CoinOuterClass.Coin]
  */
-fun BlockingBank.getAccountBalance(bech32Address: String, denom: String): CoinOuterClass.Coin =
-    balance(QueryOuterClass.QueryBalanceRequest.newBuilder().setAddress(bech32Address).setDenom(denom).build()).balance
+fun BlockingBank.getAccountBalance(
+    bech32Address: String,
+    denom: String,
+): CoinOuterClass.Coin =
+    balance(
+        QueryOuterClass.QueryBalanceRequest
+            .newBuilder()
+            .setAddress(bech32Address)
+            .setDenom(denom)
+            .build(),
+    ).balance
 
 /**
  * Get a coin balance in the account at the supplied address.
@@ -26,8 +35,17 @@ fun BlockingBank.getAccountBalance(bech32Address: String, denom: String): CoinOu
  * @param denom The denomination of the coin.
  * @return [CoinOuterClass.Coin]
  */
-suspend fun CoroutineBank.getAccountBalance(bech32Address: String, denom: String): CoinOuterClass.Coin =
-    balance(QueryOuterClass.QueryBalanceRequest.newBuilder().setAddress(bech32Address).setDenom(denom).build()).balance
+suspend fun CoroutineBank.getAccountBalance(
+    bech32Address: String,
+    denom: String,
+): CoinOuterClass.Coin =
+    balance(
+        QueryOuterClass.QueryBalanceRequest
+            .newBuilder()
+            .setAddress(bech32Address)
+            .setDenom(denom)
+            .build(),
+    ).balance
 
 /**
  * Get a list of coin balances in the account at the supplied address.
@@ -38,7 +56,12 @@ suspend fun CoroutineBank.getAccountBalance(bech32Address: String, denom: String
  * @return A list of [CoinOuterClass.Coin] associated with the account.
  */
 fun BlockingBank.getAccountCoins(bech32Address: String): List<CoinOuterClass.Coin> =
-    allBalances(QueryOuterClass.QueryAllBalancesRequest.newBuilder().setAddress(bech32Address).build()).balancesList
+    allBalances(
+        QueryOuterClass.QueryAllBalancesRequest
+            .newBuilder()
+            .setAddress(bech32Address)
+            .build(),
+    ).balancesList
 
 /**
  * Get a list of coin balances in the account at the supplied address.
@@ -49,7 +72,12 @@ fun BlockingBank.getAccountCoins(bech32Address: String): List<CoinOuterClass.Coi
  * @return A list of [CoinOuterClass.Coin] associated with the account.
  */
 suspend fun CoroutineBank.getAccountCoins(bech32Address: String): List<CoinOuterClass.Coin> =
-    allBalances(QueryOuterClass.QueryAllBalancesRequest.newBuilder().setAddress(bech32Address).build()).balancesList
+    allBalances(
+        QueryOuterClass.QueryAllBalancesRequest
+            .newBuilder()
+            .setAddress(bech32Address)
+            .build(),
+    ).balancesList
 
 /**
  * Queries the supply of a single coin.
@@ -61,9 +89,10 @@ suspend fun CoroutineBank.getAccountCoins(bech32Address: String): List<CoinOuter
  */
 fun BlockingBank.getSupply(denom: String): CoinOuterClass.Coin =
     supplyOf(
-        QueryOuterClass.QuerySupplyOfRequest.newBuilder()
+        QueryOuterClass.QuerySupplyOfRequest
+            .newBuilder()
             .setDenom(denom)
-            .build()
+            .build(),
     ).amount
 
 /**
@@ -76,7 +105,8 @@ fun BlockingBank.getSupply(denom: String): CoinOuterClass.Coin =
  */
 suspend fun CoroutineBank.getSupply(denom: String): CoinOuterClass.Coin =
     supplyOf(
-        QueryOuterClass.QuerySupplyOfRequest.newBuilder()
+        QueryOuterClass.QuerySupplyOfRequest
+            .newBuilder()
             .setDenom(denom)
-            .build()
+            .build(),
     ).amount
