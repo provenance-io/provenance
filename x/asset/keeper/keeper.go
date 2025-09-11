@@ -3,17 +3,16 @@ package keeper
 import (
 	"cosmossdk.io/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/asset/types"
 )
 
 // Keeper of the asset store
 type Keeper struct {
 	cdc            codec.BinaryCodec
-	router         baseapp.MessageRouter
 	moduleAccount  sdk.AccAddress
 	markerKeeper   types.MarkerKeeper
 	nftKeeper      types.NFTKeeper
@@ -23,24 +22,13 @@ type Keeper struct {
 // NewKeeper creates a new asset Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	router baseapp.MessageRouter,
-	moduleAccount sdk.AccAddress,
 	markerKeeper types.MarkerKeeper,
 	nftKeeper types.NFTKeeper,
 	registryKeeper types.BaseRegistryKeeper,
 ) Keeper {
-	if nftKeeper == nil {
-		panic("nft keeper is required for asset module")
-	}
-
-	if router == nil {
-		panic("router is required for asset module")
-	}
-
 	return Keeper{
 		cdc:            cdc,
-		router:         router,
-		moduleAccount:  moduleAccount,
+		moduleAccount:  authtypes.NewModuleAddress(types.ModuleName),
 		markerKeeper:   markerKeeper,
 		nftKeeper:      nftKeeper,
 		registryKeeper: registryKeeper,

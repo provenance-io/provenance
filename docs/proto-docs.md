@@ -476,9 +476,6 @@
   
     - [Query](#provenance-asset-v1-Query)
   
-- [provenance/asset/v1/genesis.proto](#provenance_asset_v1_genesis-proto)
-    - [GenesisState](#provenance-asset-v1-GenesisState)
-  
 - [provenance/msgfees/v1/tx.proto](#provenance_msgfees_v1_tx-proto)
     - [MsgAddMsgFeeProposalRequest](#provenance-msgfees-v1-MsgAddMsgFeeProposalRequest)
     - [MsgAddMsgFeeProposalResponse](#provenance-msgfees-v1-MsgAddMsgFeeProposalResponse)
@@ -7532,38 +7529,6 @@ Query defines the gRPC querier service for the asset module.
 | `Assets` | [QueryAssetsRequest](#provenance-asset-v1-QueryAssetsRequest) | [QueryAssetsResponse](#provenance-asset-v1-QueryAssetsResponse) | Assets gets all assets for a given address and class. |
 | `AssetClass` | [QueryAssetClassRequest](#provenance-asset-v1-QueryAssetClassRequest) | [QueryAssetClassResponse](#provenance-asset-v1-QueryAssetClassResponse) | AssetClass gets a specific asset class by its ID. |
 | `AssetClasses` | [QueryAssetClassesRequest](#provenance-asset-v1-QueryAssetClassesRequest) | [QueryAssetClassesResponse](#provenance-asset-v1-QueryAssetClassesResponse) | AssetClasses gets all asset classes. |
-
- <!-- end services -->
-
-
-
-<a name="provenance_asset_v1_genesis-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/asset/v1/genesis.proto
-
-
-
-<a name="provenance-asset-v1-GenesisState"></a>
-
-### GenesisState
-GenesisState defines the asset module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `asset` | [Asset](#provenance-asset-v1-Asset) | repeated | asset defines the list of assets in the genesis state. |
-| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | asset_classes defines the list of asset classes in the genesis state. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
 
  <!-- end services -->
 
