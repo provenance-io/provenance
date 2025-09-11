@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -206,61 +208,66 @@ func TestValidateJSONSchema(t *testing.T) {
 
 func TestNewDefaultMarker(t *testing.T) {
 	tests := []struct {
-		name        string
-		denom       sdk.Coin
-		fromAddr    string
-		expectError bool
+		name     string
+		denom    sdk.Coin
+		fromAddr string
+		expErr   string
 	}{
 		{
-			name:        "valid marker creation",
-			denom:       sdk.NewCoin("testcoin", sdkmath.NewInt(1000000)),
-			fromAddr:    "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-			expectError: false,
+			name:     "valid marker creation",
+			denom:    sdk.NewCoin("testcoin", sdkmath.NewInt(1000000)),
+			fromAddr: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 		},
 		{
-			name:        "invalid from address",
-			denom:       sdk.NewCoin("testcoin", sdkmath.NewInt(1000000)),
-			fromAddr:    "invalid-address",
-			expectError: true,
+			name:     "invalid from address",
+			denom:    sdk.NewCoin("testcoin", sdkmath.NewInt(1000000)),
+			fromAddr: "invalid-address",
+			expErr:   "invalid from address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			name:        "zero coin amount",
-			denom:       sdk.NewCoin("testcoin", sdkmath.ZeroInt()),
-			fromAddr:    "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-			expectError: false,
+			name:     "invalid denom",
+			denom:    sdk.Coin{Denom: "x", Amount: sdkmath.OneInt()},
+			fromAddr: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			expErr:   "failed to create marker address: invalid denom: x",
+		},
+		{
+			name:     "zero coin amount",
+			denom:    sdk.NewCoin("testcoin", sdkmath.ZeroInt()),
+			fromAddr: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			marker, err := NewDefaultMarker(tt.denom, tt.fromAddr)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			marker, err := NewDefaultMarker(tc.denom, tc.fromAddr)
 
-			if tt.expectError {
-				require.Error(t, err)
-				// Do not require.Nil(marker) because NewDefaultMarker returns a non-nil empty marker on error
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "NewDefaultMarker error")
+				assert.Nil(t, marker, "NewDefaultMarker result")
 			} else {
-				require.NoError(t, err)
-				require.NotNil(t, marker)
+				assert.NoError(t, err, "NewDefaultMarker error")
+				require.NotNil(t, marker, "NewDefaultMarker result")
 
 				// Verify marker properties
-				require.Equal(t, tt.denom.Denom, marker.GetDenom())
-				require.Equal(t, tt.denom.Amount, marker.GetSupply().Amount)
-				require.Equal(t, markertypes.StatusProposed, marker.GetStatus())
-				require.Equal(t, markertypes.MarkerType_RestrictedCoin, marker.GetMarkerType())
-				require.True(t, marker.HasFixedSupply())
-				require.False(t, marker.HasGovernanceEnabled())
-				require.False(t, marker.AllowsForcedTransfer())
-				require.Empty(t, marker.GetRequiredAttributes())
+				assert.Equal(t, tc.denom.Denom, marker.GetDenom(), "denom")
+				assert.Equal(t, tc.denom.Amount, marker.GetSupply().Amount, "amount")
+				assert.Equal(t, markertypes.StatusProposed, marker.GetStatus(), "status")
+				assert.Equal(t, markertypes.MarkerType_RestrictedCoin, marker.GetMarkerType(), "type")
+				assert.True(t, marker.HasFixedSupply(), "fixed supply")
+				assert.False(t, marker.HasGovernanceEnabled(), "has governance")
+				assert.False(t, marker.AllowsForcedTransfer(), "allows forced transfer")
+				assert.Empty(t, marker.GetRequiredAttributes(), "required attributes")
 
 				// Verify access grants
-				require.Len(t, marker.GetAccessList(), 1)
-				accessGrant := marker.GetAccessList()[0]
-				require.Equal(t, tt.fromAddr, accessGrant.Address)
-				require.Contains(t, accessGrant.Permissions, markertypes.Access_Admin)
-				require.Contains(t, accessGrant.Permissions, markertypes.Access_Mint)
-				require.Contains(t, accessGrant.Permissions, markertypes.Access_Burn)
-				require.Contains(t, accessGrant.Permissions, markertypes.Access_Withdraw)
-				require.Contains(t, accessGrant.Permissions, markertypes.Access_Transfer)
+				if assert.Len(t, marker.GetAccessList(), 1) {
+					accessGrant := marker.GetAccessList()[0]
+					assert.Equal(t, tc.fromAddr, accessGrant.Address)
+					assert.Contains(t, accessGrant.Permissions, markertypes.Access_Admin)
+					assert.Contains(t, accessGrant.Permissions, markertypes.Access_Mint)
+					assert.Contains(t, accessGrant.Permissions, markertypes.Access_Burn)
+					assert.Contains(t, accessGrant.Permissions, markertypes.Access_Withdraw)
+					assert.Contains(t, accessGrant.Permissions, markertypes.Access_Transfer)
+				}
 			}
 		})
 	}

@@ -215,11 +215,16 @@ func NewDefaultMarker(token sdk.Coin, fromAddr string) (*markertypes.MarkerAccou
 	// Get the from address
 	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
 	if err != nil {
-		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid from address: %w", err)
+		return nil, fmt.Errorf("invalid from address: %w", err)
+	}
+
+	// Get the address of the new marker.
+	markerAddr, err := markertypes.MarkerAddress(token.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create marker address: %w", err)
 	}
 
 	// Create a new marker account
-	markerAddr := markertypes.MustGetMarkerAddress(token.Denom)
 	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markerAddr),
 		token,
