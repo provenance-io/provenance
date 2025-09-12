@@ -251,3 +251,42 @@ func NewDefaultMarker(token sdk.Coin, fromAddr string) (*markertypes.MarkerAccou
 
 	return marker, nil
 }
+
+func validateJSON(data string) error {
+	if data == "" {
+		return nil // Empty data is valid
+	}
+
+	var jsonData any
+	if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
+		return fmt.Errorf("invalid JSON data: %w", err)
+	}
+
+	return nil
+}
+
+// validateJSONSchema validates that the provided string is a well-formed JSON schema
+func validateJSONSchema(data string) error {
+	if data == "" {
+		return nil // Empty data is valid
+	}
+
+	// Try to parse the data as JSON
+	var jsonData any
+	if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
+		return fmt.Errorf("invalid JSON data: %w", err)
+	}
+
+	// Check if it's a JSON schema by looking for required schema properties
+	schemaMap, ok := jsonData.(map[string]any)
+	if !ok {
+		return fmt.Errorf("data is not a JSON object")
+	}
+
+	// Check for type property which is required in JSON schemas
+	if _, hasType := schemaMap["type"]; !hasType {
+		return fmt.Errorf("data is missing required 'type' property for JSON schema")
+	}
+
+	return nil
+}
