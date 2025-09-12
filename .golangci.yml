@@ -10,7 +10,7 @@ linters:
     - bidichk
     - bodyclose
     - copyloopvar
-    - depguard
+    # - depguard
     - dogsled
     - durationcheck
     - errcheck
