@@ -11,6 +11,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
+import "cosmos/query/v1/query.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/marker/types";
 option java_package        = "io.provenance.marker.v1";
@@ -20,52 +21,62 @@ option java_multiple_files = true;
 service Query {
   // Params queries the parameters of x/bank module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/params";
   }
 
   // Returns a list of all markers on the blockchain
   rpc AllMarkers(QueryAllMarkersRequest) returns (QueryAllMarkersResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/all";
   }
 
   // query for a single marker by denom or address
   rpc Marker(QueryMarkerRequest) returns (QueryMarkerResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/detail/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/detail/{id}";
   }
 
   // query for all accounts holding the given marker coins
   rpc Holding(QueryHoldingRequest) returns (QueryHoldingResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/holding/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/holding/{id}";
   }
 
   // query for supply of coin on a marker account
   rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/supply/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/supply/{id}";
   }
 
   // query for coins on a marker account
   rpc Escrow(QueryEscrowRequest) returns (QueryEscrowResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/escrow/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/escrow/{id}";
   }
 
   // query for access records on an account
   rpc Access(QueryAccessRequest) returns (QueryAccessResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/accesscontrol/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/accesscontrol/{id}";
   }
 
   // query for access records on an account
   rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/getdenommetadata/{denom}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/getdenommetadata/{denom}";
   }
 
   // query for account data associated with a denom
   rpc AccountData(QueryAccountDataRequest) returns (QueryAccountDataResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/accountdata/{denom}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/accountdata/{denom}";
   }
 
   // NetAssetValues returns net asset values for marker
   rpc NetAssetValues(QueryNetAssetValuesRequest) returns (QueryNetAssetValuesResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/netassetvalues/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/marker/v1/netassetvalues/{id}";
   }
 }
 
