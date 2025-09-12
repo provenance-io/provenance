@@ -3628,8 +3628,8 @@ type MsgClient interface {
 	// UpdateSendDenyList will only succeed if signer has admin authority
 	UpdateSendDenyList(ctx context.Context, in *MsgUpdateSendDenyListRequest, opts ...grpc.CallOption) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues sets the net asset value for a marker.
-	// Note: When setting NAVs with the "musd" denom, amounts are in milli-USD (musd)
-	// units where 1000 = $1.00 USD
+	// Note: When setting NAVs with the "usd" denom, amounts are in whole dollars
+	// where 1 = $1.00 USD.
 	AddNetAssetValues(ctx context.Context, in *MsgAddNetAssetValuesRequest, opts ...grpc.CallOption) (*MsgAddNetAssetValuesResponse, error)
 	// SetAdministratorProposal sets administrators with specific access on the marker
 	SetAdministratorProposal(ctx context.Context, in *MsgSetAdministratorProposalRequest, opts ...grpc.CallOption) (*MsgSetAdministratorProposalResponse, error)
@@ -3963,8 +3963,8 @@ type MsgServer interface {
 	// UpdateSendDenyList will only succeed if signer has admin authority
 	UpdateSendDenyList(context.Context, *MsgUpdateSendDenyListRequest) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues sets the net asset value for a marker.
-	// Note: When setting NAVs with the "musd" denom, amounts are in milli-USD (musd)
-	// units where 1000 = $1.00 USD
+	// Note: When setting NAVs with the "usd" denom, amounts are in whole dollars
+	// where 1 = $1.00 USD.
 	AddNetAssetValues(context.Context, *MsgAddNetAssetValuesRequest) (*MsgAddNetAssetValuesResponse, error)
 	// SetAdministratorProposal sets administrators with specific access on the marker
 	SetAdministratorProposal(context.Context, *MsgSetAdministratorProposalRequest) (*MsgSetAdministratorProposalResponse, error)
