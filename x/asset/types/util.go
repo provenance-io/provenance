@@ -225,10 +225,6 @@ func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, 
 	}
 
 	// Create a new marker account
-	markerAddr, err := markertypes.MarkerAddress(token.Denom)
-	if err != nil {
-		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid marker address: %w", err)
-	}
 	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markerAddr),
 		token,
