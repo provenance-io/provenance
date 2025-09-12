@@ -178,7 +178,7 @@ func (s *TestSuite) TestCreateLedger() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// Clear events before each test
-			s.ctx.EventManager().Events()
+			s.ctx.WithEventManager(sdk.NewEventManager())
 
 			err := s.keeper.AddLedger(s.ctx, tc.ledger)
 
@@ -342,7 +342,7 @@ func (s *TestSuite) TestInitGenesis() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// Clear events before each test
-			s.ctx.EventManager().Events()
+			s.ctx.WithEventManager(sdk.NewEventManager())
 
 			// Initialize genesis state
 			s.keeper.InitGenesis(s.ctx, tc.genState)
