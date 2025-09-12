@@ -63,10 +63,10 @@ func GetCmdAsset() *cobra.Command {
 // GetCmdAssets returns the command for listing all assets.
 func GetCmdAssets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "assets <class-id> <address>",
+		Use:   "assets [<class-id>|<address>|<class-id> <address>]",
 		Short: "List all assets optionally filtered by class-id and/or address",
 		Example: fmt.Sprintf(`$ %[1]s query asset assets my-asset-class pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ %[1]s query asset assets my-asset-class pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
+$ %[1]s query asset assets my-asset-class --page=2 --limit=100
 `, version.AppName),
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -75,34 +75,27 @@ $ %[1]s query asset assets my-asset-class pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf3
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			req := &types.QueryAssetsRequest{}
+			req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			var classID string
-			var owner string
-
 			switch len(args) {
 			case 1:
 				// Determine if the single arg is an address or a class-id.
-				if _, err := sdk.AccAddressFromBech32(args[0]); err == nil {
-					owner = args[0]
+				if _, err = sdk.AccAddressFromBech32(args[0]); err == nil {
+					req.Owner = args[0]
 				} else {
-					classID = args[0]
+					req.ClassId = args[0]
 				}
 			case 2:
-				classID = args[0]
-				owner = args[1]
+				req.ClassId = args[0]
+				req.Owner = args[1]
 			}
 
-			res, err := queryClient.Assets(cmd.Context(), &types.QueryAssetsRequest{
-				ClassId:    classID,
-				Owner:      owner,
-				Pagination: pageReq,
-			})
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Assets(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -157,16 +150,14 @@ $ %[1]s query asset classes --page=2 --limit=50
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			req := &types.QueryAssetClassesRequest{}
+			req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.AssetClasses(cmd.Context(), &types.QueryAssetClassesRequest{
-				Pagination: pageReq,
-			})
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AssetClasses(cmd.Context(), req)
 			if err != nil {
 				return err
 			}

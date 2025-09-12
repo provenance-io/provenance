@@ -10,9 +10,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/asset/types"
 )
+
+var cmdStart = version.AppName + " tx " + types.ModuleName
 
 // GetTxCmd returns the transaction commands for the asset module
 func GetTxCmd() *cobra.Command {
@@ -38,35 +41,51 @@ func GetTxCmd() *cobra.Command {
 // GetCmdCreateAsset returns the command for creating an asset
 func GetCmdCreateAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-asset <class-id> <id> <uri> <uri-hash> <data> <owner>",
-		Short:   "Create a new asset",
-		Long:    `Create a new asset in the specified asset class.`,
-		Example: `  provenanced tx asset create-asset "real-estate" "property-001" "https://example.com/metadata.json" "abc123" '{"location": "New York", "value": 500000}' "tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx"`,
-		Args:    cobra.ExactArgs(6),
+		Use:   "create-asset <class-id> <id> <data> [--owner <owner>] [--uri <uri>] [--uri-hash <uri-hash>]",
+		Short: "Create a new asset",
+		Long: strings.TrimSpace(`
+Create a new asset in the specified asset class.
+
+If no --owner <owner> is supplied, the --from address is used as the owner.
+`),
+		Example: fmt.Sprintf(strings.TrimSpace(`
+$ %[1]s create-asset "real-estate" "property-001" \
+    '{"location": "New York", "value": 500000}' \
+    --uri "https://example.com/metadata.json" --uri-hash abc123 \
+    --owner tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx
+`), cmdStart),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			flagSet := cmd.Flags()
+
 			asset := &types.Asset{
 				ClassId: args[0],
 				Id:      args[1],
-				Uri:     args[2],
-				UriHash: args[3],
-				Data:    args[4],
+				Data:    args[2],
+				Uri:     ReadFlagURI(flagSet),
+				UriHash: ReadFlagURIHash(flagSet),
 			}
 
 			msg := &types.MsgCreateAsset{
 				Asset:  asset,
-				Owner:  args[5],
+				Owner:  ReadFlagOwner(flagSet),
 				Signer: clientCtx.GetFromAddress().String(),
 			}
+			if len(msg.Owner) == 0 {
+				msg.Owner = msg.Signer
+			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 		},
 	}
 
+	AddFlagsURI(cmd, "asset")
+	AddFlagOwner(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -74,25 +93,32 @@ func GetCmdCreateAsset() *cobra.Command {
 // GetCmdCreateAssetClass returns the command for creating an asset class
 func GetCmdCreateAssetClass() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-class <id> <name> <symbol> <description> <uri> <uri-hash> <data>",
-		Short:   "Create a new asset class",
-		Long:    `Create a new asset class with the specified properties.`,
-		Example: `  provenanced tx asset create-class "real-estate" "Real Estate Assets" "REAL" "Real estate properties" "https://example.com/class-metadata.json" "def456" '{"category": "property"}'`,
-		Args:    cobra.ExactArgs(7),
+		Use:   "create-class <id> <name> <data> [--symbol <symbol>] [--description <description>] [--uri <uri>] [--uri-hash <uri-hash>]",
+		Short: "Create a new asset class",
+		Long:  `Create a new asset class with the specified properties.`,
+		Example: fmt.Sprintf(strings.TrimSpace(`
+$ %[1]s create-class "real-estate" "Real Estate Assets" \
+    '{"category": "property"}' \
+    --symbol "REAL" --description "Real estate properties"
+    --uri "https://example.com/class-metadata.json" --uri-hash "def456"
+`), cmdStart),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			flagSet := cmd.Flags()
+
 			assetClass := &types.AssetClass{
 				Id:          args[0],
 				Name:        args[1],
-				Symbol:      args[2],
-				Description: args[3],
-				Uri:         args[4],
-				UriHash:     args[5],
-				Data:        args[6],
+				Symbol:      ReadFlagSymbol(flagSet),
+				Description: ReadFlagDescription(flagSet),
+				Uri:         ReadFlagURI(flagSet),
+				UriHash:     ReadFlagURIHash(flagSet),
+				Data:        args[2],
 			}
 
 			msg := &types.MsgCreateAssetClass{
@@ -100,10 +126,13 @@ func GetCmdCreateAssetClass() *cobra.Command {
 				Signer:     clientCtx.GetFromAddress().String(),
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 		},
 	}
 
+	AddFlagsURI(cmd, "asset class")
+	AddFlagSymbol(cmd)
+	AddFlagDescription(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -111,15 +140,18 @@ func GetCmdCreateAssetClass() *cobra.Command {
 // GetCmdCreatePool returns the command for creating a new pool
 func GetCmdCreatePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool <pool> <nfts>",
+		Use:   "create-pool <pool> <nft1> [<nft2> ...]",
 		Short: "Create a new pool marker",
-		Long: `Create a new pool marker with the specified NFTs.
-The nfts argument should be a semicolon-separated list of asset entries, where each entry is a comma-separated class-id and asset-id.
-The entire nfts argument must be quoted to prevent shell interpretation of the semicolons.`,
-		Example: `  provenanced tx asset create-pool 10pooltoken "asset_class1,asset_id1;asset_class2,asset_id2"
-  provenanced tx asset create-pool 10pooltoken 'asset_class1,asset_id1;asset_class2,asset_id2'
-  provenanced tx asset create-pool 1000pooltoken "real-estate,property-001;real-estate,property-002"`,
-		Args: cobra.ExactArgs(2),
+		Long: strings.TrimSpace(`
+Create a new pool marker with the specified NFTs.
+
+Each <nft> argument should be a comma-separated class-id and asset-id.
+`),
+		Example: fmt.Sprintf(strings.TrimSpace(`
+$ %[1]s create-pool 10pooltoken asset_class1,asset_id1 asset_class2,asset_id2
+$ %[1]s create-pool 1000pooltoken real-estate,property-001 real-estate,property-002
+`), cmdStart),
+		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -132,11 +164,10 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 			}
 
 			var assets []*types.AssetKey
-			assetEntries := strings.Split(args[1], ";")
-			for _, entry := range assetEntries {
+			for i, entry := range args[1:] {
 				parts := strings.Split(entry, ",")
 				if len(parts) != 2 {
-					return fmt.Errorf("invalid nft format: %s, expected class-id,asset-id", entry)
+					return fmt.Errorf("invalid nft %d format: %q, expected class-id,asset-id", i, entry)
 				}
 				assets = append(assets, &types.AssetKey{
 					ClassId: strings.TrimSpace(parts[0]),
@@ -145,7 +176,7 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 			}
 
 			msg := &types.MsgCreatePool{
-				Pool:   &pool,
+				Pool:   pool,
 				Assets: assets,
 				Signer: clientCtx.GetFromAddress().String(),
 			}
@@ -161,11 +192,13 @@ The entire nfts argument must be quoted to prevent shell interpretation of the s
 // GetCmdCreateTokenization returns the command for creating a new tokenization
 func GetCmdCreateTokenization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-tokenization <amount> <nft-class-id> <nft-id>",
-		Short:   "Create a new tokenization marker",
-		Long:    `Create a new tokenization marker with the specified amount and NFT.`,
-		Example: `  provenanced tx asset create-tokenization 1000pooltoken real-estate property-001`,
-		Args:    cobra.ExactArgs(3),
+		Use:   "create-tokenization <amount> <nft-class-id> <nft-id>",
+		Short: "Create a new tokenization marker",
+		Long:  `Create a new tokenization marker with the specified amount and NFT.`,
+		Example: fmt.Sprintf(strings.TrimSpace(`
+$ %[1]s create-tokenization 1000pooltoken real-estate property-001
+`), cmdStart),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -201,11 +234,16 @@ func GetCmdCreateSecuritization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-securitization <id> <pools> <tranches>",
 		Short: "Create a new securitization marker and tranches",
-		Long: `Create a new securitization marker and tranches.
+		Long: strings.TrimSpace(`
+Create a new securitization marker and tranches.
+
 The pools argument should be a comma-separated list of pool names.
-The tranches argument should be a comma-separated list of coins.`,
-		Example: `  provenanced tx asset create-securitization sec1 "pool1,pool2" "100tranche1,200tranche2"
-  provenanced tx asset create-securitization "mortgage-sec-001" "mortgage-pool-1,mortgage-pool-2" "1000000senior-tranche,500000mezzanine-tranche"`,
+The tranches argument should be a comma-separated list of coins.
+`),
+		Example: fmt.Sprintf(strings.TrimSpace(`
+$ %[1]s create-securitization sec1 "pool1,pool2" "100tranche1,200tranche2"
+$ %[1]s create-securitization "mortgage-sec-001" "mortgage-pool-1,mortgage-pool-2" "1000000senior-tranche,500000mezzanine-tranche"
+`), cmdStart),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
