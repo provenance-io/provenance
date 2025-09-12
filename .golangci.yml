@@ -76,7 +76,7 @@ linters-settings:
   depguard:
     rules:
       main:
-        list-mode: original
+        list-type: lax
         files:
           - $all
           - "!$test"
@@ -156,7 +156,7 @@ linters-settings:
           - pkg: "github.com/cosmos/cosmos-sdk/x/params"
             desc: "The params module is no more."
       test:
-        list-mode: original
+        list-type: lax
         files:
           - "$test"
         allow:

@@ -350,6 +350,7 @@ func (x PartyType) SimpleString() string {
 	return strings.TrimPrefix(x.String(), "PARTY_TYPE_")
 }
 
+// IsGenericPartyType returns true if the PartyType is considered generic.
 func (x PartyType) IsGenericPartyType() bool {
 	switch x {
 	case PartyType_PARTY_TYPE_GENERIC_1,
