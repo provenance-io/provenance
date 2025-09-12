@@ -1,3 +1,4 @@
+// Package types defines types and codec registration for the trigger module.
 package types
 
 import (

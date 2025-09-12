@@ -5,19 +5,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/name/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -112,6 +110,7 @@ func GetDeleteNameCmd() *cobra.Command {
 	return cmd
 }
 
+// GetModifyNameCmd returns the command to modify a name.
 func GetModifyNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "modify-name [name] [new_owner] (--unrestrict) [flags]",
@@ -271,9 +270,9 @@ func GetUpdateNameParamsCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgUpdateParamsRequest(
-				uint32(maxSegmentLength), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
-				uint32(minSegmentLength), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
-				uint32(maxNameLevels),    //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+				uint32(maxSegmentLength),
+				uint32(minSegmentLength),
+				uint32(maxNameLevels),
 				allowUnrestrictedNames,
 				authority,
 			)

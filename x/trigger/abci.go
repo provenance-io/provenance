@@ -1,8 +1,8 @@
+// Package trigger provides ABCI-related logic for the trigger module.
 package trigger
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/trigger/keeper"
 )
 

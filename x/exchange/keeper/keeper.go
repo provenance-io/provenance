@@ -8,14 +8,12 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/quarantine"
 )
@@ -43,6 +41,7 @@ type Keeper struct {
 	feeCollectorName string
 }
 
+// NewKeeper creates a new Keeper instance for the exchange module.
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollectorName string,
 	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
 	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper, markerKeeper exchange.MarkerKeeper,
@@ -146,7 +145,7 @@ func (k Keeper) GetFeeCollectorName() string {
 func getAllKeys(store storetypes.KVStore, pre []byte) [][]byte {
 	// Using a prefix iterator so that iter.Key() is the whole key (including the prefix).
 	iter := storetypes.KVStorePrefixIterator(store, pre)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	var keys [][]byte
 	for ; iter.Valid(); iter.Next() {
@@ -176,7 +175,7 @@ func iterate(store storetypes.KVStore, keyPrefix []byte, cb func(keySuffix, valu
 	} else {
 		iter = store.Iterator(nil, nil)
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	for ; iter.Valid(); iter.Next() {
 		if cb(iter.Key(), iter.Value()) {

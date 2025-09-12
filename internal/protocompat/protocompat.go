@@ -1,3 +1,4 @@
+// Package protocompat provides utilities for protobuf compatibility.
 package protocompat
 
 import (
@@ -5,15 +6,14 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/golang/protobuf/proto" //nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"google.golang.org/grpc"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 var (
@@ -22,8 +22,10 @@ var (
 	protov2MarshalOpts = protov2.MarshalOptions{Deterministic: true}
 )
 
+// Handler handles protobuf compatibility operations.
 type Handler = func(ctx context.Context, request, response protoiface.MessageV1) error
 
+// MakeHybridHandler creates a new hybrid protobuf compatibility handler.
 func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)

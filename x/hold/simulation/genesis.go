@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	hold "github.com/provenance-io/provenance/x/hold"
 )
 
+// HoldAccountHolds is the key used in simulation to track held accounts.
 const HoldAccountHolds = "hold-account-holds"
 
 // RandomAccountHolds randomly selects accounts with an existing balance to place a hold of a random amount.

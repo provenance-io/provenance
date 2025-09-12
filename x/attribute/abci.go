@@ -1,14 +1,15 @@
+// Package attribute provides ABCI logic for attribute handling.
 package attribute
 
 import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
+// MaxExpiredAttributionCount defines the max number of expired attributions to retain.
 const MaxExpiredAttributionCount = 100_000
 
 // BeginBlocker is called at the beginning of every block

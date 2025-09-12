@@ -7,14 +7,11 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
-
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-
 	provwasmtypes "github.com/provenance-io/provenance/x/wasm/types"
 )
 
@@ -111,7 +108,7 @@ func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, requ
 	}
 }
 
-// ConvertProtoToJsonMarshal  unmarshals the given bytes into a proto message and then marshals it to json.
+// ConvertProtoToJSONMarshal  unmarshals the given bytes into a proto message and then marshals it to json.
 // This is done so that clients calling stargate queries do not need to define their own proto unmarshalers,
 // being able to use response directly by json marshaling, which is supported in cosmwasm.
 func ConvertProtoToJSONMarshal(protoResponseType proto.Message, bz []byte, cdc codec.Codec) ([]byte, error) {

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -126,6 +125,7 @@ func (ma MarkerAccount) AllowsForcedTransfer() bool {
 	return ma.AllowForcedTransfer
 }
 
+// SetAllowForcedTransfer sets whether forced transfers are allowed on the marker account.
 func (ma *MarkerAccount) SetAllowForcedTransfer(allowForcedTransfer bool) {
 	ma.AllowForcedTransfer = allowForcedTransfer
 }
@@ -297,10 +297,12 @@ func ValidateRequiredAttributes(requiredAttributes []string) error {
 	return nil
 }
 
+// GetRequiredAttributes returns the list of required attributes for the marker account.
 func (ma *MarkerAccount) GetRequiredAttributes() []string {
 	return ma.RequiredAttributes
 }
 
+// SetRequiredAttributes sets the required attributes for the marker account.
 func (ma *MarkerAccount) SetRequiredAttributes(requiredAttributes []string) {
 	ma.RequiredAttributes = requiredAttributes
 }

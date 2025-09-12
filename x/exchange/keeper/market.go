@@ -7,10 +7,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -1055,7 +1053,7 @@ func (k Keeper) CanReleaseCommitmentsForMarket(ctx sdk.Context, marketID uint32,
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
 }
 
-// CanTransferCommitmentsForMarket returns true if the provided admin bech32 address has permission to
+// CanTransferCommitmentForMarket returns true if the provided admin bech32 address has permission to
 // transfer commitments from one market to another. Also returns true if the provided address is the authority address.
 func (k Keeper) CanTransferCommitmentForMarket(ctx sdk.Context, marketID uint32, admin string) bool {
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)

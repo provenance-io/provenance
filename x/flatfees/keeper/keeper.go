@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,6 @@ import (
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	"github.com/provenance-io/provenance/x/flatfees/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -34,6 +32,7 @@ type Keeper struct {
 	simulate types.BaseAppSimulateFunc
 }
 
+// NewKeeper creates and returns a new Keeper instance for the flatfees module.
 func NewKeeper(
 	cdc codec.Codec,
 	storeService storetypes.KVStoreService,

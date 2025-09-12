@@ -1,3 +1,4 @@
+// Package rand provides utilities for random account generation.
 package rand
 
 import (

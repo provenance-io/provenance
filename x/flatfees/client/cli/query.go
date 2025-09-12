@@ -1,3 +1,4 @@
+// Package cli provides CLI commands for querying and interacting with the flatfees module.
 package cli
 
 import (
@@ -5,14 +6,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
 	"github.com/provenance-io/provenance/x/flatfees/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // NewQueryCmd returns the top-level command for x/flatfees CLI queries.
@@ -34,6 +33,7 @@ func NewQueryCmd() *cobra.Command {
 	return queryCmd
 }
 
+// FlagDoNotConvert is the CLI flag used to disable fee conversion.
 const FlagDoNotConvert = "do-not-convert"
 
 // AddFlagDoNotConvert adds the --do-not-convert flag to the command.
@@ -152,6 +152,7 @@ func NewCmdGetMsgFee() *cobra.Command {
 	return cmd
 }
 
+// NewCmdCalculateTxFees creates a CLI command to calculate the transaction fees for a given message.
 func NewCmdCalculateTxFees() *cobra.Command {
 	// This cmd is named to match this module's query, but as the alias "simulate" because
 	// that's what the command is called under the tx sub-command.

@@ -1,3 +1,4 @@
+// Package cli provides command-line interface flags for the exchange module.
 package cli
 
 import (
@@ -8,21 +9,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const (
-	FlagAcceptingCommitments = "accepting-commitments"
+	FlagAcceptingCommitments = "accepting-commitments" //nolint:revive
 	FlagAcceptingOrders      = "accepting-orders"
 	FlagAccessGrants         = "access-grants"
 	FlagAccount              = "account"
@@ -337,7 +336,7 @@ func ReadFlagMarketOrArg(flagSet *pflag.FlagSet, args []string) (uint32, error) 
 		if err != nil {
 			return 0, fmt.Errorf("could not convert <market id> arg: %w", err)
 		}
-		marketID = uint32(marketID64) //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+		marketID = uint32(marketID64)
 	}
 
 	if marketID == 0 {
@@ -592,7 +591,7 @@ func ParseSplit(val string) (*exchange.DenomSplit, error) {
 
 	return &exchange.DenomSplit{
 		Denom: denom,
-		Split: uint32(amount), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+		Split: uint32(amount),
 	}, nil
 }
 
@@ -651,7 +650,7 @@ func ReadTxFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet, fileFlag s
 		return "", nil, err
 	}
 
-	propFileContents, err := os.ReadFile(filename)
+	propFileContents, err := os.ReadFile(filename) //nolint:gosec // G304
 	if err != nil {
 		return filename, nil, err
 	}
@@ -936,6 +935,7 @@ func ReadFlagAccountAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.Acc
 	return ReadFlagAccountAmountsOrDefault(flagSet, name, nil)
 }
 
+// ReadFlagAccountAmountsOrDefault reads account amounts from flags or returns default values.
 func ReadFlagAccountAmountsOrDefault(flagSet *pflag.FlagSet, name string, def []exchange.AccountAmount) ([]exchange.AccountAmount, error) {
 	rawVals, err := flagSet.GetStringSlice(name)
 	if len(rawVals) == 0 || err != nil {

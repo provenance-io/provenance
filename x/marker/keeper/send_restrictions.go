@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -15,6 +14,7 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
+// SendRestrictionFn returns a function to enforce send restrictions.
 func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// In some cases, it might not be possible to add a bypass to the context.

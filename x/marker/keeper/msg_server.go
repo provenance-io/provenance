@@ -4,19 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-metrics"
-
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	feegranttypes "cosmossdk.io/x/feegrant/keeper"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
+	"github.com/hashicorp/go-metrics"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -54,7 +51,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	if err != nil {
 		return nil, err
 	}
-	err = k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), grantee, allowance)
+	err = k.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), grantee, allowance)
 
 	return &types.MsgGrantAllowanceResponse{}, err
 }
@@ -112,7 +109,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		normalizedReqAttrs,
 	)
 
-	if err = k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
+	if err = k.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -173,7 +170,7 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 	addr := sdk.MustAccAddressFromBech32(msg.RemovedAddress)
 
-	if err := k.Keeper.RemoveAccess(ctx, admin, msg.Denom, addr); err != nil {
+	if err := k.RemoveAccess(ctx, admin, msg.Denom, addr); err != nil {
 		ctx.Logger().Error("unable to remove access grant from marker", "err", err)
 		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
@@ -192,7 +189,7 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	if err := k.Keeper.FinalizeMarker(ctx, admin, msg.Denom); err != nil {
+	if err := k.FinalizeMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to finalize marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -211,7 +208,7 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	if err := k.Keeper.ActivateMarker(ctx, admin, msg.Denom); err != nil {
+	if err := k.ActivateMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -230,7 +227,7 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	if err := k.Keeper.CancelMarker(ctx, admin, msg.Denom); err != nil {
+	if err := k.CancelMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to cancel marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -249,7 +246,7 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	if err := k.Keeper.DeleteMarker(ctx, admin, msg.Denom); err != nil {
+	if err := k.DeleteMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to delete marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -268,7 +265,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	if err := k.Keeper.MintCoin(ctx, admin, msg.Amount); err != nil {
+	if err := k.MintCoin(ctx, admin, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -278,7 +275,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient: %s", msg.Recipient)
 		}
-		if err := k.Keeper.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
+		if err := k.WithdrawCoins(ctx, admin, recipient, msg.Amount.Denom, sdk.NewCoins(msg.Amount)); err != nil {
 			ctx.Logger().Error("unable to withdraw coins", "err", err)
 			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
@@ -316,7 +313,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	if err := k.Keeper.BurnCoin(ctx, admin, msg.Amount); err != nil {
+	if err := k.BurnCoin(ctx, admin, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to burn coin from marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -354,7 +351,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 	to := sdk.MustAccAddressFromBech32(msg.ToAddress)
 
-	if err := k.Keeper.WithdrawCoins(ctx, admin, to, msg.Denom, msg.Amount); err != nil {
+	if err := k.WithdrawCoins(ctx, admin, to, msg.Denom, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -546,7 +543,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		}
 	}
 
-	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
+	if err := k.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -562,7 +559,7 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.HandleSupplyIncreaseProposal(ctx, msg.Amount, msg.TargetAddress)
+	err := k.HandleSupplyIncreaseProposal(ctx, msg.Amount, msg.TargetAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -578,7 +575,7 @@ func (k msgServer) SupplyDecreaseProposal(goCtx context.Context, msg *types.MsgS
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.HandleSupplyDecreaseProposal(ctx, msg.Amount)
+	err := k.HandleSupplyDecreaseProposal(ctx, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -775,7 +772,7 @@ func (k msgServer) SetAdministratorProposal(goCtx context.Context, msg *types.Ms
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.HandleSetAdministratorProposal(ctx, msg.Denom, msg.Access)
+	err := k.HandleSetAdministratorProposal(ctx, msg.Denom, msg.Access)
 	if err != nil {
 		return nil, err
 	}
@@ -791,7 +788,7 @@ func (k msgServer) RemoveAdministratorProposal(goCtx context.Context, msg *types
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.HandleRemoveAdministratorProposal(ctx, msg.Denom, msg.RemovedAddress)
+	err := k.HandleRemoveAdministratorProposal(ctx, msg.Denom, msg.RemovedAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -807,7 +804,7 @@ func (k msgServer) ChangeStatusProposal(goCtx context.Context, msg *types.MsgCha
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.HandleChangeStatusProposal(ctx, msg.Denom, msg.NewStatus)
+	err := k.HandleChangeStatusProposal(ctx, msg.Denom, msg.NewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -823,7 +820,7 @@ func (k msgServer) WithdrawEscrowProposal(goCtx context.Context, msg *types.MsgW
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.HandleWithdrawEscrowProposal(ctx, msg.Denom, msg.TargetAddress, msg.Amount)
+	err := k.HandleWithdrawEscrowProposal(ctx, msg.Denom, msg.TargetAddress, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -839,7 +836,7 @@ func (k msgServer) SetDenomMetadataProposal(goCtx context.Context, msg *types.Ms
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.HandleSetDenomMetadataProposal(ctx, msg.Metadata)
+	err := k.HandleSetDenomMetadataProposal(ctx, msg.Metadata)
 	if err != nil {
 		return nil, err
 	}

@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-metrics"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/hashicorp/go-metrics"
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
@@ -45,7 +43,7 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 		return nil, err
 	}
 
-	err = k.Keeper.SetAttribute(ctx, attrib, ownerAddr)
+	err = k.SetAttribute(ctx, attrib, ownerAddr)
 	if err != nil {
 		return nil, err
 	}

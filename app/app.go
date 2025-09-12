@@ -1,3 +1,4 @@
+// Package app initializes and configures the main application.
 package app
 
 import (
@@ -7,16 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/gorilla/mux"
-	"github.com/spf13/cast"
-	"github.com/spf13/viper"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtos "github.com/cometbft/cometbft/libs/os"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -39,7 +30,11 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtos "github.com/cometbft/cometbft/libs/os"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -125,7 +120,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
-
+	"github.com/gorilla/mux"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/client/docs"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -173,6 +168,8 @@ import (
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -402,7 +399,7 @@ func New(
 	}
 
 	// Register State listening services.
-	if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys); err != nil {
+	if err := app.RegisterStreamingServices(appOpts, app.keys); err != nil {
 		app.Logger().Error("failed to register streaming plugin", "error", err)
 		os.Exit(1)
 	}
@@ -460,7 +457,7 @@ func New(
 	)
 
 	app.CircuitKeeper = circuitkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[circuittypes.StoreKey]), govAuthority, app.AccountKeeper.AddressCodec())
-	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)
+	app.SetCircuitBreaker(&app.CircuitKeeper)
 
 	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), app.StakingKeeper, app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, govAuthority)
 
@@ -488,7 +485,7 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, govAuthority)
 
 	app.FlatFeesKeeper = flatfeeskeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName, app.BaseApp.SimulateProv,
+		appCodec, runtime.NewKVStoreService(keys[flatfeestypes.StoreKey]), authtypes.FeeCollectorName, app.SimulateProv,
 	)
 
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -499,7 +496,7 @@ func New(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper).SetBankKeeper(app.BankKeeper)
 
-	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
+	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
@@ -604,7 +601,7 @@ func New(
 	app.ICQKeeper = icqkeeper.NewKeeper(
 		appCodec, keys[icqtypes.StoreKey],
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
-		app.ScopedICQKeeper, app.BaseApp.GRPCQueryRouter(), govAuthority,
+		app.ScopedICQKeeper, app.GRPCQueryRouter(), govAuthority,
 	)
 	icqModule := icq.NewAppModule(app.ICQKeeper, nil)
 	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
@@ -683,7 +680,7 @@ func New(
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, app.DistrKeeper, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
+		app.StakingKeeper, app.DistrKeeper, app.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
 	)
 
 	// Set legacy router for backwards compatibility with gov v1beta1
@@ -919,7 +916,7 @@ func New(
 	app.mm.SetOrderMigrations(moduleMigrationOrder...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
-	app.configurator = module.NewConfigurator(app.appCodec, app.BaseApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	if err := app.mm.RegisterServices(app.configurator); err != nil {
 		panic(err)
 	}
@@ -1223,12 +1220,12 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *App) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
+	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
 }
 
 // Simulate runs a tx to identify how much of a fee it will cost.
 func (app *App) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	gasInfo, res, ctx, err := app.BaseApp.SimulateProv(txBytes)
+	gasInfo, res, ctx, err := app.SimulateProv(txBytes)
 	if err != nil {
 		return gasInfo, res, err
 	}
@@ -1255,7 +1252,7 @@ func (app *App) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *App) RegisterTendermintService(clientCtx client.Context) {
-	cmtservice.RegisterTendermintService(clientCtx, app.BaseApp.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
+	cmtservice.RegisterTendermintService(clientCtx, app.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
 }
 
 // RegisterNodeService registers the node query server.

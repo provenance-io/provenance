@@ -1,3 +1,4 @@
+// Package simulation provides simulation functions for the exchange module.
 package simulation
 
 import (

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -17,6 +16,7 @@ type SignersWrapper struct {
 	converted  bool
 }
 
+// NewSignersWrapper creates a new SignersWrapper.
 func NewSignersWrapper(signers []string) *SignersWrapper {
 	return &SignersWrapper{signers: signers}
 }

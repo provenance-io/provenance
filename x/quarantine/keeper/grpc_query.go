@@ -3,17 +3,16 @@ package keeper
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/provenance-io/provenance/x/quarantine"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ quarantine.QueryServer = Keeper{}
 
+// IsQuarantined checks if an address is currently quarantined.
 func (k Keeper) IsQuarantined(goCtx context.Context, req *quarantine.QueryIsQuarantinedRequest) (*quarantine.QueryIsQuarantinedResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -35,6 +34,7 @@ func (k Keeper) IsQuarantined(goCtx context.Context, req *quarantine.QueryIsQuar
 	return resp, nil
 }
 
+// QuarantinedFunds returns quarantined funds for an address.
 func (k Keeper) QuarantinedFunds(goCtx context.Context, req *quarantine.QueryQuarantinedFundsRequest) (*quarantine.QueryQuarantinedFundsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -102,6 +102,7 @@ func (k Keeper) QuarantinedFunds(goCtx context.Context, req *quarantine.QueryQua
 	return resp, nil
 }
 
+// AutoResponses returns the auto-response settings for an address.
 func (k Keeper) AutoResponses(goCtx context.Context, req *quarantine.QueryAutoResponsesRequest) (*quarantine.QueryAutoResponsesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

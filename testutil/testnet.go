@@ -2,6 +2,7 @@ package testutil
 
 import "os"
 
+// TestnetEnvVar is the environment variable used to configure testnet behavior.
 const TestnetEnvVar = "PIO_TESTNET"
 
 // UnsetTestnetEnvVar will unset the PIO_TESTNET environment variable and return a deferrable that will put it back.
@@ -15,6 +16,8 @@ const TestnetEnvVar = "PIO_TESTNET"
 // This exists because t.Setenv can't be used to unset an environment variable.
 //
 // Standard usage: defer testutil.UnsetTestnetEnvVar()()
+//
+//nolint:errcheck,gosec
 func UnsetTestnetEnvVar() func() {
 	if origVal, ok := os.LookupEnv(TestnetEnvVar); ok {
 		os.Unsetenv(TestnetEnvVar)

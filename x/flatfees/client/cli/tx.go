@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/flatfees/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // Flag names and values
@@ -23,6 +21,7 @@ const (
 	FlagUnset = "unset"
 )
 
+// NewTxCmd returns the root CLI transaction command for the flatfees module.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -165,6 +164,7 @@ The denominations in the <default cost> and <base> should be the same.
 	return cmd
 }
 
+// NewCmdUpdateConversionFactor returns a CLI command to update the conversion factor for flat fees.
 func NewCmdUpdateConversionFactor() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "conversion-factor <base>=<converted> <gov prop flags>",

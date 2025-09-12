@@ -1,16 +1,15 @@
+// Package cli provides CLI query commands for the ibcratelimit module.
 package cli
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

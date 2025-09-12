@@ -1,17 +1,16 @@
+// Package cli provides CLI query commands for the hold module.
 package cli
 
 import (
 	"fmt"
-
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/provenance-io/provenance/x/hold"
+	"github.com/spf13/cobra"
 )
 
 // exampleQueryCmdBase is the base command that gets a user to one of the query commands in here.
@@ -19,6 +18,7 @@ var exampleQueryCmdBase = fmt.Sprintf("%s query %s", version.AppName, hold.Modul
 
 var exampleQueryAddr1 = sdk.AccAddress("exampleQueryAddr1___")
 
+// QueryCmd returns the root query command for the hold module.
 func QueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        hold.ModuleName,
@@ -36,6 +36,7 @@ func QueryCmd() *cobra.Command {
 	return cmd
 }
 
+// QueryCmdGetHolds returns the CLI command to query holds for a specific account.
 func QueryCmdGetHolds() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "get <address>",
@@ -73,6 +74,7 @@ func QueryCmdGetHolds() *cobra.Command {
 	return cmd
 }
 
+// QueryCmdGetAllHolds returns the CLI command to query all holds.
 func QueryCmdGetAllHolds() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "all",

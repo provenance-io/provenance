@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,10 +16,10 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/x/hold"
 )
 
+// Keeper manages state operations for the hold module.
 type Keeper struct {
 	cdc           codec.BinaryCodec
 	storeKey      storetypes.StoreKey
@@ -29,6 +28,7 @@ type Keeper struct {
 	authority     string
 }
 
+// NewKeeper creates a new instance of the hold module Keeper.
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
 	rv := Keeper{
 		cdc:           cdc,
@@ -252,7 +252,7 @@ func (k Keeper) IterateHolds(ctx sdk.Context, addr sdk.AccAddress, process func(
 	store := k.getHoldCoinPrefixStore(ctx, addr)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	var errs []error
 	for ; iter.Valid(); iter.Next() {
@@ -287,8 +287,7 @@ func (k Keeper) IterateAllHolds(ctx sdk.Context, process func(sdk.AccAddress, sd
 	store := k.getAllHoldCoinPrefixStore(ctx)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
-
+	defer iter.Close() //nolint:errcheck
 	var errs []error
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()

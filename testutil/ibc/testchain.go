@@ -7,32 +7,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-
 	provenanceapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/contracts"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/stretchr/testify/suite"
 )
 
+// TestChain represents a test blockchain for IBC testing.
 type TestChain struct {
 	*ibctesting.TestChain
 }
 
+// SetupTestingApp initializes the testing app and returns a test chain instance.
 func SetupTestingApp(t *testing.T) (ibctesting.TestingApp, map[string]json.RawMessage) {
 	provenanceApp := provenanceapp.Setup(t)
 	return provenanceApp, provenanceApp.DefaultGenesis()
 }
 
+// StoreContractCounterDirect stores a counter contract directly on the test chain.
 func (chain *TestChain) StoreContractCounterDirect(suite *suite.Suite) uint64 {
 	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.CounterWasm())
 	suite.Require().NoError(err, "counter contract direct code load failed", err)
@@ -40,6 +40,7 @@ func (chain *TestChain) StoreContractCounterDirect(suite *suite.Suite) uint64 {
 	return codeID
 }
 
+// StoreContractEchoDirect stores an echo contract directly on the test chain.
 func (chain *TestChain) StoreContractEchoDirect(suite *suite.Suite) uint64 {
 	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.EchoWasm())
 	suite.Require().NoError(err, "echo contract direct code load failed", err)
@@ -47,6 +48,7 @@ func (chain *TestChain) StoreContractEchoDirect(suite *suite.Suite) uint64 {
 	return codeID
 }
 
+// StoreContractRateLimiterDirect stores a rate limiter contract directly on the test chain.
 func (chain *TestChain) StoreContractRateLimiterDirect(suite *suite.Suite) uint64 {
 	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.RateLimiterWasm())
 	suite.Require().NoError(err, "rate limiter contract direct code load failed")
@@ -54,6 +56,7 @@ func (chain *TestChain) StoreContractRateLimiterDirect(suite *suite.Suite) uint6
 	return codeID
 }
 
+// InstantiateContract instantiates a contract on the test chain.
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
 	addr, err := contracts.InstantiateContract(chain.GetProvenanceApp(), chain.GetContext(), msg, codeID)
 	suite.Require().NoError(err, "contract instantiation failed", err)
@@ -61,11 +64,13 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, code
 	return addr
 }
 
+// PinContract pins a contract to prevent garbage collection on the test chain.
 func (chain *TestChain) PinContract(suite *suite.Suite, codeID uint64) {
 	err := contracts.PinContract(chain.GetProvenanceApp(), chain.GetContext(), codeID)
 	suite.Require().NoError(err, "contract pin failed")
 }
 
+// QueryContract queries a contract on the test chain.
 func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
 	state, err := contracts.QueryContract(chain.GetProvenanceApp(), chain.GetContext(), contract, key)
 	suite.Require().NoError(err, "contract query failed", err)
@@ -73,6 +78,7 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	return state
 }
 
+// RegisterRateLimiterContract registers a rate limiter contract on the test chain.
 func (chain *TestChain) RegisterRateLimiterContract(suite *suite.Suite, addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("cosmos", addr)
 	suite.Require().NoError(err)
@@ -161,7 +167,7 @@ func SignAndDeliver(
 	chainID string, accNums, accSeqs []uint64, _ bool, blockTime time.Time, nextValHash []byte, priv ...cryptotypes.PrivKey,
 ) (*abci.ResponseFinalizeBlock, error) {
 	tx, err := simtestutil.GenSignedMockTx(
-		rand.New(rand.NewSource(1)),
+		rand.New(rand.NewSource(1)), //nolint:gosec // G304
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},

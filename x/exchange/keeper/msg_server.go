@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -16,6 +15,7 @@ type MsgServer struct {
 	Keeper
 }
 
+// NewMsgServer returns a new message server for the exchange module.
 func NewMsgServer(k Keeper) exchange.MsgServer {
 	return MsgServer{
 		Keeper: k,

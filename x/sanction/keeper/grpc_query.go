@@ -3,17 +3,16 @@ package keeper
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/provenance-io/provenance/x/sanction"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ sanction.QueryServer = Keeper{}
 
+// IsSanctioned checks if the given address is sanctioned.
 func (k Keeper) IsSanctioned(goCtx context.Context, req *sanction.QueryIsSanctionedRequest) (*sanction.QueryIsSanctionedResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -32,6 +31,7 @@ func (k Keeper) IsSanctioned(goCtx context.Context, req *sanction.QueryIsSanctio
 	return resp, nil
 }
 
+// SanctionedAddresses returns a list of sanctioned addresses.
 func (k Keeper) SanctionedAddresses(goCtx context.Context, req *sanction.QuerySanctionedAddressesRequest) (*sanction.QuerySanctionedAddressesResponse, error) {
 	var err error
 	var pagination *query.PageRequest
@@ -57,6 +57,7 @@ func (k Keeper) SanctionedAddresses(goCtx context.Context, req *sanction.QuerySa
 	return resp, nil
 }
 
+// TemporaryEntries returns the temporary sanction entries.
 func (k Keeper) TemporaryEntries(goCtx context.Context, req *sanction.QueryTemporaryEntriesRequest) (*sanction.QueryTemporaryEntriesResponse, error) {
 	var err error
 	var pagination *query.PageRequest
@@ -94,6 +95,7 @@ func (k Keeper) TemporaryEntries(goCtx context.Context, req *sanction.QueryTempo
 	return resp, nil
 }
 
+// Params returns the current parameters of the sanction module.
 func (k Keeper) Params(goCtx context.Context, _ *sanction.QueryParamsRequest) (*sanction.QueryParamsResponse, error) {
 	resp := &sanction.QueryParamsResponse{}
 	ctx := sdk.UnwrapSDKContext(goCtx)

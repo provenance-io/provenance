@@ -5,10 +5,8 @@ import (
 	"strings"
 
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -99,7 +97,11 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 		return err
 	}
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close()
+	defer func() {
+		if err := it.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close IterateRecords", "error", err)
+		}
+	}()
 	for ; it.Valid(); it.Next() {
 		var record types.Record
 		err = k.cdc.Unmarshal(it.Value(), &record)

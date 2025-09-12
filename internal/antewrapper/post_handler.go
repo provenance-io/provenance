@@ -4,9 +4,7 @@ import (
 	"fmt"
 
 	cerrs "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 
@@ -20,6 +18,7 @@ type FlatFeePostHandler struct {
 
 var _ sdk.PostDecorator = (*FlatFeePostHandler)(nil)
 
+// NewFlatFeePostHandler creates a new FlatFeePostHandler using the given BankKeeper and FeegrantKeeper.
 func NewFlatFeePostHandler(bk BankKeeper, fk FeegrantKeeper) FlatFeePostHandler {
 	return FlatFeePostHandler{bk: bk, fk: fk}
 }

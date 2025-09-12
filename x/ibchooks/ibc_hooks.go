@@ -8,11 +8,11 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
+// IbcHooks defines IBC hook methods for packet processing.
 type IbcHooks struct {
 	cdc                     codec.BinaryCodec
 	ibcKeeper               *ibckeeper.Keeper
@@ -22,6 +22,7 @@ type IbcHooks struct {
 	SendPacketPreProcessors []types.PreSendPacketDataProcessingFn
 }
 
+// NewIbcHooks creates a new instance of IbcHooks.
 func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper *ibckeeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, preSendPacketDataProcessingFns []types.PreSendPacketDataProcessingFn) IbcHooks {
 	return IbcHooks{
 		cdc:                     cdc,

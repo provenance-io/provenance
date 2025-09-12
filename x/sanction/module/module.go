@@ -1,3 +1,4 @@
+// Package module defines the app module implementation for the sanction module.
 package module
 
 import (
@@ -6,13 +7,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/core/appmodule"
-
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,11 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/client/cli"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
 	"github.com/provenance-io/provenance/x/sanction/simulation"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -35,10 +32,12 @@ var (
 	_ appmodule.AppModule = AppModule{}
 )
 
+// AppModuleBasic defines the basic application module for the sanction module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
+// Name returns the name of the sanction module.
 func (AppModuleBasic) Name() string {
 	return sanction.ModuleName
 }
@@ -79,6 +78,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	sanction.RegisterInterfaces(registry)
 }
 
+// AppModule implements the full application module for the sanction module.
 type AppModule struct {
 	AppModuleBasic
 	keeper     keeper.Keeper
@@ -88,6 +88,7 @@ type AppModule struct {
 	registry   cdctypes.InterfaceRegistry
 }
 
+// NewAppModule creates a new AppModule instance.
 func NewAppModule(cdc codec.Codec, sanctionKeeper keeper.Keeper, accKeeper sanction.AccountKeeper, bankKeeper sanction.BankKeeper, govKeeper govkeeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},

@@ -1,8 +1,8 @@
+// Package keeper contains state management logic for the name module.
 package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	types "github.com/provenance-io/provenance/x/name/types"
 )
 
