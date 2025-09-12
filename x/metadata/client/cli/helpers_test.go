@@ -339,7 +339,7 @@ func TestParsePartyType(t *testing.T) {
 		{input: "validator", exp: validator, expErr: ""},
 		{input: "VALIDATOR", exp: validator, expErr: ""},
 		{input: "Validator", exp: validator, expErr: ""},
-		
+
 		{input: "generic_1", exp: generic1, expErr: ""},
 		{input: "GENERIC_1", exp: generic1, expErr: ""},
 		{input: "Generic_1", exp: generic1, expErr: ""},
