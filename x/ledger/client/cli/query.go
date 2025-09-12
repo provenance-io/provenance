@@ -27,7 +27,7 @@ func CmdQuery() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        ledger.ModuleName,
 		Aliases:                    []string{"l"},
-		Short:                      "Querying commands for the account metadata module",
+		Short:                      "Querying commands for the ledger module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -247,6 +247,10 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			for i, entry := range entries {
 				appliedAmts := make([]*LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
 				for j, amt := range entry.AppliedAmounts {
+					bucket := bucketTypes[amt.BucketTypeId]
+					if bucket == nil {
+						return fmt.Errorf("bucket type not found for id: %d", amt.BucketTypeId)
+					}
 					appliedAmts[j] = &LedgerBucketAmountPlainText{
 						Bucket:     bucketTypes[amt.BucketTypeId],
 						AppliedAmt: amt.AppliedAmt.String(),
