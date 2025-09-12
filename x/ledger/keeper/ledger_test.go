@@ -411,7 +411,7 @@ func (s *TestSuite) TestUpdateLedgerStatus() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// Clear events before each test
-			s.ctx.EventManager().Events()
+			s.ctx.WithEventManager(sdk.NewEventManager())
 
 			err := s.keeper.UpdateLedgerStatus(s.ctx, validLedger.Key, tc.statusTypeId)
 
@@ -482,7 +482,7 @@ func (s *TestSuite) TestUpdateLedgerInterestRate() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// Clear events before each test
-			s.ctx.EventManager().Events()
+			s.ctx.WithEventManager(sdk.NewEventManager())
 
 			err := s.keeper.UpdateLedgerInterestRate(s.ctx, validLedger.Key, tc.interestRate, tc.dayCountConvention, tc.interestAccrualMethod)
 
@@ -553,7 +553,7 @@ func (s *TestSuite) TestUpdateLedgerPayment() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// Clear events before each test
-			s.ctx.EventManager().Events()
+			s.ctx.WithEventManager(sdk.NewEventManager())
 
 			err := s.keeper.UpdateLedgerPayment(s.ctx, validLedger.Key, tc.nextPmtAmt, tc.nextPmtDate, tc.paymentFrequency)
 
@@ -620,7 +620,7 @@ func (s *TestSuite) TestUpdateLedgerMaturityDate() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// Clear events before each test
-			s.ctx.EventManager().Events()
+			s.ctx.WithEventManager(sdk.NewEventManager())
 
 			err := s.keeper.UpdateLedgerMaturityDate(s.ctx, validLedger.Key, tc.maturityDate)
 
