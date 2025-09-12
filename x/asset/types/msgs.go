@@ -44,10 +44,6 @@ func (msg MsgCreateAssetClass) ValidateBasic() error {
 }
 
 func (msg MsgCreatePool) ValidateBasic() error {
-	if msg.Pool == nil {
-		return fmt.Errorf("pool cannot be nil")
-	}
-
 	if err := msg.Pool.Validate(); err != nil {
 		return fmt.Errorf("invalid pool: %w", err)
 	}

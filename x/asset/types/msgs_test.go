@@ -207,7 +207,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: MsgCreatePool{
-				Pool: &sdk.Coin{
+				Pool: sdk.Coin{
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -222,23 +222,9 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "nil pool",
-			msg: MsgCreatePool{
-				Pool: nil,
-				Assets: []*AssetKey{
-					{
-						ClassId: "test-class",
-						Id:      "test-id",
-					},
-				},
-				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-			},
-			wantErr: true,
-		},
-		{
 			name: "empty assets",
 			msg: MsgCreatePool{
-				Pool: &sdk.Coin{
+				Pool: sdk.Coin{
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},
@@ -250,7 +236,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		{
 			name: "nil asset",
 			msg: MsgCreatePool{
-				Pool: &sdk.Coin{
+				Pool: sdk.Coin{
 					Denom:  "pool",
 					Amount: sdkmath.NewInt(1000),
 				},

@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -213,7 +214,7 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 
 	// Create a pool with these assets
 	msg := &types.MsgCreatePool{
-		Pool: &sdk.Coin{
+		Pool: sdk.Coin{
 			Denom:  "pooltoken",
 			Amount: sdkmath.NewInt(1000),
 		},
@@ -376,7 +377,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 
 	// Create the pools
 	pool1Msg := &types.MsgCreatePool{
-		Pool: &sdk.Coin{
+		Pool: sdk.Coin{
 			Denom:  "pool1",
 			Amount: sdkmath.NewInt(1000),
 		},
@@ -392,7 +393,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 	s.Require().NoError(err)
 
 	pool2Msg := &types.MsgCreatePool{
-		Pool: &sdk.Coin{
+		Pool: sdk.Coin{
 			Denom:  "pool2",
 			Amount: sdkmath.NewInt(2000),
 		},

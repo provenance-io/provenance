@@ -63,7 +63,7 @@ message MsgCreatePool {
   option (cosmos.msg.v1.signer) = "signer";
 
   // pool defines the pool to be created.
-  cosmos.base.v1beta1.Coin pool = 1;
+  cosmos.base.v1beta1.Coin pool = 1 [(gogoproto.nullable) = false];
   // assets defines the list of assets by keys to be included in the pool.
   repeated AssetKey assets = 2;
   // signer defines the address of the message sender.
