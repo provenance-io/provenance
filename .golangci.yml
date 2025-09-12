@@ -82,12 +82,18 @@ linters-settings:
           - "!$test"
         allow:
           - $gostd
+          
+         # CosmWasm
           - github.com/CosmWasm
           - github.com/CosmWasm/wasmd
           - github.com/CosmWasm/wasmd/x/wasm 
-          - github.com/armon/go-metrics
+          - github.com/CosmWasm/wasmvm/v2
+
+          # CosmWasm Legacy Protos
+          - github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1
+
+          # Cosmossdk.io
           - cosmossdk.io
-          - github.com/cosmos
           - cosmossdk.io/api
           - cosmossdk.io/client/v2
           - cosmossdk.io/collections
@@ -102,14 +108,11 @@ linters-settings:
           - cosmossdk.io/x/nft
           - cosmossdk.io/x/tx/signing
           - cosmossdk.io/x/upgrade
+
+          # Cosmos
           - github.com/cosmos/cosmos-db
           - github.com/cosmos/cosmos-sdk
           - github.com/cosmos/go-bip39
-          - github.com/cosmos/ibc-apps
-          - github.com/cosmos/ibc-go
-          - github.com/CosmWasm/wasmvm/v2
-          - github.com/provenance-io/provenance/legacy_protos/cosmwasm/wasm/v1beta1
-
           - github.com/cosmos/gogoproto
           - github.com/cosmos/gogoproto/proto
           - github.com/golang/protobuf/proto
@@ -135,6 +138,8 @@ linters-settings:
           - github.com/stretchr/testify/assert
           - github.com/stretchr/testify/suite
 
+          # CometBFT
+          - github.com/cometbft/cometbft-db
           - github.com/cometbft/cometbft/abci/types
           - github.com/cometbft/cometbft/config
           - github.com/cometbft/cometbft/crypto
@@ -147,10 +152,29 @@ linters-settings:
           - github.com/cometbft/cometbft/rpc/jsonrpc/types
           - github.com/cometbft/cometbft/types
           - github.com/cometbft/cometbft/types/time
-          - github.com/cometbft/cometbft-db
 
+          # Provenance
+          - github.com/provenance-io/provenance
+
+          # Standard Libraries / Tools
+          - github.com/armon/go-metrics
+          - github.com/golang/protobuf/proto
+          - github.com/google/uuid
+          - github.com/gorilla/mux
+          - github.com/grpc-ecosystem/grpc-gateway
+          - github.com/hashicorp/go-metrics
           - github.com/rs/zerolog
+          - github.com/spf13/cast
+          - github.com/spf13/cobra
+          - github.com/spf13/pflag
+          - github.com/spf13/viper
 
+          # Testing
+          - github.com/stretchr/testify/assert
+          - github.com/stretchr/testify/require # used by the test-utils shared toolkit
+          - github.com/stretchr/testify/suite
+
+          # Kubernetes / YAML
           - sigs.k8s.io/yaml
         deny:
           - pkg: "github.com/cosmos/cosmos-sdk/x/params"
