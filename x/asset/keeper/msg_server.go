@@ -43,22 +43,23 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 
 	// If there's data, add it to the token
 	if msg.Asset.Data != "" {
-		// Validate the data against the Class schema if it exists
-		// otherwise it's an invalid Class id
 		class, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
 		if err != nil {
 			return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
 		}
 
-		jsonSchema, err := types.AnyToJSONSchema(m.cdc, class.Class.Data)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert class data to JSON schema: %w", err)
-		}
+		// Validate the data against the Class schema if it exists
+		if class.Class.Data != nil {
+			jsonSchema, err := types.AnyToJSONSchema(m.cdc, class.Class.Data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert class data to JSON schema: %w", err)
+			}
 
-		// Validate the data against the JSON schema
-		err = types.ValidateJSONSchema(jsonSchema, []byte(msg.Asset.Data))
-		if err != nil {
-			return nil, fmt.Errorf("invalid data: %w", err)
+			// Validate the data against the JSON schema
+			err = types.ValidateJSONSchema(jsonSchema, []byte(msg.Asset.Data))
+			if err != nil {
+				return nil, fmt.Errorf("invalid data: %w", err)
+			}
 		}
 
 		// Convert string to Any type

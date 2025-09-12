@@ -60,7 +60,10 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			assetClassID := args[0]
 			nftID := args[1]
 			ledgerClassID := args[2]
-			statusTypeID, _ := strconv.ParseInt(args[3], 10, 32)
+			statusTypeID, err := strconv.ParseInt(args[3], 10, 32)
+			if err != nil {
+			    return fmt.Errorf("invalid status_type_id: %w", err)
+			}
 
 			// Create the ledger with required fields
 			ledgerObj := &ledger.Ledger{

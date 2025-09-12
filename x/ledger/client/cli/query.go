@@ -27,19 +27,21 @@ func CmdQuery() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        ledger.ModuleName,
 		Aliases:                    []string{"l"},
-		Short:                      "Querying commands for the account metadata module",
+		Short:                      "Querying commands for the ledger module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 	queryCmd.AddCommand(
 		GetCmd(),
+		GetLedgersCmd(),
 		GetLedgerEntriesCmd(),
 		GetBalancesAsOfCmd(),
 		GetLedgerClassEntryTypesCmd(),
 		GetLedgerClassStatusTypesCmd(),
 		GetLedgerClassBucketTypesCmd(),
 		GetLedgerClassCmd(),
+		GetLedgerClassesCmd(),
 		GetAllSettlementsCmd(),
 		GetSettlementsByCorrelationIDCmd(),
 	)
@@ -101,6 +103,46 @@ func GetCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 
+	return cmd
+}
+
+// GetLedgersCmd returns the command handler for querying all ledgers with pagination
+func GetLedgersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ledgers",
+		Short: "Query all ledgers with optional pagination",
+		Example: fmt.Sprintf(`$ %s query ledger ledgers
+$ %s query ledger ledgers --limit 10
+$ %s query ledger ledgers --page-key <page_key>`, version.AppName, version.AppName, version.AppName),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := ledger.NewQueryClient(clientCtx)
+
+			req := ledger.QueryLedgersRequest{
+				Pagination: pageReq,
+			}
+
+			resp, err := queryClient.Ledgers(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "ledgers")
 	return cmd
 }
 
@@ -205,6 +247,10 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			for i, entry := range entries {
 				appliedAmts := make([]*LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
 				for j, amt := range entry.AppliedAmounts {
+					bucket := bucketTypes[amt.BucketTypeId]
+					if bucket == nil {
+						return fmt.Errorf("bucket type not found for id: %d", amt.BucketTypeId)
+					}
 					appliedAmts[j] = &LedgerBucketAmountPlainText{
 						Bucket:     bucketTypes[amt.BucketTypeId],
 						AppliedAmt: amt.AppliedAmt.String(),
@@ -431,6 +477,46 @@ func GetLedgerClassCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetLedgerClassesCmd returns the command handler for querying all ledger classes with pagination
+func GetLedgerClassesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "classes",
+		Short: "Query all ledger classes with optional pagination",
+		Example: fmt.Sprintf(`$ %s query ledger classes
+$ %s query ledger classes --limit 10
+$ %s query ledger classes --page-key <page_key>`, version.AppName, version.AppName, version.AppName),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := ledger.NewQueryClient(clientCtx)
+
+			req := ledger.QueryLedgerClassesRequest{
+				Pagination: pageReq,
+			}
+
+			resp, err := queryClient.LedgerClasses(context.Background(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "ledger classes")
 	return cmd
 }
 

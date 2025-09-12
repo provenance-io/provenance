@@ -304,7 +304,6 @@
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
     - [BucketBalance](#provenance-ledger-v1-BucketBalance)
-    - [BucketBalances](#provenance-ledger-v1-BucketBalances)
     - [Ledger](#provenance-ledger-v1-Ledger)
     - [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount)
     - [LedgerClass](#provenance-ledger-v1-LedgerClass)
@@ -330,6 +329,8 @@
     - [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse)
     - [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest)
     - [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse)
+    - [QueryLedgerClassesRequest](#provenance-ledger-v1-QueryLedgerClassesRequest)
+    - [QueryLedgerClassesResponse](#provenance-ledger-v1-QueryLedgerClassesResponse)
     - [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest)
     - [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse)
     - [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest)
@@ -340,6 +341,8 @@
     - [QueryLedgerSettlementsByCorrelationIDResponse](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIDResponse)
     - [QueryLedgerSettlementsRequest](#provenance-ledger-v1-QueryLedgerSettlementsRequest)
     - [QueryLedgerSettlementsResponse](#provenance-ledger-v1-QueryLedgerSettlementsResponse)
+    - [QueryLedgersRequest](#provenance-ledger-v1-QueryLedgersRequest)
+    - [QueryLedgersResponse](#provenance-ledger-v1-QueryLedgersResponse)
   
     - [Query](#provenance-ledger-v1-Query)
   
@@ -5203,21 +5206,6 @@ BucketBalance represents the balance for a specific bucket type
 
 
 
-<a name="provenance-ledger-v1-BucketBalances"></a>
-
-### BucketBalances
-Balances represents the current balances for principal, interest, and other amounts
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated |  |
-
-
-
-
-
-
 <a name="provenance-ledger-v1-Ledger"></a>
 
 ### Ledger
@@ -5480,7 +5468,7 @@ QueryLedgerBalancesAsOfResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bucket_balances` | [BucketBalances](#provenance-ledger-v1-BucketBalances) |  |  |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | BucketBalances represents the current balances for principal, interest, and other amounts |
 
 
 
@@ -5601,6 +5589,37 @@ QueryLedgerClassStatusTypesResponse
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `status_types` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassesRequest"></a>
+
+### QueryLedgerClassesRequest
+QueryLedgerClassesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination is an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassesResponse"></a>
+
+### QueryLedgerClassesResponse
+QueryLedgerClassesResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | List of ledger classes. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
 
 
 
@@ -5758,6 +5777,37 @@ QueryLedgerSettlementsResponse
 
 
 
+
+<a name="provenance-ledger-v1-QueryLedgersRequest"></a>
+
+### QueryLedgersRequest
+QueryLedgersRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination is an pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgersResponse"></a>
+
+### QueryLedgersResponse
+QueryLedgersResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledgers` | [Ledger](#provenance-ledger-v1-Ledger) | repeated | List of ledgers. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -5773,10 +5823,12 @@ Query defines the gRPC querier service for ledger module.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | `LedgerClass` | [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest) | [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse) | LedgerClass returns the ledger class for a given ledger class id. |
+| `LedgerClasses` | [QueryLedgerClassesRequest](#provenance-ledger-v1-QueryLedgerClassesRequest) | [QueryLedgerClassesResponse](#provenance-ledger-v1-QueryLedgerClassesResponse) | LedgerClasses returns a paginated list of ledger classes. |
 | `LedgerClassEntryTypes` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) | LedgerClassEntryTypes returns the entry types for a given ledger class id. |
 | `LedgerClassStatusTypes` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) | LedgerClassStatusTypes returns the status types for a given ledger class id. |
 | `LedgerClassBucketTypes` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) | LedgerClassBucketTypes returns the bucket types for a given ledger class id. |
 | `Ledger` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) | Ledger returns the ledger for a given ledger key. |
+| `Ledgers` | [QueryLedgersRequest](#provenance-ledger-v1-QueryLedgersRequest) | [QueryLedgersResponse](#provenance-ledger-v1-QueryLedgersResponse) | Ledgers returns a paginated list of ledgers. |
 | `LedgerEntries` | [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest) | [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse) | LedgerEntries returns the entries for a given ledger key. |
 | `LedgerEntry` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | LedgerEntry returns a specific ledger entry for an NFT. |
 | `LedgerBalancesAsOf` | [QueryLedgerBalancesAsOfRequest](#provenance-ledger-v1-QueryLedgerBalancesAsOfRequest) | [QueryLedgerBalancesAsOfResponse](#provenance-ledger-v1-QueryLedgerBalancesAsOfResponse) | LedgerBalancesAsOf returns the balances for a specific NFT as of a given date. |
@@ -8748,6 +8800,7 @@ It contains the complete registry entry for the requested key.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `registries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | registries is the collection of registry entries. This includes all roles and addresses associated with the specified NFT and asset class. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
 
 
 

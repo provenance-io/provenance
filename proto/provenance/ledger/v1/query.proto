@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/ledger/types";
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "provenance/ledger/v1/ledger.proto";
 import "provenance/ledger/v1/ledger_settlement.proto";
@@ -15,6 +16,11 @@ service Query {
   // LedgerClass returns the ledger class for a given ledger class id.
   rpc LedgerClass(QueryLedgerClassRequest) returns (QueryLedgerClassResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/class/{ledger_class_id}";
+  }
+
+  // LedgerClasses returns a paginated list of ledger classes.
+  rpc LedgerClasses(QueryLedgerClassesRequest) returns (QueryLedgerClassesResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/class";
   }
 
   // LedgerClassEntryTypes returns the entry types for a given ledger class id.
@@ -35,6 +41,11 @@ service Query {
   // Ledger returns the ledger for a given ledger key.
   rpc Ledger(QueryLedgerRequest) returns (QueryLedgerResponse) {
     option (google.api.http).get = "/provenance/ledger/v1/config/{key.asset_class_id}/{key.nft_id}";
+  }
+
+  // Ledgers returns a paginated list of ledgers.
+  rpc Ledgers(QueryLedgersRequest) returns (QueryLedgersResponse) {
+    option (google.api.http).get = "/provenance/ledger/v1/config";
   }
 
   // LedgerEntries returns the entries for a given ledger key.
@@ -75,6 +86,21 @@ message QueryLedgerClassRequest {
 // QueryLedgerClassResponse
 message QueryLedgerClassResponse {
   LedgerClass ledger_class = 1;
+}
+
+// QueryLedgerClassesRequest
+message QueryLedgerClassesRequest {
+  // pagination is an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryLedgerClassesResponse
+message QueryLedgerClassesResponse {
+  // List of ledger classes.
+  repeated LedgerClass ledger_classes = 1;
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryLedgerClassEntryTypesRequest
@@ -119,6 +145,21 @@ message QueryLedgerResponse {
   Ledger ledger = 1;
 }
 
+// QueryLedgersRequest
+message QueryLedgersRequest {
+  // pagination is an  pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryLedgersResponse
+message QueryLedgersResponse {
+  // List of ledgers.
+  repeated Ledger ledgers = 1;
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
 // QueryLedgerEntriesRequest
 message QueryLedgerEntriesRequest {
   // The ledger key identifying the ledger to query entries for.
@@ -155,7 +196,8 @@ message QueryLedgerBalancesAsOfRequest {
 
 // QueryLedgerBalancesAsOfResponse
 message QueryLedgerBalancesAsOfResponse {
-  BucketBalances bucket_balances = 1;
+  // BucketBalances represents the current balances for principal, interest, and other amounts
+  repeated BucketBalance bucket_balances = 1;
 }
 
 // QueryLedgerSettlementsRequest

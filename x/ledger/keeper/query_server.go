@@ -33,6 +33,19 @@ func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *types.QueryLed
 	}, nil
 }
 
+// LedgerClasses returns a paginated list of all ledger classes.
+func (qs LedgerQueryServer) LedgerClasses(ctx context.Context, req *types.QueryLedgerClassesRequest) (*types.QueryLedgerClassesResponse, error) {
+	ledgerClasses, pageRes, err := qs.k.GetAllLedgerClasses(ctx, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryLedgerClassesResponse{
+		LedgerClasses: ledgerClasses,
+		Pagination:    pageRes,
+	}, nil
+}
+
 // LedgerClassEntryTypes returns the entry types for a given ledger class id.
 func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *types.QueryLedgerClassEntryTypesRequest) (*types.QueryLedgerClassEntryTypesResponse, error) {
 	entryTypes, err := qs.k.GetLedgerClassEntryTypes(ctx, req.LedgerClassId)
@@ -87,6 +100,19 @@ func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *types.QueryLedger
 	}
 
 	return &resp, nil
+}
+
+// Ledgers returns a paginated list of all ledgers.
+func (qs LedgerQueryServer) Ledgers(ctx context.Context, req *types.QueryLedgersRequest) (*types.QueryLedgersResponse, error) {
+	ledgers, pageRes, err := qs.k.GetAllLedgers(ctx, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryLedgersResponse{
+		Ledgers:    ledgers,
+		Pagination: pageRes,
+	}, nil
 }
 
 // LedgerEntries returns the entries for a given ledger key.

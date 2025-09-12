@@ -27,7 +27,7 @@ func (s *TestSuite) TestAppendEntry() {
 		name   string
 		key    *ledger.LedgerKey
 		entry  ledger.LedgerEntry
-		expErr *ledger.ErrCode
+		expErr string // empty string = no error expected
 	}{
 		{
 			name: "valid amounts and balances",
@@ -52,7 +52,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-12",
 			},
-			expErr: nil,
+			expErr: "",
 		},
 		{
 			name: "valid amounts and balances with negative applied amount",
@@ -77,7 +77,7 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-13",
 			},
-			expErr: nil,
+			expErr: "",
 		},
 		{
 			name: "allow negative principal applied amount",
@@ -102,19 +102,14 @@ func (s *TestSuite) TestAppendEntry() {
 				},
 				CorrelationId: "test-correlation-id-15",
 			},
-			expErr: nil,
+			expErr: "",
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			err := s.keeper.AppendEntries(s.ctx, tc.key, []*ledger.LedgerEntry{&tc.entry})
-			if tc.expErr != nil {
-				s.Require().Error(err, "AppendEntry error")
-				s.Require().Contains(err.Error(), *tc.expErr, "AppendEntry error type")
-			} else {
-				s.Require().NoError(err, "AppendEntry error")
-			}
+			s.assertErrorValue(err, tc.expErr, "AppendEntry")
 		})
 	}
 }

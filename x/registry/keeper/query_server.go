@@ -41,12 +41,12 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegist
 func (qs QueryServer) GetRegistries(ctx context.Context, req *types.QueryGetRegistriesRequest) (*types.QueryGetRegistriesResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	registries, err := qs.keeper.GetRegistries(sdkCtx, req.Pagination, req.AssetClassId)
+	registries, pageRes, err := qs.keeper.GetRegistries(sdkCtx, req.Pagination, req.AssetClassId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryGetRegistriesResponse{Registries: registries}, nil
+	return &types.QueryGetRegistriesResponse{Registries: registries, Pagination: pageRes}, nil
 }
 
 // HasRole returns true if the address has the specified role for the given key.

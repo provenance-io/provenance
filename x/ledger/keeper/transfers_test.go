@@ -119,14 +119,20 @@ func (s *TestSuite) TestGetBalances() {
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(3, len(entries), "number of entries")
 
-	s.Require().Less(s.pastDate, helper.DaysSinceEpoch(time.Now().UTC()))
+	now := time.Now().UTC()
+	s.Require().Less(s.pastDate, helper.DaysSinceEpoch(now))
 
 	// Get balances
 	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.Key, time.Now().UTC())
 	s.Require().NoError(err, "GetBalances error")
-	s.Require().Equal(3, len(balances.BucketBalances), "number of bucket balances")
+	s.Require().Equal(3, len(balances), "number of bucket balances")
 
-	s.Require().Equal(math.NewInt(910), balances.BucketBalances[0].BalanceAmt)
-	s.Require().Equal(math.NewInt(-300), balances.BucketBalances[1].BalanceAmt)
-	s.Require().Equal(math.NewInt(100), balances.BucketBalances[2].BalanceAmt)
+	// Assert by bucket id to avoid relying on slice ordering.
+	got := map[int32]math.Int{}
+	for _, bb := range balances {
+		got[bb.BucketTypeId] = bb.BalanceAmt
+	}
+	s.Require().Equal(math.NewInt(910), got[1])
+	s.Require().Equal(math.NewInt(-300), got[2])
+	s.Require().Equal(math.NewInt(100), got[3])
 }

@@ -276,7 +276,7 @@ func (k Keeper) RequireGetLedgerEntry(ctx sdk.Context, lk *types.LedgerKey, corr
 // GetBalancesAsOf returns the principal, interest, and other balances as of a specific effective date.
 // This function calculates the current state of all buckets by processing ledger entries up to the specified date.
 // It provides a point-in-time view of the ledger's financial state.
-func (k Keeper) GetBalancesAsOf(ctx context.Context, key *types.LedgerKey, asOfDate time.Time) (*types.BucketBalances, error) {
+func (k Keeper) GetBalancesAsOf(ctx context.Context, key *types.LedgerKey, asOfDate time.Time) ([]*types.BucketBalance, error) {
 	// Convert the date to days since epoch for comparison with ledger entries.
 	asOfDateInt := helper.DaysSinceEpoch(asOfDate.UTC())
 
@@ -314,7 +314,5 @@ func (k Keeper) GetBalancesAsOf(ctx context.Context, key *types.LedgerKey, asOfD
 		bucketBalancesList[i] = bucketBalances[bt]
 	}
 
-	return &types.BucketBalances{
-		BucketBalances: bucketBalancesList,
-	}, nil
+	return bucketBalancesList, nil
 }

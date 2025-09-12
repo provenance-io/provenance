@@ -210,12 +210,12 @@ func numericToUint64(v interface{}) (uint64, bool) {
 	}
 }
 
-// NewDefaultMarker creates a new default marker account for a given denom and from address
-func NewDefaultMarker(token sdk.Coin, fromAddr string) (*markertypes.MarkerAccount, error) {
+// NewDefaultMarker creates a new default marker account for a given token and address
+func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, error) {
 	// Get the from address
-	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
+	fromAcc, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid from address: %w", err)
+		return nil, fmt.Errorf("invalid address: %w", err)
 	}
 
 	// Get the address of the new marker.
@@ -225,6 +225,10 @@ func NewDefaultMarker(token sdk.Coin, fromAddr string) (*markertypes.MarkerAccou
 	}
 
 	// Create a new marker account
+	markerAddr, err := markertypes.MarkerAddress(token.Denom)
+	if err != nil {
+		return &markertypes.MarkerAccount{}, fmt.Errorf("invalid marker address: %w", err)
+	}
 	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markerAddr),
 		token,
