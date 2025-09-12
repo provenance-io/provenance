@@ -1068,7 +1068,7 @@ func (s *MsgServerTestSuite) TestMsgTransferMarkerRequest() {
 
 	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0)
 	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
-	s.Assert().NoError(err, "should sucessfully add marker")
+	s.Assert().NoError(err, "should successfully add marker")
 
 	addAccessMsg := types.NewMsgAddAccessRequest(hotdogDenom, s.owner1Addr, access)
 	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)

@@ -599,7 +599,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			finalHold: s.coins("99banana,3cucumber"),
 		},
 		{
-			name:      "insufficent spendable: some already on hold",
+			name:      "insufficient spendable: some already on hold",
 			addr:      s.addr1,
 			funds:     s.coins("2cucumber"),
 			spendBal:  s.coins("1cucumber"),
@@ -880,7 +880,7 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 			expEvents: makeEvents(s.addr4, s.coins("1844674407370955161400hugecoin")),
 		},
 		{
-			name:      "exising amount more than max uint64 and amount released is less with result also less",
+			name:      "existing amount more than max uint64 and amount released is less with result also less",
 			addr:      s.addr4,
 			funds:     s.coins("10000000000000000000mediumcoin"),
 			finalHold: s.coins("99hugecoin,1000000000000000000000largecoin,10000000000000000000mediumcoin"),

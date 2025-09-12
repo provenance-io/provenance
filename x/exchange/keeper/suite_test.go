@@ -12,6 +12,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -249,7 +250,7 @@ func (s *TestSuite) ratios(ratiosStr string) []exchange.FeeRatio {
 	return rv
 }
 
-// ratiosStrings converts the ratios into strings. It's because comparsions on sdk.Coin (or sdkmath.Int) are annoying.
+// ratiosStrings converts the ratios into strings. It's because comparisons on sdk.Coin (or sdkmath.Int) are annoying.
 func (s *TestSuite) ratiosStrings(ratios []exchange.FeeRatio) []string {
 	return sliceStrings(ratios, exchange.FeeRatio.String)
 }
