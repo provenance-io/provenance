@@ -77,25 +77,21 @@ func (s *MsgServerTestSuite) TestCreateAssetClass() {
 
 	// Verify event emission
 	events := s.ctx.EventManager().Events()
-	event := s.findEventByType(events, types.EventTypeAssetClassCreated)
+	event := s.findEventByType(events, "provenance.asset.v1.EventAssetClassCreated")
 	s.Require().NotNil(event, "EventAssetClassCreated should be emitted")
 
 	// Verify event attributes
-	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
+	assetClassIdAttr := s.findAttributeByKey(event, "asset_class_id")
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
-	s.Require().Equal("asset-class-1", assetClassIdAttr.Value)
+	s.Require().Equal(`"asset-class-1"`, assetClassIdAttr.Value)
 
-	assetNameAttr := s.findAttributeByKey(event, types.AttributeKeyAssetName)
+	assetNameAttr := s.findAttributeByKey(event, "asset_name")
 	s.Require().NotNil(assetNameAttr, "asset_name attribute should be present")
-	s.Require().Equal("AssetClass1", assetNameAttr.Value)
+	s.Require().Equal(`"AssetClass1"`, assetNameAttr.Value)
 
-	assetSymbolAttr := s.findAttributeByKey(event, types.AttributeKeyAssetSymbol)
+	assetSymbolAttr := s.findAttributeByKey(event, "asset_symbol")
 	s.Require().NotNil(assetSymbolAttr, "asset_symbol attribute should be present")
-	s.Require().Equal("AC1", assetSymbolAttr.Value)
-
-	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
-	s.Require().NotNil(ownerAttr, "owner attribute should be present")
-	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+	s.Require().Equal(`"AC1"`, assetSymbolAttr.Value)
 }
 
 func (s *MsgServerTestSuite) TestCreateAsset() {
@@ -150,21 +146,21 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 
 	// Verify event emission
 	events := s.ctx.EventManager().Events()
-	event := s.findEventByType(events, types.EventTypeAssetCreated)
+	event := s.findEventByType(events, "provenance.asset.v1.EventAssetCreated")
 	s.Require().NotNil(event, "EventAssetCreated should be emitted")
 
 	// Verify event attributes
-	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
+	assetClassIdAttr := s.findAttributeByKey(event, "asset_class_id")
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
-	s.Require().Equal("asset-class-2", assetClassIdAttr.Value)
+	s.Require().Equal(`"asset-class-2"`, assetClassIdAttr.Value)
 
-	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetID)
+	assetIdAttr := s.findAttributeByKey(event, "asset_id")
 	s.Require().NotNil(assetIdAttr, "asset_id attribute should be present")
-	s.Require().Equal("asset-1", assetIdAttr.Value)
+	s.Require().Equal(`"asset-1"`, assetIdAttr.Value)
 
-	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	ownerAttr := s.findAttributeByKey(event, "owner")
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
-	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+	s.Require().Equal(`"`+s.user1Addr.String()+`"`, ownerAttr.Value)
 }
 
 func (s *MsgServerTestSuite) TestCreatePool() {
@@ -237,21 +233,21 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 
 	// Verify event emission
 	events := s.ctx.EventManager().Events()
-	event := s.findEventByType(events, types.EventTypePoolCreated)
+	event := s.findEventByType(events, "provenance.asset.v1.EventPoolCreated")
 	s.Require().NotNil(event, "EventPoolCreated should be emitted")
 
 	// Verify event attributes
-	poolAmountAttr := s.findAttributeByKey(event, types.AttributeKeyPool)
+	poolAmountAttr := s.findAttributeByKey(event, "pool")
 	s.Require().NotNil(poolAmountAttr, "pool attribute should be present")
-	s.Require().Equal("1000pooltoken", poolAmountAttr.Value)
+	s.Require().Equal(`"1000pooltoken"`, poolAmountAttr.Value)
 
-	assetCountAttr := s.findAttributeByKey(event, types.AttributeKeyAssetCount)
+	assetCountAttr := s.findAttributeByKey(event, "asset_count")
 	s.Require().NotNil(assetCountAttr, "asset_count attribute should be present")
-	s.Require().Equal("2", assetCountAttr.Value)
+	s.Require().Equal(`2`, assetCountAttr.Value)
 
-	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	ownerAttr := s.findAttributeByKey(event, "owner")
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
-	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+	s.Require().Equal(`"`+s.user1Addr.String()+`"`, ownerAttr.Value)
 }
 
 func (s *MsgServerTestSuite) TestCreateTokenization() {
@@ -301,25 +297,25 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 
 	// Verify event emission
 	events := s.ctx.EventManager().Events()
-	event := s.findEventByType(events, types.EventTypeTokenizationCreated)
+	event := s.findEventByType(events, "provenance.asset.v1.EventTokenizationCreated")
 	s.Require().NotNil(event, "EventTokenizationCreated should be emitted")
 
 	// Verify event attributes
-	tokenizationTokenAttr := s.findAttributeByKey(event, types.AttributeKeyTokenization)
+	tokenizationTokenAttr := s.findAttributeByKey(event, "tokenization")
 	s.Require().NotNil(tokenizationTokenAttr, "tokenization_token attribute should be present")
-	s.Require().Equal("500tokenization", tokenizationTokenAttr.Value)
+	s.Require().Equal(`"500tokenization"`, tokenizationTokenAttr.Value)
 
-	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
+	assetClassIdAttr := s.findAttributeByKey(event, "asset_class_id")
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
-	s.Require().Equal("asset-class-token", assetClassIdAttr.Value)
+	s.Require().Equal(`"asset-class-token"`, assetClassIdAttr.Value)
 
-	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetID)
+	assetIdAttr := s.findAttributeByKey(event, "asset_id")
 	s.Require().NotNil(assetIdAttr, "asset_id attribute should be present")
-	s.Require().Equal("asset-token-1", assetIdAttr.Value)
+	s.Require().Equal(`"asset-token-1"`, assetIdAttr.Value)
 
-	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	ownerAttr := s.findAttributeByKey(event, "owner")
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
-	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+	s.Require().Equal(`"`+s.user1Addr.String()+`"`, ownerAttr.Value)
 
 	// Verify that the NFT was transferred to the tokenization marker
 	// Get the marker account
@@ -428,25 +424,25 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 
 	// Verify event emission
 	events := s.ctx.EventManager().Events()
-	event := s.findEventByType(events, types.EventTypeSecuritizationCreated)
+	event := s.findEventByType(events, "provenance.asset.v1.EventSecuritizationCreated")
 	s.Require().NotNil(event, "EventSecuritizationCreated should be emitted")
 
 	// Verify event attributes
-	securitizationIdAttr := s.findAttributeByKey(event, types.AttributeKeySecuritizationID)
+	securitizationIdAttr := s.findAttributeByKey(event, "securitization_id")
 	s.Require().NotNil(securitizationIdAttr, "securitization_id attribute should be present")
-	s.Require().Equal("sec-1", securitizationIdAttr.Value)
+	s.Require().Equal(`"sec-1"`, securitizationIdAttr.Value)
 
-	trancheCountAttr := s.findAttributeByKey(event, types.AttributeKeyTrancheCount)
+	trancheCountAttr := s.findAttributeByKey(event, "tranche_count")
 	s.Require().NotNil(trancheCountAttr, "tranche_count attribute should be present")
-	s.Require().Equal("2", trancheCountAttr.Value)
+	s.Require().Equal(`2`, trancheCountAttr.Value)
 
-	poolCountAttr := s.findAttributeByKey(event, types.AttributeKeyPoolCount)
+	poolCountAttr := s.findAttributeByKey(event, "pool_count")
 	s.Require().NotNil(poolCountAttr, "pool_count attribute should be present")
-	s.Require().Equal("2", poolCountAttr.Value)
+	s.Require().Equal(`2`, poolCountAttr.Value)
 
-	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	ownerAttr := s.findAttributeByKey(event, "owner")
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
-	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+	s.Require().Equal(`"`+s.user1Addr.String()+`"`, ownerAttr.Value)
 }
 
 func (s *MsgServerTestSuite) TestBurnAsset() {
@@ -495,21 +491,21 @@ func (s *MsgServerTestSuite) TestBurnAsset() {
 
 	// Verify event emission
 	events := s.ctx.EventManager().Events()
-	event := s.findEventByType(events, types.EventTypeAssetBurned)
-	s.Require().NotNil(event, "EventTypeAssetBurned should be emitted")
+	event := s.findEventByType(events, "provenance.asset.v1.EventAssetBurned")
+	s.Require().NotNil(event, "EventAssetBurned should be emitted")
 
 	// Verify event attributes
-	assetClassIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetClassID)
+	assetClassIdAttr := s.findAttributeByKey(event, "asset_class_id")
 	s.Require().NotNil(assetClassIdAttr, "asset_class_id attribute should be present")
-	s.Require().Equal("test-class", assetClassIdAttr.Value)
+	s.Require().Equal(`"test-class"`, assetClassIdAttr.Value)
 
-	assetIdAttr := s.findAttributeByKey(event, types.AttributeKeyAssetID)
+	assetIdAttr := s.findAttributeByKey(event, "asset_id")
 	s.Require().NotNil(assetIdAttr, "asset_id attribute should be present")
-	s.Require().Equal("test-asset", assetIdAttr.Value)
+	s.Require().Equal(`"test-asset"`, assetIdAttr.Value)
 
-	ownerAttr := s.findAttributeByKey(event, types.AttributeKeyOwner)
+	ownerAttr := s.findAttributeByKey(event, "owner")
 	s.Require().NotNil(ownerAttr, "owner attribute should be present")
-	s.Require().Equal(s.user1Addr.String(), ownerAttr.Value)
+	s.Require().Equal(`"`+s.user1Addr.String()+`"`, ownerAttr.Value)
 
 	// Verify the asset no longer exists by trying to query its owner
 	// Note: In unit tests, the NFT keeper might return a different error than in production

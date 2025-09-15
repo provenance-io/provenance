@@ -190,16 +190,25 @@ func toStringSlice(v interface{}) ([]string, error) {
 	return out, nil
 }
 
-// numericToUint64 converts a numeric value to a uint64
+// numericToUint64 safely converts a numeric value to a uint64
 func numericToUint64(v interface{}) (uint64, bool) {
 	switch n := v.(type) {
 	case uint64:
 		return n, true
 	case int:
+		if n < 0 {
+			return 0, false
+		}
 		return uint64(n), true
 	case int32:
+		if n < 0 {
+			return 0, false
+		}
 		return uint64(n), true
 	case int64:
+		if n < 0 {
+			return 0, false
+		}
 		return uint64(n), true
 	case uint:
 		return uint64(n), true

@@ -807,6 +807,14 @@
   
     - [Msg](#provenance-asset-v1-Msg)
   
+- [provenance/asset/v1/events.proto](#provenance_asset_v1_events-proto)
+    - [EventAssetBurned](#provenance-asset-v1-EventAssetBurned)
+    - [EventAssetClassCreated](#provenance-asset-v1-EventAssetClassCreated)
+    - [EventAssetCreated](#provenance-asset-v1-EventAssetCreated)
+    - [EventPoolCreated](#provenance-asset-v1-EventPoolCreated)
+    - [EventSecuritizationCreated](#provenance-asset-v1-EventSecuritizationCreated)
+    - [EventTokenizationCreated](#provenance-asset-v1-EventTokenizationCreated)
+  
 - [provenance/flatfees/v1/flatfees.proto](#provenance_flatfees_v1_flatfees-proto)
     - [ConversionFactor](#provenance-flatfees-v1-ConversionFactor)
     - [MsgFee](#provenance-flatfees-v1-MsgFee)
@@ -12319,6 +12327,138 @@ Msg defines the asset module's message service.
 | `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a marker for the pool and transfers the assets to the pool marker. |
 | `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker. |
 | `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the securitization marker. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/events.proto
+
+
+
+<a name="provenance-asset-v1-EventAssetBurned"></a>
+
+### EventAssetBurned
+EventAssetBurned is emitted when an asset is burned.
+This event is triggered by the MsgBurnAsset message handler when an
+asset is successfully burned and removed from circulation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the class identifier of the burned asset |
+| `asset_id` | [string](#string) |  | asset_id is the unique identifier of the burned asset |
+| `owner` | [string](#string) |  | owner is the address of the account that owned the asset before it was burned |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventAssetClassCreated"></a>
+
+### EventAssetClassCreated
+EventAssetClassCreated is emitted when a new asset class is created.
+This event is triggered by the MsgCreateAssetClass message handler when
+an asset class is successfully created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the unique identifier of the created asset class |
+| `asset_name` | [string](#string) |  | asset_name is the human-readable name of the asset class |
+| `asset_symbol` | [string](#string) |  | asset_symbol is the symbol or ticker for the asset class |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventAssetCreated"></a>
+
+### EventAssetCreated
+EventAssetCreated is emitted when a new asset is created.
+This event is triggered by the MsgCreateAsset message handler when
+an asset is successfully created and minted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the class identifier of the created asset |
+| `asset_id` | [string](#string) |  | asset_id is the unique identifier of the created asset |
+| `owner` | [string](#string) |  | owner is the address of the account that owns the newly created asset |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventPoolCreated"></a>
+
+### EventPoolCreated
+EventPoolCreated is emitted when a new pool is created.
+This event is triggered by the MsgCreatePool message handler when
+a pool is successfully created with assets.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool` | [string](#string) |  | pool is the coin representation of the created pool |
+| `asset_count` | [uint32](#uint32) |  | asset_count is the number of assets added to the pool |
+| `owner` | [string](#string) |  | owner is the address of the account that created the pool |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventSecuritizationCreated"></a>
+
+### EventSecuritizationCreated
+EventSecuritizationCreated is emitted when a securitization is created.
+This event is triggered by the MsgCreateSecuritization message handler when
+a securitization is successfully created with tranches and pools.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `securitization_id` | [string](#string) |  | securitization_id is the unique identifier of the created securitization |
+| `tranche_count` | [uint32](#uint32) |  | tranche_count is the number of tranches in the securitization |
+| `pool_count` | [uint32](#uint32) |  | pool_count is the number of pools in the securitization |
+| `owner` | [string](#string) |  | owner is the address of the account that created the securitization |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventTokenizationCreated"></a>
+
+### EventTokenizationCreated
+EventTokenizationCreated is emitted when a tokenization marker is created.
+This event is triggered by the MsgCreateTokenization message handler when
+a tokenization is successfully created for an asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tokenization` | [string](#string) |  | tokenization is the coin representation of the tokenization marker |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the class identifier of the tokenized asset |
+| `asset_id` | [string](#string) |  | asset_id is the unique identifier of the tokenized asset |
+| `owner` | [string](#string) |  | owner is the address of the account that created the tokenization |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

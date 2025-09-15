@@ -132,7 +132,6 @@ func (msg MsgBurnAsset) ValidateBasic() error {
 		return fmt.Errorf("id cannot be empty")
 	}
 
-
 	if err := msg.Asset.Validate(); err != nil {
 		return fmt.Errorf("invalid asset: %w", err)
 	}
