@@ -5219,7 +5219,7 @@ Ledger defines an servicing ledger for an asset.
 | `status_type_id` | [int32](#int32) |  | The status of the ledger. |
 | `next_pmt_date` | [int32](#int32) |  | The next payment date (days since epoch). |
 | `next_pmt_amt` | [int64](#int64) |  | The next payment amount. |
-| `interest_rate` | [int32](#int32) |  | The interest rate (10000000 = 10.000000%) - 6 decimal places. |
+| `interest_rate` | [int32](#int32) |  | The interest rate. Min = 0, Max = 100,000,000 = 100%, e.g. 4,321,987 = 4.321987%. |
 | `maturity_date` | [int32](#int32) |  | The maturity date (days since epoch). |
 | `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The day count convention for interest calculations. |
 | `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The interest accrual method for interest calculations. |

@@ -229,9 +229,9 @@ func (l *Ledger) Validate() error {
 		return NewErrCodeInvalidField("next_pmt_amt", "must be a non-negative integer")
 	}
 
-	// Validate interest rate if provided (reasonable bounds: 0-100000000 for 0-1000%)
-	if l.InterestRate < 0 || l.InterestRate > 100000000 {
-		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100000000 (0-1000%)")
+	// Validate interest rate if provided (reasonable bounds: 0-100000000 for 0-100%)
+	if l.InterestRate < 0 || l.InterestRate > 100_000_000 {
+		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100,000,000 (0-100%)")
 	}
 
 	// Validate maturity date format if provided

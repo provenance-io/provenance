@@ -447,7 +447,7 @@ type Ledger struct {
 	NextPmtDate int32 `protobuf:"varint,4,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"nextPmtDate,omitempty"`
 	// The next payment amount.
 	NextPmtAmt int64 `protobuf:"varint,5,opt,name=next_pmt_amt,json=nextPmtAmt,proto3" json:"nextPmtAmt,omitempty"`
-	// The interest rate (10000000 = 10.000000%) - 6 decimal places.
+	// The interest rate. Min = 0, Max = 100,000,000 = 100%, e.g. 4,321,987 = 4.321987%.
 	InterestRate int32 `protobuf:"varint,6,opt,name=interest_rate,json=interestRate,proto3" json:"interestRate,omitempty"`
 	// The maturity date (days since epoch).
 	MaturityDate int32 `protobuf:"varint,7,opt,name=maturity_date,json=maturityDate,proto3" json:"maturityDate,omitempty"`

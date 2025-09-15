@@ -69,9 +69,9 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 		return err
 	}
 
-	// Validate interest rate bounds (reasonable bounds: 0-100000000 for 0-1000%)
-	if m.InterestRate < 0 || m.InterestRate > 100000000 {
-		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100000000 (0-1000%)")
+	// Validate interest rate bounds (reasonable bounds: 0-100000000 for 0-100%)
+	if m.InterestRate < 0 || m.InterestRate > 100_000_000 {
+		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100,000,000 (0-100%)")
 	}
 
 	if err := m.InterestDayCountConvention.Validate(); err != nil {
