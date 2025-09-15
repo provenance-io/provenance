@@ -8,6 +8,7 @@ import (
 
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
+	(*MsgBurnAsset)(nil),
 	(*MsgCreateAsset)(nil),
 	(*MsgCreateAssetClass)(nil),
 	(*MsgCreatePool)(nil),
@@ -112,6 +113,28 @@ func (msg MsgCreateSecuritization) ValidateBasic() error {
 		if err := tranche.Validate(); err != nil {
 			return fmt.Errorf("invalid tranche at index %d: %w", i, err)
 		}
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateBasic performs basic validation on the MsgBurnAsset message.
+func (msg MsgBurnAsset) ValidateBasic() error {
+	if msg.Asset.ClassId == "" {
+		return fmt.Errorf("class id cannot be empty")
+	}
+
+	if msg.Asset.Id == "" {
+		return fmt.Errorf("id cannot be empty")
+	}
+
+
+	if err := msg.Asset.Validate(); err != nil {
+		return fmt.Errorf("invalid asset: %w", err)
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {

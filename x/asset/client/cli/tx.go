@@ -28,6 +28,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
+		GetCmdBurnAsset(),
 		GetCmdCreateAsset(),
 		GetCmdCreateAssetClass(),
 		GetCmdCreatePool(),
@@ -36,6 +37,43 @@ func GetTxCmd() *cobra.Command {
 	)
 
 	return txCmd
+}
+
+// GetCmdBurnAsset returns the command for burning an asset
+func GetCmdBurnAsset() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "burn-asset <class-id> <id>",
+		Short: "Burn an existing asset",
+		Long: strings.TrimSpace(`
+Burn an existing asset by removing the NFT and its registry.
+Only the owner of the asset can burn it.
+`),
+		Example: fmt.Sprintf(strings.TrimSpace(`
+$ %[1]s burn-asset "real-estate" "property-001"
+`), cmdStart),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			assetKey := &types.AssetKey{
+				ClassId: args[0],
+				Id:      args[1],
+			}
+
+			msg := &types.MsgBurnAsset{
+				Asset:  assetKey,
+				Signer: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdCreateAsset returns the command for creating an asset

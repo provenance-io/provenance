@@ -1,6 +1,8 @@
 package types
 
 const (
+	// EventTypeAssetBurned emitted when an asset is burned
+	EventTypeAssetBurned string = "asset_burned"
 	// EventTypeAssetClassCreated emitted when an asset class is created
 	EventTypeAssetClassCreated string = "asset_class_created"
 	// EventTypeAssetCreated emitted when an asset is created

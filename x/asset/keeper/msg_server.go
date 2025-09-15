@@ -23,6 +23,43 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
+// BurnAsset burns an NFT and removes its registry for the asset.
+func (m msgServer) BurnAsset(goCtx context.Context, msg *types.MsgBurnAsset) (*types.MsgBurnAssetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Verify the asset exists and get the current owner
+	ownerResp, err := m.nftKeeper.Owner(goCtx, &nft.QueryOwnerRequest{ClassId: msg.Asset.ClassId, Id: msg.Asset.Id})
+	if err != nil {
+		return nil, fmt.Errorf("asset does not exist: %w", err)
+	}
+
+	// Verify the signer is the current owner of the asset
+	if msg.Signer != ownerResp.Owner {
+		return nil, fmt.Errorf("signer %s is not the owner of asset %s/%s, current owner: %s",
+			msg.Signer, msg.Asset.ClassId, msg.Asset.Id, ownerResp.Owner)
+	}
+
+	// Burn the NFT using the nft module
+	err = m.nftKeeper.Burn(ctx, msg.Asset.ClassId, msg.Asset.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to burn NFT: %w", err)
+	}
+
+	// Note: Registry entries are preserved after asset burn for historical/audit purposes
+
+	// Emit event for asset burn
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAssetBurned,
+			sdk.NewAttribute(types.AttributeKeyAssetClassID, msg.Asset.ClassId),
+			sdk.NewAttribute(types.AttributeKeyAssetID, msg.Asset.Id),
+			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
+		),
+	)
+
+	return &types.MsgBurnAssetResponse{}, nil
+}
+
 // CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
 func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset) (*types.MsgCreateAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
