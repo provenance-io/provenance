@@ -11,20 +11,20 @@ import (
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
-		func(signer string) sdk.Msg { return &MsgCreateLedgerRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgUpdateStatusRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgUpdateInterestRateRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgUpdatePaymentRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgUpdateMaturityDateRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgAppendRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgUpdateBalancesRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgTransferFundsWithSettlementRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgDestroyRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgCreateLedgerClassRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgAddLedgerClassStatusTypeRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgAddLedgerClassEntryTypeRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgAddLedgerClassBucketTypeRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgBulkCreateRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgCreateLedgerRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateStatusRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateInterestRateRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdatePaymentRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateMaturityDateRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgAppendRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateBalancesRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgTransferFundsWithSettlementRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgDestroyRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgCreateLedgerClassRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgAddLedgerClassStatusTypeRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgAddLedgerClassEntryTypeRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgAddLedgerClassBucketTypeRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgBulkCreateRequest{Signer: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)

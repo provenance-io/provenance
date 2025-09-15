@@ -180,7 +180,7 @@ func (s *MsgServerTestSuite) TestAppend() {
 						CorrelationId: "test-correlation-id-append",
 					},
 				},
-				Authority: s.validAddress1.String(),
+				Signer: s.validAddress1.String(),
 			},
 			expResp: &ledger.MsgAppendResponse{},
 		},
@@ -203,7 +203,7 @@ func (s *MsgServerTestSuite) TestAppend() {
 						CorrelationId: "test-correlation-id-unauthorized",
 					},
 				},
-				Authority: "cosmos1invalid",
+				Signer: "cosmos1invalid",
 			},
 			expErr: "unauthorized",
 		},
@@ -226,7 +226,7 @@ func (s *MsgServerTestSuite) TestAppend() {
 						CorrelationId: "test-correlation-id-invalid-type",
 					},
 				},
-				Authority: s.validAddress1.String(),
+				Signer: s.validAddress1.String(),
 			},
 			expErr: "entry type doesn't exist",
 		},
@@ -279,7 +279,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 			name: "successful update balances",
 			req: &ledger.MsgUpdateBalancesRequest{
 				Key:           s.existingLedger.Key,
-				Authority:     s.validAddress1.String(),
+				Signer:        s.validAddress1.String(),
 				CorrelationId: "test-correlation-id-update-balances",
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
 					{
@@ -300,7 +300,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 			name: "unauthorized update balances",
 			req: &ledger.MsgUpdateBalancesRequest{
 				Key:           s.existingLedger.Key,
-				Authority:     s.validAddress2.String(),
+				Signer:        s.validAddress2.String(),
 				CorrelationId: "test-correlation-id-update-balances",
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
 					{
@@ -321,7 +321,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 			name: "non-existent entry",
 			req: &ledger.MsgUpdateBalancesRequest{
 				Key:           s.existingLedger.Key,
-				Authority:     s.validAddress1.String(),
+				Signer:        s.validAddress1.String(),
 				CorrelationId: "non-existent-correlation-id",
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
 					{
@@ -388,7 +388,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 					LedgerClassId: s.validLedgerClass.LedgerClassId,
 					StatusTypeId:  1,
 				},
-				Authority: nftOwner.String(),
+				Signer: nftOwner.String(),
 			},
 			expResp: &ledger.MsgCreateLedgerResponse{},
 		},
@@ -417,7 +417,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 					StatusTypeId:  1,
 				},
 				// Note that we authorize with the servicer address, not the owner address
-				Authority: nftServicer.String(),
+				Signer: nftServicer.String(),
 			},
 			expResp: &ledger.MsgCreateLedgerResponse{},
 		},
@@ -439,7 +439,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 					StatusTypeId:  1,
 				},
 				// Servicer shouldn't be able to create a ledger because there is no registry/role
-				Authority: nftServicer.String(),
+				Signer: nftServicer.String(),
 			},
 			expErr: ledger.ErrUnauthorized,
 		},
@@ -467,15 +467,15 @@ func (s *MsgServerTestSuite) TestCreate() {
 					StatusTypeId:  1,
 				},
 				// Owner has given servicing off to a servicer, so they shouldn't be able to create a ledger
-				Authority: nftOwner.String(),
+				Signer: nftOwner.String(),
 			},
 			expErr: ledger.ErrUnauthorized,
 		},
 		{
 			name: "duplicate ledger",
 			req: &ledger.MsgCreateLedgerRequest{
-				Ledger:    s.existingLedger,
-				Authority: nftOwner.String(),
+				Ledger: s.existingLedger,
+				Signer: nftOwner.String(),
 			},
 			expErr: ledger.ErrAlreadyExists,
 		},
@@ -526,7 +526,7 @@ func (s *MsgServerTestSuite) TestUpdateStatus() {
 			name: "successful update status",
 			req: &ledger.MsgUpdateStatusRequest{
 				Key:          s.existingLedger.Key,
-				Authority:    s.validAddress1.String(),
+				Signer:       s.validAddress1.String(),
 				StatusTypeId: 2,
 			},
 			expResp: &ledger.MsgUpdateStatusResponse{},
@@ -535,7 +535,7 @@ func (s *MsgServerTestSuite) TestUpdateStatus() {
 			name: "unauthorized update status",
 			req: &ledger.MsgUpdateStatusRequest{
 				Key:          s.existingLedger.Key,
-				Authority:    s.validAddress2.String(),
+				Signer:       s.validAddress2.String(),
 				StatusTypeId: 2,
 			},
 			expErr: ledger.ErrUnauthorized,
@@ -547,7 +547,7 @@ func (s *MsgServerTestSuite) TestUpdateStatus() {
 					AssetClassId: s.validNFTClass.Id,
 					NftId:        "non-existent-nft",
 				},
-				Authority:    s.validAddress1.String(),
+				Signer:       s.validAddress1.String(),
 				StatusTypeId: 2,
 			},
 			expErr: ledger.ErrNotFound,
@@ -590,7 +590,7 @@ func (s *MsgServerTestSuite) TestUpdateInterestRate() {
 			name: "successful update interest rate",
 			req: &ledger.MsgUpdateInterestRateRequest{
 				Key:                        s.existingLedger.Key,
-				Authority:                  s.validAddress1.String(),
+				Signer:                     s.validAddress1.String(),
 				InterestRate:               5000000, // 5%
 				InterestDayCountConvention: ledger.DAY_COUNT_CONVENTION_ACTUAL_365,
 				InterestAccrualMethod:      ledger.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST,
@@ -601,7 +601,7 @@ func (s *MsgServerTestSuite) TestUpdateInterestRate() {
 			name: "unauthorized update interest rate",
 			req: &ledger.MsgUpdateInterestRateRequest{
 				Key:                        s.existingLedger.Key,
-				Authority:                  "cosmos1invalid",
+				Signer:                     "cosmos1invalid",
 				InterestRate:               5000000,
 				InterestDayCountConvention: ledger.DAY_COUNT_CONVENTION_ACTUAL_365,
 				InterestAccrualMethod:      ledger.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST,
@@ -642,7 +642,7 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 			name: "successful update payment",
 			req: &ledger.MsgUpdatePaymentRequest{
 				Key:              s.existingLedger.Key,
-				Authority:        s.validAddress1.String(),
+				Signer:           s.validAddress1.String(),
 				NextPmtAmt:       1000,
 				NextPmtDate:      helper.DaysSinceEpoch(nextPmtDate),
 				PaymentFrequency: ledger.PAYMENT_FREQUENCY_MONTHLY,
@@ -653,7 +653,7 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 			name: "unauthorized update payment",
 			req: &ledger.MsgUpdatePaymentRequest{
 				Key:              s.existingLedger.Key,
-				Authority:        "cosmos1invalid",
+				Signer:           "cosmos1invalid",
 				NextPmtAmt:       1000,
 				NextPmtDate:      helper.DaysSinceEpoch(nextPmtDate),
 				PaymentFrequency: ledger.PAYMENT_FREQUENCY_MONTHLY,
@@ -694,7 +694,7 @@ func (s *MsgServerTestSuite) TestUpdateMaturityDate() {
 			name: "successful update maturity date",
 			req: &ledger.MsgUpdateMaturityDateRequest{
 				Key:          s.existingLedger.Key,
-				Authority:    s.validAddress1.String(),
+				Signer:       s.validAddress1.String(),
 				MaturityDate: helper.DaysSinceEpoch(maturityDate),
 			},
 			expResp: &ledger.MsgUpdateMaturityDateResponse{},
@@ -703,7 +703,7 @@ func (s *MsgServerTestSuite) TestUpdateMaturityDate() {
 			name: "unauthorized update maturity date",
 			req: &ledger.MsgUpdateMaturityDateRequest{
 				Key:          s.existingLedger.Key,
-				Authority:    "cosmos1invalid",
+				Signer:       "cosmos1invalid",
 				MaturityDate: helper.DaysSinceEpoch(maturityDate),
 			},
 			expErr: "unauthorized",
@@ -760,7 +760,7 @@ func (s *MsgServerTestSuite) TestTransferFundsWithSettlement() {
 		{
 			name: "successful transfer funds with settlement",
 			req: &ledger.MsgTransferFundsWithSettlementRequest{
-				Authority: s.validAddress1.String(),
+				Signer: s.validAddress1.String(),
 				Transfers: []*ledger.FundTransferWithSettlement{
 					{
 						Key:                      s.existingLedger.Key,
@@ -784,7 +784,7 @@ func (s *MsgServerTestSuite) TestTransferFundsWithSettlement() {
 		{
 			name: "unauthorized transfer funds",
 			req: &ledger.MsgTransferFundsWithSettlementRequest{
-				Authority: s.validAddress2.String(),
+				Signer: s.validAddress2.String(),
 				Transfers: []*ledger.FundTransferWithSettlement{
 					{
 						Key:                      s.existingLedger.Key,
@@ -835,16 +835,16 @@ func (s *MsgServerTestSuite) TestDestroy() {
 		{
 			name: "unauthorized destroy",
 			req: &ledger.MsgDestroyRequest{
-				Key:       s.existingLedger.Key,
-				Authority: s.validAddress2.String(),
+				Key:    s.existingLedger.Key,
+				Signer: s.validAddress2.String(),
 			},
 			expErr: ledger.ErrUnauthorized,
 		},
 		{
 			name: "successful destroy",
 			req: &ledger.MsgDestroyRequest{
-				Key:       s.existingLedger.Key,
-				Authority: s.validAddress1.String(),
+				Key:    s.existingLedger.Key,
+				Signer: s.validAddress1.String(),
 			},
 			expResp: &ledger.MsgDestroyResponse{},
 		},
@@ -855,7 +855,7 @@ func (s *MsgServerTestSuite) TestDestroy() {
 					AssetClassId: s.validNFTClass.Id,
 					NftId:        "non-existent-nft",
 				},
-				Authority: s.validAddress1.String(),
+				Signer: s.validAddress1.String(),
 			},
 			expErr: ledger.ErrNotFound,
 		},
@@ -897,7 +897,7 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 					MaintainerAddress: authorityAddr.String(),
 					Denom:             s.bondDenom,
 				},
-				Authority: authorityAddr.String(),
+				Signer: authorityAddr.String(),
 			},
 			expResp: &ledger.MsgCreateLedgerClassResponse{},
 		},
@@ -910,7 +910,7 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 					MaintainerAddress: authorityAddr.String(),
 					Denom:             s.bondDenom,
 				},
-				Authority: authorityAddr.String(),
+				Signer: authorityAddr.String(),
 			},
 			expErr: "already exists",
 		},
@@ -952,7 +952,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 					Code:        "COMPLETED",
 					Description: "Completed",
 				},
-				Authority: authorityAddr.String(),
+				Signer: authorityAddr.String(),
 			},
 			expResp: &ledger.MsgAddLedgerClassStatusTypeResponse{},
 		},
@@ -965,7 +965,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 					Code:        "CANCELLED",
 					Description: "Cancelled",
 				},
-				Authority: "cosmos1invalid",
+				Signer: "cosmos1invalid",
 			},
 			expErr: "ledger class maintainer",
 		},
@@ -1007,7 +1007,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
 					Code:        "ADJUSTMENT",
 					Description: "Adjustment",
 				},
-				Authority: authorityAddr.String(),
+				Signer: authorityAddr.String(),
 			},
 			expResp: &ledger.MsgAddLedgerClassEntryTypeResponse{},
 		},
@@ -1020,7 +1020,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
 					Code:        "FEE",
 					Description: "Fee",
 				},
-				Authority: "cosmos1invalid",
+				Signer: "cosmos1invalid",
 			},
 			expErr: "ledger class maintainer",
 		},
@@ -1062,7 +1062,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
 					Code:        "FEES",
 					Description: "Fees",
 				},
-				Authority: authorityAddr.String(),
+				Signer: authorityAddr.String(),
 			},
 			expResp: &ledger.MsgAddLedgerClassBucketTypeResponse{},
 		},
@@ -1075,7 +1075,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
 					Code:        "PENALTIES",
 					Description: "Penalties",
 				},
-				Authority: "cosmos1invalid",
+				Signer: "cosmos1invalid",
 			},
 			expErr: "ledger class maintainer",
 		},

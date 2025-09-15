@@ -12979,7 +12979,7 @@ MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to 
 | ----- | ---- | ----- | ----------- |
 | `ledger_class_id` | [string](#string) |  | Ledger class id to add the bucket type to |
 | `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  | The bucket type to add to the ledger class |
-| `authority` | [string](#string) |  | The authority/signer that is adding the bucket type |
+| `signer` | [string](#string) |  | The signer that is adding the bucket type |
 
 
 
@@ -13006,7 +13006,7 @@ MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a
 | ----- | ---- | ----- | ----------- |
 | `ledger_class_id` | [string](#string) |  | Ledger class id to add the entry type to |
 | `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  | The entry type to add to the ledger class |
-| `authority` | [string](#string) |  | The authority/signer that is adding the entry type |
+| `signer` | [string](#string) |  | The signer that is adding the entry type |
 
 
 
@@ -13033,7 +13033,7 @@ MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to 
 | ----- | ---- | ----- | ----------- |
 | `ledger_class_id` | [string](#string) |  | Ledger class id to add the status type to |
 | `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  | The status type to add to the ledger class |
-| `authority` | [string](#string) |  | The authority/signer that is adding the status type |
+| `signer` | [string](#string) |  | The signer that is adding the status type |
 
 
 
@@ -13060,7 +13060,7 @@ MsgAppendRequest represents a request to append entries to a ledger.
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose entries are being appended |
 | `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The entries to append to the ledger |
-| `authority` | [string](#string) |  | The authority/signer that is appending the entries |
+| `signer` | [string](#string) |  | The signer that is appending the entries |
 
 
 
@@ -13085,7 +13085,7 @@ MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | The authority/signer that is bulk importing the ledger data |
+| `signer` | [string](#string) |  | The signer that is bulk importing the ledger data |
 | `ledger_and_entries` | [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries) | repeated | The genesis state to bulk import |
 
 
@@ -13112,7 +13112,7 @@ MsgCreateLedgerClassRequest represents a request to create a new ledger class.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  | The ledger class to create |
-| `authority` | [string](#string) |  | The authority/signer that is creating the ledger class |
+| `signer` | [string](#string) |  | The signer that is creating the ledger class |
 
 
 
@@ -13138,7 +13138,7 @@ MsgCreateLedgerRequest represents a request to create a new ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger to create. |
-| `authority` | [string](#string) |  | The authority address that can create ledgers. |
+| `signer` | [string](#string) |  | The signer address that can create ledgers. |
 
 
 
@@ -13164,7 +13164,7 @@ MsgDestroyRequest represents a request to destroy a ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger to destroy |
-| `authority` | [string](#string) |  | The authority/signer that is destroying the ledger |
+| `signer` | [string](#string) |  | The signer that is destroying the ledger |
 
 
 
@@ -13189,7 +13189,7 @@ MsgTransferFundsWithSettlementRequest represents a request to transfer funds wit
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | The authority/signer that is transferring the funds |
+| `signer` | [string](#string) |  | The signer that is transferring the funds |
 | `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated | The transfers to be made |
 
 
@@ -13216,7 +13216,7 @@ MsgUpdateBalancesRequest represents a request to update balances for a ledger en
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose balances are being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the balances |
+| `signer` | [string](#string) |  | The signer that is updating the balances |
 | `correlation_id` | [string](#string) |  | The correlation id of the ledger entry |
 | `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated. |
 | `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update. |
@@ -13245,7 +13245,7 @@ MsgUpdateInterestRateRequest represents a request to update the interest rate co
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the interest rate |
+| `signer` | [string](#string) |  | The signer that is updating the interest rate |
 | `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger |
 | `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger |
 | `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger |
@@ -13274,7 +13274,7 @@ MsgUpdateMaturityDateRequest represents a request to update the maturity date of
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose maturity date is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the maturity date |
+| `signer` | [string](#string) |  | The signer that is updating the maturity date |
 | `maturity_date` | [int32](#int32) |  | The new maturity date in days since epoch |
 
 
@@ -13301,7 +13301,7 @@ MsgUpdatePaymentRequest represents a request to update payment configuration of 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the payment |
+| `signer` | [string](#string) |  | The signer that is updating the payment |
 | `next_pmt_amt` | [int64](#int64) |  | The new next payment amount of the ledger |
 | `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch |
 | `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger |
@@ -13330,7 +13330,7 @@ MsgUpdateStatusRequest represents a request to update the status of a ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose status is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the status |
+| `signer` | [string](#string) |  | The signer that is updating the status |
 | `status_type_id` | [int32](#int32) |  | The new status type id of the ledger |
 
 

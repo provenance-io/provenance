@@ -166,8 +166,8 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			}
 
 			msg := &ledger.MsgCreateLedgerRequest{
-				Ledger:    ledgerObj,
-				Authority: clientCtx.FromAddress.String(),
+				Ledger: ledgerObj,
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -210,7 +210,7 @@ func CmdDestroy() *cobra.Command {
 					AssetClassId: assetClassID,
 					NftId:        nftID,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -288,8 +288,8 @@ where the json is formatted as follows:
 					AssetClassId: assetClassID,
 					NftId:        nftID,
 				},
-				Entries:   entries,
-				Authority: clientCtx.FromAddress.String(),
+				Entries: entries,
+				Signer:  clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -325,7 +325,7 @@ func CmdCreateLedgerClass() *cobra.Command {
 					Denom:             denom,
 					MaintainerAddress: clientCtx.FromAddress.String(),
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -365,7 +365,7 @@ func CmdAddLedgerClassStatusType() *cobra.Command {
 					Code:        code,
 					Description: description,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -405,7 +405,7 @@ func CmdAddLedgerClassEntryType() *cobra.Command {
 					Code:        code,
 					Description: description,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -445,7 +445,7 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 					Code:        code,
 					Description: description,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -488,7 +488,7 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 			}
 
 			msg := &ledger.MsgTransferFundsWithSettlementRequest{
-				Authority: clientCtx.FromAddress.String(),
+				Signer:    clientCtx.FromAddress.String(),
 				Transfers: transfers,
 			}
 
@@ -533,7 +533,7 @@ func CmdBulkCreate() *cobra.Command {
 			}
 
 			msg := &ledger.MsgBulkCreateRequest{
-				Authority:       clientCtx.FromAddress.String(),
+				Signer:           clientCtx.FromAddress.String(),
 				LedgerAndEntries: ledgerAndEntries,
 			}
 

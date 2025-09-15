@@ -19,7 +19,7 @@ The Ledger module provides several message types for creating and managing ledge
 ```protobuf
 message MsgCreateLedgerRequest {
     Ledger ledger = 1;
-    string authority = 2;
+    string signer = 2;
 }
 
 message MsgCreateLedgerResponse {}
@@ -39,11 +39,11 @@ message MsgCreateLedgerResponse {}
   - `interest_day_count_convention`: Day count convention for interest calculations
   - `interest_accrual_method`: Method used for interest accrual
   - `payment_frequency`: Frequency of scheduled payments
-- `authority`: The address of the authority who is creating the ledger
+- `signer`: The address of the signer who is creating the ledger
 
 #### CLI Command
 ```bash
-provenanced tx ledger create <asset_class_id> <nft_id> <ledger_class_id> <status_type_id> [flags] --from <authority>
+provenanced tx ledger create <asset_class_id> <nft_id> <ledger_class_id> <status_type_id> [flags] --from <signer>
 ```
 
 **Flags:**
@@ -63,7 +63,7 @@ provenanced tx ledger create <asset_class_id> <nft_id> <ledger_class_id> <status
 message MsgDestroyRequest {
     string nft_id = 1;
     string asset_class_id = 2;
-    string authority = 3;
+    string signer = 3;
 }
 
 message MsgDestroyResponse {}
@@ -72,11 +72,11 @@ message MsgDestroyResponse {}
 #### Fields
 - `nft_id`: The NFT or Scope identifier
 - `asset_class_id`: The Scope Specification ID or NFT Class ID
-- `authority`: The address of the authority who is destroying the ledger
+- `signer`: The address of the signer who is destroying the ledger
 
 #### CLI Command
 ```bash
-provenanced tx ledger destroy <asset_class_id> <nft_id> --from <authority>
+provenanced tx ledger destroy <asset_class_id> <nft_id> --from <signer>
 ```
 
 ## Entry Management
@@ -90,7 +90,7 @@ message MsgAppendRequest {
     string nft_id = 1;
     string asset_class_id = 2;
     repeated LedgerEntry entries = 3;
-    string authority = 4;
+    string signer = 4;
 }
 
 message MsgAppendResponse {}
@@ -114,11 +114,11 @@ message MsgAppendResponse {}
   - `balance_amounts`: Current balances for each bucket after this entry
     - `bucket_type_id`: The bucket type ID
     - `balance_amt`: Current balance in this bucket
-- `authority`: The address of the authority who is appending the entries
+- `signer`: The address of the signer who is appending the entries
 
 #### CLI Command
 ```bash
-provenanced tx ledger append <asset_class_id> <nft_id> <json_file_path> --from <authority>
+provenanced tx ledger append <asset_class_id> <nft_id> <json_file_path> --from <signer>
 ```
 
 **Note:** The JSON file should contain an array of ledger entries with the required fields.
@@ -132,7 +132,7 @@ provenanced tx ledger append <asset_class_id> <nft_id> <json_file_path> --from <
 ```protobuf
 message MsgCreateLedgerClassRequest {
     LedgerClass ledger_class = 1;
-    string authority = 2;
+    string signer = 2;
 }
 
 message MsgCreateLedgerClassResponse {}
@@ -144,11 +144,11 @@ message MsgCreateLedgerClassResponse {}
   - `asset_class_id`: The Scope Specification ID or NFT Class ID
   - `denom`: The denomination to use for the ledger entries
   - `maintainer_address`: The address of the maintainer
-- `authority`: The address of the authority who is creating the ledger class
+- `signer`: The address of the signer who is creating the ledger class
 
 #### CLI Command
 ```bash
-provenanced tx ledger create-class <ledger_class_id> <asset_class_id> <denom> --from <authority>
+provenanced tx ledger create-class <ledger_class_id> <asset_class_id> <denom> --from <signer>
 ```
 
 ### MsgAddLedgerClassEntryType
@@ -159,7 +159,7 @@ provenanced tx ledger create-class <ledger_class_id> <asset_class_id> <denom> --
 message MsgAddLedgerClassEntryTypeRequest {
     string ledger_class_id = 1;
     LedgerClassEntryType entry_type = 2;
-    string authority = 3;
+    string signer = 3;
 }
 
 message MsgAddLedgerClassEntryTypeResponse {}
@@ -171,11 +171,11 @@ message MsgAddLedgerClassEntryTypeResponse {}
   - `id`: The unique ID for the entry type
   - `code`: The code for the entry type
   - `description`: The description of the entry type
-- `authority`: The address of the authority who is adding the entry type
+- `signer`: The address of the signer who is adding the entry type
 
 #### CLI Command
 ```bash
-provenanced tx ledger add-entry-type <ledger_class_id> <id> <code> <description> --from <authority>
+provenanced tx ledger add-entry-type <ledger_class_id> <id> <code> <description> --from <signer>
 ```
 
 ### MsgAddLedgerClassStatusType
@@ -186,7 +186,7 @@ provenanced tx ledger add-entry-type <ledger_class_id> <id> <code> <description>
 message MsgAddLedgerClassStatusTypeRequest {
     string ledger_class_id = 1;
     LedgerClassStatusType status_type = 2;
-    string authority = 3;
+    string signer = 3;
 }
 
 message MsgAddLedgerClassStatusTypeResponse {}
@@ -198,11 +198,11 @@ message MsgAddLedgerClassStatusTypeResponse {}
   - `id`: The unique ID for the status type
   - `code`: The code for the status type
   - `description`: The description of the status type
-- `authority`: The address of the authority who is adding the status type
+- `signer`: The address of the signer who is adding the status type
 
 #### CLI Command
 ```bash
-provenanced tx ledger add-status-type <ledger_class_id> <id> <code> <description> --from <authority>
+provenanced tx ledger add-status-type <ledger_class_id> <id> <code> <description> --from <signer>
 ```
 
 ### MsgAddLedgerClassBucketType
@@ -213,7 +213,7 @@ provenanced tx ledger add-status-type <ledger_class_id> <id> <code> <description
 message MsgAddLedgerClassBucketTypeRequest {
     string ledger_class_id = 1;
     LedgerClassBucketType bucket_type = 2;
-    string authority = 3;
+    string signer = 3;
 }
 
 message MsgAddLedgerClassBucketTypeResponse {}
@@ -225,11 +225,11 @@ message MsgAddLedgerClassBucketTypeResponse {}
   - `id`: The unique ID for the bucket type
   - `code`: The code for the bucket type
   - `description`: The description of the bucket type
-- `authority`: The address of the authority who is adding the bucket type
+- `signer`: The address of the signer who is adding the bucket type
 
 #### CLI Command
 ```bash
-provenanced tx ledger add-bucket-type <ledger_class_id> <id> <code> <description> --from <authority>
+provenanced tx ledger add-bucket-type <ledger_class_id> <id> <code> <description> --from <signer>
 ```
 
 ## Transfer Management
@@ -241,7 +241,7 @@ provenanced tx ledger add-bucket-type <ledger_class_id> <id> <code> <description
 ```protobuf
 message MsgTransferFundsWithSettlementRequest {
     repeated FundTransferWithSettlement transfers = 1;
-    string authority = 2;
+    string signer = 2;
 }
 
 message MsgTransferFundsWithSettlementResponse {}
@@ -253,11 +253,11 @@ message MsgTransferFundsWithSettlementResponse {}
   - `asset_class_id`: The Scope Specification ID or NFT Class ID
   - `correlation_id`: The correlation ID for the transfer
   - `settlement_instructions`: The settlement instructions
-- `authority`: The address of the authority who is performing the transfer
+- `signer`: The address of the signer who is performing the transfer
 
 #### CLI Command
 ```bash
-provenanced tx ledger xfer <fund_transfers_json_file> --from <authority>
+provenanced tx ledger xfer <fund_transfers_json_file> --from <signer>
 ```
 
 **Note:** The JSON file should contain an array of fund transfer objects with the required fields.
@@ -271,7 +271,7 @@ provenanced tx ledger xfer <fund_transfers_json_file> --from <authority>
 ```protobuf
 message MsgBulkCreateRequest {
     repeated LedgerToEntries ledger_to_entries = 1;
-    string authority = 2;
+    string signer = 2;
 }
 
 message MsgBulkCreateResponse {}
@@ -282,11 +282,11 @@ message MsgBulkCreateResponse {}
   - `ledger_key`: The unique identifier for the ledger
   - `ledger`: The ledger configuration
   - `entries`: List of ledger entries to create
-- `authority`: The address of the authority who is performing the bulk creation
+- `signer`: The address of the signer who is performing the bulk creation
 
 #### CLI Command
 ```bash
-provenanced tx ledger bulk-create <ledger_entries_json_file> --from <authority>
+provenanced tx ledger bulk-create <ledger_entries_json_file> --from <signer>
 ```
 
 **Note:** The JSON file should contain an array of ledger-to-entries objects with the required fields.
@@ -300,14 +300,14 @@ All messages are validated before processing:
    - Ledger configuration must be valid
    - Asset identifiers must be valid
    - Ledger class must exist
-   - Authority must have permission
+   - Signer must have permission
    - Dates must be in correct format
    - Amounts must be valid
 
 2. **MsgDestroy**
    - Asset identifiers must be valid
    - Ledger must exist
-   - Authority must have permission
+   - Signer must have permission
    - All associated data must be properly cleaned up
 
 ### Entry Management
@@ -315,7 +315,7 @@ All messages are validated before processing:
    - Asset identifiers must be valid
    - Ledger must exist
    - Entries must be valid
-   - Authority must have permission
+   - Signer must have permission
    - Correlation IDs must be unique
    - Sequences must be valid
    - Bucket types must be valid
@@ -327,22 +327,22 @@ All messages are validated before processing:
    - Asset class ID must be valid
    - Denomination must be valid
    - Maintainer address must be valid
-   - Authority must have permission
+   - Signer must have permission
 
 2. **MsgAddLedgerClassEntryType**
    - Ledger class must exist
    - Entry type must be valid
-   - Authority must have permission
+   - Signer must have permission
 
 3. **MsgAddLedgerClassStatusType**
    - Ledger class must exist
    - Status type must be valid
-   - Authority must have permission
+   - Signer must have permission
 
 4. **MsgAddLedgerClassBucketType**
    - Ledger class must exist
    - Bucket type must be valid
-   - Authority must have permission
+   - Signer must have permission
 
 ### Transfer Management
 1. **MsgTransferFundsWithSettlement**
@@ -350,11 +350,11 @@ All messages are validated before processing:
    - Ledger must exist
    - Correlation ID must be valid
    - Settlement instructions must be valid
-   - Authority must have permission
+   - Signer must have permission
 
 ### Bulk Operations
 1. **MsgBulkCreate**
    - All ledger configurations must be valid
    - All entries must be valid
-   - Authority must have permission
+   - Signer must have permission
    - Transaction size must be within limits 
