@@ -29,7 +29,7 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
 	}
 
 	if has {
-		return types.NewErrCodeAlreadyExists("ledger class entry type")
+		return types.NewErrCodeAlreadyExists("ledger class")
 	}
 
 	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
