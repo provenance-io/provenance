@@ -284,13 +284,13 @@ func (k *MsgServer) BulkCreate(goCtx context.Context, req *types.MsgBulkCreateRe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Authority has to be able to add ledgers and entries for every key.
-	for _, ledgerToEntries := range req.LedgerToEntries {
+	for _, ledgerToEntries := range req.LedgerAndEntries {
 		if err := k.RequireAuthority(ctx, req.Authority, ledgerToEntries.LedgerKey.ToRegistryKey()); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := k.Keeper.BulkCreate(ctx, req.LedgerToEntries); err != nil {
+	if err := k.Keeper.BulkCreate(ctx, req.LedgerAndEntries); err != nil {
 		return nil, err
 	}
 

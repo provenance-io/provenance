@@ -319,7 +319,7 @@ func (m MsgBulkCreateRequest) ValidateBasic() error {
 		return err
 	}
 
-	for _, ledgerToEntries := range m.LedgerToEntries {
+	for _, ledgerToEntries := range m.LedgerAndEntries {
 		if err := ledgerToEntries.Validate(); err != nil {
 			return err
 		}

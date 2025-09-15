@@ -916,9 +916,17 @@
   
     - [Query](#provenance-ledger-v1-Query)
   
+- [provenance/ledger/v1/ledger_settlement.proto](#provenance_ledger_v1_ledger_settlement-proto)
+    - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
+    - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
+    - [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions)
+  
+    - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
+  
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
     - [BucketBalance](#provenance-ledger-v1-BucketBalance)
     - [Ledger](#provenance-ledger-v1-Ledger)
+    - [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries)
     - [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount)
     - [LedgerClass](#provenance-ledger-v1-LedgerClass)
     - [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType)
@@ -926,18 +934,10 @@
     - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
     - [LedgerKey](#provenance-ledger-v1-LedgerKey)
-    - [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries)
   
     - [DayCountConvention](#provenance-ledger-v1-DayCountConvention)
     - [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod)
     - [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency)
-  
-- [provenance/ledger/v1/ledger_settlement.proto](#provenance_ledger_v1_ledger_settlement-proto)
-    - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
-    - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
-    - [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions)
-  
-    - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
   
 - [provenance/registry/v1/genesis.proto](#provenance_registry_v1_genesis-proto)
     - [GenesisState](#provenance-registry-v1-GenesisState)
@@ -13086,7 +13086,7 @@ MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | The authority/signer that is bulk importing the ledger data |
-| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | The genesis state to bulk import |
+| `ledger_and_entries` | [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries) | repeated | The genesis state to bulk import |
 
 
 
@@ -13782,6 +13782,88 @@ Query defines the gRPC querier service for ledger module.
 
 
 
+<a name="provenance_ledger_v1_ledger_settlement-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/ledger_settlement.proto
+
+
+
+<a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
+
+### FundTransferWithSettlement
+FundTransferWithSettlement represents a fund transfer with settlement instructions
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger for this transfer. |
+| `ledger_entry_correlation_id` | [string](#string) |  | The correlation ID of the ledger entry associated with this transfer. |
+| `settlement_instructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-SettlementInstruction"></a>
+
+### SettlementInstruction
+SettlementInstruction represents blockchain-specific settlement instructions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | The amount to be transferred. |
+| `recipient_address` | [string](#string) |  | The recipient's blockchain address. |
+| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  | The current status of the funding transfer. |
+| `memo` | [string](#string) |  | An optional memo or note for the transaction. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-StoredSettlementInstructions"></a>
+
+### StoredSettlementInstructions
+StoredSettlementInstructions is used as the stored version of settlement instructions against a ledger key and entry
+correlation id.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlement_instructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-FundingTransferStatus"></a>
+
+### FundingTransferStatus
+FundingTransferStatus represents the current status of a funding transfer.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` | Unspecified funding transfer status |
+| `FUNDING_TRANSFER_STATUS_PENDING` | `1` | Pending funding transfer status |
+| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` | Processing funding transfer status |
+| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` | Completed funding transfer status |
+| `FUNDING_TRANSFER_STATUS_FAILED` | `4` | Failed funding transfer status |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance_ledger_v1_ledger-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -13823,6 +13905,23 @@ Ledger defines an servicing ledger for an asset.
 | `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The day count convention for interest calculations. |
 | `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The interest accrual method for interest calculations. |
 | `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The payment frequency. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerAndEntries"></a>
+
+### LedgerAndEntries
+LedgerAndEntries represents a ledger with its associated entries
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
 
 
 
@@ -13958,23 +14057,6 @@ LedgerKey is used as the unique key for an asset's ledger in the keeper.
 
 
 
-
-<a name="provenance-ledger-v1-LedgerToEntries"></a>
-
-### LedgerToEntries
-LedgerToEntries represents a ledger with its associated entries
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
-| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
-| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
-
-
-
-
-
  <!-- end messages -->
 
 
@@ -14026,88 +14108,6 @@ Payment frequencies for loan repayments
 | `PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
 | `PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
 | `PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
-
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_ledger_v1_ledger_settlement-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/ledger/v1/ledger_settlement.proto
-
-
-
-<a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
-
-### FundTransferWithSettlement
-FundTransferWithSettlement represents a fund transfer with settlement instructions
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger for this transfer. |
-| `ledger_entry_correlation_id` | [string](#string) |  | The correlation ID of the ledger entry associated with this transfer. |
-| `settlement_instructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-SettlementInstruction"></a>
-
-### SettlementInstruction
-SettlementInstruction represents blockchain-specific settlement instructions.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | The amount to be transferred. |
-| `recipient_address` | [string](#string) |  | The recipient's blockchain address. |
-| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  | The current status of the funding transfer. |
-| `memo` | [string](#string) |  | An optional memo or note for the transaction. |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-StoredSettlementInstructions"></a>
-
-### StoredSettlementInstructions
-StoredSettlementInstructions is used as the stored version of settlement instructions against a ledger key and entry
-correlation id.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `settlement_instructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
-
-<a name="provenance-ledger-v1-FundingTransferStatus"></a>
-
-### FundingTransferStatus
-FundingTransferStatus represents the current status of a funding transfer.
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` | Unspecified funding transfer status |
-| `FUNDING_TRANSFER_STATUS_PENDING` | `1` | Pending funding transfer status |
-| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` | Processing funding transfer status |
-| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` | Completed funding transfer status |
-| `FUNDING_TRANSFER_STATUS_FAILED` | `4` | Failed funding transfer status |
 
 
  <!-- end enums -->

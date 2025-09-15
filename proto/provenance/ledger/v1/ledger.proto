@@ -186,8 +186,8 @@ message BucketBalance {
   ];
 }
 
-// LedgerToEntries represents a ledger with its associated entries
-message LedgerToEntries {
+// LedgerAndEntries represents a ledger with its associated entries
+message LedgerAndEntries {
   // The ledger key identifying the ledger.
   LedgerKey ledger_key = 1 [(gogoproto.jsontag) = "ledgerKey,omitempty"];
   // The ledger data.

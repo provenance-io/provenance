@@ -523,18 +523,18 @@ func CmdBulkCreate() *cobra.Command {
 				return fmt.Errorf("failed to unmarshal JSON array: %w", err)
 			}
 
-			ledgerToEntries := make([]*ledger.LedgerToEntries, 0, len(rawEntries))
+			ledgerAndEntries := make([]*ledger.LedgerAndEntries, 0, len(rawEntries))
 			for _, rawEntry := range rawEntries {
-				var entry ledger.LedgerToEntries
+				var entry ledger.LedgerAndEntries
 				if err := clientCtx.Codec.UnmarshalJSON(rawEntry, &entry); err != nil {
 					return err
 				}
-				ledgerToEntries = append(ledgerToEntries, &entry)
+				ledgerAndEntries = append(ledgerAndEntries, &entry)
 			}
 
 			msg := &ledger.MsgBulkCreateRequest{
 				Authority:       clientCtx.FromAddress.String(),
-				LedgerToEntries: ledgerToEntries,
+				LedgerAndEntries: ledgerAndEntries,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

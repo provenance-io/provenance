@@ -292,7 +292,7 @@ message MsgBulkCreateRequest {
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The genesis state to bulk import
-  repeated LedgerToEntries ledger_to_entries = 2;
+  repeated LedgerAndEntries ledger_and_entries = 2;
 }
 
 // MsgBulkCreateResponse represents the response from bulk creating ledgers and entries.

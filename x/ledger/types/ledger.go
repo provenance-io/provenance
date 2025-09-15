@@ -349,8 +349,8 @@ func (bb *BucketBalance) Validate() error {
 	return nil
 }
 
-// Validate validates the LedgerToEntries type
-func (lte *LedgerToEntries) Validate() error {
+// Validate validates the LedgerAndEntries type
+func (lte *LedgerAndEntries) Validate() error {
 	if err := lte.LedgerKey.Validate(); err != nil {
 		return err
 	}
