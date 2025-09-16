@@ -8,8 +8,8 @@ import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
 import "provenance/metadata/v1/objectstore.proto";
-
 import "cosmos/query/v1/query.proto";
+
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
 option java_package        = "io.provenance.metadata.v1";
