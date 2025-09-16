@@ -227,8 +227,8 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 			config := getConfig(nftID)
 
-			if config == nil {
-				return fmt.Errorf("ledger not found for nft id: %s", nftID)
+			if config == nil || config.Ledger == nil {
+				return fmt.Errorf("ledger not found for asset class %s and nft id %s", assetClassID, nftID)
 			}
 
 			entries := getEntries(nftID)
