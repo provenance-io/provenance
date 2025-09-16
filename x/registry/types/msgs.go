@@ -14,7 +14,7 @@ var AllRequestMsgs = []sdk.Msg{
 }
 
 // ValidateBasic validates the MsgRegisterNFT message
-func (m *MsgRegisterNFT) ValidateBasic() error {
+func (m MsgRegisterNFT) ValidateBasic() error {
 	// Verify the signer is a valid address
 	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
 		return NewErrCodeInvalidField("signer", m.Signer)
@@ -35,7 +35,7 @@ func (m *MsgRegisterNFT) ValidateBasic() error {
 }
 
 // ValidateBasic validates the MsgGrantRole message
-func (m *MsgGrantRole) ValidateBasic() error {
+func (m MsgGrantRole) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
 		return NewErrCodeInvalidField("signer", m.Signer)
 	}
@@ -56,7 +56,7 @@ func (m *MsgGrantRole) ValidateBasic() error {
 }
 
 // ValidateBasic validates the MsgRevokeRole message
-func (m *MsgRevokeRole) ValidateBasic() error {
+func (m MsgRevokeRole) ValidateBasic() error {
 	// Verify the signer is a valid address
 	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
 		return NewErrCodeInvalidField("signer", m.Signer)
@@ -78,7 +78,7 @@ func (m *MsgRevokeRole) ValidateBasic() error {
 }
 
 // ValidateBasic validates the MsgUnregisterNFT message
-func (m *MsgUnregisterNFT) ValidateBasic() error {
+func (m MsgUnregisterNFT) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
 		return NewErrCodeInvalidField("signer", m.Signer)
 	}
@@ -104,8 +104,8 @@ func validateAddresses(addrs []string) error {
 	return nil
 }
 
-// ValidateBasic validates the QueryGetRegistryRequest
-func (m *QueryGetRegistryRequest) ValidateBasic() error {
+// Validate validates the QueryGetRegistryRequest
+func (m QueryGetRegistryRequest) Validate() error {
 	if err := m.Key.Validate(); err != nil {
 		return err
 	}
@@ -113,8 +113,8 @@ func (m *QueryGetRegistryRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic validates the QueryGetRegistriesRequest
-func (m *QueryGetRegistriesRequest) ValidateBasic() error {
+// Validate validates the QueryGetRegistriesRequest
+func (m QueryGetRegistriesRequest) Validate() error {
 	if strings.TrimSpace(m.AssetClassId) == "" {
 		return NewErrCodeInvalidField("asset_class_id", "asset_class_id cannot be empty if provided")
 	}
@@ -122,8 +122,8 @@ func (m *QueryGetRegistriesRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic validates the QueryHasRoleRequest
-func (m *QueryHasRoleRequest) ValidateBasic() error {
+// Validate validates the QueryHasRoleRequest
+func (m QueryHasRoleRequest) Validate() error {
 	if err := m.Key.Validate(); err != nil {
 		return err
 	}

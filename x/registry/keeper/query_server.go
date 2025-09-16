@@ -23,6 +23,10 @@ func NewQueryServer(keeper Keeper) *QueryServer {
 // GetRegistry returns the registry entry for a given key.
 // This method retrieves the complete registry entry including all roles and addresses.
 func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegistryRequest) (*types.QueryGetRegistryResponse, error) {
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	reg, err := qs.keeper.GetRegistry(sdkCtx, req.Key)
@@ -39,6 +43,10 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegist
 
 // GetRegistries returns the registries paginated
 func (qs QueryServer) GetRegistries(ctx context.Context, req *types.QueryGetRegistriesRequest) (*types.QueryGetRegistriesResponse, error) {
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	registries, pageRes, err := qs.keeper.GetRegistries(sdkCtx, req.Pagination, req.AssetClassId)
@@ -51,6 +59,10 @@ func (qs QueryServer) GetRegistries(ctx context.Context, req *types.QueryGetRegi
 
 // HasRole returns true if the address has the specified role for the given key.
 func (qs QueryServer) HasRole(ctx context.Context, req *types.QueryHasRoleRequest) (*types.QueryHasRoleResponse, error) {
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// ensure the registry exists
