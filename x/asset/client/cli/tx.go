@@ -198,14 +198,14 @@ $ %[1]s create-pool 1000pooltoken real-estate,property-001 real-estate,property-
 
 			pool, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid pool %s", args[0])
+				return types.NewErrCodeInvalidField("pool", fmt.Sprintf("invalid pool %s", args[0]))
 			}
 
 			var assets []*types.AssetKey
 			for i, entry := range args[1:] {
 				parts := strings.Split(entry, ",")
 				if len(parts) != 2 {
-					return fmt.Errorf("invalid nft %d format: %q, expected class-id,asset-id", i, entry)
+					return types.NewErrCodeInvalidField("nft_format", fmt.Sprintf("invalid nft %d format: %q, expected class-id,asset-id", i, entry))
 				}
 				assets = append(assets, &types.AssetKey{
 					ClassId: strings.TrimSpace(parts[0]),
@@ -245,7 +245,7 @@ $ %[1]s create-tokenization 1000pooltoken real-estate property-001
 
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid coin %s", args[0])
+				return types.NewErrCodeInvalidField("coin", fmt.Sprintf("invalid coin %s", args[0]))
 			}
 
 			asset := &types.AssetKey{
@@ -302,7 +302,7 @@ $ %[1]s create-securitization "mortgage-sec-001" "mortgage-pool-1,mortgage-pool-
 			for _, trancheStr := range trancheStrings {
 				coin, err := sdk.ParseCoinNormalized(strings.TrimSpace(trancheStr))
 				if err != nil {
-					return fmt.Errorf("invalid coin %s: %w", trancheStr, err)
+					return types.NewErrCodeInvalidField("tranche_coin", fmt.Sprintf("invalid coin %s: %v", trancheStr, err))
 				}
 				tranches = append(tranches, &coin)
 			}

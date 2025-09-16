@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	nfttypes "cosmossdk.io/x/nft"
 
@@ -40,7 +39,7 @@ func (q queryServer) Asset(ctx context.Context, req *types.QueryAssetRequest) (*
 func (q queryServer) Assets(ctx context.Context, req *types.QueryAssetsRequest) (*types.QueryAssetsResponse, error) {
 	if req.Owner != "" {
 		if _, err := sdk.AccAddressFromBech32(req.Owner); err != nil {
-			return nil, fmt.Errorf("invalid owner address: %w", err)
+			return nil, types.NewErrCodeInvalidField("owner", err.Error())
 		}
 	}
 	// Delegate to NFT query server
