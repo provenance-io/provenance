@@ -85,12 +85,18 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				ledgerObj.NextPmtDate = helper.DaysSinceEpoch(nextPmtDate.UTC())
 			}
 
-			nextPmtAmt, _ := cmd.Flags().GetInt64("next-pmt-amt")
+			nextPmtAmt, err := cmd.Flags().GetInt64("next-pmt-amt")
+			if err != nil {
+				return fmt.Errorf("invalid --next-pmt-amt: %w", err)
+			}
 			if nextPmtAmt > 0 {
 				ledgerObj.NextPmtAmt = nextPmtAmt
 			}
 
-			interestRate, _ := cmd.Flags().GetInt32("interest-rate")
+			interestRate, err := cmd.Flags().GetInt32("interest-rate")
+			if err != nil {
+				return fmt.Errorf("invalid --interest-rate: %w", err)
+			}
 			if interestRate > 0 {
 				ledgerObj.InterestRate = interestRate
 			}
@@ -178,7 +184,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 	ledgerFlags := pflag.NewFlagSet("ledger", pflag.ContinueOnError)
 	ledgerFlags.String("next-pmt-date", "", "Next payment date (YYYY-MM-DD)")
 	ledgerFlags.Int64("next-pmt-amt", 0, "Next payment amount")
-	ledgerFlags.Int("interest-rate", 0, "Interest rate (10000000 = 10.000000%)")
+	ledgerFlags.Int32("interest-rate", 0, "Interest rate (10000000 = 10.000000%)")
 	ledgerFlags.String("maturity-date", "", "Maturity date (YYYY-MM-DD)")
 	ledgerFlags.String("day-count-convention", "", "Day count convention (actual-365, actual-360, thirty-360, actual-actual, days-365, days-360)")
 	ledgerFlags.String("interest-accrual-method", "", "Interest accrual method (simple, compound, daily, monthly, quarterly, annual, continuous)")
