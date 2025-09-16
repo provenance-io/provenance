@@ -1,29 +1,29 @@
 package types
 
 // NewEventAssetBurned creates a new EventAssetBurned event.
-func NewEventAssetBurned(assetClassID, assetID, owner string) *EventAssetBurned {
+func NewEventAssetBurned(classID, id, owner string) *EventAssetBurned {
 	return &EventAssetBurned{
-		AssetClassId: assetClassID,
-		AssetId:      assetID,
-		Owner:        owner,
+		ClassId: classID,
+		Id:      id,
+		Owner:   owner,
 	}
 }
 
 // NewEventAssetClassCreated creates a new EventAssetClassCreated event.
-func NewEventAssetClassCreated(assetClassID, assetName, assetSymbol string) *EventAssetClassCreated {
+func NewEventAssetClassCreated(classID, className, classSymbol string) *EventAssetClassCreated {
 	return &EventAssetClassCreated{
-		AssetClassId: assetClassID,
-		AssetName:    assetName,
-		AssetSymbol:  assetSymbol,
+		ClassId:     classID,
+		ClassName:   className,
+		ClassSymbol: classSymbol,
 	}
 }
 
 // NewEventAssetCreated creates a new EventAssetCreated event.
-func NewEventAssetCreated(assetClassID, assetID, owner string) *EventAssetCreated {
+func NewEventAssetCreated(classID, id, owner string) *EventAssetCreated {
 	return &EventAssetCreated{
-		AssetClassId: assetClassID,
-		AssetId:      assetID,
-		Owner:        owner,
+		ClassId: classID,
+		Id:      id,
+		Owner:   owner,
 	}
 }
 
@@ -37,11 +37,11 @@ func NewEventPoolCreated(pool string, assetCount uint32, owner string) *EventPoo
 }
 
 // NewEventTokenizationCreated creates a new EventTokenizationCreated event.
-func NewEventTokenizationCreated(tokenization, assetClassID, assetID, owner string) *EventTokenizationCreated {
+func NewEventTokenizationCreated(tokenization, classID, id, owner string) *EventTokenizationCreated {
 	return &EventTokenizationCreated{
 		Tokenization: tokenization,
-		AssetClassId: assetClassID,
-		AssetId:      assetID,
+		ClassId:      classID,
+		Id:           id,
 		Owner:        owner,
 	}
 }

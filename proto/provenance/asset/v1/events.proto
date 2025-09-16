@@ -9,11 +9,11 @@ import "cosmos_proto/cosmos.proto";
 // This event is triggered by the MsgBurnAsset message handler when an
 // asset is successfully burned and removed from circulation.
 message EventAssetBurned {
-  // asset_class_id is the class identifier of the burned asset
-  string asset_class_id = 1;
+  // class_id is the asset class identifier of the burned asset
+  string class_id = 1;
 
-  // asset_id is the unique identifier of the burned asset
-  string asset_id = 2;
+  // id is the identifier of the burned asset
+  string id = 2;
 
   // owner is the address of the account that owned the asset before it was burned
   string owner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -23,25 +23,25 @@ message EventAssetBurned {
 // This event is triggered by the MsgCreateAssetClass message handler when
 // an asset class is successfully created.
 message EventAssetClassCreated {
-  // asset_class_id is the unique identifier of the created asset class
-  string asset_class_id = 1;
+  // class_id is the unique identifier of the created asset class
+  string class_id = 1;
 
-  // asset_name is the human-readable name of the asset class
-  string asset_name = 2;
+  // class_name is the human-readable name of the asset class
+  string class_name = 2;
 
-  // asset_symbol is the symbol or ticker for the asset class
-  string asset_symbol = 3;
+  // class_symbol is the symbol or ticker for the asset class
+  string class_symbol = 3;
 }
 
 // EventAssetCreated is emitted when a new asset is created.
 // This event is triggered by the MsgCreateAsset message handler when
 // an asset is successfully created and minted.
 message EventAssetCreated {
-  // asset_class_id is the class identifier of the created asset
-  string asset_class_id = 1;
+  // class_id is the asset class identifier of the created asset
+  string class_id = 1;
 
-  // asset_id is the unique identifier of the created asset
-  string asset_id = 2;
+  // id is the identifier of the created asset
+  string id = 2;
 
   // owner is the address of the account that owns the newly created asset
   string owner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -68,11 +68,11 @@ message EventTokenizationCreated {
   // tokenization is the coin representation of the tokenization marker
   string tokenization = 1;
 
-  // asset_class_id is the class identifier of the tokenized asset
-  string asset_class_id = 2;
+  // class_id is the asset class identifier of the tokenized asset
+  string class_id = 2;
 
-  // asset_id is the unique identifier of the tokenized asset
-  string asset_id = 3;
+  // id is the identifier of the tokenized asset
+  string id = 3;
 
   // owner is the address of the account that created the tokenization
   string owner = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];

@@ -12349,8 +12349,8 @@ asset is successfully burned and removed from circulation.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset_class_id is the class identifier of the burned asset |
-| `asset_id` | [string](#string) |  | asset_id is the unique identifier of the burned asset |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the burned asset |
+| `id` | [string](#string) |  | id is the identifier of the burned asset |
 | `owner` | [string](#string) |  | owner is the address of the account that owned the asset before it was burned |
 
 
@@ -12368,9 +12368,9 @@ an asset class is successfully created.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset_class_id is the unique identifier of the created asset class |
-| `asset_name` | [string](#string) |  | asset_name is the human-readable name of the asset class |
-| `asset_symbol` | [string](#string) |  | asset_symbol is the symbol or ticker for the asset class |
+| `class_id` | [string](#string) |  | class_id is the unique identifier of the created asset class |
+| `class_name` | [string](#string) |  | class_name is the human-readable name of the asset class |
+| `class_symbol` | [string](#string) |  | class_symbol is the symbol or ticker for the asset class |
 
 
 
@@ -12387,8 +12387,8 @@ an asset is successfully created and minted.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset_class_id is the class identifier of the created asset |
-| `asset_id` | [string](#string) |  | asset_id is the unique identifier of the created asset |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the created asset |
+| `id` | [string](#string) |  | id is the identifier of the created asset |
 | `owner` | [string](#string) |  | owner is the address of the account that owns the newly created asset |
 
 
@@ -12446,8 +12446,8 @@ a tokenization is successfully created for an asset.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tokenization` | [string](#string) |  | tokenization is the coin representation of the tokenization marker |
-| `asset_class_id` | [string](#string) |  | asset_class_id is the class identifier of the tokenized asset |
-| `asset_id` | [string](#string) |  | asset_id is the unique identifier of the tokenized asset |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the tokenized asset |
+| `id` | [string](#string) |  | id is the identifier of the tokenized asset |
 | `owner` | [string](#string) |  | owner is the address of the account that created the tokenization |
 
 

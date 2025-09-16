@@ -27,10 +27,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // This event is triggered by the MsgBurnAsset message handler when an
 // asset is successfully burned and removed from circulation.
 type EventAssetBurned struct {
-	// asset_class_id is the class identifier of the burned asset
-	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// asset_id is the unique identifier of the burned asset
-	AssetId string `protobuf:"bytes,2,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
+	// class_id is the asset class identifier of the burned asset
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	// id is the identifier of the burned asset
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
 	// owner is the address of the account that owned the asset before it was burned
 	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
@@ -68,16 +68,16 @@ func (m *EventAssetBurned) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventAssetBurned proto.InternalMessageInfo
 
-func (m *EventAssetBurned) GetAssetClassId() string {
+func (m *EventAssetBurned) GetClassId() string {
 	if m != nil {
-		return m.AssetClassId
+		return m.ClassId
 	}
 	return ""
 }
 
-func (m *EventAssetBurned) GetAssetId() string {
+func (m *EventAssetBurned) GetId() string {
 	if m != nil {
-		return m.AssetId
+		return m.Id
 	}
 	return ""
 }
@@ -93,12 +93,12 @@ func (m *EventAssetBurned) GetOwner() string {
 // This event is triggered by the MsgCreateAssetClass message handler when
 // an asset class is successfully created.
 type EventAssetClassCreated struct {
-	// asset_class_id is the unique identifier of the created asset class
-	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// asset_name is the human-readable name of the asset class
-	AssetName string `protobuf:"bytes,2,opt,name=asset_name,json=assetName,proto3" json:"asset_name,omitempty"`
-	// asset_symbol is the symbol or ticker for the asset class
-	AssetSymbol string `protobuf:"bytes,3,opt,name=asset_symbol,json=assetSymbol,proto3" json:"asset_symbol,omitempty"`
+	// class_id is the unique identifier of the created asset class
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	// class_name is the human-readable name of the asset class
+	ClassName string `protobuf:"bytes,2,opt,name=class_name,json=className,proto3" json:"class_name,omitempty"`
+	// class_symbol is the symbol or ticker for the asset class
+	ClassSymbol string `protobuf:"bytes,3,opt,name=class_symbol,json=classSymbol,proto3" json:"class_symbol,omitempty"`
 }
 
 func (m *EventAssetClassCreated) Reset()         { *m = EventAssetClassCreated{} }
@@ -134,23 +134,23 @@ func (m *EventAssetClassCreated) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventAssetClassCreated proto.InternalMessageInfo
 
-func (m *EventAssetClassCreated) GetAssetClassId() string {
+func (m *EventAssetClassCreated) GetClassId() string {
 	if m != nil {
-		return m.AssetClassId
+		return m.ClassId
 	}
 	return ""
 }
 
-func (m *EventAssetClassCreated) GetAssetName() string {
+func (m *EventAssetClassCreated) GetClassName() string {
 	if m != nil {
-		return m.AssetName
+		return m.ClassName
 	}
 	return ""
 }
 
-func (m *EventAssetClassCreated) GetAssetSymbol() string {
+func (m *EventAssetClassCreated) GetClassSymbol() string {
 	if m != nil {
-		return m.AssetSymbol
+		return m.ClassSymbol
 	}
 	return ""
 }
@@ -159,10 +159,10 @@ func (m *EventAssetClassCreated) GetAssetSymbol() string {
 // This event is triggered by the MsgCreateAsset message handler when
 // an asset is successfully created and minted.
 type EventAssetCreated struct {
-	// asset_class_id is the class identifier of the created asset
-	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// asset_id is the unique identifier of the created asset
-	AssetId string `protobuf:"bytes,2,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
+	// class_id is the asset class identifier of the created asset
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	// id is the identifier of the created asset
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
 	// owner is the address of the account that owns the newly created asset
 	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
@@ -200,16 +200,16 @@ func (m *EventAssetCreated) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventAssetCreated proto.InternalMessageInfo
 
-func (m *EventAssetCreated) GetAssetClassId() string {
+func (m *EventAssetCreated) GetClassId() string {
 	if m != nil {
-		return m.AssetClassId
+		return m.ClassId
 	}
 	return ""
 }
 
-func (m *EventAssetCreated) GetAssetId() string {
+func (m *EventAssetCreated) GetId() string {
 	if m != nil {
-		return m.AssetId
+		return m.Id
 	}
 	return ""
 }
@@ -293,10 +293,10 @@ func (m *EventPoolCreated) GetOwner() string {
 type EventTokenizationCreated struct {
 	// tokenization is the coin representation of the tokenization marker
 	Tokenization string `protobuf:"bytes,1,opt,name=tokenization,proto3" json:"tokenization,omitempty"`
-	// asset_class_id is the class identifier of the tokenized asset
-	AssetClassId string `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// asset_id is the unique identifier of the tokenized asset
-	AssetId string `protobuf:"bytes,3,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
+	// class_id is the asset class identifier of the tokenized asset
+	ClassId string `protobuf:"bytes,2,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	// id is the identifier of the tokenized asset
+	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
 	// owner is the address of the account that created the tokenization
 	Owner string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
 }
@@ -341,16 +341,16 @@ func (m *EventTokenizationCreated) GetTokenization() string {
 	return ""
 }
 
-func (m *EventTokenizationCreated) GetAssetClassId() string {
+func (m *EventTokenizationCreated) GetClassId() string {
 	if m != nil {
-		return m.AssetClassId
+		return m.ClassId
 	}
 	return ""
 }
 
-func (m *EventTokenizationCreated) GetAssetId() string {
+func (m *EventTokenizationCreated) GetId() string {
 	if m != nil {
-		return m.AssetId
+		return m.Id
 	}
 	return ""
 }
@@ -449,36 +449,35 @@ func init() {
 func init() { proto.RegisterFile("provenance/asset/v1/events.proto", fileDescriptor_b7fb48cc4f1623ab) }
 
 var fileDescriptor_b7fb48cc4f1623ab = []byte{
-	// 457 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x4f, 0x6b, 0x13, 0x41,
-	0x18, 0xc6, 0x33, 0x4d, 0xfd, 0x93, 0xb7, 0xa9, 0xb4, 0xab, 0xc8, 0xb6, 0xd0, 0xb5, 0x46, 0x0f,
-	0x82, 0x74, 0x97, 0xe0, 0x27, 0x68, 0x82, 0x87, 0x20, 0x88, 0x24, 0x9e, 0xbc, 0x84, 0xc9, 0xce,
-	0xd0, 0x0e, 0x66, 0xe7, 0x0d, 0x33, 0x93, 0xd4, 0x7a, 0x12, 0xf4, 0x03, 0xf8, 0x4d, 0xbc, 0x78,
-	0xf5, 0xee, 0xb1, 0x78, 0xf2, 0x28, 0xc9, 0x17, 0x91, 0x7d, 0x67, 0x42, 0x92, 0xa2, 0x98, 0x80,
-	0xb7, 0x7d, 0x9f, 0xf7, 0xd9, 0x7d, 0x7e, 0x3c, 0xc3, 0x2c, 0x1c, 0x8f, 0x0c, 0x4e, 0xa4, 0xe6,
-	0x3a, 0x97, 0x19, 0xb7, 0x56, 0xba, 0x6c, 0xd2, 0xcc, 0xe4, 0x44, 0x6a, 0x67, 0xd3, 0x91, 0x41,
-	0x87, 0xd1, 0xdd, 0x85, 0x23, 0x25, 0x47, 0x3a, 0x69, 0x1e, 0x1e, 0xe4, 0x68, 0x0b, 0xb4, 0x7d,
-	0xb2, 0x64, 0x7e, 0xf0, 0xfe, 0xc6, 0x47, 0x06, 0x7b, 0xcf, 0xcb, 0x0f, 0x9c, 0x96, 0xe6, 0xd6,
-	0xd8, 0x68, 0x29, 0xa2, 0xc7, 0x70, 0x87, 0xde, 0xed, 0xe7, 0x43, 0x6e, 0x6d, 0x5f, 0x89, 0x98,
-	0x1d, 0xb3, 0x27, 0xb5, 0x6e, 0x9d, 0xd4, 0x76, 0x29, 0x76, 0x44, 0x74, 0x00, 0xb7, 0xbd, 0x4b,
-	0x89, 0x78, 0x8b, 0xf6, 0xb7, 0x68, 0xee, 0x88, 0x28, 0x85, 0x1b, 0x78, 0xa1, 0xa5, 0x89, 0xab,
-	0xa5, 0xde, 0x8a, 0x7f, 0x7c, 0x3d, 0xb9, 0x17, 0x62, 0x4f, 0x85, 0x30, 0xd2, 0xda, 0x9e, 0x33,
-	0x4a, 0x9f, 0x75, 0xbd, 0xad, 0xf1, 0x81, 0xc1, 0xfd, 0x05, 0x05, 0x05, 0xb4, 0x8d, 0xe4, 0x6e,
-	0x6d, 0x96, 0x23, 0x00, 0xef, 0xd2, 0xbc, 0x90, 0x81, 0xa6, 0x46, 0xca, 0x4b, 0x5e, 0xc8, 0xe8,
-	0x21, 0x78, 0x7b, 0xdf, 0x5e, 0x16, 0x03, 0x1c, 0x7a, 0xac, 0xee, 0x0e, 0x69, 0x3d, 0x92, 0x1a,
-	0x9f, 0x18, 0xec, 0x2f, 0x21, 0x6c, 0x94, 0xfe, 0x1f, 0x9b, 0xb8, 0x08, 0xc7, 0xf1, 0x0a, 0x71,
-	0x38, 0x87, 0x88, 0x60, 0x7b, 0x84, 0x38, 0x0c, 0xd1, 0xf4, 0x1c, 0x3d, 0x80, 0x9d, 0x00, 0x86,
-	0x63, 0xed, 0x28, 0x75, 0xb7, 0xeb, 0x3b, 0x68, 0x97, 0xca, 0xc6, 0xc1, 0x5f, 0x18, 0xc4, 0x94,
-	0xfc, 0x1a, 0xdf, 0x4a, 0xad, 0xde, 0x73, 0xa7, 0x50, 0xcf, 0x09, 0x1a, 0x50, 0x77, 0x4b, 0xf2,
-	0xbc, 0x84, 0x65, 0xed, 0x0f, 0x55, 0x6d, 0xfd, 0xa3, 0xaa, 0xea, 0x5f, 0xaa, 0xda, 0x5e, 0x8f,
-	0xf8, 0x1b, 0x83, 0x43, 0x22, 0xee, 0xc9, 0x7c, 0x6c, 0x94, 0xbb, 0xc6, 0xfc, 0x14, 0xf6, 0xed,
-	0xca, 0x62, 0x71, 0x7a, 0x7b, 0xab, 0x8b, 0x8e, 0x88, 0x1e, 0xc1, 0xae, 0x33, 0x5c, 0xe7, 0xe7,
-	0x72, 0xa5, 0xd0, 0x7a, 0x10, 0x7d, 0xa5, 0x47, 0x00, 0x65, 0xf7, 0xc1, 0x51, 0x25, 0x47, 0xad,
-	0x54, 0xae, 0x35, 0xbe, 0x1e, 0x7f, 0xeb, 0xc5, 0xf7, 0x69, 0xc2, 0xae, 0xa6, 0x09, 0xfb, 0x35,
-	0x4d, 0xd8, 0xe7, 0x59, 0x52, 0xb9, 0x9a, 0x25, 0x95, 0x9f, 0xb3, 0xa4, 0xf2, 0xa6, 0x79, 0xa6,
-	0xdc, 0xf9, 0x78, 0x90, 0xe6, 0x58, 0x64, 0x8b, 0xfb, 0x7c, 0xa2, 0x70, 0x69, 0xca, 0xde, 0x85,
-	0x3f, 0x80, 0xbb, 0x1c, 0x49, 0x3b, 0xb8, 0x49, 0xd7, 0xf9, 0xd9, 0xef, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0xff, 0x36, 0xe6, 0xb0, 0x22, 0x04, 0x00, 0x00,
+	// 443 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0x4f, 0x6f, 0xd3, 0x30,
+	0x18, 0xc6, 0x9b, 0x76, 0xfc, 0xe9, 0xbb, 0x0e, 0x6d, 0x06, 0xa1, 0x6c, 0xd2, 0xc2, 0x08, 0x17,
+	0x24, 0xb4, 0x44, 0x15, 0x9f, 0x60, 0xad, 0x38, 0x4c, 0x48, 0x08, 0xa5, 0x9c, 0xb8, 0x54, 0x6e,
+	0x6c, 0x6d, 0x16, 0x89, 0xdf, 0xc8, 0x76, 0x32, 0xc6, 0xa7, 0xe0, 0xca, 0xf7, 0xe0, 0xca, 0x9d,
+	0xe3, 0xc4, 0x89, 0x23, 0x6a, 0xbf, 0x08, 0x8a, 0xe3, 0x29, 0xcd, 0x40, 0x50, 0xc4, 0xad, 0xfe,
+	0xbd, 0x4f, 0xfd, 0x3c, 0x79, 0xac, 0x17, 0x8e, 0x0a, 0x85, 0x15, 0x97, 0x54, 0xa6, 0x3c, 0xa6,
+	0x5a, 0x73, 0x13, 0x57, 0xe3, 0x98, 0x57, 0x5c, 0x1a, 0x1d, 0x15, 0x0a, 0x0d, 0x92, 0xfb, 0xad,
+	0x22, 0xb2, 0x8a, 0xa8, 0x1a, 0x1f, 0xec, 0xa7, 0xa8, 0x73, 0xd4, 0x73, 0x2b, 0x89, 0x9b, 0x43,
+	0xa3, 0x0f, 0x73, 0xd8, 0x7d, 0x51, 0xff, 0xff, 0xa4, 0xd6, 0x4e, 0x4a, 0x25, 0x39, 0x23, 0xfb,
+	0x70, 0x37, 0xcd, 0xa8, 0xd6, 0x73, 0xc1, 0x7c, 0xef, 0xc8, 0x7b, 0x3a, 0x4c, 0xee, 0xd8, 0xf3,
+	0x29, 0x23, 0xf7, 0xa0, 0x2f, 0x98, 0xdf, 0xb7, 0xb0, 0x2f, 0x18, 0x89, 0xe0, 0x16, 0x5e, 0x48,
+	0xae, 0xfc, 0x41, 0x8d, 0x26, 0xfe, 0xb7, 0xcf, 0xc7, 0x0f, 0xdc, 0xfd, 0x27, 0x8c, 0x29, 0xae,
+	0xf5, 0xcc, 0x28, 0x21, 0xcf, 0x92, 0x46, 0x16, 0x96, 0xf0, 0xb0, 0xb5, 0x9b, 0xd6, 0x97, 0x4e,
+	0x15, 0xa7, 0xe6, 0xcf, 0xa6, 0x87, 0x00, 0xcd, 0x48, 0xd2, 0x9c, 0x3b, 0xf3, 0xa1, 0x25, 0xaf,
+	0x68, 0xce, 0xc9, 0x63, 0x18, 0x35, 0x63, 0x7d, 0x99, 0x2f, 0x30, 0x6b, 0xa2, 0x24, 0xdb, 0x96,
+	0xcd, 0x2c, 0x0a, 0x25, 0xec, 0xad, 0xd9, 0xfe, 0xdd, 0xf1, 0x7f, 0x3f, 0xf3, 0xc2, 0xb5, 0xfa,
+	0x1a, 0x31, 0xbb, 0xb6, 0x23, 0xb0, 0x55, 0x20, 0x66, 0xce, 0xca, 0xfe, 0x26, 0x8f, 0x60, 0xdb,
+	0x3e, 0xd2, 0x3c, 0xc5, 0x52, 0x1a, 0x6b, 0xb8, 0x93, 0x80, 0x45, 0xd3, 0x9a, 0xfc, 0xb3, 0xf1,
+	0x27, 0x0f, 0x7c, 0xeb, 0xfc, 0x06, 0xdf, 0x71, 0x29, 0x3e, 0x50, 0x23, 0x50, 0x5e, 0x27, 0x08,
+	0x61, 0x64, 0xd6, 0xb0, 0x4b, 0xd2, 0x61, 0x9d, 0x52, 0xfa, 0xbf, 0x2b, 0x65, 0xf0, 0x6b, 0x29,
+	0x5b, 0x9b, 0x65, 0xfb, 0xe2, 0xc1, 0x81, 0xcd, 0x36, 0xe3, 0x69, 0xa9, 0x84, 0xb9, 0x91, 0xee,
+	0x19, 0xec, 0xe9, 0xce, 0xa0, 0x7d, 0x97, 0xdd, 0xee, 0xe0, 0x94, 0x91, 0x27, 0xb0, 0x63, 0x14,
+	0x95, 0xe9, 0x39, 0xef, 0x54, 0x37, 0x72, 0xb0, 0x29, 0xef, 0x10, 0xa0, 0x6e, 0xd9, 0x29, 0x06,
+	0x56, 0x31, 0xac, 0xc9, 0x8d, 0x6e, 0x37, 0xcb, 0x3f, 0x79, 0xf9, 0x75, 0x19, 0x78, 0x57, 0xcb,
+	0xc0, 0xfb, 0xb1, 0x0c, 0xbc, 0x8f, 0xab, 0xa0, 0x77, 0xb5, 0x0a, 0x7a, 0xdf, 0x57, 0x41, 0xef,
+	0xed, 0xf8, 0x4c, 0x98, 0xf3, 0x72, 0x11, 0xa5, 0x98, 0xc7, 0xed, 0xfe, 0x1d, 0x0b, 0x5c, 0x3b,
+	0xc5, 0xef, 0xdd, 0xc6, 0x9a, 0xcb, 0x82, 0xeb, 0xc5, 0x6d, 0xbb, 0x7e, 0xcf, 0x7f, 0x06, 0x00,
+	0x00, 0xff, 0xff, 0x43, 0x66, 0xba, 0x2e, 0xd2, 0x03, 0x00, 0x00,
 }
 
 func (m *EventAssetBurned) Marshal() (dAtA []byte, err error) {
@@ -508,17 +507,17 @@ func (m *EventAssetBurned) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.AssetId) > 0 {
-		i -= len(m.AssetId)
-		copy(dAtA[i:], m.AssetId)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetId)))
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.AssetClassId) > 0 {
-		i -= len(m.AssetClassId)
-		copy(dAtA[i:], m.AssetClassId)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetClassId)))
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ClassId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -545,24 +544,24 @@ func (m *EventAssetClassCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
-	if len(m.AssetSymbol) > 0 {
-		i -= len(m.AssetSymbol)
-		copy(dAtA[i:], m.AssetSymbol)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetSymbol)))
+	if len(m.ClassSymbol) > 0 {
+		i -= len(m.ClassSymbol)
+		copy(dAtA[i:], m.ClassSymbol)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ClassSymbol)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.AssetName) > 0 {
-		i -= len(m.AssetName)
-		copy(dAtA[i:], m.AssetName)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetName)))
+	if len(m.ClassName) > 0 {
+		i -= len(m.ClassName)
+		copy(dAtA[i:], m.ClassName)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ClassName)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.AssetClassId) > 0 {
-		i -= len(m.AssetClassId)
-		copy(dAtA[i:], m.AssetClassId)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetClassId)))
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ClassId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -596,17 +595,17 @@ func (m *EventAssetCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.AssetId) > 0 {
-		i -= len(m.AssetId)
-		copy(dAtA[i:], m.AssetId)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetId)))
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.AssetClassId) > 0 {
-		i -= len(m.AssetClassId)
-		copy(dAtA[i:], m.AssetClassId)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetClassId)))
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ClassId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -682,17 +681,17 @@ func (m *EventTokenizationCreated) MarshalToSizedBuffer(dAtA []byte) (int, error
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.AssetId) > 0 {
-		i -= len(m.AssetId)
-		copy(dAtA[i:], m.AssetId)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetId)))
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.AssetClassId) > 0 {
-		i -= len(m.AssetClassId)
-		copy(dAtA[i:], m.AssetClassId)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetClassId)))
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ClassId)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -770,11 +769,11 @@ func (m *EventAssetBurned) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.AssetClassId)
+	l = len(m.ClassId)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = len(m.AssetId)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -791,15 +790,15 @@ func (m *EventAssetClassCreated) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.AssetClassId)
+	l = len(m.ClassId)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = len(m.AssetName)
+	l = len(m.ClassName)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = len(m.AssetSymbol)
+	l = len(m.ClassSymbol)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -812,11 +811,11 @@ func (m *EventAssetCreated) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.AssetClassId)
+	l = len(m.ClassId)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = len(m.AssetId)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -857,11 +856,11 @@ func (m *EventTokenizationCreated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = len(m.AssetClassId)
+	l = len(m.ClassId)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	l = len(m.AssetId)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -932,7 +931,7 @@ func (m *EventAssetBurned) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -960,11 +959,11 @@ func (m *EventAssetBurned) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			m.ClassId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -992,7 +991,7 @@ func (m *EventAssetBurned) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetId = string(dAtA[iNdEx:postIndex])
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1078,7 +1077,7 @@ func (m *EventAssetClassCreated) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1106,11 +1105,11 @@ func (m *EventAssetClassCreated) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			m.ClassId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassName", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1138,11 +1137,11 @@ func (m *EventAssetClassCreated) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetName = string(dAtA[iNdEx:postIndex])
+			m.ClassName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetSymbol", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassSymbol", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1170,7 +1169,7 @@ func (m *EventAssetClassCreated) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetSymbol = string(dAtA[iNdEx:postIndex])
+			m.ClassSymbol = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1224,7 +1223,7 @@ func (m *EventAssetCreated) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1252,11 +1251,11 @@ func (m *EventAssetCreated) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			m.ClassId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1284,7 +1283,7 @@ func (m *EventAssetCreated) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetId = string(dAtA[iNdEx:postIndex])
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1535,7 +1534,7 @@ func (m *EventTokenizationCreated) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1563,11 +1562,11 @@ func (m *EventTokenizationCreated) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			m.ClassId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1595,7 +1594,7 @@ func (m *EventTokenizationCreated) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AssetId = string(dAtA[iNdEx:postIndex])
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {

@@ -34,7 +34,7 @@ import (
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	ledgertypes "github.com/provenance-io/provenance/x/ledger/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -165,6 +165,7 @@ func init() {
 	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/AnnualProvisions", &minttypes.QueryAnnualProvisionsResponse{})
 
 	// nft
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Balance", &nfttypes.QueryBalanceResponse{})
 	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Class", &nfttypes.QueryClassResponse{})
 	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Classes", &nfttypes.QueryClassesResponse{})
 	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/NFT", &nfttypes.QueryNFTResponse{})
@@ -263,16 +264,16 @@ func init() {
 	setWhitelistedQuery("/provenance.ibchooks.v1.Query/Params", &ibchookstypes.QueryParamsResponse{})
 
 	// ledger
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClass", &ledger.QueryLedgerClassResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassEntryTypes", &ledger.QueryLedgerClassEntryTypesResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassStatusTypes", &ledger.QueryLedgerClassStatusTypesResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassBucketTypes", &ledger.QueryLedgerClassBucketTypesResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/Ledger", &ledger.QueryLedgerResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntries", &ledger.QueryLedgerEntriesResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntry", &ledger.QueryLedgerEntryResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerBalancesAsOf", &ledger.QueryLedgerBalancesAsOfResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlements", &ledger.QueryLedgerSettlementsResponse{})
-	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlementsByCorrelationID", &ledger.QueryLedgerSettlementsByCorrelationIDResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClass", &ledgertypes.QueryLedgerClassResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassEntryTypes", &ledgertypes.QueryLedgerClassEntryTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassStatusTypes", &ledgertypes.QueryLedgerClassStatusTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassBucketTypes", &ledgertypes.QueryLedgerClassBucketTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/Ledger", &ledgertypes.QueryLedgerResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntries", &ledgertypes.QueryLedgerEntriesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntry", &ledgertypes.QueryLedgerEntryResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerBalancesAsOf", &ledgertypes.QueryLedgerBalancesAsOfResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlements", &ledgertypes.QueryLedgerSettlementsResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlementsByCorrelationID", &ledgertypes.QueryLedgerSettlementsByCorrelationIDResponse{})
 
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
