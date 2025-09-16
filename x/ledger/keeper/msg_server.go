@@ -12,12 +12,7 @@ type MsgServer struct {
 	Keeper
 }
 
-func NewMsgServer(k Keeper) types.MsgServer {
-	ms := MsgServer{
-		Keeper: k,
-	}
-	return &ms
-}
+func NewMsgServer(k Keeper) types.MsgServer { return &MsgServer{Keeper: k} }
 
 // CreateLedger creates a new NFT ledger.
 func (k *MsgServer) CreateLedger(goCtx context.Context, req *types.MsgCreateLedgerRequest) (*types.MsgCreateLedgerResponse, error) {
@@ -155,12 +150,14 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBa
 func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *types.MsgTransferFundsWithSettlementRequest) (*types.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.HasLedger(ctx, req.Transfers[0].Key) {
-		return nil, types.NewErrCodeNotFound("ledger")
-	}
-
-	if err := k.RequireAuthorization(ctx, req.Signer, req.Transfers[0].Key.ToRegistryKey()); err != nil {
-		return nil, err
+	// Validate each transfer targets an existing ledger and the signer has authority.
+	for _, ft := range req.Transfers {
+		if !k.HasLedger(ctx, ft.Key) {
+			return nil, types.NewErrCodeNotFound("ledger")
+		}
+		if err := k.RequireAuthorization(ctx, req.Signer, ft.Key.ToRegistryKey()); err != nil {
+			return nil, err
+		}
 	}
 
 	// Ignore the error here, as it is validated in the ValidateBasic method.

@@ -200,7 +200,7 @@ func CmdDestroy() *cobra.Command {
 		Use:     "destroy <asset_class_id> <nft_id>",
 		Aliases: []string{},
 		Short:   "Destroy a ledger by asset_class_id and nft_id",
-		Example: `$ provenanced tx ledger destroy pb1a2b3c4... --from mykey`,
+		Example: `$ provenanced tx ledger destroy asset-class-1 nft-1 --from mykey`,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -312,7 +312,7 @@ func CmdCreateLedgerClass() *cobra.Command {
 		Use:     "create-class <ledger_class_id> <asset_class_id> <denom>",
 		Aliases: []string{"cc"},
 		Short:   "Create a new ledger class",
-		Example: `$ provenanced tx ledger create-class usd pb1a2b3c4... usd pb1a2b3c4... --from mykey`,
+		Example: `$ provenanced tx ledger create-class ledger-class-1 asset-class-1 usd --from mykey`,
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
