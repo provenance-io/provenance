@@ -17,7 +17,6 @@ COPY vendor/ ./vendor/
 COPY testutil/ ./testutil/
 COPY .git/ ./.git/
 COPY contrib/ ./contrib/
-COPY legacy_protos/ ./legacy_protos/
 COPY Makefile sims.mk ./
 
 
@@ -57,4 +56,3 @@ WORKDIR /home/provenance
 
 EXPOSE 1317 9090 26656 26657
 CMD ["/usr/bin/provenanced"]
-
