@@ -59,7 +59,8 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.validAddress2, err = sdk.AccAddressFromBech32("cosmos1ze3f954mtj30st8dw2qhylfvvtdv5q6x0e4k4q")
 	s.Require().NoError(err, "AccAddressFromBech32 error")
 
-	testutil.FundAccount(s.ctx, s.app.BankKeeper, s.validAddress1, sdk.NewCoins(sdk.NewCoin(s.bondDenom, math.NewInt(1000000000000000000))))
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, s.validAddress1, sdk.NewCoins(sdk.NewCoin(s.bondDenom, math.NewInt(1000000000000000000))))
+	s.Require().NoError(err, "FundAccount error")
 
 	// Load the test ledger class configs
 	s.ConfigureTest()
@@ -71,19 +72,22 @@ func (s *MsgServerTestSuite) ConfigureTest() {
 	s.validNFTClass = nft.Class{
 		Id: "test-nft-class-id",
 	}
-	s.app.NFTKeeper.SaveClass(s.ctx, s.validNFTClass)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, s.validNFTClass)
+	s.Require().NoError(err, "Save NFTClass error")
 
 	s.validNFT = nft.NFT{
 		ClassId: s.validNFTClass.Id,
 		Id:      "test-nft-id",
 	}
-	s.app.NFTKeeper.Mint(s.ctx, s.validNFT, s.validAddress1)
+	err = s.app.NFTKeeper.Mint(s.ctx, s.validNFT, s.validAddress1)
+	s.Require().NoError(err, "Mint NFT error")
 
 	s.validNFT2 = nft.NFT{
 		ClassId: s.validNFTClass.Id,
 		Id:      "test-nft-id-2",
 	}
-	s.app.NFTKeeper.Mint(s.ctx, s.validNFT2, s.validAddress1)
+	err = s.app.NFTKeeper.Mint(s.ctx, s.validNFT2, s.validAddress1)
+	s.Require().NoError(err, "Mint NFT error")
 
 	s.validLedgerClass = ledger.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id",
@@ -91,55 +95,64 @@ func (s *MsgServerTestSuite) ConfigureTest() {
 		MaintainerAddress: s.validAddress1.String(),
 		Denom:             s.bondDenom,
 	}
-	s.keeper.AddLedgerClass(s.ctx, s.validLedgerClass)
+	err = s.keeper.AddLedgerClass(s.ctx, s.validLedgerClass)
+	s.Require().NoError(err, "AddLedgerClass error")
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	err = s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          1,
 		Code:        "SCHEDULED_PAYMENT",
 		Description: "Scheduled Payment",
 	})
+	s.Require().NoError(err, "AddClassEntryType error")
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	err = s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          2,
 		Code:        "DISBURSEMENT",
 		Description: "Disbursement",
 	})
+	s.Require().NoError(err, "AddClassEntryType error")
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	err = s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          3,
 		Code:        "ORIGINATION_FEE",
 		Description: "Origination Fee",
 	})
+	s.Require().NoError(err, "AddClassEntryType error")
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          1,
 		Code:        "PRINCIPAL",
 		Description: "Principal",
 	})
+	s.Require().NoError(err, "AddClassBucketType error")
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          2,
 		Code:        "INTEREST",
 		Description: "Interest",
 	})
+	s.Require().NoError(err, "AddClassBucketType error")
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          3,
 		Code:        "ESCROW",
 		Description: "Escrow",
 	})
+	s.Require().NoError(err, "AddClassBucketType error")
 
-	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	err = s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          1,
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
 	})
+	s.Require().NoError(err, "AddClassStatusType error")
 
-	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	err = s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          2,
 		Code:        "IN_DEFERMENT",
 		Description: "In Deferment",
 	})
+	s.Require().NoError(err, "AddClassStatusType error")
 
 	s.existingLedger = &ledger.Ledger{
 		Key: &ledger.LedgerKey{
@@ -149,7 +162,7 @@ func (s *MsgServerTestSuite) ConfigureTest() {
 		LedgerClassId: s.validLedgerClass.LedgerClassId,
 		StatusTypeId:  1,
 	}
-	err := s.keeper.AddLedger(s.ctx, *s.existingLedger)
+	err = s.keeper.AddLedger(s.ctx, *s.existingLedger)
 	s.Require().NoError(err, "AddLedger error")
 }
 
