@@ -10,7 +10,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	proto "github.com/cosmos/gogoproto/proto"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -18,16 +17,11 @@ import (
 // AnyToString extracts a string value from an Any type that contains a StringValue using the provided codec.
 func AnyToString(cdc codec.BinaryCodec, anyMsg *cdctypes.Any) (string, error) {
 	if anyMsg == nil {
-		return "", nil
+		return "", fmt.Errorf("nil Any")
 	}
-
-	var unpacked proto.Message
-	if err := cdc.UnpackAny(anyMsg, &unpacked); err != nil {
-		return "", err
-	}
-	sv, ok := unpacked.(*wrapperspb.StringValue)
-	if !ok {
-		return "", NewErrCodeInvalidField("any_message", fmt.Sprintf("expected StringValue, got %T", unpacked))
+	var sv wrapperspb.StringValue
+	if err := cdc.UnpackAny(anyMsg, &sv); err != nil {
+		return "", NewErrCodeInvalidField("data", fmt.Sprintf("expected google.protobuf.StringValue in Any: %v", err))
 	}
 	return sv.Value, nil
 }
@@ -221,8 +215,8 @@ func numericToUint64(v interface{}) (uint64, bool) {
 
 // NewDefaultMarker creates a new default marker account for a given token and address
 func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, error) {
-	// Get the from address
-	fromAcc, err := sdk.AccAddressFromBech32(addr)
+	// Get the signer address
+	signerAcc, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
 		return nil, NewErrCodeInvalidField("address", err.Error())
 	}
@@ -237,10 +231,10 @@ func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, 
 	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markerAddr),
 		token,
-		fromAcc,
+		signerAcc,
 		[]markertypes.AccessGrant{
 			{
-				Address: fromAcc.String(),
+				Address: signerAcc.String(),
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Admin,
 					markertypes.Access_Mint,
@@ -253,7 +247,7 @@ func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, 
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
 		true,       // Supply fixed
-		false,      // Allow governance control
+		false,      // Disallow governance control
 		false,      // Don't allow forced transfer
 		[]string{}, // No required attributes
 	)

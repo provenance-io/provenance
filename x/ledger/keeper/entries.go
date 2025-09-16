@@ -5,6 +5,7 @@ import (
 	"errors"
 	"maps"
 	"slices"
+	"strings"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -38,15 +39,20 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 		return err
 	}
 
-	// Get all existing entries for this NFT to check for conflicts and manage sequencing.
-	existingEntries, err := k.ListLedgerEntries(ctx, ledgerKey)
-	if err != nil {
-		return err
-	}
-
 	// Calculate the current block time in days since epoch for date validation.
 	blockTimeDays := helper.DaysSinceEpoch(ctx.BlockTime().UTC())
+	// Track in-batch correlation ids to prevent silent overwrites.
+	seen := make(map[string]struct{}, len(entries))
 	for _, le := range entries {
+		// Validate correlation id presence and in-batch uniqueness.
+		if strings.TrimSpace(le.CorrelationId) == "" {
+			return types.NewErrCodeInvalidField("correlation_id", "cannot be empty")
+		}
+		if _, ok := seen[le.CorrelationId]; ok {
+			return types.NewErrCodeAlreadyExists("correlation_id")
+		}
+		seen[le.CorrelationId] = struct{}{}
+
 		// Validate that posted dates are not in the future.
 		// This prevents entries from being posted with future timestamps.
 		if le.PostedDate > blockTimeDays {
@@ -61,6 +67,13 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 		}
 		if !hasLedgerClassEntryType {
 			return types.NewErrCodeInvalidField("entry_type_id", "entry type doesn't exist")
+		}
+
+		// Get all existing entries for this NFT to check for conflicts and manage sequencing.
+		// This is needed to include any sequence updates from prior saves in this loop.
+		existingEntries, err := k.ListLedgerEntries(ctx, ledgerKey)
+		if err != nil {
+			return err
 		}
 
 		// Save the individual entry with proper sequencing and conflict resolution.

@@ -27,7 +27,7 @@ func (k *MsgServer) CreateLedger(goCtx context.Context, req *types.MsgCreateLedg
 		return nil, types.NewErrCodeAlreadyExists("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Ledger.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Ledger.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 	if err := k.AddLedger(ctx, *req.Ledger); err != nil {
@@ -45,7 +45,7 @@ func (k *MsgServer) UpdateStatus(goCtx context.Context, req *types.MsgUpdateStat
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -64,7 +64,7 @@ func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *types.MsgUpda
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func (k *MsgServer) UpdatePayment(goCtx context.Context, req *types.MsgUpdatePay
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +102,7 @@ func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *types.MsgUpda
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -121,7 +121,7 @@ func (k *MsgServer) Append(goCtx context.Context, req *types.MsgAppendRequest) (
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -140,7 +140,7 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBa
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -159,15 +159,15 @@ func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *type
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Transfers[0].Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Transfers[0].Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
 	// Ignore the error here, as it is validated in the ValidateBasic method.
-	authorityAddr, _ := sdk.AccAddressFromBech32(req.Signer)
+	signerAddr, _ := sdk.AccAddressFromBech32(req.Signer)
 
 	for _, ft := range req.Transfers {
-		err := k.ProcessTransferFundsWithSettlement(ctx, authorityAddr, ft)
+		err := k.ProcessTransferFundsWithSettlement(ctx, signerAddr, ft)
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +184,7 @@ func (k *MsgServer) Destroy(goCtx context.Context, req *types.MsgDestroyRequest)
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -285,7 +285,7 @@ func (k *MsgServer) BulkCreate(goCtx context.Context, req *types.MsgBulkCreateRe
 
 	// Signer has to be able to add ledgers and entries for every key.
 	for _, ledgerToEntries := range req.LedgerAndEntries {
-		if err := k.RequireAuthority(ctx, req.Signer, ledgerToEntries.LedgerKey.ToRegistryKey()); err != nil {
+		if err := k.RequireAuthorization(ctx, req.Signer, ledgerToEntries.LedgerKey.ToRegistryKey()); err != nil {
 			return nil, err
 		}
 	}

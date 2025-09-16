@@ -893,7 +893,7 @@ func (s *MsgServerTestSuite) TestDestroy() {
 
 // TestCreateLedgerClass tests the CreateLedgerClass message server method
 func (s *MsgServerTestSuite) TestCreateLedgerClass() {
-	authorityAddr := s.validAddress1
+	authorizedAddr := s.validAddress1
 
 	tests := []struct {
 		name    string
@@ -907,10 +907,10 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 				LedgerClass: &ledger.LedgerClass{
 					LedgerClassId:     "test-ledger-class-new",
 					AssetClassId:      s.validNFTClass.Id,
-					MaintainerAddress: authorityAddr.String(),
+					MaintainerAddress: authorizedAddr.String(),
 					Denom:             s.bondDenom,
 				},
-				Signer: authorityAddr.String(),
+				Signer: authorizedAddr.String(),
 			},
 			expResp: &ledger.MsgCreateLedgerClassResponse{},
 		},
@@ -920,10 +920,10 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 				LedgerClass: &ledger.LedgerClass{
 					LedgerClassId:     s.validLedgerClass.LedgerClassId,
 					AssetClassId:      s.validNFTClass.Id,
-					MaintainerAddress: authorityAddr.String(),
+					MaintainerAddress: authorizedAddr.String(),
 					Denom:             s.bondDenom,
 				},
-				Signer: authorityAddr.String(),
+				Signer: authorizedAddr.String(),
 			},
 			expErr: "already exists",
 		},
@@ -948,7 +948,7 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 
 // TestAddLedgerClassStatusType tests the AddLedgerClassStatusType message server method
 func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
-	authorityAddr := s.validAddress1
+	authorizedAddr := s.validAddress1
 
 	tests := []struct {
 		name    string
@@ -965,7 +965,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 					Code:        "COMPLETED",
 					Description: "Completed",
 				},
-				Signer: authorityAddr.String(),
+				Signer: authorizedAddr.String(),
 			},
 			expResp: &ledger.MsgAddLedgerClassStatusTypeResponse{},
 		},
@@ -1003,7 +1003,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 
 // TestAddLedgerClassEntryType tests the AddLedgerClassEntryType message server method
 func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
-	authorityAddr := s.validAddress1
+	authorizedAddr := s.validAddress1
 
 	tests := []struct {
 		name    string
@@ -1020,7 +1020,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
 					Code:        "ADJUSTMENT",
 					Description: "Adjustment",
 				},
-				Signer: authorityAddr.String(),
+				Signer: authorizedAddr.String(),
 			},
 			expResp: &ledger.MsgAddLedgerClassEntryTypeResponse{},
 		},
@@ -1058,7 +1058,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
 
 // TestAddLedgerClassBucketType tests the AddLedgerClassBucketType message server method
 func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
-	authorityAddr := s.validAddress1
+	authorizedAddr := s.validAddress1
 
 	tests := []struct {
 		name    string
@@ -1075,7 +1075,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
 					Code:        "FEES",
 					Description: "Fees",
 				},
-				Signer: authorityAddr.String(),
+				Signer: authorizedAddr.String(),
 			},
 			expResp: &ledger.MsgAddLedgerClassBucketTypeResponse{},
 		},
