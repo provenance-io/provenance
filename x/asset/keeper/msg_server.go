@@ -60,7 +60,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Verify the asset class exists
-	_, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
+	classResp, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
 	if err != nil {
 		return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
 	}
@@ -75,14 +75,9 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 
 	// If there's data, add it to the token
 	if msg.Asset.Data != "" {
-		class, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
-		if err != nil {
-			return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
-		}
-
 		// Validate the data against the Class schema if it exists
-		if class.Class.Data != nil {
-			jsonSchema, err := types.AnyToJSONSchema(m.cdc, class.Class.Data)
+		if classResp.Class.Data != nil {
+			jsonSchema, err := types.AnyToJSONSchema(m.cdc, classResp.Class.Data)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert class data to JSON schema: %w", err)
 			}
@@ -179,8 +174,16 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 
 // CreatePool creates a marker for the pool and transfers the assets to the pool marker.
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	denom := fmt.Sprintf("pool.%s", msg.Pool.Denom)
+
+	// Ensure the pool marker doesn't already exist
+	if _, err := m.markerKeeper.GetMarkerByDenom(ctx, denom); err == nil {
+		return nil, fmt.Errorf("pool marker with denom %s already exists", denom)
+	}
+
 	// Create the marker
-	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.Signer)
+	marker, err := m.createMarker(goCtx, sdk.NewCoin(denom, msg.Pool.Amount), msg.Signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pool marker: %w", err)
 	}
@@ -206,7 +209,6 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	}
 
 	// Emit event for pool creation
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := ctx.EventManager().EmitTypedEvent(types.NewEventPoolCreated(msg.Pool.String(), assetCount, msg.Signer)); err != nil {
 		return nil, fmt.Errorf("failed to emit pool created event: %w", err)
 	}
@@ -269,7 +271,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	// Reassign the pools permissions to the asset module account (prevent the pools from being transferred)
 	var poolCount uint32
 	for _, pool := range msg.Pools {
-		pool, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", pool))
+		poolMarker, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", pool))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get pool marker: %w", err)
 		}
@@ -287,26 +289,26 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		)
 
 		// Revoke all access from the pool marker
-		accessList := pool.GetAccessList()
+		accessList := poolMarker.GetAccessList()
 		for _, access := range accessList {
 			accessAcc, err := sdk.AccAddressFromBech32(access.Address)
 			if err != nil {
 				return nil, fmt.Errorf("invalid from pool marker access address: %w", err)
 			}
-			err = pool.RevokeAccess(accessAcc)
+			err = poolMarker.RevokeAccess(accessAcc)
 			if err != nil {
 				return nil, fmt.Errorf("failed to revoke access: %w", err)
 			}
 		}
 
 		// Grant the module account access to the pool marker
-		err = pool.GrantAccess(moduleAccessGrant)
+		err = poolMarker.GrantAccess(moduleAccessGrant)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update pool marker access: %w", err)
 		}
 
 		// Save the updated marker
-		m.markerKeeper.SetMarker(ctx, pool)
+		m.markerKeeper.SetMarker(ctx, poolMarker)
 		poolCount++
 	}
 

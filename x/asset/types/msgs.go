@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AllRequestMsgs defines all the Msg*Request messages.
+// AllRequestMsgs lists all Msg types for interface registration.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgBurnAsset)(nil),
 	(*MsgCreateAsset)(nil),
