@@ -141,8 +141,8 @@ jobs:
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: 129784868+provenanceio-bot@users.noreply.github.com
+          password: ${{ secrets.BOT_GHCR_PAT }}
 
       - uses: docker/build-push-action@v6
         with:
