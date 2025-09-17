@@ -4,6 +4,7 @@ package provenance.oracle.v1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/query/v1/query.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/oracle/types";
 option java_package        = "io.provenance.oracle.v1";
@@ -13,7 +14,8 @@ option java_multiple_files = true;
 service Query {
   // OracleAddress returns the address of the oracle
   rpc OracleAddress(QueryOracleAddressRequest) returns (QueryOracleAddressResponse) {
-    option (google.api.http).get = "/provenance/oracle/v1/oracle_address";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/oracle/v1/oracle_address";
   }
 
   // Oracle forwards a query to the module's oracle

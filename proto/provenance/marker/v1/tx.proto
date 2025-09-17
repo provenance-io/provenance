@@ -65,7 +65,9 @@ service Msg {
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
   // UpdateSendDenyList will only succeed if signer has admin authority
   rpc UpdateSendDenyList(MsgUpdateSendDenyListRequest) returns (MsgUpdateSendDenyListResponse);
-  // AddNetAssetValues set the net asset value for a marker
+  // AddNetAssetValues sets the net asset value for a marker.
+  // Note: When setting NAVs with the "usd" denom, amounts are in whole dollars
+  // where 1 = $1.00 USD.
   rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
   // SetAdministratorProposal sets administrators with specific access on the marker
   rpc SetAdministratorProposal(MsgSetAdministratorProposalRequest) returns (MsgSetAdministratorProposalResponse);
@@ -390,8 +392,10 @@ message MsgUpdateSendDenyListResponse {}
 message MsgAddNetAssetValuesRequest {
   option (cosmos.msg.v1.signer) = "administrator";
 
-  string                 denom            = 1;
-  string                 administrator    = 2;
+  string denom         = 1;
+  string administrator = 2;
+  // Net asset values to set. The "usd" denomination represents whole-dollar amounts,
+  // where 1usd = $1.00.
   repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
 }
 

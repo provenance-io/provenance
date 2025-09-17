@@ -118,7 +118,7 @@ func (s *IntegrationTestSuite) bondCoins(amt int64) sdk.Coins {
 	return sdk.NewCoins(s.bondCoin(amt))
 }
 
-// appendCommonFlagsTo adds this suite's common flags to the end of the provided arguments.
+// appendCommonArgsTo adds this suite's common args to the end of the provided arguments.
 func (s *IntegrationTestSuite) appendCommonArgsTo(args ...string) []string {
 	return append(args, s.commonArgs...)
 }
