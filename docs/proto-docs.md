@@ -7221,7 +7221,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated | Net asset values to set. When using the special "musd" denom, the amount represents milli-USD (musd) units where 1000 = $1.00 USD |
+| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated | Net asset values to set. The "usd" denomination represents whole-dollar amounts, where 1usd = $1.00. |
 
 
 
@@ -9576,7 +9576,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  |  |
 | `signers` | [string](#string) | repeated |  |
-| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated | Net asset values to set. When using the special "musd" denom, the amount represents milli-USD (musd) units where 1000 = $1.00 USD |
+| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated | Net asset values to set. The "usd" denomination represents whole-dollar amounts, where 1usd = $1.00. |
 
 
 
@@ -10354,7 +10354,7 @@ Msg defines the Metadata Msg service.
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance-metadata-v1-MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance-metadata-v1-MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance-metadata-v1-MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance-metadata-v1-MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-metadata-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-metadata-v1-MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. |
-| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a scope. Note: When setting NAVs with the "musd" denom, amounts are in milli-USD (musd) units where 1000 = $1.00 USD |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a scope. Note: When setting NAVs amounts are in usd units where 1usd = $1.00. |
 
  <!-- end services -->
 

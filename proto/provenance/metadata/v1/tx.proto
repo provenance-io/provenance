@@ -87,8 +87,7 @@ service Msg {
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
 
   // AddNetAssetValues sets the net asset value for a scope.
-  // Note: When setting NAVs with the "musd" denom, amounts are in milli-USD (musd)
-  // units where 1000 = $1.00 USD
+  // Note: When setting NAVs amounts are in usd units where 1usd = $1.00.
   rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
 }
 
@@ -612,8 +611,8 @@ message MsgAddNetAssetValuesRequest {
 
   string          scope_id = 1;
   repeated string signers  = 2;
-  // Net asset values to set. When using the special "musd" denom, the amount
-  // represents milli-USD (musd) units where 1000 = $1.00 USD
+  // Net asset values to set. The "usd" denomination represents whole-dollar amounts,
+  // where 1usd = $1.00.
   repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
 }
 

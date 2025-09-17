@@ -1,1 +1,1 @@
-* Added documentation to NetAssetValues fields in proto clarifying "musd" denom amounts are in milli-USD units where 1000 =$1.00 USD [#2291](https://github.com/provenance-io/provenance/issues/2291).
+* Added documentation to NetAssetValues fields in proto clarifying that amounts are in `usd` units, where 1usd =$1.00. [#2291](https://github.com/provenance-io/provenance/issues/2291).

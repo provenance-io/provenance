@@ -2233,8 +2233,8 @@ var xxx_messageInfo_MsgUpdateSendDenyListResponse proto.InternalMessageInfo
 type MsgAddNetAssetValuesRequest struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
-	// Net asset values to set. When using the special "musd" denom, the amount
-	// represents milli-USD (musd) units where 1000 = $1.00 USD
+	// Net asset values to set. The "usd" denomination represents whole-dollar amounts,
+	// where 1usd = $1.00.
 	NetAssetValues []NetAssetValue `protobuf:"bytes,3,rep,name=net_asset_values,json=netAssetValues,proto3" json:"net_asset_values"`
 }
 
