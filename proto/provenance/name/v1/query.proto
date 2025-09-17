@@ -10,22 +10,26 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/name/v1/name.proto";
+import "cosmos/query/v1/query.proto";
 
 // Query defines the gRPC querier service for distribution module.
 service Query {
   // Params queries params of the name module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/name/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/name/v1/params";
   }
 
   // Resolve queries for the address associated with a given name
   rpc Resolve(QueryResolveRequest) returns (QueryResolveResponse) {
-    option (google.api.http).get = "/provenance/name/v1/resolve/{name}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/name/v1/resolve/{name}";
   }
 
   // ReverseLookup queries for all names bound against a given address
   rpc ReverseLookup(QueryReverseLookupRequest) returns (QueryReverseLookupResponse) {
-    option (google.api.http).get = "/provenance/name/v1/lookup/{address}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/name/v1/lookup/{address}";
   }
 }
 
