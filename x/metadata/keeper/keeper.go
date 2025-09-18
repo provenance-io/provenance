@@ -5,13 +5,11 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -71,6 +69,7 @@ func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bo
 	return ownerAddr.String() == stored.Owner
 }
 
+// EmitEvent emits an event using the keeper.
 func (k Keeper) EmitEvent(ctx sdk.Context, event proto.Message) {
 	err := ctx.EventManager().EmitTypedEvent(event)
 	if err != nil {
@@ -78,7 +77,7 @@ func (k Keeper) EmitEvent(ctx sdk.Context, event proto.Message) {
 	}
 }
 
-// unionUnique gets a union of the provided sets of strings without any duplicates.
+// UnionDistinct gets a union of the provided sets of strings without any duplicates.
 func (k Keeper) UnionDistinct(sets ...[]string) []string {
 	retval := []string{}
 	for _, s := range sets {

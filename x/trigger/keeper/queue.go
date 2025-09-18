@@ -2,15 +2,13 @@ package keeper
 
 import (
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // QueueTrigger Creates a QueuedTrigger and Enqueues it
 func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
-	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight()))
+	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight())) //nolint:gosec // G115
 	k.Enqueue(ctx, item)
 }
 
@@ -93,7 +91,11 @@ func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTr
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.QueueKeyPrefix)
 
-	defer iterator.Close()
+	defer func() {
+		if err := iterator.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close iterator", "error", err)
+		}
+	}()
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.QueuedTrigger{}
 		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {

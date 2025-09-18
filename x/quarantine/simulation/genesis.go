@@ -8,12 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 const (
-	QuarantineOptIn    = "quarantine-opt-in"
+	QuarantineOptIn    = "quarantine-opt-in" //nolint:revive
 	QuarantineAutoResp = "quarantine-auto-resp"
 	QuarantineFunds    = "quarantine-funds"
 )

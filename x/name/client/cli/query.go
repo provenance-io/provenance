@@ -1,3 +1,4 @@
+// Package cli provides CLI commands for querying the name module.
 package cli
 
 import (
@@ -5,14 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/provenance-io/provenance/x/name/types"
+	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd is the top-level command for name CLI queries.

@@ -4,29 +4,28 @@ import (
 	"encoding/json"
 	"fmt"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	sdkerrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
+// WasmHooks defines wasm-specific IBC hook logic.
 type WasmHooks struct {
 	ContractKeeper      *wasmkeeper.Keeper
 	ibcHooksKeeper      *keeper.Keeper
 	bech32PrefixAccAddr string
 }
 
+// NewWasmHooks creates a new instance of WasmHooks.
 func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.Keeper, bech32PrefixAccAddr string) WasmHooks {
 	return WasmHooks{
 		ContractKeeper:      contractKeeper,
@@ -40,6 +39,7 @@ func (h WasmHooks) ProperlyConfigured() bool {
 	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
 }
 
+// OnRecvPacketOverride handles custom logic on receiving a packet.
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
 	if !h.ProperlyConfigured() {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
@@ -178,6 +178,7 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 	return true, jsonObject
 }
 
+// ValidateAndParseMemo parses and validates the memo field.
 func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdktypes.AccAddress, msgBytes []byte, err error) {
 	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
 	if !isWasmRouted {
@@ -237,6 +238,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	return isWasmRouted, contractAddr, msgBytes, nil
 }
 
+// SendPacketOverride overrides sending IBC packets with custom logic.
 func (h WasmHooks) SendPacketOverride(
 	i ICS4Middleware,
 	ctx sdktypes.Context,
@@ -299,6 +301,7 @@ func (h WasmHooks) SendPacketOverride(
 	return seq, nil
 }
 
+// GetWasmSendPacketPreProcessor returns a pre-processor for sending packets.
 func (h WasmHooks) GetWasmSendPacketPreProcessor(
 	_ sdktypes.Context,
 	data []byte,
@@ -353,6 +356,7 @@ func (h WasmHooks) GetWasmSendPacketPreProcessor(
 	return dataBytes, nil
 }
 
+// SendPacketAfterHook runs after a packet is sent.
 func (h WasmHooks) SendPacketAfterHook(ctx sdktypes.Context,
 	_ *capabilitytypes.Capability,
 	_ string,
@@ -384,6 +388,7 @@ func (h WasmHooks) SendPacketAfterHook(ctx sdktypes.Context,
 	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, sequence, contract)
 }
 
+// OnAcknowledgementPacketOverride handles custom acknowledgement logic.
 func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdktypes.AccAddress) error {
 	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	if err != nil {
@@ -429,6 +434,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	return nil
 }
 
+// OnTimeoutPacketOverride handles custom logic for packet timeouts.
 func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
 	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
 	if err != nil {

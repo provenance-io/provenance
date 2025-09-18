@@ -7,19 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/spf13/cobra"
 )
 
 const (
+	// FlagConcreteType is the CLI flag for specifying the concrete attribute type.
 	FlagConcreteType = "concrete-type"
 )
 
@@ -343,7 +342,7 @@ func NewUpdateParamsCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid max value length: %w", err)
 			}
-			maxValueLength32 := uint32(maxValueLength) //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+			maxValueLength32 := uint32(maxValueLength)
 			msg := types.NewMsgUpdateParamsRequest(authority, maxValueLength32)
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},

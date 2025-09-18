@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -94,6 +93,7 @@ type IndexedAddrAmts struct {
 	indexes map[string]int
 }
 
+// NewIndexedAddrAmts returns a new instance of IndexedAddrAmts.
 func NewIndexedAddrAmts() *IndexedAddrAmts {
 	return &IndexedAddrAmts{
 		indexes: make(map[string]int),

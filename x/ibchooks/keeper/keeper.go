@@ -1,3 +1,4 @@
+// Package keeper contains the keeper implementation for ibchooks.
 package keeper
 
 import (
@@ -6,24 +7,21 @@ import (
 	"fmt"
 	"strings"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-
-	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
+// Keeper handles the storage and logic for ibchooks.
 type (
 	Keeper struct {
 		cdc      codec.BinaryCodec
@@ -75,24 +73,29 @@ func (k Keeper) ValidateAuthority(addr string) error {
 	return nil
 }
 
+// InitGenesis initializes the genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 }
 
+// ExportGenesis exports the current state as genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Params: k.GetParams(ctx),
 	}
 }
 
+// GetPacketCallbackKey returns the store key for a packet callback.
 func GetPacketCallbackKey(channel string, packetSequence uint64) []byte {
 	return []byte(fmt.Sprintf("%s::%d", channel, packetSequence))
 }
 
+// GetPacketAckKey returns the store key for packet acknowledgement.
 func GetPacketAckKey(channel string, packetSequence uint64) []byte {
 	return []byte(fmt.Sprintf("%s::%d::ack", channel, packetSequence))
 }
 
+// GeneratePacketAckValue generates a value for packet acknowledgement storage.
 func GeneratePacketAckValue(packet channeltypes.Packet, contract string) ([]byte, error) {
 	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidContractAddr, contract)

@@ -1,3 +1,4 @@
+// Package ibcratelimit provides codec registration for the ibcratelimit module.
 package ibcratelimit
 
 import (

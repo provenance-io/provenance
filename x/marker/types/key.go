@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -87,7 +86,7 @@ func DenySendMarkerPrefix(markerAddr sdk.AccAddress) []byte {
 	return key
 }
 
-// NetAssetValueKey returns key [prefix][marker address] for marker net asset values
+// NetAssetValueKeyPrefix returns key [prefix][marker address] for marker net asset values
 func NetAssetValueKeyPrefix(markerAddr sdk.AccAddress) []byte {
 	return append(NetAssetValuePrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
 }

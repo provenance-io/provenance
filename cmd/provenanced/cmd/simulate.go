@@ -3,11 +3,11 @@ package cmd
 import (
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	flatfeescli "github.com/provenance-io/provenance/x/flatfees/client/cli"
+	"github.com/spf13/cobra"
 )
 
+// GetCmdPioSimulateTx returns the command to simulate a Provenance transaction.
 func GetCmdPioSimulateTx() *cobra.Command {
 	// This command is the same as the one for the flatfees CalculateTxFees query.
 	// However, we want this one named "simulate". So, if it's not, we put the current name in the aliases

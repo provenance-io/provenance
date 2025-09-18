@@ -1,10 +1,10 @@
+// Package keeper handles the core state logic for the hold module.
 package keeper
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/hold"
 )
 

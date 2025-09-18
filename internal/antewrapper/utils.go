@@ -10,11 +10,9 @@ import (
 	cerrs "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/internal/provutils"
 	flatfees "github.com/provenance-io/provenance/x/flatfees/types"
@@ -37,6 +35,7 @@ const (
 	// nilStr is a string to use to indicate something is nil.
 	nilStr = "<nil>"
 
+	// SimAppChainID is the chain ID used for simapp unit testing.
 	SimAppChainID = "simapp-unit-testing"
 
 	// TxGasLimit is the maximum amount of gas we allow in a single Tx.

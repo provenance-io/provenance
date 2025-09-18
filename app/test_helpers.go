@@ -12,17 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/require"
-
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
-
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -41,9 +36,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 )
 
 // DefaultConsensusParams defines the default consensus params used in SimApp testing.
@@ -352,6 +348,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *App) GenesisState {
 	return genesisState
 }
 
+// GenerateAccountStrategy defines a strategy for generating accounts.
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
 // createRandomAccounts is a strategy used by addTestAddrs() in order to generated addresses in random order.
@@ -460,6 +457,7 @@ func initAccountWithCoins(app *App, ctx sdk.Context, addr sdk.AccAddress, coins 
 	}
 }
 
+// TestAddr returns a test account address.
 func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHexUnsafe(addr)
 	if err != nil {
@@ -512,15 +510,13 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 
 // MakeTestEncodingConfig creates an encoding config suitable for unit tests.
 func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
-	tempDir, err := os.MkdirTemp("", "tempprovapp")
-	switch {
-	case t != nil:
-		require.NoError(t, err, "failed to create temp dir %q", tempDir)
-	case err != nil:
-		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
-	}
-	defer os.RemoveAll(tempDir)
-
-	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
+	tempDir := t.TempDir()
+	tempApp := New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		simtestutil.NewAppOptionsWithFlagHome(tempDir),
+	)
 	return tempApp.GetEncodingConfig()
 }

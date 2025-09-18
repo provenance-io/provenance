@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -36,6 +35,7 @@ type MarkerKeeper interface {
 	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 }
 
+// BankKeeper defines the expected interface for the bank keeper.
 type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error

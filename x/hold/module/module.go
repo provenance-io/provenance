@@ -1,3 +1,4 @@
+// Package module provides the hold module implementation.
 package module
 
 import (
@@ -6,24 +7,20 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/core/appmodule"
-
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/client/cli"
 	"github.com/provenance-io/provenance/x/hold/keeper"
 	"github.com/provenance-io/provenance/x/hold/simulation"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -33,11 +30,13 @@ var (
 	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
+// AppModule implements the hold module AppModule interface.
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule object.
 func NewAppModule(cdc codec.Codec, holdKeeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -51,10 +50,12 @@ func (AppModule) IsOnePerModuleType() {}
 // IsAppModule is a dummy function that satisfies the AppModule interface.
 func (AppModule) IsAppModule() {}
 
+// AppModuleBasic defines the basic application module used by the hold module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
+// Name returns the hold module's name.
 func (AppModuleBasic) Name() string {
 	return hold.ModuleName
 }

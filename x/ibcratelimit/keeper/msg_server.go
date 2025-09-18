@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
@@ -14,6 +13,7 @@ type MsgServer struct {
 	Keeper
 }
 
+// NewMsgServer creates a new MsgServer instance for ibcratelimit message handling.
 func NewMsgServer(k Keeper) ibcratelimit.MsgServer {
 	return MsgServer{
 		Keeper: k,

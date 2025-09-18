@@ -1,10 +1,8 @@
+// Package provcli provides helper functions and constants for CLI commands.
 package provcli
 
 import (
 	"fmt"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -12,9 +10,12 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const (
+	// FlagAuthority defines the CLI flag for specifying authority.
 	FlagAuthority = "authority"
 )
 

@@ -1,3 +1,4 @@
+//nolint:revive
 package simulation
 
 import (
@@ -13,7 +14,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
 )
@@ -58,6 +58,7 @@ type SendGovMsgArgs struct {
 	Comment string
 }
 
+// WeightedOperations returns the weighted operations for sanction simulation.
 func WeightedOperations(
 	simState module.SimulationState, protoCodec *codec.ProtoCodec,
 	ak sanction.AccountKeeper, bk sanction.BankKeeper, gk govkeeper.Keeper, sk keeper.Keeper,
@@ -95,6 +96,7 @@ func WeightedOperations(
 	}
 }
 
+// ProposalMsgs returns the proposal messages for sanction simulation.
 func ProposalMsgs(
 	simState module.SimulationState, protoCodec *codec.ProtoCodec,
 	ak sanction.AccountKeeper, bk sanction.BankKeeper, gk govkeeper.Keeper, sk keeper.Keeper,
@@ -222,6 +224,7 @@ func MaxCoins(a, b sdk.Coins) sdk.Coins {
 	return sdk.NewCoins(rv...)
 }
 
+// SimulateGovMsgSanction simulates a governance sanction message.
 func SimulateGovMsgSanction(args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -290,6 +293,7 @@ func SimulateGovMsgSanction(args *WeightedOpsArgs) simtypes.Operation {
 	}
 }
 
+// SimulateGovMsgSanctionImmediate simulates an immediate governance sanction message.
 func SimulateGovMsgSanctionImmediate(args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -368,6 +372,7 @@ func SimulateGovMsgSanctionImmediate(args *WeightedOpsArgs) simtypes.Operation {
 	}
 }
 
+// SimulateGovMsgUnsanction simulates a governance unsanction message.
 func SimulateGovMsgUnsanction(args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -450,6 +455,7 @@ func SimulateGovMsgUnsanction(args *WeightedOpsArgs) simtypes.Operation {
 	}
 }
 
+// SimulateGovMsgUnsanctionImmediate simulates an immediate governance unsanction message.
 func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -542,6 +548,7 @@ func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation
 	}
 }
 
+// SimulatePropMsgUpdateParams simulates a proposal message to update parameters.
 func SimulatePropMsgUpdateParams(args *WeightedOpsArgs) simtypes.MsgSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 		return &sanction.MsgUpdateParams{

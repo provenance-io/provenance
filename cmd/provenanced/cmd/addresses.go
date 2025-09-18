@@ -5,20 +5,18 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/google/uuid"
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/version"
-
+	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/spf13/cobra"
 )
 
 var (
 	cmdStart = fmt.Sprintf("%s metaaddress", version.AppName)
 )
 
-// GetQueryCmd is the top-level command for name CLI queries.
+// AddMetaAddressCmd is the top-level command for name CLI queries.
 func AddMetaAddressCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        "metaaddress",

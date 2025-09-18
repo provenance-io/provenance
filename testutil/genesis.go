@@ -3,10 +3,9 @@ package testutil
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 )
 
 // MutateGenesisState will extract a GenesisState object from the provided config and run it through

@@ -4,16 +4,15 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 const (
+	// MaximumActions defines the maximum number of actions allowed per trigger.
 	MaximumActions uint64 = 5
 )
 

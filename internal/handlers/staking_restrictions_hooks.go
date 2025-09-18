@@ -4,12 +4,10 @@ import (
 	"context"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
@@ -17,14 +15,15 @@ import (
 var _ stakingtypes.StakingHooks = StakingRestrictionHooks{}
 
 const (
-	// The default concentration of bonded tokens a validator is allowed as a multiple of equal shares
+	// DefaultConcentrationMultiple default concentration of bonded tokens a validator is allowed as a multiple of equal shares
 	DefaultConcentrationMultiple = 5.5 // Amounts to ~8% with 68 validators
-	// Maximum Allowed Cap for Bonded stake of any single validator
+	// DefaultMaxCapPercent Maximum Allowed Cap for Bonded stake of any single validator
 	DefaultMaxCapPercent = 0.33
-	// Minimum Allowed Cap for Bonded stake of any single validator
+	// DefaultMinCapPercent Minimum Allowed Cap for Bonded stake of any single validator
 	DefaultMinCapPercent = 0.05
 )
 
+// RestrictionOptions holds options for staking restrictions.
 type RestrictionOptions struct {
 	MaxConcentrationMultiple float32
 	MaxBondedCapPercent      float32
@@ -45,7 +44,7 @@ var UnlimitedRestrictionOptions = &RestrictionOptions{
 	MinBondedCapPercent:      1.0,
 }
 
-// Hooks wrapper struct for slashing keeper
+// StakingRestrictionHooks provides hooks for staking restrictions.
 type StakingRestrictionHooks struct {
 	k    *stakingkeeper.Keeper
 	opts RestrictionOptions
@@ -57,7 +56,7 @@ func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions
 	return StakingRestrictionHooks{k, opts}
 }
 
-// Verifies that the delegation would not cause the validator's voting power to exceed our staking distribution limits
+// AfterDelegationModified verifies that the delegation would not cause the validator's voting power to exceed our staking distribution limits
 func (h StakingRestrictionHooks) AfterDelegationModified(ctx context.Context, _ sdk.AccAddress, valAddr sdk.ValAddress) error {
 	vals, _ := h.k.GetLastValidators(ctx) // Ignoring error here to treat it as zero validators.
 	valCount := len(vals)
@@ -100,52 +99,52 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx context.Context, _ 
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// BeforeDelegationCreated implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) BeforeDelegationCreated(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// AfterValidatorBonded implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) AfterValidatorBonded(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// AfterValidatorRemoved implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) AfterValidatorRemoved(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// AfterValidatorCreated implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) AfterValidatorCreated(_ context.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// AfterValidatorBeginUnbonding implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) AfterValidatorBeginUnbonding(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// BeforeValidatorModified implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// BeforeDelegationSharesModified implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) BeforeDelegationSharesModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// BeforeDelegationRemoved implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// BeforeValidatorSlashed implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
 	return nil
 }
 
-// Implements sdk.ValidatorHooks
+// AfterUnbondingInitiated implements sdk.ValidatorHooks
 func (h StakingRestrictionHooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 	return nil
 }

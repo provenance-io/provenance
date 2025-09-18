@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	dbm "github.com/cometbft/cometbft-db"
-
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
+	dbm "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -327,7 +324,7 @@ func filteredPaginateAfterOrder(
 	if len(key) != 0 {
 		// This line is changed from the query.FilteredPaginate version.
 		iterator := getOrderIterator(prefixStore, key, reverse, afterOrderID)
-		defer iterator.Close()
+		defer iterator.Close() //nolint:errcheck
 
 		var (
 			numHits uint64
@@ -362,7 +359,7 @@ func filteredPaginateAfterOrder(
 
 	// This line is changed from the query.FilteredPaginate version.
 	iterator := getOrderIterator(prefixStore, nil, reverse, afterOrderID)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 
 	end := offset + limit
 
@@ -411,7 +408,7 @@ func getOrderIterator(prefixStore storetypes.KVStore, start []byte, reverse bool
 		var end []byte
 		if start != nil {
 			itr := prefixStore.Iterator(start, nil)
-			defer itr.Close()
+			defer itr.Close() //nolint:errcheck
 			if itr.Valid() {
 				itr.Next()
 				end = itr.Key()

@@ -1,3 +1,4 @@
+// Package types defines core types, constants, and events for the attribute module
 package types
 
 import (
@@ -11,10 +12,8 @@ import (
 	"strings"
 	time "time"
 
-	"github.com/google/uuid"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/google/uuid"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -213,6 +212,8 @@ func (at *AttributeType) Unmarshal(data []byte) error {
 }
 
 // Format implements the fmt.Formatter interface.
+//
+//nolint:gosec,staticcheck
 func (at AttributeType) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

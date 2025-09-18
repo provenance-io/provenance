@@ -1,3 +1,4 @@
+// Package cli provides CLI helpers for interacting with the metadata module.
 package cli
 
 import (
@@ -5,7 +6,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 

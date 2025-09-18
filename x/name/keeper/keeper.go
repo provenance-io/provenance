@@ -7,12 +7,10 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -240,7 +238,12 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
+	defer func() {
+		if err := iterator.Close(); err != nil {
+			k.Logger(ctx).Error("failed to close iterator", "error", err)
+		}
+	}()
+
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.NameRecord{}
@@ -331,7 +334,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 	iter := storetypes.KVStorePrefixIterator(store, types.AddressKeyPrefix)
 	defer func() {
 		if iter != nil {
-			iter.Close()
+			iter.Close() //nolint:errcheck,gosec
 		}
 	}()
 
@@ -355,7 +358,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 		keepCount++
 	}
 
-	iter.Close()
+	iter.Close() //nolint:errcheck,gosec
 	iter = nil
 
 	if len(toDelete) == 0 {
@@ -372,6 +375,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
 }
 
+// CreateRootName creates a new root name entry in the keeper.
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
 	// err is suppressed because it returns an error on not found.  TODO - Remove use of error for not found
 	existing, _ := k.GetRecordByName(ctx, name)

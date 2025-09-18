@@ -1,3 +1,4 @@
+// Package keeper implements the core logic for the exchange module's state management.
 package keeper
 
 import (
@@ -6,9 +7,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -417,7 +416,7 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	return nil
 }
 
-// TransferCommitment transfers committed funds from one market to another.
+// TransferCommitments transfers committed funds from one market to another.
 func (k Keeper) TransferCommitments(ctx sdk.Context, req *exchange.MsgMarketTransferCommitmentRequest) error {
 	account, err := sdk.AccAddressFromBech32(req.Account)
 	if err != nil {

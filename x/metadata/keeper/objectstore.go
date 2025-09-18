@@ -4,9 +4,7 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -67,7 +65,11 @@ func (k Keeper) IterateOSLocators(ctx sdk.Context, cb func(account types.ObjectS
 	prefix := types.OSLocatorAddressKeyPrefix
 	it := storetypes.KVStorePrefixIterator(store, prefix)
 
-	defer it.Close()
+	defer func() {
+		if err := it.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close IterateRecords", "error", err)
+		}
+	}()
 
 	for ; it.Valid(); it.Next() {
 		record := types.ObjectStoreLocator{}

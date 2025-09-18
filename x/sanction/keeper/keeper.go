@@ -6,16 +6,15 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/errors"
 )
 
+// Keeper handles all state-related operations for the sanction module.
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
@@ -31,6 +30,7 @@ type Keeper struct {
 	msgExecLegacyContentTypeURL string
 }
 
+// NewKeeper creates a new Keeper instance for the sanction module.
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
@@ -151,7 +151,7 @@ func (k Keeper) getLatestTempEntry(store storetypes.KVStore, addr sdk.AccAddress
 	pre := CreateTemporaryAddrPrefix(addr)
 	preStore := prefix.NewStore(store, pre)
 	iter := preStore.ReverseIterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 	if iter.Valid() {
 		return iter.Value()
 	}
@@ -213,7 +213,7 @@ func (k Keeper) IterateSanctionedAddresses(ctx sdk.Context, cb func(addr sdk.Acc
 	store := k.getSanctionedAddressPrefixStore(ctx)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	for ; iter.Valid(); iter.Next() {
 		addr, _ := ParseLengthPrefixedBz(iter.Key())
@@ -240,7 +240,7 @@ func (k Keeper) IterateTemporaryEntries(ctx sdk.Context, addr sdk.AccAddress, cb
 	store, pre := k.getTemporaryEntryPrefixStore(ctx, addr)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	for ; iter.Valid(); iter.Next() {
 		key := ConcatBz(pre, iter.Key())
@@ -268,7 +268,7 @@ func (k Keeper) IterateProposalIndexEntries(ctx sdk.Context, govPropID *uint64, 
 	store, pre := k.getProposalIndexPrefixStore(ctx, govPropID)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	for ; iter.Valid(); iter.Next() {
 		key := ConcatBz(pre, iter.Key())
@@ -329,7 +329,7 @@ func (k Keeper) IterateParams(ctx sdk.Context, cb func(name, value string) (stop
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), ParamsPrefix)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	for ; iter.Valid(); iter.Next() {
 		if cb(string(iter.Key()), string(iter.Value())) {

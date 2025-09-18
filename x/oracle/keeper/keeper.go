@@ -1,21 +1,19 @@
 package keeper
 
 import (
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
-
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
+// Keeper manages the state and operations of the oracle module.
 type Keeper struct {
 	cdc      *codec.ProtoCodec
 	storeKey storetypes.StoreKey
@@ -31,6 +29,7 @@ type Keeper struct {
 	authority string
 }
 
+// NewKeeper creates a new Keeper instance for the oracle module.
 func NewKeeper(
 	cdc *codec.ProtoCodec,
 	storeKey,

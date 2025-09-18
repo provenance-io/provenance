@@ -6,12 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
+// SendRestrictionFn returns a function that restricts sending based on quarantine status.
 func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	// bypass if the context says to.
 	if quarantine.HasBypass(goCtx) {
