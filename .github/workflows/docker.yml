@@ -120,6 +120,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - run: go mod vendor
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/setup-qemu-action@v3
