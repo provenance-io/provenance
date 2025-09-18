@@ -10,7 +10,7 @@ linters:
     - bidichk
     - bodyclose
     - copyloopvar
-    # - depguard
+    - depguard
     - dogsled
     - durationcheck
     - errcheck
@@ -72,7 +72,7 @@ issues:
   max-issues-per-linter: 10000
   max-same-issues: 10000
 
-linters-settings:
+linters.settings:
   depguard:
     rules:
       main:
@@ -155,7 +155,78 @@ linters-settings:
 
           # Provenance
           - github.com/provenance-io/provenance
-
+          - github.com/provenance-io/provenance/x/trigger/types
+          - github.com/provenance-io/provenance/x/trigger/keeper
+          - github.com/provenance-io/provenance/x/trigger/types
+          - github.com/provenance-io/provenance/x/trigger
+          - github.com/provenance-io/provenance/x/trigger/client/cli
+          - github.com/provenance-io/provenance/x/trigger/simulation
+          - github.com/provenance-io/provenance/testutil
+          - github.com/provenance-io/provenance/testutil/assertions
+          - github.com/provenance-io/provenance/testutil/contracts
+          - github.com/provenance-io/provenance/testutil/queries
+          - github.com/provenance-io/provenance/testutil
+          - github.com/provenance-io/provenance/x/attribute
+          - github.com/provenance-io/provenance/x/attribute/keeper
+          - github.com/provenance-io/provenance/x/attribute/types
+          - github.com/provenance-io/provenance/x/attribute/simulation
+          - github.com/provenance-io/provenance/x/exchange
+          - github.com/provenance-io/provenance/x/exchange/client/cli
+          - github.com/provenance-io/provenance/x/exchange/keeper
+          - github.com/provenance-io/provenance/x/exchange/simulation
+          - github.com/provenance-io/provenance/x/exchange/module
+          - github.com/provenance-io/provenance/x/flatfees/client/cli
+          - github.com/provenance-io/provenance/x/flatfees/keeper
+          - github.com/provenance-io/provenance/x/flatfees/module
+          - github.com/provenance-io/provenance/x/flatfees/types
+          - github.com/provenance-io/provenance/x/flatfees/simulation
+          - github.com/provenance-io/provenance/x/hold
+          - github.com/provenance-io/provenance/x/hold/keeper
+          - github.com/provenance-io/provenance/x/hold/module
+          - github.com/provenance-io/provenance/x/hold/simulation
+          - github.com/provenance-io/provenance/x/ibchooks
+          - github.com/provenance-io/provenance/x/ibchooks/keeper
+          - github.com/provenance-io/provenance/x/ibchooks/types
+          - github.com/provenance-io/provenance/x/ibcratelimit
+          - github.com/provenance-io/provenance/x/ibcratelimit/keeper
+          - github.com/provenance-io/provenance/x/ibcratelimit/module
+          - github.com/provenance-io/provenance/x/ibcratelimit/simulation
+          - github.com/provenance-io/provenance/x/ibchooks/simulation
+          - github.com/provenance-io/provenance/x/marker
+          - github.com/provenance-io/provenance/x/marker/client/cli
+          - github.com/provenance-io/provenance/x/marker/keeper
+          - github.com/provenance-io/provenance/x/marker/simulation
+          - github.com/provenance-io/provenance/x/marker/types
+          - github.com/provenance-io/provenance/x/metadata
+          - github.com/provenance-io/provenance/x/metadata/keeper
+          - github.com/provenance-io/provenance/x/metadata/types
+          - github.com/provenance-io/provenance/x/msgfees/module
+          - github.com/provenance-io/provenance/x/metadata/simulation
+          - github.com/provenance-io/provenance/x/msgfees/types
+          - github.com/provenance-io/provenance/x/msgfees/keeper
+          - github.com/provenance-io/provenance/x/name
+          - github.com/provenance-io/provenance/x/name/keeper
+          - github.com/provenance-io/provenance/x/name/simulation
+          - github.com/provenance-io/provenance/x/name/types
+          - github.com/provenance-io/provenance/x/oracle/keeper
+          - github.com/provenance-io/provenance/x/oracle/module
+          - github.com/provenance-io/provenance/x/oracle/client/cli
+          - github.com/provenance-io/provenance/x/oracle/simulation
+          - github.com/provenance-io/provenance/x/oracle/types
+          - github.com/provenance-io/provenance/x/quarantine
+          - github.com/provenance-io/provenance/x/quarantine/keeper
+          - github.com/provenance-io/provenance/x/quarantine/module
+          - github.com/provenance-io/provenance/x/quarantine/simulation
+          - github.com/provenance-io/provenance/x/sanction
+          - github.com/provenance-io/provenance/x/sanction/keeper
+          - github.com/provenance-io/provenance/x/sanction/module
+          - github.com/provenance-io/provenance/x/sanction/simulation
+          - github.com/provenance-io/provenance/x/trigger/module
+          - github.com/provenance-io/provenance/x/trigger
+          - github.com/provenance-io/provenance/x/trigger/client/cli
+          - github.com/provenance-io/provenance/x/trigger/simulation
+          - github.com/provenance-io/provenance/x/wasm/types
+          
           # Standard Libraries / Tools
           - github.com/armon/go-metrics
           - github.com/golang/protobuf/proto
@@ -168,12 +239,20 @@ linters-settings:
           - github.com/spf13/cobra
           - github.com/spf13/pflag
           - github.com/spf13/viper
+          - google.golang.org/grpc
+          - google.golang.org/grpc/codes
+          - google.golang.org/grpc/status
+          - google.golang.org/protobuf/runtime/protoiface
+          - google.golang.org/protobuf/proto
+          - google.golang.org/protobuf/reflect/protoreflect
+          - google.golang.org/protobuf/reflect/protoregistry
+          - google.golang.org/protobuf/protoadapt
 
           # Testing
           - github.com/stretchr/testify/assert
           - github.com/stretchr/testify/require # used by the test-utils shared toolkit
           - github.com/stretchr/testify/suite
-
+          
           # Kubernetes / YAML
           - sigs.k8s.io/yaml
         deny:
@@ -214,7 +293,8 @@ linters-settings:
     max-blank-identifiers: 3
   misspell:
     locale: US
-    ignore-words:
+    mode: default
+    ignore-rules:
     - cancelled
   nolintlint:
     allow-unused: false
