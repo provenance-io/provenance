@@ -149,7 +149,7 @@ func (m MetadataAddress) Equals(m2 MetadataAddress) bool {
 // %p formats as the address of 0th element in base 16 notation, with leading 0x.
 // all others format as base 16, upper-case, two characters per byte.
 //
-//nolint:errcheck,gosec,staticcheck
+//nolint:gosec,staticcheck
 func (m MetadataAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
