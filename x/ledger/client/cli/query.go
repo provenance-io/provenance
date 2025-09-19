@@ -6,7 +6,6 @@
 package cli
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -72,7 +71,7 @@ func GetCmd() *cobra.Command {
 			}
 
 			queryClient := ledger.NewQueryClient(clientCtx)
-			l, err := queryClient.Ledger(context.Background(), &req)
+			l, err := queryClient.Ledger(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -132,7 +131,7 @@ $ %s query ledger ledgers --page-key <page_key>`, version.AppName, version.AppNa
 				Pagination: pageReq,
 			}
 
-			resp, err := queryClient.Ledgers(context.Background(), &req)
+			resp, err := queryClient.Ledgers(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -171,7 +170,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					},
 				}
 
-				config, err := queryClient.Ledger(context.Background(), &req)
+				config, err := queryClient.Ledger(cmd.Context(), &req)
 				if err != nil {
 					return nil
 				}
@@ -187,7 +186,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					},
 				}
 
-				l, err := queryClient.LedgerEntries(context.Background(), &req)
+				l, err := queryClient.LedgerEntries(cmd.Context(), &req)
 				if err != nil {
 					return nil
 				}
@@ -200,7 +199,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					LedgerClassId: ledgerClassID,
 				}
 
-				types, err := queryClient.LedgerClassEntryTypes(context.Background(), &req)
+				types, err := queryClient.LedgerClassEntryTypes(cmd.Context(), &req)
 				if err != nil {
 					return nil
 				}
@@ -215,7 +214,7 @@ func GetLedgerEntriesCmd() *cobra.Command {
 					LedgerClassId: ledgerClassID,
 				}
 
-				types, err := queryClient.LedgerClassBucketTypes(context.Background(), &req)
+				types, err := queryClient.LedgerClassBucketTypes(cmd.Context(), &req)
 				if err != nil {
 					return nil
 				}
@@ -369,7 +368,7 @@ func GetLedgerClassEntryTypesCmd() *cobra.Command {
 				LedgerClassId: ledgerClassID,
 			}
 
-			resp, err := queryClient.LedgerClassEntryTypes(context.Background(), &req)
+			resp, err := queryClient.LedgerClassEntryTypes(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -402,7 +401,7 @@ func GetLedgerClassStatusTypesCmd() *cobra.Command {
 				LedgerClassId: ledgerClassID,
 			}
 
-			resp, err := queryClient.LedgerClassStatusTypes(context.Background(), &req)
+			resp, err := queryClient.LedgerClassStatusTypes(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -434,7 +433,7 @@ func GetLedgerClassBucketTypesCmd() *cobra.Command {
 				LedgerClassId: ledgerClassID,
 			}
 
-			resp, err := queryClient.LedgerClassBucketTypes(context.Background(), &req)
+			resp, err := queryClient.LedgerClassBucketTypes(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -467,7 +466,7 @@ func GetLedgerClassCmd() *cobra.Command {
 				LedgerClassId: ledgerClassID,
 			}
 
-			resp, err := queryClient.LedgerClass(context.Background(), &req)
+			resp, err := queryClient.LedgerClass(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -506,7 +505,7 @@ $ %s query ledger classes --page-key <page_key>`, version.AppName, version.AppNa
 				Pagination: pageReq,
 			}
 
-			resp, err := queryClient.LedgerClasses(context.Background(), &req)
+			resp, err := queryClient.LedgerClasses(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
