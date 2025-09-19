@@ -84,7 +84,12 @@ message Ledger {
   int32 next_pmt_date = 4 [(gogoproto.jsontag) = "nextPmtDate,omitempty"];
 
   // The next payment amount.
-  int64 next_pmt_amt = 5 [(gogoproto.jsontag) = "nextPmtAmt,omitempty"];
+  string next_pmt_amt = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "nextPmtAmt,omitempty"
+  ];
 
   // The interest rate. Min = 0, Max = 100,000,000 = 100%, e.g. 4,321,987 = 4.321987%.
   int32 interest_rate = 6 [(gogoproto.jsontag) = "interestRate,omitempty"];

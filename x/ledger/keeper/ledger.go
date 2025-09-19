@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -268,7 +269,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, lk *types.LedgerKey, i
 // UpdateLedgerPayment updates the payment configuration of an existing ledger.
 // This function allows modification of the next payment amount, date, and frequency.
 // These parameters define the payment schedule for the ledger.
-func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPmtAmt int64, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
+func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPmtAmt math.Int, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {

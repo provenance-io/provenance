@@ -7,6 +7,7 @@ option java_multiple_files = true;
 
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 import "provenance/ledger/v1/ledger.proto";
 import "provenance/ledger/v1/ledger_settlement.proto";
 
@@ -122,7 +123,12 @@ message MsgUpdatePaymentRequest {
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The new next payment amount of the ledger
-  int64 next_pmt_amt = 3;
+  string next_pmt_amt = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "nextPmtAmt,omitempty"
+  ];
 
   // The new next payment date in days since epoch
   int32 next_pmt_date = 4;

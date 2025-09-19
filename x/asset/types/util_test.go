@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -18,6 +19,7 @@ import (
 func TestUtil(t *testing.T) {
 	fmt.Println("--- Util StringToAny AnyToString Test ---")
 	ir := cdctypes.NewInterfaceRegistry()
+	ir.RegisterImplementations((*proto.Message)(nil), &AssetData{})
 	cdc := codec.NewProtoCodec(ir)
 	fmt.Println("Registry and Codec created.")
 
@@ -273,7 +275,7 @@ func TestNewDefaultMarker(t *testing.T) {
 	}
 }
 
-func TestStringToAnyAndAnyToString_EdgeCases(t *testing.T) {
+func TestAnyToStringAndAnyToAssetData_EdgeCases(t *testing.T) {
 	ir := cdctypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(ir)
 

@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -90,7 +92,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				return fmt.Errorf("invalid --next-pmt-amt: %w", err)
 			}
 			if nextPmtAmt > 0 {
-				ledgerObj.NextPmtAmt = nextPmtAmt
+				ledgerObj.NextPmtAmt = math.NewInt(nextPmtAmt)
 			}
 
 			interestRate, err := cmd.Flags().GetInt32("interest-rate")

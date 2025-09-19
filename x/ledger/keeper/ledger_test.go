@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/nft"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -518,7 +520,7 @@ func (s *TestSuite) TestUpdateLedgerPayment() {
 
 	tests := []struct {
 		name             string
-		nextPmtAmt       int64
+		nextPmtAmt       math.Int
 		nextPmtDate      int32
 		paymentFrequency types.PaymentFrequency
 		expErr           []string
@@ -526,8 +528,8 @@ func (s *TestSuite) TestUpdateLedgerPayment() {
 	}{
 		{
 			name:             "valid payment update",
-			nextPmtAmt:       1000000,  // 1000 tokens
-			nextPmtDate:      20241201, // Dec 1, 2024
+			nextPmtAmt:       math.NewInt(1000000), // 1000 tokens
+			nextPmtDate:      20241201,             // Dec 1, 2024
 			paymentFrequency: types.PAYMENT_FREQUENCY_MONTHLY,
 			expEvent:         true,
 		},

@@ -82,7 +82,7 @@ func GetCmd() *cobra.Command {
 				Key:                        req.Key,
 				Status:                     strconv.Itoa(int(l.Ledger.StatusTypeId)),
 				NextPmtDate:                helper.EpochDaysToYMD(l.Ledger.NextPmtDate),
-				NextPmtAmt:                 strconv.FormatInt(l.Ledger.NextPmtAmt, 10),
+				NextPmtAmt:                 l.Ledger.NextPmtAmt.String(),
 				InterestRate:               strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
 				MaturityDate:               helper.EpochDaysToYMD(l.Ledger.MaturityDate),
 				InterestDayCountConvention: l.Ledger.InterestDayCountConvention,

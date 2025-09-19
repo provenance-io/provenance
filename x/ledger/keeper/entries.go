@@ -185,10 +185,19 @@ func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries [
 
 		// Check if the new entry's sequence number conflicts with existing entries.
 		// If a conflict is found, increment the sequence numbers of existing entries.
+		const maxSeq = uint32(100) - 1
+		if le.Sequence > maxSeq {
+			return types.NewErrCodeInvalidField("sequence", "must be less than 100")
+		}
 		pushNext := false
 		for _, entry := range sameDateEntries {
 			if pushNext || entry.Sequence == le.Sequence {
 				pushNext = true
+
+				// Prevent overflow of allowed range.
+				if entry.Sequence >= maxSeq {
+					return types.NewErrCodeInvalidField("sequence", "too many same-day entries (100+)")
+				}
 
 				// Update the sequence number of the existing entry to resolve the conflict.
 				entry.Sequence++

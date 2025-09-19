@@ -1,8 +1,6 @@
 package types
 
 import (
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -14,6 +12,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	messages := make([]proto.Message, len(AllRequestMsgs))
 	copy(messages, AllRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
-	registry.RegisterImplementations((*proto.Message)(nil), &wrapperspb.StringValue{})
+	registry.RegisterImplementations((*proto.Message)(nil), &AssetData{})
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

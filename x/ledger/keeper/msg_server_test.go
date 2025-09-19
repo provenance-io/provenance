@@ -656,7 +656,7 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 			req: &ledger.MsgUpdatePaymentRequest{
 				Key:              s.existingLedger.Key,
 				Signer:           s.validAddress1.String(),
-				NextPmtAmt:       1000,
+				NextPmtAmt:       math.NewInt(1000),
 				NextPmtDate:      helper.DaysSinceEpoch(nextPmtDate),
 				PaymentFrequency: ledger.PAYMENT_FREQUENCY_MONTHLY,
 			},
@@ -667,7 +667,7 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 			req: &ledger.MsgUpdatePaymentRequest{
 				Key:              s.existingLedger.Key,
 				Signer:           "cosmos1invalid",
-				NextPmtAmt:       1000,
+				NextPmtAmt:       math.NewInt(1000),
 				NextPmtDate:      helper.DaysSinceEpoch(nextPmtDate),
 				PaymentFrequency: ledger.PAYMENT_FREQUENCY_MONTHLY,
 			},

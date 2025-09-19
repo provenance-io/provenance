@@ -220,12 +220,12 @@ func (l *Ledger) Validate() error {
 	}
 
 	// Validate next payment date format if provided
-	if l.NextPmtDate < 0 {
+	if l.NextPmtDate <= 0 {
 		return NewErrCodeInvalidField("next_pmt_date", "must be after 1970-01-01")
 	}
 
 	// Validate next payment amount if provided
-	if l.NextPmtAmt < 0 {
+	if l.NextPmtAmt.IsNegative() {
 		return NewErrCodeInvalidField("next_pmt_amt", "must be a non-negative integer")
 	}
 

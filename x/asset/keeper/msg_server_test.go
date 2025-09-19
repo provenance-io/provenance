@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
@@ -40,20 +39,6 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(priv.PubKey().Address())
 }
 
-// Helper function to create expected events using EventsBuilder
-func (s *MsgServerTestSuite) createExpectedEvents(eventType string, attributes []abci.EventAttribute) sdk.Events {
-	eventsBuilder := testutil.NewEventsBuilder(s.T())
-
-	// Create the event with the specified type and attributes
-	event := sdk.Event{
-		Type:       eventType,
-		Attributes: attributes,
-	}
-
-	eventsBuilder.AddEvent(event)
-	return eventsBuilder.Build()
-}
-
 func (s *MsgServerTestSuite) TestCreateAssetClass() {
 	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
 
@@ -73,11 +58,9 @@ func (s *MsgServerTestSuite) TestCreateAssetClass() {
 
 	// Verify event emission using EventsBuilder
 	actualEvents := s.ctx.EventManager().Events()
-	expectedEvents := s.createExpectedEvents("provenance.asset.v1.EventAssetClassCreated", []abci.EventAttribute{
-		{Key: "asset_class_id", Value: `"asset-class-1"`},
-		{Key: "asset_name", Value: `"AssetClass1"`},
-		{Key: "asset_symbol", Value: `"AC1"`},
-	})
+	expectedEvents := testutil.NewEventsBuilder(s.T()).
+		AddTypedEvent(types.NewEventAssetClassCreated("asset-class-1", "AssetClass1", "AC1")).
+		Build()
 
 	// Use testutil to assert that the expected events are contained in the actual events
 	assertions.AssertEventsContains(s.T(), expectedEvents, actualEvents, "EventAssetClassCreated should be emitted with correct attributes")
@@ -135,11 +118,9 @@ func (s *MsgServerTestSuite) TestCreateAsset() {
 
 	// Verify event emission using EventsBuilder
 	actualEvents := s.ctx.EventManager().Events()
-	expectedEvents := s.createExpectedEvents("provenance.asset.v1.EventAssetCreated", []abci.EventAttribute{
-		{Key: "asset_class_id", Value: `"asset-class-2"`},
-		{Key: "asset_id", Value: `"asset-1"`},
-		{Key: "owner", Value: `"` + s.user1Addr.String() + `"`},
-	})
+	expectedEvents := testutil.NewEventsBuilder(s.T()).
+		AddTypedEvent(types.NewEventAssetCreated("asset-class-2", "asset-1", s.user1Addr.String())).
+		Build()
 
 	// Use testutil to assert that the expected events are contained in the actual events
 	assertions.AssertEventsContains(s.T(), expectedEvents, actualEvents, "EventAssetCreated should be emitted with correct attributes")
@@ -215,11 +196,9 @@ func (s *MsgServerTestSuite) TestCreatePool() {
 
 	// Verify event emission using EventsBuilder
 	actualEvents := s.ctx.EventManager().Events()
-	expectedEvents := s.createExpectedEvents("provenance.asset.v1.EventPoolCreated", []abci.EventAttribute{
-		{Key: "asset_count", Value: `2`},
-		{Key: "owner", Value: `"` + s.user1Addr.String() + `"`},
-		{Key: "pool", Value: `"1000pooltoken"`},
-	})
+	expectedEvents := testutil.NewEventsBuilder(s.T()).
+		AddTypedEvent(types.NewEventPoolCreated("1000pooltoken", 2, s.user1Addr.String())).
+		Build()
 
 	// Use testutil to assert that the expected events are contained in the actual events
 	assertions.AssertEventsContains(s.T(), expectedEvents, actualEvents, "EventPoolCreated should be emitted with correct attributes")
@@ -272,12 +251,9 @@ func (s *MsgServerTestSuite) TestCreateTokenization() {
 
 	// Verify event emission using EventsBuilder
 	actualEvents := s.ctx.EventManager().Events()
-	expectedEvents := s.createExpectedEvents("provenance.asset.v1.EventTokenizationCreated", []abci.EventAttribute{
-		{Key: "asset_class_id", Value: `"asset-class-token"`},
-		{Key: "asset_id", Value: `"asset-token-1"`},
-		{Key: "owner", Value: `"` + s.user1Addr.String() + `"`},
-		{Key: "tokenization", Value: `"500tokenization"`},
-	})
+	expectedEvents := testutil.NewEventsBuilder(s.T()).
+		AddTypedEvent(types.NewEventTokenizationCreated("500tokenization", "asset-class-token", "asset-token-1", s.user1Addr.String())).
+		Build()
 
 	// Use testutil to assert that the expected events are contained in the actual events
 	assertions.AssertEventsContains(s.T(), expectedEvents, actualEvents, "EventTokenizationCreated should be emitted with correct attributes")
@@ -389,12 +365,9 @@ func (s *MsgServerTestSuite) TestCreateSecuritization() {
 
 	// Verify event emission using EventsBuilder
 	actualEvents := s.ctx.EventManager().Events()
-	expectedEvents := s.createExpectedEvents("provenance.asset.v1.EventSecuritizationCreated", []abci.EventAttribute{
-		{Key: "owner", Value: `"` + s.user1Addr.String() + `"`},
-		{Key: "pool_count", Value: `2`},
-		{Key: "securitization_id", Value: `"sec-1"`},
-		{Key: "tranche_count", Value: `2`},
-	})
+	expectedEvents := testutil.NewEventsBuilder(s.T()).
+		AddTypedEvent(types.NewEventSecuritizationCreated("sec-1", 2, 2, s.user1Addr.String())).
+		Build()
 
 	// Use testutil to assert that the expected events are contained in the actual events
 	assertions.AssertEventsContains(s.T(), expectedEvents, actualEvents, "EventSecuritizationCreated should be emitted with correct attributes")
@@ -446,11 +419,9 @@ func (s *MsgServerTestSuite) TestBurnAsset() {
 
 	// Verify event emission using EventsBuilder
 	actualEvents := s.ctx.EventManager().Events()
-	expectedEvents := s.createExpectedEvents("provenance.asset.v1.EventAssetBurned", []abci.EventAttribute{
-		{Key: "asset_class_id", Value: `"test-class"`},
-		{Key: "asset_id", Value: `"test-asset"`},
-		{Key: "owner", Value: `"` + s.user1Addr.String() + `"`},
-	})
+	expectedEvents := testutil.NewEventsBuilder(s.T()).
+		AddTypedEvent(types.NewEventAssetBurned("test-class", "test-asset", s.user1Addr.String())).
+		Build()
 
 	// Use testutil to assert that the expected events are contained in the actual events
 	assertions.AssertEventsContains(s.T(), expectedEvents, actualEvents, "EventAssetBurned should be emitted with correct attributes")

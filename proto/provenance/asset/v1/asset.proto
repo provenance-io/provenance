@@ -55,3 +55,9 @@ message AssetKey {
   // id is a unique identifier of the asset.
   string id = 2;
 }
+
+// AssetData defines the data type for Assets and Asset Classes.
+message AssetData {
+  // value is the string stored in the data field of an asset or asset class.
+  string value = 1;
+}

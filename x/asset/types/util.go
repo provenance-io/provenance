@@ -4,32 +4,36 @@ import (
 	"encoding/json"
 	"fmt"
 
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
-
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-// AnyToString extracts a string value from an Any type that contains a StringValue using the provided codec.
+// AnyToString extracts a string value from an Any type that contains an AssetData using the provided codec.
 func AnyToString(cdc codec.BinaryCodec, anyMsg *cdctypes.Any) (string, error) {
 	if anyMsg == nil {
 		return "", fmt.Errorf("nil Any")
 	}
-	var sv wrapperspb.StringValue
-	if err := cdc.UnpackAny(anyMsg, &sv); err != nil {
-		return "", NewErrCodeInvalidField("data", fmt.Sprintf("expected google.protobuf.StringValue in Any: %v", err))
+
+	var msg proto.Message
+	if err := cdc.UnpackAny(anyMsg, &msg); err != nil {
+		return "", NewErrCodeInvalidField("data", fmt.Sprintf("failed to unpack Any (type_url=%q) as %s: %v", anyMsg.TypeUrl, proto.MessageName(&AssetData{}), err))
 	}
-	return sv.Value, nil
+	ad, ok := msg.(*AssetData)
+	if !ok {
+		return "", NewErrCodeInvalidField("data", fmt.Sprintf("unexpected Any concrete type: got type_url=%q, expected %s", anyMsg.TypeUrl, proto.MessageName(&AssetData{})))
+	}
+	return ad.Value, nil
 }
 
-// StringToAny converts a string to an Any type by wrapping it in a StringValue
+// StringToAny converts a string to an Any type by wrapping it in an AssetData
 func StringToAny(str string) (*cdctypes.Any, error) {
-	strMsg := wrapperspb.String(str)
-	anyMsg, err := cdctypes.NewAnyWithValue(strMsg)
+	strMsg := AssetData{Value: str}
+	anyMsg, err := cdctypes.NewAnyWithValue(&strMsg)
 	if err != nil {
 		return nil, NewErrCodeInternal(fmt.Sprintf("failed to create Any from string: %v", err))
 	}
