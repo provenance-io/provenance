@@ -3,6 +3,9 @@ package provenance.asset.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
+option java_package        = "io.provenance.asset.v1";
+option java_multiple_files = true;
+
 import "cosmos_proto/cosmos.proto";
 
 // EventAssetBurned is emitted when an asset is burned.
