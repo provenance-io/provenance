@@ -3,6 +3,9 @@ package provenance.asset.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
+option java_package        = "io.provenance.asset.v1";
+option java_multiple_files = true;
+
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "provenance/asset/v1/asset.proto";

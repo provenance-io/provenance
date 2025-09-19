@@ -3,6 +3,9 @@ package provenance.asset.v1;
 
 option go_package = "github.com/provenance-io/provenance/x/asset/types";
 
+option java_package        = "io.provenance.asset.v1";
+option java_multiple_files = true;
+
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
