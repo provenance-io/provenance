@@ -228,7 +228,7 @@ func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, 
 	// Get the address of the new marker.
 	markerAddr, err := markertypes.MarkerAddress(token.Denom)
 	if err != nil {
-		return nil, NewErrCodeInternal(fmt.Sprintf("failed to create marker address: %v", err))
+		return nil, NewErrCodeInvalidField("token.denom", fmt.Sprintf("failed to create marker address from denom: %v", err))
 	}
 
 	// Create a new marker account

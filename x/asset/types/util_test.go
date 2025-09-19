@@ -213,7 +213,7 @@ func TestNewDefaultMarker(t *testing.T) {
 		name     string
 		denom    sdk.Coin
 		fromAddr string
-		expErr   string
+		expErr   error
 	}{
 		{
 			name:     "valid marker creation",
@@ -224,13 +224,13 @@ func TestNewDefaultMarker(t *testing.T) {
 			name:     "invalid from address",
 			denom:    sdk.NewCoin("testcoin", sdkmath.NewInt(1000000)),
 			fromAddr: "invalid-address",
-			expErr:   "invalid from address: decoding bech32 failed: invalid separator index -1",
+			expErr:   NewErrCodeInvalidField("address", "decoding bech32 failed: invalid separator index -1"),
 		},
 		{
 			name:     "invalid denom",
 			denom:    sdk.Coin{Denom: "x", Amount: sdkmath.OneInt()},
 			fromAddr: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-			expErr:   "failed to create marker address: invalid denom: x",
+			expErr:   NewErrCodeInvalidField("token.denom", "failed to create marker address from denom: invalid denom: x"),
 		},
 		{
 			name:     "zero coin amount",
@@ -243,8 +243,9 @@ func TestNewDefaultMarker(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			marker, err := NewDefaultMarker(tc.denom, tc.fromAddr)
 
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "NewDefaultMarker error")
+			if tc.expErr != nil {
+				require.Error(t, err, "NewDefaultMarker error")
+				assert.ErrorIs(t, err, tc.expErr)
 				assert.Nil(t, marker, "NewDefaultMarker result")
 			} else {
 				assert.NoError(t, err, "NewDefaultMarker error")
