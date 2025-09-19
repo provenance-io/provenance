@@ -76,7 +76,7 @@ tasks.withType<JavaCompile> {
 
 tasks.withType<KotlinCompile> {
     compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
+        freeCompilerArgs.addAll("-Xjsr305=strict", "-opt-in=kotlin.RequiresOptIn")
         jvmTarget.set(JvmTarget.JVM_17)
         languageVersion.set(KotlinVersion.KOTLIN_1_9)
         apiVersion.set(KotlinVersion.KOTLIN_1_9)
