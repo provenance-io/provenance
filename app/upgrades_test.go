@@ -1372,26 +1372,18 @@ func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
 
 	// Read the gzipped file data
 	data, err := upgradeDataFS.ReadFile(filePath)
-	if err != nil {
-		s.T().Logf("Note: No ledger genesis file found at %s: %v", filePath, err)
-		s.T().Skip("Skipping test - no ledger genesis data file available")
-		return
-	}
+	s.Require().NoError(err, "Failed to read file %s", filePath)
 
 	// Create gzip reader for decompression.
 	reader := bytes.NewReader(data)
 	gzReader, err := gzip.NewReader(reader)
-	if err != nil {
-		s.T().Fatalf("Failed to create gzip reader for %s: %v", filePath, err)
-	}
+	s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
 	defer gzReader.Close()
 
 	// Decode the entire JSON into a GenesisState.
 	var genesisState ledgerTypes.GenesisState
 	decoder := json.NewDecoder(gzReader)
-	if err := decoder.Decode(&genesisState); err != nil {
-		s.T().Fatalf("Failed to decode genesis state from %s: %v", filePath, err)
-	}
+	s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
 
 	// Validate GenesisState.
 	err = genesisState.Validate()

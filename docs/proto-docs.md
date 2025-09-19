@@ -305,6 +305,7 @@
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
     - [BucketBalance](#provenance-ledger-v1-BucketBalance)
     - [Ledger](#provenance-ledger-v1-Ledger)
+    - [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries)
     - [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount)
     - [LedgerClass](#provenance-ledger-v1-LedgerClass)
     - [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType)
@@ -312,7 +313,6 @@
     - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
     - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
     - [LedgerKey](#provenance-ledger-v1-LedgerKey)
-    - [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries)
   
     - [DayCountConvention](#provenance-ledger-v1-DayCountConvention)
     - [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod)
@@ -449,6 +449,8 @@
     - [GenesisState](#provenance-attribute-v1-GenesisState)
   
 - [provenance/asset/v1/tx.proto](#provenance_asset_v1_tx-proto)
+    - [MsgBurnAsset](#provenance-asset-v1-MsgBurnAsset)
+    - [MsgBurnAssetResponse](#provenance-asset-v1-MsgBurnAssetResponse)
     - [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset)
     - [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass)
     - [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse)
@@ -461,6 +463,14 @@
     - [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse)
   
     - [Msg](#provenance-asset-v1-Msg)
+  
+- [provenance/asset/v1/events.proto](#provenance_asset_v1_events-proto)
+    - [EventAssetBurned](#provenance-asset-v1-EventAssetBurned)
+    - [EventAssetClassCreated](#provenance-asset-v1-EventAssetClassCreated)
+    - [EventAssetCreated](#provenance-asset-v1-EventAssetCreated)
+    - [EventPoolCreated](#provenance-asset-v1-EventPoolCreated)
+    - [EventSecuritizationCreated](#provenance-asset-v1-EventSecuritizationCreated)
+    - [EventTokenizationCreated](#provenance-asset-v1-EventTokenizationCreated)
   
 - [provenance/asset/v1/asset.proto](#provenance_asset_v1_asset-proto)
     - [Asset](#provenance-asset-v1-Asset)
@@ -4654,7 +4664,7 @@ MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to 
 | ----- | ---- | ----- | ----------- |
 | `ledger_class_id` | [string](#string) |  | Ledger class id to add the bucket type to |
 | `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  | The bucket type to add to the ledger class |
-| `authority` | [string](#string) |  | The authority/signer that is adding the bucket type |
+| `signer` | [string](#string) |  | The signer that is adding the bucket type |
 
 
 
@@ -4681,7 +4691,7 @@ MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a
 | ----- | ---- | ----- | ----------- |
 | `ledger_class_id` | [string](#string) |  | Ledger class id to add the entry type to |
 | `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  | The entry type to add to the ledger class |
-| `authority` | [string](#string) |  | The authority/signer that is adding the entry type |
+| `signer` | [string](#string) |  | The signer that is adding the entry type |
 
 
 
@@ -4708,7 +4718,7 @@ MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to 
 | ----- | ---- | ----- | ----------- |
 | `ledger_class_id` | [string](#string) |  | Ledger class id to add the status type to |
 | `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  | The status type to add to the ledger class |
-| `authority` | [string](#string) |  | The authority/signer that is adding the status type |
+| `signer` | [string](#string) |  | The signer that is adding the status type |
 
 
 
@@ -4735,7 +4745,7 @@ MsgAppendRequest represents a request to append entries to a ledger.
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose entries are being appended |
 | `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The entries to append to the ledger |
-| `authority` | [string](#string) |  | The authority/signer that is appending the entries |
+| `signer` | [string](#string) |  | The signer that is appending the entries |
 
 
 
@@ -4760,8 +4770,8 @@ MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | The authority/signer that is bulk importing the ledger data |
-| `ledger_to_entries` | [LedgerToEntries](#provenance-ledger-v1-LedgerToEntries) | repeated | The genesis state to bulk import |
+| `signer` | [string](#string) |  | The signer that is bulk importing the ledger data |
+| `ledger_and_entries` | [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries) | repeated | The genesis state to bulk import |
 
 
 
@@ -4787,7 +4797,7 @@ MsgCreateLedgerClassRequest represents a request to create a new ledger class.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  | The ledger class to create |
-| `authority` | [string](#string) |  | The authority/signer that is creating the ledger class |
+| `signer` | [string](#string) |  | The signer that is creating the ledger class |
 
 
 
@@ -4813,7 +4823,7 @@ MsgCreateLedgerRequest represents a request to create a new ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger to create. |
-| `authority` | [string](#string) |  | The authority address that can create ledgers. |
+| `signer` | [string](#string) |  | The signer address that can create ledgers. |
 
 
 
@@ -4839,7 +4849,7 @@ MsgDestroyRequest represents a request to destroy a ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger to destroy |
-| `authority` | [string](#string) |  | The authority/signer that is destroying the ledger |
+| `signer` | [string](#string) |  | The signer that is destroying the ledger |
 
 
 
@@ -4864,7 +4874,7 @@ MsgTransferFundsWithSettlementRequest represents a request to transfer funds wit
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | The authority/signer that is transferring the funds |
+| `signer` | [string](#string) |  | The signer that is transferring the funds |
 | `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated | The transfers to be made |
 
 
@@ -4891,7 +4901,7 @@ MsgUpdateBalancesRequest represents a request to update balances for a ledger en
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose balances are being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the balances |
+| `signer` | [string](#string) |  | The signer that is updating the balances |
 | `correlation_id` | [string](#string) |  | The correlation id of the ledger entry |
 | `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated. |
 | `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update. |
@@ -4920,7 +4930,7 @@ MsgUpdateInterestRateRequest represents a request to update the interest rate co
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the interest rate |
+| `signer` | [string](#string) |  | The signer that is updating the interest rate |
 | `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger |
 | `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger |
 | `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger |
@@ -4949,7 +4959,7 @@ MsgUpdateMaturityDateRequest represents a request to update the maturity date of
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose maturity date is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the maturity date |
+| `signer` | [string](#string) |  | The signer that is updating the maturity date |
 | `maturity_date` | [int32](#int32) |  | The new maturity date in days since epoch |
 
 
@@ -4976,7 +4986,7 @@ MsgUpdatePaymentRequest represents a request to update payment configuration of 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the payment |
+| `signer` | [string](#string) |  | The signer that is updating the payment |
 | `next_pmt_amt` | [int64](#int64) |  | The new next payment amount of the ledger |
 | `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch |
 | `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger |
@@ -5005,7 +5015,7 @@ MsgUpdateStatusRequest represents a request to update the status of a ledger.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose status is being updated |
-| `authority` | [string](#string) |  | The authority/signer that is updating the status |
+| `signer` | [string](#string) |  | The signer that is updating the status |
 | `status_type_id` | [int32](#int32) |  | The new status type id of the ledger |
 
 
@@ -5230,6 +5240,23 @@ Ledger defines an servicing ledger for an asset.
 
 
 
+<a name="provenance-ledger-v1-LedgerAndEntries"></a>
+
+### LedgerAndEntries
+LedgerAndEntries represents a ledger with its associated entries
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-LedgerBucketAmount"></a>
 
 ### LedgerBucketAmount
@@ -5354,23 +5381,6 @@ LedgerKey is used as the unique key for an asset's ledger in the keeper.
 | ----- | ---- | ----- | ----------- |
 | `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
 | `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
-
-
-
-
-
-
-<a name="provenance-ledger-v1-LedgerToEntries"></a>
-
-### LedgerToEntries
-LedgerToEntries represents a ledger with its associated entries
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
-| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
-| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
 
 
 
@@ -7202,6 +7212,32 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+<a name="provenance-asset-v1-MsgBurnAsset"></a>
+
+### MsgBurnAsset
+MsgBurnAsset is the message type for creating a new asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset` | [AssetKey](#provenance-asset-v1-AssetKey) |  | asset defines the asset by key to be burned. |
+| `signer` | [string](#string) |  | signer defines the address of asset owner. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgBurnAssetResponse"></a>
+
+### MsgBurnAssetResponse
+MsgBurnAsset is the message type for creating a new asset.
+
+
+
+
+
+
 <a name="provenance-asset-v1-MsgCreateAsset"></a>
 
 ### MsgCreateAsset
@@ -7350,11 +7386,144 @@ Msg defines the asset module's message service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
+| `BurnAsset` | [MsgBurnAsset](#provenance-asset-v1-MsgBurnAsset) | [MsgBurnAssetResponse](#provenance-asset-v1-MsgBurnAssetResponse) | BurnAsset burns/removes an NFT and its registry for the asset. |
 | `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) | CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema. |
 | `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) | CreateAssetClass creates an NFT class and validates the json schema data field. |
 | `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a marker for the pool and transfers the assets to the pool marker. |
 | `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker. |
 | `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the securitization marker. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/events.proto
+
+
+
+<a name="provenance-asset-v1-EventAssetBurned"></a>
+
+### EventAssetBurned
+EventAssetBurned is emitted when an asset is burned.
+This event is triggered by the MsgBurnAsset message handler when an
+asset is successfully burned and removed from circulation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the burned asset |
+| `id` | [string](#string) |  | id is the identifier of the burned asset |
+| `owner` | [string](#string) |  | owner is the address of the account that owned the asset before it was burned |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventAssetClassCreated"></a>
+
+### EventAssetClassCreated
+EventAssetClassCreated is emitted when a new asset class is created.
+This event is triggered by the MsgCreateAssetClass message handler when
+an asset class is successfully created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id is the unique identifier of the created asset class |
+| `class_name` | [string](#string) |  | class_name is the human-readable name of the asset class |
+| `class_symbol` | [string](#string) |  | class_symbol is the symbol or ticker for the asset class |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventAssetCreated"></a>
+
+### EventAssetCreated
+EventAssetCreated is emitted when a new asset is created.
+This event is triggered by the MsgCreateAsset message handler when
+an asset is successfully created and minted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the created asset |
+| `id` | [string](#string) |  | id is the identifier of the created asset |
+| `owner` | [string](#string) |  | owner is the address of the account that owns the newly created asset |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventPoolCreated"></a>
+
+### EventPoolCreated
+EventPoolCreated is emitted when a new pool is created.
+This event is triggered by the MsgCreatePool message handler when
+a pool is successfully created with assets.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool` | [string](#string) |  | pool is the coin representation of the created pool |
+| `asset_count` | [uint32](#uint32) |  | asset_count is the number of assets added to the pool |
+| `owner` | [string](#string) |  | owner is the address of the account that created the pool |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventSecuritizationCreated"></a>
+
+### EventSecuritizationCreated
+EventSecuritizationCreated is emitted when a securitization is created.
+This event is triggered by the MsgCreateSecuritization message handler when
+a securitization is successfully created with tranches and pools.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `securitization_id` | [string](#string) |  | securitization_id is the unique identifier of the created securitization |
+| `tranche_count` | [uint32](#uint32) |  | tranche_count is the number of tranches in the securitization |
+| `pool_count` | [uint32](#uint32) |  | pool_count is the number of pools in the securitization |
+| `owner` | [string](#string) |  | owner is the address of the account that created the securitization |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventTokenizationCreated"></a>
+
+### EventTokenizationCreated
+EventTokenizationCreated is emitted when a tokenization marker is created.
+This event is triggered by the MsgCreateTokenization message handler when
+a tokenization is successfully created for an asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tokenization` | [string](#string) |  | tokenization is the coin representation of the tokenization marker |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the tokenized asset |
+| `id` | [string](#string) |  | id is the identifier of the tokenized asset |
+| `owner` | [string](#string) |  | owner is the address of the account that created the tokenization |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

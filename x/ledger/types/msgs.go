@@ -27,11 +27,11 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgBulkCreateRequest)(nil),
 }
 
-// Note: Authority address validation is performed in the message server to avoid duplicate bech32 conversions.
+// Note: Signer address validation is performed in the message server to avoid duplicate bech32 conversions.
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateLedgerRequest
 func (m MsgCreateLedgerRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -44,7 +44,7 @@ func (m MsgCreateLedgerRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateStatusRequest
 func (m MsgUpdateStatusRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -61,7 +61,7 @@ func (m MsgUpdateStatusRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateInterestRateRequest
 func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -87,7 +87,7 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdatePaymentRequest
 func (m MsgUpdatePaymentRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -114,7 +114,7 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateMaturityDateRequest
 func (m MsgUpdateMaturityDateRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -131,7 +131,7 @@ func (m MsgUpdateMaturityDateRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAppendRequest
 func (m MsgAppendRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -160,7 +160,7 @@ func (m MsgAppendRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgUpdateBalancesRequest
 func (m MsgUpdateBalancesRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -201,7 +201,7 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgTransferFundsWithSettlementRequest
 func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -220,7 +220,7 @@ func (m MsgTransferFundsWithSettlementRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgDestroyRequest
 func (m MsgDestroyRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -233,14 +233,14 @@ func (m MsgDestroyRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgCreateLedgerClassRequest
 func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
 	// Validate that the maintainer in the ledger class is the same as the maintainer address.
 	// We force them to be the same for now so that a ledger class isn't locked out.
-	if m.LedgerClass.MaintainerAddress != m.Authority {
-		return NewErrCodeUnauthorized("maintainer address is not the same as the authority")
+	if m.LedgerClass.MaintainerAddress != m.Signer {
+		return NewErrCodeUnauthorized("maintainer address is not the same as the signer")
 	}
 
 	if err := m.LedgerClass.Validate(); err != nil {
@@ -252,7 +252,7 @@ func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassStatusTypeRequest
 func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -273,7 +273,7 @@ func (m MsgAddLedgerClassStatusTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassEntryTypeRequest
 func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -294,7 +294,7 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgAddLedgerClassBucketTypeRequest
 func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
@@ -315,11 +315,11 @@ func (m MsgAddLedgerClassBucketTypeRequest) ValidateBasic() error {
 
 // ValidateBasic implements the sdk.Msg interface for MsgBulkCreateRequest
 func (m MsgBulkCreateRequest) ValidateBasic() error {
-	if err := validateAccAddress("authority", m.Authority); err != nil {
+	if err := validateAccAddress("signer", m.Signer); err != nil {
 		return err
 	}
 
-	for _, ledgerToEntries := range m.LedgerToEntries {
+	for _, ledgerToEntries := range m.LedgerAndEntries {
 		if err := ledgerToEntries.Validate(); err != nil {
 			return err
 		}

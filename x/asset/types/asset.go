@@ -1,25 +1,20 @@
 package types
 
-import (
-	"errors"
-	"fmt"
-)
-
 func (a *Asset) Validate() error {
 	if a == nil {
-		return errors.New("asset cannot be nil")
+		return NewErrCodeInvalidField("asset", "asset cannot be nil")
 	}
 
 	if len(a.ClassId) == 0 {
-		return errors.New("class id cannot be empty")
+		return NewErrCodeMissingField("class_id")
 	}
 
 	if len(a.Id) == 0 {
-		return errors.New("id cannot be empty")
+		return NewErrCodeMissingField("id")
 	}
 
 	if err := validateJSON(a.Data); err != nil {
-		return fmt.Errorf("invalid data: %w", err)
+		return NewErrCodeInvalidField("data", err.Error())
 	}
 
 	// There is nothing to validate with the Uri, or UriHash.
@@ -28,19 +23,19 @@ func (a *Asset) Validate() error {
 
 func (c *AssetClass) Validate() error {
 	if c == nil {
-		return errors.New("asset class cannot be nil")
+		return NewErrCodeInvalidField("asset_class", "asset class cannot be nil")
 	}
 
 	if len(c.Id) == 0 {
-		return errors.New("id cannot be empty")
+		return NewErrCodeMissingField("id")
 	}
 
 	if len(c.Name) == 0 {
-		return errors.New("name cannot be empty")
+		return NewErrCodeMissingField("name")
 	}
 
 	if err := validateJSONSchema(c.Data); err != nil {
-		return fmt.Errorf("invalid data: %w", err)
+		return NewErrCodeInvalidField("data", err.Error())
 	}
 
 	// There is nothing to validate for the Symbol, Description, Uri, or UriHash.
@@ -49,15 +44,15 @@ func (c *AssetClass) Validate() error {
 
 func (k *AssetKey) Validate() error {
 	if k == nil {
-		return errors.New("asset key cannot be nil")
+		return NewErrCodeInvalidField("asset_key", "asset key cannot be nil")
 	}
 
 	if len(k.ClassId) == 0 {
-		return errors.New("class id cannot be empty")
+		return NewErrCodeMissingField("class_id")
 	}
 
 	if len(k.Id) == 0 {
-		return errors.New("id cannot be empty")
+		return NewErrCodeMissingField("id")
 	}
 
 	return nil

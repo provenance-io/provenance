@@ -23,14 +23,46 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
+// BurnAsset burns an NFT and removes its registry for the asset.
+func (m msgServer) BurnAsset(goCtx context.Context, msg *types.MsgBurnAsset) (*types.MsgBurnAssetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Verify the asset exists and get the current owner
+	ownerResp, err := m.nftKeeper.Owner(goCtx, &nft.QueryOwnerRequest{ClassId: msg.Asset.ClassId, Id: msg.Asset.Id})
+	if err != nil {
+		return nil, types.NewErrCodeNotFound(fmt.Sprintf("asset %s/%s", msg.Asset.ClassId, msg.Asset.Id))
+	}
+
+	// Verify the signer is the current owner of the asset
+	if msg.Signer != ownerResp.Owner {
+		return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("signer %s is not the owner of asset %s/%s, current owner: %s",
+			msg.Signer, msg.Asset.ClassId, msg.Asset.Id, ownerResp.Owner))
+	}
+
+	// Burn the NFT using the nft module
+	err = m.nftKeeper.Burn(ctx, msg.Asset.ClassId, msg.Asset.Id)
+	if err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to burn NFT: %v", err))
+	}
+
+	// Note: Registry entries are preserved after asset burn for historical/audit purposes
+
+	// Emit event for asset burn
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventAssetBurned(msg.Asset.ClassId, msg.Asset.Id, msg.Signer)); err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to emit asset burned event: %v", err))
+	}
+
+	return &types.MsgBurnAssetResponse{}, nil
+}
+
 // CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
 func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset) (*types.MsgCreateAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Verify the asset class exists
-	_, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
+	classResp, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
 	if err != nil {
-		return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
+		return nil, types.NewErrCodeNotFound(fmt.Sprintf("asset class %s", msg.Asset.ClassId))
 	}
 
 	// Create NFT from asset
@@ -43,29 +75,24 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 
 	// If there's data, add it to the token
 	if msg.Asset.Data != "" {
-		class, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
-		if err != nil {
-			return nil, fmt.Errorf("asset class %s does not exist", msg.Asset.ClassId)
-		}
-
 		// Validate the data against the Class schema if it exists
-		if class.Class.Data != nil {
-			jsonSchema, err := types.AnyToJSONSchema(m.cdc, class.Class.Data)
+		if classResp.Class.Data != nil {
+			jsonSchema, err := types.AnyToJSONSchema(m.cdc, classResp.Class.Data)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert class data to JSON schema: %w", err)
+				return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to convert class data to JSON schema: %v", err))
 			}
 
 			// Validate the data against the JSON schema
 			err = types.ValidateJSONSchema(jsonSchema, []byte(msg.Asset.Data))
 			if err != nil {
-				return nil, fmt.Errorf("invalid data: %w", err)
+				return nil, types.NewErrCodeInvalidField("data", err.Error())
 			}
 		}
 
 		// Convert string to Any type
 		anyValue, err := types.StringToAny(msg.Asset.Data)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create Any from data: %w", err)
+			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create Any from data: %v", err))
 		}
 		token.Data = anyValue
 	}
@@ -73,13 +100,13 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	// Get the owner address
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return nil, fmt.Errorf("invalid owner address: %w", err)
+		return nil, types.NewErrCodeInvalidField("owner", err.Error())
 	}
 
 	// Mint the NFT with the owner address
 	err = m.nftKeeper.Mint(ctx, token, owner)
 	if err != nil {
-		return nil, fmt.Errorf("failed to mint NFT: %w", err)
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to mint NFT: %v", err))
 	}
 
 	// Create a default registry for the asset
@@ -90,18 +117,13 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 
 	err = m.registryKeeper.CreateDefaultRegistry(ctx, owner.String(), registryKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create default registry: %w", err)
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create default registry: %v", err))
 	}
 
 	// Emit event for asset creation
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeAssetCreated,
-			sdk.NewAttribute(types.AttributeKeyAssetClassID, msg.Asset.ClassId),
-			sdk.NewAttribute(types.AttributeKeyAssetID, msg.Asset.Id),
-			sdk.NewAttribute(types.AttributeKeyOwner, owner.String()),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventAssetCreated(msg.Asset.ClassId, msg.Asset.Id, owner.String())); err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to emit asset created event: %v", err))
+	}
 
 	return &types.MsgCreateAssetResponse{}, nil
 }
@@ -125,73 +147,71 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 		// Convert string to Any type
 		anyMsg, err := types.StringToAny(msg.AssetClass.Data)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create Any from data: %w", err)
+			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create Any from data: %v", err))
 		}
 		class.Data = anyMsg
 
 		// Validate the data is valid JSON schema
 		_, err = types.AnyToJSONSchema(m.cdc, anyMsg)
 		if err != nil {
-			return nil, fmt.Errorf("invalid data: %w", err)
+			return nil, types.NewErrCodeInvalidField("data", err.Error())
 		}
 	}
 
 	// Save the NFT class
 	err := m.nftKeeper.SaveClass(ctx, class)
 	if err != nil {
-		return nil, fmt.Errorf("failed to save NFT class: %w", err)
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to save NFT class: %v", err))
 	}
 
 	// Emit event for asset class creation
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeAssetClassCreated,
-			sdk.NewAttribute(types.AttributeKeyAssetClassID, class.Id),
-			sdk.NewAttribute(types.AttributeKeyAssetName, class.Name),
-			sdk.NewAttribute(types.AttributeKeyAssetSymbol, class.Symbol),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventAssetClassCreated(class.Id, class.Name, class.Symbol)); err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to emit asset class created event: %v", err))
+	}
 
 	return &types.MsgCreateAssetClassResponse{}, nil
 }
 
 // CreatePool creates a marker for the pool and transfers the assets to the pool marker.
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
-	// Create the marker
-	marker, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("pool.%s", msg.Pool.Denom), msg.Pool.Amount), msg.Signer)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create pool marker: %w", err)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	denom := fmt.Sprintf("pool.%s", msg.Pool.Denom)
+
+	// Ensure the pool marker doesn't already exist
+	if _, err := m.markerKeeper.GetMarkerByDenom(ctx, denom); err == nil {
+		return nil, types.NewErrCodeAlreadyExists(fmt.Sprintf("pool marker with denom %s", denom))
 	}
 
-	// Get the nfts
+	// Create the marker
+	marker, err := m.createMarker(goCtx, sdk.NewCoin(denom, msg.Pool.Amount), msg.Signer)
+	if err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create pool marker: %v", err))
+	}
+
+	// Get the nfts and count them
+	var assetCount uint32
 	for _, asset := range msg.Assets {
 		// Get the owner of the nft and verify it matches the from address
 		ownerResp, err := m.nftKeeper.Owner(goCtx, &nft.QueryOwnerRequest{ClassId: asset.ClassId, Id: asset.Id})
 		if err != nil {
-			return nil, fmt.Errorf("failed to get owner of asset: %w", err)
+			return nil, types.NewErrCodeNotFound(fmt.Sprintf("asset %s/%s", asset.ClassId, asset.Id))
 		}
 		if ownerResp.Owner != msg.Signer {
-			return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, ownerResp.Owner, msg.Signer)
+			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, ownerResp.Owner, msg.Signer))
 		}
 
 		// Transfer the nft to the pool marker address
 		err = m.nftKeeper.Transfer(goCtx, asset.ClassId, asset.Id, marker.GetAddress())
 		if err != nil {
-			return nil, fmt.Errorf("failed to transfer nft: %w", err)
+			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to transfer nft: %v", err))
 		}
+		assetCount++
 	}
 
 	// Emit event for pool creation
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypePoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPool, msg.Pool.String()),
-			sdk.NewAttribute(types.AttributeKeyAssetCount, fmt.Sprintf("%d", len(msg.Assets))),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventPoolCreated(msg.Pool.String(), assetCount, msg.Signer)); err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to emit pool created event: %v", err))
+	}
 
 	return &types.MsgCreatePoolResponse{}, nil
 }
@@ -201,35 +221,29 @@ func (m msgServer) CreateTokenization(goCtx context.Context, msg *types.MsgCreat
 	// Create the marker
 	marker, err := m.createMarker(goCtx, msg.Token, msg.Signer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create tokenization marker: %w", err)
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create tokenization marker: %v", err))
 	}
 
 	// Verify the Asset exists and is owned by the from address
 	ownerResp, err := m.nftKeeper.Owner(goCtx, &nft.QueryOwnerRequest{ClassId: msg.Asset.ClassId, Id: msg.Asset.Id})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get owner of asset: %w", err)
+		return nil, types.NewErrCodeNotFound(fmt.Sprintf("asset %s/%s", msg.Asset.ClassId, msg.Asset.Id))
 	}
 	if ownerResp.Owner != msg.Signer {
-		return nil, fmt.Errorf("asset class %s, id %s owner %s does not match from address %s", msg.Asset.ClassId, msg.Asset.Id, ownerResp.Owner, msg.Signer)
+		return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("asset class %s, id %s owner %s does not match from address %s", msg.Asset.ClassId, msg.Asset.Id, ownerResp.Owner, msg.Signer))
 	}
 
 	// Transfer the Asset to the tokenization marker address
 	err = m.nftKeeper.Transfer(goCtx, msg.Asset.ClassId, msg.Asset.Id, marker.GetAddress())
 	if err != nil {
-		return nil, fmt.Errorf("failed to transfer asset: %w", err)
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to transfer asset: %v", err))
 	}
 
 	// Emit event for tokenization creation
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTokenizationCreated,
-			sdk.NewAttribute(types.AttributeKeyTokenization, msg.Token.String()),
-			sdk.NewAttribute(types.AttributeKeyAssetClassID, msg.Asset.ClassId),
-			sdk.NewAttribute(types.AttributeKeyAssetID, msg.Asset.Id),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventTokenizationCreated(msg.Token.String(), msg.Asset.ClassId, msg.Asset.Id, msg.Signer)); err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to emit tokenization created event: %v", err))
+	}
 
 	return &types.MsgCreateTokenizationResponse{}, nil
 }
@@ -241,22 +255,25 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	// Create the securitization marker
 	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s", msg.Id), sdkmath.NewInt(0)), msg.Signer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create securitization marker: %w", err)
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create securitization marker: %v", err))
 	}
 
-	// Create the tranches
+	// Create the tranches and count them
+	var trancheCount uint32
 	for _, tranche := range msg.Tranches {
 		_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s.tranche.%s", msg.Id, tranche.Denom), tranche.Amount), msg.Signer)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create tranche marker: %w", err)
+			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create tranche marker: %v", err))
 		}
+		trancheCount++
 	}
 
 	// Reassign the pools permissions to the asset module account (prevent the pools from being transferred)
+	var poolCount uint32
 	for _, pool := range msg.Pools {
-		pool, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", pool))
+		poolMarker, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", pool))
 		if err != nil {
-			return nil, fmt.Errorf("failed to get pool marker: %w", err)
+			return nil, types.NewErrCodeNotFound(fmt.Sprintf("pool marker with denom pool.%s", pool))
 		}
 
 		// Create a new access grant with the desired permissions
@@ -272,38 +289,33 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		)
 
 		// Revoke all access from the pool marker
-		accessList := pool.GetAccessList()
+		accessList := poolMarker.GetAccessList()
 		for _, access := range accessList {
 			accessAcc, err := sdk.AccAddressFromBech32(access.Address)
 			if err != nil {
-				return nil, fmt.Errorf("invalid from pool marker access address: %w", err)
+				return nil, types.NewErrCodeInvalidField("pool_marker_access_address", err.Error())
 			}
-			err = pool.RevokeAccess(accessAcc)
+			err = poolMarker.RevokeAccess(accessAcc)
 			if err != nil {
-				return nil, fmt.Errorf("failed to revoke access: %w", err)
+				return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to revoke access: %v", err))
 			}
 		}
 
 		// Grant the module account access to the pool marker
-		err = pool.GrantAccess(moduleAccessGrant)
+		err = poolMarker.GrantAccess(moduleAccessGrant)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update pool marker access: %w", err)
+			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to update pool marker access: %v", err))
 		}
 
 		// Save the updated marker
-		m.markerKeeper.SetMarker(ctx, pool)
+		m.markerKeeper.SetMarker(ctx, poolMarker)
+		poolCount++
 	}
 
 	// Emit event for securitization creation
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSecuritizationCreated,
-			sdk.NewAttribute(types.AttributeKeySecuritizationID, msg.Id),
-			sdk.NewAttribute(types.AttributeKeyTrancheCount, fmt.Sprintf("%d", len(msg.Tranches))),
-			sdk.NewAttribute(types.AttributeKeyPoolCount, fmt.Sprintf("%d", len(msg.Pools))),
-			sdk.NewAttribute(types.AttributeKeyOwner, msg.Signer),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventSecuritizationCreated(msg.Id, trancheCount, poolCount, msg.Signer)); err != nil {
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to emit securitization created event: %v", err))
+	}
 
 	return &types.MsgCreateSecuritizationResponse{}, nil
 }
@@ -314,13 +326,13 @@ func (m msgServer) createMarker(goCtx context.Context, token sdk.Coin, addr stri
 
 	marker, err := types.NewDefaultMarker(token, addr)
 	if err != nil {
-		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to create marker: %w", err)
+		return &markertypes.MarkerAccount{}, types.NewErrCodeInternal(fmt.Sprintf("failed to create marker: %v", err))
 	}
 
 	// Add the marker account by setting it
 	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
 	if err != nil {
-		return &markertypes.MarkerAccount{}, fmt.Errorf("failed to add marker account: %w", err)
+		return &markertypes.MarkerAccount{}, types.NewErrCodeInternal(fmt.Sprintf("failed to add marker account: %v", err))
 	}
 
 	return marker, nil

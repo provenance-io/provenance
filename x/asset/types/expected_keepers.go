@@ -24,6 +24,8 @@ type NFTKeeper interface {
 	SaveClass(ctx context.Context, class nft.Class) error
 	// Mint mints an NFT.
 	Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error
+	// Burn burns an NFT.
+	Burn(ctx context.Context, classID, nftID string) error
 	// Owner returns the owner of an NFT.
 	Owner(ctx context.Context, r *nft.QueryOwnerRequest) (*nft.QueryOwnerResponse, error)
 	// Transfer transfers an NFT from one account to another.

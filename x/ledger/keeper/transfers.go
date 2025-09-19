@@ -14,7 +14,7 @@ import (
 // ProcessTransferFundsWithSettlement processes a fund transfer request with settlement instructions.
 // This function executes bank transfers, and stores settlement records.
 // It ensures that funds are transferred according to settlement instructions while maintaining proper state tracking.
-func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, authorityAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error {
+func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, signerAddr sdk.AccAddress, transfer *types.FundTransferWithSettlement) error {
 	// Convert the context to SDK context for state operations.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -48,9 +48,9 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, author
 			return types.NewErrCodeInvalidField("recipient_address", "bank blocked address")
 		}
 
-		// Execute the actual bank transfer from authority to recipient.
+		// Execute the actual bank transfer from signer to recipient.
 		// This moves the specified amount of coins between accounts.
-		if err := k.BankKeeper.SendCoins(ctx, authorityAddr, recipientAddr, sdk.NewCoins(inst.Amount)); err != nil {
+		if err := k.BankKeeper.SendCoins(ctx, signerAddr, recipientAddr, sdk.NewCoins(inst.Amount)); err != nil {
 			return err
 		}
 

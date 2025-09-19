@@ -12,12 +12,7 @@ type MsgServer struct {
 	Keeper
 }
 
-func NewMsgServer(k Keeper) types.MsgServer {
-	ms := MsgServer{
-		Keeper: k,
-	}
-	return &ms
-}
+func NewMsgServer(k Keeper) types.MsgServer { return &MsgServer{Keeper: k} }
 
 // CreateLedger creates a new NFT ledger.
 func (k *MsgServer) CreateLedger(goCtx context.Context, req *types.MsgCreateLedgerRequest) (*types.MsgCreateLedgerResponse, error) {
@@ -27,7 +22,7 @@ func (k *MsgServer) CreateLedger(goCtx context.Context, req *types.MsgCreateLedg
 		return nil, types.NewErrCodeAlreadyExists("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Ledger.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Ledger.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 	if err := k.AddLedger(ctx, *req.Ledger); err != nil {
@@ -45,7 +40,7 @@ func (k *MsgServer) UpdateStatus(goCtx context.Context, req *types.MsgUpdateStat
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -64,7 +59,7 @@ func (k *MsgServer) UpdateInterestRate(goCtx context.Context, req *types.MsgUpda
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -83,7 +78,7 @@ func (k *MsgServer) UpdatePayment(goCtx context.Context, req *types.MsgUpdatePay
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +97,7 @@ func (k *MsgServer) UpdateMaturityDate(goCtx context.Context, req *types.MsgUpda
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -121,7 +116,7 @@ func (k *MsgServer) Append(goCtx context.Context, req *types.MsgAppendRequest) (
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -140,7 +135,7 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBa
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -155,19 +150,21 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBa
 func (k *MsgServer) TransferFundsWithSettlement(goCtx context.Context, req *types.MsgTransferFundsWithSettlementRequest) (*types.MsgTransferFundsWithSettlementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.HasLedger(ctx, req.Transfers[0].Key) {
-		return nil, types.NewErrCodeNotFound("ledger")
-	}
-
-	if err := k.RequireAuthority(ctx, req.Authority, req.Transfers[0].Key.ToRegistryKey()); err != nil {
-		return nil, err
+	// Validate each transfer targets an existing ledger and the signer has authority.
+	for _, ft := range req.Transfers {
+		if !k.HasLedger(ctx, ft.Key) {
+			return nil, types.NewErrCodeNotFound("ledger")
+		}
+		if err := k.RequireAuthorization(ctx, req.Signer, ft.Key.ToRegistryKey()); err != nil {
+			return nil, err
+		}
 	}
 
 	// Ignore the error here, as it is validated in the ValidateBasic method.
-	authorityAddr, _ := sdk.AccAddressFromBech32(req.Authority)
+	signerAddr, _ := sdk.AccAddressFromBech32(req.Signer)
 
 	for _, ft := range req.Transfers {
-		err := k.ProcessTransferFundsWithSettlement(ctx, authorityAddr, ft)
+		err := k.ProcessTransferFundsWithSettlement(ctx, signerAddr, ft)
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +181,7 @@ func (k *MsgServer) Destroy(goCtx context.Context, req *types.MsgDestroyRequest)
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	if err := k.RequireAuthority(ctx, req.Authority, req.Key.ToRegistryKey()); err != nil {
+	if err := k.RequireAuthorization(ctx, req.Signer, req.Key.ToRegistryKey()); err != nil {
 		return nil, err
 	}
 
@@ -200,7 +197,7 @@ func (k *MsgServer) CreateLedgerClass(goCtx context.Context, req *types.MsgCreat
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Note: No authorization is required for creation since the basic validation checks that the maintainer
-	// matches the authority, and the create will fail if the class already exists.
+	// matches the signer, and the create will fail if the class already exists.
 
 	if err := k.AddLedgerClass(ctx, *req.LedgerClass); err != nil {
 		return nil, err
@@ -221,7 +218,7 @@ func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *types.M
 		return nil, types.NewErrCodeNotFound("ledger_class")
 	}
 
-	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
+	if !k.IsLedgerClassMaintainer(ctx, req.Signer, req.LedgerClassId) {
 		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
 	}
 
@@ -245,7 +242,7 @@ func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *types.Ms
 		return nil, types.NewErrCodeNotFound("ledger_class")
 	}
 
-	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
+	if !k.IsLedgerClassMaintainer(ctx, req.Signer, req.LedgerClassId) {
 		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
 	}
 
@@ -268,7 +265,7 @@ func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *types.M
 		return nil, types.NewErrCodeNotFound("ledger_class")
 	}
 
-	if !k.IsLedgerClassMaintainer(ctx, req.Authority, req.LedgerClassId) {
+	if !k.IsLedgerClassMaintainer(ctx, req.Signer, req.LedgerClassId) {
 		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
 	}
 
@@ -283,14 +280,14 @@ func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *types.M
 func (k *MsgServer) BulkCreate(goCtx context.Context, req *types.MsgBulkCreateRequest) (*types.MsgBulkCreateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Authority has to be able to add ledgers and entries for every key.
-	for _, ledgerToEntries := range req.LedgerToEntries {
-		if err := k.RequireAuthority(ctx, req.Authority, ledgerToEntries.LedgerKey.ToRegistryKey()); err != nil {
+	// Signer has to be able to add ledgers and entries for every key.
+	for _, ledgerToEntries := range req.LedgerAndEntries {
+		if err := k.RequireAuthorization(ctx, req.Signer, ledgerToEntries.LedgerKey.ToRegistryKey()); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := k.Keeper.BulkCreate(ctx, req.LedgerToEntries); err != nil {
+	if err := k.Keeper.BulkCreate(ctx, req.LedgerAndEntries); err != nil {
 		return nil, err
 	}
 

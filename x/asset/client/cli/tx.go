@@ -28,6 +28,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
+		GetCmdBurnAsset(),
 		GetCmdCreateAsset(),
 		GetCmdCreateAssetClass(),
 		GetCmdCreatePool(),
@@ -36,6 +37,43 @@ func GetTxCmd() *cobra.Command {
 	)
 
 	return txCmd
+}
+
+// GetCmdBurnAsset returns the command for burning an asset
+func GetCmdBurnAsset() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "burn-asset <class-id> <id>",
+		Short: "Burn an existing asset",
+		Long: strings.TrimSpace(`
+Burn an existing asset by removing the NFT and its registry.
+Only the owner of the asset can burn it.
+`),
+		Example: fmt.Sprintf(strings.TrimSpace(`
+$ %[1]s burn-asset "real-estate" "property-001"
+`), cmdStart),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			assetKey := &types.AssetKey{
+				ClassId: args[0],
+				Id:      args[1],
+			}
+
+			msg := &types.MsgBurnAsset{
+				Asset:  assetKey,
+				Signer: clientCtx.GetFromAddress().String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdCreateAsset returns the command for creating an asset
@@ -160,14 +198,14 @@ $ %[1]s create-pool 1000pooltoken real-estate,property-001 real-estate,property-
 
 			pool, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid pool %s", args[0])
+				return types.NewErrCodeInvalidField("pool", fmt.Sprintf("invalid pool %s", args[0]))
 			}
 
 			var assets []*types.AssetKey
 			for i, entry := range args[1:] {
 				parts := strings.Split(entry, ",")
 				if len(parts) != 2 {
-					return fmt.Errorf("invalid nft %d format: %q, expected class-id,asset-id", i, entry)
+					return types.NewErrCodeInvalidField("nft_format", fmt.Sprintf("invalid nft %d format: %q, expected class-id,asset-id", i, entry))
 				}
 				assets = append(assets, &types.AssetKey{
 					ClassId: strings.TrimSpace(parts[0]),
@@ -207,7 +245,7 @@ $ %[1]s create-tokenization 1000pooltoken real-estate property-001
 
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid coin %s", args[0])
+				return types.NewErrCodeInvalidField("coin", fmt.Sprintf("invalid coin %s", args[0]))
 			}
 
 			asset := &types.AssetKey{
@@ -264,7 +302,7 @@ $ %[1]s create-securitization "mortgage-sec-001" "mortgage-pool-1,mortgage-pool-
 			for _, trancheStr := range trancheStrings {
 				coin, err := sdk.ParseCoinNormalized(strings.TrimSpace(trancheStr))
 				if err != nil {
-					return fmt.Errorf("invalid coin %s: %w", trancheStr, err)
+					return types.NewErrCodeInvalidField("tranche_coin", fmt.Sprintf("invalid coin %s: %v", trancheStr, err))
 				}
 				tranches = append(tranches, &coin)
 			}

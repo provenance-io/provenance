@@ -85,12 +85,18 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				ledgerObj.NextPmtDate = helper.DaysSinceEpoch(nextPmtDate.UTC())
 			}
 
-			nextPmtAmt, _ := cmd.Flags().GetInt64("next-pmt-amt")
+			nextPmtAmt, err := cmd.Flags().GetInt64("next-pmt-amt")
+			if err != nil {
+				return fmt.Errorf("invalid --next-pmt-amt: %w", err)
+			}
 			if nextPmtAmt > 0 {
 				ledgerObj.NextPmtAmt = nextPmtAmt
 			}
 
-			interestRate, _ := cmd.Flags().GetInt32("interest-rate")
+			interestRate, err := cmd.Flags().GetInt32("interest-rate")
+			if err != nil {
+				return fmt.Errorf("invalid --interest-rate: %w", err)
+			}
 			if interestRate > 0 {
 				ledgerObj.InterestRate = interestRate
 			}
@@ -166,8 +172,8 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			}
 
 			msg := &ledger.MsgCreateLedgerRequest{
-				Ledger:    ledgerObj,
-				Authority: clientCtx.FromAddress.String(),
+				Ledger: ledgerObj,
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -178,7 +184,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 	ledgerFlags := pflag.NewFlagSet("ledger", pflag.ContinueOnError)
 	ledgerFlags.String("next-pmt-date", "", "Next payment date (YYYY-MM-DD)")
 	ledgerFlags.Int64("next-pmt-amt", 0, "Next payment amount")
-	ledgerFlags.Int("interest-rate", 0, "Interest rate (10000000 = 10.000000%)")
+	ledgerFlags.Int32("interest-rate", 0, "Interest rate (10000000 = 10.000000%)")
 	ledgerFlags.String("maturity-date", "", "Maturity date (YYYY-MM-DD)")
 	ledgerFlags.String("day-count-convention", "", "Day count convention (actual-365, actual-360, thirty-360, actual-actual, days-365, days-360)")
 	ledgerFlags.String("interest-accrual-method", "", "Interest accrual method (simple, compound, daily, monthly, quarterly, annual, continuous)")
@@ -194,7 +200,7 @@ func CmdDestroy() *cobra.Command {
 		Use:     "destroy <asset_class_id> <nft_id>",
 		Aliases: []string{},
 		Short:   "Destroy a ledger by asset_class_id and nft_id",
-		Example: `$ provenanced tx ledger destroy pb1a2b3c4... --from mykey`,
+		Example: `$ provenanced tx ledger destroy asset-class-1 nft-1 --from mykey`,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -210,7 +216,7 @@ func CmdDestroy() *cobra.Command {
 					AssetClassId: assetClassID,
 					NftId:        nftID,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -288,8 +294,8 @@ where the json is formatted as follows:
 					AssetClassId: assetClassID,
 					NftId:        nftID,
 				},
-				Entries:   entries,
-				Authority: clientCtx.FromAddress.String(),
+				Entries: entries,
+				Signer:  clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -306,7 +312,7 @@ func CmdCreateLedgerClass() *cobra.Command {
 		Use:     "create-class <ledger_class_id> <asset_class_id> <denom>",
 		Aliases: []string{"cc"},
 		Short:   "Create a new ledger class",
-		Example: `$ provenanced tx ledger create-class usd pb1a2b3c4... usd pb1a2b3c4... --from mykey`,
+		Example: `$ provenanced tx ledger create-class ledger-class-1 asset-class-1 usd --from mykey`,
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -325,7 +331,7 @@ func CmdCreateLedgerClass() *cobra.Command {
 					Denom:             denom,
 					MaintainerAddress: clientCtx.FromAddress.String(),
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -365,7 +371,7 @@ func CmdAddLedgerClassStatusType() *cobra.Command {
 					Code:        code,
 					Description: description,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -405,7 +411,7 @@ func CmdAddLedgerClassEntryType() *cobra.Command {
 					Code:        code,
 					Description: description,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -445,7 +451,7 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 					Code:        code,
 					Description: description,
 				},
-				Authority: clientCtx.FromAddress.String(),
+				Signer: clientCtx.FromAddress.String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -488,7 +494,7 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 			}
 
 			msg := &ledger.MsgTransferFundsWithSettlementRequest{
-				Authority: clientCtx.FromAddress.String(),
+				Signer:    clientCtx.FromAddress.String(),
 				Transfers: transfers,
 			}
 
@@ -523,18 +529,18 @@ func CmdBulkCreate() *cobra.Command {
 				return fmt.Errorf("failed to unmarshal JSON array: %w", err)
 			}
 
-			ledgerToEntries := make([]*ledger.LedgerToEntries, 0, len(rawEntries))
+			ledgerAndEntries := make([]*ledger.LedgerAndEntries, 0, len(rawEntries))
 			for _, rawEntry := range rawEntries {
-				var entry ledger.LedgerToEntries
+				var entry ledger.LedgerAndEntries
 				if err := clientCtx.Codec.UnmarshalJSON(rawEntry, &entry); err != nil {
 					return err
 				}
-				ledgerToEntries = append(ledgerToEntries, &entry)
+				ledgerAndEntries = append(ledgerAndEntries, &entry)
 			}
 
 			msg := &ledger.MsgBulkCreateRequest{
-				Authority:       clientCtx.FromAddress.String(),
-				LedgerToEntries: ledgerToEntries,
+				Signer:           clientCtx.FromAddress.String(),
+				LedgerAndEntries: ledgerAndEntries,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

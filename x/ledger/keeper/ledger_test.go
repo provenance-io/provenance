@@ -7,7 +7,6 @@ import (
 
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	"github.com/provenance-io/provenance/x/ledger/types"
-	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -20,7 +19,7 @@ func (s *TestSuite) TestNonExistentDenom() {
 	s.nftKeeper.Mint(s.ctx, nft, s.addr1)
 
 	// Attempt to attach a denom that doesn't exist.
-	ledgerClass := ledger.LedgerClass{
+	ledgerClass := types.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id-2",
 		AssetClassId:      s.validNFTClass.Id,
 		MaintainerAddress: s.addr1.String(),
@@ -33,36 +32,20 @@ func (s *TestSuite) TestNonExistentDenom() {
 
 func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
 	s.T().Skip("Skipping test - authorization logic moved out of keeper")
-	err := s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
-		Id:          1,
-		Code:        "SCHEDULED_PAYMENT",
-		Description: "Scheduled Payment",
-	})
-	s.Require().Error(err, "AddClassEntryType error")
-	s.Require().ErrorIs(err, ledger.ErrUnauthorized, "AddClassEntryType error")
-
-	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
-		Id:          1,
-		Code:        "PRINCIPAL",
-		Description: "Principal",
-	})
-	s.Require().Error(err, "AddClassBucketType error")
-	s.Require().Contains(err.Error(), ledger.ErrCodeUnauthorized, "AddClassBucketType error")
-
-	err = s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	err := s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, types.LedgerClassStatusType{
 		Id:          1,
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
 	})
 	s.Require().Error(err, "AddClassStatusType error")
-	s.Require().Contains(err.Error(), ledger.ErrCodeUnauthorized, "AddClassStatusType error")
+	s.Require().Contains(err.Error(), types.ErrCodeUnauthorized, "AddClassStatusType error")
 }
 
 // Test to ensure only the registered servicer or owner can create a ledger.
 func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 	s.T().Skip("Skipping test - authorization logic moved out of keeper")
-	ledger := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	ledger := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
@@ -103,12 +86,12 @@ func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
 func (s *TestSuite) TestCreateLedgerClass() {
 	tests := []struct {
 		name        string
-		ledgerClass ledger.LedgerClass
+		ledgerClass types.LedgerClass
 		expErr      []string
 	}{
 		{
 			name: "valid ledger class should already exist",
-			ledgerClass: ledger.LedgerClass{
+			ledgerClass: types.LedgerClass{
 				LedgerClassId:     s.validLedgerClass.LedgerClassId,
 				AssetClassId:      s.validLedgerClass.AssetClassId,
 				MaintainerAddress: s.addr1.String(),
@@ -118,7 +101,7 @@ func (s *TestSuite) TestCreateLedgerClass() {
 		},
 		{
 			name: "invalid asset class id",
-			ledgerClass: ledger.LedgerClass{
+			ledgerClass: types.LedgerClass{
 				LedgerClassId:     s.validLedgerClass.LedgerClassId,
 				AssetClassId:      "non-existent-class-id",
 				MaintainerAddress: s.addr1.String(),
@@ -144,14 +127,14 @@ func (s *TestSuite) TestCreateLedgerClass() {
 func (s *TestSuite) TestCreateLedger() {
 	tests := []struct {
 		name     string
-		ledger   ledger.Ledger
+		ledger   types.Ledger
 		expErr   []error
 		expEvent bool
 	}{
 		{
 			name: "valid ledger",
-			ledger: ledger.Ledger{
-				Key: &ledger.LedgerKey{
+			ledger: types.Ledger{
+				Key: &types.LedgerKey{
 					AssetClassId: s.validNFTClass.Id,
 					NftId:        s.validNFT.Id,
 				},
@@ -163,15 +146,15 @@ func (s *TestSuite) TestCreateLedger() {
 
 		{
 			name: "duplicate ledger",
-			ledger: ledger.Ledger{
-				Key: &ledger.LedgerKey{
+			ledger: types.Ledger{
+				Key: &types.LedgerKey{
 					AssetClassId: s.validNFTClass.Id,
 					NftId:        s.validNFT.Id,
 				},
 				LedgerClassId: s.validLedgerClass.LedgerClassId,
 				StatusTypeId:  1,
 			},
-			expErr: []error{ledger.ErrAlreadyExists},
+			expErr: []error{types.ErrAlreadyExists},
 		},
 	}
 
@@ -224,8 +207,8 @@ func (s *TestSuite) TestCreateLedger() {
 // TestGetLedger tests the GetLedger function
 func (s *TestSuite) TestGetLedger() {
 	// Create a valid ledger first that we can try to get
-	validLedger := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	validLedger := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
@@ -239,7 +222,7 @@ func (s *TestSuite) TestGetLedger() {
 		name      string
 		nftId     string
 		expErr    []string
-		expLedger *ledger.Ledger
+		expLedger *types.Ledger
 	}{
 		{
 			name:      "valid ledger retrieval",
@@ -250,7 +233,7 @@ func (s *TestSuite) TestGetLedger() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			ledger, err := s.keeper.GetLedger(s.ctx, &ledger.LedgerKey{
+			ledger, err := s.keeper.GetLedger(s.ctx, &types.LedgerKey{
 				AssetClassId: s.validNFTClass.Id,
 				NftId:        tc.nftId,
 			})
@@ -276,8 +259,8 @@ func (s *TestSuite) TestGetLedger() {
 // TestGetLedgerEntry tests the GetLedgerEntry function
 func (s *TestSuite) TestGetLedgerEntry() {
 	// Create a test ledger
-	l := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	l := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
@@ -291,14 +274,14 @@ func (s *TestSuite) TestGetLedgerEntry() {
 	// Test cases
 	tests := []struct {
 		name          string
-		key           *ledger.LedgerKey
+		key           *types.LedgerKey
 		correlationId string
-		expEntry      *ledger.LedgerEntry
+		expEntry      *types.LedgerEntry
 		expErr        *types.ErrCode
 	}{
 		{
 			name: "not found",
-			key: &ledger.LedgerKey{
+			key: &types.LedgerKey{
 				AssetClassId: s.validNFTClass.Id,
 				NftId:        s.validNFT.Id,
 			},
@@ -331,11 +314,11 @@ func (s *TestSuite) TestProcessFundTransfer() {
 func (s *TestSuite) TestInitGenesis() {
 	tests := []struct {
 		name     string
-		genState *ledger.GenesisState
+		genState *types.GenesisState
 	}{
 		{
 			name:     "empty genesis state",
-			genState: &ledger.GenesisState{},
+			genState: &types.GenesisState{},
 		},
 	}
 
@@ -358,7 +341,7 @@ func (s *TestSuite) TestExportGenesis() {
 }
 
 func (s *TestSuite) TestBech32() {
-	ledgerKey := &ledger.LedgerKey{
+	ledgerKey := &types.LedgerKey{
 		AssetClassId: s.validNFTClass.Id,
 		NftId:        s.addr1.String(),
 	}
@@ -379,8 +362,8 @@ func (s *TestSuite) TestBech32() {
 // TestUpdateLedgerStatus tests the UpdateLedgerStatus function and event emission
 func (s *TestSuite) TestUpdateLedgerStatus() {
 	// Create a valid ledger first
-	validLedger := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	validLedger := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
@@ -451,8 +434,8 @@ func (s *TestSuite) TestUpdateLedgerStatus() {
 // TestUpdateLedgerInterestRate tests the UpdateLedgerInterestRate function and event emission
 func (s *TestSuite) TestUpdateLedgerInterestRate() {
 	// Create a valid ledger first
-	validLedger := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	validLedger := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
@@ -522,8 +505,8 @@ func (s *TestSuite) TestUpdateLedgerInterestRate() {
 // TestUpdateLedgerPayment tests the UpdateLedgerPayment function and event emission
 func (s *TestSuite) TestUpdateLedgerPayment() {
 	// Create a valid ledger first
-	validLedger := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	validLedger := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
@@ -593,8 +576,8 @@ func (s *TestSuite) TestUpdateLedgerPayment() {
 // TestUpdateLedgerMaturityDate tests the UpdateLedgerMaturityDate function and event emission
 func (s *TestSuite) TestUpdateLedgerMaturityDate() {
 	// Create a valid ledger first
-	validLedger := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	validLedger := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        s.validNFT.Id,
 		},
@@ -663,7 +646,7 @@ func (s *TestSuite) TestGetAllLedgerClasses() {
 	nft2 := nft.NFT{ClassId: nftClass2.Id, Id: "test-nft-id-2"}
 	s.nftKeeper.Mint(s.ctx, nft2, s.addr1)
 
-	ledgerClass2 := ledger.LedgerClass{
+	ledgerClass2 := types.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id-2",
 		AssetClassId:      nftClass2.Id,
 		MaintainerAddress: s.addr1.String(),
@@ -678,7 +661,7 @@ func (s *TestSuite) TestGetAllLedgerClasses() {
 	nft3 := nft.NFT{ClassId: nftClass3.Id, Id: "test-nft-id-3"}
 	s.nftKeeper.Mint(s.ctx, nft3, s.addr1)
 
-	ledgerClass3 := ledger.LedgerClass{
+	ledgerClass3 := types.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id-3",
 		AssetClassId:      nftClass3.Id,
 		MaintainerAddress: s.addr1.String(),
@@ -780,7 +763,7 @@ func (s *TestSuite) TestLedgerClassesQueryServer() {
 	nft2 := nft.NFT{ClassId: nftClass2.Id, Id: "test-nft-id-2"}
 	s.nftKeeper.Mint(s.ctx, nft2, s.addr1)
 
-	ledgerClass2 := ledger.LedgerClass{
+	ledgerClass2 := types.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id-2",
 		AssetClassId:      nftClass2.Id,
 		MaintainerAddress: s.addr1.String(),
@@ -794,26 +777,26 @@ func (s *TestSuite) TestLedgerClassesQueryServer() {
 
 	tests := []struct {
 		name        string
-		request     *ledger.QueryLedgerClassesRequest
+		request     *types.QueryLedgerClassesRequest
 		expectError bool
 	}{
 		{
 			name: "valid request without pagination",
-			request: &ledger.QueryLedgerClassesRequest{
+			request: &types.QueryLedgerClassesRequest{
 				Pagination: &query.PageRequest{CountTotal: true},
 			},
 			expectError: false,
 		},
 		{
 			name: "valid request with pagination limit",
-			request: &ledger.QueryLedgerClassesRequest{
+			request: &types.QueryLedgerClassesRequest{
 				Pagination: &query.PageRequest{Limit: 1, CountTotal: true},
 			},
 			expectError: false,
 		},
 		{
 			name: "valid request with nil pagination",
-			request: &ledger.QueryLedgerClassesRequest{
+			request: &types.QueryLedgerClassesRequest{
 				Pagination: nil,
 			},
 			expectError: false,
@@ -863,7 +846,7 @@ func (s *TestSuite) TestGetAllLedgers() {
 	nft2 := nft.NFT{ClassId: nftClass2.Id, Id: "test-nft-id-2"}
 	s.nftKeeper.Mint(s.ctx, nft2, s.addr1)
 
-	ledgerClass2 := ledger.LedgerClass{
+	ledgerClass2 := types.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id-2",
 		AssetClassId:      nftClass2.Id,
 		MaintainerAddress: s.addr1.String(),
@@ -873,7 +856,7 @@ func (s *TestSuite) TestGetAllLedgers() {
 	s.Require().NoError(err, "AddLedgerClass error")
 
 	// Add status types for the new ledger class
-	err = s.keeper.AddClassStatusType(s.ctx, ledgerClass2.LedgerClassId, ledger.LedgerClassStatusType{
+	err = s.keeper.AddClassStatusType(s.ctx, ledgerClass2.LedgerClassId, types.LedgerClassStatusType{
 		Id:          1,
 		Code:        "ACTIVE",
 		Description: "Active",
@@ -881,8 +864,8 @@ func (s *TestSuite) TestGetAllLedgers() {
 	s.Require().NoError(err, "AddClassStatusType error")
 
 	// Create multiple ledgers for testing
-	ledger1 := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	ledger1 := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        "test-ledger-nft-1",
 		},
@@ -896,8 +879,8 @@ func (s *TestSuite) TestGetAllLedgers() {
 	err = s.keeper.AddLedger(s.ctx, ledger1)
 	s.Require().NoError(err, "AddLedger error")
 
-	ledger2 := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	ledger2 := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: nftClass2.Id,
 			NftId:        nft2.Id,
 		},
@@ -907,8 +890,8 @@ func (s *TestSuite) TestGetAllLedgers() {
 	err = s.keeper.AddLedger(s.ctx, ledger2)
 	s.Require().NoError(err, "AddLedger error")
 
-	ledger3 := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	ledger3 := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        "test-ledger-nft-3",
 		},
@@ -1010,8 +993,8 @@ func (s *TestSuite) TestGetAllLedgers() {
 
 func (s *TestSuite) TestLedgersQueryServer() {
 	// Create additional ledger for testing
-	ledger1 := ledger.Ledger{
-		Key: &ledger.LedgerKey{
+	ledger1 := types.Ledger{
+		Key: &types.LedgerKey{
 			AssetClassId: s.validNFTClass.Id,
 			NftId:        "test-ledger-nft-server",
 		},
@@ -1030,26 +1013,26 @@ func (s *TestSuite) TestLedgersQueryServer() {
 
 	tests := []struct {
 		name        string
-		request     *ledger.QueryLedgersRequest
+		request     *types.QueryLedgersRequest
 		expectError bool
 	}{
 		{
 			name: "valid request without pagination",
-			request: &ledger.QueryLedgersRequest{
+			request: &types.QueryLedgersRequest{
 				Pagination: &query.PageRequest{CountTotal: true},
 			},
 			expectError: false,
 		},
 		{
 			name: "valid request with pagination limit",
-			request: &ledger.QueryLedgersRequest{
+			request: &types.QueryLedgersRequest{
 				Pagination: &query.PageRequest{Limit: 1, CountTotal: true},
 			},
 			expectError: false,
 		},
 		{
 			name: "valid request with nil pagination",
-			request: &ledger.QueryLedgersRequest{
+			request: &types.QueryLedgersRequest{
 				Pagination: nil,
 			},
 			expectError: false,
