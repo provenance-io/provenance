@@ -3,12 +3,10 @@ package types
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
@@ -17,85 +15,75 @@ const (
 	MaxLedgerEntrySequence = 99
 	MaxLenLedgerClassID    = 50
 	MaxLenCorrelationID    = 50
-	MaxLenAssetClassID     = registrytypes.MaxLenAssetClassID
-	MaxLenNFTID            = registrytypes.MaxLenNFTID
 	MaxLenCode             = 50
 	MaxLenDescription      = 100
 	MaxLenDenom            = 128
 	MaxLenMemo             = 50
 )
 
-var alNumDashRx = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
-
 // Validate validates the LedgerClass type
 func (lc *LedgerClass) Validate() error {
-	if err := lenCheck("ledger_class_id", lc.LedgerClassId, 1, MaxLenLedgerClassID); err != nil {
-		return err
+	var errs []error
+	// Validate ledger class id format using asset class id validation
+	if err := registrytypes.ValidateClassID(lc.LedgerClassId); err != nil {
+		errs = append(errs, fmt.Errorf("ledger_class_id: %w", err))
 	}
 
-	// Verify that the ledger class only contains alphanumeric and dashes
-	if !alNumDashRx.MatchString(lc.LedgerClassId) {
-		return NewErrCodeInvalidField("ledger_class_id", "must only contain alphanumeric and dashes")
-	}
-
-	if err := lenCheck("asset_class_id", lc.AssetClassId, 1, MaxLenAssetClassID); err != nil {
-		return err
-	}
-
-	// Validate asset_class_id format (should be a valid UUID or similar format)
-	if !alNumDashRx.MatchString(lc.AssetClassId) {
-		return NewErrCodeInvalidField("asset_class_id", "must only contain alphanumeric and dashes")
+	if err := registrytypes.ValidateClassID(lc.AssetClassId); err != nil {
+		errs = append(errs, fmt.Errorf("asset_class_id: %w", err))
 	}
 
 	// Check denom length first for nicer error messages.
-	if err := lenCheck("denom", lc.Denom, 2, MaxLenDenom); err != nil {
-		return err
+	if err := registrytypes.ValidateStringLength(lc.Denom, 2, MaxLenDenom); err != nil {
+		errs = append(errs, fmt.Errorf("denom: %w", err))
 	}
 
 	// Validate denom format (should be a valid coin denomination)
 	if err := sdk.ValidateDenom(lc.Denom); err != nil {
-		return NewErrCodeInvalidField("denom", fmt.Sprintf("must be a valid coin denomination: %v", err))
+		errs = append(errs, fmt.Errorf("denom must be a valid coin denomination: %w", err))
 	}
 
-	if err := validateAccAddress("maintainer_address", lc.MaintainerAddress); err != nil {
-		return err
+	if _, err := sdk.AccAddressFromBech32(lc.MaintainerAddress); err != nil {
+		errs = append(errs, fmt.Errorf("maintainer_address: %w", err))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate validates the LedgerClassEntryType type
 func (lcet *LedgerClassEntryType) Validate() error {
+	var errs []error
 	if lcet.Id < 0 {
-		return NewErrCodeInvalidField("id", "must be a non-negative integer")
+		errs = append(errs, fmt.Errorf("id must be a non-negative integer"))
 	}
 
-	if err := lenCheck("code", lcet.Code, 1, MaxLenCode); err != nil {
-		return err
+	if err := lenCheck(lcet.Code, 1, MaxLenCode); err != nil {
+		errs = append(errs, fmt.Errorf("code: %w", err))
 	}
 
-	if err := lenCheck("description", lcet.Description, 1, MaxLenDescription); err != nil {
-		return err
+	if err := lenCheck(lcet.Description, 1, MaxLenDescription); err != nil {
+		errs = append(errs, fmt.Errorf("description: %w", err))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate validates the LedgerClassStatusType type
 func (lcst *LedgerClassStatusType) Validate() error {
+	var errs []error
 	if lcst.Id < 0 {
-		return NewErrCodeInvalidField("id", "must be a non-negative integer")
+		errs = append(errs, fmt.Errorf("id: must be a non-negative integer"))
 	}
 
-	if err := lenCheck("code", lcst.Code, 1, MaxLenCode); err != nil {
-		return err
+	if err := lenCheck(lcst.Code, 1, MaxLenCode); err != nil {
+		errs = append(errs, fmt.Errorf("code: %w", err))
 	}
 
-	if err := lenCheck("description", lcst.Description, 1, MaxLenDescription); err != nil {
-		return err
+	if err := lenCheck(lcst.Description, 1, MaxLenDescription); err != nil {
+		errs = append(errs, fmt.Errorf("description: %w", err))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 const (
@@ -178,27 +166,18 @@ func (lk LedgerKey) ToRegistryKey() *registrytypes.RegistryKey {
 // Validate validates the LedgerKey type
 func (lk *LedgerKey) Validate() error {
 	if lk == nil {
-		return NewErrCodeMissingField("key")
+		return fmt.Errorf("key cannot be nil")
+	}
+	var errs []error
+	if err := registrytypes.ValidateClassID(lk.AssetClassId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("asset_class_id", "%s", err))
 	}
 
-	// Verify that the nft_id and asset_class_id do not contain a null byte
-	if strings.Contains(lk.NftId, "\x00") {
-		return NewErrCodeInvalidField("nft_id", "must not contain a null byte")
+	if err := registrytypes.ValidateNftID(lk.NftId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("nft_id", "%s", err))
 	}
 
-	if err := lenCheck("nft_id", lk.NftId, 1, MaxLenNFTID); err != nil {
-		return err
-	}
-
-	if err := lenCheck("asset_class_id", lk.AssetClassId, 1, MaxLenAssetClassID); err != nil {
-		return err
-	}
-
-	if strings.Contains(lk.AssetClassId, "\x00") {
-		return NewErrCodeInvalidField("asset_class_id", "must not contain a null byte")
-	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 // Equals returns true if this LedgerKey equals the provided one.
@@ -215,186 +194,195 @@ func (lk *LedgerKey) Equals(other *LedgerKey) bool {
 // Validate validates the Ledger type
 func (l *Ledger) Validate() error {
 	if l.Key == nil {
-		return NewErrCodeMissingField("key")
+		return fmt.Errorf("key cannot be nil")
 	}
 
+	var errs []error
 	if err := l.Key.Validate(); err != nil {
-		return err
+		errs = append(errs, fmt.Errorf("key: %w", err))
 	}
 
-	// Validate the LedgerClassId field
-	if err := lenCheck("ledger_class_id", l.LedgerClassId, 1, MaxLenLedgerClassID); err != nil {
-		return err
+	// Validate ledger class id format using asset class id validation
+	if err := registrytypes.ValidateClassID(l.LedgerClassId); err != nil {
+		errs = append(errs, fmt.Errorf("ledger_class_id: %w", err))
 	}
 
 	// Validate status_type_id is positive
 	if l.StatusTypeId <= 0 {
-		return NewErrCodeInvalidField("status_type_id", "must be a positive integer")
+		errs = append(errs, fmt.Errorf("status_type_id: must be a positive integer"))
 	}
 
 	// Validate next payment date format if provided
 	if l.NextPmtDate <= 0 {
-		return NewErrCodeInvalidField("next_pmt_date", "must be after 1970-01-01")
+		errs = append(errs, fmt.Errorf("next_pmt_date: must be after 1970-01-01"))
 	}
 
 	// Validate next payment amount if provided
 	if l.NextPmtAmt.IsNegative() {
-		return NewErrCodeInvalidField("next_pmt_amt", "must be a non-negative integer")
+		errs = append(errs, fmt.Errorf("next_pmt_amt: must be a non-negative integer"))
 	}
 
 	// Validate interest rate if provided (reasonable bounds: 0-100000000 for 0-100%)
 	if l.InterestRate < 0 || l.InterestRate > 100_000_000 {
-		return NewErrCodeInvalidField("interest_rate", "must be between 0 and 100,000,000 (0-100%)")
+		errs = append(errs, fmt.Errorf("interest_rate: must be between 0 and 100,000,000 (0-100%%)"))
 	}
 
 	// Validate maturity date format if provided
 	if l.MaturityDate < 0 {
-		return NewErrCodeInvalidField("maturity_date", "must be after 1970-01-01")
+		errs = append(errs, fmt.Errorf("maturity_date: must be after 1970-01-01"))
 	}
 
 	if err := l.InterestDayCountConvention.Validate(); err != nil {
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		errs = append(errs, fmt.Errorf("interest_day_count_convention: %w", err))
 	}
 
 	if err := l.InterestAccrualMethod.Validate(); err != nil {
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		errs = append(errs, fmt.Errorf("interest_accrual_method: %w", err))
 	}
 
 	if err := l.PaymentFrequency.Validate(); err != nil {
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		errs = append(errs, fmt.Errorf("payment_frequency: %w", err))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate validates the LedgerClassBucketType type
 func (lcbt *LedgerClassBucketType) Validate() error {
+	var errs []error
 	if lcbt.Id < 0 {
-		return NewErrCodeInvalidField("id", "must be a non-negative integer")
+		errs = append(errs, fmt.Errorf("id: must be a non-negative integer"))
 	}
 
-	if err := lenCheck("code", lcbt.Code, 1, MaxLenCode); err != nil {
-		return err
+	if err := lenCheck(lcbt.Code, 1, MaxLenCode); err != nil {
+		errs = append(errs, fmt.Errorf("code: %w", err))
 	}
 
-	if err := lenCheck("description", lcbt.Description, 1, MaxLenDescription); err != nil {
-		return err
+	if err := lenCheck(lcbt.Description, 1, MaxLenDescription); err != nil {
+		errs = append(errs, fmt.Errorf("description: %w", err))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate validates the LedgerEntry type
 func (le *LedgerEntry) Validate() error {
-	if err := lenCheck("correlation_id", le.CorrelationId, 1, MaxLenCorrelationID); err != nil {
-		return err
+	var errs []error
+	if err := lenCheck(le.CorrelationId, 1, MaxLenCorrelationID); err != nil {
+		errs = append(errs, fmt.Errorf("correlation_id: %w", err))
 	}
 
 	// Validate reverses_correlation_id if provided
-	if err := lenCheck("reverses_correlation_id", le.ReversesCorrelationId, 0, MaxLenCorrelationID); err != nil {
-		return err
+	if err := lenCheck(le.ReversesCorrelationId, 0, MaxLenCorrelationID); err != nil {
+		errs = append(errs, fmt.Errorf("reverses_correlation_id: %w", err))
 	}
 
 	// Validate sequence number (should be < 100 as per proto comment)
 	if le.Sequence >= MaxLedgerEntrySequence {
-		return NewErrCodeInvalidField("sequence", fmt.Sprintf("must be less than %d", MaxLedgerEntrySequence))
+		errs = append(errs, fmt.Errorf("sequence: must be less than %d", MaxLedgerEntrySequence))
 	}
 
 	// Validate entry_type_id is positive
 	if le.EntryTypeId <= 0 {
-		return NewErrCodeInvalidField("entry_type_id", "must be a positive integer")
+		errs = append(errs, fmt.Errorf("entry_type_id: must be a positive integer"))
 	}
 
 	if le.PostedDate <= 0 {
-		return NewErrCodeInvalidField("posted_date", "must be a valid integer")
+		errs = append(errs, fmt.Errorf("posted_date: must be a valid integer"))
 	}
 
 	if le.EffectiveDate <= 0 {
-		return NewErrCodeInvalidField("effective_date", "must be a valid integer")
+		errs = append(errs, fmt.Errorf("effective_date: must be a valid integer"))
 	}
 
 	// Validate amounts are non-negative
 	if le.TotalAmt.IsNil() || le.TotalAmt.IsNegative() {
-		return NewErrCodeInvalidField("total_amt", "must be a non-negative integer")
+		errs = append(errs, fmt.Errorf("total_amt: must be a non-negative integer"))
 	}
 
 	// Validate applied_amounts
 	if len(le.AppliedAmounts) == 0 {
-		return NewErrCodeInvalidField("applied_amounts", "cannot be empty")
+		errs = append(errs, fmt.Errorf("applied_amounts: cannot be empty"))
 	}
 
-	for _, applied := range le.AppliedAmounts {
+	for i, applied := range le.AppliedAmounts {
 		if applied.BucketTypeId <= 0 {
-			return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
+			errs = append(errs, fmt.Errorf("applied_amounts[%d].bucket_type_id: must be a positive integer", i))
 		}
 	}
 
 	if err := validateEntryAmounts(le.TotalAmt, le.AppliedAmounts); err != nil {
-		return err
+		errs = append(errs, fmt.Errorf("applied_amounts: %w", err))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate validates the LedgerBucketAmount type
 func (lba *LedgerBucketAmount) Validate() error {
+	var errs []error
 	if lba.BucketTypeId <= 0 {
-		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
+		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
 	}
 
 	if lba.AppliedAmt.IsNil() || lba.AppliedAmt.IsNegative() {
-		return NewErrCodeInvalidField("applied_amt", "must be a non-negative integer")
+		errs = append(errs, fmt.Errorf("applied_amt: must be a non-negative integer"))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate validates the BucketBalance type
 func (bb *BucketBalance) Validate() error {
+	var errs []error
 	if bb.BucketTypeId <= 0 {
-		return NewErrCodeInvalidField("bucket_type_id", "must be a positive integer")
+		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
 	}
 
 	if bb.BalanceAmt.IsNil() || bb.BalanceAmt.IsNegative() {
-		return NewErrCodeInvalidField("balance_amt", "must be a non-negative integer")
+		errs = append(errs, fmt.Errorf("balance_amt: must be a non-negative integer"))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate validates the LedgerAndEntries type
 func (lte *LedgerAndEntries) Validate() error {
-	if lte.LedgerKey == nil && lte.Ledger == nil {
-		return errors.New("either a ledger or ledger key are required")
-	}
-
-	if lte.LedgerKey != nil {
+	// Validate the ledger key and ledger.
+	//  - One or both must be non-nil.
+	//  - If both are non-nil: validate each.
+	//  - key and ledger.key must be the same.
+	var errs []error
+	switch {
+	case lte.LedgerKey == nil && lte.Ledger == nil:
+		return fmt.Errorf("ledger_key, ledger: one or both must be non-nil")
+	case lte.LedgerKey != nil && lte.Ledger == nil:
 		if err := lte.LedgerKey.Validate(); err != nil {
-			return err
+			errs = append(errs, fmt.Errorf("ledger_key: %w", err))
 		}
-	}
-
-	if lte.Ledger != nil {
+	case lte.LedgerKey == nil && lte.Ledger != nil:
 		if err := lte.Ledger.Validate(); err != nil {
-			return NewErrCodeInvalidField("ledger", err.Error())
+			errs = append(errs, fmt.Errorf("ledger: %w", err))
 		}
-
-		if lte.LedgerKey != nil && !lte.LedgerKey.Equals(lte.Ledger.Key) {
-			return errors.New("the ledger_key does not equal the ledger.key")
+	case lte.LedgerKey != nil && lte.Ledger != nil:
+		if err := lte.LedgerKey.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("ledger_key: %w", err))
+		}
+		if err := lte.Ledger.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("ledger: %w", err))
+		}
+		if lte.LedgerKey.String() != lte.Ledger.Key.String() {
+			errs = append(errs, fmt.Errorf("ledger_key, ledger.key: must be the same value"))
 		}
 	}
 
-	if len(lte.Entries) == 0 {
-		return NewErrCodeMissingField("entries")
-	}
-
-	for _, entry := range lte.Entries {
+	for i, entry := range lte.Entries {
 		if err := entry.Validate(); err != nil {
-			return err
+			errs = append(errs, fmt.Errorf("entries[%d]: %w", i, err))
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // UnmarshalJSON implements json.Unmarshaler for DayCount.

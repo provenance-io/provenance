@@ -219,7 +219,7 @@ func (k *MsgServer) AddLedgerClassStatusType(goCtx context.Context, req *types.M
 	}
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Signer, req.LedgerClassId) {
-		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
+		return nil, types.NewErrCodeUnauthorized("signer is not a ledger class maintainer")
 	}
 
 	err = k.AddClassStatusType(ctx, req.LedgerClassId, *req.StatusType)
@@ -243,7 +243,7 @@ func (k *MsgServer) AddLedgerClassEntryType(goCtx context.Context, req *types.Ms
 	}
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Signer, req.LedgerClassId) {
-		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
+		return nil, types.NewErrCodeUnauthorized("signer is not a ledger class maintainer")
 	}
 
 	if err := k.AddClassEntryType(ctx, req.LedgerClassId, *req.EntryType); err != nil {
@@ -266,7 +266,7 @@ func (k *MsgServer) AddLedgerClassBucketType(goCtx context.Context, req *types.M
 	}
 
 	if !k.IsLedgerClassMaintainer(ctx, req.Signer, req.LedgerClassId) {
-		return nil, types.NewErrCodeUnauthorized("ledger class maintainer")
+		return nil, types.NewErrCodeUnauthorized("signer is not a ledger class maintainer")
 	}
 
 	if err := k.AddClassBucketType(ctx, req.LedgerClassId, *req.BucketType); err != nil {

@@ -19,6 +19,8 @@
 package types
 
 import (
+	"fmt"
+
 	cerrs "cosmossdk.io/errors"
 )
 
@@ -42,12 +44,8 @@ var (
 	ErrNotFound      = cerrs.Register(ModuleName, 6, "not found")
 )
 
-func NewErrCodeInvalidField(field, why string) error {
-	return cerrs.Wrapf(ErrInvalidField, "field %q is invalid: %s", field, why)
-}
-
-func NewErrCodeMissingField(field string) error {
-	return cerrs.Wrapf(ErrMissingField, "required field %q is missing or empty", field)
+func NewErrCodeInvalidField(field, format string, args ...interface{}) error {
+	return cerrs.Wrapf(ErrInvalidField, "invalid %s: %s", field, fmt.Sprintf(format, args...))
 }
 
 func NewErrCodeUnauthorized(why string) error {

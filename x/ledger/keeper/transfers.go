@@ -39,7 +39,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, signer
 		// Parse the recipient address from bech32 format.
 		recipientAddr, err := sdk.AccAddressFromBech32(inst.RecipientAddress)
 		if err != nil {
-			return types.NewErrCodeInvalidField("recipient_address", "invalid recipient address")
+			return types.NewErrCodeInvalidField("recipient_address", "%s", err)
 		}
 
 		// Check if the recipient address is blocked by the bank module.
@@ -67,7 +67,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, signer
 	// This preserves the complete settlement history for future reference.
 	sk := collections.Join(keyStr, transfer.LedgerEntryCorrelationId)
 	if err := k.FundTransfersWithSettlement.Set(ctx, sk, *existingSettlements); err != nil {
-		return types.NewErrCodeInternal("failed to store transfer")
+		return err
 	}
 
 	// Emit an event to notify other modules of the completed transfer.
