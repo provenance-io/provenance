@@ -8,6 +8,7 @@ import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
 import "provenance/metadata/v1/objectstore.proto";
+import "cosmos/query/v1/query.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -18,7 +19,8 @@ option java_multiple_files = true;
 service Query {
   // Params queries the parameters of x/metadata module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/params";
   }
 
   // ---- Primary Data Queries -----
@@ -42,7 +44,8 @@ service Query {
   // By default, sessions and records are not included.
   // Set include_sessions and/or include_records to true to include sessions and/or records.
   rpc Scope(ScopeRequest) returns (ScopeResponse) {
-    option (google.api.http) = {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http)                   = {
       get: "/provenance/metadata/v1/scope/{scope_id}"
       additional_bindings: {get: "/provenance/metadata/v1/session/{session_addr}/scope"}
       additional_bindings: {get: "/provenance/metadata/v1/record/{record_addr}/scope"}
@@ -51,7 +54,8 @@ service Query {
 
   // ScopesAll retrieves all scopes.
   rpc ScopesAll(ScopesAllRequest) returns (ScopesAllResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scopes/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/scopes/all";
   }
 
   // Sessions searches for sessions.
@@ -82,7 +86,8 @@ service Query {
   // By default, the scope and records are not included.
   // Set include_scope and/or include_records to true to include the scope and/or records.
   rpc Sessions(SessionsRequest) returns (SessionsResponse) {
-    option (google.api.http) = {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http)                   = {
       get: "/provenance/metadata/v1/session/{session_id}"
       additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/sessions"}
       additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}"}
@@ -93,7 +98,8 @@ service Query {
 
   // SessionsAll retrieves all sessions.
   rpc SessionsAll(SessionsAllRequest) returns (SessionsAllResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/sessions/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/sessions/all";
   }
 
   // Records searches for records.
@@ -119,7 +125,8 @@ service Query {
   // By default, the scope and sessions are not included.
   // Set include_scope and/or include_sessions to true to include the scope and/or sessions.
   rpc Records(RecordsRequest) returns (RecordsResponse) {
-    option (google.api.http) = {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http)                   = {
       get: "/provenance/metadata/v1/record/{record_addr}"
       additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/records"}
       additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/record/{name}"}
@@ -132,17 +139,20 @@ service Query {
 
   // RecordsAll retrieves all records.
   rpc RecordsAll(RecordsAllRequest) returns (RecordsAllResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/records/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/records/all";
   }
 
   // Ownership returns the scope identifiers that have the given address in the owners list.
   rpc Ownership(OwnershipRequest) returns (OwnershipResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/ownership/{address}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/ownership/{address}";
   }
 
   // ValueOwnership returns the scope identifiers that list the given address as the value owner.
   rpc ValueOwnership(ValueOwnershipRequest) returns (ValueOwnershipResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/valueownership/{address}";
   }
 
   // ---- Specification Queries -----
@@ -155,12 +165,14 @@ service Query {
   // By default, the contract and record specifications are not included.
   // Set include_contract_specs and/or include_record_specs to true to include contract and/or record specifications.
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/scopespec/{specification_id}";
   }
 
   // ScopeSpecificationsAll retrieves all scope specifications.
   rpc ScopeSpecificationsAll(ScopeSpecificationsAllRequest) returns (ScopeSpecificationsAllResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scopespecs/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/scopespecs/all";
   }
 
   // ContractSpecification returns a contract specification for the given specification id.
@@ -173,12 +185,14 @@ service Query {
   // By default, the record specifications for this contract specification are not included.
   // Set include_record_specs to true to include them in the result.
   rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/contractspec/{specification_id}";
   }
 
   // ContractSpecificationsAll retrieves all contract specifications.
   rpc ContractSpecificationsAll(ContractSpecificationsAllRequest) returns (ContractSpecificationsAllResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/contractspecs/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/contractspecs/all";
   }
 
   // RecordSpecificationsForContractSpecification returns the record specifications for the given input.
@@ -189,12 +203,14 @@ service Query {
   // address, then the contract specification that contains that record specification is used.
   rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest)
       returns (RecordSpecificationsForContractSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_id}/recordspecs";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/contractspec/{specification_id}/recordspecs";
   }
 
   // RecordSpecification returns a record specification for the given input.
   rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
-    option (google.api.http) = {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http)                   = {
       get: "/provenance/metadata/v1/recordspec/{specification_id}"
       additional_bindings: {get: "/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}"}
     };
@@ -202,50 +218,59 @@ service Query {
 
   // RecordSpecificationsAll retrieves all record specifications.
   rpc RecordSpecificationsAll(RecordSpecificationsAllRequest) returns (RecordSpecificationsAllResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/recordspecs/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/recordspecs/all";
   }
 
   // GetByAddr retrieves metadata given any address(es).
   rpc GetByAddr(GetByAddrRequest) returns (GetByAddrResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/addr/{addrs}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/addr/{addrs}";
   }
 
   // ---- Object Store Locator Queries -----
 
   // OSLocatorParams returns all parameters for the object store locator sub module.
   rpc OSLocatorParams(OSLocatorParamsRequest) returns (OSLocatorParamsResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/locator/params";
   }
 
   // OSLocator returns an ObjectStoreLocator by its owner's address.
   rpc OSLocator(OSLocatorRequest) returns (OSLocatorResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/{owner}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/locator/{owner}";
   }
 
   // OSLocatorsByURI returns all ObjectStoreLocator entries for a locator uri.
   rpc OSLocatorsByURI(OSLocatorsByURIRequest) returns (OSLocatorsByURIResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/uri/{uri}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/locator/uri/{uri}";
   }
 
   // OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope.
   rpc OSLocatorsByScope(OSLocatorsByScopeRequest) returns (OSLocatorsByScopeResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/scope/{scope_id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/locator/scope/{scope_id}";
   }
 
   // OSAllLocators returns all ObjectStoreLocator entries.
   rpc OSAllLocators(OSAllLocatorsRequest) returns (OSAllLocatorsResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locators/all";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/locators/all";
   }
 
   // AccountData gets the account data associated with a metadata address.
   // Currently, only scope ids are supported.
   rpc AccountData(AccountDataRequest) returns (AccountDataResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/accountdata/{metadata_addr}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/accountdata/{metadata_addr}";
   }
 
   // ScopeNetAssetValues returns net asset values for scope
   rpc ScopeNetAssetValues(QueryScopeNetAssetValuesRequest) returns (QueryScopeNetAssetValuesResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/netassetvalues/{id}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/metadata/v1/netassetvalues/{id}";
   }
 }
 
