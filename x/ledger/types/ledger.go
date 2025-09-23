@@ -13,14 +13,15 @@ import (
 )
 
 const (
-	MaxLenLedgerClassID = 50
-	MaxLenCorrelationID = 50
-	MaxLenAssetClassID  = registrytypes.MaxLenAssetClassID
-	MaxLenNFTID         = registrytypes.MaxLenNFTID
-	MaxLenCode          = 50
-	MaxLenDescription   = 100
-	MaxLenDenom         = 128
-	MaxLenMemo          = 50
+	MaxLedgerEntrySequence = 99
+	MaxLenLedgerClassID    = 50
+	MaxLenCorrelationID    = 50
+	MaxLenAssetClassID     = registrytypes.MaxLenAssetClassID
+	MaxLenNFTID            = registrytypes.MaxLenNFTID
+	MaxLenCode             = 50
+	MaxLenDescription      = 100
+	MaxLenDenom            = 128
+	MaxLenMemo             = 50
 )
 
 var alNumDashRx = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
@@ -283,8 +284,8 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	// Validate sequence number (should be < 100 as per proto comment)
-	if le.Sequence >= 100 {
-		return NewErrCodeInvalidField("sequence", "must be less than 100")
+	if le.Sequence >= MaxLedgerEntrySequence {
+		return NewErrCodeInvalidField("sequence", fmt.Sprintf("must be less than %d", MaxLedgerEntrySequence))
 	}
 
 	// Validate entry_type_id is positive

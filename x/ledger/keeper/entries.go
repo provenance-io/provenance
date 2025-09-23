@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"maps"
 	"slices"
-	"strings"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -39,51 +39,125 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 		return err
 	}
 
+	// Get all existing entries for this NFT to check for conflicts and manage sequencing.
+	existingEntries, err := k.ListLedgerEntries(ctx, ledgerKey)
+	if err != nil {
+		return err
+	}
+
 	// Calculate the current block time in days since epoch for date validation.
 	blockTimeDays := helper.DaysSinceEpoch(ctx.BlockTime().UTC())
-	// Track in-batch correlation ids to prevent silent overwrites.
-	seen := make(map[string]struct{}, len(entries))
-	for _, le := range entries {
-		// Validate correlation id presence and in-batch uniqueness.
-		if strings.TrimSpace(le.CorrelationId) == "" {
-			return types.NewErrCodeInvalidField("correlation_id", "cannot be empty")
-		}
-		if _, ok := seen[le.CorrelationId]; ok {
-			return types.NewErrCodeAlreadyExists("correlation_id")
-		}
-		seen[le.CorrelationId] = struct{}{}
-
+	for _, newEntry := range entries {
 		// Validate that posted dates are not in the future.
 		// This prevents entries from being posted with future timestamps.
-		if le.PostedDate > blockTimeDays {
+		if newEntry.PostedDate > blockTimeDays {
 			return types.NewErrCodeInvalidField("posted_date", "cannot be in the future")
 		}
 
 		// Validate that the LedgerClassEntryType exists for this ledger class.
 		// This ensures only valid entry types can be used for this ledger.
-		hasLedgerClassEntryType, err := k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.LedgerClassId, le.EntryTypeId))
+		var hasLedgerClassEntryType bool
+		hasLedgerClassEntryType, err = k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.LedgerClassId, newEntry.EntryTypeId))
 		if err != nil {
-			return err
+			return fmt.Errorf("error getting ledger class entry type for ledger class id %q and entry type %d", ledger.LedgerClassId, newEntry.EntryTypeId)
 		}
 		if !hasLedgerClassEntryType {
 			return types.NewErrCodeInvalidField("entry_type_id", "entry type doesn't exist")
 		}
 
-		// Get all existing entries for this NFT to check for conflicts and manage sequencing.
-		// This is needed to include any sequence updates from prior saves in this loop.
-		existingEntries, err := k.ListLedgerEntries(ctx, ledgerKey)
-		if err != nil {
-			return err
-		}
-
 		// Save the individual entry with proper sequencing and conflict resolution.
-		err = k.saveEntry(ctx, ledgerKey, existingEntries, le)
+		existingEntries, err = k.saveNewEntry(ctx, ledgerKey, existingEntries, newEntry)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// saveNewEntry handles the individual entry storage logic with sequence number management
+// and conflict resolution. This function ensures that entries are stored with proper
+// sequencing and that no duplicate correlation IDs exist.
+//
+// This method is only designed for use by the AppendEntries method.
+//
+// Returns an updated list of existing entries.
+// Returns an error if conflicts are detected or if storage fails.
+func (k Keeper) saveNewEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry, newEntry *types.LedgerEntry) ([]*types.LedgerEntry, error) {
+	// Make sure the new entry is valid.
+	if err := newEntry.Validate(); err != nil {
+		return nil, err
+	}
+
+	// Get the string representation of the ledger key for use in key/value store operations.
+	ledgerKeyStr := ledgerKey.String()
+	// Make sure the entry doesn't already exist.
+	newEntryKey := collections.Join(ledgerKeyStr, newEntry.CorrelationId)
+	if found, err := k.LedgerEntries.Has(ctx, newEntryKey); found || err != nil {
+		return nil, types.NewErrCodeAlreadyExists(fmt.Sprintf("ledger entry with correlation id %q", newEntry.CorrelationId))
+	}
+
+	// Find entries with the same effective date for sequence number management.
+	// Entries with the same effective date must have unique sequence numbers.
+	var sameDateEntries []*types.LedgerEntry
+	for _, entry := range entries {
+		if entry.EffectiveDate == newEntry.EffectiveDate {
+			sameDateEntries = append(sameDateEntries, entry)
+		}
+	}
+
+	// If there are entries with the same date, check for sequence number conflicts
+	// and manage the sequencing to maintain proper order.
+	if len(sameDateEntries) > 0 {
+		// Sort entries by sequence number to identify conflicts and gaps.
+		slices.SortFunc(sameDateEntries, func(a, b *types.LedgerEntry) int {
+			if a.Sequence < b.Sequence {
+				return -1
+			}
+			if a.Sequence > b.Sequence {
+				return 1
+			}
+			return 0
+		})
+
+		// Check if the new entry's sequence number conflicts with existing entries.
+		// If a conflict is found, increment the sequence numbers of existing entries.
+		pushNext := false
+		for _, entry := range sameDateEntries {
+			if entry.Sequence == newEntry.Sequence {
+				pushNext = true
+			}
+			if pushNext {
+				// Prevent overflow of allowed range.
+				if entry.Sequence >= types.MaxLedgerEntrySequence {
+					return nil, types.NewErrCodeInvalidField("sequence", "too many same-day entries (100+)")
+				}
+
+				// Update the sequence number of the existing entry to resolve the conflict.
+				entry.Sequence++
+				key := collections.Join(ledgerKeyStr, entry.CorrelationId)
+				if err := k.LedgerEntries.Set(ctx, key, *entry); err != nil {
+					return nil, fmt.Errorf("could not update sequence number of ledger entry with correlation id %q", entry.CorrelationId)
+				}
+			}
+		}
+	}
+
+	// Store the new entry with its correlation ID as the key.
+	err := k.LedgerEntries.Set(ctx, newEntryKey, *newEntry)
+	if err != nil {
+		return nil, fmt.Errorf("could not set ledger entry with correlation id %q", newEntry.CorrelationId)
+	}
+
+	// Emit the ledger entry added event to notify other modules of the new entry.
+	// This allows for proper event handling and external integrations.
+	err = ctx.EventManager().EmitTypedEvent(types.NewEventLedgerEntryAdded(ledgerKey, newEntry.CorrelationId))
+	if err != nil {
+		return nil, err
+	}
+
+	entries = append(entries, newEntry)
+	return entries, nil
 }
 
 // UpdateEntryBalances updates the balance amounts and applied amounts for an existing ledger entry.
@@ -127,101 +201,6 @@ func (k Keeper) UpdateEntryBalances(ctx sdk.Context, ledgerKey *types.LedgerKey,
 	ledgerKeyStr := ledgerKey.String()
 	err = k.LedgerEntries.Set(ctx, collections.Join(ledgerKeyStr, correlationID), *existingEntry)
 	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// saveEntry handles the individual entry storage logic with sequence number management
-// and conflict resolution. This function ensures that entries are stored with proper
-// sequencing and that no duplicate correlation IDs exist.
-//
-// The function implements a sequence number management system:
-// 1. Groups entries by effective date
-// 2. Checks for correlation ID conflicts
-// 3. Manages sequence numbers to maintain proper ordering
-// 4. Handles sequence number conflicts by incrementing existing entries
-//
-// Parameters:
-// - ctx: The SDK context for state operations
-// - ledgerKey: The ledger identifier
-// - entries: Existing entries for conflict checking
-// - le: The new ledger entry to save
-//
-// Returns an error if conflicts are detected or if storage fails.
-func (k Keeper) saveEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry, le *types.LedgerEntry) error {
-	// Find entries with the same effective date for sequence number management.
-	// Entries with the same effective date must have unique sequence numbers.
-	var sameDateEntries []types.LedgerEntry
-	for _, entry := range entries {
-		if entry.EffectiveDate == le.EffectiveDate {
-			sameDateEntries = append(sameDateEntries, *entry)
-		}
-
-		// Check for correlation ID conflicts.
-		// Each entry must have a unique correlation ID across the entire ledger.
-		if entry.CorrelationId == le.CorrelationId {
-			return types.NewErrCodeAlreadyExists("correlation_id")
-		}
-	}
-
-	// Get the string representation of the ledger key for use in key/value store operations.
-	ledgerKeyStr := ledgerKey.String()
-
-	// If there are entries with the same date, check for sequence number conflicts
-	// and manage the sequencing to maintain proper order.
-	if len(sameDateEntries) > 0 {
-		// Sort entries by sequence number to identify conflicts and gaps.
-		slices.SortFunc(sameDateEntries, func(a, b types.LedgerEntry) int {
-			if a.Sequence < b.Sequence {
-				return -1
-			}
-			if a.Sequence > b.Sequence {
-				return 1
-			}
-			return 0
-		})
-
-		// Check if the new entry's sequence number conflicts with existing entries.
-		// If a conflict is found, increment the sequence numbers of existing entries.
-		const maxSeq = uint32(100) - 1
-		if le.Sequence > maxSeq {
-			return types.NewErrCodeInvalidField("sequence", "must be less than 100")
-		}
-		pushNext := false
-		for _, entry := range sameDateEntries {
-			if pushNext || entry.Sequence == le.Sequence {
-				pushNext = true
-
-				// Prevent overflow of allowed range.
-				if entry.Sequence >= maxSeq {
-					return types.NewErrCodeInvalidField("sequence", "too many same-day entries (100+)")
-				}
-
-				// Update the sequence number of the existing entry to resolve the conflict.
-				entry.Sequence++
-				key := collections.Join(ledgerKeyStr, entry.CorrelationId)
-				if err := k.LedgerEntries.Set(ctx, key, entry); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	// Store the new entry with its correlation ID as the key.
-	entryKey := collections.Join(ledgerKeyStr, le.CorrelationId)
-	err := k.LedgerEntries.Set(ctx, entryKey, *le)
-	if err != nil {
-		return err
-	}
-
-	// Emit the ledger entry added event to notify other modules of the new entry.
-	// This allows for proper event handling and external integrations.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerEntryAdded(
-		ledgerKey,
-		le.CorrelationId,
-	)); err != nil {
 		return err
 	}
 
