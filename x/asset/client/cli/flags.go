@@ -8,7 +8,6 @@ import (
 const (
 	FlagURI         = "uri"
 	FlagURIHash     = "uri-hash"
-	FlagOwner       = "owner"
 	FlagSymbol      = "symbol"
 	FlagDescription = "description"
 )
@@ -30,18 +29,6 @@ func ReadFlagURI(flagSet *pflag.FlagSet) string {
 func ReadFlagURIHash(flagSet *pflag.FlagSet) string {
 	// GetString only returns an error if the flag wasn't set up on the cmd, but we don't care here.
 	rv, _ := flagSet.GetString(FlagURIHash)
-	return rv
-}
-
-// AddFlagOwner adds the --owner flag to the provided command.
-func AddFlagOwner(cmd *cobra.Command) {
-	cmd.Flags().String(FlagOwner, "", "owner of the asset")
-}
-
-// ReadFlagOwner returns the value provided with the --owner flag.
-func ReadFlagOwner(flagSet *pflag.FlagSet) string {
-	// GetString only returns an error if the flag wasn't set up on the cmd, but we don't care here.
-	rv, _ := flagSet.GetString(FlagOwner)
 	return rv
 }
 

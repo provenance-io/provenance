@@ -66,15 +66,15 @@ func (s *IntegrationTestSuite) TestAssetQueryCommands() {
 			"cli-class-empty",
 			"Empty Class",
 			"",
-			"--symbol=EMPTY",
-			"--description=Class with no assets",
-			"--uri=https://example.com/empty",
-			"--uri-hash=empty-hash",
+			"--symbol", "EMPTY",
+			"--description", "Class with no assets",
+			"--uri", "https://example.com/empty",
+			"--uri-hash", "empty-hash",
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
 			"--yes",
-			"--keyring-backend=test",
+			"--keyring-backend", "test",
 		}
 		testcli.NewTxExecutor(assetcli.GetCmdCreateAssetClass(), args).
 			WithExpErr(false).
@@ -87,15 +87,15 @@ func (s *IntegrationTestSuite) TestAssetQueryCommands() {
 			"cli-class-1",
 			"Test Class",
 			"",
-			"--symbol=TST",
-			"--description=Class with one asset",
-			"--uri=https://example.com/class1",
-			"--uri-hash=class1-hash",
+			"--symbol", "TST",
+			"--description", "Class with one asset",
+			"--uri", "https://example.com/class1",
+			"--uri-hash", "class1-hash",
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
 			"--yes",
-			"--keyring-backend=test",
+			"--keyring-backend", "test",
 		}
 		testcli.NewTxExecutor(assetcli.GetCmdCreateAssetClass(), args).
 			WithExpErr(false).
@@ -106,14 +106,14 @@ func (s *IntegrationTestSuite) TestAssetQueryCommands() {
 			"cli-class-1",
 			"cli-asset-1",
 			"",
-			"--uri=https://example.com/asset1",
-			"--uri-hash=asset1-hash",
+			"--uri", "https://example.com/asset1",
+			"--uri-hash", "asset1-hash",
 			valAddr,
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
 			"--yes",
-			"--keyring-backend=test",
+			"--keyring-backend", "test",
 		}
 		testcli.NewTxExecutor(assetcli.GetCmdCreateAsset(), args).
 			WithExpErr(false).
@@ -155,12 +155,14 @@ func (s *IntegrationTestSuite) TestAssetQueryCommands() {
 		// Valid: class with asset.
 		out, err := clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssetClass(), []string{"cli-class-1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
 		s.Require().NoError(err)
-		s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), "\"class\":{\"id\":\"cli-class-1\"")
+		outStr := out.String()
+		s.Require().Contains(strings.ReplaceAll(outStr, "\n", ""), "\"asset_class\":{\"id\":\"cli-class-1\"")
 
 		// Valid: class without assets.
 		out, err = clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssetClass(), []string{"cli-class-empty", fmt.Sprintf("--%s=json", flags.FlagOutput)})
 		s.Require().NoError(err)
-		s.Require().Contains(strings.ReplaceAll(out.String(), "\n", ""), "\"class\":{\"id\":\"cli-class-empty\"")
+		outStr = out.String()
+		s.Require().Contains(strings.ReplaceAll(outStr, "\n", ""), "\"asset_class\":{\"id\":\"cli-class-empty\"")
 
 		// Invalid: non-existent class id.
 		_, err = clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdAssetClass(), []string{"does-not-exist", fmt.Sprintf("--%s=json", flags.FlagOutput)})
@@ -194,15 +196,15 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				"test-class-id",
 				"Test Asset Class",
 				"{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"integer\"}}}",
-				"--symbol=TAC",
-				"--description=Test asset class description",
-				"--uri=https://example.com/uri",
-				"--uri-hash=uri-hash-123",
+				"--symbol", "TAC",
+				"--description", "Test asset class description",
+				"--uri", "https://example.com/uri",
+				"--uri-hash", "uri-hash-123",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
 				"--yes",
-				"--keyring-backend=test",
+				"--keyring-backend", "test",
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -225,14 +227,14 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				"test-class-id",
 				"test-asset-id",
 				"{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"integer\"}}}",
-				"--uri=https://example.com/asset-uri",
-				"--uri-hash=asset-uri-hash-123",
+				"--uri", "https://example.com/asset-uri",
+				"--uri-hash", "asset-uri-hash-123",
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
 				"--yes",
-				"--keyring-backend=test",
+				"--keyring-backend", "test",
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -258,7 +260,7 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
 				"--yes",
-				"--keyring-backend=test",
+				"--keyring-backend", "test",
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -285,7 +287,7 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
 				"--yes",
-				"--keyring-backend=test",
+				"--keyring-backend", "test",
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -310,10 +312,9 @@ func (s *IntegrationTestSuite) TestAssetTxCommands() {
 				"100tranche1,200tranche2",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				// fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGasPrices, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 381000000)).String()),
 				"--yes",
-				"--keyring-backend=test",
+				"--keyring-backend", "test",
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},

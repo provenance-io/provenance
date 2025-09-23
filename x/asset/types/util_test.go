@@ -143,19 +143,6 @@ func TestValidateJSONSchema(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name: "valid object schema with wrong type",
-			schema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"age": map[string]interface{}{
-						"type": "integer",
-					},
-				},
-			},
-			data:        []byte(`{"age": "thirty"}`),
-			expectError: true,
-		},
-		{
 			name: "array schema with valid data",
 			schema: map[string]interface{}{
 				"type": "array",
@@ -197,7 +184,7 @@ func TestValidateJSONSchema(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateJSONSchema(tt.schema, tt.data)
+			err := ValidateDataWithJSONSchema(tt.schema, tt.data)
 
 			if tt.expectError {
 				require.Error(t, err)
@@ -213,7 +200,7 @@ func TestNewDefaultMarker(t *testing.T) {
 		name     string
 		denom    sdk.Coin
 		fromAddr string
-		expErr   error
+		expErr   string
 	}{
 		{
 			name:     "valid marker creation",
@@ -224,13 +211,13 @@ func TestNewDefaultMarker(t *testing.T) {
 			name:     "invalid from address",
 			denom:    sdk.NewCoin("testcoin", sdkmath.NewInt(1000000)),
 			fromAddr: "invalid-address",
-			expErr:   NewErrCodeInvalidField("address", "decoding bech32 failed: invalid separator index -1"),
+			expErr:   "invalid address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name:     "invalid denom",
 			denom:    sdk.Coin{Denom: "x", Amount: sdkmath.OneInt()},
 			fromAddr: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-			expErr:   NewErrCodeInvalidField("token.denom", "failed to create marker address from denom: invalid denom: x"),
+			expErr:   "failed to create marker address from denom: invalid denom: x",
 		},
 		{
 			name:     "zero coin amount",
@@ -243,9 +230,9 @@ func TestNewDefaultMarker(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			marker, err := NewDefaultMarker(tc.denom, tc.fromAddr)
 
-			if tc.expErr != nil {
+			if tc.expErr != "" {
 				require.Error(t, err, "NewDefaultMarker error")
-				assert.ErrorIs(t, err, tc.expErr)
+				require.Equal(t, tc.expErr, err.Error())
 				assert.Nil(t, marker, "NewDefaultMarker result")
 			} else {
 				assert.NoError(t, err, "NewDefaultMarker error")
@@ -355,11 +342,11 @@ func TestAnyToJSONSchema_Integration(t *testing.T) {
 
 	// Test validation with valid data
 	validData := []byte(`{"name": "Alice", "age": 25}`)
-	err = ValidateJSONSchema(schema, validData)
+	err = ValidateDataWithJSONSchema(schema, validData)
 	require.NoError(t, err)
 
 	// Test validation with invalid data
 	invalidData := []byte(`{"age": "not a number"}`)
-	err = ValidateJSONSchema(schema, invalidData)
+	err = ValidateDataWithJSONSchema(schema, invalidData)
 	require.Error(t, err)
 }

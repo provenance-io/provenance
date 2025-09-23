@@ -21,11 +21,11 @@ func AnyToString(cdc codec.BinaryCodec, anyMsg *cdctypes.Any) (string, error) {
 
 	var msg proto.Message
 	if err := cdc.UnpackAny(anyMsg, &msg); err != nil {
-		return "", NewErrCodeInvalidField("data", fmt.Sprintf("failed to unpack Any (type_url=%q) as %s: %v", anyMsg.TypeUrl, proto.MessageName(&AssetData{}), err))
+		return "", fmt.Errorf("failed to unpack Any (type_url=%q) as %s: %w", anyMsg.TypeUrl, proto.MessageName(&AssetData{}), err)
 	}
 	ad, ok := msg.(*AssetData)
 	if !ok {
-		return "", NewErrCodeInvalidField("data", fmt.Sprintf("unexpected Any concrete type: got type_url=%q, expected %s", anyMsg.TypeUrl, proto.MessageName(&AssetData{})))
+		return "", fmt.Errorf("unexpected Any concrete type: got type_url=%q, expected %s", anyMsg.TypeUrl, proto.MessageName(&AssetData{}))
 	}
 	return ad.Value, nil
 }
@@ -35,7 +35,7 @@ func StringToAny(str string) (*cdctypes.Any, error) {
 	strMsg := AssetData{Value: str}
 	anyMsg, err := cdctypes.NewAnyWithValue(&strMsg)
 	if err != nil {
-		return nil, NewErrCodeInternal(fmt.Sprintf("failed to create Any from string: %v", err))
+		return nil, fmt.Errorf("failed to create Any from string: %w", err)
 	}
 	return anyMsg, nil
 }
@@ -57,22 +57,21 @@ func AnyToJSONSchema(cdc codec.BinaryCodec, anyValue *cdctypes.Any) (map[string]
 	return schema, nil
 }
 
-func ValidateJSONSchema(schema map[string]interface{}, data []byte) error {
+func ValidateDataWithJSONSchema(schema map[string]interface{}, data []byte) error {
 	// Decode the JSON instance.
-	var value interface{}
-	if err := json.Unmarshal(data, &value); err != nil {
-		return NewErrCodeInvalidField("data", fmt.Sprintf("invalid JSON data: %v", err))
+	var jsonData interface{}
+	if err := json.Unmarshal(data, &jsonData); err != nil {
+		return fmt.Errorf("data is not valid JSON: %w", err)
 	}
-	return validateAgainstSchema(schema, value)
+	return validateAgainstSchema(schema, jsonData)
 }
 
 // validateAgainstSchema provides a minimal, dependency-free subset of JSON Schema validation
 // sufficient for our use cases/tests:
-// - Supported types: object, array, string, integer
+// - Supported types: object, array, string
 // - Object keywords: properties, required
 // - Array keywords: items
-// - Integer keywords: minimum
-func validateAgainstSchema(schema map[string]interface{}, value interface{}) error {
+func validateAgainstSchema(schema map[string]interface{}, jsonData interface{}) error {
 	if schema == nil {
 		return nil
 	}
@@ -80,20 +79,20 @@ func validateAgainstSchema(schema map[string]interface{}, value interface{}) err
 	schemaType, _ := schema["type"].(string)
 	switch schemaType {
 	case "object":
-		obj, ok := value.(map[string]interface{})
+		obj, ok := jsonData.(map[string]interface{})
 		if !ok {
-			return NewErrCodeInvalidField("schema_validation", "expected object")
+			return fmt.Errorf("invalid object definition")
 		}
 
 		// required
 		if reqVal, exists := schema["required"]; exists {
 			required, err := toStringSlice(reqVal)
 			if err != nil {
-				return NewErrCodeInvalidField("required", err.Error())
+				return fmt.Errorf("invalid required definition: %w", err)
 			}
 			for _, key := range required {
 				if _, present := obj[key]; !present {
-					return NewErrCodeMissingField(key)
+					return fmt.Errorf("required %s cannot be empty", key)
 				}
 			}
 		}
@@ -102,16 +101,16 @@ func validateAgainstSchema(schema map[string]interface{}, value interface{}) err
 		if propsVal, exists := schema["properties"]; exists {
 			props, ok := propsVal.(map[string]interface{})
 			if !ok {
-				return NewErrCodeInvalidField("properties", "invalid properties definition")
+				return fmt.Errorf("invalid properties definition")
 			}
 			for key, sub := range props {
 				subSchema, ok := sub.(map[string]interface{})
 				if !ok {
-					return NewErrCodeInvalidField("property_schema", fmt.Sprintf("invalid schema for property: %s", key))
+					return fmt.Errorf("invalid property %s definition", key)
 				}
 				if val, present := obj[key]; present {
 					if err := validateAgainstSchema(subSchema, val); err != nil {
-						return NewErrCodeInvalidField(fmt.Sprintf("property_%s", key), err.Error())
+						return fmt.Errorf("invalid property %s definition: %w", key, err)
 					}
 				}
 			}
@@ -119,43 +118,26 @@ func validateAgainstSchema(schema map[string]interface{}, value interface{}) err
 		return nil
 
 	case "array":
-		arr, ok := value.([]interface{})
+		arr, ok := jsonData.([]interface{})
 		if !ok {
-			return NewErrCodeInvalidField("schema_validation", "expected array")
+			return fmt.Errorf("invalid array definition")
 		}
 		if itemsVal, exists := schema["items"]; exists {
 			itemSchema, ok := itemsVal.(map[string]interface{})
 			if !ok {
-				return NewErrCodeInvalidField("items", "invalid items definition")
+				return fmt.Errorf("invalid array items definition")
 			}
 			for i, item := range arr {
 				if err := validateAgainstSchema(itemSchema, item); err != nil {
-					return NewErrCodeInvalidField(fmt.Sprintf("item_%d", i), err.Error())
+					return fmt.Errorf("invalid array item definition at index %d: %w", i, err)
 				}
 			}
 		}
 		return nil
 
 	case "string":
-		if _, ok := value.(string); !ok {
-			return NewErrCodeInvalidField("schema_validation", "expected string")
-		}
-		return nil
-
-	case "integer":
-		f, ok := numericToUint64(value)
-		if !ok {
-			return NewErrCodeInvalidField("schema_validation", "expected integer")
-		}
-		// minimum
-		if minVal, ok := schema["minimum"]; ok {
-			minn, ok := numericToUint64(minVal)
-			if !ok {
-				return NewErrCodeInvalidField("minimum", "invalid minimum")
-			}
-			if f < minn {
-				return NewErrCodeInvalidField("value", fmt.Sprintf("value %v is less than minimum %v", f, minn))
-			}
+		if _, ok := jsonData.(string); !ok {
+			return fmt.Errorf("invalid string definition")
 		}
 		return nil
 
@@ -175,46 +157,17 @@ func toStringSlice(v interface{}) ([]string, error) {
 	}
 	arr, ok := v.([]interface{})
 	if !ok {
-		return nil, NewErrCodeInvalidField("string_array", "expected array of strings")
+		return nil, fmt.Errorf("string_array: expected array of strings")
 	}
 	out := make([]string, 0, len(arr))
 	for _, it := range arr {
 		s, ok := it.(string)
 		if !ok {
-			return nil, NewErrCodeInvalidField("array_element", "expected string in array")
+			return nil, fmt.Errorf("array_element: expected string in array")
 		}
 		out = append(out, s)
 	}
 	return out, nil
-}
-
-// numericToUint64 safely converts a numeric value to a uint64
-func numericToUint64(v interface{}) (uint64, bool) {
-	switch n := v.(type) {
-	case uint64:
-		return n, true
-	case int:
-		if n < 0 {
-			return 0, false
-		}
-		return uint64(n), true
-	case int32:
-		if n < 0 {
-			return 0, false
-		}
-		return uint64(n), true
-	case int64:
-		if n < 0 {
-			return 0, false
-		}
-		return uint64(n), true
-	case uint:
-		return uint64(n), true
-	case uint32:
-		return uint64(n), true
-	default:
-		return 0, false
-	}
 }
 
 // NewDefaultMarker creates a new default marker account for a given token and address
@@ -222,13 +175,13 @@ func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, 
 	// Get the signer address
 	signerAcc, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
-		return nil, NewErrCodeInvalidField("address", err.Error())
+		return nil, fmt.Errorf("invalid address: %w", err)
 	}
 
 	// Get the address of the new marker.
 	markerAddr, err := markertypes.MarkerAddress(token.Denom)
 	if err != nil {
-		return nil, NewErrCodeInvalidField("token.denom", fmt.Sprintf("failed to create marker address from denom: %v", err))
+		return nil, fmt.Errorf("failed to create marker address from denom: %w", err)
 	}
 
 	// Create a new marker account
@@ -257,43 +210,4 @@ func NewDefaultMarker(token sdk.Coin, addr string) (*markertypes.MarkerAccount, 
 	)
 
 	return marker, nil
-}
-
-func validateJSON(data string) error {
-	if data == "" {
-		return nil // Empty data is valid
-	}
-
-	var jsonData any
-	if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
-		return NewErrCodeInvalidField("data", fmt.Sprintf("invalid JSON data: %v", err))
-	}
-
-	return nil
-}
-
-// validateJSONSchema validates that the provided string is a well-formed JSON schema
-func validateJSONSchema(data string) error {
-	if data == "" {
-		return nil // Empty data is valid
-	}
-
-	// Try to parse the data as JSON
-	var jsonData any
-	if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
-		return NewErrCodeInvalidField("data", fmt.Sprintf("invalid JSON data: %v", err))
-	}
-
-	// Check if it's a JSON schema by looking for required schema properties
-	schemaMap, ok := jsonData.(map[string]any)
-	if !ok {
-		return NewErrCodeInvalidField("data", "data is not a JSON object")
-	}
-
-	// Check for type property which is required in JSON schemas
-	if _, hasType := schemaMap["type"]; !hasType {
-		return NewErrCodeMissingField("type")
-	}
-
-	return nil
 }
