@@ -236,7 +236,6 @@ func (s RecordSpecification) ValidateBasic() error {
 	if s.ResultType == DefinitionType_DEFINITION_TYPE_UNSPECIFIED {
 		return errors.New("record specification result type cannot be unspecified")
 	}
-
 	return nil
 }
 
@@ -347,6 +346,37 @@ func (x PartyType) IsValid() bool {
 
 func (x PartyType) SimpleString() string {
 	return strings.TrimPrefix(x.String(), "PARTY_TYPE_")
+}
+
+func (x PartyType) IsGenericPartyType() bool {
+	switch x {
+	case PartyType_PARTY_TYPE_GENERIC_1,
+		PartyType_PARTY_TYPE_GENERIC_2,
+		PartyType_PARTY_TYPE_GENERIC_3,
+		PartyType_PARTY_TYPE_GENERIC_4,
+		PartyType_PARTY_TYPE_GENERIC_5,
+		PartyType_PARTY_TYPE_GENERIC_6:
+		return true
+	default:
+		return false
+	}
+}
+
+// ValidateGenericPartyTypeUsage validates the generic party types.
+func ValidateGenericPartyTypeUsage(partyTypes []PartyType, description *Description) error {
+	hasGeneric := false
+	for _, pt := range partyTypes {
+		if pt.IsGenericPartyType() {
+			hasGeneric = true
+			break
+		}
+	}
+	if hasGeneric {
+		if description == nil || len(strings.TrimSpace(description.Description)) == 0 {
+			return fmt.Errorf("when using generic party types, a description is required")
+		}
+	}
+	return nil
 }
 
 // validateURLBasic - Helper function to check if a url string is superficially valid.

@@ -560,6 +560,10 @@ func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 	if err := msg.ConvertOptionalFields(); err != nil {
 		return err
 	}
+	if err := ValidateGenericPartyTypeUsage(msg.Specification.PartiesInvolved, msg.Specification.Description); err != nil {
+		return err
+	}
+
 	return msg.Specification.ValidateBasic()
 }
 
@@ -629,6 +633,10 @@ func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 	if err := msg.ConvertOptionalFields(); err != nil {
 		return err
 	}
+	if err := ValidateGenericPartyTypeUsage(msg.Specification.PartiesInvolved, msg.Specification.Description); err != nil {
+		return err
+	}
+
 	return msg.Specification.ValidateBasic()
 }
 

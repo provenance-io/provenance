@@ -25,11 +25,12 @@ jobs:
       PR_TARGET: ${{ github.event.pull_request.base.ref }}
     steps:
       - name: Checkout PR Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
+          ref: ${{ github.head_ref }}
 
       - name: Fetch Target Branch
         run: git fetch origin "${PR_TARGET}:${PR_TARGET}" --depth 1
@@ -56,7 +57,7 @@ jobs:
 
       # This step is required for committing the changes to your branch.
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_user_name: "Provenance-io Bot"
           commit_user_email: "129784868+provenanceio-bot@users.noreply.github.com"

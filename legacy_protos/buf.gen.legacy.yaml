@@ -1,5 +1,0 @@
-version: v1
-plugins:
-  - name: gogofaster
-    out: legacy_protos
-    opt: paths=source_relative
