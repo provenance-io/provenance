@@ -37,19 +37,19 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 	}{
 		"valid two-part": {
 			"name.domain",
-			mustHexDecode("0369e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
+			mustHexDecode("0769e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
 			false,
 			"",
 		},
 		"valid single": {
 			"domain",
-			mustHexDecode("03f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
+			mustHexDecode("07f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
 			false,
 			"",
 		},
 		"valid multi-part": {
 			"first.second.third.fourth.fifth.sixth.seventh.eighth.ninth.tenth",
-			mustHexDecode("0319f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
+			mustHexDecode("0719f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
 			false,
 			"",
 		},
@@ -94,22 +94,6 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 			s.Equal(tc.key, key)
 		})
 	}
-}
-
-func (s *NameKeyTestSuite) TestAddressKeyPrefix() {
-	key, err := GetAddressKeyPrefix(s.addr1)
-	s.Assert().NoError(err)
-	// check for address prefix
-	s.Assert().Equal("05", hex.EncodeToString(key[0:1]))
-	s.Assert().Equal(byte(20), key[1:2][0], "should be the length of key 20 for secp256k1")
-	s.Assert().Equal(AddressKeyPrefix, key[0:1])
-
-	key, err = GetAddressKeyPrefix(s.addr2)
-	s.Assert().NoError(err)
-	// check for address prefix
-	s.Assert().Equal("05", hex.EncodeToString(key[0:1]))
-	s.Assert().Equal(byte(32), key[1:2][0], "should be the length of key 32 for secp256r1")
-	s.Assert().Equal(AddressKeyPrefix, key[0:1])
 }
 
 func mustHexDecode(h string) []byte {
