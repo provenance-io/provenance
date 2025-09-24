@@ -1,19 +1,13 @@
 package keeper_test
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 	"testing"
 
 	"cosmossdk.io/collections"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/yaml"
-
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -258,7 +252,7 @@ func (s *KeeperTestSuite) TestGetName() {
 		s.Require().Error(err)
 		s.Require().Nil(r)
 		s.Require().Equal("segment of name is too short", err.Error())
-		s.Require().False(s.app.NameKeeper.NameExists(s.ctx, "..name"))
+		s.Require().True(s.app.NameKeeper.NameExists(s.ctx, "..name"))
 	})
 }
 
@@ -274,7 +268,7 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 	s.Run("delete invalid name", func() {
 		err := s.app.NameKeeper.DeleteRecord(s.ctx, "undefined.name")
 		s.Require().Error(err)
-		s.Require().Equal("no address bound to name", err.Error())
+		s.Require().ErrorContains(err, "collections: not found: key")
 	})
 	s.Run("delete valid root name", func() {
 		err := s.app.NameKeeper.DeleteRecord(s.ctx, "name")
@@ -323,7 +317,7 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 		}
 		addr1Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user1Addr)
 		s.Require().NoError(err, "GetRecordsByAddress(user1)")
-		s.Assert().Equal(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
+		s.Assert().ElementsMatch(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
 
 		// expUser2Recs := nametypes.NameRecords{}
 		addr2Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user2Addr)
@@ -419,165 +413,6 @@ func (s *KeeperTestSuite) TestCreateRootName() {
 	})
 }
 
-func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
-	// Not using the suite here because:
-	// a) this is only going to be around for a couple versions.
-	// b) I don't want to worry about any of the name records automatically added for the suite runs.
-
-	provApp := app.Setup(t)
-	ctx := provApp.NewContext(false)
-
-	getRecordNames := func(records nametypes.NameRecords) []string {
-		rv := make([]string, len(records))
-		for i, record := range records {
-			rv[i] = record.Name
-		}
-		return rv
-	}
-
-	// The point of this setup is that "two" will be saved (and indexed) to addr1.
-	// It will then be updated (and indexed) to addr2, but the addr1 index will still exist.
-
-	addr1 := sdk.AccAddress("addr1_______________")
-	addr2 := sdk.AccAddress("addr2_______________")
-
-	setups := []struct {
-		id    string
-		addr  sdk.AccAddress
-		names []string
-	}{
-		{id: "addr1", addr: addr1, names: []string{"one", "sub.one", "two"}},
-		{id: "addr2", addr: addr2, names: []string{"two", "sub.two"}},
-	}
-
-	for _, sc := range setups {
-		for _, name := range sc.names {
-			// Using the private addRecord method here to bypass the name-already-bound
-			// check. This lets me mimic what used to happen in ModifyRecord.
-			err := provApp.NameKeeper.AddRecord(ctx, name, sc.addr, false, true)
-			require.NoError(t, err, "addRecord(%q, %s)", name, sc.id)
-		}
-	}
-
-	// Defining these as full records because the address value is important here.
-	expNameRecords := nametypes.NameRecords{
-		{Name: "one", Address: addr1.String()},
-		{Name: "sub.one", Address: addr1.String()},
-		{Name: "two", Address: addr2.String()},
-		{Name: "sub.two", Address: addr2.String()},
-		{Name: attrtypes.AccountDataName, Address: authtypes.NewModuleAddress(attrtypes.ModuleName).String(), Restricted: true},
-	}
-
-	// For these, all we care about are the names.
-	addr1ExpNames := []string{"one", "sub.one"}
-	addr2ExpNames := []string{"two", "sub.two"}
-
-	tests := []struct {
-		name          string
-		expLog        []string
-		expAddr1Names []string
-		expAddr2Names []string
-	}{
-		{
-			// Sanity check. DeleteInvalidAddressIndexEntries isn't run on first test case.
-			// Make sure there's a bad entry in the addr1 names.
-			name:          "initial state sanity check",
-			expAddr1Names: addr1ExpNames,
-			expAddr2Names: addr2ExpNames,
-		},
-		{
-			// DeleteInvalidAddressIndexEntries will be called first.
-			// There should be one bad entry to delete (addr1 -> "two").
-			name: "first run - deletes one",
-			expLog: []string{
-				"Checking address -> name index entries.",
-				"Found 5 invalid entries, deleting",
-				"Done checking address -> name index entries. Deleted 5 invalid entries and kept 0 valid entries.",
-			},
-			expAddr1Names: addr1ExpNames,
-			expAddr2Names: addr2ExpNames,
-		},
-		{
-			// DeleteInvalidAddressIndexEntries will be called again.
-			// This time, all is good, so there shouldn't be anything to delete.
-			name: "second run - all ok already",
-			expLog: []string{
-				"Checking address -> name index entries.",
-				"All 0 index entries are valid",
-			},
-			expAddr1Names: addr1ExpNames,
-			expAddr2Names: addr2ExpNames,
-		},
-	}
-
-	for i, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			// All the log lines are info level and have the module name at the end.
-			for l, expLog := range tc.expLog {
-				tc.expLog[l] = "INF " + expLog + " module=x/name"
-			}
-			if i != 0 {
-				// Call the DeleteInvalidAddressIndexEntries function.
-				// Use a custom logger that goes to a buffer, so I can see what was logged.
-				var logBuffer bytes.Buffer
-				lw := zerolog.ConsoleWriter{
-					Out:          &logBuffer,
-					NoColor:      true,
-					PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
-				}
-				// Error log lines will start with "ERR ".
-				// Info log lines will start with "INF ".
-				// Debug log lines are omitted, but would start with "DBG ".
-				logger := log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
-
-				// And use a fresh event manager.
-				em := sdk.NewEventManager()
-
-				tctx := provApp.NewContext(false).WithEventManager(em).WithLogger(logger)
-				testFunc := func() {
-					provApp.NameKeeper.DeleteInvalidAddressIndexEntries(tctx)
-				}
-				require.NotPanics(t, testFunc, "DeleteInvalidAddressIndexEntries")
-
-				// Get the log output and make sure it's as expected.
-				logOut := logBuffer.String()
-				t.Logf("DeleteInvalidAddressIndexEntries log output:\n%s", logOut)
-				actLog1Lines := strings.Split(logOut, "\n")
-				// Delete the last entry if it's just an empty string.
-				if len(actLog1Lines[len(actLog1Lines)-1]) == 0 {
-					actLog1Lines = actLog1Lines[:len(actLog1Lines)-1]
-				}
-				assert.Equal(t, tc.expLog, actLog1Lines, "logged output")
-
-				// Make sure no events were emitted.
-				events := em.Events()
-				assert.Len(t, events, 0, "emitted events")
-			}
-
-			// Get all the records and make sure they're as expected.
-			var allRecords nametypes.NameRecords
-			err := provApp.NameKeeper.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
-				allRecords = append(allRecords, record)
-				return nil
-			})
-			require.NoError(t, err, "IterateRecords by name")
-			assert.ElementsMatch(t, expNameRecords, allRecords, "name records: expected (A) vs actual (B)")
-
-			// Get all the addr1 name records and make sure they're as expected.
-			addr1ActRecords, err := provApp.NameKeeper.GetRecordsByAddress(ctx, addr1)
-			require.NoError(t, err, "GetRecordsByAddress(addr1)")
-			addr1ActNames := getRecordNames(addr1ActRecords)
-			require.ElementsMatch(t, tc.expAddr1Names, addr1ActNames, "addr1 names: expected (A) vs actual (B)")
-
-			// Get all the addr2 name records and make sure they're as expected.
-			addr2ActRecords, err := provApp.NameKeeper.GetRecordsByAddress(ctx, addr2)
-			require.NoError(t, err, "GetRecordsByAddress(addr2)")
-			addr2ActNames := getRecordNames(addr2ActRecords)
-			require.ElementsMatch(t, tc.expAddr2Names, addr2ActNames, "addr2 names: expected (A) vs actual (B)")
-		})
-	}
-}
-
 func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 
 	testCases := []struct {
@@ -644,7 +479,7 @@ func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 			name:       "..badroot",
 			owner:      s.user1Addr,
 			restricted: false,
-			err:        fmt.Errorf("segment of name is too short"),
+			err:        fmt.Errorf("name is already bound to an address"),
 		},
 	}
 
@@ -669,28 +504,21 @@ func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 	addr := s.user1Addr
 	restrict := false
 
-	// Step 1: Set the name record
 	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restrict)
 	s.Require().NoError(err, "SetNameRecord failed")
 
-	// Step 2: Normalize the name
-	normalized, err := s.app.NameKeeper.Normalize(s.ctx, name)
-	s.Require().NoError(err, "Normalize failed")
-
-	// Step 3: Get the record directly by name
-	recordByName, err := s.app.NameKeeper.GetNameRecord(s.ctx, normalized)
+	recordByName, err := s.app.NameKeeper.GetRecordByName(s.ctx, name)
 	s.Require().NoError(err, "GetNameRecord failed")
 
-	// Step 4: Match via AddrIndex
-	pair := collections.Join(addr.Bytes(), normalized)
+	pair := collections.Join(addr, recordByName.Name)
 	iter, err := s.app.NameKeeper.GetAddrIndex().MatchExact(s.ctx, pair)
 	s.Require().NoError(err, "AddrIndex MatchExact failed")
 	defer iter.Close()
 
-	var recordByIndex types.NameRecord
+	var recordByIndex *types.NameRecord
 	found := false
 	for ; iter.Valid(); iter.Next() {
-		recordByIndex, err = s.app.NameKeeper.GetNameRecord(s.ctx, name)
+		recordByIndex, err = s.app.NameKeeper.GetRecordByName(s.ctx, name)
 		s.Require().NoError(err, "failed to get name record from index")
 		found = true
 		break

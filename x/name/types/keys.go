@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/collections/indexes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -27,17 +26,16 @@ const (
 
 var (
 	// NameKeyPrefix is a prefix added to keys for adding/querying names.
-	NameKeyPrefix = []byte{0x03}
+	NameKeyPrefix = collections.NewPrefix(0x07)
 	// AddressKeyPrefix is a prefix added to keys for indexing name records by address.
-	AddressKeyPrefix = []byte{0x05}
+	AddressKeyPrefix = collections.NewPrefix(0x08)
 	// NameParamStoreKey key for marker module's params
-	NameParamStoreKey = []byte{0x06}
+	NameParamStoreKey = collections.NewPrefix(0x09)
 )
 
 // NameRecordIndexes defines indexes for name records
 type NameRecordIndexes struct {
-	// AddrIndex maps (address, name) -> empty
-	AddrIndex *indexes.Multi[collections.Pair[[]byte, string], string, NameRecord]
+	AddrIndex *indexes.Multi[collections.Pair[sdk.AccAddress, string], string, NameRecord]
 }
 
 // IndexesList implements collections.Indexes
@@ -109,35 +107,8 @@ func (c HashedStringKeyCodec) ComputeHash(name string) []byte {
 	return hsh.Sum(nil)
 }
 
-// GetNameKeyBytes returns the name key in the same format as before (0x03 + sha256(name))
-func GetNameKeyBytes(name string) ([]byte, error) {
-	hash, err := computeNameHash(name)
-	if err != nil {
-		return nil, err
-	}
-	return append(append([]byte{}, NameKeyPrefix...), hash...), nil
-}
-
-func GetAddressKeyPrefix(addr sdk.AccAddress) ([]byte, error) {
-	if err := sdk.VerifyAddressFormat(addr); err != nil {
-		return nil, err
-	}
-	key := append([]byte{}, AddressKeyPrefix...)
-	key = append(key, address.MustLengthPrefix(addr)...)
-	return key, nil
-}
-
-// GetAddressKeyBytes returns the full address key
-func GetAddressKeyBytes(addr sdk.AccAddress, nameKey []byte) ([]byte, error) {
-	prefix, err := GetAddressKeyPrefix(addr)
-	if err != nil {
-		return nil, err
-	}
-	return append(prefix, nameKey...), nil
-}
-
-// computeNameHash replicates the exact hashing logic from the old system
-func computeNameHash(name string) ([]byte, error) {
+// ComputeNameHash computes hash for a name (exported for migration)
+func ComputeNameHash(name string) ([]byte, error) {
 	comps := strings.Split(name, ".")
 	hsh := sha256.New()
 	for i := len(comps) - 1; i >= 0; i-- {
@@ -155,4 +126,13 @@ func computeNameHash(name string) ([]byte, error) {
 // ValidateAddress validates an account address
 func ValidateAddress(addr sdk.AccAddress) error {
 	return sdk.VerifyAddressFormat(addr)
+}
+
+// GetNameKeyBytes returns the name key in the same format as before (0x03 + sha256(name))
+func GetNameKeyBytes(name string) ([]byte, error) {
+	hash, err := ComputeNameHash(name)
+	if err != nil {
+		return nil, err
+	}
+	return append(append([]byte{}, NameKeyPrefix...), hash...), nil
 }
