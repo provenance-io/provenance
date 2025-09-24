@@ -84,6 +84,7 @@ message Ledger {
   int32 next_pmt_date = 4 [(gogoproto.jsontag) = "nextPmtDate,omitempty"];
 
   // The next payment amount.
+  // The units of this field are defined by the denom field in this ledger's class.
   string next_pmt_amt = 5 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -148,6 +149,7 @@ message LedgerEntry {
   int32 effective_date = 8 [(gogoproto.jsontag) = "effectiveDate,omitempty"];
 
   // The total amount of the ledger entry.
+  // The units of this field are defined by the denom field in this ledger's class.
   string total_amt = 9 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -169,6 +171,7 @@ message LedgerBucketAmount {
   int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
 
   // The amount applied to the bucket.
+  // The units of this field are defined by the denom field in this ledger's class.
   string applied_amt = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -183,6 +186,7 @@ message BucketBalance {
   int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
 
   // The balance of the bucket.
+  // The units of this field are defined by the denom field in this ledger's class.
   string balance_amt = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",

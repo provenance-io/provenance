@@ -349,7 +349,8 @@ type MsgUpdatePaymentRequest struct {
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	// The signer that is updating the payment
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
-	// The new next payment amount of the ledger
+	// The new next payment amount of the ledger.
+	// The units of this field are defined by the denom field in this ledger's class.
 	NextPmtAmt cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=next_pmt_amt,json=nextPmtAmt,proto3,customtype=cosmossdk.io/math.Int" json:"nextPmtAmt,omitempty"`
 	// The new next payment date in days since epoch
 	NextPmtDate int32 `protobuf:"varint,4,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"next_pmt_date,omitempty"`

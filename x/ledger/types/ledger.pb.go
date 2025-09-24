@@ -446,6 +446,7 @@ type Ledger struct {
 	// The next payment date (days since epoch).
 	NextPmtDate int32 `protobuf:"varint,4,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"nextPmtDate,omitempty"`
 	// The next payment amount.
+	// The units of this field are defined by the denom field in this ledger's class.
 	NextPmtAmt cosmossdk_io_math.Int `protobuf:"bytes,5,opt,name=next_pmt_amt,json=nextPmtAmt,proto3,customtype=cosmossdk.io/math.Int" json:"nextPmtAmt,omitempty"`
 	// The interest rate. Min = 0, Max = 100,000,000 = 100%, e.g. 4,321,987 = 4.321987%.
 	InterestRate int32 `protobuf:"varint,6,opt,name=interest_rate,json=interestRate,proto3" json:"interestRate,omitempty"`
@@ -638,6 +639,7 @@ type LedgerEntry struct {
 	// The effective date (days since epoch).
 	EffectiveDate int32 `protobuf:"varint,8,opt,name=effective_date,json=effectiveDate,proto3" json:"effectiveDate,omitempty"`
 	// The total amount of the ledger entry.
+	// The units of this field are defined by the denom field in this ledger's class.
 	TotalAmt cosmossdk_io_math.Int `protobuf:"bytes,9,opt,name=total_amt,json=totalAmt,proto3,customtype=cosmossdk.io/math.Int" json:"totalAmt,omitempty"`
 	// The applied amounts for each bucket.
 	AppliedAmounts []*LedgerBucketAmount `protobuf:"bytes,10,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"appliedAmounts,omitempty"`
@@ -747,6 +749,7 @@ type LedgerBucketAmount struct {
 	// The bucket type specified by the LedgerClassBucketType.id.
 	BucketTypeId int32 `protobuf:"varint,1,opt,name=bucket_type_id,json=bucketTypeId,proto3" json:"bucketTypeId,omitempty"`
 	// The amount applied to the bucket.
+	// The units of this field are defined by the denom field in this ledger's class.
 	AppliedAmt cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=applied_amt,json=appliedAmt,proto3,customtype=cosmossdk.io/math.Int" json:"appliedAmt,omitempty"`
 }
 
@@ -795,6 +798,7 @@ type BucketBalance struct {
 	// The bucket type specified by the LedgerClassBucketType.id.
 	BucketTypeId int32 `protobuf:"varint,1,opt,name=bucket_type_id,json=bucketTypeId,proto3" json:"bucketTypeId,omitempty"`
 	// The balance of the bucket.
+	// The units of this field are defined by the denom field in this ledger's class.
 	BalanceAmt cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=balance_amt,json=balanceAmt,proto3,customtype=cosmossdk.io/math.Int" json:"balanceAmt,omitempty"`
 }
 

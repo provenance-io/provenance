@@ -122,7 +122,8 @@ message MsgUpdatePaymentRequest {
   // The signer that is updating the payment
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // The new next payment amount of the ledger
+  // The new next payment amount of the ledger.
+  // The units of this field are defined by the denom field in this ledger's class.
   string next_pmt_amt = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
