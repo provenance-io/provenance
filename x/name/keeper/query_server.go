@@ -29,7 +29,7 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 	}
 	record, err := k.nameRecords.Get(ctx, name)
 	if err != nil {
-		return nil, types.ErrNameNotBound
+		return nil, err
 	}
 	return &types.QueryResolveResponse{Address: record.Address, Restricted: record.Restricted}, nil
 }

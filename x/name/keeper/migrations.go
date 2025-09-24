@@ -15,6 +15,13 @@ type Migrator struct {
 	keeper Keeper
 }
 
+// Legacy prefixes - OLD values moved here for migration
+var (
+	LegacyNameKeyPrefix     = []byte{0x03}
+	LegacyAddressKeyPrefix  = []byte{0x05}
+	LegacyNameParamStoreKey = []byte{0x06}
+)
+
 // NewMigrator returns a new Migrator.
 func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
@@ -27,60 +34,43 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	ctx.Logger().Info("Phase 1: Collecting existing name records...")
-	var recordsToMigrate []struct {
-		name   string
-		record types.NameRecord
-	}
-
-	// Iterate over name records.
-	namePrefix := types.NameKeyPrefix
-	iter, err := store.Iterator(namePrefix, storetypes.PrefixEndBytes(namePrefix))
+	// Step 1: Load legacy records
+	legacyIter, err := store.Iterator(LegacyNameKeyPrefix, storetypes.PrefixEndBytes(LegacyNameKeyPrefix))
 	if err != nil {
-		return fmt.Errorf("failed to create name records iterator: %w", err)
+		return fmt.Errorf("failed to create legacy iterator: %w", err)
 	}
-	defer iter.Close()
+	defer legacyIter.Close()
 
-	for ; iter.Valid(); iter.Next() {
-		key := iter.Key()
-		value := iter.Value()
-
-		if len(key) <= len(namePrefix) {
-			continue
-		}
+	var recordsToMigrate []types.NameRecord
+	for ; legacyIter.Valid(); legacyIter.Next() {
 		var record types.NameRecord
-		if err := m.keeper.cdc.Unmarshal(value, &record); err != nil {
-			ctx.Logger().Error("failed to unmarshal name record during migration",
-				"key", fmt.Sprintf("%x", key), "error", err)
-			continue
+		if err := m.keeper.cdc.Unmarshal(legacyIter.Value(), &record); err != nil {
+			continue // skip bad records silently
 		}
-
-		if record.Name == "" {
-			ctx.Logger().Error("name record has empty name field",
-				"key", fmt.Sprintf("%x", key))
-			continue
-		}
-		recordsToMigrate = append(recordsToMigrate, struct {
-			name   string
-			record types.NameRecord
-		}{
-			name:   record.Name,
-			record: record,
-		})
+		recordsToMigrate = append(recordsToMigrate, record)
 	}
 
-	ctx.Logger().Info(fmt.Sprintf("Found %d name records to migrate", len(recordsToMigrate)))
-
-	ctx.Logger().Info("Phase 2: Migrating records to collections...")
-	for _, item := range recordsToMigrate {
-		if err := m.keeper.nameRecords.Set(ctx, item.name, item.record); err != nil {
-			ctx.Logger().Error("failed to set record in nameRecords", "name", item.name, "address", item.record.Address, "error", err)
-			return fmt.Errorf("failed to migrate name record %s: %w", item.name, err)
+	// Step 2: Migrate records to collections
+	for _, record := range recordsToMigrate {
+		if err := m.keeper.nameRecords.Set(ctx, record.Name, record); err != nil {
+			return fmt.Errorf("failed to migrate record %s: %w", record.Name, err)
 		}
 	}
+
+	// Step 3: Migrate params if they exist
+	if exists, _ := store.Has(LegacyNameParamStoreKey); exists {
+		bz, err := store.Get(LegacyNameParamStoreKey)
+		if err == nil {
+			var params types.Params
+			if err := m.keeper.cdc.Unmarshal(bz, &params); err == nil {
+				if err := m.keeper.paramsStore.Set(ctx, params); err != nil {
+					return fmt.Errorf("failed to migrate params: %w", err)
+				}
+			}
+		}
+	}
+
 	ctx.Logger().Info(fmt.Sprintf("Successfully migrated %d name records to collections", len(recordsToMigrate)))
-
 	ctx.Logger().Info("Name module migration to collections (v2 to v3) completed successfully.")
-
 	return nil
 }
