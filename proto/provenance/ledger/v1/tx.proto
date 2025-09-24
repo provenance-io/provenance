@@ -76,13 +76,13 @@ message MsgCreateLedgerResponse {}
 message MsgUpdateStatusRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger key of the ledger whose status is being updated
+  // Ledger key of the ledger whose status is being updated.
   LedgerKey key = 1;
 
-  // The signer that is updating the status
+  // The signer that is updating the status.
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // The new status type id of the ledger
+  // The new status type id of the ledger.
   int32 status_type_id = 3;
 }
 
@@ -93,19 +93,19 @@ message MsgUpdateStatusResponse {}
 message MsgUpdateInterestRateRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger key of the ledger whose interest rate is being updated
+  // Ledger key of the ledger whose interest rate is being updated.
   LedgerKey key = 1;
 
-  // The signer that is updating the interest rate
+  // The signer that is updating the interest rate.
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // The new interest rate of the ledger
+  // The new interest rate of the ledger.
   int32 interest_rate = 3;
 
-  // The new interest day count convention of the ledger
+  // The new interest day count convention of the ledger.
   DayCountConvention interest_day_count_convention = 4;
 
-  // The new interest accrual method of the ledger
+  // The new interest accrual method of the ledger.
   InterestAccrualMethod interest_accrual_method = 5;
 }
 
@@ -116,10 +116,10 @@ message MsgUpdateInterestRateResponse {}
 message MsgUpdatePaymentRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger key of the ledger whose payment is being updated
+  // Ledger key of the ledger whose payment is being updated.
   LedgerKey key = 1;
 
-  // The signer that is updating the payment
+  // The signer that is updating the payment.
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The new next payment amount of the ledger.
@@ -131,10 +131,10 @@ message MsgUpdatePaymentRequest {
     (gogoproto.jsontag)    = "nextPmtAmt,omitempty"
   ];
 
-  // The new next payment date in days since epoch
+  // The new next payment date in days since epoch.
   int32 next_pmt_date = 4;
 
-  // The new payment frequency of the ledger
+  // The new payment frequency of the ledger.
   PaymentFrequency payment_frequency = 5;
 }
 
@@ -145,13 +145,13 @@ message MsgUpdatePaymentResponse {}
 message MsgUpdateMaturityDateRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger key of the ledger whose maturity date is being updated
+  // Ledger key of the ledger whose maturity date is being updated.
   LedgerKey key = 1;
 
-  // The signer that is updating the maturity date
+  // The signer that is updating the maturity date.
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // The new maturity date in days since epoch
+  // The new maturity date in days since epoch.
   int32 maturity_date = 3;
 }
 
@@ -162,13 +162,13 @@ message MsgUpdateMaturityDateResponse {}
 message MsgAppendRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger key of the ledger whose entries are being appended
+  // Ledger key of the ledger whose entries are being appended.
   LedgerKey key = 1;
 
-  // The entries to append to the ledger
+  // The entries to append to the ledger.
   repeated LedgerEntry entries = 2;
 
-  // The signer that is appending the entries
+  // The signer that is appending the entries.
   string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -179,13 +179,13 @@ message MsgAppendResponse {}
 message MsgUpdateBalancesRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger key of the ledger whose balances are being updated
+  // Ledger key of the ledger whose balances are being updated.
   LedgerKey key = 1;
 
-  // The signer that is updating the balances
+  // The signer that is updating the balances.
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // The correlation id of the ledger entry
+  // The correlation id of the ledger entry.
   string correlation_id = 3;
 
   // The applied amounts to be updated.
@@ -202,10 +202,10 @@ message MsgUpdateBalancesResponse {}
 message MsgTransferFundsWithSettlementRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // The signer that is transferring the funds
+  // The signer that is transferring the funds.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // The transfers to be made
+  // The transfers to be made.
   repeated FundTransferWithSettlement transfers = 2;
 }
 
@@ -216,10 +216,10 @@ message MsgTransferFundsWithSettlementResponse {}
 message MsgDestroyRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger key of the ledger to destroy
+  // Ledger key of the ledger to destroy.
   LedgerKey key = 1;
 
-  // The signer that is destroying the ledger
+  // The signer that is destroying the ledger.
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -230,10 +230,10 @@ message MsgDestroyResponse {}
 message MsgCreateLedgerClassRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // The ledger class to create
+  // The ledger class to create.
   LedgerClass ledger_class = 1;
 
-  // The signer that is creating the ledger class
+  // The signer that is creating the ledger class.
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -244,13 +244,13 @@ message MsgCreateLedgerClassResponse {}
 message MsgAddLedgerClassStatusTypeRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger class id to add the status type to
+  // Ledger class id to add the status type to.
   string ledger_class_id = 1;
 
-  // The status type to add to the ledger class
+  // The status type to add to the ledger class.
   LedgerClassStatusType status_type = 2;
 
-  // The signer that is adding the status type
+  // The signer that is adding the status type.
   string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -261,13 +261,13 @@ message MsgAddLedgerClassStatusTypeResponse {}
 message MsgAddLedgerClassEntryTypeRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger class id to add the entry type to
+  // Ledger class id to add the entry type to.
   string ledger_class_id = 1;
 
-  // The entry type to add to the ledger class
+  // The entry type to add to the ledger class.
   LedgerClassEntryType entry_type = 2;
 
-  // The signer that is adding the entry type
+  // The signer that is adding the entry type.
   string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -278,13 +278,13 @@ message MsgAddLedgerClassEntryTypeResponse {}
 message MsgAddLedgerClassBucketTypeRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // Ledger class id to add the bucket type to
+  // Ledger class id to add the bucket type to.
   string ledger_class_id = 1;
 
-  // The bucket type to add to the ledger class
+  // The bucket type to add to the ledger class.
   LedgerClassBucketType bucket_type = 2;
 
-  // The signer that is adding the bucket type
+  // The signer that is adding the bucket type.
   string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -295,10 +295,10 @@ message MsgAddLedgerClassBucketTypeResponse {}
 message MsgBulkCreateRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // The signer that is bulk importing the ledger data
+  // The signer that is bulk importing the ledger data.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // The genesis state to bulk import
+  // The genesis state to bulk import.
   repeated LedgerAndEntries ledger_and_entries = 2;
 }
 

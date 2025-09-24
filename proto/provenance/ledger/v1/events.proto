@@ -9,10 +9,10 @@ option java_multiple_files = true;
 // This event is triggered by the MsgCreateLedger message handler when a
 // ledger is successfully created for a specific NFT or scope.
 message EventLedgerCreated {
-  // asset class of the ledger
+  // asset class of the ledger.
   string asset_class_id = 1;
 
-  // nft id of the ledger (scope id or nft id)
+  // nft id of the ledger (scope id or nft id).
   string nft_id = 2;
 }
 
@@ -22,10 +22,10 @@ message EventLedgerCreated {
 // and MsgUpdateLedgerMaturityDate when a ledger's configuration is
 // successfully modified.
 message EventLedgerUpdated {
-  // asset class of the ledger
+  // asset class of the ledger.
   string asset_class_id = 1;
 
-  // nft id of the ledger (scope id or nft id)
+  // nft id of the ledger (scope id or nft id).
   string nft_id = 2;
 
   // What type of data update caused this event to be emitted.
@@ -55,13 +55,13 @@ enum UpdateType {
 // This event is triggered by the MsgAppendLedgerEntry message handler when
 // one or more ledger entries are successfully added to an existing ledger.
 message EventLedgerEntryAdded {
-  // asset class of the ledger
+  // asset class of the ledger.
   string asset_class_id = 1;
 
-  // nft id of the ledger (scope id or nft id)
+  // nft id of the ledger (scope id or nft id).
   string nft_id = 2;
 
-  // correlation id of the ledger entry
+  // correlation id of the ledger entry.
   string correlation_id = 3;
 }
 
@@ -70,13 +70,13 @@ message EventLedgerEntryAdded {
 // MsgTransferFundsWithSettlement message handler when a fund transfer with
 // settlement instructions is successfully processed.
 message EventFundTransferWithSettlement {
-  // asset class of the ledger
+  // asset class of the ledger.
   string asset_class_id = 1;
 
-  // nft id of the ledger (scope id or nft id)
+  // nft id of the ledger (scope id or nft id).
   string nft_id = 2;
 
-  // correlation id of the ledger entry
+  // correlation id of the ledger entry.
   string correlation_id = 3;
 }
 
@@ -84,9 +84,9 @@ message EventFundTransferWithSettlement {
 // This event is triggered by the MsgDestroyLedger message handler when
 // a ledger and all its associated data are successfully removed.
 message EventLedgerDestroyed {
-  // asset class of the ledger
+  // asset class of the ledger.
   string asset_class_id = 1;
 
-  // nft id of the ledger (scope id or nft id)
+  // nft id of the ledger (scope id or nft id).
   string nft_id = 2;
 }

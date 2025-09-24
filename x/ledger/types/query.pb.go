@@ -932,7 +932,7 @@ func (m *QueryLedgerBalancesAsOfRequest) GetAsOfDate() string {
 
 // QueryLedgerBalancesAsOfResponse
 type QueryLedgerBalancesAsOfResponse struct {
-	// BucketBalances represents the current balances for principal, interest, and other amounts
+	// BucketBalances represents the current balances for principal, interest, and other amounts.
 	BucketBalances []*BucketBalance `protobuf:"bytes,1,rep,name=bucket_balances,json=bucketBalances,proto3" json:"bucket_balances,omitempty"`
 }
 

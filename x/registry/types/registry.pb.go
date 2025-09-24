@@ -90,7 +90,7 @@ type RegistryKey struct {
 	// asset_class_id is the Scope Specification ID or NFT Class ID.
 	// This identifies the class or specification that the NFT belongs to.
 	// If it is a Scope Specification, the address is used, e.g."scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m".
-	// Otherwise, it is the NFT Class ID, e.g. "heloc-loan-class"
+	// Otherwise, it is the NFT Class ID, e.g. "heloc-loan-class".
 	AssetClassId string `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
 }
 

@@ -12,19 +12,19 @@ import "provenance/ledger/v1/ledger.proto";
 
 // FundingTransferStatus represents the current status of a funding transfer.
 enum FundingTransferStatus {
-  // Unspecified funding transfer status
+  // Unspecified funding transfer status.
   FUNDING_TRANSFER_STATUS_UNSPECIFIED = 0;
-  // Pending funding transfer status
+  // Pending funding transfer status.
   FUNDING_TRANSFER_STATUS_PENDING = 1;
-  // Processing funding transfer status
+  // Processing funding transfer status.
   FUNDING_TRANSFER_STATUS_PROCESSING = 2;
-  // Completed funding transfer status
+  // Completed funding transfer status.
   FUNDING_TRANSFER_STATUS_COMPLETED = 3;
-  // Failed funding transfer status
+  // Failed funding transfer status.
   FUNDING_TRANSFER_STATUS_FAILED = 4;
 }
 
-// FundTransferWithSettlement represents a fund transfer with settlement instructions
+// FundTransferWithSettlement represents a fund transfer with settlement instructions.
 message FundTransferWithSettlement {
   // The ledger key identifying the ledger for this transfer.
   LedgerKey key = 1;

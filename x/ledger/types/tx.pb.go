@@ -125,11 +125,11 @@ var xxx_messageInfo_MsgCreateLedgerResponse proto.InternalMessageInfo
 
 // MsgUpdateStatusRequest represents a request to update the status of a ledger.
 type MsgUpdateStatusRequest struct {
-	// Ledger key of the ledger whose status is being updated
+	// Ledger key of the ledger whose status is being updated.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The signer that is updating the status
+	// The signer that is updating the status.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
-	// The new status type id of the ledger
+	// The new status type id of the ledger.
 	StatusTypeId int32 `protobuf:"varint,3,opt,name=status_type_id,json=statusTypeId,proto3" json:"status_type_id,omitempty"`
 }
 
@@ -226,15 +226,15 @@ var xxx_messageInfo_MsgUpdateStatusResponse proto.InternalMessageInfo
 
 // MsgUpdateInterestRateRequest represents a request to update the interest rate configuration of a ledger.
 type MsgUpdateInterestRateRequest struct {
-	// Ledger key of the ledger whose interest rate is being updated
+	// Ledger key of the ledger whose interest rate is being updated.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The signer that is updating the interest rate
+	// The signer that is updating the interest rate.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
-	// The new interest rate of the ledger
+	// The new interest rate of the ledger.
 	InterestRate int32 `protobuf:"varint,3,opt,name=interest_rate,json=interestRate,proto3" json:"interest_rate,omitempty"`
-	// The new interest day count convention of the ledger
+	// The new interest day count convention of the ledger.
 	InterestDayCountConvention DayCountConvention `protobuf:"varint,4,opt,name=interest_day_count_convention,json=interestDayCountConvention,proto3,enum=provenance.ledger.v1.DayCountConvention" json:"interest_day_count_convention,omitempty"`
-	// The new interest accrual method of the ledger
+	// The new interest accrual method of the ledger.
 	InterestAccrualMethod InterestAccrualMethod `protobuf:"varint,5,opt,name=interest_accrual_method,json=interestAccrualMethod,proto3,enum=provenance.ledger.v1.InterestAccrualMethod" json:"interest_accrual_method,omitempty"`
 }
 
@@ -345,16 +345,16 @@ var xxx_messageInfo_MsgUpdateInterestRateResponse proto.InternalMessageInfo
 
 // MsgUpdatePaymentRequest represents a request to update payment configuration of a ledger.
 type MsgUpdatePaymentRequest struct {
-	// Ledger key of the ledger whose payment is being updated
+	// Ledger key of the ledger whose payment is being updated.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The signer that is updating the payment
+	// The signer that is updating the payment.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
 	// The new next payment amount of the ledger.
 	// The units of this field are defined by the denom field in this ledger's class.
 	NextPmtAmt cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=next_pmt_amt,json=nextPmtAmt,proto3,customtype=cosmossdk.io/math.Int" json:"nextPmtAmt,omitempty"`
-	// The new next payment date in days since epoch
+	// The new next payment date in days since epoch.
 	NextPmtDate int32 `protobuf:"varint,4,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"next_pmt_date,omitempty"`
-	// The new payment frequency of the ledger
+	// The new payment frequency of the ledger.
 	PaymentFrequency PaymentFrequency `protobuf:"varint,5,opt,name=payment_frequency,json=paymentFrequency,proto3,enum=provenance.ledger.v1.PaymentFrequency" json:"payment_frequency,omitempty"`
 }
 
@@ -458,11 +458,11 @@ var xxx_messageInfo_MsgUpdatePaymentResponse proto.InternalMessageInfo
 
 // MsgUpdateMaturityDateRequest represents a request to update the maturity date of a ledger.
 type MsgUpdateMaturityDateRequest struct {
-	// Ledger key of the ledger whose maturity date is being updated
+	// Ledger key of the ledger whose maturity date is being updated.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The signer that is updating the maturity date
+	// The signer that is updating the maturity date.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
-	// The new maturity date in days since epoch
+	// The new maturity date in days since epoch.
 	MaturityDate int32 `protobuf:"varint,3,opt,name=maturity_date,json=maturityDate,proto3" json:"maturity_date,omitempty"`
 }
 
@@ -559,11 +559,11 @@ var xxx_messageInfo_MsgUpdateMaturityDateResponse proto.InternalMessageInfo
 
 // MsgAppendRequest represents a request to append entries to a ledger.
 type MsgAppendRequest struct {
-	// Ledger key of the ledger whose entries are being appended
+	// Ledger key of the ledger whose entries are being appended.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The entries to append to the ledger
+	// The entries to append to the ledger.
 	Entries []*LedgerEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
-	// The signer that is appending the entries
+	// The signer that is appending the entries.
 	Signer string `protobuf:"bytes,3,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
@@ -660,11 +660,11 @@ var xxx_messageInfo_MsgAppendResponse proto.InternalMessageInfo
 
 // MsgUpdateBalancesRequest represents a request to update balances for a ledger entry.
 type MsgUpdateBalancesRequest struct {
-	// Ledger key of the ledger whose balances are being updated
+	// Ledger key of the ledger whose balances are being updated.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The signer that is updating the balances
+	// The signer that is updating the balances.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
-	// The correlation id of the ledger entry
+	// The correlation id of the ledger entry.
 	CorrelationId string `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 	// The applied amounts to be updated.
 	AppliedAmounts []*LedgerBucketAmount `protobuf:"bytes,4,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"applied_amounts,omitempty"`
@@ -779,9 +779,9 @@ var xxx_messageInfo_MsgUpdateBalancesResponse proto.InternalMessageInfo
 
 // MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement instructions.
 type MsgTransferFundsWithSettlementRequest struct {
-	// The signer that is transferring the funds
+	// The signer that is transferring the funds.
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	// The transfers to be made
+	// The transfers to be made.
 	Transfers []*FundTransferWithSettlement `protobuf:"bytes,2,rep,name=transfers,proto3" json:"transfers,omitempty"`
 }
 
@@ -873,9 +873,9 @@ var xxx_messageInfo_MsgTransferFundsWithSettlementResponse proto.InternalMessage
 
 // MsgDestroyRequest represents a request to destroy a ledger.
 type MsgDestroyRequest struct {
-	// Ledger key of the ledger to destroy
+	// Ledger key of the ledger to destroy.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The signer that is destroying the ledger
+	// The signer that is destroying the ledger.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
@@ -965,9 +965,9 @@ var xxx_messageInfo_MsgDestroyResponse proto.InternalMessageInfo
 
 // MsgCreateLedgerClassRequest represents a request to create a new ledger class.
 type MsgCreateLedgerClassRequest struct {
-	// The ledger class to create
+	// The ledger class to create.
 	LedgerClass *LedgerClass `protobuf:"bytes,1,opt,name=ledger_class,json=ledgerClass,proto3" json:"ledger_class,omitempty"`
-	// The signer that is creating the ledger class
+	// The signer that is creating the ledger class.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
@@ -1057,11 +1057,11 @@ var xxx_messageInfo_MsgCreateLedgerClassResponse proto.InternalMessageInfo
 
 // MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class.
 type MsgAddLedgerClassStatusTypeRequest struct {
-	// Ledger class id to add the status type to
+	// Ledger class id to add the status type to.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
-	// The status type to add to the ledger class
+	// The status type to add to the ledger class.
 	StatusType *LedgerClassStatusType `protobuf:"bytes,2,opt,name=status_type,json=statusType,proto3" json:"status_type,omitempty"`
-	// The signer that is adding the status type
+	// The signer that is adding the status type.
 	Signer string `protobuf:"bytes,3,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
@@ -1158,11 +1158,11 @@ var xxx_messageInfo_MsgAddLedgerClassStatusTypeResponse proto.InternalMessageInf
 
 // MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class.
 type MsgAddLedgerClassEntryTypeRequest struct {
-	// Ledger class id to add the entry type to
+	// Ledger class id to add the entry type to.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
-	// The entry type to add to the ledger class
+	// The entry type to add to the ledger class.
 	EntryType *LedgerClassEntryType `protobuf:"bytes,2,opt,name=entry_type,json=entryType,proto3" json:"entry_type,omitempty"`
-	// The signer that is adding the entry type
+	// The signer that is adding the entry type.
 	Signer string `protobuf:"bytes,3,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
@@ -1259,11 +1259,11 @@ var xxx_messageInfo_MsgAddLedgerClassEntryTypeResponse proto.InternalMessageInfo
 
 // MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
 type MsgAddLedgerClassBucketTypeRequest struct {
-	// Ledger class id to add the bucket type to
+	// Ledger class id to add the bucket type to.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
-	// The bucket type to add to the ledger class
+	// The bucket type to add to the ledger class.
 	BucketType *LedgerClassBucketType `protobuf:"bytes,2,opt,name=bucket_type,json=bucketType,proto3" json:"bucket_type,omitempty"`
-	// The signer that is adding the bucket type
+	// The signer that is adding the bucket type.
 	Signer string `protobuf:"bytes,3,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
@@ -1360,9 +1360,9 @@ var xxx_messageInfo_MsgAddLedgerClassBucketTypeResponse proto.InternalMessageInf
 
 // MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
 type MsgBulkCreateRequest struct {
-	// The signer that is bulk importing the ledger data
+	// The signer that is bulk importing the ledger data.
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	// The genesis state to bulk import
+	// The genesis state to bulk import.
 	LedgerAndEntries []*LedgerAndEntries `protobuf:"bytes,2,rep,name=ledger_and_entries,json=ledgerAndEntries,proto3" json:"ledger_and_entries,omitempty"`
 }
 

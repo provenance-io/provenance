@@ -27,11 +27,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // This event is triggered by the MsgBurnAsset message handler when an
 // asset is successfully burned and removed from circulation.
 type EventAssetBurned struct {
-	// class_id is the asset class identifier of the burned asset
+	// class_id is the asset class identifier of the burned asset.
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	// id is the identifier of the burned asset
+	// id is the identifier of the burned asset.
 	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	// owner is the address of the account that owned the asset before it was burned
+	// owner is the address of the account that owned the asset before it was burned.
 	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
@@ -93,11 +93,11 @@ func (m *EventAssetBurned) GetOwner() string {
 // This event is triggered by the MsgCreateAssetClass message handler when
 // an asset class is successfully created.
 type EventAssetClassCreated struct {
-	// class_id is the unique identifier of the created asset class
+	// class_id is the unique identifier of the created asset class.
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	// class_name is the human-readable name of the asset class
+	// class_name is the human-readable name of the asset class.
 	ClassName string `protobuf:"bytes,2,opt,name=class_name,json=className,proto3" json:"class_name,omitempty"`
-	// class_symbol is the symbol or ticker for the asset class
+	// class_symbol is the symbol or ticker for the asset class.
 	ClassSymbol string `protobuf:"bytes,3,opt,name=class_symbol,json=classSymbol,proto3" json:"class_symbol,omitempty"`
 }
 
@@ -159,11 +159,11 @@ func (m *EventAssetClassCreated) GetClassSymbol() string {
 // This event is triggered by the MsgCreateAsset message handler when
 // an asset is successfully created and minted.
 type EventAssetCreated struct {
-	// class_id is the asset class identifier of the created asset
+	// class_id is the asset class identifier of the created asset.
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	// id is the identifier of the created asset
+	// id is the identifier of the created asset.
 	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	// owner is the address of the account that owns the newly created asset
+	// owner is the address of the account that owns the newly created asset.
 	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
@@ -225,11 +225,11 @@ func (m *EventAssetCreated) GetOwner() string {
 // This event is triggered by the MsgCreatePool message handler when
 // a pool is successfully created with assets.
 type EventPoolCreated struct {
-	// pool is the coin representation of the created pool
+	// pool is the coin representation of the created pool.
 	Pool string `protobuf:"bytes,1,opt,name=pool,proto3" json:"pool,omitempty"`
-	// asset_count is the number of assets added to the pool
+	// asset_count is the number of assets added to the pool.
 	AssetCount uint32 `protobuf:"varint,2,opt,name=asset_count,json=assetCount,proto3" json:"asset_count,omitempty"`
-	// owner is the address of the account that created the pool
+	// owner is the address of the account that created the pool.
 	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
@@ -291,13 +291,13 @@ func (m *EventPoolCreated) GetOwner() string {
 // This event is triggered by the MsgCreateTokenization message handler when
 // a tokenization is successfully created for an asset.
 type EventTokenizationCreated struct {
-	// tokenization is the coin representation of the tokenization marker
+	// tokenization is the coin representation of the tokenization marker.
 	Tokenization string `protobuf:"bytes,1,opt,name=tokenization,proto3" json:"tokenization,omitempty"`
-	// class_id is the asset class identifier of the tokenized asset
+	// class_id is the asset class identifier of the tokenized asset.
 	ClassId string `protobuf:"bytes,2,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	// id is the identifier of the tokenized asset
+	// id is the identifier of the tokenized asset.
 	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
-	// owner is the address of the account that created the tokenization
+	// owner is the address of the account that created the tokenization.
 	Owner string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
@@ -366,13 +366,13 @@ func (m *EventTokenizationCreated) GetOwner() string {
 // This event is triggered by the MsgCreateSecuritization message handler when
 // a securitization is successfully created with tranches and pools.
 type EventSecuritizationCreated struct {
-	// securitization_id is the unique identifier of the created securitization
+	// securitization_id is the unique identifier of the created securitization.
 	SecuritizationId string `protobuf:"bytes,1,opt,name=securitization_id,json=securitizationId,proto3" json:"securitization_id,omitempty"`
-	// tranche_count is the number of tranches in the securitization
+	// tranche_count is the number of tranches in the securitization.
 	TrancheCount uint32 `protobuf:"varint,2,opt,name=tranche_count,json=trancheCount,proto3" json:"tranche_count,omitempty"`
-	// pool_count is the number of pools in the securitization
+	// pool_count is the number of pools in the securitization.
 	PoolCount uint32 `protobuf:"varint,3,opt,name=pool_count,json=poolCount,proto3" json:"pool_count,omitempty"`
-	// owner is the address of the account that created the securitization
+	// owner is the address of the account that created the securitization.
 	Owner string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 

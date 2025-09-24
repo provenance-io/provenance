@@ -29,15 +29,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type FundingTransferStatus int32
 
 const (
-	// Unspecified funding transfer status
+	// Unspecified funding transfer status.
 	FundingTransferStatus_FUNDING_TRANSFER_STATUS_UNSPECIFIED FundingTransferStatus = 0
-	// Pending funding transfer status
+	// Pending funding transfer status.
 	FundingTransferStatus_FUNDING_TRANSFER_STATUS_PENDING FundingTransferStatus = 1
-	// Processing funding transfer status
+	// Processing funding transfer status.
 	FundingTransferStatus_FUNDING_TRANSFER_STATUS_PROCESSING FundingTransferStatus = 2
-	// Completed funding transfer status
+	// Completed funding transfer status.
 	FundingTransferStatus_FUNDING_TRANSFER_STATUS_COMPLETED FundingTransferStatus = 3
-	// Failed funding transfer status
+	// Failed funding transfer status.
 	FundingTransferStatus_FUNDING_TRANSFER_STATUS_FAILED FundingTransferStatus = 4
 )
 
@@ -65,7 +65,7 @@ func (FundingTransferStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_0caa3a369f9ea91c, []int{0}
 }
 
-// FundTransferWithSettlement represents a fund transfer with settlement instructions
+// FundTransferWithSettlement represents a fund transfer with settlement instructions.
 type FundTransferWithSettlement struct {
 	// The ledger key identifying the ledger for this transfer.
 	Key *LedgerKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`

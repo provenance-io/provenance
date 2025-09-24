@@ -12,17 +12,17 @@ option java_multiple_files = true;
 // is defined by the either a scope spec `x/metadata`, or nft class `x/nft`. Ultimately, the configuration will
 // assist in verifying the types that are associated with particular ledger entries.
 message LedgerClass {
-  // Unique ID for the ledger class (eg. 1, 2, 3, etc.)
+  // Unique ID for the ledger class (eg. 1, 2, 3, etc.).
   // This is necessary since the nft class does not have an owner.
   string ledger_class_id = 1 [(gogoproto.jsontag) = "ledgerClassId,omitempty"];
 
-  // Scope Specification ID or NFT Class ID
+  // Scope Specification ID or NFT Class ID.
   string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
 
-  // Denom that this class of asset will be ledgered in
+  // Denom that this class of asset will be ledgered in.
   string denom = 3 [(gogoproto.jsontag) = "denom,omitempty"];
 
-  // Address of the maintainer for the ledger class
+  // Address of the maintainer for the ledger class.
   string maintainer_address = 4
       [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.jsontag) = "maintainerAddress,omitempty"];
 }
@@ -30,13 +30,13 @@ message LedgerClass {
 // LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
 // for minimal data storage while providing a human readable description of the entry type.
 message LedgerClassEntryType {
-  // Unique ID for the entry type (eg. 1, 2, 3, etc.)
+  // Unique ID for the entry type (eg. 1, 2, 3, etc.).
   int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
-  // Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER")
+  // Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER").
   string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 
-  // Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other")
+  // Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other").
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
@@ -57,7 +57,6 @@ message LedgerClassStatusType {
 
 // LedgerKey is used as the unique key for an asset's ledger in the keeper.
 message LedgerKey {
-  // disable stringer
   option (gogoproto.goproto_stringer) = false;
 
   // Identifier for the nft that this ledger is linked to.
@@ -65,7 +64,7 @@ message LedgerKey {
   // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
   string nft_id = 1 [(gogoproto.jsontag) = "nftId,omitempty"];
 
-  // Scope Specification ID or NFT Class ID
+  // Scope Specification ID or NFT Class ID.
   string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
 }
 
@@ -111,15 +110,15 @@ message Ledger {
       [(gogoproto.jsontag) = "paymentFrequency,omitempty", (gogoproto.casttype) = "PaymentFrequency"];
 }
 
-// LedgerClassBucketType represents a bucket type for a ledger class
+// LedgerClassBucketType represents a bucket type for a ledger class.
 message LedgerClassBucketType {
-  // Unique ID for the bucket type (eg. 1, 2, 3, etc.)
+  // Unique ID for the bucket type (eg. 1, 2, 3, etc.).
   int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
-  // Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER")
+  // Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER").
   string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 
-  // Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other")
+  // Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other").
   string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
@@ -180,7 +179,7 @@ message LedgerBucketAmount {
   ];
 }
 
-// BucketBalance represents the balance for a specific bucket type
+// BucketBalance represents the balance for a specific bucket type.
 message BucketBalance {
   // The bucket type specified by the LedgerClassBucketType.id.
   int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
@@ -195,7 +194,7 @@ message BucketBalance {
   ];
 }
 
-// LedgerAndEntries represents a ledger with its associated entries
+// LedgerAndEntries represents a ledger with its associated entries.
 message LedgerAndEntries {
   // The ledger key identifying the ledger.
   LedgerKey ledger_key = 1 [(gogoproto.jsontag) = "ledgerKey,omitempty"];
@@ -205,7 +204,7 @@ message LedgerAndEntries {
   repeated LedgerEntry entries = 3 [(gogoproto.jsontag) = "entries,omitempty"];
 }
 
-// Day Count Conventions used in interest calculations
+// Day Count Conventions used in interest calculations.
 enum DayCountConvention {
   option (gogoproto.goproto_enum_prefix)   = false;
   option (gogoproto.goproto_enum_stringer) = true;
@@ -234,7 +233,7 @@ enum DayCountConvention {
   DAY_COUNT_CONVENTION_DAYS_360 = 6;
 }
 
-// Interest Accrual Methods describing how interest is calculated over time
+// Interest Accrual Methods describing how interest is calculated over time.
 enum InterestAccrualMethod {
   option (gogoproto.goproto_enum_prefix)   = false;
   option (gogoproto.goproto_enum_stringer) = true;
@@ -264,7 +263,7 @@ enum InterestAccrualMethod {
   INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7;
 }
 
-// Payment frequencies for loan repayments
+// Payment frequencies for loan repayments.
 enum PaymentFrequency {
   option (gogoproto.goproto_enum_prefix)   = false;
   option (gogoproto.goproto_enum_stringer) = true;

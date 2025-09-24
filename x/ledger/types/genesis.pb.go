@@ -26,19 +26,19 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState represents the initial state of the ledger store.
 // This structure matches the test.json format for bulk import.
 type GenesisState struct {
-	// Ledger classes configuration
+	// Ledger classes configuration.
 	LedgerClasses []LedgerClass `protobuf:"bytes,1,rep,name=ledger_classes,json=ledgerClasses,proto3" json:"ledgerClasses,omitempty"`
-	// Ledger class entry types configuration
+	// Ledger class entry types configuration.
 	LedgerClassEntryTypes []GenesisLedgerClassEntryType `protobuf:"bytes,2,rep,name=ledger_class_entry_types,json=ledgerClassEntryTypes,proto3" json:"ledgerClassEntryTypes,omitempty"`
-	// Ledger class status types configuration
+	// Ledger class status types configuration.
 	LedgerClassStatusTypes []GenesisLedgerClassStatusType `protobuf:"bytes,3,rep,name=ledger_class_status_types,json=ledgerClassStatusTypes,proto3" json:"ledgerClassStatusTypes,omitempty"`
-	// Ledger class bucket types configuration
+	// Ledger class bucket types configuration.
 	LedgerClassBucketTypes []GenesisLedgerClassBucketType `protobuf:"bytes,4,rep,name=ledger_class_bucket_types,json=ledgerClassBucketTypes,proto3" json:"ledgerClassBucketTypes,omitempty"`
-	// Ledgers
+	// Ledgers.
 	Ledgers []GenesisLedger `protobuf:"bytes,5,rep,name=ledgers,proto3" json:"ledgers,omitempty"`
-	// Ledger entries
+	// Ledger entries.
 	LedgerEntries []GenesisLedgerEntry `protobuf:"bytes,6,rep,name=ledger_entries,json=ledgerEntries,proto3" json:"ledgerEntries,omitempty"`
-	// Settlement instructions for fund transfers
+	// Settlement instructions for fund transfers.
 	SettlementInstructions []GenesisStoredSettlementInstructions `protobuf:"bytes,7,rep,name=settlement_instructions,json=settlementInstructions,proto3" json:"settlementInstructions,omitempty"`
 }
 

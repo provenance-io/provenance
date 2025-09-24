@@ -25,7 +25,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Day Count Conventions used in interest calculations
+// Day Count Conventions used in interest calculations.
 type DayCountConvention int32
 
 const (
@@ -75,7 +75,7 @@ func (DayCountConvention) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_dee508b012fc2213, []int{0}
 }
 
-// Interest Accrual Methods describing how interest is calculated over time
+// Interest Accrual Methods describing how interest is calculated over time.
 type InterestAccrualMethod int32
 
 const (
@@ -127,7 +127,7 @@ func (InterestAccrualMethod) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_dee508b012fc2213, []int{1}
 }
 
-// Payment frequencies for loan repayments
+// Payment frequencies for loan repayments.
 type PaymentFrequency int32
 
 const (
@@ -175,14 +175,14 @@ func (PaymentFrequency) EnumDescriptor() ([]byte, []int) {
 // is defined by the either a scope spec `x/metadata`, or nft class `x/nft`. Ultimately, the configuration will
 // assist in verifying the types that are associated with particular ledger entries.
 type LedgerClass struct {
-	// Unique ID for the ledger class (eg. 1, 2, 3, etc.)
+	// Unique ID for the ledger class (eg. 1, 2, 3, etc.).
 	// This is necessary since the nft class does not have an owner.
 	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledgerClassId,omitempty"`
-	// Scope Specification ID or NFT Class ID
+	// Scope Specification ID or NFT Class ID.
 	AssetClassId string `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"assetClassId,omitempty"`
-	// Denom that this class of asset will be ledgered in
+	// Denom that this class of asset will be ledgered in.
 	Denom string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
-	// Address of the maintainer for the ledger class
+	// Address of the maintainer for the ledger class.
 	MaintainerAddress string `protobuf:"bytes,4,opt,name=maintainer_address,json=maintainerAddress,proto3" json:"maintainerAddress,omitempty"`
 }
 
@@ -250,11 +250,11 @@ func (m *LedgerClass) GetMaintainerAddress() string {
 // LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
 // for minimal data storage while providing a human readable description of the entry type.
 type LedgerClassEntryType struct {
-	// Unique ID for the entry type (eg. 1, 2, 3, etc.)
+	// Unique ID for the entry type (eg. 1, 2, 3, etc.).
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER")
+	// Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER").
 	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
-	// Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other")
+	// Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other").
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 }
 
@@ -385,7 +385,7 @@ type LedgerKey struct {
 	// This could be a `x/metadata` scope id or an `x/nft` nft id.
 	// In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
 	NftId string `protobuf:"bytes,1,opt,name=nft_id,json=nftId,proto3" json:"nftId,omitempty"`
-	// Scope Specification ID or NFT Class ID
+	// Scope Specification ID or NFT Class ID.
 	AssetClassId string `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"assetClassId,omitempty"`
 }
 
@@ -556,13 +556,13 @@ func (m *Ledger) GetPaymentFrequency() PaymentFrequency {
 	return PAYMENT_FREQUENCY_UNSPECIFIED
 }
 
-// LedgerClassBucketType represents a bucket type for a ledger class
+// LedgerClassBucketType represents a bucket type for a ledger class.
 type LedgerClassBucketType struct {
-	// Unique ID for the bucket type (eg. 1, 2, 3, etc.)
+	// Unique ID for the bucket type (eg. 1, 2, 3, etc.).
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER")
+	// Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER").
 	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
-	// Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other")
+	// Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other").
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 }
 
@@ -793,7 +793,7 @@ func (m *LedgerBucketAmount) GetBucketTypeId() int32 {
 	return 0
 }
 
-// BucketBalance represents the balance for a specific bucket type
+// BucketBalance represents the balance for a specific bucket type.
 type BucketBalance struct {
 	// The bucket type specified by the LedgerClassBucketType.id.
 	BucketTypeId int32 `protobuf:"varint,1,opt,name=bucket_type_id,json=bucketTypeId,proto3" json:"bucketTypeId,omitempty"`
@@ -842,7 +842,7 @@ func (m *BucketBalance) GetBucketTypeId() int32 {
 	return 0
 }
 
-// LedgerAndEntries represents a ledger with its associated entries
+// LedgerAndEntries represents a ledger with its associated entries.
 type LedgerAndEntries struct {
 	// The ledger key identifying the ledger.
 	LedgerKey *LedgerKey `protobuf:"bytes,1,opt,name=ledger_key,json=ledgerKey,proto3" json:"ledgerKey,omitempty"`

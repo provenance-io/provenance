@@ -341,7 +341,7 @@ func (m *QueryAssetClassResponse) GetAssetClass() *AssetClass {
 	return nil
 }
 
-// QueryAssetClassesRequest is the request type for the Query/Classes RPC method
+// QueryAssetClassesRequest is the request type for the Query/Classes RPC method.
 type QueryAssetClassesRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`

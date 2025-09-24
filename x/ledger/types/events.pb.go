@@ -67,9 +67,9 @@ func (UpdateType) EnumDescriptor() ([]byte, []int) {
 // This event is triggered by the MsgCreateLedger message handler when a
 // ledger is successfully created for a specific NFT or scope.
 type EventLedgerCreated struct {
-	// asset class of the ledger
+	// asset class of the ledger.
 	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// nft id of the ledger (scope id or nft id)
+	// nft id of the ledger (scope id or nft id).
 	NftId string `protobuf:"bytes,2,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
 }
 
@@ -126,9 +126,9 @@ func (m *EventLedgerCreated) GetNftId() string {
 // and MsgUpdateLedgerMaturityDate when a ledger's configuration is
 // successfully modified.
 type EventLedgerUpdated struct {
-	// asset class of the ledger
+	// asset class of the ledger.
 	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// nft id of the ledger (scope id or nft id)
+	// nft id of the ledger (scope id or nft id).
 	NftId string `protobuf:"bytes,2,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
 	// What type of data update caused this event to be emitted.
 	UpdateType UpdateType `protobuf:"varint,3,opt,name=update_type,json=updateType,proto3,enum=provenance.ledger.v1.UpdateType" json:"update_type,omitempty"`
@@ -192,11 +192,11 @@ func (m *EventLedgerUpdated) GetUpdateType() UpdateType {
 // This event is triggered by the MsgAppendLedgerEntry message handler when
 // one or more ledger entries are successfully added to an existing ledger.
 type EventLedgerEntryAdded struct {
-	// asset class of the ledger
+	// asset class of the ledger.
 	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// nft id of the ledger (scope id or nft id)
+	// nft id of the ledger (scope id or nft id).
 	NftId string `protobuf:"bytes,2,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
-	// correlation id of the ledger entry
+	// correlation id of the ledger entry.
 	CorrelationId string `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 }
 
@@ -259,11 +259,11 @@ func (m *EventLedgerEntryAdded) GetCorrelationId() string {
 // MsgTransferFundsWithSettlement message handler when a fund transfer with
 // settlement instructions is successfully processed.
 type EventFundTransferWithSettlement struct {
-	// asset class of the ledger
+	// asset class of the ledger.
 	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// nft id of the ledger (scope id or nft id)
+	// nft id of the ledger (scope id or nft id).
 	NftId string `protobuf:"bytes,2,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
-	// correlation id of the ledger entry
+	// correlation id of the ledger entry.
 	CorrelationId string `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 }
 
@@ -325,9 +325,9 @@ func (m *EventFundTransferWithSettlement) GetCorrelationId() string {
 // This event is triggered by the MsgDestroyLedger message handler when
 // a ledger and all its associated data are successfully removed.
 type EventLedgerDestroyed struct {
-	// asset class of the ledger
+	// asset class of the ledger.
 	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
-	// nft id of the ledger (scope id or nft id)
+	// nft id of the ledger (scope id or nft id).
 	NftId string `protobuf:"bytes,2,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
 }
 

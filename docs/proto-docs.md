@@ -4663,9 +4663,9 @@ MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_class_id` | [string](#string) |  | Ledger class id to add the bucket type to |
-| `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  | The bucket type to add to the ledger class |
-| `signer` | [string](#string) |  | The signer that is adding the bucket type |
+| `ledger_class_id` | [string](#string) |  | Ledger class id to add the bucket type to. |
+| `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  | The bucket type to add to the ledger class. |
+| `signer` | [string](#string) |  | The signer that is adding the bucket type. |
 
 
 
@@ -4690,9 +4690,9 @@ MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_class_id` | [string](#string) |  | Ledger class id to add the entry type to |
-| `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  | The entry type to add to the ledger class |
-| `signer` | [string](#string) |  | The signer that is adding the entry type |
+| `ledger_class_id` | [string](#string) |  | Ledger class id to add the entry type to. |
+| `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  | The entry type to add to the ledger class. |
+| `signer` | [string](#string) |  | The signer that is adding the entry type. |
 
 
 
@@ -4717,9 +4717,9 @@ MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_class_id` | [string](#string) |  | Ledger class id to add the status type to |
-| `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  | The status type to add to the ledger class |
-| `signer` | [string](#string) |  | The signer that is adding the status type |
+| `ledger_class_id` | [string](#string) |  | Ledger class id to add the status type to. |
+| `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  | The status type to add to the ledger class. |
+| `signer` | [string](#string) |  | The signer that is adding the status type. |
 
 
 
@@ -4744,9 +4744,9 @@ MsgAppendRequest represents a request to append entries to a ledger.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose entries are being appended |
-| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The entries to append to the ledger |
-| `signer` | [string](#string) |  | The signer that is appending the entries |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose entries are being appended. |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The entries to append to the ledger. |
+| `signer` | [string](#string) |  | The signer that is appending the entries. |
 
 
 
@@ -4771,8 +4771,8 @@ MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `signer` | [string](#string) |  | The signer that is bulk importing the ledger data |
-| `ledger_and_entries` | [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries) | repeated | The genesis state to bulk import |
+| `signer` | [string](#string) |  | The signer that is bulk importing the ledger data. |
+| `ledger_and_entries` | [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries) | repeated | The genesis state to bulk import. |
 
 
 
@@ -4797,8 +4797,8 @@ MsgCreateLedgerClassRequest represents a request to create a new ledger class.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  | The ledger class to create |
-| `signer` | [string](#string) |  | The signer that is creating the ledger class |
+| `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  | The ledger class to create. |
+| `signer` | [string](#string) |  | The signer that is creating the ledger class. |
 
 
 
@@ -4849,8 +4849,8 @@ MsgDestroyRequest represents a request to destroy a ledger.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger to destroy |
-| `signer` | [string](#string) |  | The signer that is destroying the ledger |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger to destroy. |
+| `signer` | [string](#string) |  | The signer that is destroying the ledger. |
 
 
 
@@ -4875,8 +4875,8 @@ MsgTransferFundsWithSettlementRequest represents a request to transfer funds wit
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `signer` | [string](#string) |  | The signer that is transferring the funds |
-| `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated | The transfers to be made |
+| `signer` | [string](#string) |  | The signer that is transferring the funds. |
+| `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated | The transfers to be made. |
 
 
 
@@ -4901,9 +4901,9 @@ MsgUpdateBalancesRequest represents a request to update balances for a ledger en
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose balances are being updated |
-| `signer` | [string](#string) |  | The signer that is updating the balances |
-| `correlation_id` | [string](#string) |  | The correlation id of the ledger entry |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose balances are being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the balances. |
+| `correlation_id` | [string](#string) |  | The correlation id of the ledger entry. |
 | `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated. |
 | `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update. |
 
@@ -4930,11 +4930,11 @@ MsgUpdateInterestRateRequest represents a request to update the interest rate co
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated |
-| `signer` | [string](#string) |  | The signer that is updating the interest rate |
-| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger |
-| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger |
-| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the interest rate. |
+| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. |
 
 
 
@@ -4959,9 +4959,9 @@ MsgUpdateMaturityDateRequest represents a request to update the maturity date of
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose maturity date is being updated |
-| `signer` | [string](#string) |  | The signer that is updating the maturity date |
-| `maturity_date` | [int32](#int32) |  | The new maturity date in days since epoch |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose maturity date is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the maturity date. |
+| `maturity_date` | [int32](#int32) |  | The new maturity date in days since epoch. |
 
 
 
@@ -4986,11 +4986,11 @@ MsgUpdatePaymentRequest represents a request to update payment configuration of 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated |
-| `signer` | [string](#string) |  | The signer that is updating the payment |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the payment. |
 | `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. |
-| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch |
-| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger |
+| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. |
 
 
 
@@ -5015,9 +5015,9 @@ MsgUpdateStatusRequest represents a request to update the status of a ledger.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose status is being updated |
-| `signer` | [string](#string) |  | The signer that is updating the status |
-| `status_type_id` | [int32](#int32) |  | The new status type id of the ledger |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose status is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the status. |
+| `status_type_id` | [int32](#int32) |  | The new status type id of the ledger. |
 
 
 
@@ -5084,9 +5084,9 @@ settlement instructions is successfully processed.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset class of the ledger |
-| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
-| `correlation_id` | [string](#string) |  | correlation id of the ledger entry |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry. |
 
 
 
@@ -5103,8 +5103,8 @@ ledger is successfully created for a specific NFT or scope.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset class of the ledger |
-| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
 
 
 
@@ -5121,8 +5121,8 @@ a ledger and all its associated data are successfully removed.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset class of the ledger |
-| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
 
 
 
@@ -5139,9 +5139,9 @@ one or more ledger entries are successfully added to an existing ledger.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset class of the ledger |
-| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
-| `correlation_id` | [string](#string) |  | correlation id of the ledger entry |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry. |
 
 
 
@@ -5160,8 +5160,8 @@ successfully modified.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `asset_class_id` | [string](#string) |  | asset class of the ledger |
-| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id) |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
 | `update_type` | [UpdateType](#provenance-ledger-v1-UpdateType) |  | What type of data update caused this event to be emitted. |
 
 
@@ -5204,7 +5204,7 @@ This is used to identify the specific update that caused the event to be emitted
 <a name="provenance-ledger-v1-BucketBalance"></a>
 
 ### BucketBalance
-BucketBalance represents the balance for a specific bucket type
+BucketBalance represents the balance for a specific bucket type.
 
 
 | Field | Type | Label | Description |
@@ -5244,7 +5244,7 @@ Ledger defines an servicing ledger for an asset.
 <a name="provenance-ledger-v1-LedgerAndEntries"></a>
 
 ### LedgerAndEntries
-LedgerAndEntries represents a ledger with its associated entries
+LedgerAndEntries represents a ledger with its associated entries.
 
 
 | Field | Type | Label | Description |
@@ -5285,10 +5285,10 @@ assist in verifying the types that are associated with particular ledger entries
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_class_id` | [string](#string) |  | Unique ID for the ledger class (eg. 1, 2, 3, etc.) This is necessary since the nft class does not have an owner. |
-| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
-| `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in |
-| `maintainer_address` | [string](#string) |  | Address of the maintainer for the ledger class |
+| `ledger_class_id` | [string](#string) |  | Unique ID for the ledger class (eg. 1, 2, 3, etc.). This is necessary since the nft class does not have an owner. |
+| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID. |
+| `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in. |
+| `maintainer_address` | [string](#string) |  | Address of the maintainer for the ledger class. |
 
 
 
@@ -5298,14 +5298,14 @@ assist in verifying the types that are associated with particular ledger entries
 <a name="provenance-ledger-v1-LedgerClassBucketType"></a>
 
 ### LedgerClassBucketType
-LedgerClassBucketType represents a bucket type for a ledger class
+LedgerClassBucketType represents a bucket type for a ledger class.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [int32](#int32) |  | Unique ID for the bucket type (eg. 1, 2, 3, etc.) |
-| `code` | [string](#string) |  | Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER") |
-| `description` | [string](#string) |  | Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other") |
+| `id` | [int32](#int32) |  | Unique ID for the bucket type (eg. 1, 2, 3, etc.). |
+| `code` | [string](#string) |  | Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER"). |
+| `description` | [string](#string) |  | Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other"). |
 
 
 
@@ -5321,9 +5321,9 @@ for minimal data storage while providing a human readable description of the ent
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [int32](#int32) |  | Unique ID for the entry type (eg. 1, 2, 3, etc.) |
-| `code` | [string](#string) |  | Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER") |
-| `description` | [string](#string) |  | Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other") |
+| `id` | [int32](#int32) |  | Unique ID for the entry type (eg. 1, 2, 3, etc.). |
+| `code` | [string](#string) |  | Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER"). |
+| `description` | [string](#string) |  | Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other"). |
 
 
 
@@ -5381,7 +5381,7 @@ LedgerKey is used as the unique key for an asset's ledger in the keeper.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
-| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID |
+| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID. |
 
 
 
@@ -5393,7 +5393,7 @@ LedgerKey is used as the unique key for an asset's ledger in the keeper.
 <a name="provenance-ledger-v1-DayCountConvention"></a>
 
 ### DayCountConvention
-Day Count Conventions used in interest calculations
+Day Count Conventions used in interest calculations.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -5410,7 +5410,7 @@ Day Count Conventions used in interest calculations
 <a name="provenance-ledger-v1-InterestAccrualMethod"></a>
 
 ### InterestAccrualMethod
-Interest Accrual Methods describing how interest is calculated over time
+Interest Accrual Methods describing how interest is calculated over time.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -5428,7 +5428,7 @@ Interest Accrual Methods describing how interest is calculated over time
 <a name="provenance-ledger-v1-PaymentFrequency"></a>
 
 ### PaymentFrequency
-Payment frequencies for loan repayments
+Payment frequencies for loan repayments.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -5479,7 +5479,7 @@ QueryLedgerBalancesAsOfResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | BucketBalances represents the current balances for principal, interest, and other amounts |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | BucketBalances represents the current balances for principal, interest, and other amounts. |
 
 
 
@@ -5860,7 +5860,7 @@ Query defines the gRPC querier service for ledger module.
 <a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
 
 ### FundTransferWithSettlement
-FundTransferWithSettlement represents a fund transfer with settlement instructions
+FundTransferWithSettlement represents a fund transfer with settlement instructions.
 
 
 | Field | Type | Label | Description |
@@ -5917,11 +5917,11 @@ FundingTransferStatus represents the current status of a funding transfer.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` | Unspecified funding transfer status |
-| `FUNDING_TRANSFER_STATUS_PENDING` | `1` | Pending funding transfer status |
-| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` | Processing funding transfer status |
-| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` | Completed funding transfer status |
-| `FUNDING_TRANSFER_STATUS_FAILED` | `4` | Failed funding transfer status |
+| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` | Unspecified funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_PENDING` | `1` | Pending funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` | Processing funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` | Completed funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_FAILED` | `4` | Failed funding transfer status. |
 
 
  <!-- end enums -->
@@ -6048,13 +6048,13 @@ This structure matches the test.json format for bulk import.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | Ledger classes configuration |
-| `ledger_class_entry_types` | [GenesisLedgerClassEntryType](#provenance-ledger-v1-GenesisLedgerClassEntryType) | repeated | Ledger class entry types configuration |
-| `ledger_class_status_types` | [GenesisLedgerClassStatusType](#provenance-ledger-v1-GenesisLedgerClassStatusType) | repeated | Ledger class status types configuration |
-| `ledger_class_bucket_types` | [GenesisLedgerClassBucketType](#provenance-ledger-v1-GenesisLedgerClassBucketType) | repeated | Ledger class bucket types configuration |
-| `ledgers` | [GenesisLedger](#provenance-ledger-v1-GenesisLedger) | repeated | Ledgers |
-| `ledger_entries` | [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry) | repeated | Ledger entries |
-| `settlement_instructions` | [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions) | repeated | Settlement instructions for fund transfers |
+| `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | Ledger classes configuration. |
+| `ledger_class_entry_types` | [GenesisLedgerClassEntryType](#provenance-ledger-v1-GenesisLedgerClassEntryType) | repeated | Ledger class entry types configuration. |
+| `ledger_class_status_types` | [GenesisLedgerClassStatusType](#provenance-ledger-v1-GenesisLedgerClassStatusType) | repeated | Ledger class status types configuration. |
+| `ledger_class_bucket_types` | [GenesisLedgerClassBucketType](#provenance-ledger-v1-GenesisLedgerClassBucketType) | repeated | Ledger class bucket types configuration. |
+| `ledgers` | [GenesisLedger](#provenance-ledger-v1-GenesisLedger) | repeated | Ledgers. |
+| `ledger_entries` | [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry) | repeated | Ledger entries. |
+| `settlement_instructions` | [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions) | repeated | Settlement instructions for fund transfers. |
 
 
 
@@ -7415,9 +7415,9 @@ asset is successfully burned and removed from circulation.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  | class_id is the asset class identifier of the burned asset |
-| `id` | [string](#string) |  | id is the identifier of the burned asset |
-| `owner` | [string](#string) |  | owner is the address of the account that owned the asset before it was burned |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the burned asset. |
+| `id` | [string](#string) |  | id is the identifier of the burned asset. |
+| `owner` | [string](#string) |  | owner is the address of the account that owned the asset before it was burned. |
 
 
 
@@ -7434,9 +7434,9 @@ an asset class is successfully created.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  | class_id is the unique identifier of the created asset class |
-| `class_name` | [string](#string) |  | class_name is the human-readable name of the asset class |
-| `class_symbol` | [string](#string) |  | class_symbol is the symbol or ticker for the asset class |
+| `class_id` | [string](#string) |  | class_id is the unique identifier of the created asset class. |
+| `class_name` | [string](#string) |  | class_name is the human-readable name of the asset class. |
+| `class_symbol` | [string](#string) |  | class_symbol is the symbol or ticker for the asset class. |
 
 
 
@@ -7453,9 +7453,9 @@ an asset is successfully created and minted.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  | class_id is the asset class identifier of the created asset |
-| `id` | [string](#string) |  | id is the identifier of the created asset |
-| `owner` | [string](#string) |  | owner is the address of the account that owns the newly created asset |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the created asset. |
+| `id` | [string](#string) |  | id is the identifier of the created asset. |
+| `owner` | [string](#string) |  | owner is the address of the account that owns the newly created asset. |
 
 
 
@@ -7472,9 +7472,9 @@ a pool is successfully created with assets.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `pool` | [string](#string) |  | pool is the coin representation of the created pool |
-| `asset_count` | [uint32](#uint32) |  | asset_count is the number of assets added to the pool |
-| `owner` | [string](#string) |  | owner is the address of the account that created the pool |
+| `pool` | [string](#string) |  | pool is the coin representation of the created pool. |
+| `asset_count` | [uint32](#uint32) |  | asset_count is the number of assets added to the pool. |
+| `owner` | [string](#string) |  | owner is the address of the account that created the pool. |
 
 
 
@@ -7491,10 +7491,10 @@ a securitization is successfully created with tranches and pools.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `securitization_id` | [string](#string) |  | securitization_id is the unique identifier of the created securitization |
-| `tranche_count` | [uint32](#uint32) |  | tranche_count is the number of tranches in the securitization |
-| `pool_count` | [uint32](#uint32) |  | pool_count is the number of pools in the securitization |
-| `owner` | [string](#string) |  | owner is the address of the account that created the securitization |
+| `securitization_id` | [string](#string) |  | securitization_id is the unique identifier of the created securitization. |
+| `tranche_count` | [uint32](#uint32) |  | tranche_count is the number of tranches in the securitization. |
+| `pool_count` | [uint32](#uint32) |  | pool_count is the number of pools in the securitization. |
+| `owner` | [string](#string) |  | owner is the address of the account that created the securitization. |
 
 
 
@@ -7511,10 +7511,10 @@ a tokenization is successfully created for an asset.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenization` | [string](#string) |  | tokenization is the coin representation of the tokenization marker |
-| `class_id` | [string](#string) |  | class_id is the asset class identifier of the tokenized asset |
-| `id` | [string](#string) |  | id is the identifier of the tokenized asset |
-| `owner` | [string](#string) |  | owner is the address of the account that created the tokenization |
+| `tokenization` | [string](#string) |  | tokenization is the coin representation of the tokenization marker. |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the tokenized asset. |
+| `id` | [string](#string) |  | id is the identifier of the tokenized asset. |
+| `owner` | [string](#string) |  | owner is the address of the account that created the tokenization. |
 
 
 
@@ -7657,7 +7657,7 @@ QueryAssetClassResponse is the response type for the Query/Class RPC method.
 <a name="provenance-asset-v1-QueryAssetClassesRequest"></a>
 
 ### QueryAssetClassesRequest
-QueryAssetClassesRequest is the request type for the Query/Classes RPC method
+QueryAssetClassesRequest is the request type for the Query/Classes RPC method.
 
 
 | Field | Type | Label | Description |
@@ -9146,7 +9146,7 @@ It links registry entries to specific NFT assets and their associated asset clas
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an NFT, the NFT class must be registered in the ledger module as a LedgerClass. |
-| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. This identifies the class or specification that the NFT belongs to. If it is a Scope Specification, the address is used, e.g."scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m". Otherwise, it is the NFT Class ID, e.g. "heloc-loan-class" |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. This identifies the class or specification that the NFT belongs to. If it is a Scope Specification, the address is used, e.g."scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m". Otherwise, it is the NFT Class ID, e.g. "heloc-loan-class". |
 
 
 

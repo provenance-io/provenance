@@ -81,7 +81,7 @@ message QueryAssetClassResponse {
   AssetClass asset_class = 1;
 }
 
-// QueryAssetClassesRequest is the request type for the Query/Classes RPC method
+// QueryAssetClassesRequest is the request type for the Query/Classes RPC method.
 message QueryAssetClassesRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
