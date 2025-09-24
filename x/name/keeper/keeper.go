@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"bytes"
-	"crypto/sha256"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,16 +52,16 @@ func NewKeeper(
 	// Create address index
 	addrIndex := indexes.NewMulti(
 		sb,
-		collections.NewPrefix(types.AddressKeyPrefix),
+		types.AddressKeyPrefix,
 		"addr_index",
-		collections.PairKeyCodec(collections.BytesKey, collections.StringKey),
-		types.HashedStringKeyCodec{}, // Primary key codec
-		func(name string, record types.NameRecord) (collections.Pair[[]byte, string], error) {
+		collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
+		collections.StringKey,
+		func(name string, record types.NameRecord) (collections.Pair[sdk.AccAddress, string], error) {
 			addr, err := sdk.AccAddressFromBech32(record.Address)
 			if err != nil {
-				return collections.Pair[[]byte, string]{}, err
+				return collections.Pair[sdk.AccAddress, string]{}, err
 			}
-			return collections.Join([]byte(addr), name), nil
+			return collections.Join(addr, name), nil
 		},
 	)
 
@@ -73,7 +72,7 @@ func NewKeeper(
 	// Create name records collection
 	nameRecords := collections.NewIndexedMap(
 		sb,
-		collections.NewPrefix(types.NameKeyPrefix),
+		types.NameKeyPrefix,
 		"name_records",
 		types.HashedStringKeyCodec{},
 		codec.CollValue[types.NameRecord](cdc),
@@ -153,9 +152,22 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	if err = types.ValidateAddress(addr); err != nil {
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
-	if err := k.addRecord(ctx, name, addr, restrict, false); err != nil {
+	exists, err := k.nameRecords.Has(ctx, normalizedName)
+	if err != nil {
 		return err
 	}
+	if exists {
+		return types.ErrNameAlreadyBound
+	}
+	record := types.NewNameRecord(normalizedName, addr, restrict)
+	if err := record.Validate(); err != nil {
+		return err
+	}
+
+	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
+		return err
+	}
+
 	nameBoundEvent := types.NewEventNameBound(addr.String(), normalizedName, restrict)
 	return ctx.EventManager().EmitTypedEvent(nameBoundEvent)
 }
@@ -166,15 +178,24 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	if err != nil {
 		return err
 	}
-	if err := types.ValidateAddress(addr); err != nil {
+	if err = types.ValidateAddress(addr); err != nil {
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
-	_, err = k.nameRecords.Get(ctx, normalizedName)
+	exists, err := k.nameRecords.Has(ctx, normalizedName)
 	if err != nil {
+		return err
+	}
+	if !exists {
 		return types.ErrNameNotBound
 	}
-	// Use AddRecord with isModifiable = true (matches old behavior)
-	if err := k.addRecord(ctx, normalizedName, addr, restrict, true); err != nil {
+
+	// Create and validate updated record
+	record := types.NewNameRecord(normalizedName, addr, restrict)
+	if err := record.Validate(); err != nil {
+		return err
+	}
+	// Update the record.
+	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
 		return err
 	}
 	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), name, restrict)
@@ -189,18 +210,17 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 	}
 	namerecord, err := k.nameRecords.Get(ctx, normalizedName)
 	if err != nil {
-		return nil, types.ErrNameNotBound
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, types.ErrNameNotBound
+		}
+		return nil, err
 	}
 	return &namerecord, nil
 }
 
 // NameExists returns true if store contains a record for the given name.
 func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
-	normalizedName, err := k.Normalize(ctx, name)
-	if err != nil {
-		return false
-	}
-	exists, _ := k.nameRecords.Has(ctx, normalizedName)
+	exists, _ := k.nameRecords.Has(ctx, name)
 	return exists
 }
 
@@ -208,16 +228,27 @@ func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
 func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
 	var records []types.NameRecord
 
-	addressStr := address.String()
-	err := k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
-		if record.Address == addressStr {
-			records = append(records, record)
+	iter, err := k.nameRecords.Indexes.AddrIndex.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			continue
 		}
 
-		return false, nil
-	})
+		record, err := k.nameRecords.Get(ctx, pk)
+		if err != nil {
+			continue
+		}
 
-	return records, err
+		records = append(records, record)
+	}
+
+	return records, nil
 }
 
 // DeleteRecord removes a name record from the kvstore.
@@ -228,7 +259,7 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	}
 	record, err := k.nameRecords.Get(ctx, normalizedName)
 	if err != nil {
-		return types.ErrNameNotBound
+		return err
 	}
 	if err := k.nameRecords.Remove(ctx, normalizedName); err != nil {
 		return err
@@ -281,126 +312,8 @@ func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 	return normalized, nil
 }
 
-// DeleteInvalidAddressIndexEntries is only for the rust upgrade. It goes over all the address -> name entries and
-// deletes any that are no longer accurate.
-func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
-	logger := k.Logger(ctx)
-	logger.Info("Checking address -> name index entries.")
-	keepCount := 0
-	var toDelete [][]byte
-
-	store := k.storeService.OpenKVStore(ctx)
-	iterator, err := store.Iterator(types.AddressKeyPrefix, storetypes.PrefixEndBytes(types.AddressKeyPrefix))
-	if err != nil {
-		logger.Error("failed to create iterator for address index", "error", err)
-		return
-	}
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		key := iterator.Key()
-
-		if len(key) < 23 { // 1 (prefix) + 1 (len) + 20 (min addr) + 20 (hash)
-			toDelete = append(toDelete, key)
-			continue
-		}
-		addrLen := int(key[1])
-		if len(key) != 2+addrLen+20 {
-			toDelete = append(toDelete, key)
-			continue
-		}
-		addrBz := key[2 : 2+addrLen]
-		nameHash := key[2+addrLen:]
-
-		nameKey := make([]byte, 0, len(types.NameKeyPrefix)+len(nameHash))
-		nameKey = append(nameKey, types.NameKeyPrefix...)
-		nameKey = append(nameKey, nameHash...)
-
-		exists, err := store.Has(nameKey)
-		if err != nil || !exists {
-			toDelete = append(toDelete, key)
-			continue
-		}
-
-		bz, err := store.Get(nameKey)
-		if err != nil {
-			toDelete = append(toDelete, key)
-			continue
-		}
-
-		var record types.NameRecord
-		if err := k.cdc.Unmarshal(bz, &record); err != nil {
-			toDelete = append(toDelete, key)
-			continue
-		}
-
-		fullHash := sha256.Sum256([]byte(record.Name))
-		computedHash := fullHash[:20]
-		if !bytes.Equal(computedHash, nameHash) {
-			toDelete = append(toDelete, key)
-			continue
-		}
-
-		addr, err := sdk.AccAddressFromBech32(record.Address)
-		if err != nil || !bytes.Equal(addr.Bytes(), addrBz) {
-			toDelete = append(toDelete, key)
-			continue
-		}
-		keepCount++
-	}
-
-	if len(toDelete) == 0 {
-		logger.Info(fmt.Sprintf("All %d index entries are valid", keepCount))
-		return
-	}
-
-	logger.Info(fmt.Sprintf("Found %d invalid entries, deleting", len(toDelete)))
-	for _, key := range toDelete {
-		if err := store.Delete(key); err != nil {
-			logger.Error("failed to delete invalid index entry", "key", fmt.Sprintf("%x", key), "error", err)
-		}
-	}
-	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
-}
-
-func (k *Keeper) GetNameRecord(ctx sdk.Context, key string) (types.NameRecord, error) {
-	return k.nameRecords.Get(ctx, key)
-}
-
-func (k Keeper) GetAddrIndex() *indexes.Multi[collections.Pair[[]byte, string], string, types.NameRecord] {
+func (k Keeper) GetAddrIndex() *indexes.Multi[collections.Pair[sdk.AccAddress, string], string, types.NameRecord] {
 	return k.nameRecords.Indexes.AddrIndex
-}
-
-func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool, isModifiable bool) error {
-	normalizedName, err := k.Normalize(ctx, name)
-	if err != nil {
-		return err
-	}
-
-	if err = types.ValidateAddress(addr); err != nil {
-		return types.ErrInvalidAddress.Wrap(err.Error())
-	}
-
-	// Check if record exists only when isModifiable = false
-	exists, err := k.nameRecords.Has(ctx, normalizedName)
-	if err != nil {
-		return err
-	}
-
-	if exists && !isModifiable {
-		return types.ErrNameAlreadyBound
-	}
-
-	record := types.NewNameRecord(normalizedName, addr, restrict)
-	if err := record.Validate(); err != nil {
-		return err
-	}
-
-	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {

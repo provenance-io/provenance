@@ -57,11 +57,6 @@ func (s *MigrationTestSuite) SetupTest() {
 	}
 	store.Set(nameKey, s.cdc.MustMarshal(&record))
 
-	addrPrefix, err := types.GetAddressKeyPrefix(s.user1Addr)
-	s.Require().NoError(err)
-
-	addrIndexKey := append(addrPrefix, nameKey...)
-	store.Set(addrIndexKey, s.cdc.MustMarshal(&record))
 }
 
 func (s *MigrationTestSuite) TestMigration() {
@@ -80,10 +75,6 @@ func (s *MigrationTestSuite) TestMigration() {
 	s.Require().NoError(err, "failed to marshal name record")
 	oldStore.Set(nameKey, recordBz)
 
-	addrIndexKey, err := types.GetAddressKeyBytes(s.user1Addr, nameKey[1:]) // Strip prefix byte
-	s.Require().NoError(err, "failed to get address key bytes")
-	oldStore.Set(addrIndexKey, []byte("old"))
-
 	newKeeper := keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(storeKey))
 	migrator := keeper.NewMigrator(newKeeper)
 
@@ -93,7 +84,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	params := newKeeper.GetParams(s.ctx)
 	s.Require().Equal(types.DefaultParams(), params, "params mismatch after migration")
 
-	migratedRecord, err := newKeeper.GetNameRecord(s.ctx, name)
+	migratedRecord, err := newKeeper.GetRecordByName(s.ctx, name)
 	s.Require().NoError(err, "failed to get migrated name record")
 	s.Require().Equal(name, migratedRecord.Name, "migrated record name mismatch")
 	s.Require().Equal(s.user1Addr.String(), migratedRecord.Address, "migrated record address mismatch")
@@ -101,7 +92,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	normalized, err := newKeeper.Normalize(s.ctx, name)
 	s.Require().NoError(err, "failed to normalize name")
 
-	pair := collections.Join([]byte(s.user1Addr), normalized)
+	pair := collections.Join(s.user1Addr, normalized)
 	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, pair)
 	s.Require().NoError(err, "failed to get address index iterator")
 	defer iter.Close()
@@ -111,7 +102,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	primaryKey, err := iter.PrimaryKey()
 	s.Require().NoError(err, "failed to get primary key from iterator")
 
-	indexRecord, err := newKeeper.GetNameRecord(s.ctx, primaryKey)
+	indexRecord, err := newKeeper.GetRecordByName(s.ctx, primaryKey)
 	s.Require().NoError(err, "failed to get record by primary key")
 	s.Require().Equal(migratedRecord, indexRecord, "migrated record and index record do not match")
 
