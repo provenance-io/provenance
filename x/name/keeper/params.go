@@ -1,6 +1,11 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/name/types"
@@ -10,7 +15,10 @@ import (
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	params, err := k.paramsStore.Get(ctx)
 	if err != nil {
-		return types.DefaultParams()
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultParams()
+		}
+		panic(fmt.Errorf("failed to get name module params: %w", err))
 	}
 	return params
 }
