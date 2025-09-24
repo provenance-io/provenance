@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -200,6 +201,17 @@ func (lk *LedgerKey) Validate() error {
 	return nil
 }
 
+// Equals returns true if this LedgerKey equals the provided one.
+func (lk *LedgerKey) Equals(other *LedgerKey) bool {
+	if lk == other {
+		return true
+	}
+	if lk == nil || other == nil {
+		return false
+	}
+	return lk.NftId == other.NftId && lk.AssetClassId == other.AssetClassId
+}
+
 // Validate validates the Ledger type
 func (l *Ledger) Validate() error {
 	if l.Key == nil {
@@ -352,12 +364,24 @@ func (bb *BucketBalance) Validate() error {
 
 // Validate validates the LedgerAndEntries type
 func (lte *LedgerAndEntries) Validate() error {
-	if err := lte.LedgerKey.Validate(); err != nil {
-		return err
+	if lte.LedgerKey == nil && lte.Ledger == nil {
+		return errors.New("either a ledger or ledger key are required")
 	}
 
-	if err := lte.Ledger.Validate(); err != nil {
-		return NewErrCodeInvalidField("ledger", err.Error())
+	if lte.LedgerKey != nil {
+		if err := lte.LedgerKey.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if lte.Ledger != nil {
+		if err := lte.Ledger.Validate(); err != nil {
+			return NewErrCodeInvalidField("ledger", err.Error())
+		}
+
+		if lte.LedgerKey != nil && !lte.LedgerKey.Equals(lte.Ledger.Key) {
+			return errors.New("the ledger_key does not equal the ledger.key")
+		}
 	}
 
 	if len(lte.Entries) == 0 {
