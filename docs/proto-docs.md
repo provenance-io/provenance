@@ -7387,7 +7387,7 @@ Msg defines the asset module's message service.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `BurnAsset` | [MsgBurnAsset](#provenance-asset-v1-MsgBurnAsset) | [MsgBurnAssetResponse](#provenance-asset-v1-MsgBurnAssetResponse) | BurnAsset burns/removes an NFT and its registry for the asset. |
+| `BurnAsset` | [MsgBurnAsset](#provenance-asset-v1-MsgBurnAsset) | [MsgBurnAssetResponse](#provenance-asset-v1-MsgBurnAssetResponse) | BurnAsset burns/removes an NFT (but does not remove its registry). |
 | `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) | CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema. |
 | `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) | CreateAssetClass creates an NFT class and validates the json schema data field. |
 | `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a marker for the pool and transfers the assets to the pool marker. |

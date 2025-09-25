@@ -23,7 +23,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// BurnAsset burns an NFT and removes its registry for the asset.
+// BurnAsset burns/removes an NFT (but does not remove its registry).
 func (m msgServer) BurnAsset(goCtx context.Context, msg *types.MsgBurnAsset) (*types.MsgBurnAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -197,7 +197,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 			return nil, types.NewErrCodeNotFound(fmt.Sprintf("asset %s/%s", asset.ClassId, asset.Id))
 		}
 		if ownerResp.Owner != msg.Signer {
-			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("asset class %s, id %s owner %s does not match from address %s", asset.ClassId, asset.Id, ownerResp.Owner, msg.Signer))
+			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("asset class %s, id %s owner %s does not match signer %s", asset.ClassId, asset.Id, ownerResp.Owner, msg.Signer))
 		}
 
 		// Transfer the nft to the pool marker address

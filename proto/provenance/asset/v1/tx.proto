@@ -16,7 +16,7 @@ import "provenance/asset/v1/asset.proto";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // BurnAsset burns/removes an NFT and its registry for the asset.
+  // BurnAsset burns/removes an NFT (but does not remove its registry).
   rpc BurnAsset(MsgBurnAsset) returns (MsgBurnAssetResponse);
 
   // CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.

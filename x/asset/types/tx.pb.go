@@ -704,7 +704,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// BurnAsset burns/removes an NFT and its registry for the asset.
+	// BurnAsset burns/removes an NFT (but does not remove its registry).
 	BurnAsset(ctx context.Context, in *MsgBurnAsset, opts ...grpc.CallOption) (*MsgBurnAssetResponse, error)
 	// CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
 	CreateAsset(ctx context.Context, in *MsgCreateAsset, opts ...grpc.CallOption) (*MsgCreateAssetResponse, error)
@@ -783,7 +783,7 @@ func (c *msgClient) CreateSecuritization(ctx context.Context, in *MsgCreateSecur
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// BurnAsset burns/removes an NFT and its registry for the asset.
+	// BurnAsset burns/removes an NFT (but does not remove its registry).
 	BurnAsset(context.Context, *MsgBurnAsset) (*MsgBurnAssetResponse, error)
 	// CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
 	CreateAsset(context.Context, *MsgCreateAsset) (*MsgCreateAssetResponse, error)
