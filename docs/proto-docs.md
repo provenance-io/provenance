@@ -7248,7 +7248,7 @@ MsgCreateAsset is the message type for creating a new asset.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset` | [Asset](#provenance-asset-v1-Asset) |  | asset defines the asset to be created. |
-| `owner` | [string](#string) |  | owner defines the address to set as the created asset. |
+| `owner` | [string](#string) |  | owner defines the owner address for the created asset. if owner is not provided, signer will be used. |
 | `signer` | [string](#string) |  | signer defines the address of the message sender. |
 
 

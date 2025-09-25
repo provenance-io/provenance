@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -103,7 +105,8 @@ func validateAgainstSchema(schema map[string]interface{}, jsonData interface{}) 
 			if !ok {
 				return fmt.Errorf("invalid properties definition")
 			}
-			for key, sub := range props {
+			for _, key := range slices.Sorted(maps.Keys(props)) {
+				sub := props[key]
 				subSchema, ok := sub.(map[string]interface{})
 				if !ok {
 					return fmt.Errorf("invalid property %s definition", key)

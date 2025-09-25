@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,30 +16,23 @@ import (
 )
 
 func TestUtil(t *testing.T) {
-	fmt.Println("--- Util StringToAny AnyToString Test ---")
 	ir := cdctypes.NewInterfaceRegistry()
 	ir.RegisterImplementations((*proto.Message)(nil), &AssetData{})
 	cdc := codec.NewProtoCodec(ir)
-	fmt.Println("Registry and Codec created.")
 
 	originalString := "direct check string"
-	fmt.Printf("Attempting StringToAny for string: '%s' ...\n", originalString)
 	anyMsg, err := StringToAny(originalString)
 	if err != nil {
 		t.Fatalf("StringToAny failed: %v", err)
 	}
-
-	fmt.Printf("Attempting util.AnyToString for TypeURL %s...\n", anyMsg.TypeUrl)
 	strMsg, err := AnyToString(cdc, anyMsg)
 	require.NoError(t, err, "AnyToString failed")
 	require.Equal(t, originalString, strMsg, "Decoded string does not match original")
-
-	fmt.Printf("Unpacking successful. Final string: %q\n", strMsg)
-	fmt.Println("--- Registry Direct Check Test Passed ---")
 }
 
 func TestAnyToJSONSchema(t *testing.T) {
 	ir := cdctypes.NewInterfaceRegistry()
+	ir.RegisterImplementations((*proto.Message)(nil), &AssetData{})
 	cdc := codec.NewProtoCodec(ir)
 
 	tests := []struct {
@@ -231,8 +223,7 @@ func TestNewDefaultMarker(t *testing.T) {
 			marker, err := NewDefaultMarker(tc.denom, tc.fromAddr)
 
 			if tc.expErr != "" {
-				require.Error(t, err, "NewDefaultMarker error")
-				require.Equal(t, tc.expErr, err.Error())
+				require.EqualError(t, err, tc.expErr, "NewDefaultMarker error")
 				assert.Nil(t, marker, "NewDefaultMarker result")
 			} else {
 				assert.NoError(t, err, "NewDefaultMarker error")
@@ -265,6 +256,7 @@ func TestNewDefaultMarker(t *testing.T) {
 
 func TestAnyToStringAndAnyToAssetData_EdgeCases(t *testing.T) {
 	ir := cdctypes.NewInterfaceRegistry()
+	ir.RegisterImplementations((*proto.Message)(nil), &AssetData{})
 	cdc := codec.NewProtoCodec(ir)
 
 	tests := []struct {

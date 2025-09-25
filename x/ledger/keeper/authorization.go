@@ -21,12 +21,7 @@ import (
 //
 // Returns an error if the address is not authorized, nil otherwise.
 func (k Keeper) RequireAuthorization(ctx sdk.Context, addr string, key *registrytypes.RegistryKey) error {
-	err := assertAuthorization(ctx, k.RegistryKeeper, addr, key)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return assertAuthorization(ctx, k.RegistryKeeper, addr, key)
 }
 
 // assertOwner verifies that the given address is the direct owner of the NFT.
@@ -53,9 +48,12 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, signerAddr string, ledgerKey
 // This function determines if an address has authorization to perform ledger operations
 // based on a hierarchical authorization system:
 //
-// Authorization Hierarchy:
-// 1. Registry Servicer Role: If a servicer is registered for the NFT, only the servicer can act
-// 2. NFT Ownership: If no servicer is registered, the NFT owner has authorization
+// Authorization Logic:
+//  1. No Registry Entry: If no registry entry exists, authorization is based on NFT ownership
+//  2. Registry Entry with Servicer: If a servicer role is registered, only the servicer is authorized
+//     (NFT owner is explicitly denied when a servicer exists)
+//  3. Registry Entry without Servicer: If registry entry exists but no servicer role,
+//     authorization falls back to NFT ownership
 //
 // The registry module acts as a gate that can override direct NFT ownership,
 // allowing for delegated authorization through registered servicers. This enables
@@ -69,8 +67,7 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, signerAddr string, ledgerKey
 // - rk: The registry key containing asset class ID and NFT ID
 //
 // Returns:
-// - bool: true if authorized, false otherwise
-// - error: error details if authorization fails
+// - error: nil if authorized, error details if authorization fails
 func assertAuthorization(ctx sdk.Context, k RegistryKeeper, signerAddr string, rk *registrytypes.RegistryKey) error {
 	// Get the registry entry for the NFT to determine if the address has the servicer role.
 	// The registry entry contains role assignments that can override direct NFT ownership.

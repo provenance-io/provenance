@@ -79,7 +79,7 @@ $ %[1]s burn-asset "real-estate" "property-001"
 // GetCmdCreateAsset returns the command for creating an asset
 func GetCmdCreateAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-asset <class-id> <id> <data> <owner>[--uri <uri>] [--uri-hash <uri-hash>]",
+		Use:   "create-asset <class-id> <id> <data> [--owner <owner>] [--uri <uri>] [--uri-hash <uri-hash>]",
 		Short: "Create a new asset",
 		Long: strings.TrimSpace(`
 Create a new asset in the specified asset class.
@@ -89,10 +89,10 @@ If no --owner <owner> is supplied, the --from address is used as the owner.
 		Example: fmt.Sprintf(strings.TrimSpace(`
 $ %[1]s create-asset "real-estate" "property-001" \
     '{"location": "New York", "value": 500000}' \
-    --uri "https://example.com/metadata.json" --uri-hash abc123 \
-    --owner tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx
+    --owner tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx \
+    --uri "https://example.com/metadata.json" --uri-hash abc123
 `), cmdStart),
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -111,7 +111,7 @@ $ %[1]s create-asset "real-estate" "property-001" \
 
 			msg := &types.MsgCreateAsset{
 				Asset:  asset,
-				Owner:  args[3],
+				Owner:  ReadFlagOwner(flagSet),
 				Signer: clientCtx.GetFromAddress().String(),
 			}
 			if len(msg.Owner) == 0 {
@@ -123,6 +123,7 @@ $ %[1]s create-asset "real-estate" "property-001" \
 	}
 
 	AddFlagsURI(cmd, "asset")
+	AddFlagOwner(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -229,7 +230,7 @@ $ %[1]s create-pool 1000pooltoken real-estate,property-001 real-estate,property-
 // GetCmdCreateTokenization returns the command for creating a new tokenization
 func GetCmdCreateTokenization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-tokenization <amount> <nft-class-id> <nft-id>",
+		Use:   "create-tokenization <token> <nft-class-id> <nft-id>",
 		Short: "Create a new tokenization marker",
 		Long:  `Create a new tokenization marker with the specified amount and NFT.`,
 		Example: fmt.Sprintf(strings.TrimSpace(`
@@ -242,9 +243,9 @@ $ %[1]s create-tokenization 1000pooltoken real-estate property-001
 				return err
 			}
 
-			coin, err := sdk.ParseCoinNormalized(args[0])
+			token, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return types.NewErrCodeInvalidField("coin", "%s", err)
+				return types.NewErrCodeInvalidField("token", "%s", err)
 			}
 
 			asset := &types.AssetKey{
@@ -253,7 +254,7 @@ $ %[1]s create-tokenization 1000pooltoken real-estate property-001
 			}
 
 			msg := &types.MsgCreateTokenization{
-				Token:  coin,
+				Token:  token,
 				Asset:  asset,
 				Signer: clientCtx.GetFromAddress().String(),
 			}

@@ -10,6 +10,7 @@ const (
 	FlagURIHash     = "uri-hash"
 	FlagSymbol      = "symbol"
 	FlagDescription = "description"
+	FlagOwner       = "owner"
 )
 
 // AddFlagsURI adds the --uri and --uri-hash flags to the provided command.
@@ -53,5 +54,16 @@ func AddFlagDescription(cmd *cobra.Command) {
 func ReadFlagDescription(flagSet *pflag.FlagSet) string {
 	// GetString only returns an error if the flag wasn't set up on the cmd, but we don't care here.
 	rv, _ := flagSet.GetString(FlagDescription)
+	return rv
+}
+
+// AddFlagOwner adds the --owner flag to the provided command.
+func AddFlagOwner(cmd *cobra.Command) {
+	cmd.Flags().String(FlagOwner, "", "owner address")
+}
+
+// ReadFlagOwner returns the value provided with the --owner flag.
+func ReadFlagOwner(flagSet *pflag.FlagSet) string {
+	rv, _ := flagSet.GetString(FlagOwner)
 	return rv
 }

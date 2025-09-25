@@ -339,13 +339,7 @@ func GetBalancesAsOfCmd() *cobra.Command {
 				return err
 			}
 
-			json, err := json.MarshalIndent(res, "", "  ")
-			if err != nil {
-				return err
-			}
-			cmd.Println(string(json))
-
-			return nil
+			return clientCtx.PrintProto(res)
 		},
 	}
 
