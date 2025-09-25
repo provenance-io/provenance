@@ -80,7 +80,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 
 	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
 	if err != nil {
-		return types.NewErrCodeRegistryNotFound(fmt.Sprintf("class id: %s, nft id: %s", key.AssetClassId, key.NftId))
+		return types.NewErrCodeRegistryNotFound(key.String())
 	}
 
 	// Identify which entry has the role we want.
@@ -119,7 +119,7 @@ func (k Keeper) GrantRole(ctx sdk.Context, key *types.RegistryKey, role types.Re
 func (k Keeper) RevokeRole(ctx sdk.Context, key *types.RegistryKey, role types.RegistryRole, addrs []string) error {
 	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
 	if err != nil {
-		return types.NewErrCodeRegistryNotFound(fmt.Sprintf("class id: %s, nft id: %s", key.AssetClassId, key.NftId))
+		return types.NewErrCodeRegistryNotFound(key.String())
 	}
 
 	// Identify which entry has the role we want.

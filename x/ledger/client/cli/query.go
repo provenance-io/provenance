@@ -76,6 +76,11 @@ func GetCmd() *cobra.Command {
 				return err
 			}
 
+			// ledger query can return nil if the ledger is not found
+			if l == nil || l.Ledger == nil {
+				return fmt.Errorf("ledger not found for asset class id %s and nft id %s", assetClassID, nftID)
+			}
+
 			// Convert to PlainText
 			plainText := LedgerPlainText{
 				Key:                        req.Key,

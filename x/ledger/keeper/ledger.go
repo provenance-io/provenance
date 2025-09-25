@@ -145,7 +145,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 
 	// Ensure the ledger class is compatible with the asset class.
 	if ledgerClass.AssetClassId != l.Key.AssetClassId {
-		return types.NewErrCodeInvalidField("ledger class", "ledger class not allowed for asset class id")
+		return types.NewErrCodeInvalidField("ledger class asset class id", "does not match ledger key asset class id")
 	}
 
 	// Validate that the ledger class exists in the state store.
@@ -154,7 +154,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 		return err
 	}
 	if !hasLedgerClass {
-		return types.NewErrCodeInvalidField("ledger class", "ledger class doesn't exist")
+		return types.NewErrCodeInvalidField("ledger class", "doesn't exist")
 	}
 
 	// Validate that the NFT exists in the registry.
@@ -338,7 +338,7 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, m
 func (k Keeper) DestroyLedger(ctx sdk.Context, lk *types.LedgerKey) error {
 	// Check if the ledger exists before attempting to destroy it.
 	if !k.HasLedger(ctx, lk) {
-		return types.NewErrCodeInvalidField("ledger", "ledger doesn't exist")
+		return types.NewErrCodeInvalidField("ledger", "doesn't exist")
 	}
 
 	keyStr := lk.String()

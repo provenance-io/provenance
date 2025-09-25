@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	nfttypes "cosmossdk.io/x/nft"
 
@@ -23,7 +24,7 @@ func NewQueryServerImpl(keeper Keeper) types.QueryServer {
 func (q queryServer) Asset(ctx context.Context, req *types.QueryAssetRequest) (*types.QueryAssetResponse, error) {
 	nftResp, err := q.nftKeeper.NFT(ctx, &nfttypes.QueryNFTRequest{ClassId: req.ClassId, Id: req.Id})
 	if err != nil {
-		return nil, err
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to get asset: %s", err))
 	}
 	n := nftResp.Nft
 	asset := &types.Asset{ClassId: n.ClassId, Id: n.Id, Uri: n.Uri, UriHash: n.UriHash}
@@ -39,14 +40,14 @@ func (q queryServer) Asset(ctx context.Context, req *types.QueryAssetRequest) (*
 func (q queryServer) Assets(ctx context.Context, req *types.QueryAssetsRequest) (*types.QueryAssetsResponse, error) {
 	if req.Owner != "" {
 		if _, err := sdk.AccAddressFromBech32(req.Owner); err != nil {
-			return nil, types.NewErrCodeInvalidField("owner", err.Error())
+			return nil, types.NewErrCodeInvalidField("owner", "%s", err)
 		}
 	}
 	// Delegate to NFT query server
 	nftReq := &nfttypes.QueryNFTsRequest{Owner: req.Owner, ClassId: req.ClassId, Pagination: req.Pagination}
 	nftResp, err := q.nftKeeper.NFTs(ctx, nftReq)
 	if err != nil {
-		return nil, err
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to get assets: %s", err))
 	}
 	assets := make([]*types.Asset, 0, len(nftResp.Nfts))
 	for _, n := range nftResp.Nfts {
@@ -65,7 +66,7 @@ func (q queryServer) Assets(ctx context.Context, req *types.QueryAssetsRequest) 
 func (q queryServer) AssetClass(ctx context.Context, req *types.QueryAssetClassRequest) (*types.QueryAssetClassResponse, error) {
 	nftResp, err := q.nftKeeper.Class(ctx, &nfttypes.QueryClassRequest{ClassId: req.Id})
 	if err != nil {
-		return nil, err
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to get asset class: %s", err))
 	}
 	c := nftResp.Class
 	ac := &types.AssetClass{Id: c.Id, Name: c.Name, Symbol: c.Symbol, Description: c.Description, Uri: c.Uri, UriHash: c.UriHash}
@@ -81,7 +82,7 @@ func (q queryServer) AssetClass(ctx context.Context, req *types.QueryAssetClassR
 func (q queryServer) AssetClasses(ctx context.Context, req *types.QueryAssetClassesRequest) (*types.QueryAssetClassesResponse, error) {
 	nftResp, err := q.nftKeeper.Classes(ctx, &nfttypes.QueryClassesRequest{Pagination: req.Pagination})
 	if err != nil {
-		return nil, err
+		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to get asset classes: %s", err))
 	}
 	classes := make([]*types.AssetClass, 0, len(nftResp.Classes))
 	for _, c := range nftResp.Classes {

@@ -21,6 +21,8 @@
 package types
 
 import (
+	"fmt"
+
 	cerrs "cosmossdk.io/errors"
 )
 
@@ -33,7 +35,6 @@ const (
 	ErrCodeInvalidRole            ErrCode = "INVALID_ROLE"
 	ErrCodeRegistryNotFound       ErrCode = "REGISTRY_NOT_FOUND"
 	ErrCodeAddressAlreadyHasRole  ErrCode = "ADDRESS_ALREADY_HAS_ROLE"
-	ErrCodeInvalidHrp             ErrCode = "INVALID_HRP"
 	ErrCodeInvalidKey             ErrCode = "INVALID_KEY"
 	ErrCodeAddressDoesNotHaveRole ErrCode = "ADDRESS_DOES_NOT_HAVE_ROLE"
 	ErrCodeInvalidField           ErrCode = "INVALID_FIELD"
@@ -46,18 +47,17 @@ var (
 	ErrInvalidRole            = cerrs.Register(ModuleName, 4, "invalid role")
 	ErrRegistryNotFound       = cerrs.Register(ModuleName, 5, "registry not found")
 	ErrAddressAlreadyHasRole  = cerrs.Register(ModuleName, 6, "address already has role")
-	ErrInvalidHrp             = cerrs.Register(ModuleName, 7, "invalid hrp")
-	ErrInvalidKey             = cerrs.Register(ModuleName, 8, "invalid key")
-	ErrAddressDoesNotHaveRole = cerrs.Register(ModuleName, 9, "address does not have role")
-	ErrInvalidField           = cerrs.Register(ModuleName, 10, "invalid field")
+	ErrInvalidKey             = cerrs.Register(ModuleName, 7, "invalid key")
+	ErrAddressDoesNotHaveRole = cerrs.Register(ModuleName, 8, "address does not have role")
+	ErrInvalidField           = cerrs.Register(ModuleName, 9, "invalid field")
 )
 
 func NewErrCodeRegistryAlreadyExists(key string) error {
-	return cerrs.Wrapf(ErrRegistryAlreadyExists, "registry already exists for key: %s", key)
+	return cerrs.Wrapf(ErrRegistryAlreadyExists, "registry already exists for key: %q", key)
 }
 
 func NewErrCodeNFTNotFound(nftID string) error {
-	return cerrs.Wrapf(ErrNFTNotFound, "NFT does not exist: %s", nftID)
+	return cerrs.Wrapf(ErrNFTNotFound, "NFT does not exist: %q", nftID)
 }
 
 func NewErrCodeUnauthorized(why string) error {
@@ -65,29 +65,21 @@ func NewErrCodeUnauthorized(why string) error {
 }
 
 func NewErrCodeInvalidRole(role string) error {
-	return cerrs.Wrapf(ErrInvalidRole, "invalid role: %s", role)
+	return cerrs.Wrapf(ErrInvalidRole, "invalid role: %q", role)
 }
 
 func NewErrCodeRegistryNotFound(key string) error {
-	return cerrs.Wrapf(ErrRegistryNotFound, "registry not found for key: %s", key)
+	return cerrs.Wrapf(ErrRegistryNotFound, "registry not found for key: %q", key)
 }
 
 func NewErrCodeAddressAlreadyHasRole(address, role string) error {
-	return cerrs.Wrapf(ErrAddressAlreadyHasRole, "address %s already has role %s", address, role)
+	return cerrs.Wrapf(ErrAddressAlreadyHasRole, "address %q already has role %q", address, role)
 }
 
 func NewErrCodeAddressDoesNotHaveRole(address, role string) error {
-	return cerrs.Wrapf(ErrAddressDoesNotHaveRole, "address %s does not have role %s", address, role)
+	return cerrs.Wrapf(ErrAddressDoesNotHaveRole, "address %q does not have role %q", address, role)
 }
 
-func NewErrCodeInvalidHrp(hrp string) error {
-	return cerrs.Wrapf(ErrInvalidHrp, "invalid hrp: %s", hrp)
-}
-
-func NewErrCodeInvalidKey(key string) error {
-	return cerrs.Wrapf(ErrInvalidKey, "invalid key: %s", key)
-}
-
-func NewErrCodeInvalidField(field, value string) error {
-	return cerrs.Wrapf(ErrInvalidField, "invalid field: %s, value: %s", field, value)
+func NewErrCodeInvalidField(field, format string, args ...interface{}) error {
+	return cerrs.Wrapf(ErrInvalidField, "invalid %s: %s", field, fmt.Sprintf(format, args...))
 }

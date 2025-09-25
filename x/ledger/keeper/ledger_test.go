@@ -807,7 +807,7 @@ func (s *TestSuite) TestLedgerClassesQueryServer() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			resp, err := queryServer.LedgerClasses(sdk.WrapSDKContext(s.ctx), tc.request)
+			resp, err := queryServer.LedgerClasses(s.ctx, tc.request)
 
 			if tc.expectError {
 				s.Require().Error(err)

@@ -13,6 +13,7 @@ import (
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgBurnAsset{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgCreateAsset{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgCreateAssetClass{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgCreatePool{Signer: signer} },
@@ -21,6 +22,96 @@ func TestAllMsgsGetSigners(t *testing.T) {
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
+
+func TestMsgBurnAsset_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgBurnAsset
+		expErr string
+	}{
+		{
+			name: "valid message",
+			msg: MsgBurnAsset{
+				Asset: &AssetKey{
+					ClassId: "class-id",
+					Id:      "asset-id",
+				},
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			expErr: "",
+		},
+		{
+			name: "nil asset",
+			msg: MsgBurnAsset{
+				Asset:  nil,
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			expErr: "invalid asset: asset_key cannot be nil: invalid field",
+		},
+		{
+			name: "empty class id",
+			msg: MsgBurnAsset{
+				Asset: &AssetKey{
+					ClassId: "",
+					Id:      "asset-id",
+				},
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			expErr: "invalid asset: invalid class_id: must be between 1 and 128 characters: invalid field",
+		},
+		{
+			name: "empty id",
+			msg: MsgBurnAsset{
+				Asset: &AssetKey{
+					ClassId: "class-id",
+					Id:      "",
+				},
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			expErr: "invalid asset: invalid id: must be between 1 and 128 characters: invalid field",
+		},
+		{
+			name: "asset validation failure",
+			msg: MsgBurnAsset{
+				Asset: &AssetKey{
+					ClassId: "class-id",
+					Id:      "",
+				},
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			expErr: "invalid asset: invalid id: must be between 1 and 128 characters: invalid field",
+		},
+		{
+			name: "empty signer",
+			msg: MsgBurnAsset{
+				Asset: &AssetKey{
+					ClassId: "class-id",
+					Id:      "asset-id",
+				},
+				Signer: "",
+			},
+			expErr: "invalid signer: empty address string is not allowed: invalid field",
+		},
+		{
+			name: "invalid signer",
+			msg: MsgBurnAsset{
+				Asset: &AssetKey{
+					ClassId: "class-id",
+					Id:      "asset-id",
+				},
+				Signer: "invalid-address",
+			},
+			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1: invalid field",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.msg.ValidateBasic()
+			assertions.AssertErrorValue(t, err, tt.expErr, "MsgBurnAsset.ValidateBasic()")
+		})
+	}
 }
 
 func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
@@ -48,7 +139,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset: asset cannot be nil",
+			expErr: "invalid asset: asset cannot be nil: invalid field",
 		},
 		{
 			name: "empty class_id",
@@ -60,7 +151,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset: class id cannot be empty",
+			expErr: "invalid asset: invalid class_id: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "empty id",
@@ -72,7 +163,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset: id cannot be empty",
+			expErr: "invalid asset: invalid id: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "empty owner",
@@ -84,7 +175,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid owner: empty address string is not allowed",
+			expErr: "invalid owner: empty address string is not allowed: invalid field",
 		},
 		{
 			name: "invalid owner",
@@ -96,7 +187,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "invalid-address",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid owner: decoding bech32 failed: invalid separator index -1",
+			expErr: "invalid owner: decoding bech32 failed: invalid separator index -1: invalid field",
 		},
 		{
 			name: "empty signer",
@@ -108,7 +199,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 				Signer: "",
 			},
-			expErr: "invalid signer: empty address string is not allowed",
+			expErr: "invalid signer: empty address string is not allowed: invalid field",
 		},
 		{
 			name: "invalid signer",
@@ -120,7 +211,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 				Signer: "invalid-address",
 			},
-			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1",
+			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1: invalid field",
 		},
 	}
 
@@ -155,7 +246,7 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 				AssetClass: nil,
 				Signer:     "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset class: asset class cannot be nil",
+			expErr: "invalid asset_class: asset_class cannot be nil: invalid field",
 		},
 		{
 			name: "empty id",
@@ -166,7 +257,7 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset class: id cannot be empty",
+			expErr: "invalid asset_class: invalid id: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "empty name",
@@ -177,7 +268,7 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset class: name cannot be empty",
+			expErr: "invalid asset_class: invalid name: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "empty signer",
@@ -188,7 +279,7 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 				},
 				Signer: "",
 			},
-			expErr: "invalid signer: empty address string is not allowed",
+			expErr: "invalid signer: empty address string is not allowed: invalid field",
 		},
 		{
 			name: "invalid signer",
@@ -199,7 +290,7 @@ func TestMsgCreateAssetClass_ValidateBasic(t *testing.T) {
 				},
 				Signer: "invalid-address",
 			},
-			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1",
+			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1: invalid field",
 		},
 	}
 
@@ -249,7 +340,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid pool: invalid denom: ",
+			expErr: "invalid pool: invalid denom: : invalid field",
 		},
 		{
 			name: "empty assets",
@@ -261,7 +352,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Assets: []*AssetKey{},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "assets cannot be empty",
+			expErr: "invalid assets: cannot be empty: invalid field",
 		},
 		{
 			name: "nil asset",
@@ -275,7 +366,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset at index 0: asset key cannot be nil",
+			expErr: "invalid assets[0]: asset_key cannot be nil: invalid field",
 		},
 		{
 			name: "asset with empty class id",
@@ -292,7 +383,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset at index 0: class id cannot be empty",
+			expErr: "invalid assets[0]: invalid class_id: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "asset with empty id",
@@ -309,7 +400,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset at index 0: id cannot be empty",
+			expErr: "invalid assets[0]: invalid id: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "duplicate assets",
@@ -330,7 +421,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "duplicate asset at index 0 and 1",
+			expErr: "invalid assets: duplicate asset at index 0 and 1: invalid field",
 		},
 		{
 			name: "empty signer",
@@ -347,7 +438,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				},
 				Signer: "",
 			},
-			expErr: "invalid signer: empty address string is not allowed",
+			expErr: "invalid signer: empty address string is not allowed: invalid field",
 		},
 		{
 			name: "invalid signer",
@@ -364,7 +455,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				},
 				Signer: "invalid-address",
 			},
-			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1",
+			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1: invalid field",
 		},
 	}
 
@@ -410,7 +501,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid token: invalid denom: ",
+			expErr: "invalid token: invalid denom: : invalid field",
 		},
 		{
 			name: "negative token amount",
@@ -425,7 +516,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid token: negative coin amount: -1000",
+			expErr: "invalid token: negative coin amount: -1000: invalid field",
 		},
 		{
 			name: "nil asset",
@@ -437,7 +528,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 				Asset:  nil,
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset: asset key cannot be nil",
+			expErr: "invalid asset: asset_key cannot be nil: invalid field",
 		},
 		{
 			name: "empty asset class_id",
@@ -452,7 +543,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset: class id cannot be empty",
+			expErr: "invalid asset: invalid class_id: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "empty asset id",
@@ -467,7 +558,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid asset: id cannot be empty",
+			expErr: "invalid asset: invalid id: must be between 1 and 128 characters: invalid field",
 		},
 		{
 			name: "empty signer",
@@ -482,7 +573,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "",
 			},
-			expErr: "invalid signer: empty address string is not allowed",
+			expErr: "invalid signer: empty address string is not allowed: invalid field",
 		},
 		{
 			name: "invalid signer",
@@ -497,7 +588,7 @@ func TestMsgCreateTokenization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "invalid-address",
 			},
-			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1",
+			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1: invalid field",
 		},
 	}
 
@@ -552,7 +643,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "id cannot be empty",
+			expErr: "invalid id: cannot be empty: invalid field",
 		},
 		{
 			name: "empty pools",
@@ -567,7 +658,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "pools cannot be empty",
+			expErr: "invalid pools: cannot be empty: invalid field",
 		},
 		{
 			name: "empty pool string",
@@ -585,7 +676,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid pool at index 1: cannot be empty",
+			expErr: "invalid pools[1]: cannot be empty: invalid field",
 		},
 		{
 			name: "empty tranches",
@@ -597,7 +688,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				Tranches: []*sdk.Coin{},
 				Signer:   "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "tranches cannot be empty",
+			expErr: "invalid tranches: cannot be empty: invalid field",
 		},
 		{
 			name: "nil tranche",
@@ -611,7 +702,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid tranche at index 0: cannot be nil",
+			expErr: "invalid tranches[0]: cannot be nil: invalid field",
 		},
 		{
 			name: "invalid tranche coin",
@@ -628,7 +719,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid tranche at index 0: invalid denom: ",
+			expErr: "invalid tranches[0]: invalid denom: : invalid field",
 		},
 		{
 			name: "empty signer",
@@ -645,7 +736,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "",
 			},
-			expErr: "invalid signer: empty address string is not allowed",
+			expErr: "invalid signer: empty address string is not allowed: invalid field",
 		},
 		{
 			name: "invalid signer",
@@ -662,7 +753,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "invalid-address",
 			},
-			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1",
+			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1: invalid field",
 		},
 	}
 
