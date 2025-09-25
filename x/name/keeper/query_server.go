@@ -47,13 +47,13 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 		pageReq = request.Pagination
 	}
 
-	allRecords, err := k.GetRecordsByAddress(ctx, accAddr)
+	recordByAddress, err := k.GetRecordsByAddress(ctx, accAddr)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	allNames := make([]string, len(allRecords))
-	for i, record := range allRecords {
+	allNames := make([]string, len(recordByAddress))
+	for i, record := range recordByAddress {
 		allNames[i] = record.Name
 	}
 
