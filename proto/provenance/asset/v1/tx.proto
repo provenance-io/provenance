@@ -42,8 +42,9 @@ message MsgCreateAsset {
 
   // asset defines the asset to be created.
   Asset asset = 1;
-  // owner defines the address to set as the created asset.
-  string owner = 2;
+  // owner defines the owner address for the created asset.
+  // if owner is not provided, signer will be used.
+  string owner = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // signer defines the address of the message sender.
   string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

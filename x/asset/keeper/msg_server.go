@@ -97,7 +97,10 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 		token.Data = anyValue
 	}
 
-	// Get the owner address
+	// Get the owner address, if not provided, use the signer
+	if msg.Owner == "" {
+		msg.Owner = msg.Signer
+	}
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, types.NewErrCodeInvalidField("owner", "%s", err)
@@ -252,7 +255,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Create the securitization marker
-	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf(msg.Id), sdkmath.NewInt(0)), msg.Signer)
+	_, err := m.createMarker(goCtx, sdk.NewCoin(msg.Id, sdkmath.NewInt(0)), msg.Signer)
 	if err != nil {
 		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create securitization marker: %s", err))
 	}

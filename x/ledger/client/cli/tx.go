@@ -233,10 +233,10 @@ func CmdDestroy() *cobra.Command {
 func CmdAppend() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "append <asset_class_id> <nft_id> <json_file_path>",
-		Aliases: []string{"aj"},
+		Aliases: []string{},
 		Short:   "Append ledger entries from a JSON file",
 		Example: `$ provenanced tx ledger append asset-class-1 nft-1 entries.json --from mykey
-where the json is formatted as follows:
+where the json is formatted as follows (array ofLedgerEntry type):
 [
 	{
 		"correlation_id": "entry1",
@@ -247,18 +247,8 @@ where the json is formatted as follows:
 		"posted_date": 19665,
 		"effective_date": 19665,
 		"total_amt": "80000",
-		"applied_amounts": [
-			{
-				"bucket_type_id": 1,
-				"applied_amt": "80000"
-			}
-		],
-		"balance_amounts": [
-			{
-				"bucket_type_id": 1,
-				"balance_amt": "80000"
-			}
-		]
+		"applied_amounts": [{"bucket_type_id": 1, "applied_amt": "80000"}, ...],	
+		"balance_amounts": [{"bucket_type_id": 1, "balance_amt": "80000"}, ...],
 	}
 ]
 `,
@@ -470,6 +460,24 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 		Use:   "xfer <fund_transfers_json_file",
 		Short: "Submit fund transfers",
 		Args:  cobra.ExactArgs(1),
+		Example: `$ provenanced tx ledger xfer transfers.json --from mykey
+		where the json is formatted as follows (array ofFundTransferWithSettlement type):
+		[
+			{
+				"key": {"asset_class_id": "asset-class-1", "nft_id": "nft-1"},
+				"ledger_entry_correlation_id": "entry1",
+				"settlement_instructions": [
+					{
+						"amount": {"denom": "usd", "amount": "100000"},
+						"recipient_address": "tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx",
+						"status": "FUNDING_TRANSFER_STATUS_PENDING",
+						"memo": "test transfer",
+					}
+					...
+				]
+			}
+		]
+		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -511,10 +519,33 @@ func CmdTransferFundsWithSettlement() *cobra.Command {
 // CmdBulkCreate returns the command for creating ledgers and entries in bulk
 func CmdBulkCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "bulk-create <ledger_entries_json_file",
-		Short:   "Create ledgers and entries in bulk",
-		Example: `$ provenanced tx ledger bulk-create data.json --from mykey`,
-		Args:    cobra.ExactArgs(1),
+		Use:   "bulk-create <ledger_entries_json_file>",
+		Short: "Create ledgers and entries in bulk",
+		Example: `$ provenanced tx ledger bulk-create data.json --from mykey
+		where the json is formatted as follows (array of LedgerAndEntries type):
+		[
+			{
+				"ledger_key": {"asset_class_id": "asset-class-1", "nft_id": "nft-1"},
+				"ledger": {"ledger_class_id": "ledger-class-1", "status_type_id": 1, "next_pmt_date": 19665, ... },
+				"entries": [
+					{
+						"correlation_id": "entry1",
+						"reverses_correlation_id": "",
+						"is_void": false,
+						"sequence": 1,
+						"entry_type_id": 1,
+						"posted_date": 19665,
+						"effective_date": 19665,
+						"total_amt": "80000",
+						"applied_amounts": [{"bucket_type_id": 1, "applied_amt": "80000"}, ...],	
+						"balance_amounts": [{"bucket_type_id": 1, "balance_amt": "80000"}, ...],
+					}
+					...
+				]
+			}
+		]
+		`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
