@@ -175,15 +175,14 @@ func (m msgServer) CreateAssetClass(goCtx context.Context, msg *types.MsgCreateA
 // CreatePool creates a marker for the pool and transfers the assets to the pool marker.
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	denom := fmt.Sprintf("pool.%s", msg.Pool.Denom)
 
 	// Ensure the pool marker doesn't already exist
-	if _, err := m.markerKeeper.GetMarkerByDenom(ctx, denom); err == nil {
-		return nil, types.NewErrCodeAlreadyExists(fmt.Sprintf("pool marker with denom %s", denom))
+	if _, err := m.markerKeeper.GetMarkerByDenom(ctx, msg.Pool.Denom); err == nil {
+		return nil, types.NewErrCodeAlreadyExists(fmt.Sprintf("pool marker with denom %s", msg.Pool.Denom))
 	}
 
 	// Create the marker
-	marker, err := m.createMarker(goCtx, sdk.NewCoin(denom, msg.Pool.Amount), msg.Signer)
+	marker, err := m.createMarker(goCtx, sdk.NewCoin(msg.Pool.Denom, msg.Pool.Amount), msg.Signer)
 	if err != nil {
 		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create pool marker: %s", err))
 	}
@@ -253,7 +252,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Create the securitization marker
-	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s", msg.Id), sdkmath.NewInt(0)), msg.Signer)
+	_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf(msg.Id), sdkmath.NewInt(0)), msg.Signer)
 	if err != nil {
 		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create securitization marker: %s", err))
 	}
@@ -261,7 +260,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	// Create the tranches and count them
 	var trancheCount uint32
 	for _, tranche := range msg.Tranches {
-		_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("sec.%s.tranche.%s", msg.Id, tranche.Denom), tranche.Amount), msg.Signer)
+		_, err := m.createMarker(goCtx, sdk.NewCoin(fmt.Sprintf("%s.tranche.%s", msg.Id, tranche.Denom), tranche.Amount), msg.Signer)
 		if err != nil {
 			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create tranche marker: %s", err))
 		}
@@ -271,9 +270,9 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	// Reassign the pools permissions to the asset module account (prevent the pools from being transferred)
 	var poolCount uint32
 	for _, pool := range msg.Pools {
-		poolMarker, err := m.markerKeeper.GetMarkerByDenom(ctx, fmt.Sprintf("pool.%s", pool))
+		poolMarker, err := m.markerKeeper.GetMarkerByDenom(ctx, pool)
 		if err != nil {
-			return nil, types.NewErrCodeNotFound(fmt.Sprintf("pool marker with denom pool.%s", pool))
+			return nil, types.NewErrCodeNotFound(fmt.Sprintf("pool marker with denom %s", pool))
 		}
 
 		// Create a new access grant with the desired permissions
