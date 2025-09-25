@@ -226,21 +226,29 @@ func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
 
 // GetRecordsByAddress looks up all names bound to an address.
 func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
-	var records []types.NameRecord
+	var records types.NameRecords
 
-	iter, err := k.nameRecords.Indexes.AddrIndex.Iterate(ctx, nil)
+	// We create a prefix of the composite index key (address + name) by fixing the address part
+	// with PairPrefix, then build a PrefixedPairRange to efficiently query all entries matching
+	// that address in the multi-index (one-to-many relationship)
+	refKeyPrefix := collections.PairPrefix[sdk.AccAddress, string](address)
+	prefixRange := collections.NewPrefixedPairRange[
+		collections.Pair[sdk.AccAddress, string],
+		string,
+	](refKeyPrefix)
+
+	iter, err := k.nameRecords.Indexes.AddrIndex.Iterate(ctx, prefixRange)
 	if err != nil {
 		return nil, err
 	}
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
+		primaryKey, err := iter.PrimaryKey()
 		if err != nil {
 			continue
 		}
-
-		record, err := k.nameRecords.Get(ctx, pk)
+		record, err := k.nameRecords.Get(ctx, primaryKey)
 		if err != nil {
 			continue
 		}
