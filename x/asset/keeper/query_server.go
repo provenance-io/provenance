@@ -29,8 +29,9 @@ func (q queryServer) Asset(ctx context.Context, req *types.QueryAssetRequest) (*
 	n := nftResp.Nft
 	asset := &types.Asset{ClassId: n.ClassId, Id: n.Id, Uri: n.Uri, UriHash: n.UriHash}
 	if n.Data != nil {
-		if strValue, err := types.AnyToString(q.cdc, n.Data); err == nil {
-			asset.Data = strValue
+		asset.Data, err = types.AnyToString(q.cdc, n.Data)
+		if err != nil {
+			asset.Data = fmt.Sprintf("error reading nft data: %q", err.Error())
 		}
 	}
 	return &types.QueryAssetResponse{Asset: asset}, nil
@@ -53,8 +54,9 @@ func (q queryServer) Assets(ctx context.Context, req *types.QueryAssetsRequest) 
 	for _, n := range nftResp.Nfts {
 		asset := &types.Asset{ClassId: n.ClassId, Id: n.Id, Uri: n.Uri, UriHash: n.UriHash}
 		if n.Data != nil {
-			if strValue, err := types.AnyToString(q.cdc, n.Data); err == nil {
-				asset.Data = strValue
+			asset.Data, err = types.AnyToString(q.cdc, n.Data)
+			if err != nil {
+				asset.Data = fmt.Sprintf("error reading nft data: %q", err.Error())
 			}
 		}
 		assets = append(assets, asset)
@@ -71,8 +73,9 @@ func (q queryServer) AssetClass(ctx context.Context, req *types.QueryAssetClassR
 	c := nftResp.Class
 	ac := &types.AssetClass{Id: c.Id, Name: c.Name, Symbol: c.Symbol, Description: c.Description, Uri: c.Uri, UriHash: c.UriHash}
 	if c.Data != nil {
-		if strValue, err := types.AnyToString(q.cdc, c.Data); err == nil {
-			ac.Data = strValue
+		ac.Data, err = types.AnyToString(q.cdc, c.Data)
+		if err != nil {
+			ac.Data = fmt.Sprintf("error reading class data: %q", err.Error())
 		}
 	}
 	return &types.QueryAssetClassResponse{AssetClass: ac}, nil
@@ -88,8 +91,9 @@ func (q queryServer) AssetClasses(ctx context.Context, req *types.QueryAssetClas
 	for _, c := range nftResp.Classes {
 		ac := &types.AssetClass{Id: c.Id, Name: c.Name, Symbol: c.Symbol, Description: c.Description, Uri: c.Uri, UriHash: c.UriHash}
 		if c.Data != nil {
-			if strValue, err := types.AnyToString(q.cdc, c.Data); err == nil {
-				ac.Data = strValue
+			ac.Data, err = types.AnyToString(q.cdc, c.Data)
+			if err != nil {
+				ac.Data = fmt.Sprintf("error reading class data: %q", err.Error())
 			}
 		}
 		classes = append(classes, ac)
