@@ -1,12 +1,12 @@
 ## Build provenance for ARM
-FROM golang:1.23-bullseye as build
+FROM golang:1.23-bullseye AS build
 WORKDIR /
 ARG VERSION
 RUN apt-get update && apt-get upgrade -y && apt-get install -y git
 RUN git clone https://github.com/cosmos/relayer.git /relayer && cd /relayer && git checkout "$VERSION" && make install && cd / && rm -rf /relayer
 
 ## Run provenance for ARM
-FROM build as relayer
+FROM build AS relayer
 ARG MNEMONIC
 ENV LD_LIBRARY_PATH="/usr/local/lib"
 
