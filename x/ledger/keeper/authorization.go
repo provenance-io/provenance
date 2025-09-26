@@ -72,7 +72,7 @@ func assertAuthorization(ctx context.Context, k RegistryKeeper, signerAddr strin
 	if k == nil {
 		return types.NewErrCodeInternal("registry keeper is nil")
 	}
-	
+
 	// Get the registry entry for the NFT to determine if the address has the servicer role.
 	// The registry entry contains role assignments that can override direct NFT ownership.
 	registryEntry, err := k.GetRegistry(ctx, rk)
