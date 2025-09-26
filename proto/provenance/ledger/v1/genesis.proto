@@ -1,0 +1,92 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/ledger/v1/ledger.proto";
+import "provenance/ledger/v1/ledger_settlement.proto";
+
+// GenesisState represents the initial state of the ledger store.
+// This structure matches the test.json format for bulk import.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Ledger classes configuration.
+  repeated LedgerClass ledger_classes = 1
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClasses,omitempty"];
+
+  // Ledger class entry types configuration.
+  repeated GenesisLedgerClassEntryType ledger_class_entry_types = 2
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClassEntryTypes,omitempty"];
+
+  // Ledger class status types configuration.
+  repeated GenesisLedgerClassStatusType ledger_class_status_types = 3
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClassStatusTypes,omitempty"];
+
+  // Ledger class bucket types configuration.
+  repeated GenesisLedgerClassBucketType ledger_class_bucket_types = 4
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerClassBucketTypes,omitempty"];
+
+  // Ledgers.
+  repeated GenesisLedger ledgers = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgers,omitempty"];
+
+  // Ledger entries.
+  repeated GenesisLedgerEntry ledger_entries = 6
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledgerEntries,omitempty"];
+
+  // Settlement instructions for fund transfers.
+  repeated GenesisStoredSettlementInstructions settlement_instructions = 7
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "settlementInstructions,omitempty"];
+}
+
+// GenesisLedgerClassEntryType is a single ledger class entry type with its key. This is used for the genesis state
+// import/export so that we can avoid non-deterministic maps in the genesis functions.
+message GenesisLedgerClassEntryType {
+  GenesisPair          key        = 1 [(gogoproto.jsontag) = "key,omitempty"];
+  LedgerClassEntryType entry_type = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "entryType,omitempty"];
+}
+
+// GenesisLedgerClassStatusType is a single ledger class status type with its key. This is used for the genesis state
+// import/export so that we can avoid non-deterministic maps in the genesis functions.
+message GenesisLedgerClassStatusType {
+  GenesisPair           key         = 1 [(gogoproto.jsontag) = "key,omitempty"];
+  LedgerClassStatusType status_type = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "statusType,omitempty"];
+}
+
+// GenesisLedgerClassBucketType is a single ledger class bucket type with its key. This is used for the genesis state
+// import/export so that we can avoid non-deterministic maps in the genesis functions.
+message GenesisLedgerClassBucketType {
+  GenesisPair           key         = 1 [(gogoproto.jsontag) = "key,omitempty"];
+  LedgerClassBucketType bucket_type = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "bucketType,omitempty"];
+}
+
+// GenesisLedger is a single ledger type with its key. This is used for the genesis state import/export so that we
+// can avoid non-deterministic maps in the genesis functions.
+message GenesisLedger {
+  Ledger ledger = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ledger,omitempty"];
+}
+
+// GenesisLedgerEntry is a single ledger entry with its key. This is used for the genesis state import/export so that we
+// can avoid non-deterministic maps in the genesis functions.
+message GenesisLedgerEntry {
+  LedgerKey   key   = 1 [(gogoproto.jsontag) = "key,omitempty"];
+  LedgerEntry entry = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "entry,omitempty"];
+}
+
+// GenesisStoredSettlementInstructions is a single settlement instruction with its key. This is used for the genesis
+// state import/export so that we can avoid non-deterministic maps in the genesis functions.
+message GenesisStoredSettlementInstructions {
+  GenesisPair                  key                     = 1 [(gogoproto.jsontag) = "key,omitempty"];
+  StoredSettlementInstructions settlement_instructions = 2
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "settlementInstructions,omitempty"];
+}
+
+// GenesisPair represents a simple pair of strings that can be used as the key for a collections export.
+message GenesisPair {
+  string p1 = 1 [(gogoproto.jsontag) = "p1,omitempty"];
+  string p2 = 2 [(gogoproto.jsontag) = "p2,omitempty"];
+}

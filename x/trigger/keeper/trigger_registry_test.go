@@ -94,7 +94,7 @@ func (s *KeeperTestSuite) TestUnregisterTrigger() {
 			trigger: s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 		},
 		{
-			name:    "invalid - unregister non existant trigger",
+			name:    "invalid - unregister non existent trigger",
 			exists:  false,
 			trigger: s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 		},

@@ -1,0 +1,94 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/registry/types";
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/registry/v1/registry.proto";
+
+// Query defines the gRPC querier service for the registry module.
+// This service provides read-only access to registry data and role verification.
+service Query {
+  // GetRegistry returns the registry entry for a given key.
+  // This method retrieves the complete registry entry including all roles and addresses.
+  rpc GetRegistry(QueryGetRegistryRequest) returns (QueryGetRegistryResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/registry/{key.asset_class_id}/{key.nft_id}";
+  }
+
+  // GetRegistries returns all registry entries, optionally filtered by asset class ID.
+  // This method retrieves the complete registry entries including all roles and addresses.
+  rpc GetRegistries(QueryGetRegistriesRequest) returns (QueryGetRegistriesResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/registry";
+  }
+
+  // HasRole returns true if the address has the specified role for the given key.
+  rpc HasRole(QueryHasRoleRequest) returns (QueryHasRoleResponse) {
+    option (google.api.http).get =
+        "/provenance/registry/v1/has_role/{key.asset_class_id}/{key.nft_id}/{address}/{role}";
+  }
+}
+
+// QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method.
+// It contains the key information needed to retrieve a specific registry entry.
+message QueryGetRegistryRequest {
+  // key is the registry key to query.
+  // This contains the NFT ID and asset class ID that uniquely identify the registry entry.
+  RegistryKey key = 1;
+}
+
+// QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method.
+// It contains the complete registry entry for the requested key.
+message QueryGetRegistryResponse {
+  // registry is the registry entry for the requested key.
+  // This includes all roles and addresses associated with the specified NFT and asset class.
+  RegistryEntry registry = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryGetRegistriesRequest is the paginated request type for the Query/GetRegistries RPC method.
+message QueryGetRegistriesRequest {
+  // asset_class_id is the Scope Specification ID or NFT Class ID.
+  // This identifies the class or specification that the NFTs belong to.
+  string asset_class_id = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetRegistriesResponse is the paginated response type for the Query/GetRegistries RPC method.
+// It contains the complete registry entry for the requested key.
+message QueryGetRegistriesResponse {
+  // registries is the collection of registry entries.
+  // This includes all roles and addresses associated with the specified NFT and asset class.
+  repeated RegistryEntry registries = 1 [(gogoproto.nullable) = false];
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryHasRoleRequest is the request type for the Query/HasRole RPC method.
+// It contains the information needed to verify if an address has a specific role.
+message QueryHasRoleRequest {
+  // key is the registry key to query.
+  // This identifies the specific registry entry to check.
+  RegistryKey key = 1;
+
+  // address is the blockchain address to check for the role.
+  // This is the address whose role permissions are being verified.
+  string address = 2;
+
+  // role is the specific role to check for.
+  // This determines which role permission is being verified.
+  RegistryRole role = 3;
+}
+
+// QueryHasRoleResponse is the response type for the Query/HasRole RPC method.
+// It provides a boolean result indicating whether the address has the specified role.
+message QueryHasRoleResponse {
+  // has_role is true if the address has the specified role for the given key.
+  // This boolean value indicates whether the role verification was successful.
+  bool has_role = 1;
+}
