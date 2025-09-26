@@ -339,15 +339,18 @@ func (d Description) ValidateBasic(path string) error {
 	return nil
 }
 
+// IsValid checks whether the PartyType value is valid.
 func (x PartyType) IsValid() bool {
 	_, ok := PartyType_name[int32(x)]
 	return ok
 }
 
+// SimpleString returns the string representation of the PartyType.
 func (x PartyType) SimpleString() string {
 	return strings.TrimPrefix(x.String(), "PARTY_TYPE_")
 }
 
+// IsGenericPartyType returns true if the PartyType is considered generic.
 func (x PartyType) IsGenericPartyType() bool {
 	switch x {
 	case PartyType_PARTY_TYPE_GENERIC_1,

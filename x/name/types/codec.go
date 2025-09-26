@@ -1,3 +1,4 @@
+// Package types defines types and codec registrations for the name module.
 package types
 
 import (

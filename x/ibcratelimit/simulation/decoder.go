@@ -1,3 +1,4 @@
+// Package simulation provides simulation logic for the ibcratelimit module.
 package simulation
 
 import (
@@ -6,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 

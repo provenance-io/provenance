@@ -7,21 +7,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-
+	"github.com/google/uuid"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/spf13/cobra"
 )
 
 const (
-	FlagSigners            = "signers"
+	FlagSigners            = "signers" //nolint:revive
 	FlagRequirePartyRollup = "require-party-rollup"
 	AddSwitch              = "add"
 	RemoveSwitch           = "remove"

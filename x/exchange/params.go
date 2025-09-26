@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
@@ -54,6 +53,7 @@ func (p Params) Validate() error {
 	return errors.Join(errs...)
 }
 
+// NewDenomSplit returns a new instance of DenomSplit.
 func NewDenomSplit(denom string, split uint32) *DenomSplit {
 	return &DenomSplit{
 		Denom: denom,

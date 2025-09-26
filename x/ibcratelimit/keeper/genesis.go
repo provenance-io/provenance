@@ -1,8 +1,8 @@
+// Package keeper handles state management and business logic for ibcratelimit.
 package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 

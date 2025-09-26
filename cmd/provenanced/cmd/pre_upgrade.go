@@ -4,19 +4,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	cmtconfig "github.com/cometbft/cometbft/config"
-
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-
 	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/spf13/cobra"
 )
 
 var (
-	ErrFail      error = cmderrors.ExitCodeError(30)
+	ErrFail      error = cmderrors.ExitCodeError(30) //nolint:revive
 	ErrFailRetry error = cmderrors.ExitCodeError(31)
 )
 

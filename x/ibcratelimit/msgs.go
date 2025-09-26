@@ -26,6 +26,7 @@ func NewMsgUpdateParamsRequest(authority, ratelimiter string) *MsgUpdateParamsRe
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateParamsRequest.
 func (m MsgUpdateParamsRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority: %w", err)

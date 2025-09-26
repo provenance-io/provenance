@@ -5,7 +5,6 @@ import (
 	"math/rand"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
-
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	internalrand "github.com/provenance-io/provenance/internal/rand"
@@ -58,6 +56,7 @@ func ProposalMsgs(simState module.SimulationState, k keeper.Keeper) []simtypes.W
 	}
 }
 
+// SimulatePropMsgUpdateOracle simulates a governance proposal to update the oracle.
 func SimulatePropMsgUpdateOracle(k keeper.Keeper) simtypes.MsgSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 		// change it to a new random account.

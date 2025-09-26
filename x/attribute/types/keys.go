@@ -25,8 +25,8 @@ const (
 	AccountDataName = "accountdata"
 )
 
+// Legacy amino encoded objects use this key prefix.
 var (
-	// Legacy amino encoded objects use this key prefix
 	AttributeKeyPrefixAmino      = []byte{0x00}
 	AttributeKeyPrefix           = []byte{0x02}
 	AttributeAddrLookupKeyPrefix = []byte{0x03}
@@ -118,7 +118,7 @@ func GetNameKeyBytes(name string) []byte {
 func GetAttributeExpireTimePrefix(expireTime time.Time) []byte {
 	key := AttributeExpirationKeyPrefix
 	expireTimeBz := make([]byte, 8)
-	binary.BigEndian.PutUint64(expireTimeBz, uint64(expireTime.Unix()))
+	binary.BigEndian.PutUint64(expireTimeBz, uint64(expireTime.Unix())) //nolint:gosec // G304
 	return append(key, expireTimeBz...)
 }
 

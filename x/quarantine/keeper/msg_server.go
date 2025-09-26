@@ -5,12 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 var _ quarantine.MsgServer = Keeper{}
 
+// OptIn enables quarantine for the sender.
 func (k Keeper) OptIn(goCtx context.Context, msg *quarantine.MsgOptIn) (*quarantine.MsgOptInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -26,6 +26,7 @@ func (k Keeper) OptIn(goCtx context.Context, msg *quarantine.MsgOptIn) (*quarant
 	return &quarantine.MsgOptInResponse{}, nil
 }
 
+// OptOut disables quarantine for the sender.
 func (k Keeper) OptOut(goCtx context.Context, msg *quarantine.MsgOptOut) (*quarantine.MsgOptOutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -41,6 +42,7 @@ func (k Keeper) OptOut(goCtx context.Context, msg *quarantine.MsgOptOut) (*quara
 	return &quarantine.MsgOptOutResponse{}, nil
 }
 
+// Accept accepts quarantined funds from a sender.
 func (k Keeper) Accept(goCtx context.Context, msg *quarantine.MsgAccept) (*quarantine.MsgAcceptResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -72,6 +74,7 @@ func (k Keeper) Accept(goCtx context.Context, msg *quarantine.MsgAccept) (*quara
 	return &quarantine.MsgAcceptResponse{FundsReleased: fundsReleased}, nil
 }
 
+// Decline rejects quarantined funds from a sender.
 func (k Keeper) Decline(goCtx context.Context, msg *quarantine.MsgDecline) (*quarantine.MsgDeclineResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -99,6 +102,7 @@ func (k Keeper) Decline(goCtx context.Context, msg *quarantine.MsgDecline) (*qua
 	return &quarantine.MsgDeclineResponse{}, nil
 }
 
+// UpdateAutoResponses updates auto-response settings for quarantine actions.
 func (k Keeper) UpdateAutoResponses(goCtx context.Context, msg *quarantine.MsgUpdateAutoResponses) (*quarantine.MsgUpdateAutoResponsesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -1,3 +1,4 @@
+// Package cli provides command-line interface utilities for the ibchooks module.
 package cli
 
 import (
@@ -5,15 +6,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
+	"github.com/spf13/cobra"
 )
 
 func indexRunCmd(cmd *cobra.Command, _ []string) error {
@@ -46,7 +45,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdPoolParams return pool params.
+// GetCmdWasmSender return pool params.
 func GetCmdWasmSender() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "wasm-sender <channelID> <originalSender>",

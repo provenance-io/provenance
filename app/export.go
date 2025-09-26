@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	storetypes "cosmossdk.io/store/types"
-
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdkcodec "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +14,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -69,14 +66,14 @@ func (app *App) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs
 		AppState:        appState,
 		Validators:      validators,
 		Height:          height,
-		ConsensusParams: app.BaseApp.GetConsensusParams(ctx),
+		ConsensusParams: app.GetConsensusParams(ctx),
 	}, err
 }
 
 // prepare for fresh start at zero height
 // NOTE: zero height genesis is a temporary feature which will be deprecated in favor of export at a block height
 func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
-	applyAllowedAddrs := false
+	applyAllowedAddrs := false //nolint:staticcheck // QF1007
 
 	// check if there is a allowed address list
 	if len(jailAllowedAddrs) > 0 {

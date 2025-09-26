@@ -1,3 +1,4 @@
+// Package module defines the app module for the exchange functionality.
 package module
 
 import (
@@ -6,24 +7,20 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/core/appmodule"
-
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 	"github.com/provenance-io/provenance/x/exchange/simulation"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -33,10 +30,12 @@ var (
 	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
+// AppModuleBasic defines the basic application module for the exchange module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
+// Name returns the exchange module's name.
 func (AppModuleBasic) Name() string {
 	return exchange.ModuleName
 }
@@ -80,11 +79,13 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // RegisterLegacyAminoCodec registers the exchange module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
+// AppModule implements the full application module for the exchange module.
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule instance.
 func NewAppModule(cdc codec.Codec, exchangeKeeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},

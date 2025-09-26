@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/provenance-io/provenance/x/quarantine/errors"
 )
 
@@ -247,6 +246,7 @@ func (r *QuarantineRecord) DeclineFrom(addrs []sdk.AccAddress) bool {
 	return rv
 }
 
+// GetAllFromAddrs returns all sender addresses in the quarantine record.
 func (r *QuarantineRecord) GetAllFromAddrs() []sdk.AccAddress {
 	rv := make([]sdk.AccAddress, len(r.UnacceptedFromAddresses)+len(r.AcceptedFromAddresses))
 	copy(rv, r.UnacceptedFromAddresses)

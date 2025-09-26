@@ -7,7 +7,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-
 	simappparams "github.com/provenance-io/provenance/app/params"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
@@ -41,6 +40,7 @@ func NewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []s
 	return m, nil
 }
 
+// MustNewCreateTriggerRequest creates a new MsgCreateTriggerRequest with the given parameters.
 func MustNewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
 	m, err := NewCreateTriggerRequest(authorities, event, msgs)
 	if err != nil {

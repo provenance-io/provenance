@@ -6,12 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/provenance-io/provenance/x/sanction"
 )
 
 const (
-	SanctionAddresses   = "sanction-addresses"
+	SanctionAddresses   = "sanction-addresses" //nolint:revive
 	SanctionTempEntries = "sanction-temp-entries"
 	SanctionParams      = "sanction-params"
 )
@@ -44,13 +43,13 @@ func RandomTempEntries(r *rand.Rand, accounts []simtypes.Account) []*sanction.Te
 		case 0:
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000),
+				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000), //nolint:gosec // G115
 				Status:     sanction.TEMP_STATUS_SANCTIONED,
 			})
 		case 1:
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000),
+				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000), //nolint:gosec // G115
 				Status:     sanction.TEMP_STATUS_UNSANCTIONED,
 			})
 		}

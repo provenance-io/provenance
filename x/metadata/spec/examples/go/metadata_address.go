@@ -1,3 +1,4 @@
+// Package provenance contains Go examples for working with metadata addresses.
 package provenance
 
 import (
@@ -11,7 +12,7 @@ import (
 )
 
 const (
-	PrefixScope                 = "scope"
+	PrefixScope                 = "scope" //nolint:revive
 	PrefixSession               = "session"
 	PrefixRecord                = "record"
 	PrefixScopeSpecification    = "scopespec"
@@ -83,6 +84,7 @@ func MetadataAddressFromBech32(address string) (MetadataAddress, error) {
 	return bz, nil
 }
 
+// MetadataAddressFromBytes converts bytes to a MetadataAddress.
 func MetadataAddressFromBytes(bz []byte) (MetadataAddress, error) {
 	err := validateBytes(bz)
 	if err != nil {
@@ -146,6 +148,8 @@ func (m MetadataAddress) Equals(m2 MetadataAddress) bool {
 // %s formats as bech32 address string (same as m.String()).
 // %p formats as the address of 0th element in base 16 notation, with leading 0x.
 // all others format as base 16, upper-case, two characters per byte.
+//
+//nolint:gosec,staticcheck
 func (m MetadataAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 
 	errorsmod "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
-
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
@@ -67,7 +65,7 @@ func (k Keeper) buildWasmExecMsg(msgType string, packet exported.PacketI) ([]byt
 	}
 
 	var asJSON []byte
-	switch {
+	switch { //nolint:staticcheck // QF1001: intentional logic for clarity
 	case msgType == ibcratelimit.MsgSendPacket:
 		msg := ibcratelimit.SendPacketMsg{SendPacket: ibcratelimit.PacketMsg{
 			Packet: unwrapped,

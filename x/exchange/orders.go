@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -199,7 +198,7 @@ func (o Order) PartialFillAllowed() bool {
 	return o.MustGetSubOrder().PartialFillAllowed()
 }
 
-// GetUUID returns this order's UUID.
+// GetExternalID returns the external ID of the order.
 func (o Order) GetExternalID() string {
 	return o.MustGetSubOrder().GetExternalID()
 }
@@ -549,6 +548,7 @@ type FilledOrder struct {
 
 var _ OrderI = (*FilledOrder)(nil)
 
+// NewFilledOrder creates a new FilledOrder.
 func NewFilledOrder(order *Order, actualPrice sdk.Coin, actualFees sdk.Coins) *FilledOrder {
 	return &FilledOrder{
 		order:       order,

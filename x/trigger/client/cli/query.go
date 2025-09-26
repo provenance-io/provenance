@@ -1,3 +1,4 @@
+// Package cli provides CLI commands for querying the trigger module.
 package cli
 
 import (
@@ -6,13 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/provenance-io/provenance/x/trigger/types"
+	"github.com/spf13/cobra"
 )
 
 var cmdStart = fmt.Sprintf("%s query trigger", version.AppName)
@@ -90,7 +89,7 @@ func queryTriggerByID(client client.Context, queryClient types.QueryClient, arg 
 	var response *types.QueryTriggerByIDResponse
 	response, err = queryClient.TriggerByID(
 		context.Background(),
-		&types.QueryTriggerByIDRequest{Id: uint64(triggerID)},
+		&types.QueryTriggerByIDRequest{Id: uint64(triggerID)}, //nolint:gosec // G115
 	)
 	if err != nil {
 		return fmt.Errorf("failed to query trigger %d: %w", triggerID, err)

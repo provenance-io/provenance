@@ -19,6 +19,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParamsRequest)(nil),
 }
 
+// NewMsgAddAttributeRequest creates a new message to add an attribute.
 func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest {
 	return &MsgAddAttributeRequest{
 		Account:       account,
@@ -29,6 +30,7 @@ func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string
 	}
 }
 
+// ValidateBasic implements basic validation for MsgAddAttributeRequest.
 func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")
@@ -40,6 +42,7 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	return a.ValidateBasic()
 }
 
+// NewMsgUpdateAttributeRequest creates a new message to update an attribute.
 func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name string, originalValue []byte, updateValue []byte, origAttrType AttributeType, updatedAttrType AttributeType) *MsgUpdateAttributeRequest {
 	return &MsgUpdateAttributeRequest{
 		Account:               account,
@@ -52,6 +55,7 @@ func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name str
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateAttributeRequest.
 func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")
@@ -63,6 +67,7 @@ func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	return a.ValidateBasic()
 }
 
+// NewMsgUpdateAttributeExpirationRequest creates a new message to update attribute expiration.
 func NewMsgUpdateAttributeExpirationRequest(account, name, value string, expirationDate *time.Time, owner sdk.AccAddress) *MsgUpdateAttributeExpirationRequest {
 	return &MsgUpdateAttributeExpirationRequest{
 		Account:        account,
@@ -73,6 +78,7 @@ func NewMsgUpdateAttributeExpirationRequest(account, name, value string, expirat
 	}
 }
 
+// ValidateBasic implements basic validation for MsgUpdateAttributeExpirationRequest.
 func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
@@ -91,6 +97,7 @@ func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgDeleteAttributeRequest creates a new message to delete an attribute.
 func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest {
 	return &MsgDeleteAttributeRequest{
 		Account: account,
@@ -99,6 +106,7 @@ func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name str
 	}
 }
 
+// ValidateBasic implements basic validation for MsgDeleteAttributeRequest.
 func (msg MsgDeleteAttributeRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
 		return fmt.Errorf("empty name")
@@ -115,6 +123,7 @@ func (msg MsgDeleteAttributeRequest) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgDeleteDistinctAttributeRequest creates a new message to delete a distinct attribute.
 func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest {
 	return &MsgDeleteDistinctAttributeRequest{
 		Account: account,
@@ -124,6 +133,7 @@ func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, 
 	}
 }
 
+// ValidateBasic implements basic validation for MsgDeleteDistinctAttributeRequest.
 func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
 		return fmt.Errorf("empty name")
@@ -143,6 +153,7 @@ func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 	return nil
 }
 
+// ValidateBasic implements basic validation for MsgSetAccountDataRequest.
 func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	// This message is only for regular account addresses. No need to allow for scopes or others.
 	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {

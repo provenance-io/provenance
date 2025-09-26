@@ -1,12 +1,12 @@
+// Package internal provides logger utilities for structured logging.
 package internal
 
 import (
 	"bytes"
 	"strings"
 
-	"github.com/rs/zerolog"
-
 	"cosmossdk.io/log"
+	"github.com/rs/zerolog"
 )
 
 // NewBufferedLogger creates a new logger that writes to the provided buffer.

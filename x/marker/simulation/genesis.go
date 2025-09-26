@@ -1,3 +1,4 @@
+// Package simulation provides simulation utilities for the marker module.
 package simulation
 
 // DONTCOVER
@@ -8,11 +9,9 @@ import (
 	"math/rand"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 

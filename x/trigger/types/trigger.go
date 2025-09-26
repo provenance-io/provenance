@@ -6,20 +6,23 @@ import (
 	time "time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
+// TriggerID represents a unique identifier for a trigger.
 type TriggerID = uint64
 
 const (
+	// BlockHeightPrefix is the prefix key used to identify triggers based on block height.
 	BlockHeightPrefix = "block-height"
-	BlockTimePrefix   = "block-time"
+	// BlockTimePrefix is the prefix key used to identify triggers based on block time.
+	BlockTimePrefix = "block-time"
 )
 
+// TriggerEventI is the interface for trigger events.
 type TriggerEventI interface {
 	proto.Message
 	GetEventPrefix() string
@@ -94,7 +97,7 @@ func (e TransactionEvent) Validate() error {
 	return nil
 }
 
-// Validate checks if this event is valid with the current context.
+// ValidateContext checks if this event is valid with the current context.
 func (e TransactionEvent) ValidateContext(_ sdk.Context) error {
 	return nil
 }
@@ -114,7 +117,9 @@ func (e BlockHeightEvent) Validate() error {
 	return nil
 }
 
-// Validate checks if this event is valid with the current context.
+// ValidateContext checks if this event is valid with the current context.
+//
+//nolint:gosec // G115:
 func (e BlockHeightEvent) ValidateContext(ctx sdk.Context) error {
 	if e.BlockHeight <= uint64(ctx.BlockHeight()) {
 		return ErrInvalidBlockHeight
@@ -128,6 +133,8 @@ func (e BlockTimeEvent) GetEventPrefix() string {
 }
 
 // GetEventOrder gets the order for which this event should be processed
+//
+//nolint:gosec // G115
 func (e BlockTimeEvent) GetEventOrder() uint64 {
 	return uint64(e.Time.UnixNano())
 }
@@ -137,7 +144,7 @@ func (e BlockTimeEvent) Validate() error {
 	return nil
 }
 
-// Validate checks if this event is valid with the current context.
+// ValidateContext checks if this event is valid with the current context.
 func (e BlockTimeEvent) ValidateContext(ctx sdk.Context) error {
 	if e.Time.UTC().Equal(ctx.BlockTime().UTC()) || e.Time.Before(ctx.BlockTime().UTC()) {
 		return ErrInvalidBlockTime

@@ -8,22 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rs/zerolog"
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
-	cmtconfig "github.com/cometbft/cometbft/config"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-
+	cmtconfig "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -44,11 +36,15 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 // NewRootCmd creates a new root command for provenanced. It is called once in the main function.
@@ -59,7 +55,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	if err != nil {
 		panic(fmt.Errorf("failed to create temp dir: %w", err))
 	}
-	defer os.RemoveAll(tempDir)
+	defer os.RemoveAll(tempDir) //nolint:errcheck
 
 	// These are added to prevent invalid address caching from tempApp.
 	sdk.SetAddrCacheEnabled(false)
@@ -268,7 +264,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
 	// Create the snapshot dir if not exists
 	if _, err = os.Stat(snapshotDir); os.IsNotExist(err) {
-		err = os.Mkdir(snapshotDir, 0o755)
+		err = os.Mkdir(snapshotDir, 0o755) //nolint:gosec // G304
 		if err != nil {
 			panic(err)
 		}
@@ -291,11 +287,11 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
+		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json")) //nolint:gosec // G304
 		if err != nil {
 			panic(err)
 		}
-		defer reader.Close()
+		defer reader.Close() //nolint:errcheck
 
 		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
 		if err != nil {

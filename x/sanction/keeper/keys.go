@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/x/sanction"
 )
 
@@ -29,7 +28,9 @@ var (
 )
 
 const (
-	ParamNameImmediateSanctionMinDeposit   = "immediate_sanction_min_deposit"
+	// ParamNameImmediateSanctionMinDeposit defines the parameter name for the minimum deposit required for immediate sanctions.
+	ParamNameImmediateSanctionMinDeposit = "immediate_sanction_min_deposit"
+	// ParamNameImmediateUnsanctionMinDeposit defines the parameter name for the minimum deposit required for immediate unsanctions.
 	ParamNameImmediateUnsanctionMinDeposit = "immediate_unsanction_min_deposit"
 )
 

@@ -5,10 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"google.golang.org/grpc"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -18,9 +14,11 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -296,16 +294,17 @@ Example <fee ratio>: 100nhash:1nhash`
 	// OptAsksBidsDesc is a description of the --asks and --bids flags when they're optional.
 	OptAsksBidsDesc = fmt.Sprintf("At most one of --%s or --%s can be provided.", FlagAsks, FlagBids)
 
+	// AccountAmountDesc defines the description for account amount flags.
 	AccountAmountDesc = `An <account-amount> has the format "<account>:<amount>".
 The <account> should be a bech32 address string.
 The <amount> should be a coins string with the format <amount><denom>[,<amount><denom> ...]
 
 Example <account-amount>: ` + ExampleAddr + `:10nhash,3orange`
-
+	// NAVDesc is the description for the NAV command.
 	NAVDesc = `A <nav> (net-asset-value) has the format "<assets coin>:<price coin>".
 Both <assets coin> and <price coin> have the format "<amount><denom>".
 
 Example <nav>: 1cherry:10nhash`
-
+	// PageFlagsUse is the usage string for page-related CLI flags.
 	PageFlagsUse = "[pagination flags]"
 )

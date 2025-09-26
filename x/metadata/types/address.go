@@ -1,3 +1,4 @@
+// Package types provides core metadata types and utilities.
 package types
 
 import (
@@ -10,11 +11,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
-	"sigs.k8s.io/yaml"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/google/uuid"
+	"sigs.k8s.io/yaml"
 )
 
 const (
