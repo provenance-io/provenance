@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
@@ -72,6 +73,9 @@ func assertAuthorization(ctx context.Context, k RegistryKeeper, signerAddr strin
 	if k == nil {
 		return types.NewErrCodeInternal("registry keeper is nil")
 	}
+	if rk == nil {
+		return types.NewErrCodeInternal("registry key is nil")
+	}
 
 	// Get the registry entry for the NFT to determine if the address has the servicer role.
 	// The registry entry contains role assignments that can override direct NFT ownership.
@@ -96,19 +100,19 @@ func assertAuthorization(ctx context.Context, k RegistryKeeper, signerAddr strin
 	// Check if there is a registered servicer for this NFT.
 	// If a servicer exists, only the servicer can perform ledger operations,
 	// even if the NFT owner tries to act directly.
+	hasServicer := false
 	for _, role := range registryEntry.Roles {
-		if role.Role == registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER {
-			for _, address := range role.Addresses {
-				// Check if the address is the servicer
-				if address == signerAddr {
-					return nil
-				}
-			}
-
-			// Since there is a registered servicer, the owner is not authorized.
-			// This enforces the delegation model where servicers have exclusive rights.
-			return types.NewErrCodeUnauthorized("owner is not the registered servicer")
+		if role.Role != registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER {
+			continue
 		}
+		hasServicer = true
+
+		if slices.Contains(role.Addresses, signerAddr) {
+			return nil
+		}
+	}
+	if hasServicer {
+		return types.NewErrCodeUnauthorized("owner is not the registered servicer")
 	}
 
 	// Since there isn't a registered servicer, let's see if the address is the owner.

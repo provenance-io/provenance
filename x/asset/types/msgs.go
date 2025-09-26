@@ -101,8 +101,8 @@ func (msg MsgCreateTokenization) ValidateBasic() error {
 func (msg MsgCreateSecuritization) ValidateBasic() error {
 	var errs []error
 
-	if msg.Id == "" {
-		errs = append(errs, NewErrCodeInvalidField("id", "cannot be empty"))
+	if err := sdk.ValidateDenom(msg.Id); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("id", "%s", err))
 	}
 
 	if len(msg.Pools) == 0 {
