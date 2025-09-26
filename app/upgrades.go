@@ -570,17 +570,18 @@ var upgradeDataFS embed.FS
 
 // LedgerKeeper has the ledger keeper methods needed for creating ledgers and entries.
 type LedgerKeeper interface {
-	ImportLedgerClasses(ctx sdk.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerClassEntryTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerClassStatusTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerClassBucketTypes(ctx sdk.Context, state *ledgerTypes.GenesisState)
-	ImportLedgers(ctx sdk.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerEntries(ctx sdk.Context, state *ledgerTypes.GenesisState)
-	ImportStoredSettlementInstructions(ctx sdk.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClasses(ctx context.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassEntryTypes(ctx context.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassStatusTypes(ctx context.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClassBucketTypes(ctx context.Context, state *ledgerTypes.GenesisState)
+	ImportLedgers(ctx context.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerEntries(ctx context.Context, state *ledgerTypes.GenesisState)
+	ImportStoredSettlementInstructions(ctx context.Context, state *ledgerTypes.GenesisState)
 }
 
 // streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
-func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
+func streamImportLedgerData(goCtx context.Context, lk LedgerKeeper) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
 
 	ctx.Logger().Info("Starting streaming import of ledger data.")
@@ -647,7 +648,8 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 }
 
 // processGenesisField processes a single field from the GenesisState JSON.
-func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
+func processGenesisField(goCtx context.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	switch fieldName {
 	case "ledgerClasses":
 		var ledgerClasses []ledgerTypes.LedgerClass

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 type QueryServerTestSuite struct {
 	suite.Suite
 	app       *app.App
-	ctx       sdk.Context
+	ctx       context.Context
 	user1Addr sdk.AccAddress
 	user2Addr sdk.AccAddress
 }
@@ -173,7 +174,7 @@ func (s *QueryServerTestSuite) TestListAssets() {
 				Owner: tc.address,
 			}
 
-			resp, err := queryServer.Assets(sdk.WrapSDKContext(s.ctx), req)
+			resp, err := queryServer.Assets(s.ctx, req)
 
 			if tc.expectError {
 				s.Require().Error(err)
@@ -246,7 +247,7 @@ func (s *QueryServerTestSuite) TestListAssetClasses() {
 	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
 
 	req := &types.QueryAssetClassesRequest{}
-	resp, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req)
+	resp, err := queryServer.AssetClasses(s.ctx, req)
 
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
@@ -313,7 +314,7 @@ func (s *QueryServerTestSuite) TestGetClass() {
 				Id: tc.classId,
 			}
 
-			resp, err := queryServer.AssetClass(sdk.WrapSDKContext(s.ctx), req)
+			resp, err := queryServer.AssetClass(s.ctx, req)
 
 			if tc.expectError {
 				s.Require().Error(err)
@@ -354,7 +355,7 @@ func (s *QueryServerTestSuite) TestListAssetsEmptyState() {
 		Owner: s.user1Addr.String(),
 	}
 
-	resp, err := queryServer.Assets(sdk.WrapSDKContext(s.ctx), req)
+	resp, err := queryServer.Assets(s.ctx, req)
 
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
@@ -365,7 +366,7 @@ func (s *QueryServerTestSuite) TestListAssetClassesEmptyState() {
 	queryServer := keeper.NewQueryServerImpl(s.app.AssetKeeper)
 
 	req := &types.QueryAssetClassesRequest{}
-	resp, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req)
+	resp, err := queryServer.AssetClasses(s.ctx, req)
 
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
@@ -455,7 +456,7 @@ func (s *QueryServerTestSuite) TestListAssetsWithPagination() {
 				req.Pagination.CountTotal = true
 			}
 
-			resp, err := queryServer.Assets(sdk.WrapSDKContext(s.ctx), req)
+			resp, err := queryServer.Assets(s.ctx, req)
 
 			if tc.expectError {
 				s.Require().Error(err)
@@ -544,7 +545,7 @@ func (s *QueryServerTestSuite) TestListAssetClassesWithPagination() {
 				req.Pagination.CountTotal = true
 			}
 
-			resp, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req)
+			resp, err := queryServer.AssetClasses(s.ctx, req)
 
 			if tc.expectError {
 				s.Require().Error(err)
@@ -616,7 +617,7 @@ func (s *QueryServerTestSuite) TestListAssetsPaginationEdgeCases() {
 				Pagination: tc.pagination,
 			}
 
-			resp, err := queryServer.Assets(sdk.WrapSDKContext(s.ctx), req)
+			resp, err := queryServer.Assets(s.ctx, req)
 
 			if tc.expectError {
 				s.Require().Error(err)
@@ -668,7 +669,7 @@ func (s *QueryServerTestSuite) TestListAssetClassesPaginationEdgeCases() {
 				Pagination: tc.pagination,
 			}
 
-			resp, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req)
+			resp, err := queryServer.AssetClasses(s.ctx, req)
 
 			if tc.expectError {
 				s.Require().Error(err)
@@ -704,15 +705,15 @@ func (s *QueryServerTestSuite) TestListAssetsPaginationConsistency() {
 		Pagination: &query.PageRequest{Offset: 2, Limit: 1, CountTotal: true},
 	}
 
-	resp1, err := queryServer.Assets(sdk.WrapSDKContext(s.ctx), req1)
+	resp1, err := queryServer.Assets(s.ctx, req1)
 	s.Require().NoError(err)
 	s.Require().Len(resp1.Assets, 1)
 
-	resp2, err := queryServer.Assets(sdk.WrapSDKContext(s.ctx), req2)
+	resp2, err := queryServer.Assets(s.ctx, req2)
 	s.Require().NoError(err)
 	s.Require().Len(resp2.Assets, 1)
 
-	resp3, err := queryServer.Assets(sdk.WrapSDKContext(s.ctx), req3)
+	resp3, err := queryServer.Assets(s.ctx, req3)
 	s.Require().NoError(err)
 	s.Require().Len(resp3.Assets, 1)
 
@@ -744,11 +745,11 @@ func (s *QueryServerTestSuite) TestListAssetClassesPaginationConsistency() {
 		Pagination: &query.PageRequest{Offset: 1, Limit: 1, CountTotal: true},
 	}
 
-	resp1, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req1)
+	resp1, err := queryServer.AssetClasses(s.ctx, req1)
 	s.Require().NoError(err)
 	s.Require().Len(resp1.AssetClasses, 1)
 
-	resp2, err := queryServer.AssetClasses(sdk.WrapSDKContext(s.ctx), req2)
+	resp2, err := queryServer.AssetClasses(s.ctx, req2)
 	s.Require().NoError(err)
 	s.Require().Len(resp2.AssetClasses, 1)
 

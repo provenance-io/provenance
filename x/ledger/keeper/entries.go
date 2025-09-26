@@ -32,15 +32,17 @@ import (
 // - entries: Array of ledger entries to append
 //
 // Returns an error if validation fails or if entries cannot be saved.
-func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error {
+func (k Keeper) AppendEntries(goCtx context.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	// Retrieve the ledger to ensure it exists and get its configuration.
-	ledger, err := k.RequireGetLedger(ctx, ledgerKey)
+	ledger, err := k.RequireGetLedger(goCtx, ledgerKey)
 	if err != nil {
 		return err
 	}
 
 	// Get all existing entries for this NFT to check for conflicts and manage sequencing.
-	existingEntries, err := k.ListLedgerEntries(ctx, ledgerKey)
+	existingEntries, err := k.ListLedgerEntries(goCtx, ledgerKey)
 	if err != nil {
 		return err
 	}
@@ -57,7 +59,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 		// Validate that the LedgerClassEntryType exists for this ledger class.
 		// This ensures only valid entry types can be used for this ledger.
 		var hasLedgerClassEntryType bool
-		hasLedgerClassEntryType, err = k.LedgerClassEntryTypes.Has(ctx, collections.Join(ledger.LedgerClassId, newEntry.EntryTypeId))
+		hasLedgerClassEntryType, err = k.LedgerClassEntryTypes.Has(goCtx, collections.Join(ledger.LedgerClassId, newEntry.EntryTypeId))
 		if err != nil {
 			return fmt.Errorf("error getting ledger class entry type for ledger class id %q and entry type %d", ledger.LedgerClassId, newEntry.EntryTypeId)
 		}
@@ -66,7 +68,7 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 		}
 
 		// Save the individual entry with proper sequencing and conflict resolution.
-		existingEntries, err = k.saveNewEntry(ctx, ledgerKey, existingEntries, newEntry)
+		existingEntries, err = k.saveNewEntry(goCtx, ledgerKey, existingEntries, newEntry)
 		if err != nil {
 			return err
 		}
@@ -83,7 +85,9 @@ func (k Keeper) AppendEntries(ctx sdk.Context, ledgerKey *types.LedgerKey, entri
 //
 // Returns an updated list of existing entries.
 // Returns an error if conflicts are detected or if storage fails.
-func (k Keeper) saveNewEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry, newEntry *types.LedgerEntry) ([]*types.LedgerEntry, error) {
+func (k Keeper) saveNewEntry(goCtx context.Context, ledgerKey *types.LedgerKey, entries []*types.LedgerEntry, newEntry *types.LedgerEntry) ([]*types.LedgerEntry, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	// Make sure the new entry is valid.
 	if err := newEntry.Validate(); err != nil {
 		return nil, err
@@ -93,7 +97,7 @@ func (k Keeper) saveNewEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entrie
 	ledgerKeyStr := ledgerKey.String()
 	// Make sure the entry doesn't already exist.
 	newEntryKey := collections.Join(ledgerKeyStr, newEntry.CorrelationId)
-	if found, err := k.LedgerEntries.Has(ctx, newEntryKey); found || err != nil {
+	if found, err := k.LedgerEntries.Has(goCtx, newEntryKey); found || err != nil {
 		return nil, types.NewErrCodeAlreadyExists(fmt.Sprintf("ledger entry with correlation id %q", newEntry.CorrelationId))
 	}
 
@@ -136,7 +140,7 @@ func (k Keeper) saveNewEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entrie
 				// Update the sequence number of the existing entry to resolve the conflict.
 				entry.Sequence++
 				key := collections.Join(ledgerKeyStr, entry.CorrelationId)
-				if err := k.LedgerEntries.Set(ctx, key, *entry); err != nil {
+				if err := k.LedgerEntries.Set(goCtx, key, *entry); err != nil {
 					return nil, fmt.Errorf("could not update sequence number of ledger entry with correlation id %q", entry.CorrelationId)
 				}
 			}
@@ -144,7 +148,7 @@ func (k Keeper) saveNewEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entrie
 	}
 
 	// Store the new entry with its correlation ID as the key.
-	err := k.LedgerEntries.Set(ctx, newEntryKey, *newEntry)
+	err := k.LedgerEntries.Set(goCtx, newEntryKey, *newEntry)
 	if err != nil {
 		return nil, fmt.Errorf("could not set ledger entry with correlation id %q", newEntry.CorrelationId)
 	}
@@ -177,7 +181,7 @@ func (k Keeper) saveNewEntry(ctx sdk.Context, ledgerKey *types.LedgerKey, entrie
 // - appliedAmounts: New applied amounts for the entry
 //
 // Returns an error if the entry doesn't exist or if the update fails.
-func (k Keeper) UpdateEntryBalances(ctx sdk.Context, ledgerKey *types.LedgerKey, correlationID string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
+func (k Keeper) UpdateEntryBalances(ctx context.Context, ledgerKey *types.LedgerKey, correlationID string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Retrieve the existing entry to ensure it exists before updating.
 	existingEntry, err := k.GetLedgerEntry(ctx, ledgerKey, correlationID)
 	if err != nil {
@@ -262,7 +266,7 @@ func (k Keeper) GetLedgerEntry(ctx context.Context, key *types.LedgerKey, correl
 // RequireGetLedgerEntry retrieves a ledger entry and requires it to exist.
 // This function is similar to GetLedgerEntry but returns an error if the entry is not found.
 // It's used when the ledger entry must exist for the operation to proceed.
-func (k Keeper) RequireGetLedgerEntry(ctx sdk.Context, lk *types.LedgerKey, correlationID string) (*types.LedgerEntry, error) {
+func (k Keeper) RequireGetLedgerEntry(ctx context.Context, lk *types.LedgerKey, correlationID string) (*types.LedgerEntry, error) {
 	ledgerEntry, err := k.GetLedgerEntry(ctx, lk, correlationID)
 	if err != nil {
 		return nil, err

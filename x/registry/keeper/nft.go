@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/registry/types"
@@ -9,7 +11,7 @@ import (
 // HasNFT checks if an NFT exists in either the metadata or nft module.
 // If the assetClassId is a metadata scope, it will check if the scope exists.
 // Otherwise, it will check if the NFT exists in the nft module.
-func (k Keeper) HasNFT(ctx sdk.Context, assetClassID, nftID *string) bool {
+func (k Keeper) HasNFT(ctx context.Context, assetClassID, nftID *string) bool {
 	metadataAddress, isMetadataScope := types.MetadataScopeID(*nftID)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -20,7 +22,7 @@ func (k Keeper) HasNFT(ctx sdk.Context, assetClassID, nftID *string) bool {
 }
 
 // AssetClassExists checks if an asset class exists in either the metadata or nft module.
-func (k Keeper) AssetClassExists(ctx sdk.Context, assetClassID *string) bool {
+func (k Keeper) AssetClassExists(ctx context.Context, assetClassID *string) bool {
 	metadataAddress, isMetadataScope := types.MetadataScopeSpecID(*assetClassID)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -33,7 +35,7 @@ func (k Keeper) AssetClassExists(ctx sdk.Context, assetClassID *string) bool {
 // GetNFTOwner returns the owner of an NFT.
 // If the assetClassId is a metadata scope, it will return the owner of the scope.
 // Otherwise, it will return the owner of the NFT from the nft module.
-func (k Keeper) GetNFTOwner(ctx sdk.Context, assetClassID, nftID *string) sdk.AccAddress {
+func (k Keeper) GetNFTOwner(ctx context.Context, assetClassID, nftID *string) sdk.AccAddress {
 	metadataAddress, isMetadataScope := types.MetadataScopeID(*nftID)
 	if isMetadataScope {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)

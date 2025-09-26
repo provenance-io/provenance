@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
@@ -20,7 +20,7 @@ import (
 // - key: The registry key containing asset class ID and NFT ID
 //
 // Returns an error if the address is not authorized, nil otherwise.
-func (k Keeper) RequireAuthorization(ctx sdk.Context, addr string, key *registrytypes.RegistryKey) error {
+func (k Keeper) RequireAuthorization(ctx context.Context, addr string, key *registrytypes.RegistryKey) error {
 	return assertAuthorization(ctx, k.RegistryKeeper, addr, key)
 }
 
@@ -34,7 +34,7 @@ func (k Keeper) RequireAuthorization(ctx sdk.Context, addr string, key *registry
 // - ledgerKey: The ledger key containing asset class ID and NFT ID
 //
 // Returns an error if the address is not the NFT owner, nil otherwise.
-func assertOwner(ctx sdk.Context, k RegistryKeeper, signerAddr string, ledgerKey *types.LedgerKey) error {
+func assertOwner(ctx context.Context, k RegistryKeeper, signerAddr string, ledgerKey *types.LedgerKey) error {
 	// Check if the address has ownership of the NFT
 	nftOwner := k.GetNFTOwner(ctx, &ledgerKey.AssetClassId, &ledgerKey.NftId)
 	if len(nftOwner) == 0 || nftOwner.String() != signerAddr {
@@ -68,7 +68,11 @@ func assertOwner(ctx sdk.Context, k RegistryKeeper, signerAddr string, ledgerKey
 //
 // Returns:
 // - error: nil if authorized, error details if authorization fails
-func assertAuthorization(ctx sdk.Context, k RegistryKeeper, signerAddr string, rk *registrytypes.RegistryKey) error {
+func assertAuthorization(ctx context.Context, k RegistryKeeper, signerAddr string, rk *registrytypes.RegistryKey) error {
+	if k == nil {
+		return types.NewErrCodeInternal("registry keeper is nil")
+	}
+	
 	// Get the registry entry for the NFT to determine if the address has the servicer role.
 	// The registry entry contains role assignments that can override direct NFT ownership.
 	registryEntry, err := k.GetRegistry(ctx, rk)

@@ -16,7 +16,7 @@ import (
 // AddLedgerClass creates a new ledger class with validation checks.
 // This function validates that the asset class exists in the registry and that the denom has a supply.
 // It ensures that ledger classes are only created for valid asset classes and tokens.
-func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
+func (k Keeper) AddLedgerClass(ctx context.Context, l types.LedgerClass) error {
 	// Check if the asset class exists in the registry.
 	hasAssetClass := k.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
@@ -49,7 +49,7 @@ func (k Keeper) AddLedgerClass(ctx sdk.Context, l types.LedgerClass) error {
 // AddClassEntryType adds a new entry type to an existing ledger class.
 // This function validates that the entry type doesn't already exist for the given class.
 // Entry types define what kinds of transactions can be recorded in ledgers of this class.
-func (k Keeper) AddClassEntryType(ctx sdk.Context, ledgerClassID string, l types.LedgerClassEntryType) error {
+func (k Keeper) AddClassEntryType(ctx context.Context, ledgerClassID string, l types.LedgerClassEntryType) error {
 	// Create the composite key for the entry type.
 	key := collections.Join(ledgerClassID, l.Id)
 
@@ -73,7 +73,7 @@ func (k Keeper) AddClassEntryType(ctx sdk.Context, ledgerClassID string, l types
 // AddClassStatusType adds a new status type to an existing ledger class.
 // This function validates that the status type doesn't already exist for the given class.
 // Status types define the possible states that ledger entries can have.
-func (k Keeper) AddClassStatusType(ctx sdk.Context, ledgerClassID string, l types.LedgerClassStatusType) error {
+func (k Keeper) AddClassStatusType(ctx context.Context, ledgerClassID string, l types.LedgerClassStatusType) error {
 	// Create the composite key for the status type.
 	key := collections.Join(ledgerClassID, l.Id)
 
@@ -98,7 +98,7 @@ func (k Keeper) AddClassStatusType(ctx sdk.Context, ledgerClassID string, l type
 // AddClassBucketType adds a new bucket type to an existing ledger class.
 // This function validates that the bucket type doesn't already exist for the given class.
 // Bucket types define how funds are categorized and organized within ledgers.
-func (k Keeper) AddClassBucketType(ctx sdk.Context, ledgerClassID string, l types.LedgerClassBucketType) error {
+func (k Keeper) AddClassBucketType(ctx context.Context, ledgerClassID string, l types.LedgerClassBucketType) error {
 	// Create the composite key for the bucket type.
 	key := collections.Join(ledgerClassID, l.Id)
 
@@ -122,7 +122,7 @@ func (k Keeper) AddClassBucketType(ctx sdk.Context, ledgerClassID string, l type
 // IsLedgerClassMaintainer checks if the given address is the maintainer of a ledger class.
 // This function validates that the maintainer address matches the one stored in the ledger class.
 // Only maintainers can modify ledger class configurations.
-func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, ledgerClassID string) bool {
+func (k Keeper) IsLedgerClassMaintainer(ctx context.Context, maintainerAddr string, ledgerClassID string) bool {
 	// Validate that the maintainer address matches the one in the ledger class.
 	ledgerClass, err := k.LedgerClasses.Get(ctx, ledgerClassID)
 	return err == nil && ledgerClass.MaintainerAddress == maintainerAddr
@@ -131,7 +131,7 @@ func (k Keeper) IsLedgerClassMaintainer(ctx sdk.Context, maintainerAddr string, 
 // AddLedger creates a new ledger instance with comprehensive validation.
 // This function validates the ledger class, asset class, NFT existence, and status type.
 // It ensures that ledgers are only created for valid configurations and existing assets.
-func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
+func (k Keeper) AddLedger(ctx context.Context, l types.Ledger) error {
 	// Do not allow creating a duplicate ledger.
 	if k.HasLedger(ctx, l.Key) {
 		return types.NewErrCodeAlreadyExists("ledger")
@@ -184,7 +184,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 	}
 
 	// Emit the ledger created event to notify other modules.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerCreated(key)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerCreated(key)); err != nil {
 		return err
 	}
 
@@ -194,7 +194,7 @@ func (k Keeper) AddLedger(ctx sdk.Context, l types.Ledger) error {
 // UpdateLedgerStatus updates the status type of an existing ledger.
 // This function validates that the new status type exists for the ledger's class.
 // Status changes can reflect the current state of the ledger (e.g., active, suspended, closed).
-func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusTypeID int32) error {
+func (k Keeper) UpdateLedgerStatus(ctx context.Context, lk *types.LedgerKey, statusTypeID int32) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
@@ -225,7 +225,7 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusT
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_STATUS)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_STATUS)); err != nil {
 		return err
 	}
 
@@ -235,7 +235,7 @@ func (k Keeper) UpdateLedgerStatus(ctx sdk.Context, lk *types.LedgerKey, statusT
 // UpdateLedgerInterestRate updates the interest rate configuration of an existing ledger.
 // This function allows modification of the interest rate, day count convention, and accrual method.
 // These parameters affect how interest is calculated and applied to the ledger.
-func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
+func (k Keeper) UpdateLedgerInterestRate(ctx context.Context, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
@@ -259,7 +259,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, lk *types.LedgerKey, i
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_INTEREST_RATE)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_INTEREST_RATE)); err != nil {
 		return err
 	}
 
@@ -269,7 +269,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx sdk.Context, lk *types.LedgerKey, i
 // UpdateLedgerPayment updates the payment configuration of an existing ledger.
 // This function allows modification of the next payment amount, date, and frequency.
 // These parameters define the payment schedule for the ledger.
-func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPmtAmt math.Int, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
+func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, nextPmtAmt math.Int, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
@@ -293,7 +293,7 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPm
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_PAYMENT)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_PAYMENT)); err != nil {
 		return err
 	}
 
@@ -303,7 +303,7 @@ func (k Keeper) UpdateLedgerPayment(ctx sdk.Context, lk *types.LedgerKey, nextPm
 // UpdateLedgerMaturityDate updates the maturity date of an existing ledger.
 // This function allows modification of when the ledger reaches its final maturity.
 // The maturity date is important for calculating final payments and ledger closure.
-func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, maturityDate int32) error {
+func (k Keeper) UpdateLedgerMaturityDate(ctx context.Context, lk *types.LedgerKey, maturityDate int32) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
@@ -325,7 +325,7 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, m
 	}
 
 	// Emit the ledger updated event.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_MATURITY_DATE)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_MATURITY_DATE)); err != nil {
 		return err
 	}
 
@@ -335,7 +335,7 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx sdk.Context, lk *types.LedgerKey, m
 // DestroyLedger removes a ledger and all its associated entries from the state store.
 // This function performs a complete cleanup by removing the ledger and all its entries.
 // It emits an event to notify other modules of the ledger destruction.
-func (k Keeper) DestroyLedger(ctx sdk.Context, lk *types.LedgerKey) error {
+func (k Keeper) DestroyLedger(ctx context.Context, lk *types.LedgerKey) error {
 	// Check if the ledger exists before attempting to destroy it.
 	if !k.HasLedger(ctx, lk) {
 		return types.NewErrCodeInvalidField("ledger", "doesn't exist")
@@ -376,7 +376,7 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, lk *types.LedgerKey) error {
 	}
 
 	// Emit the ledger destroyed event to notify other modules.
-	if err := ctx.EventManager().EmitTypedEvent(types.NewEventLedgerDestroyed(lk)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerDestroyed(lk)); err != nil {
 		return err
 	}
 
@@ -400,7 +400,7 @@ func (k Keeper) DestroyLedger(ctx sdk.Context, lk *types.LedgerKey) error {
 //   - Returns (nil, err) if an error occurs during retrieval
 //   - Returns (&ledger, nil) if the ledger is found successfully
 //   - The returned ledger will have its Key field set to the provided key
-func (k Keeper) GetLedger(ctx sdk.Context, key *types.LedgerKey) (*types.Ledger, error) {
+func (k Keeper) GetLedger(ctx context.Context, key *types.LedgerKey) (*types.Ledger, error) {
 	keyStr := key.String()
 
 	// Lookup the ledger in the state store using the key string.
@@ -423,7 +423,7 @@ func (k Keeper) GetLedger(ctx sdk.Context, key *types.LedgerKey) (*types.Ledger,
 // RequireGetLedger retrieves a ledger and requires it to exist.
 // This function is similar to GetLedger but returns an error if the ledger is not found.
 // It's used when the ledger must exist for the operation to proceed.
-func (k Keeper) RequireGetLedger(ctx sdk.Context, lk *types.LedgerKey) (*types.Ledger, error) {
+func (k Keeper) RequireGetLedger(ctx context.Context, lk *types.LedgerKey) (*types.Ledger, error) {
 	ledger, err := k.GetLedger(ctx, lk)
 	if err != nil {
 		return nil, err
@@ -465,7 +465,7 @@ func (k Keeper) GetAllLedgers(ctx context.Context, pageRequest *query.PageReques
 
 // HasLedger checks if a ledger exists for the given key.
 // This function provides a quick existence check without retrieving the full ledger data.
-func (k Keeper) HasLedger(ctx sdk.Context, key *types.LedgerKey) bool {
+func (k Keeper) HasLedger(ctx context.Context, key *types.LedgerKey) bool {
 	keyStr := key.String()
 
 	has, _ := k.Ledgers.Has(ctx, keyStr)

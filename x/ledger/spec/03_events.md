@@ -254,7 +254,7 @@ ctx.EventManager().EmitTypedEvent(
 
 ```go
 // Example of consuming events
-func (k Keeper) AfterTx(ctx sdk.Context, tx sdk.Tx, events []abci.Event) {
+func (k Keeper) AfterTx(ctx context.Context, tx sdk.Tx, events []abci.Event) {
     for _, event := range events {
         if event.Type == "provenance.ledger.v1.EventLedgerCreated" {
             // Process ledger created event

@@ -60,7 +60,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Verify the asset class exists
-	classResp, err := m.nftKeeper.Class(ctx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
+	classResp, err := m.nftKeeper.Class(goCtx, &nft.QueryClassRequest{ClassId: msg.Asset.ClassId})
 	if err != nil {
 		return nil, types.NewErrCodeNotFound(fmt.Sprintf("asset class %q", msg.Asset.ClassId))
 	}
@@ -107,7 +107,7 @@ func (m msgServer) CreateAsset(goCtx context.Context, msg *types.MsgCreateAsset)
 	}
 
 	// Mint the NFT with the owner address
-	err = m.nftKeeper.Mint(ctx, token, owner)
+	err = m.nftKeeper.Mint(goCtx, token, owner)
 	if err != nil {
 		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to mint NFT: %s", err))
 	}
