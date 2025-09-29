@@ -982,6 +982,13 @@
   
     - [RegistryRole](#provenance-registry-v1-RegistryRole)
   
+- [provenance/registry/v1/events.proto](#provenance_registry_v1_events-proto)
+    - [EventNFTRegistered](#provenance-registry-v1-EventNFTRegistered)
+    - [EventNFTUnregistered](#provenance-registry-v1-EventNFTUnregistered)
+    - [EventRegistryBulkUpdate](#provenance-registry-v1-EventRegistryBulkUpdate)
+    - [EventRoleGranted](#provenance-registry-v1-EventRoleGranted)
+    - [EventRoleRevoked](#provenance-registry-v1-EventRoleRevoked)
+  
 - [cosmos/quarantine/v1beta1/events.proto](#cosmos_quarantine_v1beta1_events-proto)
     - [EventFundsQuarantined](#cosmos-quarantine-v1beta1-EventFundsQuarantined)
     - [EventFundsReleased](#cosmos-quarantine-v1beta1-EventFundsReleased)
@@ -14686,6 +14693,110 @@ These roles determine the permissions and capabilities that an address has withi
 | `REGISTRY_ROLE_BORROWER` | `5` | REGISTRY_ROLE_BORROWER indicates the address has borrower privileges. Borrowers can borrow against the underlying assets within defined parameters. |
 | `REGISTRY_ROLE_ORIGINATOR` | `6` | REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges. Originators are responsible for creating and originating the underlying assets. |
 
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/events.proto
+
+
+
+<a name="provenance-registry-v1-EventNFTRegistered"></a>
+
+### EventNFTRegistered
+EventNFTRegistered is an event emitted when an NFT is registered in the registry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. |
+| `nft_id` | [string](#string) |  | nft_id is the identifier for the NFT that this registry is linked to. |
+| `signer` | [string](#string) |  | signer is the account that registered the NFT. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventNFTUnregistered"></a>
+
+### EventNFTUnregistered
+EventNFTUnregistered is an event emitted when an NFT is unregistered from the registry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. |
+| `nft_id` | [string](#string) |  | nft_id is the identifier for the NFT that was unregistered. |
+| `signer` | [string](#string) |  | signer is the account that unregistered the NFT. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventRegistryBulkUpdate"></a>
+
+### EventRegistryBulkUpdate
+EventRegistryBulkUpdate is an event emitted when a bulk update is performed on the registry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries_count` | [uint64](#uint64) |  | entries_count is the number of registry entries that were updated. |
+| `signer` | [string](#string) |  | signer is the account that performed the bulk update. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventRoleGranted"></a>
+
+### EventRoleGranted
+EventRoleGranted is an event emitted when a role is granted to one or more addresses.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. |
+| `nft_id` | [string](#string) |  | nft_id is the identifier for the NFT that this registry is linked to. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the type of role that was granted. |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses that were granted the role. |
+| `signer` | [string](#string) |  | signer is the account that granted the role. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventRoleRevoked"></a>
+
+### EventRoleRevoked
+EventRoleRevoked is an event emitted when a role is revoked from one or more addresses.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. |
+| `nft_id` | [string](#string) |  | nft_id is the identifier for the NFT that this registry is linked to. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the type of role that was revoked. |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses that had the role revoked. |
+| `signer` | [string](#string) |  | signer is the account that revoked the role. |
+
+
+
+
+
+ <!-- end messages -->
 
  <!-- end enums -->
 

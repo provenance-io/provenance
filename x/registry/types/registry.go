@@ -17,9 +17,10 @@ import (
 const (
 	registryKeyHrp = "reg"
 
-	MaxLenAddress      = 90
-	MaxLenAssetClassID = 128
-	MaxLenNFTID        = 128
+	MaxLenAddress          = 90
+	MaxLenAssetClassID     = 128
+	MaxLenNFTID            = 128
+	MaxRegistryBulkEntries = 200
 )
 
 var alNumDashRx = regexp.MustCompile(`^[a-zA-Z0-9-.]+$`)

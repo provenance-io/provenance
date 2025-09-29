@@ -1,0 +1,66 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/registry/types";
+
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+import "provenance/registry/v1/registry.proto";
+
+// EventNFTRegistered is an event emitted when an NFT is registered in the registry.
+message EventNFTRegistered {
+  // asset_class_id is the Scope Specification ID or NFT Class ID.
+  string asset_class_id = 1;
+  // nft_id is the identifier for the NFT that this registry is linked to.
+  string nft_id = 2;
+  // signer is the account that registered the NFT.
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventRoleGranted is an event emitted when a role is granted to one or more addresses.
+message EventRoleGranted {
+  // asset_class_id is the Scope Specification ID or NFT Class ID.
+  string asset_class_id = 1;
+  // nft_id is the identifier for the NFT that this registry is linked to.
+  string nft_id = 2;
+  // role is the type of role that was granted.
+  RegistryRole role = 3;
+  // addresses is the list of addresses that were granted the role.
+  repeated string addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // signer is the account that granted the role.
+  string signer = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventRoleRevoked is an event emitted when a role is revoked from one or more addresses.
+message EventRoleRevoked {
+  // asset_class_id is the Scope Specification ID or NFT Class ID.
+  string asset_class_id = 1;
+  // nft_id is the identifier for the NFT that this registry is linked to.
+  string nft_id = 2;
+  // role is the type of role that was revoked.
+  RegistryRole role = 3;
+  // addresses is the list of addresses that had the role revoked.
+  repeated string addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // signer is the account that revoked the role.
+  string signer = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventNFTUnregistered is an event emitted when an NFT is unregistered from the registry.
+message EventNFTUnregistered {
+  // asset_class_id is the Scope Specification ID or NFT Class ID.
+  string asset_class_id = 1;
+  // nft_id is the identifier for the NFT that was unregistered.
+  string nft_id = 2;
+  // signer is the account that unregistered the NFT.
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventRegistryBulkUpdate is an event emitted when a bulk update is performed on the registry.
+message EventRegistryBulkUpdate {
+  // entries_count is the number of registry entries that were updated.
+  uint64 entries_count = 1;
+  // signer is the account that performed the bulk update.
+  string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
