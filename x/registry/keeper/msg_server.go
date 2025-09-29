@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/collections"
 
@@ -149,11 +150,11 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 
 	// Upsert each provided registry entry using the keeper's create function
 	// which performs the underlying set operation on the registry store.
-	for _, entry := range msg.Entries {
+	for i, entry := range msg.Entries {
 		// Validate that the signer owns the NFT
 		nftOwner := k.keeper.GetNFTOwner(sdkCtx, &entry.Key.AssetClassId, &entry.Key.NftId)
 		if nftOwner == nil || nftOwner.String() != msg.Signer {
-			return nil, types.NewErrCodeUnauthorized("signer does not own the NFT")
+			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("signer does not own the NFT at index %d", i))
 		}
 
 		if err := k.keeper.CreateRegistry(sdkCtx, entry.Key, entry.Roles); err != nil {
