@@ -109,9 +109,18 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 }
 
 // UnregisterNFT unregisters an NFT from the registry.
-// This removes the entire registry entry for the specified key.
+// This removes the entire registry entry and associated data for the specified key.
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// Ensure the registry exists
+	has, err := k.keeper.Registry.Has(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId))
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
+	}
 
 	// Validate that the signer owns the NFT
 	nftOwner := k.keeper.GetNFTOwner(sdkCtx, &msg.Key.AssetClassId, &msg.Key.NftId)
@@ -119,7 +128,10 @@ func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNF
 		return nil, types.NewErrCodeUnauthorized("signer does not own the NFT")
 	}
 
-	// TODO: Implement unregister functionality
+	// Remove the registry entry
+	if err := k.keeper.Registry.Remove(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId)); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUnregisterNFTResponse{}, nil
 }

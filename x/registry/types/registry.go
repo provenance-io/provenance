@@ -154,26 +154,6 @@ func ValidRolesString() string {
 	return strings.Join(roles, "  ")
 }
 
-// Validate validates the RegistryBulkUpdate
-func (m *MsgRegistryBulkUpdate) Validate() error {
-	if m == nil {
-		return fmt.Errorf("registry bulk update cannot be nil")
-	}
-
-	// Validate entries
-	if len(m.Entries) == 0 || len(m.Entries) > 200 {
-		return fmt.Errorf("entries cannot be empty or greater than 200")
-	}
-
-	for _, entry := range m.Entries {
-		if err := entry.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // ValidateClassID validates the asset class id format
 func ValidateClassID(classID string) error {
 	if err := ValidateStringLength(classID, 1, MaxLenAssetClassID); err != nil {
