@@ -74,6 +74,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 * Registered legacy `MsgExecuteContract` (v1beta1) for backward compatibility in transaction decoding [#2311](https://github.com/provenance-io/provenance/issues/2311).
 * Updated Linux build to use Ubuntu 20.04 for glibc compatibility [#2376](https://github.com/provenance-io/provenance/issues/2376).
+* Add missing `AddTxFlagsToCmd` to `gov-root-name` [PR 2456](https://github.com/provenance-io/provenance/pull/2456). 
 
 ### Dependencies
 
