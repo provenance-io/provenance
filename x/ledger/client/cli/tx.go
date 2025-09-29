@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"cosmossdk.io/math"
 
@@ -62,7 +61,8 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			assetClassID := args[0]
 			nftID := args[1]
 			ledgerClassID := args[2]
-			statusTypeID, err := strconv.ParseInt(args[3], 10, 32)
+			statusTypeID, err :=
+				strconv.ParseInt(args[3], 10, 32)
 			if err != nil {
 				return fmt.Errorf("invalid status_type_id: %w", err)
 			}
@@ -78,7 +78,12 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			}
 
 			// Get optional fields from flags
-			nextPmtDateStr, _ := cmd.Flags().GetString("next-pmt-date")
+			flagSet := cmd.Flags()
+
+			nextPmtDateStr, err := ReadFlagNextPmtDate(flagSet)
+			if err != nil {
+				return fmt.Errorf("failed to read --%s: %w", FlagNextPmtDate, err)
+			}
 			if nextPmtDateStr != "" {
 				nextPmtDate, err := helper.ParseYMD(nextPmtDateStr)
 				if err != nil {
@@ -87,7 +92,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				ledgerObj.NextPmtDate = helper.DaysSinceEpoch(nextPmtDate.UTC())
 			}
 
-			nextPmtAmt, err := cmd.Flags().GetInt64("next-pmt-amt")
+			nextPmtAmt, err := ReadFlagNextPmtAmt(flagSet)
 			if err != nil {
 				return fmt.Errorf("invalid --next-pmt-amt: %w", err)
 			}
@@ -95,7 +100,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				ledgerObj.NextPmtAmt = math.NewInt(nextPmtAmt)
 			}
 
-			interestRate, err := cmd.Flags().GetInt32("interest-rate")
+			interestRate, err := ReadFlagInterestRate(flagSet)
 			if err != nil {
 				return fmt.Errorf("invalid --interest-rate: %w", err)
 			}
@@ -103,7 +108,10 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 				ledgerObj.InterestRate = interestRate
 			}
 
-			maturityDateStr, _ := cmd.Flags().GetString("maturity-date")
+			maturityDateStr, err := ReadFlagMaturityDate(flagSet)
+			if err != nil {
+				return fmt.Errorf("failed to read --%s: %w", FlagMaturityDate, err)
+			}
 			if maturityDateStr != "" {
 				maturityDate, err := helper.ParseYMD(maturityDateStr)
 				if err != nil {
@@ -113,85 +121,40 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 			}
 
 			// Get enum values from flags
-			dayCountConvention, _ := cmd.Flags().GetString("day-count-convention")
-			if dayCountConvention != "" {
-				switch dayCountConvention {
-				case "actual-365":
-					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_ACTUAL_365
-				case "actual-360":
-					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_ACTUAL_360
-				case "thirty-360":
-					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_THIRTY_360
-				case "actual-actual":
-					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_ACTUAL_ACTUAL
-				case "days-365":
-					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_DAYS_365
-				case "days-360":
-					ledgerObj.InterestDayCountConvention = ledger.DAY_COUNT_CONVENTION_DAYS_360
-				default:
-					return fmt.Errorf("invalid --day-count-convention: %s", dayCountConvention)
-				}
+			dayCountConvention, err := ReadFlagDayCountConvention(flagSet)
+			if err != nil {
+				return err
 			}
+			ledgerObj.InterestDayCountConvention = dayCountConvention
 
-			interestAccrualMethod, _ := cmd.Flags().GetString("interest-accrual-method")
-			if interestAccrualMethod != "" {
-				switch interestAccrualMethod {
-				case "simple":
-					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST
-				case "compound":
-					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST
-				case "daily":
-					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING
-				case "monthly":
-					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING
-				case "quarterly":
-					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING
-				case "annual":
-					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING
-				case "continuous":
-					ledgerObj.InterestAccrualMethod = ledger.INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING
-				default:
-					return fmt.Errorf("invalid --interest-accrual-method: %s", interestAccrualMethod)
-				}
+			interestAccrualMethod, err := ReadFlagInterestAccrualMethod(flagSet)
+			if err != nil {
+				return err
 			}
+			ledgerObj.InterestAccrualMethod = interestAccrualMethod
 
-			paymentFrequency, _ := cmd.Flags().GetString("payment-frequency")
-			if paymentFrequency != "" {
-				switch paymentFrequency {
-				case "daily":
-					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_DAILY
-				case "weekly":
-					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_WEEKLY
-				case "monthly":
-					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_MONTHLY
-				case "quarterly":
-					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_QUARTERLY
-				case "annually":
-					ledgerObj.PaymentFrequency = ledger.PAYMENT_FREQUENCY_ANNUALLY
-				default:
-					return fmt.Errorf("invalid --payment-frequency: %s", paymentFrequency)
-				}
+			paymentFrequency, err := ReadFlagPaymentFrequency(flagSet)
+			if err != nil {
+				return err
 			}
+			ledgerObj.PaymentFrequency = paymentFrequency
 
 			msg := &ledger.MsgCreateLedgerRequest{
 				Ledger: ledgerObj,
 				Signer: clientCtx.FromAddress.String(),
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 		},
 	}
 
-	// Add custom flags
-	ledgerFlags := pflag.NewFlagSet("ledger", pflag.ContinueOnError)
-	ledgerFlags.String("next-pmt-date", "", "Next payment date (YYYY-MM-DD)")
-	ledgerFlags.Int64("next-pmt-amt", 0, "Next payment amount")
-	ledgerFlags.Int32("interest-rate", 0, "Interest rate (10000000 = 10.000000%)")
-	ledgerFlags.String("maturity-date", "", "Maturity date (YYYY-MM-DD)")
-	ledgerFlags.String("day-count-convention", "", "Day count convention (actual-365, actual-360, thirty-360, actual-actual, days-365, days-360)")
-	ledgerFlags.String("interest-accrual-method", "", "Interest accrual method (simple, compound, daily, monthly, quarterly, annual, continuous)")
-	ledgerFlags.String("payment-frequency", "", "Payment frequency (daily, weekly, monthly, quarterly, annually)")
-	cmd.Flags().AddFlagSet(ledgerFlags)
+	AddFlagNextPmtDate(cmd)
+	AddFlagNextPmtAmt(cmd)
+	AddFlagInterestRate(cmd)
+	AddFlagMaturityDate(cmd)
+	AddFlagDayCountConvention(cmd)
+	AddFlagInterestAccrualMethod(cmd)
+	AddFlagPaymentFrequency(cmd)
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
