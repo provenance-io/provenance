@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -220,7 +219,11 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 
 // NameExists returns true if store contains a record for the given name.
 func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
-	exists, _ := k.nameRecords.Has(ctx, name)
+	normalizedName, err := k.Normalize(ctx, name)
+	if err != nil {
+		return false
+	}
+	exists, _ := k.nameRecords.Has(ctx, normalizedName)
 	return exists
 }
 
@@ -252,10 +255,8 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 		if err != nil {
 			continue
 		}
-
 		records = append(records, record)
 	}
-
 	return records, nil
 }
 
@@ -267,6 +268,9 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	}
 	record, err := k.nameRecords.Get(ctx, normalizedName)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.ErrNameNotBound
+		}
 		return err
 	}
 	if err := k.nameRecords.Remove(ctx, normalizedName); err != nil {
@@ -276,18 +280,9 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	return ctx.EventManager().EmitTypedEvent(nameUnboundEvent)
 }
 
-func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(record types.NameRecord) error) error {
-	count := 0
+func (k Keeper) IterateRecords(ctx sdk.Context, handle func(record types.NameRecord) error) error {
 	err := k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
-		count++
-		if prefix != nil && !bytes.Equal(prefix, types.NameKeyPrefix) {
-			nameBytes := []byte(record.Name)
-			if !bytes.HasPrefix(nameBytes, prefix) {
-				return false, nil
-			}
-		}
 		if err := handle(record); err != nil {
-			ctx.Logger().Error("IterateRecords handle error", "error", err)
 			return true, err
 		}
 		return false, nil
