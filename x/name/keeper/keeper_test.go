@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	"cosmossdk.io/collections"
@@ -252,7 +253,7 @@ func (s *KeeperTestSuite) TestGetName() {
 		s.Require().Error(err)
 		s.Require().Nil(r)
 		s.Require().Equal("segment of name is too short", err.Error())
-		s.Require().True(s.app.NameKeeper.NameExists(s.ctx, "..name"))
+		s.Require().False(s.app.NameKeeper.NameExists(s.ctx, "..name"))
 	})
 }
 
@@ -268,7 +269,7 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 	s.Run("delete invalid name", func() {
 		err := s.app.NameKeeper.DeleteRecord(s.ctx, "undefined.name")
 		s.Require().Error(err)
-		s.Require().ErrorContains(err, "collections: not found: key")
+		s.Require().Equal("no address bound to name", err.Error())
 	})
 	s.Run("delete valid root name", func() {
 		err := s.app.NameKeeper.DeleteRecord(s.ctx, "name")
@@ -315,9 +316,13 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 			{Name: "name", Address: s.user1Addr.String(), Restricted: false},
 			{Name: "example.name", Address: s.user1Addr.String(), Restricted: false},
 		}
+
 		addr1Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user1Addr)
+		sortNameRecordsByName(expUser1Recs)
+		sortNameRecordsByName(addr1Recs)
+		
 		s.Require().NoError(err, "GetRecordsByAddress(user1)")
-		s.Assert().ElementsMatch(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
+		s.Assert().Equal(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
 
 		// expUser2Recs := nametypes.NameRecords{}
 		addr2Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user2Addr)
@@ -371,7 +376,7 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 			return nil
 		}
 		// Collect and return genesis state.
-		err := s.app.NameKeeper.IterateRecords(s.ctx, nametypes.NameKeyPrefix, appendToRecords)
+		err := s.app.NameKeeper.IterateRecords(s.ctx, appendToRecords)
 		s.Require().NoError(err, "IterateRecords error")
 		s.Require().Equal(expRecords, records, "records iterated over")
 	})
@@ -479,7 +484,7 @@ func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 			name:       "..badroot",
 			owner:      s.user1Addr,
 			restricted: false,
-			err:        fmt.Errorf("name is already bound to an address"),
+			err:        fmt.Errorf("segment of name is too short"),
 		},
 	}
 
@@ -553,4 +558,9 @@ func (s *KeeperTestSuite) TestStoreNameRecordAndAddrIndex() {
 	}
 	s.Require().True(found, "Expected to find name record [%s] for address [%s]", name, addr.String())
 	s.T().Logf("Found %d records for address %s", len(recordsByAddr), addr.String())
+}
+func sortNameRecordsByName(records nametypes.NameRecords) {
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].Name < records[j].Name
+	})
 }
