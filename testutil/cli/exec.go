@@ -4,13 +4,15 @@ package cli
 import (
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+
 	sdkcli "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/queries"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 )
 
 // TxExecutor helps facilitate the execution and testing of a tx CLI command.

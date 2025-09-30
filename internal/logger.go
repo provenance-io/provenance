@@ -5,8 +5,9 @@ import (
 	"bytes"
 	"strings"
 
-	"cosmossdk.io/log"
 	"github.com/rs/zerolog"
+
+	"cosmossdk.io/log"
 )
 
 // NewBufferedLogger creates a new logger that writes to the provided buffer.
