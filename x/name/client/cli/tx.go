@@ -213,6 +213,7 @@ $ %s tx name gov-root-name \
 	cmd.Flags().BoolP(FlagUnrestricted, "u", false, "Allow child name creation by everyone")
 	govcli.AddGovPropFlagsToCmd(cmd)
 	provcli.AddAuthorityFlagToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
