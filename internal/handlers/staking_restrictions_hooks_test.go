@@ -24,7 +24,7 @@ import (
 // assertEqualFloats checks that two floats are equal to a given precision (number of digits past the decimal).
 // For example, 3.141 and 3.142 are equal with a precision of 2 but not 3.
 // Returns true if they're equal, false if not.
-func assertEqualFloats(t *testing.T, expected, actual float32, precision uint16, msgAndArgs ...interface{}) bool {
+func assertEqualFloats(t *testing.T, expected, actual float64, precision uint16, msgAndArgs ...interface{}) bool {
 	ffmt := "%." + strconv.Itoa(int(precision)) + "f"
 	exp := fmt.Sprintf(ffmt, expected)
 	act := fmt.Sprintf(ffmt, actual)
@@ -213,7 +213,7 @@ func TestRestrictionOptions_CalcMaxValPct(t *testing.T) {
 		name     string
 		this     *RestrictionOptions // Defaults to DefaultRestrictionOptions.
 		valCount int
-		exp      float32
+		exp      float64
 	}{
 		{
 			name:     "default options: zero validators",
@@ -364,7 +364,7 @@ func TestRestrictionOptions_CalcMaxValPct(t *testing.T) {
 
 			// Repeat this 1000 times to check determinism.
 			for i := range 1000 {
-				var act float32
+				var act float64
 				testFunc := func() {
 					act = tc.this.CalcMaxValPct(tc.valCount)
 				}
@@ -404,54 +404,54 @@ func TestCalcMaxValBond(t *testing.T) {
 
 	// dCon = default concentration (but with a shorter name).
 	// Doing lots of tests with this because that's the value most likely to be used in these calcs.
-	dCon := float32(DefaultConcentrationMultiple)
+	dCon := DefaultConcentrationMultiple
 
 	tests := []struct {
 		name      string
 		totalBond sdkmath.Int
-		maxValPct float32
+		maxValPct float64
 		exp       sdkmath.Int
 	}{
 		{
 			name:      "difficult float 0.1",
 			totalBond: oneBil,
-			maxValPct: float32(1) + (float32(1) / 10) - 1, // should be 0.1, but impossible to represent as float.
+			maxValPct: float64(1) + (float64(1) / 10) - 1, // should be 0.1, but impossible to represent as float.
 			exp:       sdkmath.NewInt(100_000_000),
 		},
 		{
 			name:      "difficult float 0.2",
 			totalBond: oneBil,
-			maxValPct: float32(1) / 5, // should be 0.2, but impossible to represent as float.
+			maxValPct: float64(1) / 5, // should be 0.2, but impossible to represent as float.
 			exp:       sdkmath.NewInt(200_000_000),
 		},
 		{
 			name:      "difficult float 0.3",
 			totalBond: oneBil,
-			maxValPct: float32(1)/10 + float32(2)/10, // should be 0.3, but impossible to represent as float.
+			maxValPct: float64(1)/10 + float64(2)/10, // should be 0.3, but impossible to represent as float.
 			exp:       sdkmath.NewInt(300_000_000),
 		},
 		{
 			name:      "difficult float 1/3",
 			totalBond: oneBil,
-			maxValPct: float32(1) / 3, // should be 0.3333..., but impossible to represent as float.
+			maxValPct: float64(1) / 3, // should be 0.3333..., but impossible to represent as float.
 			exp:       sdkmath.NewInt(333_333_000),
 		},
 		{
 			name:      "difficult float 1/3 + 1/2",
 			totalBond: oneBil,
-			maxValPct: float32(1)/3 + float32(1)/2, // should be 0.8333..., but impossible to represent as float.
+			maxValPct: float64(1)/3 + float64(1)/2, // should be 0.8333..., but impossible to represent as float.
 			exp:       sdkmath.NewInt(833_333_000),
 		},
 		{
 			name:      "difficult float 1/3 + 1/3",
 			totalBond: oneBil,
-			maxValPct: float32(1)/3 + float32(1)/3, // should be 0.666..., but impossible to represent as float.
+			maxValPct: float64(1)/3 + float64(1)/3, // should be 0.666..., but impossible to represent as float.
 			exp:       sdkmath.NewInt(666_666_000),
 		},
 		{
 			name:      "difficult float 1/3 + 1/10",
 			totalBond: oneBil,
-			maxValPct: float32(1)/3 + float32(1)/10, // should be 0.4333..., but impossible to represent as float.
+			maxValPct: float64(1)/3 + float64(1)/10, // should be 0.4333..., but impossible to represent as float.
 			exp:       sdkmath.NewInt(433_333_000),
 		},
 		{
@@ -769,7 +769,7 @@ func TestCalcsTogether(t *testing.T) {
 
 			// Repeat this 1000 times to check determinism.
 			for i := range 1000 {
-				var maxValPct float32
+				var maxValPct float64
 				var act sdkmath.Int
 				testFunc := func() {
 					maxValPct = tc.opts.CalcMaxValPct(tc.valCount)

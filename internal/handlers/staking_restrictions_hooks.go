@@ -26,9 +26,9 @@ const (
 
 // RestrictionOptions contains configurable fields related to how the staking restrictions apply.
 type RestrictionOptions struct {
-	MaxConcentrationMultiple float32
-	MaxBondedCapPercent      float32
-	MinBondedCapPercent      float32
+	MaxConcentrationMultiple float64
+	MaxBondedCapPercent      float64
+	MinBondedCapPercent      float64
 }
 
 // DefaultRestrictionOptions are default constraints that prevent single point of failure on validators
@@ -46,8 +46,8 @@ var UnlimitedRestrictionOptions = &RestrictionOptions{
 }
 
 // CalcMaxValPct returns the maximum percent (of total bond) a single validator is allowed to have.
-func (o RestrictionOptions) CalcMaxValPct(valCount int) float32 {
-	rv := o.MaxConcentrationMultiple / float32(valCount)
+func (o RestrictionOptions) CalcMaxValPct(valCount int) float64 {
+	rv := o.MaxConcentrationMultiple / float64(valCount)
 	if rv >= o.MaxBondedCapPercent {
 		return o.MaxBondedCapPercent // This gets returned if valCount == 0.
 	}
@@ -58,7 +58,7 @@ func (o RestrictionOptions) CalcMaxValPct(valCount int) float32 {
 }
 
 // CalcMaxValBond calculates the maximum bond allowed for a single validator based on total bonded tokens and max percent.
-func CalcMaxValBond(totalBond sdkmath.Int, maxValPct float32) sdkmath.Int {
+func CalcMaxValBond(totalBond sdkmath.Int, maxValPct float64) sdkmath.Int {
 	// maxValPct is expected to be between 0.05 and 0.33. At 100 validators it will be 0.055.
 	// The * 1_000_000 then / by same, essentially tells it to use 6 digits of precision from maxValPct.
 	return totalBond.MulRaw(int64(maxValPct * 1_000_000)).QuoRaw(1_000_000)
