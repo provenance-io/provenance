@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 

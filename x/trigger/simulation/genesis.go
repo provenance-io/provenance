@@ -13,6 +13,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	internalrand "github.com/provenance-io/provenance/internal/rand"
 	"github.com/provenance-io/provenance/x/trigger/types"

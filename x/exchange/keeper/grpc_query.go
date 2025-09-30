@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/provenance-io/provenance/x/exchange"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/store/prefix"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+
+	"github.com/provenance-io/provenance/x/exchange"
 )
 
 // QueryServer is an alias for a Keeper that implements the exchange.QueryServer interface.

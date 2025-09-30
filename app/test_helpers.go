@@ -12,12 +12,17 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -36,10 +41,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/require"
 )
 
 // DefaultConsensusParams defines the default consensus params used in SimApp testing.
@@ -510,13 +514,19 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 
 // MakeTestEncodingConfig creates an encoding config suitable for unit tests.
 func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
-	tempDir := t.TempDir()
-	tempApp := New(
-		log.NewNopLogger(),
-		dbm.NewMemDB(),
-		nil,
-		true,
-		simtestutil.NewAppOptionsWithFlagHome(tempDir),
-	)
+	tempDir, err := os.MkdirTemp("", "tempprovapp") //nolint:usetesting // Not using t.TempDir() here to allow t to be nil and so the dir is cleaned up sooner.
+	switch {
+	case t != nil:
+		require.NoError(t, err, "failed to create temp dir %q", tempDir)
+	case err != nil:
+		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
+	}
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			fmt.Printf("failed to remove temp dir %s: %v\n", tempDir, err)
+		}
+	}()
+
+	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	return tempApp.GetEncodingConfig()
 }
