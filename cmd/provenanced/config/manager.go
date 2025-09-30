@@ -7,14 +7,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	cmtconfig "github.com/cometbft/cometbft/config"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // DefaultConsensusTimeoutCommit is the default value used for the consensus.timeout_commit config value.

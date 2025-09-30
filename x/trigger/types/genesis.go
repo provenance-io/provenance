@@ -6,6 +6,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 

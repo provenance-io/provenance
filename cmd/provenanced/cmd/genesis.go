@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,6 +22,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/x/exchange"
 	exchangecli "github.com/provenance-io/provenance/x/exchange/client/cli"
 	flatfeescli "github.com/provenance-io/provenance/x/flatfees/client/cli"
@@ -27,7 +30,6 @@ import (
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	"github.com/spf13/cobra"
 )
 
 const (

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdkerrors "cosmossdk.io/errors"
+
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	tendermintclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"

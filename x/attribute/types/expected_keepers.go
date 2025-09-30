@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 

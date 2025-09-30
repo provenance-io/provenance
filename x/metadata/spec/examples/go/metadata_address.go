@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/google/uuid"
+
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 const (

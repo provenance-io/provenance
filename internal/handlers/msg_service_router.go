@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -12,10 +16,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/protocompat"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // This file is basically a copy of the SDK's baseapp/msg_service_router.go file with the following modifications:

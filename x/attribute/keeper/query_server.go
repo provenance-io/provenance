@@ -4,12 +4,15 @@ import (
 	"context"
 	"strings"
 
-	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/provenance-io/provenance/x/attribute/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/store/prefix"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+
+	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
 var _ types.QueryServer = Keeper{}

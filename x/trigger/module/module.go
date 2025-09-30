@@ -6,9 +6,15 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/core/appmodule"
 	cerrs "cosmossdk.io/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,14 +23,12 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
 	triggerModule "github.com/provenance-io/provenance/x/trigger"
 	"github.com/provenance-io/provenance/x/trigger/client/cli"
 	"github.com/provenance-io/provenance/x/trigger/keeper"
 	"github.com/provenance-io/provenance/x/trigger/simulation"
 	"github.com/provenance-io/provenance/x/trigger/types"
-	"github.com/spf13/cobra"
 )
 
 var (

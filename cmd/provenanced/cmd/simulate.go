@@ -3,8 +3,9 @@ package cmd
 import (
 	"strings"
 
-	flatfeescli "github.com/provenance-io/provenance/x/flatfees/client/cli"
 	"github.com/spf13/cobra"
+
+	flatfeescli "github.com/provenance-io/provenance/x/flatfees/client/cli"
 )
 
 // GetCmdPioSimulateTx returns the command to simulate a Provenance transaction.

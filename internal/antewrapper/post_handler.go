@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	cerrs "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 

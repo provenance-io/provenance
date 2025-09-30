@@ -2,13 +2,15 @@
 package contracts
 
 import (
-	_ "embed"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	provenanceapp "github.com/provenance-io/provenance/app"
+
+	_ "embed"
 )
 
 //go:embed counter/artifacts/counter.wasm

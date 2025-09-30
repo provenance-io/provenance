@@ -9,11 +9,15 @@ import (
 	"strings"
 	"time"
 
-	cerrs "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	"github.com/spf13/cobra"
+
 	cmtos "github.com/cometbft/cometbft/libs/os"
 	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	cmttypes "github.com/cometbft/cometbft/types"
+
+	cerrs "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -29,10 +33,10 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
+
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/spf13/cobra"
 )
 
 const (

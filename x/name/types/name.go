@@ -5,8 +5,9 @@ import (
 	"strings"
 	"unicode"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewNameRecord creates a name record binding that is restricted for child updates to the owner.

@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 )
 
 // GetLastGovProp executes a query to get the most recent governance proposal, requiring everything to be okay.
