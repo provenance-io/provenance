@@ -8,11 +8,13 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"

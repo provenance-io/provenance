@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PrependToEach prepends the provided prefix to each of the provide lines.

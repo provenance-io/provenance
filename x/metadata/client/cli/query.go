@@ -7,13 +7,15 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/google/uuid"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/google/uuid"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
-	"github.com/spf13/cobra"
 )
 
 // cmdStart is the first part of the command that gets you to one of the ones in here.

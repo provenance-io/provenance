@@ -3,9 +3,11 @@ package keeper
 import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 

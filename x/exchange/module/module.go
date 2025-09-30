@@ -7,20 +7,24 @@ import (
 	"fmt"
 	"math/rand"
 
-	"cosmossdk.io/core/appmodule"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/core/appmodule"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 	"github.com/provenance-io/provenance/x/exchange/simulation"
-	"github.com/spf13/cobra"
 )
 
 var (

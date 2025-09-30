@@ -8,14 +8,22 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rs/zerolog"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
+	cmtconfig "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	cmtconfig "github.com/cometbft/cometbft/config"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,15 +44,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 // NewRootCmd creates a new root command for provenanced. It is called once in the main function.

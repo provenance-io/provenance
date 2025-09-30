@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-metrics"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hashicorp/go-metrics"
+
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 

@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/flatfees/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // MsgKeeper is an interface with all the keeper methods needed for the msg server endpoints.
