@@ -16,7 +16,6 @@ linters:
     - errcheck
     - errorlint
     - errname
-#    - forcetypeassert
     - goconst
     - gocritic
     - goheader
@@ -41,9 +40,6 @@ linters:
     - unused
     - whitespace
     - usetesting
-    # - stylecheck
-    # - tenv
-    # - gosimple
 formatters:
   enable:
     - gofmt
@@ -82,33 +78,22 @@ linters.settings:
           - "!$test"
         allow:
           - $gostd
-          # Provenance
+          # Primary
           - github.com/provenance-io/provenance
-          # CosmWasm
           - github.com/CosmWasm
-          # Cosmossdk.io
           - cosmossdk.io
-          # Cosmos
           - github.com/cosmos
-          # CometBFT
           - github.com/cometbft          
-          # Standard Libraries / Tools
           - github.com/armon/go-metrics
-          - google.golang.org/grpc
-          - google.golang.org/protobuf
+          - google.golang.org
+          - github.com/spf13
           - github.com/golang/protobuf
           - github.com/google/uuid
           - github.com/gorilla/mux
           - github.com/grpc-ecosystem/grpc-gateway
           - github.com/hashicorp/go-metrics
           - github.com/rs/zerolog
-          - github.com/spf13/cast
-          - github.com/spf13/cobra
-          - github.com/spf13/pflag
-          - github.com/spf13/viper
-          # Testing
           - github.com/stretchr/testify   
-          # Kubernetes / YAML
           - sigs.k8s.io/yaml
         deny:
           - pkg: "github.com/cosmos/cosmos-sdk/x/params"
@@ -123,14 +108,6 @@ linters.settings:
   errcheck:
     exclude-functions:
       - (fmt.State).Write
-  gci:
-    custom-order: true
-    sections:
-      - standard
-      - default
-      - prefix(github.com/provenance-io)
-      - blank
-      - dot
   govet:
     shadow: true
     settings:
@@ -155,3 +132,16 @@ linters.settings:
     allow-unused: false
     require-explanation: false
     require-specific: false
+
+formatters.settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard
+      - default
+      - prefix(github.com/cometbft)
+      - prefix(cosmossdk.io)
+      - prefix(github.com/cosmos)
+      - prefix(github.com/provenance-io)
+      - blank
+      - dot

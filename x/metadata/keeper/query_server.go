@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/google/uuid"
+
 	"cosmossdk.io/store/prefix"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/google/uuid"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 

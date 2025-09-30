@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+
 	"github.com/provenance-io/provenance/x/exchange"
-	"github.com/spf13/cobra"
 )
 
 // CmdQuery returns the root query command for the exchange module.

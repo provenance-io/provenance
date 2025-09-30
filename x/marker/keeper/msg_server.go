@@ -4,16 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-metrics"
+
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	feegranttypes "cosmossdk.io/x/feegrant/keeper"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/hashicorp/go-metrics"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 

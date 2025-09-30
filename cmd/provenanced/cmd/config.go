@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/version"
+
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (

@@ -7,6 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
 	simappparams "github.com/provenance-io/provenance/app/params"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
