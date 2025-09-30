@@ -701,8 +701,6 @@ func (s *IntegrationTestSuite) TestGovRootNameCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			// because the cmd runs inside of the gov cmd (which adds flags) we register here so we can use it directly.
-			flags.AddTxFlagsToCmd(tc.cmd)
 			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
