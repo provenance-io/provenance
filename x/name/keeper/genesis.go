@@ -3,6 +3,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	types "github.com/provenance-io/provenance/x/name/types"
 )
 

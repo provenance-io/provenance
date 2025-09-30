@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var docGenCmdStart = fmt.Sprintf("%s docgen", version.AppName)
