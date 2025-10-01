@@ -239,24 +239,20 @@ func GetLedgerEntriesCmd() *cobra.Command {
 			entryTypes := getEntryTypes(config.Ledger.LedgerClassId)
 			bucketTypes := getBucketTypes(config.Ledger.LedgerClassId)
 
-			// Check if we successfully retrieved the entry types and bucket types
-			if entryTypes == nil {
-				return fmt.Errorf("failed to retrieve entry types for ledger class: %s", config.Ledger.LedgerClassId)
-			}
-			if bucketTypes == nil {
-				return fmt.Errorf("failed to retrieve bucket types for ledger class: %s", config.Ledger.LedgerClassId)
-			}
-
 			plainTextEntries := make([]*LedgerEntryPlainText, len(entries))
 			for i, entry := range entries {
 				appliedAmts := make([]*LedgerBucketAmountPlainText, len(entry.AppliedAmounts))
 				for j, amt := range entry.AppliedAmounts {
 					bucket := bucketTypes[amt.BucketTypeId]
 					if bucket == nil {
-						return fmt.Errorf("bucket type not found for id: %d", amt.BucketTypeId)
+						bucket = &ledger.LedgerClassBucketType{
+							Id:          amt.BucketTypeId,
+							Code:        "UNKNOWN_BUCKET_TYPE",
+							Description: "Bucket type information unavailable.",
+						}
 					}
 					appliedAmts[j] = &LedgerBucketAmountPlainText{
-						Bucket:     bucketTypes[amt.BucketTypeId],
+						Bucket:     bucket,
 						AppliedAmt: amt.AppliedAmt.String(),
 					}
 				}
@@ -271,7 +267,11 @@ func GetLedgerEntriesCmd() *cobra.Command {
 
 				entryType := entryTypes[entry.EntryTypeId]
 				if entryType == nil {
-					return fmt.Errorf("entry type not found for id: %d", entry.EntryTypeId)
+					entryType = &ledger.LedgerClassEntryType{
+						Id:          entry.EntryTypeId,
+						Code:        "UNKNOWN_ENTRY_TYPE",
+						Description: "Entry type information unavailable",
+					}
 				}
 
 				plainTextEntries[i] = &LedgerEntryPlainText{

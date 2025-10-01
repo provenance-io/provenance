@@ -105,8 +105,14 @@ func assertAuthorization(ctx context.Context, k RegistryKeeper, signerAddr strin
 		if role.Role != registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER {
 			continue
 		}
-		hasServicer = true
 
+		// If the servicer role has no addresses, it is not authorized.
+		if len(role.Addresses) == 0 {
+			continue
+		}
+
+		// Check if the signer is in the list of servicer addresses.
+		hasServicer = true
 		if slices.Contains(role.Addresses, signerAddr) {
 			return nil
 		}

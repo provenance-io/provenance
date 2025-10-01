@@ -37,6 +37,8 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 		return nil, err
 	}
 
+	k.keeper.emitEvent(sdkCtx, types.NewEventNFTRegistered(msg.Key, msg.Signer))
+
 	return &types.MsgRegisterNFTResponse{}, nil
 }
 
@@ -58,6 +60,8 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 	if err != nil {
 		return nil, err
 	}
+
+	k.keeper.emitEvent(sdkCtx, types.NewEventRoleGranted(msg.Key, msg.Role, msg.Addresses, msg.Signer))
 
 	return &types.MsgGrantRoleResponse{}, nil
 }
@@ -81,11 +85,13 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, err
 	}
 
+	k.keeper.emitEvent(sdkCtx, types.NewEventRoleRevoked(msg.Key, msg.Role, msg.Addresses, msg.Signer))
+
 	return &types.MsgRevokeRoleResponse{}, nil
 }
 
 // UnregisterNFT unregisters an NFT from the registry.
-// This removes the entire registry entry for the specified key.
+// This removes the entire registry entry and associated data for the specified key.
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {
 	// Validate that the signer owns the NFT
 	if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
@@ -102,8 +108,6 @@ func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNF
 // RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
 // This creates multiple registry entries, or updates if one exists.
 func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistryBulkUpdate) (*types.MsgRegistryBulkUpdateResponse, error) {
-	// Upsert each provided registry entry using the keeper's create function
-	// which performs the underlying set operation on the registry store.
 	for i, entry := range msg.Entries {
 		// Validate that the NFT exists
 		if err := k.ValidateNFTExists(ctx, &entry.Key.AssetClassId, &entry.Key.NftId); err != nil {
@@ -147,6 +151,8 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 		}
 		k.EmitEvents(ctx, allEvents...)
 	}
+
+	k.keeper.emitEvent(sdkCtx, types.NewEventRegistryBulkUpdate(uint64(len(msg.Entries)), msg.Signer))
 
 	return &types.MsgRegistryBulkUpdateResponse{}, nil
 }

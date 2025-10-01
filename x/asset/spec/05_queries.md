@@ -1,184 +1,74 @@
-# Queries
+# Asset Queries
 
-The `x/asset` module provides queries for retrieving asset and asset class information.
+There are several queries for getting information about assets and asset classes in the asset module.
 
-<!-- TOC -->
-  - [ListAssets](#listassets)
-  - [ListAssetClasses](#listassetclasses)
-  - [GetClass](#getclass)
+---
+<!-- TOC 2 2 -->
+  - [Asset](#asset)
+  - [Assets](#assets)
+  - [AssetClass](#assetclass)
+  - [AssetClasses](#assetclasses)
 
-## ListAssets
 
-Retrieves all assets owned by a specific address.
+## Asset
 
-**Endpoint**: `GET /provenance/asset/v1/asset`
+Use the `Asset` query to look up a specific asset by its class ID and asset ID.
 
-### Request
+### QueryAssetRequest
 
-| Field | Type | Description |
-|-------|------|-------------|
-| address | string | The bech32 address to query assets for |
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L36-L43
 
-### Response
+### QueryAssetResponse
 
-```protobuf
-message QueryListAssetsResponse {
-  repeated Asset assets = 1;
-}
-```
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L45-L49
 
-### Asset Fields
+See also: [Asset](03_messages.md#asset).
 
-| Field | Type | Description |
-|-------|------|-------------|
-| class_id | string | The asset class ID |
-| id | string | The asset ID |
-| uri | string | Link to off-chain metadata |
-| uri_hash | string | Hash of the metadata document |
-| data | string | JSON data for the asset |
 
-### Validation
+## Assets
 
-- The `address` must be a valid bech32 address
-- If the address is invalid or missing, the query will fail
-- If the address doesn't own any assets, an empty list will be returned
+The `Assets` query retrieves all assets for a given owner and optionally filters by class ID.
 
-### Example
+This query is paginated.
 
-Request:
-```bash
-curl "http://localhost:1317/provenance/asset/v1/asset?address=pb1v9jxgun9wde476twta6xse2lv4mx2mn56s5hm4"
-```
+### QueryAssetsRequest
 
-Response:
-```json
-{
-  "assets": [
-    {
-      "class_id": "real-estate-token",
-      "id": "property-001",
-      "uri": "https://example.com/metadata/property-001.json",
-      "uri_hash": "a1b2c3d4e5f6",
-      "data": "{\"address\":\"123 Main St\",\"value\":500000}"
-    }
-  ]
-}
-```
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L51-L61
 
-## ListAssetClasses
+### QueryAssetsResponse
 
-Retrieves all asset classes in the system.
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L63-L70
 
-**Endpoint**: `GET /provenance/asset/v1/class`
+See also: [Asset](03_messages.md#asset).
 
-### Request
 
-No parameters required.
+## AssetClass
 
-### Response
+Use the `AssetClass` query to look up a specific asset class by its ID.
 
-```protobuf
-message QueryListAssetClassesResponse {
-  repeated AssetClass assetClasses = 1;
-}
-```
+### QueryAssetClassRequest
 
-### AssetClass Fields
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L72-L76
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | string | Unique identifier for the asset class |
-| name | string | Human-readable name for the asset class |
-| symbol | string | Abbreviated name for the asset class |
-| description | string | Brief description of the asset class |
-| uri | string | Link to off-chain metadata |
-| uri_hash | string | Hash of the metadata document |
-| data | string | JSON schema for asset data validation |
+### QueryAssetClassResponse
 
-### Example
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L78-L82
 
-Request:
-```bash
-curl "http://localhost:1317/provenance/asset/v1/class"
-```
+See also: [AssetClass](03_messages.md#assetclass).
 
-Response:
-```json
-{
-  "assetClasses": [
-    {
-      "id": "real-estate-token",
-      "name": "Real Estate Token",
-      "symbol": "RET",
-      "description": "Tokenized real estate properties",
-      "uri": "https://example.com/schema/real-estate.json",
-      "uri_hash": "schema-hash-123",
-      "data": "{\"type\":\"object\",\"properties\":{\"address\":{\"type\":\"string\"},\"value\":{\"type\":\"number\"}}}"
-    }
-  ]
-}
-```
 
-## GetClass
+## AssetClasses
 
-Retrieves a specific asset class by its ID.
+Use the `AssetClasses` query to get all asset classes in the system.
 
-**Endpoint**: `GET /provenance/asset/v1/class/{id}`
+This query is paginated.
 
-### Request
+### QueryAssetClassesRequest
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | string | The asset class ID to retrieve |
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L84-L88
 
-### Response
+### QueryAssetClassesResponse
 
-```protobuf
-message QueryGetClassResponse {
-  AssetClass assetClass = 1;
-}
-```
++++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/query.proto#L90-L97
 
-### Validation
-
-- The `id` must be a non-empty string
-- If the asset class doesn't exist, the query will fail with "class not found"
-- If the `id` is invalid, the query will fail
-
-### Example
-
-Request:
-```bash
-curl "http://localhost:1317/provenance/asset/v1/class/real-estate-token"
-```
-
-Response:
-```json
-{
-  "assetClass": {
-    "id": "real-estate-token",
-    "name": "Real Estate Token",
-    "symbol": "RET",
-    "description": "Tokenized real estate properties",
-    "uri": "https://example.com/schema/real-estate.json",
-    "uri_hash": "schema-hash-123",
-    "data": "{\"type\":\"object\",\"properties\":{\"address\":{\"type\":\"string\"},\"value\":{\"type\":\"number\"}}}"
-  }
-}
-```
-
-## Query Implementation Details
-
-The asset module queries leverage the underlying NFT module's storage:
-
-- **ListAssets**: Queries all NFT classes, then filters NFTs by owner address
-- **ListAssetClasses**: Queries all NFT classes and converts them to asset classes
-- **GetClass**: Queries a specific NFT class by ID
-
-The queries handle the conversion between NFT module data structures and asset module data structures, including:
-
-- Converting `Any` types to JSON strings for the `data` field
-- Mapping NFT class fields to asset class fields
-- Filtering and transforming data as needed
-
-This design allows the asset module to benefit from the NFT module's proven query infrastructure while providing domain-specific asset functionality. 
+See also: [AssetClass](03_messages.md#assetclass).

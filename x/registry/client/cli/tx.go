@@ -170,7 +170,27 @@ func CmdRegistryBulkUpdate() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bulk-update <entries_json_file>",
 		Short: "Bulk update registry entries",
-		Args:  cobra.ExactArgs(1),
+		Example: `$ provenanced tx registry bulk-update entries.json --from mykey
+		where the json is formatted as follows (array of RegistryEntry type):
+		[
+			{
+				"key": { "asset_class_id": "loan.asset", "nft_id": "loan-001" },
+				"roles": [
+					{ "role": 6, "addresses": ["tp1q75h9mg54a6nrr9xqldyh0r82e5lf5wqrxzhqp"] },
+					{ "role": 1, "addresses": ["tp1sh49f6ze3vn7cdl2amh2gnc70z5mten3y3fv0k"] }
+				]
+			},
+			{
+				"key": { "asset_class_id": "loan.asset", "nft_id": "loan-002" },
+				"roles": [
+					{ "role": 6, "addresses": ["tp1q75h9mg54a6nrr9xqldyh0r82e5lf5wqrxzhqp"] }
+				]
+			}
+		]
+		
+		Role values: 1=SERVICER, 2=SUBSERVICER, 3=CONTROLLER, 4=CUSTODIAN, 5=BORROWER, 6=ORIGINATOR
+		`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

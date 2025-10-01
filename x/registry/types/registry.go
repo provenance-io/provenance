@@ -17,9 +17,10 @@ import (
 const (
 	registryKeyHrp = "reg"
 
-	MaxLenAddress      = 90
-	MaxLenAssetClassID = 128
-	MaxLenNFTID        = 128
+	MaxLenAddress          = 90
+	MaxLenAssetClassID     = 128
+	MaxLenNFTID            = 128
+	MaxRegistryBulkEntries = 200
 )
 
 var alNumDashRx = regexp.MustCompile(`^[a-zA-Z0-9-.]+$`)
@@ -171,26 +172,6 @@ func ParseRegistryRole(str string) (RegistryRole, error) {
 		return rv, NewErrCodeInvalidField("role", "cannot be unspecified")
 	}
 	return rv, nil
-}
-
-// Validate validates the RegistryBulkUpdate
-func (m *MsgRegistryBulkUpdate) Validate() error {
-	if m == nil {
-		return fmt.Errorf("registry bulk update cannot be nil")
-	}
-
-	// Validate entries
-	if len(m.Entries) == 0 || len(m.Entries) > 200 {
-		return fmt.Errorf("entries cannot be empty or greater than 200")
-	}
-
-	for _, entry := range m.Entries {
-		if err := entry.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // ValidateClassID validates the asset class id format
