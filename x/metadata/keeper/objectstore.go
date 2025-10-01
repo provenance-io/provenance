@@ -66,7 +66,7 @@ func (k Keeper) IterateOSLocators(ctx sdk.Context, cb func(account types.ObjectS
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.OSLocatorAddressKeyPrefix
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for ; it.Valid(); it.Next() {
 		record := types.ObjectStoreLocator{}

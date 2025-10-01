@@ -132,7 +132,7 @@ func readAddressesFileFlag(flagSet *pflag.FlagSet) ([]string, error) {
 		return nil, nil
 	}
 
-	data, err := os.ReadFile(path) //nolint:gosec // G304
+	data, err := os.ReadFile(path) //nolint:gosec // G304: error handled
 	if err != nil {
 		return nil, err
 	}

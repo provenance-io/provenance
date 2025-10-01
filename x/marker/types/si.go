@@ -169,7 +169,7 @@ func (p SIPrefix) IsValid() bool {
 
 // Format implements the fmt.Formatter interface.
 //
-//nolint:gosec,staticcheck
+//nolint:gosec,staticcheck // G104: ignore write error, safe for formatter
 func (p SIPrefix) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

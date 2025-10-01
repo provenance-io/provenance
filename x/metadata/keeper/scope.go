@@ -18,7 +18,7 @@ import (
 func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
-	defer it.Close() //nolint:errcheck
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; it.Valid(); it.Next() {
 		scope := k.mustReadScopeBz(it.Value())
 		k.PopulateScopeValueOwner(ctx, &scope)
@@ -34,7 +34,7 @@ func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress,
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressScopeCacheIteratorPrefix(address)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -55,7 +55,7 @@ func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.Met
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -903,7 +903,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress,
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
-	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for ; it.Valid(); it.Next() {
 		var scopeNav types.NetAssetValue
@@ -925,7 +925,7 @@ func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddr
 	for ; it.Valid(); it.Next() {
 		keys = append(keys, it.Key())
 	}
-	defer it.Close() //nolint:errcheck
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for _, key := range keys {
 		store.Delete(key)

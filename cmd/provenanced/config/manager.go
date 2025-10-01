@@ -362,7 +362,7 @@ func deleteConfigFile(cmd *cobra.Command, filePath string, verbose bool) error {
 // Errors if the path already exists as a non-directory.
 func EnsureConfigDir(cmd *cobra.Command) error {
 	dir := GetFullPathToConfigDir(cmd)
-	err := os.MkdirAll(dir, os.ModePerm) //nolint:gosec // G301
+	err := os.MkdirAll(dir, os.ModePerm) //nolint:gosec // G301: test/setup code, permissions are acceptable
 	if err != nil {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}

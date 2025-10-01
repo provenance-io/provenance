@@ -44,8 +44,7 @@ func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger types.Trigg
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.TriggerKeyPrefix)
 
-	defer iterator.Close() //nolint:errcheck
-
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.Trigger{}
 		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {

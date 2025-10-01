@@ -83,7 +83,7 @@ func (k Keeper) paginateAllHolds(ctx sdk.Context, pageRequest *query.PageRequest
 
 	if len(key) != 0 {
 		iterator := getIterator(prefixStore, key, reverse)
-		defer iterator.Close() //nolint:errcheck
+		defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 		for ; iterator.Valid(); iterator.Next() {
 			if err := iterator.Error(); err != nil {
@@ -113,7 +113,7 @@ func (k Keeper) paginateAllHolds(ctx sdk.Context, pageRequest *query.PageRequest
 	}
 
 	iterator := getIterator(prefixStore, nil, reverse)
-	defer iterator.Close() //nolint:errcheck
+	defer iterator.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	accumulate := false
 	var numHits uint64
@@ -166,7 +166,7 @@ func getIterator(prefixStore storetypes.KVStore, start []byte, reverse bool) dbm
 		var end []byte
 		if start != nil {
 			itr := prefixStore.Iterator(start, nil)
-			defer itr.Close() //nolint:errcheck
+			defer itr.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 			if itr.Valid() {
 				itr.Next()
 				end = itr.Key()

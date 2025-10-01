@@ -99,7 +99,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 		return err
 	}
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for ; it.Valid(); it.Next() {
 		var record types.Record

@@ -151,7 +151,7 @@ func (k Keeper) getLatestTempEntry(store storetypes.KVStore, addr sdk.AccAddress
 	pre := CreateTemporaryAddrPrefix(addr)
 	preStore := prefix.NewStore(store, pre)
 	iter := preStore.ReverseIterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 	if iter.Valid() {
 		return iter.Value()
 	}
@@ -213,7 +213,7 @@ func (k Keeper) IterateSanctionedAddresses(ctx sdk.Context, cb func(addr sdk.Acc
 	store := k.getSanctionedAddressPrefixStore(ctx)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		addr, _ := ParseLengthPrefixedBz(iter.Key())
@@ -240,7 +240,7 @@ func (k Keeper) IterateTemporaryEntries(ctx sdk.Context, addr sdk.AccAddress, cb
 	store, pre := k.getTemporaryEntryPrefixStore(ctx, addr)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		key := ConcatBz(pre, iter.Key())
@@ -268,7 +268,7 @@ func (k Keeper) IterateProposalIndexEntries(ctx sdk.Context, govPropID *uint64, 
 	store, pre := k.getProposalIndexPrefixStore(ctx, govPropID)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		key := ConcatBz(pre, iter.Key())
@@ -329,7 +329,7 @@ func (k Keeper) IterateParams(ctx sdk.Context, cb func(name, value string) (stop
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), ParamsPrefix)
 
 	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		if cb(string(iter.Key()), string(iter.Value())) {

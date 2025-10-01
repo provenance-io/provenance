@@ -519,7 +519,7 @@ func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
 	case err != nil:
 		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
 	}
-	defer os.RemoveAll(tempDir) //nolint:errcheck
+	defer os.RemoveAll(tempDir) //nolint:errcheck // cleanup best-effort, ignore errors.
 
 	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	return tempApp.GetEncodingConfig()
