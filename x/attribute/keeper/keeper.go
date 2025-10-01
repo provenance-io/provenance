@@ -539,7 +539,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	for ; iterator.Valid(); iterator.Next() {
 		expirationKeys = append(expirationKeys, iterator.Key())
 	}
-	iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
+	iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 
 	count := 0
 	for _, expirationKey := range expirationKeys {
