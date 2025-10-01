@@ -21,6 +21,15 @@ func (k Keeper) HasNFT(ctx context.Context, assetClassID, nftID *string) bool {
 	return k.NFTKeeper.HasNFT(ctx, *assetClassID, *nftID)
 }
 
+// ValidateNFTExists returns nil if the described NFT exists, or an error otherwise.
+func (k Keeper) ValidateNFTExists(ctx context.Context, assetClassID, nftID *string) error {
+	hasNFT := k.HasNFT(ctx, assetClassID, nftID)
+	if !hasNFT {
+		return types.NewErrCodeNFTNotFound(*nftID)
+	}
+	return nil
+}
+
 // AssetClassExists checks if an asset class exists in either the metadata or nft module.
 func (k Keeper) AssetClassExists(ctx context.Context, assetClassID *string) bool {
 	metadataAddress, isMetadataScope := types.MetadataScopeSpecID(*assetClassID)
@@ -48,4 +57,14 @@ func (k Keeper) GetNFTOwner(ctx context.Context, assetClassID, nftID *string) sd
 		return accAddr
 	}
 	return k.NFTKeeper.GetOwner(ctx, *assetClassID, *nftID)
+}
+
+// ValidateNFTOwner returns nil if the described NFT is owned by the expOwner.
+// Returns an error if owned by someone else, or if the NFT doesn't exist.
+func (k Keeper) ValidateNFTOwner(ctx context.Context, assetClassID, nftID *string, expOwner string) error {
+	nftOwner := k.GetNFTOwner(ctx, assetClassID, nftID)
+	if len(nftOwner) == 0 || nftOwner.String() != expOwner {
+		return types.NewErrCodeUnauthorized("signer does not own the NFT")
+	}
+	return nil
 }
