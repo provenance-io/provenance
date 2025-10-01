@@ -78,7 +78,7 @@ func (k Keeper) CreateDefaultRegistry(ctx context.Context, ownerAddrStr string, 
 }
 
 func (k Keeper) CreateRegistry(ctx context.Context, key *types.RegistryKey, roles []types.RolesEntry) error {
-	return k.Registry.Set(ctx, collections.Join(key.AssetClassId, key.NftId), types.RegistryEntry{
+	return k.Registry.Set(ctx, key.CollKey(), types.RegistryEntry{
 		Key:   key,
 		Roles: roles,
 	})
@@ -89,7 +89,7 @@ func (k Keeper) GrantRole(ctx context.Context, key *types.RegistryKey, role type
 		return types.NewErrCodeInvalidRole(role.String())
 	}
 
-	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
+	registryEntry, err := k.Registry.Get(ctx, key.CollKey())
 	if err != nil {
 		return types.NewErrCodeRegistryNotFound(key.String())
 	}
@@ -120,7 +120,7 @@ func (k Keeper) GrantRole(ctx context.Context, key *types.RegistryKey, role type
 	registryEntry.Roles[roleI].Addresses = append(registryEntry.Roles[roleI].Addresses, addrs...)
 
 	// Store the updated entry.
-	if err = k.Registry.Set(ctx, collections.Join(key.AssetClassId, key.NftId), registryEntry); err != nil {
+	if err = k.Registry.Set(ctx, key.CollKey(), registryEntry); err != nil {
 		return fmt.Errorf("failed to set registry entry: %w", err)
 	}
 
@@ -128,7 +128,7 @@ func (k Keeper) GrantRole(ctx context.Context, key *types.RegistryKey, role type
 }
 
 func (k Keeper) RevokeRole(ctx context.Context, key *types.RegistryKey, role types.RegistryRole, addrs []string) error {
-	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
+	registryEntry, err := k.Registry.Get(ctx, key.CollKey())
 	if err != nil {
 		return types.NewErrCodeRegistryNotFound(key.String())
 	}
@@ -174,7 +174,7 @@ func (k Keeper) RevokeRole(ctx context.Context, key *types.RegistryKey, role typ
 	}
 
 	// Save the updated registry entry
-	if err := k.Registry.Set(ctx, collections.Join(key.AssetClassId, key.NftId), registryEntry); err != nil {
+	if err := k.Registry.Set(ctx, key.CollKey(), registryEntry); err != nil {
 		return err
 	}
 
@@ -182,7 +182,7 @@ func (k Keeper) RevokeRole(ctx context.Context, key *types.RegistryKey, role typ
 }
 
 func (k Keeper) HasRole(ctx context.Context, key *types.RegistryKey, role types.RegistryRole, address string) (bool, error) {
-	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
+	registryEntry, err := k.Registry.Get(ctx, key.CollKey())
 	if err != nil {
 		return false, err
 	}
@@ -205,7 +205,7 @@ func (k Keeper) HasRole(ctx context.Context, key *types.RegistryKey, role types.
 
 // GetRegistry returns a registry entry for a given key. If the registry entry is not found, it returns nil, nil.
 func (k Keeper) GetRegistry(ctx context.Context, key *types.RegistryKey) (*types.RegistryEntry, error) {
-	registryEntry, err := k.Registry.Get(ctx, collections.Join(key.AssetClassId, key.NftId))
+	registryEntry, err := k.Registry.Get(ctx, key.CollKey())
 	if err != nil {
 		// Eat the not found error as it is expected, and return nil.
 		if errors.Is(err, collections.ErrNotFound) {

@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/registry/types"
@@ -66,7 +64,7 @@ func (qs QueryServer) HasRole(ctx context.Context, req *types.QueryHasRoleReques
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// ensure the registry exists
-	has, err := qs.keeper.Registry.Has(sdkCtx, collections.Join(req.Key.AssetClassId, req.Key.NftId))
+	has, err := qs.keeper.Registry.Has(sdkCtx, req.Key.CollKey())
 	if err != nil {
 		return nil, err
 	}

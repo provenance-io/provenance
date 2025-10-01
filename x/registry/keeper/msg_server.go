@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/registry/types"
@@ -26,7 +24,7 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Already exists check
-	has, err := k.Registry.Has(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId))
+	has, err := k.Registry.Has(sdkCtx, msg.Key.CollKey())
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +57,7 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// ensure the registry exists
-	has, err := k.Registry.Has(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId))
+	has, err := k.Registry.Has(sdkCtx, msg.Key.CollKey())
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +85,7 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// ensure the registry exists
-	has, err := k.Registry.Has(sdkCtx, collections.Join(msg.Key.AssetClassId, msg.Key.NftId))
+	has, err := k.Registry.Has(sdkCtx, msg.Key.CollKey())
 	if err != nil {
 		return nil, err
 	}

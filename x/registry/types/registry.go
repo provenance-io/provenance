@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
@@ -46,6 +48,11 @@ func (m *RegistryKey) Validate() error {
 		ValidateNftID(m.NftId),
 		ValidateClassID(m.AssetClassId),
 	)
+}
+
+// CollKey returns the collections key that this RegistryKey represents.
+func (m *RegistryKey) CollKey() collections.Pair[string, string] {
+	return collections.Join(m.AssetClassId, m.NftId)
 }
 
 // Validate validates the RegistryEntry

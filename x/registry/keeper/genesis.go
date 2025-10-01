@@ -10,7 +10,7 @@ import (
 
 func (k Keeper) InitGenesis(ctx context.Context, state *types.GenesisState) {
 	for _, entry := range state.Entries {
-		if err := k.Registry.Set(ctx, collections.Join(entry.Key.AssetClassId, entry.Key.NftId), entry); err != nil {
+		if err := k.Registry.Set(ctx, entry.Key.CollKey(), entry); err != nil {
 			panic(err) // Genesis should not fail
 		}
 	}
