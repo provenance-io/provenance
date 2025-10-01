@@ -327,7 +327,7 @@ func filteredPaginateAfterOrder(
 	if len(key) != 0 {
 		// This line is changed from the query.FilteredPaginate version.
 		iterator := getOrderIterator(prefixStore, key, reverse, afterOrderID)
-		defer iterator.Close() //nolint:errcheck
+		defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 		var (
 			numHits uint64
@@ -362,7 +362,7 @@ func filteredPaginateAfterOrder(
 
 	// This line is changed from the query.FilteredPaginate version.
 	iterator := getOrderIterator(prefixStore, nil, reverse, afterOrderID)
-	defer iterator.Close() //nolint:errcheck
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	end := offset + limit
 
@@ -411,7 +411,7 @@ func getOrderIterator(prefixStore storetypes.KVStore, start []byte, reverse bool
 		var end []byte
 		if start != nil {
 			itr := prefixStore.Iterator(start, nil)
-			defer itr.Close() //nolint:errcheck
+			defer itr.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 			if itr.Valid() {
 				itr.Next()
 				end = itr.Key()

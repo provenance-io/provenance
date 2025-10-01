@@ -53,12 +53,12 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 func (k Keeper) detectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	match := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
 		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
-		curHeight := uint64(ctx.BlockHeight()) //nolint:gosec // G115
+		curHeight := uint64(ctx.BlockHeight()) //nolint:gosec // safe: block height is always ≥ 0 in context
 		return curHeight >= blockHeightEvent.GetBlockHeight()
 	}
 	terminator := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
 		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
-		curHeight := uint64(ctx.BlockHeight()) //nolint:gosec // G115
+		curHeight := uint64(ctx.BlockHeight()) //nolint:gosec // safe: block height is always ≥ 0 in context
 		return curHeight < blockHeightEvent.GetBlockHeight()
 	}
 
