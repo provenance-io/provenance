@@ -5,7 +5,6 @@ import (
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 )
 
-// NewGenesisState creates a new GenesisState for the oracle module.
 func NewGenesisState(port string, oracle string) *GenesisState {
 	return &GenesisState{
 		PortId: port,

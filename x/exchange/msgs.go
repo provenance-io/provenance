@@ -91,7 +91,6 @@ func DefineCustomGetSigners(options *signing.Options) {
 		createPaymentGetSignersFunc(options, "target"))
 }
 
-// ValidateBasic implements basic validation for MsgCreateAskRequest.
 func (m MsgCreateAskRequest) ValidateBasic() error {
 	if err := m.AskOrder.Validate(); err != nil {
 		return err
@@ -104,7 +103,6 @@ func (m MsgCreateAskRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic implements basic validation for MsgCreateBidRequest.
 func (m MsgCreateBidRequest) ValidateBasic() error {
 	if err := m.BidOrder.Validate(); err != nil {
 		return err
@@ -117,7 +115,6 @@ func (m MsgCreateBidRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic implements basic validation for MsgCommitFundsRequest.
 func (m MsgCommitFundsRequest) ValidateBasic() error {
 	var errs []error
 
@@ -148,7 +145,6 @@ func (m MsgCommitFundsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgCancelOrderRequest.
 func (m MsgCancelOrderRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
 		return fmt.Errorf("invalid signer: %w", err)
@@ -159,7 +155,6 @@ func (m MsgCancelOrderRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic implements basic validation for MsgFillBidsRequest.
 func (m MsgFillBidsRequest) ValidateBasic() error {
 	var errs []error
 
@@ -200,7 +195,6 @@ func (m MsgFillBidsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgFillAsksRequest.
 func (m MsgFillAsksRequest) ValidateBasic() error {
 	var errs []error
 
@@ -239,7 +233,6 @@ func (m MsgFillAsksRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketSettleRequest.
 func (m MsgMarketSettleRequest) ValidateBasic() error {
 	var errs []error
 
@@ -269,7 +262,6 @@ func (m MsgMarketSettleRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// Validate validates the MsgMarketCommitmentSettleRequest message.
 func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 	var errs []error
 
@@ -340,12 +332,10 @@ func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketCommitmentSettleRequest.
 func (m MsgMarketCommitmentSettleRequest) ValidateBasic() error {
 	return m.Validate(true)
 }
 
-// ValidateBasic implements basic validation for MsgMarketReleaseCommitmentsRequest.
 func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
@@ -373,7 +363,6 @@ func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketTransferCommitmentRequest.
 func (m MsgMarketTransferCommitmentRequest) ValidateBasic() error {
 	var errs []error
 
@@ -408,7 +397,6 @@ func (m MsgMarketTransferCommitmentRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketSetOrderExternalIDRequest.
 func (m MsgMarketSetOrderExternalIDRequest) ValidateBasic() error {
 	var errs []error
 
@@ -431,7 +419,6 @@ func (m MsgMarketSetOrderExternalIDRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketWithdrawRequest.
 func (m MsgMarketWithdrawRequest) ValidateBasic() error {
 	var errs []error
 
@@ -456,7 +443,6 @@ func (m MsgMarketWithdrawRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketUpdateDetailsRequest.
 func (m MsgMarketUpdateDetailsRequest) ValidateBasic() error {
 	var errs []error
 
@@ -475,12 +461,10 @@ func (m MsgMarketUpdateDetailsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketUpdateEnabledRequest.
 func (m MsgMarketUpdateEnabledRequest) ValidateBasic() error {
 	return errors.New("the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint")
 }
 
-// ValidateBasic implements basic validation for MsgMarketUpdateAcceptingOrdersRequest.
 func (m MsgMarketUpdateAcceptingOrdersRequest) ValidateBasic() error {
 	var errs []error
 
@@ -497,7 +481,6 @@ func (m MsgMarketUpdateAcceptingOrdersRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketUpdateUserSettleRequest.
 func (m MsgMarketUpdateUserSettleRequest) ValidateBasic() error {
 	var errs []error
 
@@ -514,7 +497,6 @@ func (m MsgMarketUpdateUserSettleRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketUpdateAcceptingCommitmentsRequest.
 func (m MsgMarketUpdateAcceptingCommitmentsRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
@@ -526,7 +508,6 @@ func (m MsgMarketUpdateAcceptingCommitmentsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketUpdateIntermediaryDenomRequest.
 func (m MsgMarketUpdateIntermediaryDenomRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
@@ -541,7 +522,6 @@ func (m MsgMarketUpdateIntermediaryDenomRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgMarketManagePermissionsRequest.
 func (m MsgMarketManagePermissionsRequest) ValidateBasic() error {
 	var errs []error
 
@@ -598,7 +578,6 @@ func (m MsgMarketManagePermissionsRequest) HasUpdates() bool {
 	return len(m.RevokeAll) > 0 || len(m.ToRevoke) > 0 || len(m.ToGrant) > 0
 }
 
-// ValidateBasic implements basic validation for MsgMarketManageReqAttrsRequest.
 func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 	var errs []error
 
@@ -630,12 +609,10 @@ func (m MsgMarketManageReqAttrsRequest) HasUpdates() bool {
 		len(m.CreateCommitmentToAdd) > 0 || len(m.CreateCommitmentToRemove) > 0
 }
 
-// ValidateBasic implements basic validation for MsgCreatePaymentRequest.
 func (m MsgCreatePaymentRequest) ValidateBasic() error {
 	return m.Payment.Validate()
 }
 
-// ValidateBasic implements basic validation for MsgAcceptPaymentRequest.
 func (m MsgAcceptPaymentRequest) ValidateBasic() error {
 	var errs []error
 	if err := m.Payment.Validate(); err != nil {
@@ -647,7 +624,6 @@ func (m MsgAcceptPaymentRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgRejectPaymentRequest.
 func (m MsgRejectPaymentRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
@@ -662,7 +638,6 @@ func (m MsgRejectPaymentRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgRejectPaymentsRequest.
 func (m MsgRejectPaymentsRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
@@ -691,7 +666,6 @@ func (m MsgRejectPaymentsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgCancelPaymentsRequest.
 func (m MsgCancelPaymentsRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
@@ -720,7 +694,6 @@ func (m MsgCancelPaymentsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgChangePaymentTargetRequest.
 func (m MsgChangePaymentTargetRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
@@ -737,7 +710,6 @@ func (m MsgChangePaymentTargetRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgGovCreateMarketRequest.
 func (m MsgGovCreateMarketRequest) ValidateBasic() error {
 	errs := make([]error, 0, 2)
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
@@ -747,7 +719,6 @@ func (m MsgGovCreateMarketRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgGovManageFeesRequest.
 func (m MsgGovManageFeesRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
@@ -796,7 +767,6 @@ func (m MsgGovManageFeesRequest) HasUpdates() bool {
 		m.SetFeeCommitmentSettlementBips != 0 || m.UnsetFeeCommitmentSettlementBips
 }
 
-// ValidateBasic implements basic validation for MsgGovCloseMarketRequest.
 func (m MsgGovCloseMarketRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
@@ -808,12 +778,10 @@ func (m MsgGovCloseMarketRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-// ValidateBasic implements basic validation for MsgGovUpdateParamsRequest.
 func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
 	return errors.New("deprecated and unusable")
 }
 
-// ValidateBasic implements basic validation for MsgUpdateParamsRequest.
 func (m MsgUpdateParamsRequest) ValidateBasic() error {
 	errs := make([]error, 0, 2)
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {

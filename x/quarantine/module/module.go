@@ -1,4 +1,3 @@
-// Package module implements the app module for the quarantine functionality.
 package module
 
 import (
@@ -34,12 +33,10 @@ var (
 	_ appmodule.AppModule = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module for the quarantine module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// Name returns the name of the quarantine module.
 func (AppModuleBasic) Name() string {
 	return quarantine.ModuleName
 }
@@ -83,7 +80,6 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // RegisterLegacyAminoCodec registers the quarantine module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
-// AppModule implements the full application module for the quarantine module.
 type AppModule struct {
 	AppModuleBasic
 	keeper     keeper.Keeper
@@ -92,7 +88,6 @@ type AppModule struct {
 	registry   cdctypes.InterfaceRegistry
 }
 
-// NewAppModule creates a new AppModule instance.
 func NewAppModule(cdc codec.Codec, quarantineKeeper keeper.Keeper, accKeeper quarantine.AccountKeeper, bankKeeper quarantine.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},

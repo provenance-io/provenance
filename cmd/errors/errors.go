@@ -1,4 +1,3 @@
-// Package errors defines custom error handling for CLI commands.
 package errors
 
 import "fmt"

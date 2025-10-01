@@ -1,4 +1,3 @@
-// Package keeper contains state management logic for the name module.
 package keeper
 
 import (

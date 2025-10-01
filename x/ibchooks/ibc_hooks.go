@@ -13,7 +13,6 @@ import (
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
-// IbcHooks defines IBC hook methods for packet processing.
 type IbcHooks struct {
 	cdc                     codec.BinaryCodec
 	ibcKeeper               *ibckeeper.Keeper
@@ -23,7 +22,6 @@ type IbcHooks struct {
 	SendPacketPreProcessors []types.PreSendPacketDataProcessingFn
 }
 
-// NewIbcHooks creates a new instance of IbcHooks.
 func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper *ibckeeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, preSendPacketDataProcessingFns []types.PreSendPacketDataProcessingFn) IbcHooks {
 	return IbcHooks{
 		cdc:                     cdc,

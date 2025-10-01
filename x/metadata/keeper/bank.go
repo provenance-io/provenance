@@ -17,7 +17,6 @@ import (
 // scopeDenomPrefix is the string that will start every scope denom.
 const scopeDenomPrefix = types.DenomPrefix + types.PrefixScope + "1"
 
-// NewMDBankKeeper creates a new instance of MDBankKeeper.
 func NewMDBankKeeper(bk bankkeeper.BaseKeeper) *MDBankKeeper {
 	return &MDBankKeeper{BaseKeeper: bk}
 }
