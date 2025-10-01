@@ -32,7 +32,7 @@ func (m Migrator) DeleteGasLimits(ctx sdk.Context, logger log.Logger) {
 
 	closeIter := func() {
 		if iter != nil {
-			iter.Close() //nolint:errcheck,gosec
+			iter.Close() //nolint:errcheck,gosec // safe: closing iterator.
 			iter = nil
 		}
 	}
