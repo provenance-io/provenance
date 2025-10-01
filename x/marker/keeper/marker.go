@@ -91,9 +91,8 @@ func (k Keeper) AddAccess(
 	}
 	switch m.GetStatus() {
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
-	//nolint:staticcheck // QF1001: intentional logic for clarity
 	case types.StatusFinalized, types.StatusActive:
-		if !(caller.Equals(m.GetManager()) && m.GetStatus() == types.StatusFinalized) &&
+		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
 			!m.AddressHasAccess(caller, types.Access_Admin) &&
 			!k.accountControlsAllSupply(ctx, caller, m) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
@@ -134,9 +133,8 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 	switch m.GetStatus() {
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
-	//nolint:staticcheck // QF1007
 	case types.StatusFinalized, types.StatusActive:
-		if !(caller.Equals(m.GetManager()) && m.GetStatus() == types.StatusFinalized) &&
+		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
 			!m.AddressHasAccess(caller, types.Access_Admin) &&
 			!k.accountControlsAllSupply(ctx, caller, m) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
@@ -291,12 +289,12 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	return ctx.EventManager().EmitTypedEvent(markerBurnEvent)
 }
 
-// CurrentCirculation returns the current supply in network according to the bank module for the given marker
+// Returns the current supply in network according to the bank module for the given marker
 func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdkmath.Int {
 	return k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount
 }
 
-// CurrentEscrow retures the current escrow balance for the marker base account
+// Retures the current escrow balance for the marker base account
 func (k Keeper) CurrentEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coins {
 	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
 }

@@ -12,7 +12,6 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParamsRequest)(nil),
 }
 
-// ValidateBasic implements basic validation for MsgEmitIBCAck.
 func (m MsgEmitIBCAck) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	return err

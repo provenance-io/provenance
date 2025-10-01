@@ -42,7 +42,6 @@ const (
 	label      = "tutorialsc"           // must gbe a string of at least length 10 so that the name module doesn't fail on minlength
 )
 
-// Wrapper is a helper type for simulation.
 type Wrapper struct {
 	cdc  codec.Codec
 	wasm module.AppModuleSimulation
@@ -52,7 +51,6 @@ type Wrapper struct {
 	wk   *wasmkeeper.Keeper
 }
 
-// NewWrapper creates a new Wrapper instance.
 func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router wasmkeeper.MessageRouter) *Wrapper {
 	return &Wrapper{
 		cdc:  cdc,
@@ -166,7 +164,6 @@ func SimulateMsgBindName(simState module.SimulationState, ak authkeeper.AccountK
 	}
 }
 
-// SimulateMsgAddMarker simulates adding a marker message.
 func SimulateMsgAddMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
@@ -205,7 +202,6 @@ func SimulateMsgAddMarker(simState module.SimulationState, ak authkeeper.Account
 	}
 }
 
-// SimulateMsgAddAccess simulates adding access to a marker.
 func SimulateMsgAddAccess(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
@@ -221,7 +217,6 @@ func SimulateMsgAddAccess(simState module.SimulationState, ak authkeeper.Account
 	}
 }
 
-// SimulateFinalizeMarker simulates finalizing a marker.
 func SimulateFinalizeMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
@@ -236,7 +231,6 @@ func SimulateFinalizeMarker(simState module.SimulationState, ak authkeeper.Accou
 	}
 }
 
-// SimulateActivateMarker simulates activating a marker.
 func SimulateActivateMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
@@ -251,7 +245,6 @@ func SimulateActivateMarker(simState module.SimulationState, ak authkeeper.Accou
 	}
 }
 
-// SimulateMsgWithdrawRequest simulates a withdraw request message.
 func SimulateMsgWithdrawRequest(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
@@ -269,7 +262,6 @@ func SimulateMsgWithdrawRequest(simState module.SimulationState, ak authkeeper.A
 	}
 }
 
-// SimulateMsgStoreContract simulates storing a contract.
 func SimulateMsgStoreContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
@@ -293,7 +285,6 @@ func SimulateMsgStoreContract(simState module.SimulationState, ak authkeeper.Acc
 	}
 }
 
-// SimulateMsgInstantiateContract simulates contract instantiation.
 func SimulateMsgInstantiateContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
@@ -360,7 +351,6 @@ func SimulateMsgInstantiateContract(simState module.SimulationState, ak authkeep
 	}
 }
 
-// SimulateMsgExecuteContract simulates contract execution.
 func SimulateMsgExecuteContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, _, consumer simtypes.Account, contractAddr string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,

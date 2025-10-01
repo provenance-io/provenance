@@ -244,7 +244,7 @@ func (k Keeper) ClearSendDeny(ctx sdk.Context, markerAddr sdk.AccAddress) {
 	}
 }
 
-// IterateSendDeny  iterates all markers with the given handler function.
+// IterateMarkers  iterates all markers with the given handler function.
 func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendKeyPrefix)
@@ -373,11 +373,7 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateNetAssetValues", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 	for ; it.Valid(); it.Next() {
 		var markerNav types.NetAssetValue
 		err := k.cdc.Unmarshal(it.Value(), &markerNav)
@@ -394,11 +390,7 @@ func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress
 func (k Keeper) IterateAllNetAssetValues(ctx sdk.Context, handler func(sdk.AccAddress, types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValuePrefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateAllNetAssetValues", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 	for ; it.Valid(); it.Next() {
 		markerAddr := types.GetMarkerFromNetAssetValueKey(it.Key())
 		var markerNav types.NetAssetValue
@@ -420,7 +412,7 @@ func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress)
 	for ; it.Valid(); it.Next() {
 		keys = append(keys, it.Key())
 	}
-	it.Close() //nolint:errcheck,gosec
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for _, key := range keys {
 		store.Delete(key)

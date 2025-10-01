@@ -7,7 +7,6 @@ import (
 	"github.com/provenance-io/provenance/x/sanction/errors"
 )
 
-// NewGenesisState returns a new GenesisState object.
 func NewGenesisState(params *Params, addrs []string, tempEntries []*TemporaryEntry) *GenesisState {
 	return &GenesisState{
 		Params:              params,
@@ -16,12 +15,10 @@ func NewGenesisState(params *Params, addrs []string, tempEntries []*TemporaryEnt
 	}
 }
 
-// DefaultGenesisState returns the default genesis state for the sanction module.
 func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(DefaultParams(), nil, nil)
 }
 
-// Validate validates the GenesisState.
 func (g GenesisState) Validate() error {
 	if g.Params != nil {
 		if err := g.Params.ValidateBasic(); err != nil {

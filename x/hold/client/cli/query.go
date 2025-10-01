@@ -1,4 +1,3 @@
-// Package cli provides CLI query commands for the hold module.
 package cli
 
 import (
@@ -20,7 +19,6 @@ var exampleQueryCmdBase = fmt.Sprintf("%s query %s", version.AppName, hold.Modul
 
 var exampleQueryAddr1 = sdk.AccAddress("exampleQueryAddr1___")
 
-// QueryCmd returns the root query command for the hold module.
 func QueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        hold.ModuleName,
@@ -38,7 +36,6 @@ func QueryCmd() *cobra.Command {
 	return cmd
 }
 
-// QueryCmdGetHolds returns the CLI command to query holds for a specific account.
 func QueryCmdGetHolds() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "get <address>",
@@ -76,7 +73,6 @@ func QueryCmdGetHolds() *cobra.Command {
 	return cmd
 }
 
-// QueryCmdGetAllHolds returns the CLI command to query all holds.
 func QueryCmdGetAllHolds() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "all",

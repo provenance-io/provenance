@@ -1,4 +1,3 @@
-// Package msgfees defines the app module implementation for the msgfees module.
 package msgfees
 
 import (
