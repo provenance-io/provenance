@@ -18,9 +18,9 @@ func NewEventRoleGranted(key *RegistryKey, role RegistryRole, addrs []string) *E
 	}
 }
 
-// NewEventRoleRevoke returns a new EventRoleRevoke.
-func NewEventRoleRevoke(key *RegistryKey, role RegistryRole, addrs []string) *EventRoleRevoke {
-	return &EventRoleRevoke{
+// NewEventRoleRevoked returns a new EventRoleRevoked.
+func NewEventRoleRevoked(key *RegistryKey, role RegistryRole, addrs []string) *EventRoleRevoked {
+	return &EventRoleRevoked{
 		NftId:        key.NftId,
 		AssetClassId: key.AssetClassId,
 		Role:         role.ShortString(),

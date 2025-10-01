@@ -230,20 +230,20 @@ func TestNewEventRoleGranted(t *testing.T) {
 	}
 }
 
-func TestNewEventRoleRevoke(t *testing.T) {
+func TestNewEventRoleRevoked(t *testing.T) {
 	tests := []struct {
 		name  string
 		key   *RegistryKey
 		role  RegistryRole
 		addrs []string
-		exp   *EventRoleRevoke
+		exp   *EventRoleRevoked
 	}{
 		{
 			name:  "role: servicer",
 			key:   &RegistryKey{AssetClassId: "Asset-class-id", NftId: "nft-iD"},
 			role:  RegistryRole_REGISTRY_ROLE_SERVICER,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "Asset-class-id",
 				NftId:        "nft-iD",
 				Role:         "SERVICER",
@@ -255,7 +255,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "aSset-class-id", NftId: "nft-Id"},
 			role:  RegistryRole_REGISTRY_ROLE_SUBSERVICER,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "aSset-class-id",
 				NftId:        "nft-Id",
 				Role:         "SUBSERVICER",
@@ -267,7 +267,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asSet-class-id", NftId: "nfT-id"},
 			role:  RegistryRole_REGISTRY_ROLE_CONTROLLER,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asSet-class-id",
 				NftId:        "nfT-id",
 				Role:         "CONTROLLER",
@@ -279,7 +279,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "assEt-class-id", NftId: "nFt-id"},
 			role:  RegistryRole_REGISTRY_ROLE_CUSTODIAN,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "assEt-class-id",
 				NftId:        "nFt-id",
 				Role:         "CUSTODIAN",
@@ -291,7 +291,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asseT-class-id", NftId: "Nft-id"},
 			role:  RegistryRole_REGISTRY_ROLE_BORROWER,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asseT-class-id",
 				NftId:        "Nft-id",
 				Role:         "BORROWER",
@@ -303,7 +303,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asset-Class-id", NftId: "nft-iD"},
 			role:  RegistryRole_REGISTRY_ROLE_ORIGINATOR,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asset-Class-id",
 				NftId:        "nft-iD",
 				Role:         "ORIGINATOR",
@@ -315,7 +315,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asset-cLass-id", NftId: "nft-Id"},
 			role:  RegistryRole_REGISTRY_ROLE_UNSPECIFIED,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asset-cLass-id",
 				NftId:        "nft-Id",
 				Role:         "UNSPECIFIED",
@@ -327,7 +327,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asset-clAss-id", NftId: "nfT-id"},
 			role:  420,
 			addrs: []string{"addr0"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asset-clAss-id",
 				NftId:        "nfT-id",
 				Role:         "420",
@@ -339,7 +339,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asset-claSs-id", NftId: "nFt-id"},
 			role:  RegistryRole_REGISTRY_ROLE_SERVICER,
 			addrs: []string{},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asset-claSs-id",
 				NftId:        "nFt-id",
 				Role:         "SERVICER",
@@ -351,7 +351,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asset-clasS-id", NftId: "Nft-id"},
 			role:  RegistryRole_REGISTRY_ROLE_SERVICER,
 			addrs: nil,
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asset-clasS-id",
 				NftId:        "Nft-id",
 				Role:         "SERVICER",
@@ -363,7 +363,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asset-class-Id", NftId: "nft-iD"},
 			role:  RegistryRole_REGISTRY_ROLE_SERVICER,
 			addrs: []string{"addr0", "addr1"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asset-class-Id",
 				NftId:        "nft-iD",
 				Role:         "SERVICER",
@@ -375,7 +375,7 @@ func TestNewEventRoleRevoke(t *testing.T) {
 			key:   &RegistryKey{AssetClassId: "asset-class-iD", NftId: "nft-Id"},
 			role:  RegistryRole_REGISTRY_ROLE_SERVICER,
 			addrs: []string{"addr10", "addr11", "addr12"},
-			exp: &EventRoleRevoke{
+			exp: &EventRoleRevoked{
 				AssetClassId: "asset-class-iD",
 				NftId:        "nft-Id",
 				Role:         "SERVICER",
@@ -386,13 +386,13 @@ func TestNewEventRoleRevoke(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var act *EventRoleRevoke
+			var act *EventRoleRevoked
 			testFunc := func() {
-				act = NewEventRoleRevoke(tc.key, tc.role, tc.addrs)
+				act = NewEventRoleRevoked(tc.key, tc.role, tc.addrs)
 			}
-			require.NotPanics(t, testFunc, "NewEventRoleRevoke")
-			assert.Equal(t, tc.exp, act, "NewEventRoleRevoke result")
-			assertEverythingSet(t, act, "EventRoleRevoke")
+			require.NotPanics(t, testFunc, "NewEventRoleRevoked")
+			assert.Equal(t, tc.exp, act, "NewEventRoleRevoked result")
+			assertEverythingSet(t, act, "EventRoleRevoked")
 		})
 	}
 }

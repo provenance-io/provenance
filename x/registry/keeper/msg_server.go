@@ -107,7 +107,7 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, err
 	}
 
-	k.keeper.EmitEvent(sdkCtx, types.NewEventRoleRevoke(msg.Key, msg.Role, msg.Addresses))
+	k.keeper.EmitEvent(sdkCtx, types.NewEventRoleRevoked(msg.Key, msg.Role, msg.Addresses))
 	return &types.MsgRevokeRoleResponse{}, nil
 }
 

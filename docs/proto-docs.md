@@ -590,7 +590,7 @@
     - [EventNFTUnregistered](#provenance-registry-v1-EventNFTUnregistered)
     - [EventRegistryBulkUpdated](#provenance-registry-v1-EventRegistryBulkUpdated)
     - [EventRoleGranted](#provenance-registry-v1-EventRoleGranted)
-    - [EventRoleRevoke](#provenance-registry-v1-EventRoleRevoke)
+    - [EventRoleRevoked](#provenance-registry-v1-EventRoleRevoked)
   
 - [provenance/registry/v1/query.proto](#provenance_registry_v1_query-proto)
     - [QueryGetRegistriesRequest](#provenance-registry-v1-QueryGetRegistriesRequest)
@@ -9017,7 +9017,7 @@ EventRegistryBulkUpdated is the event emitted to indicate that a registry has be
 <a name="provenance-registry-v1-EventRoleGranted"></a>
 
 ### EventRoleGranted
-EventRegistryGrant is the event emitted when an address is granted a role in a registry.
+EventRoleGranted is the event emitted when an address is granted a role in a registry.
 
 
 | Field | Type | Label | Description |
@@ -9032,10 +9032,10 @@ EventRegistryGrant is the event emitted when an address is granted a role in a r
 
 
 
-<a name="provenance-registry-v1-EventRoleRevoke"></a>
+<a name="provenance-registry-v1-EventRoleRevoked"></a>
 
-### EventRoleRevoke
-EventRegistryGrant is the event emitted when an address has a role revoked in a registry.
+### EventRoleRevoked
+EventRoleRevoked is the event emitted when an address has a role revoked in a registry.
 
 
 | Field | Type | Label | Description |

@@ -11,7 +11,7 @@ message EventNFTRegistered {
   string asset_class_id = 2;
 }
 
-// EventRegistryGrant is the event emitted when an address is granted a role in a registry.
+// EventRoleGranted is the event emitted when an address is granted a role in a registry.
 message EventRoleGranted {
   string          nft_id         = 1;
   string          asset_class_id = 2;
@@ -19,8 +19,8 @@ message EventRoleGranted {
   repeated string addresses      = 4;
 }
 
-// EventRegistryGrant is the event emitted when an address has a role revoked in a registry.
-message EventRoleRevoke {
+// EventRoleRevoked is the event emitted when an address has a role revoked in a registry.
+message EventRoleRevoked {
   string          nft_id         = 1;
   string          asset_class_id = 2;
   string          role           = 3;

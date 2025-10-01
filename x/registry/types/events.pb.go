@@ -75,7 +75,7 @@ func (m *EventNFTRegistered) GetAssetClassId() string {
 	return ""
 }
 
-// EventRegistryGrant is the event emitted when an address is granted a role in a registry.
+// EventRoleGranted is the event emitted when an address is granted a role in a registry.
 type EventRoleGranted struct {
 	NftId        string   `protobuf:"bytes,1,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
 	AssetClassId string   `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
@@ -144,26 +144,26 @@ func (m *EventRoleGranted) GetAddresses() []string {
 	return nil
 }
 
-// EventRegistryGrant is the event emitted when an address has a role revoked in a registry.
-type EventRoleRevoke struct {
+// EventRoleRevoked is the event emitted when an address has a role revoked in a registry.
+type EventRoleRevoked struct {
 	NftId        string   `protobuf:"bytes,1,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
 	AssetClassId string   `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
 	Role         string   `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
 	Addresses    []string `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty"`
 }
 
-func (m *EventRoleRevoke) Reset()         { *m = EventRoleRevoke{} }
-func (m *EventRoleRevoke) String() string { return proto.CompactTextString(m) }
-func (*EventRoleRevoke) ProtoMessage()    {}
-func (*EventRoleRevoke) Descriptor() ([]byte, []int) {
+func (m *EventRoleRevoked) Reset()         { *m = EventRoleRevoked{} }
+func (m *EventRoleRevoked) String() string { return proto.CompactTextString(m) }
+func (*EventRoleRevoked) ProtoMessage()    {}
+func (*EventRoleRevoked) Descriptor() ([]byte, []int) {
 	return fileDescriptor_61a0995529587ff0, []int{2}
 }
-func (m *EventRoleRevoke) XXX_Unmarshal(b []byte) error {
+func (m *EventRoleRevoked) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventRoleRevoke) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventRoleRevoked) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventRoleRevoke.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventRoleRevoked.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -173,40 +173,40 @@ func (m *EventRoleRevoke) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *EventRoleRevoke) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventRoleRevoke.Merge(m, src)
+func (m *EventRoleRevoked) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventRoleRevoked.Merge(m, src)
 }
-func (m *EventRoleRevoke) XXX_Size() int {
+func (m *EventRoleRevoked) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventRoleRevoke) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventRoleRevoke.DiscardUnknown(m)
+func (m *EventRoleRevoked) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventRoleRevoked.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventRoleRevoke proto.InternalMessageInfo
+var xxx_messageInfo_EventRoleRevoked proto.InternalMessageInfo
 
-func (m *EventRoleRevoke) GetNftId() string {
+func (m *EventRoleRevoked) GetNftId() string {
 	if m != nil {
 		return m.NftId
 	}
 	return ""
 }
 
-func (m *EventRoleRevoke) GetAssetClassId() string {
+func (m *EventRoleRevoked) GetAssetClassId() string {
 	if m != nil {
 		return m.AssetClassId
 	}
 	return ""
 }
 
-func (m *EventRoleRevoke) GetRole() string {
+func (m *EventRoleRevoked) GetRole() string {
 	if m != nil {
 		return m.Role
 	}
 	return ""
 }
 
-func (m *EventRoleRevoke) GetAddresses() []string {
+func (m *EventRoleRevoked) GetAddresses() []string {
 	if m != nil {
 		return m.Addresses
 	}
@@ -322,7 +322,7 @@ func (m *EventRegistryBulkUpdated) GetAssetClassId() string {
 func init() {
 	proto.RegisterType((*EventNFTRegistered)(nil), "provenance.registry.v1.EventNFTRegistered")
 	proto.RegisterType((*EventRoleGranted)(nil), "provenance.registry.v1.EventRoleGranted")
-	proto.RegisterType((*EventRoleRevoke)(nil), "provenance.registry.v1.EventRoleRevoke")
+	proto.RegisterType((*EventRoleRevoked)(nil), "provenance.registry.v1.EventRoleRevoked")
 	proto.RegisterType((*EventNFTUnregistered)(nil), "provenance.registry.v1.EventNFTUnregistered")
 	proto.RegisterType((*EventRegistryBulkUpdated)(nil), "provenance.registry.v1.EventRegistryBulkUpdated")
 }
@@ -332,7 +332,7 @@ func init() {
 }
 
 var fileDescriptor_61a0995529587ff0 = []byte{
-	// 310 bytes of a gzipped FileDescriptorProto
+	// 304 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2e, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x2f, 0x4a, 0x4d, 0xcf, 0x2c, 0x2e, 0x29, 0xaa, 0xd4,
 	0x2f, 0x33, 0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
@@ -344,15 +344,14 @@ var fileDescriptor_61a0995529587ff0 = []byte{
 	0x97, 0x00, 0xd8, 0xcc, 0xa0, 0xfc, 0x9c, 0x54, 0xf7, 0xa2, 0xc4, 0xbc, 0x12, 0x0a, 0x4d, 0x14,
 	0x12, 0xe2, 0x62, 0x29, 0xca, 0xcf, 0x49, 0x95, 0x60, 0x06, 0xcb, 0x81, 0xd9, 0x42, 0x32, 0x5c,
 	0x9c, 0x89, 0x29, 0x29, 0x45, 0xa9, 0xc5, 0xc5, 0xa9, 0xc5, 0x12, 0x2c, 0x0a, 0xcc, 0x1a, 0x9c,
-	0x41, 0x08, 0x01, 0xa5, 0x06, 0x46, 0x2e, 0x7e, 0xb8, 0x1b, 0x82, 0x52, 0xcb, 0xf2, 0xb3, 0x53,
-	0xe9, 0xed, 0x84, 0x60, 0x2e, 0x11, 0x58, 0xc8, 0x86, 0xe6, 0x15, 0x51, 0x29, 0x6c, 0xc3, 0xb9,
-	0x24, 0x20, 0xde, 0x82, 0x46, 0xa1, 0x53, 0x69, 0x4e, 0x76, 0x68, 0x41, 0x4a, 0x22, 0xa5, 0x41,
-	0xec, 0x94, 0x7d, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e,
-	0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x5c, 0x92, 0x99, 0xf9,
-	0x7a, 0xd8, 0x13, 0x4f, 0x00, 0x63, 0x94, 0x49, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72,
-	0x7e, 0xae, 0x3e, 0x42, 0x91, 0x6e, 0x66, 0x3e, 0x12, 0x4f, 0xbf, 0x02, 0x91, 0x2c, 0x4b, 0x2a,
-	0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x69, 0xd2, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x79, 0xd0,
-	0x39, 0xc2, 0xba, 0x02, 0x00, 0x00,
+	0x41, 0x08, 0x01, 0x54, 0x37, 0x04, 0xa5, 0x96, 0xe5, 0x67, 0xd3, 0xdf, 0x0d, 0xc1, 0x5c, 0x22,
+	0xb0, 0xa0, 0x0d, 0xcd, 0x2b, 0xa2, 0x52, 0xe0, 0x86, 0x73, 0x49, 0x40, 0xfc, 0x05, 0x8d, 0x43,
+	0xa7, 0xd2, 0x9c, 0xec, 0xd0, 0x82, 0x94, 0x44, 0x4a, 0xc3, 0xd8, 0x29, 0xfb, 0xc4, 0x23, 0x39,
+	0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63,
+	0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xb8, 0x24, 0x33, 0xf3, 0xf5, 0xb0, 0xa7, 0x9e, 0x00, 0xc6,
+	0x28, 0x93, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x7d, 0x84, 0x22, 0xdd,
+	0xcc, 0x7c, 0x24, 0x9e, 0x7e, 0x05, 0x22, 0x5d, 0x96, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81,
+	0x13, 0xa5, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xcd, 0x21, 0x15, 0x91, 0xbb, 0x02, 0x00, 0x00,
 }
 
 func (m *EventNFTRegistered) Marshal() (dAtA []byte, err error) {
@@ -445,7 +444,7 @@ func (m *EventRoleGranted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventRoleRevoke) Marshal() (dAtA []byte, err error) {
+func (m *EventRoleRevoked) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -455,12 +454,12 @@ func (m *EventRoleRevoke) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventRoleRevoke) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventRoleRevoked) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventRoleRevoke) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventRoleRevoked) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -627,7 +626,7 @@ func (m *EventRoleGranted) Size() (n int) {
 	return n
 }
 
-func (m *EventRoleRevoke) Size() (n int) {
+func (m *EventRoleRevoked) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -986,7 +985,7 @@ func (m *EventRoleGranted) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventRoleRevoke) Unmarshal(dAtA []byte) error {
+func (m *EventRoleRevoked) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1009,10 +1008,10 @@ func (m *EventRoleRevoke) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventRoleRevoke: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventRoleRevoked: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventRoleRevoke: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventRoleRevoked: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
