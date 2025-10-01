@@ -10,7 +10,9 @@ import (
 	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/registry/types"
 )
@@ -52,6 +54,15 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 	rk.schema = schema
 
 	return rk
+}
+
+func (k Keeper) EmitEvent(ctx sdk.Context, tev proto.Message) {
+	err := ctx.EventManager().EmitTypedEvent(tev)
+	if err != nil {
+		// The only reason we'd get an error here is if the event isn't defined correctly in the protos.
+		// But we already know all of them are, so we should never see this.
+		panic(fmt.Errorf("could not emit typed event %#v: %w", tev, err))
+	}
 }
 
 // CreateDefaultRegistry generates a default registry for a given nft key.
