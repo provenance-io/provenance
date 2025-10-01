@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/x/nft"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/x/nft"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
@@ -91,9 +92,10 @@ func (s *KeeperTestSuite) TestCreateDefaultRegistry() {
 	s.Require().Equal(types.RegistryRole_REGISTRY_ROLE_ORIGINATOR, entry.Roles[0].Role)
 	s.Require().Equal([]string{s.user1}, entry.Roles[0].Addresses)
 
-	// Test duplicate creation (keeper doesn't check for duplicates, just overwrites)
+	// Test duplicate creation not allowed.
+	expDupErr := "registry already exists for key: \"" + key.String() + "\": registry already exists"
 	err = s.app.RegistryKeeper.CreateDefaultRegistry(s.ctx, s.user1, key)
-	s.Require().NoError(err) // Should succeed and overwrite
+	s.Require().EqualError(err, expDupErr)
 }
 
 func (s *KeeperTestSuite) TestCreateRegistry() {
@@ -123,9 +125,10 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 	s.Require().Equal(key, entry.Key)
 	s.Require().Equal(roles, entry.Roles)
 
-	// Test duplicate creation (keeper doesn't check for duplicates, just overwrites)
+	// Test duplicate creation not allowed.
+	expDupErr := "registry already exists for key: \"" + key.String() + "\": registry already exists"
 	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
-	s.Require().NoError(err) // Should succeed and overwrite
+	s.Require().EqualError(err, expDupErr)
 }
 
 func (s *KeeperTestSuite) TestGrantRole() {
@@ -736,7 +739,7 @@ func (s *KeeperTestSuite) TestRegisterNFTMsgServer() {
 					},
 				},
 			},
-			expErr: "registry already exists", // The registry already exists from previous tests
+			expErr: "unauthorized access: signer does not own the NFT: unauthorized",
 		},
 	}
 
