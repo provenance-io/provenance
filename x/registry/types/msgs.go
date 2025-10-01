@@ -143,12 +143,9 @@ func (m QueryGetRegistryRequest) Validate() error {
 
 // Validate validates the QueryGetRegistriesRequest
 func (m QueryGetRegistriesRequest) Validate() error {
-	var errs []error
-	if strings.TrimSpace(m.AssetClassId) == "" {
-		errs = append(errs, NewErrCodeInvalidField("asset_class_id", "cannot be empty if provided"))
-	}
-
-	return errors.Join(errs...)
+	// The AssetClassId is optional, and there's nothing to validate on it.
+	// There's nothing to validate with the pagination either.
+	return nil
 }
 
 // Validate validates the QueryHasRoleRequest
