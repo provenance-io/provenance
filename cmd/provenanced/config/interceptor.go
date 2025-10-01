@@ -21,9 +21,9 @@ const (
 	EnvTypeFlag = "testnet"
 	// CoinTypeFlag is a flag for indicating coin type.
 	CoinTypeFlag = "coin-type"
-	// ConsensusTimeoutCommitKey is the key for consensus timeout commit.
+
 	ConsensusTimeoutCommitKey       = "consensus.timeout_commit"
-	ConsensusTimeoutCommitValue     = "3.5s" //nolint:revive
+	ConsensusTimeoutCommitValue     = "3.5s"
 	ConsensusSkipTimeoutCommitKey   = "consensus.skip_timeout_commit"
 	ConsensusSkipTimeoutCommitValue = "false"
 )
@@ -70,7 +70,6 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	return LoadConfigFromFiles(cmd)
 }
 
-// SetPioConfigFromFlags sets the Provenance config from command-line flags.
 func SetPioConfigFromFlags(flagSet *pflag.FlagSet) {
 	// Ignoring errors here in the off chance that the flags weren't defined originally.
 	customDenom, _ := flagSet.GetString(CustomDenomFlag)

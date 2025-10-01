@@ -247,7 +247,6 @@ func (r *QuarantineRecord) DeclineFrom(addrs []sdk.AccAddress) bool {
 	return rv
 }
 
-// GetAllFromAddrs returns all sender addresses in the quarantine record.
 func (r *QuarantineRecord) GetAllFromAddrs() []sdk.AccAddress {
 	rv := make([]sdk.AccAddress, len(r.UnacceptedFromAddresses)+len(r.AcceptedFromAddresses))
 	copy(rv, r.UnacceptedFromAddresses)

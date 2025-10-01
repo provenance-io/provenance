@@ -1,4 +1,3 @@
-// Package marker provides ABCI handlers for the marker module.
 package marker
 
 import (

@@ -1,4 +1,3 @@
-// Package cli provides CLI commands for querying the quarantine module.
 package cli
 
 import (

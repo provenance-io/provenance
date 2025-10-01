@@ -13,8 +13,7 @@ import (
 const (
 	// A sane default for maximum length of an audit message string (memo)
 	maxAuditMessageLength = 200
-	// UsdDenom defines the USD denomination used in metadata scope values.
-	UsdDenom = "usd"
+	UsdDenom              = "usd"
 )
 
 // NewScope creates a new instance.
@@ -36,7 +35,6 @@ func NewScope(
 	}
 }
 
-// Equals checks if two scopes are equal.
 func (s Scope) Equals(t Scope) bool {
 	return s.ScopeId.Equals(t.ScopeId) &&
 		s.SpecificationId.Equals(t.SpecificationId) &&
@@ -73,7 +71,6 @@ func (s Scope) ValidateBasic() error {
 	return nil
 }
 
-// ValidateOwnersBasic validates the basic fields of the scope's owners.
 func (s Scope) ValidateOwnersBasic() error {
 	if err := ValidatePartiesBasic(s.Owners); err != nil {
 		return fmt.Errorf("invalid scope owners: %w", err)
@@ -81,7 +78,6 @@ func (s Scope) ValidateOwnersBasic() error {
 	return ValidateOptionalParties(s.RequirePartyRollup, s.Owners)
 }
 
-// RemoveDataAccess removes a data access address from the scope.
 func (s *Scope) RemoveDataAccess(addresses []string) {
 	newDataAccess := []string{}
 	for _, da := range s.DataAccess {
@@ -100,7 +96,6 @@ func (s *Scope) RemoveDataAccess(addresses []string) {
 	s.DataAccess = newDataAccess
 }
 
-// AddDataAccess adds
 func (s *Scope) AddDataAccess(addresses []string) {
 	for _, addr := range addresses {
 		found := false

@@ -9,7 +9,6 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-// CmdQuery returns the root query command for the exchange module.
 func CmdQuery() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        exchange.ModuleName,

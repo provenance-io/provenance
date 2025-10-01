@@ -1,4 +1,3 @@
-// Package module defines the IBC middleware for rate limiting IBC transfers.
 package module
 
 import (

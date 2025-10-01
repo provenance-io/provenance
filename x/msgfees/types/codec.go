@@ -1,4 +1,3 @@
-// Package types defines types and codec registrations for the msgfees module.
 package types
 
 import (

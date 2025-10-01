@@ -1,4 +1,3 @@
-// Package errors defines custom error types for the sanction module.
 package errors
 
 import (
@@ -9,7 +8,7 @@ import (
 const sanctionCodespace = "sanction"
 
 var (
-	ErrInvalidParams      = cerrs.Register(sanctionCodespace, 2, "invalid params") //nolint:revive
+	ErrInvalidParams      = cerrs.Register(sanctionCodespace, 2, "invalid params")
 	ErrUnsanctionableAddr = cerrs.Register(sanctionCodespace, 3, "address cannot be sanctioned")
 	ErrInvalidTempStatus  = cerrs.Register(sanctionCodespace, 4, "invalid temp status")
 	ErrSanctionedAccount  = cerrs.Register(sanctionCodespace, 5, "account is sanctioned")

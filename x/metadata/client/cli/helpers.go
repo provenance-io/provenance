@@ -1,4 +1,3 @@
-// Package cli provides CLI helpers for interacting with the metadata module.
 package cli
 
 import (

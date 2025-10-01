@@ -15,7 +15,6 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
-// SendRestrictionFn returns a function to enforce send restrictions.
 func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// In some cases, it might not be possible to add a bypass to the context.

@@ -1,4 +1,3 @@
-// Package assertions provides assertion helpers for tests.
 package assertions
 
 import (

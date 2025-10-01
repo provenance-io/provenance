@@ -1,4 +1,3 @@
-// Package provcli provides helper functions and constants for CLI commands.
 package provcli
 
 import (
@@ -16,7 +15,6 @@ import (
 )
 
 const (
-	// FlagAuthority defines the CLI flag for specifying authority.
 	FlagAuthority = "authority"
 )
 

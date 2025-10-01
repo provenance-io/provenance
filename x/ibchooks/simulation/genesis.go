@@ -1,4 +1,3 @@
-// Package simulation provides simulation utilities for ibchooks.
 package simulation
 
 // DONTCOVER

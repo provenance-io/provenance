@@ -14,7 +14,6 @@ type MsgServer struct {
 	Keeper
 }
 
-// NewMsgServer creates a new MsgServer instance for ibcratelimit message handling.
 func NewMsgServer(k Keeper) ibcratelimit.MsgServer {
 	return MsgServer{
 		Keeper: k,

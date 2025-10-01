@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Validate validates the AccountHold object.
 func (e AccountHold) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(e.Address); err != nil {
 		return fmt.Errorf("invalid address: %w", err)

@@ -87,7 +87,7 @@ func DenySendMarkerPrefix(markerAddr sdk.AccAddress) []byte {
 	return key
 }
 
-// NetAssetValueKeyPrefix returns key [prefix][marker address] for marker net asset values
+// NetAssetValueKey returns key [prefix][marker address] for marker net asset values
 func NetAssetValueKeyPrefix(markerAddr sdk.AccAddress) []byte {
 	return append(NetAssetValuePrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
 }

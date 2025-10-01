@@ -1,4 +1,3 @@
-// Package testlog provides test logging utilities.
 package testlog
 
 import (

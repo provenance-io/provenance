@@ -1,4 +1,3 @@
-// Package keeper contains the logic for managing triggers and detecting events.
 package keeper
 
 import (

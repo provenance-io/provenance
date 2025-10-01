@@ -240,11 +240,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := iterator.Close(); err != nil {
-			k.Logger(ctx).Error("failed to close iterator", "error", err)
-		}
-	}()
+	defer iterator.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
@@ -377,7 +373,6 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
 }
 
-// CreateRootName creates a new root name entry in the keeper.
 func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
 	// err is suppressed because it returns an error on not found.  TODO - Remove use of error for not found
 	existing, _ := k.GetRecordByName(ctx, name)

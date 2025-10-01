@@ -1,4 +1,3 @@
-// Package simulation contains simulation logic for the sanction module.
 package simulation
 
 import (
@@ -11,7 +10,6 @@ import (
 	"github.com/provenance-io/provenance/x/sanction/keeper"
 )
 
-// NewDecodeStore returns a decoder function for the simulation store.
 func NewDecodeStore(_ codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {

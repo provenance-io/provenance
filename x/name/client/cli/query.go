@@ -1,4 +1,3 @@
-// Package cli provides CLI commands for querying the name module.
 package cli
 
 import (

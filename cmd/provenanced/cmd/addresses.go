@@ -18,7 +18,7 @@ var (
 	cmdStart = fmt.Sprintf("%s metaaddress", version.AppName)
 )
 
-// AddMetaAddressCmd is the top-level command for name CLI queries.
+// GetQueryCmd is the top-level command for name CLI queries.
 func AddMetaAddressCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        "metaaddress",

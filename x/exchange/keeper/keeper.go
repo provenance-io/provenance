@@ -43,7 +43,6 @@ type Keeper struct {
 	feeCollectorName string
 }
 
-// NewKeeper creates a new Keeper instance for the exchange module.
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollectorName string,
 	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
 	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper, markerKeeper exchange.MarkerKeeper,

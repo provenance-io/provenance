@@ -1,4 +1,3 @@
-// Package handlers provides message fee handling and event aggregation.
 package handlers
 
 import (

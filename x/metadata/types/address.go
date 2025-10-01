@@ -1,4 +1,3 @@
-// Package types provides core metadata types and utilities.
 package types
 
 import (

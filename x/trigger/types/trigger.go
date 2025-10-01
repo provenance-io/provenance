@@ -13,17 +13,13 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
-// TriggerID represents a unique identifier for a trigger.
 type TriggerID = uint64
 
 const (
-	// BlockHeightPrefix is the prefix key used to identify triggers based on block height.
 	BlockHeightPrefix = "block-height"
-	// BlockTimePrefix is the prefix key used to identify triggers based on block time.
-	BlockTimePrefix = "block-time"
+	BlockTimePrefix   = "block-time"
 )
 
-// TriggerEventI is the interface for trigger events.
 type TriggerEventI interface {
 	proto.Message
 	GetEventPrefix() string
@@ -98,7 +94,7 @@ func (e TransactionEvent) Validate() error {
 	return nil
 }
 
-// ValidateContext checks if this event is valid with the current context.
+// Validate checks if this event is valid with the current context.
 func (e TransactionEvent) ValidateContext(_ sdk.Context) error {
 	return nil
 }
@@ -145,7 +141,7 @@ func (e BlockTimeEvent) Validate() error {
 	return nil
 }
 
-// ValidateContext checks if this event is valid with the current context.
+// Validate checks if this event is valid with the current context.
 func (e BlockTimeEvent) ValidateContext(ctx sdk.Context) error {
 	if e.Time.UTC().Equal(ctx.BlockTime().UTC()) || e.Time.Before(ctx.BlockTime().UTC()) {
 		return ErrInvalidBlockTime

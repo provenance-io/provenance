@@ -5,12 +5,10 @@ import (
 	"fmt"
 )
 
-// DefaultGenesisState returns the default genesis state for the hold module.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
 }
 
-// Validate validates the genesis state of the hold module.
 func (g GenesisState) Validate() error {
 	addrs := make(map[string]int)
 	var errs []error

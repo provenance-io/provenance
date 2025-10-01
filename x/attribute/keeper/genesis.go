@@ -1,4 +1,3 @@
-// Package keeper contains logic for managing attribute module state.
 package keeper
 
 import (

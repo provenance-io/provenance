@@ -1,4 +1,3 @@
-// Package simulation provides simulation utilities for metadata genesis.
 package simulation
 
 // DONTCOVER

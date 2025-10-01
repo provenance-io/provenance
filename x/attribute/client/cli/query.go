@@ -1,4 +1,3 @@
-// Package cli provides CLI query commands for the attribute module.
 package cli
 
 import (

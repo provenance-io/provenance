@@ -1,4 +1,3 @@
-// Package simulation provides simulation functions for the hold module.
 package simulation
 
 import (

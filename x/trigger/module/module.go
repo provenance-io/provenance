@@ -1,4 +1,3 @@
-// Package trigger defines the app module for the trigger functionality.
 package trigger
 
 import (

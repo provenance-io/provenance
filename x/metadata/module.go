@@ -1,4 +1,3 @@
-// Package metadata defines the module implementation for metadata operations.
 package metadata
 
 import (

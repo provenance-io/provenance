@@ -1,4 +1,3 @@
-// Package queries helpers for authentication queries.
 package queries
 
 import (

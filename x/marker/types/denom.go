@@ -10,8 +10,7 @@ import (
 
 const (
 	maxDenomMetadataDescriptionLength = 200
-	// UsdDenom defines the denom string used for USD-based markers.
-	UsdDenom = "usd"
+	UsdDenom                          = "usd"
 )
 
 // ValidateDenomMetadataBasic performs validation of the denom metadata fields.

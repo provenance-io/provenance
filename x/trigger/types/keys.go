@@ -16,11 +16,9 @@ const (
 
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
-	// EventOrderLength defines the fixed length for event order identifiers.
+
 	EventOrderLength = 8
-	// TriggerIDLength defines the byte length used to store a TriggerID.
-	TriggerIDLength = 8
-	// QueueIndexLength defines the fixed length for queue index keys.
+	TriggerIDLength  = 8
 	QueueIndexLength = 8
 )
 

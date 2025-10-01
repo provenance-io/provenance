@@ -1,4 +1,3 @@
-// Package ibc provides mocks and helpers for IBC testing.
 package ibc
 
 import (
@@ -11,10 +10,8 @@ import (
 
 var _ porttypes.ICS4Wrapper = &ICS4WrapperMock{}
 
-// ICS4WrapperMock is a mock implementation of the ICS4Wrapper interface for testing.
 type ICS4WrapperMock struct{}
 
-// SendPacket mocks sending an IBC packet.
 func (m *ICS4WrapperMock) SendPacket(
 	_ sdk.Context,
 	_ *capabilitytypes.Capability,
@@ -27,7 +24,6 @@ func (m *ICS4WrapperMock) SendPacket(
 	return 1, nil
 }
 
-// WriteAcknowledgement mocks writing an acknowledgement for a packet.
 func (m *ICS4WrapperMock) WriteAcknowledgement(
 	_ sdk.Context,
 	_ *capabilitytypes.Capability,
@@ -37,7 +33,6 @@ func (m *ICS4WrapperMock) WriteAcknowledgement(
 	return nil
 }
 
-// GetAppVersion mocks retrieving the application version for a given port and channel.
 func (m *ICS4WrapperMock) GetAppVersion(
 	_ sdk.Context,
 	_,

@@ -1,4 +1,3 @@
-// Package contracts contains helpers for working with WASM contracts in tests.
 package contracts
 
 import (
@@ -32,12 +31,11 @@ func CounterWasm() []byte {
 	return counterWasm
 }
 
-// RateLimiterWasm applies rate limiting to WASM contract execution.
+// CounterWasm returns the counter contract wasm byte data
 func RateLimiterWasm() []byte {
 	return rateLimiterWasm
 }
 
-// StoreContractCode stores WASM contract code.
 func StoreContractCode(app *provenanceapp.App, ctx sdk.Context, wasmCode []byte) (uint64, error) {
 	govKeeper := wasmkeeper.NewGovPermissionKeeper(app.WasmKeeper)
 	creator := app.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
@@ -47,7 +45,6 @@ func StoreContractCode(app *provenanceapp.App, ctx sdk.Context, wasmCode []byte)
 	return codeID, err
 }
 
-// InstantiateContract instantiates a WASM contract.
 func InstantiateContract(app *provenanceapp.App, ctx sdk.Context, msg string, codeID uint64) (sdk.AccAddress, error) {
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
 	creator := app.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
@@ -55,13 +52,11 @@ func InstantiateContract(app *provenanceapp.App, ctx sdk.Context, msg string, co
 	return addr, err
 }
 
-// QueryContract queries a WASM contract.
 func QueryContract(app *provenanceapp.App, ctx sdk.Context, contract sdk.AccAddress, key []byte) (string, error) {
 	state, err := app.WasmKeeper.QuerySmart(ctx, contract, key)
 	return string(state), err
 }
 
-// PinContract pins a WASM contract in the store.
 func PinContract(app *provenanceapp.App, ctx sdk.Context, codeID uint64) error {
 	err := app.ContractKeeper.PinCode(ctx, codeID)
 	return err

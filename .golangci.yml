@@ -32,7 +32,7 @@ linters:
     - prealloc
     - predeclared
     - promlinter
-    - revive
+    # - revive
     - staticcheck
     - tparallel
     - unconvert
@@ -110,17 +110,14 @@ linters.settings:
       - (fmt.State).Write
   govet:
     shadow: true
-    settings:
-      printf:
-        funcs:
+    printf:
+      funcs:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
   golint:
     min-confidence: 0
-  # gocyclo:
-  #   min-complexity: 15
   dogsled:
     max-blank-identifiers: 3
   misspell:

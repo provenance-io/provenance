@@ -1,4 +1,3 @@
-// Package simulation provides simulation support for the name module.
 package simulation
 
 import (

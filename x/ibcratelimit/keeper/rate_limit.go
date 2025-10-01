@@ -67,13 +67,13 @@ func (k Keeper) buildWasmExecMsg(msgType string, packet exported.PacketI) ([]byt
 	}
 
 	var asJSON []byte
-	switch { //nolint:staticcheck // QF1001: intentional logic for clarity
-	case msgType == ibcratelimit.MsgSendPacket:
+	switch msgType {
+	case ibcratelimit.MsgSendPacket:
 		msg := ibcratelimit.SendPacketMsg{SendPacket: ibcratelimit.PacketMsg{
 			Packet: unwrapped,
 		}}
 		asJSON, err = json.Marshal(msg)
-	case msgType == ibcratelimit.MsgRecvPacket:
+	case ibcratelimit.MsgRecvPacket:
 		msg := ibcratelimit.RecvPacketMsg{RecvPacket: ibcratelimit.PacketMsg{
 			Packet: unwrapped,
 		}}

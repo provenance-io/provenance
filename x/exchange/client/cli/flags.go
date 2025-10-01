@@ -1,4 +1,3 @@
-// Package cli provides command-line interface flags for the exchange module.
 package cli
 
 import (
@@ -23,7 +22,7 @@ import (
 )
 
 const (
-	FlagAcceptingCommitments = "accepting-commitments" //nolint:revive
+	FlagAcceptingCommitments = "accepting-commitments"
 	FlagAcceptingOrders      = "accepting-orders"
 	FlagAccessGrants         = "access-grants"
 	FlagAccount              = "account"
@@ -937,7 +936,6 @@ func ReadFlagAccountAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.Acc
 	return ReadFlagAccountAmountsOrDefault(flagSet, name, nil)
 }
 
-// ReadFlagAccountAmountsOrDefault reads account amounts from flags or returns default values.
 func ReadFlagAccountAmountsOrDefault(flagSet *pflag.FlagSet, name string, def []exchange.AccountAmount) ([]exchange.AccountAmount, error) {
 	rawVals, err := flagSet.GetStringSlice(name)
 	if len(rawVals) == 0 || err != nil {

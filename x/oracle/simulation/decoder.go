@@ -1,4 +1,3 @@
-// Package simulation provides simulation logic for the oracle module.
 package simulation
 
 import (

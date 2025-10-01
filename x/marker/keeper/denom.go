@@ -1,4 +1,3 @@
-// Package keeper handles marker module state and logic.
 package keeper
 
 import (

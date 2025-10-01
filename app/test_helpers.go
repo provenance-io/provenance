@@ -352,7 +352,6 @@ func GenesisStateWithSingleValidator(t *testing.T, app *App) GenesisState {
 	return genesisState
 }
 
-// GenerateAccountStrategy defines a strategy for generating accounts.
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
 // createRandomAccounts is a strategy used by addTestAddrs() in order to generated addresses in random order.
@@ -461,7 +460,6 @@ func initAccountWithCoins(app *App, ctx sdk.Context, addr sdk.AccAddress, coins 
 	}
 }
 
-// TestAddr returns a test account address.
 func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHexUnsafe(addr)
 	if err != nil {
@@ -521,11 +519,7 @@ func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
 	case err != nil:
 		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
 	}
-	defer func() {
-		if err := os.RemoveAll(tempDir); err != nil {
-			fmt.Printf("failed to remove temp dir %s: %v\n", tempDir, err)
-		}
-	}()
+	defer os.RemoveAll(tempDir) //nolint:errcheck
 
 	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	return tempApp.GetEncodingConfig()

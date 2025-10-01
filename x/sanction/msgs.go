@@ -14,7 +14,6 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParams)(nil),
 }
 
-// NewMsgSanction creates a new MsgSanction message.
 func NewMsgSanction(authority string, addrs ...sdk.AccAddress) *MsgSanction {
 	rv := &MsgSanction{
 		Authority: authority,
@@ -25,7 +24,6 @@ func NewMsgSanction(authority string, addrs ...sdk.AccAddress) *MsgSanction {
 	return rv
 }
 
-// ValidateBasic implements basic validation for MsgSanction.
 func (m MsgSanction) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
@@ -40,7 +38,6 @@ func (m MsgSanction) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgUnsanction creates a new MsgUnsanction message.
 func NewMsgUnsanction(authority string, addrs ...sdk.AccAddress) *MsgUnsanction {
 	rv := &MsgUnsanction{
 		Authority: authority,
@@ -51,7 +48,6 @@ func NewMsgUnsanction(authority string, addrs ...sdk.AccAddress) *MsgUnsanction 
 	return rv
 }
 
-// ValidateBasic implements basic validation for MsgUnsanction.
 func (m MsgUnsanction) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
@@ -66,7 +62,6 @@ func (m MsgUnsanction) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgUpdateParams creates a new MsgUpdateParams message.
 func NewMsgUpdateParams(authority string, minDepSanction, minDepUnsanction sdk.Coins) *MsgUpdateParams {
 	rv := &MsgUpdateParams{
 		Authority: authority,
@@ -78,7 +73,6 @@ func NewMsgUpdateParams(authority string, minDepSanction, minDepUnsanction sdk.C
 	return rv
 }
 
-// ValidateBasic implements basic validation for MsgUpdateParams.
 func (m MsgUpdateParams) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {

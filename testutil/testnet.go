@@ -2,7 +2,6 @@ package testutil
 
 import "os"
 
-// TestnetEnvVar is the environment variable used to configure testnet behavior.
 const TestnetEnvVar = "PIO_TESTNET"
 
 // UnsetTestnetEnvVar will unset the PIO_TESTNET environment variable and return a deferrable that will put it back.

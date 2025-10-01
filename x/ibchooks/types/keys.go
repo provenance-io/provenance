@@ -1,9 +1,8 @@
 package types
 
-// ModuleName defines the module name constant for ibchooks.
 const (
 	ModuleName = "ibchooks"
-	StoreKey   = "hooks-for-ibc" // not using the module name because of collisions with key "ibc" // nolint:revive
+	StoreKey   = "hooks-for-ibc" // not using the module name because of collisions with key "ibc"
 
 	IBCCallbackKey = "ibc_callback"
 	IBCAsyncAckKey = "ibc_async_ack"

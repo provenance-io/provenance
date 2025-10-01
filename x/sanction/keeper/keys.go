@@ -29,9 +29,7 @@ var (
 )
 
 const (
-	// ParamNameImmediateSanctionMinDeposit defines the parameter name for the minimum deposit required for immediate sanctions.
-	ParamNameImmediateSanctionMinDeposit = "immediate_sanction_min_deposit"
-	// ParamNameImmediateUnsanctionMinDeposit defines the parameter name for the minimum deposit required for immediate unsanctions.
+	ParamNameImmediateSanctionMinDeposit   = "immediate_sanction_min_deposit"
 	ParamNameImmediateUnsanctionMinDeposit = "immediate_unsanction_min_deposit"
 )
 

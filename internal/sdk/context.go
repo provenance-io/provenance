@@ -1,4 +1,3 @@
-// Package sdk contains extensions for the Cosmos SDK context.
 package sdk
 
 import (

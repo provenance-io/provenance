@@ -1,4 +1,3 @@
-// Package types defines types used by the ibchooks module.
 package types
 
 import (
