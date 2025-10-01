@@ -55,6 +55,17 @@ func (m *RegistryKey) CollKey() collections.Pair[string, string] {
 	return collections.Join(m.AssetClassId, m.NftId)
 }
 
+// Equals returns true if this RegistryKey equals the provided one.
+func (m *RegistryKey) Equals(other *RegistryKey) bool {
+	if m == other {
+		return true
+	}
+	if m == nil || other == nil {
+		return false
+	}
+	return m.NftId == other.NftId && m.AssetClassId == other.AssetClassId
+}
+
 // Validate validates the RegistryEntry
 func (m *RegistryEntry) Validate() error {
 	if m == nil {
@@ -78,6 +89,19 @@ func (m *RegistryEntry) Validate() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// GetRoleAddrs gets all the addresses assigned the given role in this RegistryEntry.
+func (m *RegistryEntry) GetRoleAddrs(role RegistryRole) []string {
+	if m == nil {
+		return nil
+	}
+	for _, entry := range m.Roles {
+		if entry.Role == role {
+			return entry.Addresses
+		}
+	}
+	return nil
 }
 
 // Validate validates the RolesEntry

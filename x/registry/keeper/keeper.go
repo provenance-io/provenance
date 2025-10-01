@@ -56,12 +56,23 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 	return rk
 }
 
+// EmitEvent emits an event.
 func (k Keeper) EmitEvent(ctx context.Context, tev proto.Message) {
 	err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(tev)
 	if err != nil {
 		// The only reason we'd get an error here is if the event isn't defined correctly in the protos.
 		// But we already know all of them are, so we should never see this.
 		panic(fmt.Errorf("could not emit typed event %#v: %w", tev, err))
+	}
+}
+
+// EmitEvents emits multiple events at once.
+func (k Keeper) EmitEvents(ctx context.Context, tevs ...proto.Message) {
+	err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvents(tevs...)
+	if err != nil {
+		// The only reason we'd get an error here is if the event isn't defined correctly in the protos.
+		// But we already know all of them are, so we should never see this.
+		panic(fmt.Errorf("could not emit typed events %#v: %w", tevs, err))
 	}
 }
 
