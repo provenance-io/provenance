@@ -420,7 +420,7 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 // CmdTransferFundsWithSettlement returns the command for transferring funds with settlement instructions
 func CmdTransferFundsWithSettlement() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "xfer <fund_transfers_json_file",
+		Use:   "xfer <fund_transfers_json_file>",
 		Short: "Submit fund transfers",
 		Args:  cobra.ExactArgs(1),
 		Example: `$ provenanced tx ledger xfer transfers.json --from mykey

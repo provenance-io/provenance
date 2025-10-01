@@ -13,6 +13,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgGrantRole)(nil),
 	(*MsgRevokeRole)(nil),
 	(*MsgUnregisterNFT)(nil),
+	(*MsgRegistryBulkUpdate)(nil),
 }
 
 // ValidateBasic validates the MsgRegisterNFT message

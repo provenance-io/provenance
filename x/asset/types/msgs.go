@@ -24,8 +24,10 @@ func (msg MsgCreateAsset) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("asset", "%s", err))
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("owner", "%s", err))
+	if len(msg.Owner) > 0 {
+		if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+			errs = append(errs, NewErrCodeInvalidField("owner", "%s", err))
+		}
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {

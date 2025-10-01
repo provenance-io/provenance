@@ -93,7 +93,7 @@ func ReadFlagDayCountConvention(flagSet *pflag.FlagSet) (ledger.DayCountConventi
 		return ledger.DAY_COUNT_CONVENTION_UNSPECIFIED, err
 	}
 	if val == "" {
-		return ledger.DAY_COUNT_CONVENTION_UNSPECIFIED, fmt.Errorf("invalid --day-count-convention: empty value")
+		return ledger.DAY_COUNT_CONVENTION_UNSPECIFIED, nil
 	}
 
 	return parseEnum(val, FlagDayCountConvention, "DAY_COUNT_CONVENTION_", ledger.DayCountConvention_value, ledger.DAY_COUNT_CONVENTION_UNSPECIFIED)
@@ -111,7 +111,25 @@ func ReadFlagInterestAccrualMethod(flagSet *pflag.FlagSet) (ledger.InterestAccru
 		return ledger.INTEREST_ACCRUAL_METHOD_UNSPECIFIED, err
 	}
 	if val == "" {
-		return ledger.INTEREST_ACCRUAL_METHOD_UNSPECIFIED, fmt.Errorf("invalid --interest-rate: empty value")
+		return ledger.INTEREST_ACCRUAL_METHOD_UNSPECIFIED, nil
+	}
+
+	// Map short forms to canonical tokens expected by the enum.
+	switch strings.ToUpper(val) {
+	case "SIMPLE":
+		val = "SIMPLE_INTEREST"
+	case "COMPOUND":
+		val = "COMPOUND_INTEREST"
+	case "DAILY":
+		val = "DAILY_COMPOUNDING"
+	case "MONTHLY":
+		val = "MONTHLY_COMPOUNDING"
+	case "QUARTERLY":
+		val = "QUARTERLY_COMPOUNDING"
+	case "ANNUAL", "ANNUALLY":
+		val = "ANNUAL_COMPOUNDING"
+	case "CONTINUOUS":
+		val = "CONTINUOUS_COMPOUNDING"
 	}
 
 	return parseEnum(val, FlagInterestAccrualMethod, "INTEREST_ACCRUAL_METHOD_", ledger.InterestAccrualMethod_value, ledger.INTEREST_ACCRUAL_METHOD_UNSPECIFIED)
