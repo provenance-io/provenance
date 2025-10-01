@@ -56,8 +56,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 	return rk
 }
 
-func (k Keeper) EmitEvent(ctx sdk.Context, tev proto.Message) {
-	err := ctx.EventManager().EmitTypedEvent(tev)
+func (k Keeper) EmitEvent(ctx context.Context, tev proto.Message) {
+	err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(tev)
 	if err != nil {
 		// The only reason we'd get an error here is if the event isn't defined correctly in the protos.
 		// But we already know all of them are, so we should never see this.
@@ -77,11 +77,52 @@ func (k Keeper) CreateDefaultRegistry(ctx context.Context, ownerAddrStr string, 
 	return k.CreateRegistry(ctx, key, roles)
 }
 
+// CreateRegistry stores a new registry entry in state.
+// Returns an error if the registry already exists, or if there's a problem.
 func (k Keeper) CreateRegistry(ctx context.Context, key *types.RegistryKey, roles []types.RolesEntry) error {
-	return k.Registry.Set(ctx, key.CollKey(), types.RegistryEntry{
+	// Already exists check
+	has, err := k.Registry.Has(ctx, key.CollKey())
+	if err != nil {
+		return fmt.Errorf("could not check if registry already exists: %w", err)
+	}
+	if has {
+		return types.NewErrCodeRegistryAlreadyExists(key.String())
+	}
+
+	err = k.Registry.Set(ctx, key.CollKey(), types.RegistryEntry{
 		Key:   key,
 		Roles: roles,
 	})
+	if err != nil {
+		return fmt.Errorf("could not set registry entry: %w", err)
+	}
+
+	k.EmitEvent(ctx, types.NewEventNFTRegistered(key))
+	for _, entry := range roles {
+		k.EmitEvent(ctx, types.NewEventRoleGranted(key, entry.Role, entry.Addresses))
+	}
+	return nil
+}
+
+func (k Keeper) DeleteRegistry(ctx context.Context, key *types.RegistryKey) error {
+	reg, err := k.GetRegistry(ctx, key)
+	if err != nil {
+		return fmt.Errorf("could not get registry: %w", err)
+	}
+	if reg == nil {
+		return types.NewErrCodeRegistryNotFound(key.String())
+	}
+
+	err = k.Registry.Remove(ctx, key.CollKey())
+	if err != nil {
+		return fmt.Errorf("error removing registry: %w", err)
+	}
+
+	k.EmitEvent(ctx, types.NewEventNFTUnregistered(key))
+	for _, entry := range reg.Roles {
+		k.EmitEvent(ctx, types.NewEventRoleRevoked(key, entry.Role, entry.Addresses))
+	}
+	return nil
 }
 
 func (k Keeper) GrantRole(ctx context.Context, key *types.RegistryKey, role types.RegistryRole, addrs []string) error {
@@ -124,6 +165,7 @@ func (k Keeper) GrantRole(ctx context.Context, key *types.RegistryKey, role type
 		return fmt.Errorf("failed to set registry entry: %w", err)
 	}
 
+	k.EmitEvent(ctx, types.NewEventRoleGranted(key, role, addrs))
 	return nil
 }
 
@@ -174,10 +216,11 @@ func (k Keeper) RevokeRole(ctx context.Context, key *types.RegistryKey, role typ
 	}
 
 	// Save the updated registry entry
-	if err := k.Registry.Set(ctx, key.CollKey(), registryEntry); err != nil {
+	if err = k.Registry.Set(ctx, key.CollKey(), registryEntry); err != nil {
 		return err
 	}
 
+	k.EmitEvent(ctx, types.NewEventRoleRevoked(key, role, addrs))
 	return nil
 }
 
@@ -201,6 +244,17 @@ func (k Keeper) HasRole(ctx context.Context, key *types.RegistryKey, role types.
 	}
 
 	return false, nil
+}
+
+func (k Keeper) ValidateRegistryExists(ctx context.Context, key *types.RegistryKey) error {
+	has, err := k.Registry.Has(ctx, key.CollKey())
+	if err != nil {
+		return fmt.Errorf("error checking if registry exists: %w", err)
+	}
+	if !has {
+		return types.NewErrCodeRegistryNotFound(key.String())
+	}
+	return nil
 }
 
 // GetRegistry returns a registry entry for a given key. If the registry entry is not found, it returns nil, nil.
