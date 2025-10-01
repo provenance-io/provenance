@@ -4,6 +4,12 @@ The Registry module assigns roles to addresses associated NFTs.
 
 ---
 <!-- TOC -->
+  - [Overview](#overview)
+  - [Types](#types)
+    - [RegistryRole](#registryrole)
+    - [RegistryKey](#registrykey)
+    - [RegistryEntry](#registryentry)
+    - [RolesEntry](#rolesentry)
 
 
 ## Overview
@@ -22,19 +28,19 @@ There are a few message types used throughout this module.
 
 The different roles available are defined in the `RegistryRole` enum.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L1-L1
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L11-L35
 
 ### RegistryKey
 
 A `RegistryKey` contains the information that uniquely identifies an NFT.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L1-L1
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L37-L52
 
 ### RegistryEntry
 
 A registry entry contains all of the role and address associations for a given NFT.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L1-L1
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L54-L64
 
 See also: [RegistryKey](#registrykey), [RolesEntry](#rolesentry).
 
@@ -42,6 +48,6 @@ See also: [RegistryKey](#registrykey), [RolesEntry](#rolesentry).
 
 A `RolesEntry` associates any number of addresses with a specific role.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L1-L1
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/registry.proto#L66-L75
 
 See also: [RegistryRole](#registryrole).

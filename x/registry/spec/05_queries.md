@@ -4,6 +4,9 @@ There are several queries for getting information about things in the registry m
 
 ---
 <!-- TOC 2 2 -->
+  - [GetRegistry](#getregistry)
+  - [GetRegistries](#getregistries)
+  - [HasRole](#hasrole)
 
 
 ## GetRegistry

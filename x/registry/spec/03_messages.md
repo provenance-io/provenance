@@ -4,6 +4,11 @@ The `x/registry` module has several `Msg` endpoints.
 
 ---
 <!-- TOC 2 2 -->
+  - [RegisterNFT](#registernft)
+  - [GrantRole](#grantrole)
+  - [RevokeRole](#revokerole)
+  - [UnregisterNFT](#unregisternft)
+  - [RegistryBulkUpdate](#registrybulkupdate)
 
 
 ## RegisterNFT

@@ -2,7 +2,6 @@
 
 The `x/registry` module uses key/value paris to store registry data in state.
 
----
 
 ## Registry Entry
 
