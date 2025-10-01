@@ -1,4 +1,3 @@
-// Package sanction handles sanctioning logic and related types.
 package sanction
 
 import (

@@ -1,4 +1,3 @@
-// Package testutil provides utilities for testing events.
 package testutil
 
 import (

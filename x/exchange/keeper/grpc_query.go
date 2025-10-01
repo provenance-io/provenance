@@ -21,7 +21,6 @@ type QueryServer struct {
 	Keeper
 }
 
-// NewQueryServer returns a new instance of the exchange module's gRPC query server.
 func NewQueryServer(k Keeper) exchange.QueryServer {
 	return QueryServer{Keeper: k}
 }

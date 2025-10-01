@@ -10,7 +10,6 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{Params: DefaultParams()}
 }
 
-// Validate checks the validity of the GenesisState.
 func (g GenesisState) Validate() error {
 	var errs []error
 

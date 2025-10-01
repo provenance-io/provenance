@@ -1,4 +1,3 @@
-// Package internal provides logger utilities for structured logging.
 package internal
 
 import (

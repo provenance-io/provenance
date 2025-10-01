@@ -121,7 +121,6 @@ func ExtractCmtConfigAndMap(cmd *cobra.Command) (*cmtconfig.Config, FieldValueMa
 	return conf, fields, nil
 }
 
-// DefaultCmtConfig returns the default commit config.
 func DefaultCmtConfig() *cmtconfig.Config {
 	rv := cmtconfig.DefaultConfig()
 	rv.Consensus.TimeoutCommit = DefaultConsensusTimeoutCommit

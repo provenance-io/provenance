@@ -1,4 +1,3 @@
-// Package keeper handles the core state logic for the hold module.
 package keeper
 
 import (

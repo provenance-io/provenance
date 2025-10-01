@@ -1,4 +1,3 @@
-// Package trigger provides ABCI-related logic for the trigger module.
 package trigger
 
 import (

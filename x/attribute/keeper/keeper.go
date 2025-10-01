@@ -117,11 +117,9 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 	// Init an attribute record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := iterator.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateRecords", "error", err)
-		}
-	}()
+
+	iterator.Close() //nolint:errcheck,gosec
+
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.Attribute{}

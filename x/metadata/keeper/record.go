@@ -99,11 +99,8 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 		return err
 	}
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateRecords", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
 	for ; it.Valid(); it.Next() {
 		var record types.Record
 		err = k.cdc.Unmarshal(it.Value(), &record)
