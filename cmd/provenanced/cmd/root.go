@@ -268,7 +268,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
 	// Create the snapshot dir if not exists
 	if _, err = os.Stat(snapshotDir); os.IsNotExist(err) {
-		err = os.Mkdir(snapshotDir, 0o755) //nolint:errcheck // closing resource, error ignored safely.
+		err = os.Mkdir(snapshotDir, 0o755) //nolint:gosec // G301: permission is safe and intended.
 		if err != nil {
 			panic(err)
 		}
