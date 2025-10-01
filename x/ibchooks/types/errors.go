@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	ErrBadMetadataFormatMsg = "wasm metadata not properly formatted for: '%v'. %s" //nolint:revive
-	ErrBadExecutionMsg      = "cannot execute contract: %v"                        //nolint:revive
+	ErrBadMetadataFormatMsg = "wasm metadata not properly formatted for: '%v'. %s"
+	ErrBadExecutionMsg      = "cannot execute contract: %v"
 
 	ErrMsgValidation       = errorsmod.Register("wasm-hooks", 2, "error in wasmhook message validation")
 	ErrMarshaling          = errorsmod.Register("wasm-hooks", 3, "cannot marshal the ICS20 packet")

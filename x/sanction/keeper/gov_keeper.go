@@ -18,7 +18,6 @@ func WrapGovKeeper(keeper *govkeeper.Keeper) *WrappedGovKeeper {
 	return &WrappedGovKeeper{Keeper: keeper}
 }
 
-// GetProposal returns the proposal with the given ID.
 func (w WrappedGovKeeper) GetProposal(ctx context.Context, propID uint64) *govv1.Proposal {
 	prop, err := w.Keeper.Proposals.Get(ctx, propID)
 	if err != nil {

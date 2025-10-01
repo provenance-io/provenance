@@ -1,4 +1,3 @@
-// Package simulation provides simulation logic for the ibcratelimit module.
 package simulation
 
 import (

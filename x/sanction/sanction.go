@@ -14,7 +14,6 @@ var (
 	DefaultImmediateUnsanctionMinDeposit sdk.Coins
 )
 
-// DefaultParams returns the default parameters for the sanction module.
 func DefaultParams() *Params {
 	return &Params{
 		ImmediateSanctionMinDeposit:   DefaultImmediateSanctionMinDeposit,
@@ -22,7 +21,6 @@ func DefaultParams() *Params {
 	}
 }
 
-// ValidateBasic implements basic validation for Params.
 func (p Params) ValidateBasic() error {
 	if err := p.ImmediateSanctionMinDeposit.Validate(); err != nil {
 		return sdkerrors.ErrInvalidCoins.Wrapf("invalid immediate sanction min deposit: %s", err.Error())

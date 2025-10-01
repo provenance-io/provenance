@@ -1,4 +1,3 @@
-// Package testutil provides test helpers for the quarantine module.
 package testutil
 
 import (

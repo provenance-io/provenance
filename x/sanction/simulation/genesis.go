@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	SanctionAddresses   = "sanction-addresses" //nolint:revive
+	SanctionAddresses   = "sanction-addresses"
 	SanctionTempEntries = "sanction-temp-entries"
 	SanctionParams      = "sanction-params"
 )

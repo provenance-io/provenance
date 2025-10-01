@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// NewEventOrderCreated creates a new event signaling that an order was created.
 func NewEventOrderCreated(order OrderI) *EventOrderCreated {
 	return &EventOrderCreated{
 		OrderId:    order.GetOrderID(),
@@ -15,7 +14,6 @@ func NewEventOrderCreated(order OrderI) *EventOrderCreated {
 	}
 }
 
-// NewEventOrderCancelled creates a new event signaling that an order was cancelled.
 func NewEventOrderCancelled(order OrderI, cancelledBy string) *EventOrderCancelled {
 	return &EventOrderCancelled{
 		OrderId:     order.GetOrderID(),
@@ -25,7 +23,6 @@ func NewEventOrderCancelled(order OrderI, cancelledBy string) *EventOrderCancell
 	}
 }
 
-// NewEventOrderFilled creates a new event signaling that an order was filled.
 func NewEventOrderFilled(order OrderI) *EventOrderFilled {
 	return &EventOrderFilled{
 		OrderId:    order.GetOrderID(),
@@ -37,7 +34,6 @@ func NewEventOrderFilled(order OrderI) *EventOrderFilled {
 	}
 }
 
-// NewEventOrderPartiallyFilled creates a new event signaling that an order was partially filled.
 func NewEventOrderPartiallyFilled(order OrderI) *EventOrderPartiallyFilled {
 	return &EventOrderPartiallyFilled{
 		OrderId:    order.GetOrderID(),
@@ -49,7 +45,6 @@ func NewEventOrderPartiallyFilled(order OrderI) *EventOrderPartiallyFilled {
 	}
 }
 
-// NewEventOrderExternalIDUpdated creates a new event for updated external order ID.
 func NewEventOrderExternalIDUpdated(order OrderI) *EventOrderExternalIDUpdated {
 	return &EventOrderExternalIDUpdated{
 		OrderId:    order.GetOrderID(),
@@ -58,7 +53,6 @@ func NewEventOrderExternalIDUpdated(order OrderI) *EventOrderExternalIDUpdated {
 	}
 }
 
-// NewEventFundsCommitted creates a new event for committed funds.
 func NewEventFundsCommitted(account string, marketID uint32, amount sdk.Coins, tag string) *EventFundsCommitted {
 	return &EventFundsCommitted{
 		Account:  account,
@@ -68,7 +62,6 @@ func NewEventFundsCommitted(account string, marketID uint32, amount sdk.Coins, t
 	}
 }
 
-// NewEventCommitmentReleased creates a new event for released commitments.
 func NewEventCommitmentReleased(account string, marketID uint32, amount sdk.Coins, tag string) *EventCommitmentReleased {
 	return &EventCommitmentReleased{
 		Account:  account,
@@ -78,7 +71,6 @@ func NewEventCommitmentReleased(account string, marketID uint32, amount sdk.Coin
 	}
 }
 
-// NewEventMarketWithdraw creates a new event for market withdrawal.
 func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination sdk.AccAddress, withdrawnBy string) *EventMarketWithdraw {
 	return &EventMarketWithdraw{
 		MarketId:    marketID,
@@ -88,7 +80,6 @@ func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination sdk.A
 	}
 }
 
-// NewEventMarketDetailsUpdated creates a new event for market details update.
 func NewEventMarketDetailsUpdated(marketID uint32, updatedBy string) *EventMarketDetailsUpdated {
 	return &EventMarketDetailsUpdated{
 		MarketId:  marketID,
@@ -105,7 +96,6 @@ func NewEventMarketAcceptingOrdersUpdated(marketID uint32, updatedBy string, isA
 	return NewEventMarketOrdersDisabled(marketID, updatedBy)
 }
 
-// NewEventMarketOrdersEnabled creates a new event when market orders are enabled.
 func NewEventMarketOrdersEnabled(marketID uint32, updatedBy string) *EventMarketOrdersEnabled {
 	return &EventMarketOrdersEnabled{
 		MarketId:  marketID,
@@ -113,7 +103,6 @@ func NewEventMarketOrdersEnabled(marketID uint32, updatedBy string) *EventMarket
 	}
 }
 
-// NewEventMarketOrdersDisabled creates a new event when market orders are disabled.
 func NewEventMarketOrdersDisabled(marketID uint32, updatedBy string) *EventMarketOrdersDisabled {
 	return &EventMarketOrdersDisabled{
 		MarketId:  marketID,
@@ -130,7 +119,6 @@ func NewEventMarketUserSettleUpdated(marketID uint32, updatedBy string, isAllowe
 	return NewEventMarketUserSettleDisabled(marketID, updatedBy)
 }
 
-// NewEventMarketUserSettleEnabled creates a new event when user settle is enabled.
 func NewEventMarketUserSettleEnabled(marketID uint32, updatedBy string) *EventMarketUserSettleEnabled {
 	return &EventMarketUserSettleEnabled{
 		MarketId:  marketID,
@@ -138,7 +126,6 @@ func NewEventMarketUserSettleEnabled(marketID uint32, updatedBy string) *EventMa
 	}
 }
 
-// NewEventMarketUserSettleDisabled creates a new event when user settle is disabled.
 func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy string) *EventMarketUserSettleDisabled {
 	return &EventMarketUserSettleDisabled{
 		MarketId:  marketID,
@@ -155,7 +142,6 @@ func NewEventMarketAcceptingCommitmentsUpdated(marketID uint32, updatedBy string
 	return NewEventMarketCommitmentsDisabled(marketID, updatedBy)
 }
 
-// NewEventMarketCommitmentsEnabled creates a new event when market commitments are enabled.
 func NewEventMarketCommitmentsEnabled(marketID uint32, updatedBy string) *EventMarketCommitmentsEnabled {
 	return &EventMarketCommitmentsEnabled{
 		MarketId:  marketID,
@@ -163,7 +149,6 @@ func NewEventMarketCommitmentsEnabled(marketID uint32, updatedBy string) *EventM
 	}
 }
 
-// NewEventMarketCommitmentsDisabled creates a new event when market commitments are disabled.
 func NewEventMarketCommitmentsDisabled(marketID uint32, updatedBy string) *EventMarketCommitmentsDisabled {
 	return &EventMarketCommitmentsDisabled{
 		MarketId:  marketID,
@@ -171,7 +156,6 @@ func NewEventMarketCommitmentsDisabled(marketID uint32, updatedBy string) *Event
 	}
 }
 
-// NewEventMarketIntermediaryDenomUpdated creates a new event when the intermediary denom is updated.
 func NewEventMarketIntermediaryDenomUpdated(marketID uint32, updatedBy string) *EventMarketIntermediaryDenomUpdated {
 	return &EventMarketIntermediaryDenomUpdated{
 		MarketId:  marketID,
@@ -179,7 +163,6 @@ func NewEventMarketIntermediaryDenomUpdated(marketID uint32, updatedBy string) *
 	}
 }
 
-// NewEventMarketPermissionsUpdated creates a new event when market permissions are updated.
 func NewEventMarketPermissionsUpdated(marketID uint32, updatedBy string) *EventMarketPermissionsUpdated {
 	return &EventMarketPermissionsUpdated{
 		MarketId:  marketID,
@@ -187,7 +170,6 @@ func NewEventMarketPermissionsUpdated(marketID uint32, updatedBy string) *EventM
 	}
 }
 
-// NewEventMarketReqAttrUpdated creates a new event when required market attributes are updated.
 func NewEventMarketReqAttrUpdated(marketID uint32, updatedBy string) *EventMarketReqAttrUpdated {
 	return &EventMarketReqAttrUpdated{
 		MarketId:  marketID,
@@ -195,26 +177,22 @@ func NewEventMarketReqAttrUpdated(marketID uint32, updatedBy string) *EventMarke
 	}
 }
 
-// NewEventMarketCreated creates a new event signaling that a market was created.
 func NewEventMarketCreated(marketID uint32) *EventMarketCreated {
 	return &EventMarketCreated{
 		MarketId: marketID,
 	}
 }
 
-// NewEventMarketFeesUpdated creates a new event when market fees are updated.
 func NewEventMarketFeesUpdated(marketID uint32) *EventMarketFeesUpdated {
 	return &EventMarketFeesUpdated{
 		MarketId: marketID,
 	}
 }
 
-// NewEventParamsUpdated creates a new event when parameters are updated.
 func NewEventParamsUpdated() *EventParamsUpdated {
 	return &EventParamsUpdated{}
 }
 
-// NewEventPaymentCreated creates a new event when a payment is created.
 func NewEventPaymentCreated(payment *Payment) *EventPaymentCreated {
 	return &EventPaymentCreated{
 		Source:       payment.Source,
@@ -225,7 +203,6 @@ func NewEventPaymentCreated(payment *Payment) *EventPaymentCreated {
 	}
 }
 
-// NewEventPaymentUpdated creates a new event when a payment is updated.
 func NewEventPaymentUpdated(payment *Payment, oldTarget string) *EventPaymentUpdated {
 	return &EventPaymentUpdated{
 		Source:       payment.Source,
@@ -237,7 +214,6 @@ func NewEventPaymentUpdated(payment *Payment, oldTarget string) *EventPaymentUpd
 	}
 }
 
-// NewEventPaymentAccepted creates a new event when a payment is accepted.
 func NewEventPaymentAccepted(payment *Payment) *EventPaymentAccepted {
 	return &EventPaymentAccepted{
 		Source:       payment.Source,
@@ -248,7 +224,6 @@ func NewEventPaymentAccepted(payment *Payment) *EventPaymentAccepted {
 	}
 }
 
-// NewEventPaymentRejected creates a new event when a payment is rejected.
 func NewEventPaymentRejected(payment *Payment) *EventPaymentRejected {
 	return &EventPaymentRejected{
 		Source:     payment.Source,
@@ -266,7 +241,6 @@ func NewEventsPaymentsRejected(payments []*Payment) []*EventPaymentRejected {
 	return rv
 }
 
-// NewEventPaymentCancelled creates a new event when a payment is cancelled.
 func NewEventPaymentCancelled(payment *Payment) *EventPaymentCancelled {
 	return &EventPaymentCancelled{
 		Source:     payment.Source,

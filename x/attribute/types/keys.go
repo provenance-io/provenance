@@ -25,8 +25,8 @@ const (
 	AccountDataName = "accountdata"
 )
 
-// Legacy amino encoded objects use this key prefix.
 var (
+	// Legacy amino encoded objects use this key prefix
 	AttributeKeyPrefixAmino      = []byte{0x00}
 	AttributeKeyPrefix           = []byte{0x02}
 	AttributeAddrLookupKeyPrefix = []byte{0x03}

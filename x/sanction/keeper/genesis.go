@@ -1,4 +1,3 @@
-// Package keeper provides the logic for managing sanctions within the sanction module.
 package keeper
 
 import (

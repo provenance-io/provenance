@@ -1,4 +1,3 @@
-// Package simulation provides simulation utilities for the attribute module.
 package simulation
 
 import (

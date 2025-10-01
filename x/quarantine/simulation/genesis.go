@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	QuarantineOptIn    = "quarantine-opt-in" //nolint:revive
+	QuarantineOptIn    = "quarantine-opt-in"
 	QuarantineAutoResp = "quarantine-auto-resp"
 	QuarantineFunds    = "quarantine-funds"
 )

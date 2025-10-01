@@ -14,7 +14,6 @@ import (
 
 var _ quarantine.QueryServer = Keeper{}
 
-// IsQuarantined checks if an address is currently quarantined.
 func (k Keeper) IsQuarantined(goCtx context.Context, req *quarantine.QueryIsQuarantinedRequest) (*quarantine.QueryIsQuarantinedResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -36,7 +35,6 @@ func (k Keeper) IsQuarantined(goCtx context.Context, req *quarantine.QueryIsQuar
 	return resp, nil
 }
 
-// QuarantinedFunds returns quarantined funds for an address.
 func (k Keeper) QuarantinedFunds(goCtx context.Context, req *quarantine.QueryQuarantinedFundsRequest) (*quarantine.QueryQuarantinedFundsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -104,7 +102,6 @@ func (k Keeper) QuarantinedFunds(goCtx context.Context, req *quarantine.QueryQua
 	return resp, nil
 }
 
-// AutoResponses returns the auto-response settings for an address.
 func (k Keeper) AutoResponses(goCtx context.Context, req *quarantine.QueryAutoResponsesRequest) (*quarantine.QueryAutoResponsesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
