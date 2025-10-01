@@ -15,6 +15,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgGrantRole{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgRevokeRole{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgUnregisterNFT{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgRegistryBulkUpdate{Signer: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
