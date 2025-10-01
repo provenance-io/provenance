@@ -160,7 +160,7 @@ Example of message.json contents:
 
 			msg, err := types.NewCreateTriggerRequest(
 				[]string{callerAddr.String()},
-				&types.BlockHeightEvent{BlockHeight: uint64(height)}, //nolint:gosec // G115:
+				&types.BlockHeightEvent{BlockHeight: uint64(height)}, //nolint:gosec // G115: safe int to uint64 conversion
 				msgs,
 			)
 			if err != nil {
@@ -255,7 +255,7 @@ func GetCmdDestroyTrigger() *cobra.Command {
 
 			msg := types.NewDestroyTriggerRequest(
 				callerAddr.String(),
-				uint64(triggerID), //nolint:gosec // G115:
+				uint64(triggerID), //nolint:gosec // G115: safe int to uint64 conversion
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -266,7 +266,7 @@ func GetCmdDestroyTrigger() *cobra.Command {
 
 // parseMessages reads and parses the message.
 func parseMessages(cdc codec.Codec, path string) ([]sdk.Msg, error) {
-	contents, err := os.ReadFile(path) //nolint:gosec // G115
+	contents, err := os.ReadFile(path) //nolint:gosec // path err already set to needed return value.
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +282,7 @@ func parseMessages(cdc codec.Codec, path string) ([]sdk.Msg, error) {
 
 // parseEvent reads and parses the transaction event from a file.
 func parseEvent(path string) (*types.TransactionEvent, error) {
-	contents, err := os.ReadFile(path) //nolint:gosec // G115
+	contents, err := os.ReadFile(path) //nolint:gosec // path err already set to needed return value.
 	if err != nil {
 		return nil, err
 	}

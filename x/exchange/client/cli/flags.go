@@ -651,7 +651,7 @@ func ReadTxFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet, fileFlag s
 		return "", nil, err
 	}
 
-	propFileContents, err := os.ReadFile(filename) //nolint:gosec // G304
+	propFileContents, err := os.ReadFile(filename) //nolint:gosec // G304: error handled
 	if err != nil {
 		return filename, nil, err
 	}
