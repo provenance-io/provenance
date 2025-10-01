@@ -3,9 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"regexp"
-	"slices"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -109,17 +107,22 @@ func (m *RolesEntry) Validate() error {
 	return errors.Join(errs...)
 }
 
-func (m RegistryRole) Validate() error {
+func (r RegistryRole) Validate() error {
 	var errs []error
-	if _, ok := RegistryRole_name[int32(m)]; !ok {
+	if _, ok := RegistryRole_name[int32(r)]; !ok {
 		errs = append(errs, fmt.Errorf("invalid role"))
 	}
 
-	if m == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+	if r == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
 		errs = append(errs, fmt.Errorf("cannot be unspecified"))
 	}
 
 	return errors.Join(errs...)
+}
+
+// ShortString returns this.String() with the "REGISTRY_ROLE_" prefix removed.
+func (r RegistryRole) ShortString() string {
+	return strings.TrimPrefix(r.String(), "REGISTRY_ROLE_")
 }
 
 // ParseRegistryRole converts the provided string into a RegistryRole. The "REGISTRY_ROLE_" prefix is optional.
@@ -137,21 +140,6 @@ func ParseRegistryRole(str string) (RegistryRole, error) {
 		return rv, NewErrCodeInvalidField("role", "cannot be unspecified")
 	}
 	return rv, nil
-}
-
-// ValidRolesString returns a string containing all of the registry roles string values.
-func ValidRolesString() string {
-	roles := make([]string, 0, len(RegistryRole_name)-1)
-	for _, roleID := range slices.Sorted(maps.Keys(RegistryRole_name)) {
-		if roleID == 0 {
-			continue
-		}
-		roles = append(roles, strings.TrimPrefix(RegistryRole_name[roleID], "REGISTRY_ROLE_"))
-	}
-	for _, role := range RegistryRole_value {
-		roles = append(roles, RegistryRole(role).String())
-	}
-	return strings.Join(roles, "  ")
 }
 
 // Validate validates the RegistryBulkUpdate
