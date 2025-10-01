@@ -214,7 +214,7 @@ func (at *AttributeType) Unmarshal(data []byte) error {
 
 // Format implements the fmt.Formatter interface.
 //
-//nolint:gosec,staticcheck
+//nolint:gosec,staticcheck // ignoring unchecked write errors, safe in this context.
 func (at AttributeType) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

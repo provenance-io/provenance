@@ -48,7 +48,7 @@ func DefaultTestNetworkConfig() testnet.Config {
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
-	defer os.RemoveAll(tempDir) //nolint:errcheck
+	defer os.RemoveAll(tempDir) //nolint:errcheck // best-effort cleanup, error not critical.
 
 	tempApp := provenanceapp.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	encCfg := tempApp.GetEncodingConfig()
