@@ -37,8 +37,6 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 		return nil, err
 	}
 
-	k.keeper.emitEvent(sdkCtx, types.NewEventNFTRegistered(msg.Key, msg.Signer))
-
 	return &types.MsgRegisterNFTResponse{}, nil
 }
 
@@ -61,8 +59,6 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, err
 	}
 
-	k.keeper.emitEvent(sdkCtx, types.NewEventRoleGranted(msg.Key, msg.Role, msg.Addresses, msg.Signer))
-
 	return &types.MsgGrantRoleResponse{}, nil
 }
 
@@ -84,8 +80,6 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 	if err != nil {
 		return nil, err
 	}
-
-	k.keeper.emitEvent(sdkCtx, types.NewEventRoleRevoked(msg.Key, msg.Role, msg.Addresses, msg.Signer))
 
 	return &types.MsgRevokeRoleResponse{}, nil
 }
@@ -151,8 +145,6 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 		}
 		k.EmitEvents(ctx, allEvents...)
 	}
-
-	k.keeper.emitEvent(sdkCtx, types.NewEventRegistryBulkUpdate(uint64(len(msg.Entries)), msg.Signer))
 
 	return &types.MsgRegistryBulkUpdateResponse{}, nil
 }

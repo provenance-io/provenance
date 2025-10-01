@@ -8,8 +8,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -18,7 +16,7 @@ import (
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
-// RegistryKeeper defines the registry keeper
+// Keeper defines the registry keeper.
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	schema   collections.Schema
@@ -302,23 +300,4 @@ func (k Keeper) GetRegistries(ctx context.Context, pagination *query.PageRequest
 		entries[i] = *p
 	}
 	return entries, pageRes, nil
-}
-
-// getLogger gets a logger for the registry module.
-func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/registry")
-}
-
-// logErrorf uses fmt.Sprintf to combine the msg and args, and logs the result as an error from this module.
-func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
-	k.getLogger(ctx).Error(fmt.Sprintf(msg, args...))
-}
-
-// emitEvent emits the provided event and writes any error to the error log.
-// If you have multiple events to emit, consider using emitEvents.
-func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
-	err := ctx.EventManager().EmitTypedEvent(event)
-	if err != nil {
-		k.logErrorf(ctx, "error emitting event %#v: %v", event, err)
-	}
 }
