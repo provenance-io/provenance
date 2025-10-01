@@ -1,4 +1,3 @@
-// Package ibc handles IBC functionality.
 package ibc
 
 import (
@@ -9,7 +8,6 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 )
 
-// IbcAcknowledgementErrorType is the error type for IBC acknowledgements.
 const IbcAcknowledgementErrorType = "ibc-acknowledgement-error"
 
 // NewEmitErrorAcknowledgement creates a new error acknowledgement after having emitted an event with the

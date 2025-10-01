@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 )
 
-// ChannelKeeper defines expected IBC channel keeper functionality.
 type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)
 	GetPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) []byte

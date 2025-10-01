@@ -1,4 +1,3 @@
-// Package hold provides types and utilities for managing token holds.
 package hold
 
 import (
@@ -7,7 +6,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// RegisterInterfaces registers the hold module interfaces with the interface registry.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	messages := make([]proto.Message, len(AllRequestMsgs))
 	copy(messages, AllRequestMsgs)

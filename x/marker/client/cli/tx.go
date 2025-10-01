@@ -38,7 +38,6 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// FlagType defines the CLI flag for specifying the marker type.
 const (
 	FlagType                   = "type"
 	FlagSupplyFixed            = "supplyFixed"
@@ -591,7 +590,6 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 	return cmd
 }
 
-// GetCmdGrantAuthorization returns the CLI command to grant marker authorization.
 func GetCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "grant-authz [grantee] [authorization_type]",
@@ -677,7 +675,6 @@ func bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
 	return addrs, nil
 }
 
-// GetCmdRevokeAuthorization returns the CLI command to revoke marker authorization.
 func GetCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "revoke-authz [grantee] [authorization_type]",
@@ -1394,8 +1391,7 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 		}
 		partsPerAddress := strings.Split(p, ",")
 		// if it has an address has to have at least one access associated with it
-		//nolint:staticcheck // QF1001: intentional logic for clarity
-		if !(len(partsPerAddress) > 1) {
+		if len(partsPerAddress) <= 1 {
 			panic("at least one grant should be provided with address")
 		}
 		var permissions types.AccessList
@@ -1691,7 +1687,6 @@ func GetUpdateMarkerParamsCmd() *cobra.Command {
 	return cmd
 }
 
-// GetGrantMultiAuthzCmd returns the CLI command to grant multiple marker authorizations.
 func GetGrantMultiAuthzCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant-multi-authz <grantee> <msg-type-url> <authorizations-json-or-file>",

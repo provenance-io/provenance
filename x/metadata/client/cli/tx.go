@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	FlagSigners            = "signers" //nolint:revive
+	FlagSigners            = "signers"
 	FlagRequirePartyRollup = "require-party-rollup"
 	AddSwitch              = "add"
 	RemoveSwitch           = "remove"

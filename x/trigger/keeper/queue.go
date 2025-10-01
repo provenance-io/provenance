@@ -92,12 +92,8 @@ func (k Keeper) removeQueueIndex(ctx sdk.Context, index uint64) bool {
 func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.QueueKeyPrefix)
+	defer iterator.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
-	defer func() {
-		if err := iterator.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close iterator", "error", err)
-		}
-	}()
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.QueuedTrigger{}
 		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {

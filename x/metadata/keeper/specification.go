@@ -16,11 +16,8 @@ import (
 func (k Keeper) IterateRecordSpecs(ctx sdk.Context, handler func(specification types.RecordSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.RecordSpecificationKeyPrefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateRecordSpecs", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
 	for ; it.Valid(); it.Next() {
 		var recordSpec types.RecordSpecification
 		err := k.cdc.Unmarshal(it.Value(), &recordSpec)
@@ -65,11 +62,8 @@ func (k Keeper) IterateRecordSpecsForContractSpec(ctx sdk.Context, contractSpecI
 		return err
 	}
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateRecordSpecsForContractSpec", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck
+
 	for ; it.Valid(); it.Next() {
 		var recordSpecID types.MetadataAddress
 		if err := recordSpecID.Unmarshal(it.Key()); err != nil {
@@ -170,11 +164,8 @@ func (k Keeper) isRecordSpecUsed(_ sdk.Context, _ types.MetadataAddress) bool {
 func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.ContractSpecificationKeyPrefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateContractSpecs", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
 	for ; it.Valid(); it.Next() {
 		var contractSpec types.ContractSpecification
 		err := k.cdc.Unmarshal(it.Value(), &contractSpec)
@@ -193,11 +184,8 @@ func (k Keeper) IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.A
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressContractSpecCacheIteratorPrefix(ownerAddress)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateContractSpecsForOwner", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck
+
 	for ; it.Valid(); it.Next() {
 		var contractSpecID types.MetadataAddress
 		if err := contractSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {
@@ -382,11 +370,8 @@ func (k Keeper) ValidateWriteContractSpecification(_ sdk.Context, existing *type
 func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.ScopeSpecificationKeyPrefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateScopeSpecs", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
 	for ; it.Valid(); it.Next() {
 		var scopeSpec types.ScopeSpecification
 		err := k.cdc.Unmarshal(it.Value(), &scopeSpec)
@@ -405,11 +390,8 @@ func (k Keeper) IterateScopeSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccA
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressScopeSpecCacheIteratorPrefix(ownerAddress)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close IterateScopeSpecsForOwner", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
 	for ; it.Valid(); it.Next() {
 		var scopeSpecID types.MetadataAddress
 		if err := scopeSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {
@@ -427,11 +409,8 @@ func (k Keeper) IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecID)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := it.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close iterator", "error", err)
-		}
-	}()
+	defer it.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
 	for ; it.Valid(); it.Next() {
 		var scopeSpecID types.MetadataAddress
 		if err := scopeSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {

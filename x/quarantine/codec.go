@@ -1,4 +1,3 @@
-// Package quarantine defines types and codec registration for the quarantine module.
 package quarantine
 
 import (

@@ -41,7 +41,6 @@ func NewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []s
 	return m, nil
 }
 
-// MustNewCreateTriggerRequest creates a new MsgCreateTriggerRequest with the given parameters.
 func MustNewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
 	m, err := NewCreateTriggerRequest(authorities, event, msgs)
 	if err != nil {

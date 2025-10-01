@@ -1,4 +1,3 @@
-// Package app initializes and configures the main application.
 package app
 
 import (
