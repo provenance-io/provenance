@@ -60,7 +60,7 @@ func (c *MockCodec) WithUnpackAnyErrs(errMsgs ...string) *MockCodec {
 
 // MarshalJSON encodes a proto message to JSON using the mock codec.
 //
-//nolint:govet
+//nolint:govet // method signature differs intentionally for mock testing
 func (c *MockCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	if len(c.MarshalJSONErrs) > 0 {
 		errMsg := c.MarshalJSONErrs[0]

@@ -76,7 +76,7 @@ func (k Keeper) getQuarantinedAccountsPrefixStore(ctx sdk.Context) (storetypes.K
 func (k Keeper) IterateQuarantinedAccounts(ctx sdk.Context, cb func(toAddr sdk.AccAddress) (stop bool)) {
 	store, pre := k.getQuarantinedAccountsPrefixStore(ctx)
 	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		addr := quarantine.ParseOptInKey(quarantine.MakeKey(pre, iter.Key()))
@@ -149,7 +149,7 @@ func (k Keeper) getAutoResponsesPrefixStore(ctx sdk.Context, toAddr sdk.AccAddre
 func (k Keeper) IterateAutoResponses(ctx sdk.Context, toAddr sdk.AccAddress, cb func(toAddr, fromAddr sdk.AccAddress, response quarantine.AutoResponse) (stop bool)) {
 	store, pre := k.getAutoResponsesPrefixStore(ctx, toAddr)
 	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		kToAddr, kFromAddr := quarantine.ParseAutoResponseKey(quarantine.MakeKey(pre, iter.Key()))
@@ -337,7 +337,7 @@ func (k Keeper) getQuarantineRecordPrefixStore(ctx sdk.Context, toAddr sdk.AccAd
 func (k Keeper) IterateQuarantineRecords(ctx sdk.Context, toAddr sdk.AccAddress, cb func(toAddr, recordSuffix sdk.AccAddress, record *quarantine.QuarantineRecord) (stop bool)) {
 	store, pre := k.getQuarantineRecordPrefixStore(ctx, toAddr)
 	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		kToAddr, kRecordSuffix := quarantine.ParseRecordKey(quarantine.MakeKey(pre, iter.Key()))
