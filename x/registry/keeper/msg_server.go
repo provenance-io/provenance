@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
