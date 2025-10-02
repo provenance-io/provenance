@@ -40,11 +40,21 @@ This request is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L71-L111
 
-See also: DayCountConvention, InterestAccrualMethod, PaymentFrequency // TODO: Convert to links.
-
 #### LedgerKey
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L58-L69
+
+#### DayCountConvention
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L207-L234
+
+#### InterestAccrualMethod
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L236-L264
+
+#### PaymentFrequency
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L266-L288
 
 ### MsgCreateLedgerResponse
 
@@ -55,7 +65,11 @@ See also: DayCountConvention, InterestAccrualMethod, PaymentFrequency // TODO: C
 
 To update the status of a ledger, use a `MsgUpdateStatusRequest`.
 
-This request is expected to fail if: // TODO: UpdateStatus
+This request is expected to fail if:
+- The ledger does not exist.
+- The status does not exist for the ledger class.
+- The `signer` does not have the authority to update the ledger.
+- The msg is invalid.
 
 ### MsgUpdateStatusRequest
 
@@ -72,13 +86,16 @@ See also: [LedgerKey](#ledgerkey)
 
 To update the interest rate, interest day count convention, and interest accrual method of a ledger, use a `MsgUpdateInterestRateRequest`.
 
-This request is expected to fail if: // TODO: UpdateInterestRate
+This request is expected to fail if:
+- The ledger does not exist.
+- The `signer` does not have the authority to update the ledger.
+- The msg is invalid.
 
 ### MsgUpdateInterestRateRequest
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L92-L110
 
-See also: [LedgerKey](#ledgerkey), DayCountConvention, InterestAccrualMethod. // TODO: Convert to links.
+See also: [LedgerKey](#ledgerkey), [DayCountConvention](#daycountconvention), [InterestAccrualMethod](#interestaccrualmethod).
 
 ### MsgUpdateInterestRateResponse
 
@@ -89,13 +106,16 @@ See also: [LedgerKey](#ledgerkey), DayCountConvention, InterestAccrualMethod. //
 
 To update the next payment amount, next payment date, and payment frequency of a ledger, use a `MsgUpdatePaymentRequest`.
 
-This request is expected to fail if: // TODO: UpdatePayment
+This request is expected to fail if:
+- The ledger does not exist.
+- The `signer` does not have the authority to update the ledger.
+- The msg is invalid.
 
 ### MsgUpdatePaymentRequest
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L115-L139
 
-See also: [LedgerKey](#ledgerkey), PaymentFrequency // TODO: Convert to links.
+See also: [LedgerKey](#ledgerkey), [PaymentFrequency](#paymentfrequency)
 
 ### MsgUpdatePaymentResponse
 
@@ -106,7 +126,10 @@ See also: [LedgerKey](#ledgerkey), PaymentFrequency // TODO: Convert to links.
 
 To update a ledger's maturity date, use a `MsgUpdateMaturityDateRequest`.
 
-This request is expected to fail if: // TODO: UpdateMaturityDate
+This request is expected to fail if:
+- The ledger does not exist.
+- The `signer` does not have the authority to update the ledger.
+- The msg is invalid.
 
 ### MsgUpdateMaturityDateRequest
 
@@ -123,16 +146,12 @@ See also: [LedgerKey](#ledgerkey).
 
 Entries are added to a ledger using a `MsgAppendRequest`.
 
-This request is expected to fail if: // TODO: Append
-1. **MsgAppend**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Entries must be valid
-   - Signer must have permission
-   - Correlation IDs must be unique
-   - Sequences must be valid
-   - Bucket types must be valid
-   - Amounts must be valid
+This request is expected to fail if:
+- The ledger does not exist.
+- The `signer` does not have the authority to update the ledger.
+- One or more provided correlation_id values equal one or more existing ones.
+- The ledger class entry type doesn't exist for one or more entries.
+- The msg is invalid.
 
 ### MsgAppendRequest
 
@@ -161,7 +180,11 @@ See also: [LedgerKey](#ledgerkey).
 
 To update the applied amounts or balances amounts of a ledger entry, use a `MsgUpdateBalancesRequest`.
 
-This request is expected to fail if: // TODO: UpdateBalances
+This request is expected to fail if:
+- The ledger does not exist.
+- The ledger entry does not exist.
+- The `signer` does not have the authority to update the ledger.
+- The msg is invalid.
 
 ### MsgUpdateBalancesRequest
 
@@ -178,13 +201,12 @@ See also: [LedgerKey](#ledgerkey), [LedgerBucketAmount](#ledgerbucketamount), [B
 
 To transfer funds for a ledger based on settlement instructions, use a `MsgTransferFundsWithSettlementRequest`.
 
-This request is expected to fail if: // TODO: TransferFundsWithSettlement
-1. **MsgTransferFundsWithSettlement**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Correlation ID must be valid
-   - Settlement instructions must be valid
-   - Signer must have permission
+This request is expected to fail if:
+- One or more ledgers do not exist.
+- The ledger entry does not exist.
+- The `signer` does not have the authority to update one of the ledgers.
+- The `signer` does not have the required funds.
+- The msg is invalid.
 
 ### MsgTransferFundsWithSettlementRequest
 
@@ -211,12 +233,10 @@ This request is expected to fail if: // TODO: TransferFundsWithSettlement
 
 To delete a ledger and it's entries, use a `MsgDestroyRequest`.
 
-This request is expected to fail if: // TODO: Destroy
-2. **MsgDestroy**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Signer must have permission
-   - All associated data must be properly cleaned up
+This request is expected to fail if:
+- The ledger does not exist.
+- The `signer` does not have the authority to update the ledger.
+- The msg is invalid.
 
 ### MsgDestroyRequest
 
@@ -233,13 +253,11 @@ See also: [LedgerKey](#ledgerkey).
 
 Ledger classes are created using a `MsgCreateLedgerClassRequest`.
 
-This request is expected to fail if: // TODO: CreateLedgerClass
-1. **MsgCreateLedgerClass**
-   - Ledger class configuration must be valid
-   - Asset class ID must be valid
-   - Denomination must be valid
-   - Maintainer address must be valid
-   - Signer must have permission
+This request is expected to fail if:
+- The asset class does not exist.
+- The ledger class already exists.
+- The denom does not yet have a marker.
+- The msg is invalid.
 
 ### MsgCreateLedgerClassRequest
 
@@ -258,11 +276,11 @@ This request is expected to fail if: // TODO: CreateLedgerClass
 
 To create a ledger class status type, use a `MsgAddLedgerClassStatusTypeRequest`.
 
-This request is expected to fail if: // TODO: AddLedgerClassStatusType
-3. **MsgAddLedgerClassStatusType**
-   - Ledger class must exist
-   - Status type must be valid
-   - Signer must have permission
+This request is expected to fail if:
+- The ledger class does not exist.
+- The ledger class status type already exists.
+- The `signer` is not the maintainer of the ledger class.
+- The msg is invalid
 
 ### MsgAddLedgerClassStatusTypeRequest
 
@@ -281,11 +299,11 @@ This request is expected to fail if: // TODO: AddLedgerClassStatusType
 
 A ledger class entry type is created using a `MsgAddLedgerClassEntryTypeRequest`.
 
-This request is expected to fail if: // TODO: AddLedgerClassEntryType
-2. **MsgAddLedgerClassEntryType**
-   - Ledger class must exist
-   - Entry type must be valid
-   - Signer must have permission
+This request is expected to fail if:
+- The ledger class does not exist.
+- The ledger class entry type already exists.
+- The `signer` is not the maintainer of the ledger class.
+- The msg is invalid
 
 ### MsgAddLedgerClassEntryTypeRequest
 
@@ -304,11 +322,11 @@ This request is expected to fail if: // TODO: AddLedgerClassEntryType
 
 To create a ledger class bucket type, use `MsgAddLedgerClassBucketTypeRequest`.
 
-This request is expected to fail if: // TODO: AddLedgerClassBucketType
-4. **MsgAddLedgerClassBucketType**
-   - Ledger class must exist
-   - Bucket type must be valid
-   - Signer must have permission
+This request is expected to fail if:
+- The ledger class does not exist.
+- The ledger class bucket type already exists.
+- The `signer` is not the maintainer of the ledger class.
+- The msg is invalid
 
 ### MsgAddLedgerClassBucketTypeRequest
 
@@ -325,14 +343,20 @@ This request is expected to fail if: // TODO: AddLedgerClassBucketType
 
 ## BulkCreate
 
-Ledger and ledger entries can be created in bulk using a `MsgBulkCreateRequest`.
+Ledger and ledger entries can be created together and in bulk using a `MsgBulkCreateRequest`.
+This is essentially a combination of the [CreateLedger](#createledger) and [Append](#append) endpoints.
 
-This request is expected to fail if: // TODO: BulkCreate
-1. **MsgBulkCreate**
-   - All ledger configurations must be valid
-   - All entries must be valid
-   - Signer must have permission
-   - Transaction size must be within limits
+This request is expected to fail if:
+- One or more of the ledgers already exists.
+- One or more of the NFTs do not exist.
+- One or more of the ledger classes do not exist.
+- One ore more of the ledger class status types do not exist.
+- The `signer` does not have the authority to create a ledger for one or more provided NFTs.
+- The ledger does not exist for one or more ledger entries.
+- The `signer` does not have the authority to update the ledger for one or more ledger entries.
+- One or more provided correlation_id values equal one or more existing ones.
+- The ledger class entry type doesn't exist for one or more ledger entries.
+- The msg is invalid.
 
 ### MsgBulkCreateRequest
 
@@ -341,6 +365,9 @@ This request is expected to fail if: // TODO: BulkCreate
 #### LedgerAndEntries
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L197-L205
+
+At least one of `Ledger` or `LedgerKey` must be provided.
+If both are provided, the two `LedgerKey`s must be equal.
 
 ### MsgBulkCreateResponse
 
