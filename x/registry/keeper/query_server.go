@@ -3,6 +3,9 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/registry/types"
@@ -21,6 +24,9 @@ func NewQueryServer(keeper Keeper) *QueryServer {
 // GetRegistry returns the registry entry for a given key.
 // This method retrieves the complete registry entry including all roles and addresses.
 func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegistryRequest) (*types.QueryGetRegistryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
@@ -41,6 +47,9 @@ func (qs QueryServer) GetRegistry(ctx context.Context, req *types.QueryGetRegist
 
 // GetRegistries returns the registries paginated
 func (qs QueryServer) GetRegistries(ctx context.Context, req *types.QueryGetRegistriesRequest) (*types.QueryGetRegistriesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
@@ -57,6 +66,9 @@ func (qs QueryServer) GetRegistries(ctx context.Context, req *types.QueryGetRegi
 
 // HasRole returns true if the address has the specified role for the given key.
 func (qs QueryServer) HasRole(ctx context.Context, req *types.QueryHasRoleRequest) (*types.QueryHasRoleResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}

@@ -171,7 +171,7 @@ func (s *MsgServerTestSuite) TestAppend() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgAppendRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgAppendResponse
 	}{
 		{
@@ -218,7 +218,7 @@ func (s *MsgServerTestSuite) TestAppend() {
 				},
 				Signer: "cosmos1invalid",
 			},
-			expErr: "unauthorized",
+			expErr: ledger.ErrUnauthorized,
 		},
 		{
 			name: "invalid entry type",
@@ -241,7 +241,7 @@ func (s *MsgServerTestSuite) TestAppend() {
 				},
 				Signer: s.validAddress1.String(),
 			},
-			expErr: "entry type doesn't exist",
+			expErr: ledger.ErrInvalidField,
 		},
 	}
 
@@ -250,9 +250,9 @@ func (s *MsgServerTestSuite) TestAppend() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.Append(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "Append should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "Append should succeed")
@@ -596,7 +596,7 @@ func (s *MsgServerTestSuite) TestUpdateInterestRate() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgUpdateInterestRateRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgUpdateInterestRateResponse
 	}{
 		{
@@ -619,7 +619,7 @@ func (s *MsgServerTestSuite) TestUpdateInterestRate() {
 				InterestDayCountConvention: ledger.DAY_COUNT_CONVENTION_ACTUAL_365,
 				InterestAccrualMethod:      ledger.INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST,
 			},
-			expErr: "unauthorized",
+			expErr: ledger.ErrUnauthorized,
 		},
 	}
 
@@ -628,9 +628,9 @@ func (s *MsgServerTestSuite) TestUpdateInterestRate() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.UpdateInterestRate(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "UpdateInterestRate should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "UpdateInterestRate should succeed")
@@ -648,7 +648,7 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgUpdatePaymentRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgUpdatePaymentResponse
 	}{
 		{
@@ -671,7 +671,7 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 				NextPmtDate:      helper.DaysSinceEpoch(nextPmtDate),
 				PaymentFrequency: ledger.PAYMENT_FREQUENCY_MONTHLY,
 			},
-			expErr: "unauthorized",
+			expErr: ledger.ErrUnauthorized,
 		},
 	}
 
@@ -680,9 +680,9 @@ func (s *MsgServerTestSuite) TestUpdatePayment() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.UpdatePayment(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "UpdatePayment should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "UpdatePayment should succeed")
@@ -700,7 +700,7 @@ func (s *MsgServerTestSuite) TestUpdateMaturityDate() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgUpdateMaturityDateRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgUpdateMaturityDateResponse
 	}{
 		{
@@ -719,7 +719,7 @@ func (s *MsgServerTestSuite) TestUpdateMaturityDate() {
 				Signer:       "cosmos1invalid",
 				MaturityDate: helper.DaysSinceEpoch(maturityDate),
 			},
-			expErr: "unauthorized",
+			expErr: ledger.ErrUnauthorized,
 		},
 	}
 
@@ -728,9 +728,9 @@ func (s *MsgServerTestSuite) TestUpdateMaturityDate() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.UpdateMaturityDate(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "UpdateMaturityDate should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "UpdateMaturityDate should succeed")
@@ -898,7 +898,7 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgCreateLedgerClassRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgCreateLedgerClassResponse
 	}{
 		{
@@ -925,7 +925,7 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 				},
 				Signer: authorizedAddr.String(),
 			},
-			expErr: "already exists",
+			expErr: ledger.ErrAlreadyExists,
 		},
 	}
 
@@ -934,9 +934,9 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.CreateLedgerClass(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "CreateLedgerClass should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "CreateLedgerClass should succeed")
@@ -953,7 +953,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgAddLedgerClassStatusTypeRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgAddLedgerClassStatusTypeResponse
 	}{
 		{
@@ -980,7 +980,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 				},
 				Signer: "cosmos1invalid",
 			},
-			expErr: "ledger class maintainer",
+			expErr: ledger.ErrUnauthorized,
 		},
 	}
 
@@ -989,9 +989,9 @@ func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.AddLedgerClassStatusType(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "AddLedgerClassStatusType should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "AddLedgerClassStatusType should succeed")
@@ -1008,7 +1008,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgAddLedgerClassEntryTypeRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgAddLedgerClassEntryTypeResponse
 	}{
 		{
@@ -1035,7 +1035,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
 				},
 				Signer: "cosmos1invalid",
 			},
-			expErr: "ledger class maintainer",
+			expErr: ledger.ErrUnauthorized,
 		},
 	}
 
@@ -1044,9 +1044,9 @@ func (s *MsgServerTestSuite) TestAddLedgerClassEntryType() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.AddLedgerClassEntryType(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "AddLedgerClassEntryType should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "AddLedgerClassEntryType should succeed")
@@ -1063,7 +1063,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgAddLedgerClassBucketTypeRequest
-		expErr  string
+		expErr  error
 		expResp *ledger.MsgAddLedgerClassBucketTypeResponse
 	}{
 		{
@@ -1090,7 +1090,7 @@ func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
 				},
 				Signer: "cosmos1invalid",
 			},
-			expErr: "ledger class maintainer",
+			expErr: ledger.ErrUnauthorized,
 		},
 	}
 
@@ -1099,9 +1099,9 @@ func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.AddLedgerClassBucketType(s.ctx, tc.req)
 
-			if tc.expErr != "" {
+			if tc.expErr != nil {
 				s.Require().Error(err, "AddLedgerClassBucketType should fail")
-				s.Require().Contains(err.Error(), tc.expErr, "error message")
+				s.Require().ErrorIs(err, tc.expErr)
 				s.Require().Nil(resp, "response should be nil on error")
 			} else {
 				s.Require().NoError(err, "AddLedgerClassBucketType should succeed")
