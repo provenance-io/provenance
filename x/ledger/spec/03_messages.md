@@ -2,315 +2,128 @@
 
 The Ledger module provides several message types for creating and managing ledger classes, ledgers, entries, and transfers. These messages allow authorized users to perform various operations on ledger data.
 
-<!-- TOC -->
-  - [Ledger Management](#ledger-management)
-  - [Entry Management](#entry-management)
-  - [Class Management](#class-management)
-  - [Transfer Management](#transfer-management)
-  - [Bulk Operations](#bulk-operations)
-  - [Message Validation](#message-validation)
-
-## Ledger Management
-
-### MsgCreate
-
-`MsgCreate` creates a new ledger for an asset.
-
-```protobuf
-message MsgCreateLedgerRequest {
-    Ledger ledger = 1;
-    string signer = 2;
-}
-
-message MsgCreateLedgerResponse {}
-```
-
-#### Fields
-- `ledger`: The ledger configuration to create
-  - `key`: The unique identifier for the ledger
-    - `nft_id`: The NFT or Scope identifier
-    - `asset_class_id`: The Scope Specification ID or NFT Class ID
-  - `ledger_class_id`: The ledger class identifier
-  - `status_type_id`: The current status of the ledger
-  - `next_pmt_date`: The next scheduled payment date in epoch days
-  - `next_pmt_amt`: The amount of the next scheduled payment
-  - `interest_rate`: The interest rate for the ledger (10000000 = 10.000000%)
-  - `maturity_date`: The maturity date in epoch days
-  - `interest_day_count_convention`: Day count convention for interest calculations
-  - `interest_accrual_method`: Method used for interest accrual
-  - `payment_frequency`: Frequency of scheduled payments
-- `signer`: The address of the signer who is creating the ledger
-
-#### CLI Command
-```bash
-provenanced tx ledger create <asset_class_id> <nft_id> <ledger_class_id> <status_type_id> [flags] --from <signer>
-```
-
-**Flags:**
-- `--next-pmt-date`: Next payment date (YYYY-MM-DD)
-- `--next-pmt-amt`: Next payment amount
-- `--interest-rate`: Interest rate (10000000 = 10.000000%)
-- `--maturity-date`: Maturity date (YYYY-MM-DD)
-- `--day-count-convention`: Day count convention (actual-365, actual-360, thirty-360, actual-actual, days-365, days-360)
-- `--interest-accrual-method`: Interest accrual method (simple, compound, daily, monthly, quarterly, annual, continuous)
-- `--payment-frequency`: Payment frequency (daily, weekly, monthly, quarterly, annually)
-
-### MsgDestroy
-
-`MsgDestroy` removes a ledger and all associated data.
-
-```protobuf
-message MsgDestroyRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    string signer = 3;
-}
-
-message MsgDestroyResponse {}
-```
-
-#### Fields
-- `nft_id`: The NFT or Scope identifier
-- `asset_class_id`: The Scope Specification ID or NFT Class ID
-- `signer`: The address of the signer who is destroying the ledger
-
-#### CLI Command
-```bash
-provenanced tx ledger destroy <asset_class_id> <nft_id> --from <signer>
-```
-
-## Entry Management
-
-### MsgAppend
-
-`MsgAppend` adds one or more new entries to an existing ledger.
-
-```protobuf
-message MsgAppendRequest {
-    string nft_id = 1;
-    string asset_class_id = 2;
-    repeated LedgerEntry entries = 3;
-    string signer = 4;
-}
-
-message MsgAppendResponse {}
-```
-
-#### Fields
-- `nft_id`: The NFT or Scope identifier
-- `asset_class_id`: The Scope Specification ID or NFT Class ID
-- `entries`: One or more ledger entries to append
-  - `correlation_id`: Unique identifier for tracking with external systems (max 50 characters)
-  - `reverses_correlation_id`: If this entry reverses another entry, the correlation ID of the reversed entry
-  - `is_void`: Indicates if this entry is void and should be excluded from balance calculations
-  - `sequence`: Sequence number for ordering entries with same effective date (less than 100)
-  - `entry_type_id`: The type of ledger entry
-  - `posted_date`: The date when the entry was recorded (epoch days)
-  - `effective_date`: The date when the entry takes effect (epoch days)
-  - `total_amt`: The total amount of the entry
-  - `applied_amounts`: List of amounts applied to different buckets
-    - `bucket_type_id`: The bucket type ID
-    - `applied_amt`: Amount applied to this bucket
-  - `balance_amounts`: Current balances for each bucket after this entry
-    - `bucket_type_id`: The bucket type ID
-    - `balance_amt`: Current balance in this bucket
-- `signer`: The address of the signer who is appending the entries
-
-#### CLI Command
-```bash
-provenanced tx ledger append <asset_class_id> <nft_id> <json_file_path> --from <signer>
-```
-
-**Note:** The JSON file should contain an array of ledger entries with the required fields.
-
-## Class Management
-
-### MsgCreateLedgerClass
-
-`MsgCreateLedgerClass` creates a new ledger class configuration.
-
-```protobuf
-message MsgCreateLedgerClassRequest {
-    LedgerClass ledger_class = 1;
-    string signer = 2;
-}
-
-message MsgCreateLedgerClassResponse {}
-```
-
-#### Fields
-- `ledger_class`: The ledger class configuration to create
-  - `ledger_class_id`: The unique identifier for the ledger class
-  - `asset_class_id`: The Scope Specification ID or NFT Class ID
-  - `denom`: The denomination to use for the ledger entries
-  - `maintainer_address`: The address of the maintainer
-- `signer`: The address of the signer who is creating the ledger class
-
-#### CLI Command
-```bash
-provenanced tx ledger create-class <ledger_class_id> <asset_class_id> <denom> --from <signer>
-```
-
-### MsgAddLedgerClassEntryType
-
-`MsgAddLedgerClassEntryType` adds an entry type to a ledger class.
-
-```protobuf
-message MsgAddLedgerClassEntryTypeRequest {
-    string ledger_class_id = 1;
-    LedgerClassEntryType entry_type = 2;
-    string signer = 3;
-}
-
-message MsgAddLedgerClassEntryTypeResponse {}
-```
-
-#### Fields
-- `ledger_class_id`: The ledger class identifier
-- `entry_type`: The entry type to add
-  - `id`: The unique ID for the entry type
-  - `code`: The code for the entry type
-  - `description`: The description of the entry type
-- `signer`: The address of the signer who is adding the entry type
-
-#### CLI Command
-```bash
-provenanced tx ledger add-entry-type <ledger_class_id> <id> <code> <description> --from <signer>
-```
-
-### MsgAddLedgerClassStatusType
-
-`MsgAddLedgerClassStatusType` adds a status type to a ledger class.
-
-```protobuf
-message MsgAddLedgerClassStatusTypeRequest {
-    string ledger_class_id = 1;
-    LedgerClassStatusType status_type = 2;
-    string signer = 3;
-}
-
-message MsgAddLedgerClassStatusTypeResponse {}
-```
-
-#### Fields
-- `ledger_class_id`: The ledger class identifier
-- `status_type`: The status type to add
-  - `id`: The unique ID for the status type
-  - `code`: The code for the status type
-  - `description`: The description of the status type
-- `signer`: The address of the signer who is adding the status type
-
-#### CLI Command
-```bash
-provenanced tx ledger add-status-type <ledger_class_id> <id> <code> <description> --from <signer>
-```
-
-### MsgAddLedgerClassBucketType
-
-`MsgAddLedgerClassBucketType` adds a bucket type to a ledger class.
-
-```protobuf
-message MsgAddLedgerClassBucketTypeRequest {
-    string ledger_class_id = 1;
-    LedgerClassBucketType bucket_type = 2;
-    string signer = 3;
-}
-
-message MsgAddLedgerClassBucketTypeResponse {}
-```
-
-#### Fields
-- `ledger_class_id`: The ledger class identifier
-- `bucket_type`: The bucket type to add
-  - `id`: The unique ID for the bucket type
-  - `code`: The code for the bucket type
-  - `description`: The description of the bucket type
-- `signer`: The address of the signer who is adding the bucket type
-
-#### CLI Command
-```bash
-provenanced tx ledger add-bucket-type <ledger_class_id> <id> <code> <description> --from <signer>
-```
-
-## Transfer Management
-
-### MsgTransferFundsWithSettlement
-
-`MsgTransferFundsWithSettlement` transfers funds with settlement instructions.
-
-```protobuf
-message MsgTransferFundsWithSettlementRequest {
-    repeated FundTransferWithSettlement transfers = 1;
-    string signer = 2;
-}
-
-message MsgTransferFundsWithSettlementResponse {}
-```
-
-#### Fields
-- `transfers`: List of fund transfers with settlement instructions
-  - `nft_id`: The NFT or Scope identifier
-  - `asset_class_id`: The Scope Specification ID or NFT Class ID
-  - `correlation_id`: The correlation ID for the transfer
-  - `settlement_instructions`: The settlement instructions
-- `signer`: The address of the signer who is performing the transfer
-
-#### CLI Command
-```bash
-provenanced tx ledger xfer <fund_transfers_json_file> --from <signer>
-```
-
-**Note:** The JSON file should contain an array of fund transfer objects with the required fields.
-
-## Bulk Operations
-
-### MsgBulkCreate
-
-`MsgBulkCreate` creates multiple ledgers and entries in a single transaction.
-
-```protobuf
-message MsgBulkCreateRequest {
-    repeated LedgerToEntries ledger_to_entries = 1;
-    string signer = 2;
-}
-
-message MsgBulkCreateResponse {}
-```
-
-#### Fields
-- `ledger_to_entries`: List of ledgers with their associated entries
-  - `ledger_key`: The unique identifier for the ledger
-  - `ledger`: The ledger configuration
-  - `entries`: List of ledger entries to create
-- `signer`: The address of the signer who is performing the bulk creation
-
-#### CLI Command
-```bash
-provenanced tx ledger bulk-create <ledger_entries_json_file> --from <signer>
-```
-
-**Note:** The JSON file should contain an array of ledger-to-entries objects with the required fields.
-
-## Message Validation
-
-All messages are validated before processing:
-
-### Ledger Management
-1. **MsgCreate**
-   - Ledger configuration must be valid
-   - Asset identifiers must be valid
-   - Ledger class must exist
-   - Signer must have permission
-   - Dates must be in correct format
-   - Amounts must be valid
-
-2. **MsgDestroy**
-   - Asset identifiers must be valid
-   - Ledger must exist
-   - Signer must have permission
-   - All associated data must be properly cleaned up
-
-### Entry Management
+---
+<!-- TOC 2 2 -->
+  - [CreateLedger](#createledger)
+  - [UpdateStatus](#updatestatus)
+  - [UpdateInterestRate](#updateinterestrate)
+  - [UpdatePayment](#updatepayment)
+  - [UpdateMaturityDate](#updatematuritydate)
+  - [Append](#append)
+  - [UpdateBalances](#updatebalances)
+  - [TransferFundsWithSettlement](#transferfundswithsettlement)
+  - [Destroy](#destroy)
+  - [CreateLedgerClass](#createledgerclass)
+  - [AddLedgerClassStatusType](#addledgerclassstatustype)
+  - [AddLedgerClassEntryType](#addledgerclassentrytype)
+  - [AddLedgerClassBucketType](#addledgerclassbuckettype)
+  - [BulkCreate](#bulkcreate)
+
+
+## CreateLedger
+
+To create a new ledger, use a `MsgCreateLedgerRequest`.
+
+This request is expected to fail if:
+- The ledger already exists.
+- The NFT does not exist.
+- The ledger class does not exist.
+- The ledger class status type does not exist.
+- The `signer` does not have the authority to create a ledger for the provided NFT.
+- The msg is invalid.
+
+### MsgCreateLedgerRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L62-L70
+
+#### Ledger
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L71-L111
+
+See also: DayCountConvention, InterestAccrualMethod, PaymentFrequency // TODO: Convert to links.
+
+#### LedgerKey
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L58-L69
+
+### MsgCreateLedgerResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L72-L73
+
+
+## UpdateStatus
+
+To update the status of a ledger, use a `MsgUpdateStatusRequest`.
+
+This request is expected to fail if: // TODO: UpdateStatus
+
+### MsgUpdateStatusRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L75-L87
+
+See also: [LedgerKey](#ledgerkey)
+
+### MsgUpdateStatusResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L89-L90
+
+
+## UpdateInterestRate
+
+To update the interest rate, interest day count convention, and interest accrual method of a ledger, use a `MsgUpdateInterestRateRequest`.
+
+This request is expected to fail if: // TODO: UpdateInterestRate
+
+### MsgUpdateInterestRateRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L92-L110
+
+See also: [LedgerKey](#ledgerkey), DayCountConvention, InterestAccrualMethod. // TODO: Convert to links.
+
+### MsgUpdateInterestRateResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L112-L113
+
+
+## UpdatePayment
+
+To update the next payment amount, next payment date, and payment frequency of a ledger, use a `MsgUpdatePaymentRequest`.
+
+This request is expected to fail if: // TODO: UpdatePayment
+
+### MsgUpdatePaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L115-L139
+
+See also: [LedgerKey](#ledgerkey), PaymentFrequency // TODO: Convert to links.
+
+### MsgUpdatePaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L141-L142
+
+
+## UpdateMaturityDate
+
+To update a ledger's maturity date, use a `MsgUpdateMaturityDateRequest`.
+
+This request is expected to fail if: // TODO: UpdateMaturityDate
+
+### MsgUpdateMaturityDateRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L144-L156
+
+See also: [LedgerKey](#ledgerkey).
+
+### MsgUpdateMaturityDateResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L158-L159
+
+
+## Append
+
+Entries are added to a ledger using a `MsgAppendRequest`.
+
+This request is expected to fail if: // TODO: Append
 1. **MsgAppend**
    - Asset identifiers must be valid
    - Ledger must exist
@@ -321,30 +134,51 @@ All messages are validated before processing:
    - Bucket types must be valid
    - Amounts must be valid
 
-### Class Management
-1. **MsgCreateLedgerClass**
-   - Ledger class configuration must be valid
-   - Asset class ID must be valid
-   - Denomination must be valid
-   - Maintainer address must be valid
-   - Signer must have permission
+### MsgAppendRequest
 
-2. **MsgAddLedgerClassEntryType**
-   - Ledger class must exist
-   - Entry type must be valid
-   - Signer must have permission
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L161-L173
 
-3. **MsgAddLedgerClassStatusType**
-   - Ledger class must exist
-   - Status type must be valid
-   - Signer must have permission
+See also: [LedgerKey](#ledgerkey).
 
-4. **MsgAddLedgerClassBucketType**
-   - Ledger class must exist
-   - Bucket type must be valid
-   - Signer must have permission
+#### LedgerEntry
 
-### Transfer Management
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L125-L164
+
+#### LedgerBucketAmount
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L166-L180
+
+#### BucketBalance
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L182-L195
+
+### MsgAppendResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L175-L176
+
+
+## UpdateBalances
+
+To update the applied amounts or balances amounts of a ledger entry, use a `MsgUpdateBalancesRequest`.
+
+This request is expected to fail if: // TODO: UpdateBalances
+
+### MsgUpdateBalancesRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L178-L196
+
+See also: [LedgerKey](#ledgerkey), [LedgerBucketAmount](#ledgerbucketamount), [BucketBalance](#BucketBalance).
+
+### MsgUpdateBalancesResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L198-L199
+
+
+## TransferFundsWithSettlement
+
+To transfer funds for a ledger based on settlement instructions, use a `MsgTransferFundsWithSettlementRequest`.
+
+This request is expected to fail if: // TODO: TransferFundsWithSettlement
 1. **MsgTransferFundsWithSettlement**
    - Asset identifiers must be valid
    - Ledger must exist
@@ -352,9 +186,162 @@ All messages are validated before processing:
    - Settlement instructions must be valid
    - Signer must have permission
 
-### Bulk Operations
+### MsgTransferFundsWithSettlementRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L201-L210
+
+#### FundTransferWithSettlement
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger_settlement.proto#L27-L34
+
+#### SettlementInstruction
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger_settlement.proto#L36-L49
+
+#### FundingTransferStatus
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger_settlement.proto#L13-L25
+
+### MsgTransferFundsWithSettlementResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L212-L213
+
+
+## Destroy
+
+To delete a ledger and it's entries, use a `MsgDestroyRequest`.
+
+This request is expected to fail if: // TODO: Destroy
+2. **MsgDestroy**
+   - Asset identifiers must be valid
+   - Ledger must exist
+   - Signer must have permission
+   - All associated data must be properly cleaned up
+
+### MsgDestroyRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L215-L224
+
+See also: [LedgerKey](#ledgerkey).
+
+### MsgDestroyResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L226-L227
+
+
+## CreateLedgerClass
+
+Ledger classes are created using a `MsgCreateLedgerClassRequest`.
+
+This request is expected to fail if: // TODO: CreateLedgerClass
+1. **MsgCreateLedgerClass**
+   - Ledger class configuration must be valid
+   - Asset class ID must be valid
+   - Denomination must be valid
+   - Maintainer address must be valid
+   - Signer must have permission
+
+### MsgCreateLedgerClassRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L229-L238
+
+#### LedgerClass
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L11-L28
+
+### MsgCreateLedgerClassResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L240-L241
+
+
+## AddLedgerClassStatusType
+
+To create a ledger class status type, use a `MsgAddLedgerClassStatusTypeRequest`.
+
+This request is expected to fail if: // TODO: AddLedgerClassStatusType
+3. **MsgAddLedgerClassStatusType**
+   - Ledger class must exist
+   - Status type must be valid
+   - Signer must have permission
+
+### MsgAddLedgerClassStatusTypeRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L243-L255
+
+#### LedgerClassStatusType
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L43-L56
+
+### MsgAddLedgerClassStatusTypeResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L257-L258
+
+
+## AddLedgerClassEntryType
+
+A ledger class entry type is created using a `MsgAddLedgerClassEntryTypeRequest`.
+
+This request is expected to fail if: // TODO: AddLedgerClassEntryType
+2. **MsgAddLedgerClassEntryType**
+   - Ledger class must exist
+   - Entry type must be valid
+   - Signer must have permission
+
+### MsgAddLedgerClassEntryTypeRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L260-L272
+
+#### LedgerClassEntryType
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L30-L41
+
+### MsgAddLedgerClassEntryTypeResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L274-L275
+
+
+## AddLedgerClassBucketType
+
+To create a ledger class bucket type, use `MsgAddLedgerClassBucketTypeRequest`.
+
+This request is expected to fail if: // TODO: AddLedgerClassBucketType
+4. **MsgAddLedgerClassBucketType**
+   - Ledger class must exist
+   - Bucket type must be valid
+   - Signer must have permission
+
+### MsgAddLedgerClassBucketTypeRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L277-L289
+
+#### LedgerClassBucketType
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L113-L123
+
+### MsgAddLedgerClassBucketTypeResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L291-L292
+
+
+## BulkCreate
+
+Ledger and ledger entries can be created in bulk using a `MsgBulkCreateRequest`.
+
+This request is expected to fail if: // TODO: BulkCreate
 1. **MsgBulkCreate**
    - All ledger configurations must be valid
    - All entries must be valid
    - Signer must have permission
-   - Transaction size must be within limits 
+   - Transaction size must be within limits
+
+### MsgBulkCreateRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L294-L303
+
+#### LedgerAndEntries
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger.proto#L197-L205
+
+### MsgBulkCreateResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L305-L306
