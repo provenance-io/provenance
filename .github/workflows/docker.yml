@@ -1,16 +1,23 @@
 name: Docker Build and Push
-# Build & Push builds the simapp docker image on every push to main
-# and pushes the image to a private Google Artifact Registry.
+# Build & Push builds the simapp docker image on every push to master
+# and pushes the image to https://hub.docker.com/u/provenanceio and ghcr.io/provenance-io/provenance
 on:
+  pull_request:
+    paths:
+      - docker/blockchain/Dockerfile
+      - .github/workflows/docker.yml
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
   push:
     branches:
       - main
     tags:
       - '**'
 
-permissions:
-  id-token: write
-  contents: read
+env:
+  DOCKER_IMAGE: "provenanceio/provenance"
+  GHCR_IMAGE: "ghcr.io/provenance-io/provenance"
 
 # Set concurrency for this workflow to cancel in-progress jobs if retriggered.
 # The github.ref is only available when triggered by a PR so fall back to github.run_id for other cases.
@@ -24,7 +31,7 @@ jobs:
   heighliner-docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: docker/setup-buildx-action@v3
 
@@ -33,7 +40,7 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: us-central1-docker.pkg.dev/provlabs-test/docker/provenance
+          images: ${{ env.DOCKER_IMAGE }}
           flavor: |
             prefix=heighliner-,onlatest=true
           tags: |
@@ -41,18 +48,10 @@ jobs:
             type=ref,event=pr
             type=ref,event=tag
 
-      - uses: google-github-actions/auth@v1
-        id: auth
-        with:
-          token_format: access_token
-          workload_identity_provider: projects/815721530660/locations/global/workloadIdentityPools/gha-runner-pool/providers/gha-runner-pool-provider
-          service_account: gha-runner@provlabs-test.iam.gserviceaccount.com
-
       - uses: docker/login-action@v3
         with:
-          registry: us-central1-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # lock to "linux/amd64" only for now since cross compilation is throwing errors
       - uses: strangelove-ventures/heighliner-build-action@main
@@ -61,7 +60,7 @@ jobs:
           chain: provenance
           local: true
           tag: ${{ steps.meta.outputs.version }}
-          registry: us-central1-docker.pkg.dev/provlabs-test/docker
+          registry: provenanceio
           platform: linux/amd64
           dockerfile: cosmos
           build-target: |
@@ -72,3 +71,92 @@ jobs:
             - "WITH_LEDGER=false"
             - "BUILD_TAGS=muslc musl dynamic"
           skip: ${{ github.event_name == 'pull_request' }}
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - run: go mod vendor
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=edge
+            type=ref,event=pr
+            type=ref,event=tag
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: run
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
+          platforms: linux/amd64,linux/arm64
+          file: docker/blockchain/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+
+  ghcr-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - run: go mod vendor
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.GHCR_IMAGE }}
+          tags: |
+            type=edge
+            type=ref,event=pr
+            type=ref,event=tag
+          labels: |
+            org.opencontainers.image.source=https://github.com/provenance-io/provenance
+            org.opencontainers.image.description=Provenance Blockchain Node
+            org.opencontainers.image.licenses=Apache-2.0
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: 129784868+provenanceio-bot@users.noreply.github.com
+          password: ${{ secrets.BOT_GHCR_PAT }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: run
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
+          platforms: linux/amd64,linux/arm64
+          file: docker/blockchain/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
