@@ -539,14 +539,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-proto-legacy:
-	docker run --rm \
-		-v $(PWD):/workspace \
-		--workdir /workspace \
-		ghcr.io/cosmos/proto-builder:0.15.1 \
-		buf generate --template legacy_protos/buf.gen.legacy.yaml legacy_protos
-
-.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check proto-doc-gen proto-legacy
+.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check proto-doc-gen
 
 
 ##############################

@@ -1,4 +1,4 @@
-FROM golang:1.23-bullseye as build
+FROM golang:1.23-bullseye AS build
 ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance
@@ -31,7 +31,7 @@ RUN ARCH=$(uname -m) && \
     make VERSION=${VERSION} install
 
 ###
-FROM debian:bullseye-slim as run
+FROM debian:bullseye-slim AS run
 ENV LD_LIBRARY_PATH="/usr/local/lib"
 RUN apt-get update && \
     apt-get upgrade -y && \

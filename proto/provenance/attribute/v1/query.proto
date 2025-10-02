@@ -10,37 +10,44 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/attribute/v1/attribute.proto";
+import "cosmos/query/v1/query.proto";
 
 // Query defines the gRPC querier service for attribute module.
 service Query {
   // Params queries params of the attribute module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/attribute/v1/params";
   }
 
   // Attribute queries attributes on a given account (address) for one (or more) with the given name
   rpc Attribute(QueryAttributeRequest) returns (QueryAttributeResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/attribute/{account}/{name}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/attribute/v1/attribute/{account}/{name}";
   }
 
   // Attributes queries attributes on a given account (address) for any defined attributes
   rpc Attributes(QueryAttributesRequest) returns (QueryAttributesResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/attributes/{account}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/attribute/v1/attributes/{account}";
   }
 
   // Scan queries attributes on a given account (address) for any that match the provided suffix
   rpc Scan(QueryScanRequest) returns (QueryScanResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/attribute/{account}/scan/{suffix}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/attribute/v1/attribute/{account}/scan/{suffix}";
   }
 
   // AttributeAccounts queries accounts on a given attribute name
   rpc AttributeAccounts(QueryAttributeAccountsRequest) returns (QueryAttributeAccountsResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/accounts/{attribute_name}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/attribute/v1/accounts/{attribute_name}";
   }
 
   // AccountData returns the accountdata for a specified account.
   rpc AccountData(QueryAccountDataRequest) returns (QueryAccountDataResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/accountdata/{account}";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/provenance/attribute/v1/accountdata/{account}";
   }
 }
 

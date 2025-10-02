@@ -123,7 +123,7 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 
 	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
-
+	generic1 := types.PartyType_PARTY_TYPE_GENERIC_1
 	newScope := func(valueOwner sdk.AccAddress) *types.Scope {
 		return &types.Scope{
 			ScopeId:            scopeID,
@@ -215,6 +215,20 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			msg:      newMsg(addrAlice, addrSam.String(), addrBob.String()),
 			expAddrs: []sdk.AccAddress{addrSam},
 		},
+		{
+			name: "smart contract with generic party type",
+			existing: &types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecID,
+				Owners:             []types.Party{{Address: addrSam.String(), Role: generic1}},
+				DataAccess:         nil,
+				ValueOwnerAddress:  addrAlice.String(),
+				RequirePartyRollup: false,
+			},
+			msg:      newMsg(addrBob, addrSam.String(), addrAlice.String()),
+			expAddrs: []sdk.AccAddress{addrSam},
+			expErr:   "",
+		},
 	}
 
 	for _, tc := range tests {
@@ -275,6 +289,13 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 
 	owner := types.PartyType_PARTY_TYPE_OWNER
 	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+
+	generic1 := types.PartyType_PARTY_TYPE_GENERIC_1
+	generic2 := types.PartyType_PARTY_TYPE_GENERIC_2
+	generic3 := types.PartyType_PARTY_TYPE_GENERIC_3
+	generic4 := types.PartyType_PARTY_TYPE_GENERIC_4
+	generic5 := types.PartyType_PARTY_TYPE_GENERIC_5
+	generic6 := types.PartyType_PARTY_TYPE_GENERIC_6
 
 	tests := []struct {
 		name             string
@@ -386,6 +407,44 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 			),
 			expErr: "",
 		},
+		{
+			name:             "generic party types basic validation",
+			reqParties:       ptz(pt("party1", generic1, false), pt("party2", generic2, true)),
+			availableParties: ptz(pt("party3", generic3, false)),
+			reqRoles:         []types.PartyType{generic4, generic5},
+			msg:              normalMsg("party1", "party3"),
+			authK:            NewMockAuthKeeper(),
+			authzK:           NewMockAuthzKeeper(),
+			expErr:           "missing signers for roles required by spec: GENERIC_4 need 1 have 0, GENERIC_5 need 1 have 0",
+		},
+		{
+			name:             "generic party types with authorization",
+			reqParties:       ptz(pt("party1", generic1, false)),
+			availableParties: ptz(pt("party1", generic1, false), pt("party2", generic2, true)),
+			reqRoles:         []types.PartyType{generic1},
+			msg:              normalMsg("party2"),
+			authK:            NewMockAuthKeeper(),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: sdk.AccAddress("party2"), Granter: sdk.AccAddress("party1"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("generic_auth", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			expErr: "",
+		},
+		{
+			name:             "mixed generic and standard party types",
+			reqParties:       ptz(pt("party1", owner, false), pt("party2", generic3, false)),
+			availableParties: ptz(pt("party3", generic6, true)),
+			reqRoles:         []types.PartyType{owner, generic6},
+			msg:              normalMsg("party1", "party3"),
+			authK:            NewMockAuthKeeper(),
+			authzK:           NewMockAuthzKeeper(),
+			expErr:           "missing required signature: " + accStr("party2") + " (GENERIC_3)",
+		},
 	}
 
 	for _, tc := range tests {
@@ -493,6 +552,12 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 	controller := types.PartyType_PARTY_TYPE_CONTROLLER
 	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+	generic1 := types.PartyType_PARTY_TYPE_GENERIC_1
+	generic2 := types.PartyType_PARTY_TYPE_GENERIC_2
+	generic3 := types.PartyType_PARTY_TYPE_GENERIC_3
+	generic4 := types.PartyType_PARTY_TYPE_GENERIC_4
+	generic5 := types.PartyType_PARTY_TYPE_GENERIC_5
+	generic6 := types.PartyType_PARTY_TYPE_GENERIC_6
 
 	tests := []struct {
 		name             string
@@ -679,6 +744,140 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 					SignerAcc:       nil,
 					CanBeUsedBySpec: false,
 					UsedBySpec:      false,
+				}.Real(),
+			},
+			expErr: "",
+		},
+		{
+			name:             "generic party types missing signatures",
+			reqParties:       ptz(pt("party1", generic1, false), pt("party2", generic2, false)),
+			availableParties: nil,
+			reqRoles:         rz(generic3),
+			msg:              newMsg("signer1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties:       nil,
+			expErr: fmt.Sprintf("missing required signatures: %s (GENERIC_1), %s (GENERIC_2)",
+				accStr("party1"), accStr("party2")),
+		},
+		{
+			name:             "generic party types with required roles",
+			reqParties:       nil,
+			availableParties: ptz(pt("party1", generic4, false), pt("party2", generic5, false)),
+			reqRoles:         rz(generic4, generic5, generic6),
+			msg:              newMsg("party1", "party2"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties:       nil,
+			expErr:           "missing signers for roles required by spec: GENERIC_6 need 1 have 0",
+		},
+		{
+			name:             "generic party types successful validation",
+			reqParties:       ptz(pt("party1", generic1, false)),
+			availableParties: ptz(pt("party2", generic2, true)),
+			reqRoles:         rz(generic2),
+			msg:              newMsg("party1", "party2"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties: []*types.PartyDetails{
+				types.TestablePartyDetails{
+					Address:         accStr("party2"),
+					Role:            generic2,
+					Optional:        true,
+					Acc:             nil,
+					Signer:          accStr("party2"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: true,
+					UsedBySpec:      true,
+				}.Real(),
+				types.TestablePartyDetails{
+					Address:         accStr("party1"),
+					Role:            generic1,
+					Optional:        false,
+					Acc:             nil,
+					Signer:          accStr("party1"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: false,
+					UsedBySpec:      false,
+				}.Real(),
+			},
+			expErr: "",
+		},
+		{
+			name:       "all generic party types required",
+			reqParties: nil,
+			availableParties: ptz(
+				pt("party1", generic1, true),
+				pt("party2", generic2, true),
+				pt("party3", generic3, true),
+				pt("party4", generic4, true),
+				pt("party5", generic5, true),
+				pt("party6", generic6, true),
+			),
+			reqRoles:    rz(generic1, generic2, generic3, generic4, generic5, generic6),
+			msg:         newMsg("party1", "party2", "party3", "party4", "party5", "party6"),
+			authKeeper:  NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper(),
+			expParties: []*types.PartyDetails{
+				types.TestablePartyDetails{
+					Address:         accStr("party1"),
+					Role:            generic1,
+					Optional:        true,
+					Acc:             nil,
+					Signer:          accStr("party1"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: true,
+					UsedBySpec:      true,
+				}.Real(),
+				types.TestablePartyDetails{
+					Address:         accStr("party2"),
+					Role:            generic2,
+					Optional:        true,
+					Acc:             nil,
+					Signer:          accStr("party2"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: true,
+					UsedBySpec:      true,
+				}.Real(),
+				types.TestablePartyDetails{
+					Address:         accStr("party3"),
+					Role:            generic3,
+					Optional:        true,
+					Acc:             nil,
+					Signer:          accStr("party3"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: true,
+					UsedBySpec:      true,
+				}.Real(),
+				types.TestablePartyDetails{
+					Address:         accStr("party4"),
+					Role:            generic4,
+					Optional:        true,
+					Acc:             nil,
+					Signer:          accStr("party4"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: true,
+					UsedBySpec:      true,
+				}.Real(),
+				types.TestablePartyDetails{
+					Address:         accStr("party5"),
+					Role:            generic5,
+					Optional:        true,
+					Acc:             nil,
+					Signer:          accStr("party5"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: true,
+					UsedBySpec:      true,
+				}.Real(),
+				types.TestablePartyDetails{
+					Address:         accStr("party6"),
+					Role:            generic6,
+					Optional:        true,
+					Acc:             nil,
+					Signer:          accStr("party6"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: true,
+					UsedBySpec:      true,
 				}.Real(),
 			},
 			expErr: "",
@@ -1207,6 +1406,25 @@ func TestAssociateSigners(t *testing.T) {
 				pd("addr3", acc("addr3-one"), "", nil),
 				pd("addr4", acc("addr4-one"), "addr4", nil),
 				pd("addr5", acc("addr5-one"), "", nil),
+			),
+		},
+		{
+			name:    "generic party types association",
+			parties: pdz(pd(accStr("addr1"), acc("addr1"), "", nil), pd(accStr("addr2"), acc("addr2"), "", nil)),
+			signers: sw(accStr("addr1"), accStr("addr2")),
+			expParties: pdz(
+				pd(accStr("addr1"), acc("addr1"), accStr("addr1"), nil),
+				pd(accStr("addr2"), acc("addr2"), accStr("addr2"), nil),
+			),
+		},
+		{
+			name:    "mixed generic and standard party signer association",
+			parties: pdz(pd(accStr("addr1"), acc("addr1"), "", nil), pd(accStr("addr2"), acc("addr2"), "", nil), pd(accStr("addr3"), acc("addr3"), "", nil)),
+			signers: sw(accStr("addr3"), accStr("addr1")),
+			expParties: pdz(
+				pd(accStr("addr1"), acc("addr1"), accStr("addr1"), nil),
+				pd(accStr("addr2"), acc("addr2"), "", nil),
+				pd(accStr("addr3"), acc("addr3"), accStr("addr3"), nil),
 			),
 		},
 	}
@@ -1938,7 +2156,6 @@ func TestMissingRolesString(t *testing.T) {
 	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 	controller := types.PartyType_PARTY_TYPE_CONTROLLER
 	validator := types.PartyType_PARTY_TYPE_VALIDATOR
-
 	// rolesForDeterministismTests returns two of each PartyType in a random order.
 	rolesForDeterministismTests := func() []types.PartyType {
 		rv := make([]types.PartyType, 0, 2*len(types.PartyType_name))
@@ -1963,9 +2180,7 @@ func TestMissingRolesString(t *testing.T) {
 		return rv
 	}
 	// resultForDeterministismTests is the expected result for all the determinism tests.
-	resultForDeterministismTests := "UNSPECIFIED need 2 have 1, ORIGINATOR need 2 have 1, SERVICER need 2 have 1, " +
-		"INVESTOR need 2 have 1, CUSTODIAN need 2 have 1, OWNER need 2 have 1, AFFILIATE need 2 have 1, " +
-		"OMNIBUS need 2 have 1, PROVENANCE need 2 have 1, CONTROLLER need 2 have 1, VALIDATOR need 2 have 1"
+	resultForDeterministismTests := "UNSPECIFIED need 2 have 1, ORIGINATOR need 2 have 1, SERVICER need 2 have 1, INVESTOR need 2 have 1, CUSTODIAN need 2 have 1, OWNER need 2 have 1, AFFILIATE need 2 have 1, OMNIBUS need 2 have 1, PROVENANCE need 2 have 1, CONTROLLER need 2 have 1, VALIDATOR need 2 have 1, GENERIC_1 need 2 have 1, GENERIC_2 need 2 have 1, GENERIC_3 need 2 have 1, GENERIC_4 need 2 have 1, GENERIC_5 need 2 have 1, GENERIC_6 need 2 have 1"
 
 	// roleStr gets a string of the variable name (or value) used in these tests for the roles.
 	roleStr := func(role types.PartyType) string {

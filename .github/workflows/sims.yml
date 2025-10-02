@@ -24,7 +24,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -50,7 +50,7 @@ jobs:
     if: needs.setup.outputs.should-run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Output setup
         run: |
           echo " should-run: [${{ needs.setup.outputs.should-run }}]"
@@ -61,7 +61,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev wget curl build-essential cmake gcc sqlite3
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
@@ -83,14 +83,14 @@ jobs:
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Define test-logs
         id: test-logs
         run: |
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
@@ -135,14 +135,14 @@ jobs:
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Define test-logs
         id: test-logs
         run: |
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
@@ -172,14 +172,14 @@ jobs:
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Define test-logs
         id: test-logs
         run: |
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Update provwasm contract
