@@ -12,12 +12,11 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/gorilla/mux"
-	"github.com/spf13/cast"
-	"github.com/spf13/viper"
-
 	vaultmodule "github.com/provlabs/vault"
 	vaultkeeper "github.com/provlabs/vault/keeper"
 	vaulttypes "github.com/provlabs/vault/types"
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
