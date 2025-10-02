@@ -6,6 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -42,75 +44,75 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 		return nil, types.ErrInvalidAddress
 	}
 
-	var pageReq *query.PageRequest
-	if request.Pagination != nil {
-		pageReq = request.Pagination
+	limit := request.Pagination.GetLimit()
+	if limit == 0 {
+		limit = query.DefaultLimit
+	}
+	const maxLimit = 200
+	if limit > maxLimit {
+		limit = maxLimit
 	}
 
-	recordByAddress, err := k.GetRecordsByAddress(ctx, accAddr)
+	// Continuation key from previous page
+	var continueAfterName string
+	if len(request.Pagination.GetKey()) > 0 {
+		continueAfterName = string(request.Pagination.GetKey())
+	}
+
+	// Create range for this address
+	refKeyPrefix := collections.PairPrefix[sdk.AccAddress, string](accAddr)
+	prefixRange := collections.NewPrefixedPairRange[
+		collections.Pair[sdk.AccAddress, string],
+		string,
+	](refKeyPrefix)
+
+	iter, err := k.nameRecords.Indexes.AddrIndex.Iterate(ctx, prefixRange)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	defer iter.Close()
 
-	allNames := make([]string, len(recordByAddress))
-	for i, record := range recordByAddress {
-		allNames[i] = record.Name
-	}
+	// If we have a continuation key, skip forward past it (inclusive)
+	skipMode := continueAfterName != ""
 
-	limit := query.DefaultLimit
-	var start = 0
+	var names []string
+	var lastKey string
 
-	if pageReq != nil {
-		if pageReq.Limit > 0 {
-			limit = safeUint64ToInt(pageReq.Limit)
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-
-		if len(pageReq.Key) > 0 {
-			pageKey := string(pageReq.Key)
-			for i, name := range allNames {
-				if name == pageKey {
-					start = i + 1
-					break
-				}
+		if skipMode {
+			if pk == continueAfterName {
+				skipMode = false
+				continue
 			}
-		} else {
-			start = safeUint64ToInt(pageReq.Offset)
+			if pk < continueAfterName {
+				continue
+			}
+			skipMode = false
 		}
+		if uint64(len(names)) >= limit {
+			break
+		}
+		record, err := k.nameRecords.Get(ctx, pk)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		names = append(names, record.Name)
+		lastKey = pk
 	}
 
-	end := start + limit
-	if end > len(allNames) {
-		end = len(allNames)
+	var nextKey []byte
+	if iter.Valid() {
+		nextKey = []byte(lastKey)
 	}
 
-	if start >= len(allNames) {
-		start = len(allNames)
-		end = len(allNames)
-	}
-
-	var pageNames []string
-	if start < end {
-		pageNames = allNames[start:end]
-	} else {
-		pageNames = []string{}
-	}
-
-	rv := &types.QueryReverseLookupResponse{
-		Name:       pageNames,
-		Pagination: &query.PageResponse{},
-	}
-
-	if end < len(allNames) {
-		rv.Pagination.NextKey = []byte(allNames[end-1])
-	}
-
-	return rv, nil
-}
-func safeUint64ToInt(u uint64) int {
-	const maxInt = int(^uint(0) >> 1)
-	if u > uint64(maxInt) {
-		return maxInt
-	}
-	// #nosec G115 -- safe conversion due to explicit bound check above
-	return int(u)
+	return &types.QueryReverseLookupResponse{
+		Name: names,
+		Pagination: &query.PageResponse{
+			NextKey: nextKey,
+		},
+	}, nil
 }
