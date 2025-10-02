@@ -777,7 +777,7 @@ func New(
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
-		vaultmodule.NewAppModule(app.VaultKeeper, address.Bech32Codec{Bech32Prefix: addrPrefix}),
+		vaultmodule.NewAppModule(app.VaultKeeper, app.MarkerKeeper, app.BankKeeper, address.Bech32Codec{Bech32Prefix: addrPrefix}),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
