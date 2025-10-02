@@ -12,9 +12,6 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/gorilla/mux"
-	vaultmodule "github.com/provlabs/vault"
-	vaultkeeper "github.com/provlabs/vault/keeper"
-	vaulttypes "github.com/provlabs/vault/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
@@ -128,6 +125,10 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
+
+	vaultmodule "github.com/provlabs/vault"
+	vaultkeeper "github.com/provlabs/vault/keeper"
+	vaulttypes "github.com/provlabs/vault/types"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/client/docs"

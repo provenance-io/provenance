@@ -167,6 +167,7 @@ linters-settings:
       - prefix(github.com/cometbft)
       - prefix(cosmossdk.io)
       - prefix(github.com/cosmos)
+      - prefix(github.com/provlabs)
       - prefix(github.com/provenance-io)
       - blank
       - dot
