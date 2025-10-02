@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/registry/keeper"
 	"github.com/provenance-io/provenance/x/registry/types"
 )
@@ -147,13 +148,14 @@ func (s *KeeperTestSuite) TestGrantRole() {
 	s.Require().NoError(err)
 
 	tests := []struct {
-		name       string
-		key        *types.RegistryKey
-		role       types.RegistryRole
-		addr       []string
-		expErr     error
-		expHasRole bool
-		expAddr    string
+		name           string
+		key            *types.RegistryKey
+		role           types.RegistryRole
+		addr           []string
+		expErr         error
+		expErrContains []string
+		expHasRole     bool
+		expAddr        string
 	}{
 		{
 			name:       "successful role grant",
@@ -179,23 +181,26 @@ func (s *KeeperTestSuite) TestGrantRole() {
 				AssetClassId: "nonexistent",
 				NftId:        "nonexistent",
 			},
-			role:   types.RegistryRole_REGISTRY_ROLE_SERVICER,
-			addr:   []string{s.user2Addr.String()},
-			expErr: types.ErrRegistryNotFound,
+			role:           types.RegistryRole_REGISTRY_ROLE_SERVICER,
+			addr:           []string{s.user2Addr.String()},
+			expErr:         types.ErrRegistryNotFound,
+			expErrContains: []string{"registry not found"},
 		},
 		{
-			name:   "address already has role",
-			key:    baseKey,
-			role:   types.RegistryRole_REGISTRY_ROLE_SERVICER,
-			addr:   []string{s.user2Addr.String()},
-			expErr: types.ErrAddressAlreadyHasRole,
+			name:           "address already has role",
+			key:            baseKey,
+			role:           types.RegistryRole_REGISTRY_ROLE_SERVICER,
+			addr:           []string{s.user2Addr.String()},
+			expErr:         types.ErrAddressAlreadyHasRole,
+			expErrContains: []string{"already has role"},
 		},
 		{
-			name:   "invalid role",
-			key:    baseKey,
-			role:   types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED,
-			addr:   []string{s.user2Addr.String()},
-			expErr: types.ErrInvalidRole,
+			name:           "invalid role",
+			key:            baseKey,
+			role:           types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED,
+			addr:           []string{s.user2Addr.String()},
+			expErr:         types.ErrInvalidRole,
+			expErrContains: []string{"invalid role"},
 		},
 	}
 
@@ -205,6 +210,7 @@ func (s *KeeperTestSuite) TestGrantRole() {
 			if tc.expErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expErr)
+				assertions.RequireErrorContents(s.T(), err, tc.expErrContains)
 			} else {
 				s.Require().NoError(err)
 
@@ -237,13 +243,14 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 	s.Require().NoError(err)
 
 	tests := []struct {
-		name       string
-		key        *types.RegistryKey
-		role       types.RegistryRole
-		addr       []string
-		expErr     error
-		expHasRole bool
-		checkAddr  string
+		name           string
+		key            *types.RegistryKey
+		role           types.RegistryRole
+		addr           []string
+		expErr         error
+		expErrContains []string
+		expHasRole     bool
+		checkAddr      string
 	}{
 		{
 			name:       "successful role revocation for one address",
@@ -269,16 +276,18 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 				AssetClassId: "nonexistent",
 				NftId:        "nonexistent",
 			},
-			role:   types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
-			addr:   []string{s.user2Addr.String()},
-			expErr: types.ErrRegistryNotFound,
+			role:           types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+			addr:           []string{s.user2Addr.String()},
+			expErr:         types.ErrRegistryNotFound,
+			expErrContains: []string{"registry not found"},
 		},
 		{
-			name:   "invalid role",
-			key:    baseKey,
-			role:   types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED,
-			addr:   []string{s.user2Addr.String()},
-			expErr: types.ErrInvalidRole,
+			name:           "invalid role",
+			key:            baseKey,
+			role:           types.RegistryRole_REGISTRY_ROLE_UNSPECIFIED,
+			addr:           []string{s.user2Addr.String()},
+			expErr:         types.ErrInvalidRole,
+			expErrContains: []string{"invalid role"},
 		},
 	}
 
@@ -288,6 +297,7 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 			if tc.expErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expErr)
+				assertions.RequireErrorContents(s.T(), err, tc.expErrContains)
 			} else {
 				s.Require().NoError(err)
 
@@ -356,10 +366,9 @@ func (s *KeeperTestSuite) TestHasRole() {
 		s.Run(tc.name, func() {
 			hasRole, err := s.app.RegistryKeeper.HasRole(s.ctx, tc.key, tc.role, tc.address)
 			if tc.expErr != "" {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErr)
+				assertions.RequireErrorContents(s.T(), err, []string{tc.expErr})
 			} else {
-				s.Require().NoError(err)
+				assertions.RequireErrorContents(s.T(), err, nil)
 				s.Require().Equal(tc.expHasRole, hasRole)
 			}
 		})
@@ -411,10 +420,10 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 		s.Run(tc.name, func() {
 			entry, err := s.app.RegistryKeeper.GetRegistry(s.ctx, tc.key)
 			if tc.expErr != "" {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErr)
+				assertions.RequireErrorContents(s.T(), err, []string{tc.expErr})
+				s.Require().Nil(entry)
 			} else {
-				s.Require().NoError(err)
+				assertions.RequireErrorContents(s.T(), err, nil)
 				if tc.expKey != nil {
 					s.Require().NotNil(entry)
 					s.Require().Equal(tc.expKey, entry.Key)
@@ -465,84 +474,72 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 		pageRequest   *query.PageRequest
 		assetClassId  string
 		expectedCount int
-		expectError   bool
 	}{
 		{
 			name:          "get all registries without pagination",
 			pageRequest:   nil,
 			assetClassId:  "",
 			expectedCount: len(keys),
-			expectError:   false,
 		},
 		{
 			name:          "get all registries with count total",
 			pageRequest:   &query.PageRequest{CountTotal: true},
 			assetClassId:  "",
 			expectedCount: len(keys),
-			expectError:   false,
 		},
 		{
 			name:          "get registries with limit 3",
 			pageRequest:   &query.PageRequest{Limit: 3, CountTotal: true},
 			assetClassId:  "",
 			expectedCount: 3,
-			expectError:   false,
 		},
 		{
 			name:          "get registries with offset 2 and limit 3",
 			pageRequest:   &query.PageRequest{Offset: 2, Limit: 3, CountTotal: true},
 			assetClassId:  "",
 			expectedCount: 3,
-			expectError:   false,
 		},
 		{
 			name:          "get registries with offset 5 and limit 5",
 			pageRequest:   &query.PageRequest{Offset: 5, Limit: 5, CountTotal: true},
 			assetClassId:  "",
 			expectedCount: 2, // Only 2 remaining after offset 5
-			expectError:   false,
 		},
 		{
 			name:          "get registries with offset beyond total count",
 			pageRequest:   &query.PageRequest{Offset: 10, Limit: 5, CountTotal: true},
 			assetClassId:  "",
 			expectedCount: 0,
-			expectError:   false,
 		},
 		{
 			name:          "get registries with large limit",
 			pageRequest:   &query.PageRequest{Limit: 100, CountTotal: true},
 			assetClassId:  "",
 			expectedCount: len(keys),
-			expectError:   false,
 		},
 		{
 			name:          "get registries with reverse order",
 			pageRequest:   &query.PageRequest{Limit: uint64(len(keys)), Reverse: true, CountTotal: true},
 			assetClassId:  "",
 			expectedCount: len(keys),
-			expectError:   false,
 		},
 		{
 			name:          "filter by asset class 'aclass'",
 			pageRequest:   &query.PageRequest{CountTotal: true},
 			assetClassId:  "aclass",
 			expectedCount: 2, // aclass has 2 NFTs
-			expectError:   false,
 		},
 		{
 			name:          "filter by asset class 'bclass' with limit 1",
 			pageRequest:   &query.PageRequest{Limit: 1, CountTotal: true},
 			assetClassId:  "bclass",
 			expectedCount: 1,
-			expectError:   false,
 		},
 		{
 			name:          "filter by non-existent asset class",
 			pageRequest:   &query.PageRequest{CountTotal: true},
 			assetClassId:  "nonexistent",
 			expectedCount: 0,
-			expectError:   false,
 		},
 	}
 
@@ -554,13 +551,7 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			regs, pageRes, err := s.app.RegistryKeeper.GetRegistries(s.ctx, tc.pageRequest, tc.assetClassId)
-
-			if tc.expectError {
-				s.Require().Error(err)
-				return
-			}
-
-			s.Require().NoError(err)
+			assertions.RequireErrorContents(s.T(), err, nil)
 			s.Require().NotNil(regs)
 			s.Require().Len(regs, tc.expectedCount)
 
@@ -599,7 +590,7 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 
 			// Verify deterministic ordering by running the same query twice
 			regs2, _, err2 := s.app.RegistryKeeper.GetRegistries(s.ctx, tc.pageRequest, tc.assetClassId)
-			s.Require().NoError(err2)
+			assertions.RequireErrorContents(s.T(), err2, nil)
 			s.Require().Equal(keyStrs(regs), keyStrs(regs2), "results should be deterministic")
 		})
 	}
@@ -608,7 +599,7 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 	s.Run("pagination consistency", func() {
 		// Get all results without pagination
 		allRegs, _, err := s.app.RegistryKeeper.GetRegistries(s.ctx, &query.PageRequest{CountTotal: true}, "")
-		s.Require().NoError(err)
+		assertions.RequireErrorContents(s.T(), err, nil)
 
 		// Get results in pages of 2
 		var paginatedRegs []types.RegistryEntry
@@ -621,7 +612,7 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 				Limit:      pageSize,
 				CountTotal: true,
 			}, "")
-			s.Require().NoError(err)
+			assertions.RequireErrorContents(s.T(), err, nil)
 
 			if len(pageRegs) == 0 {
 				break
