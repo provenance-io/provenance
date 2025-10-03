@@ -11,4 +11,3 @@ The ledger module provides various tools for defining and managing financial tra
 3. **[Messages](03_messages)**
 4. **[Events](04_events)**
 5. **[Queries](05_queries)**
-6. **[Bulk Import](06_bulk_import.md)**
