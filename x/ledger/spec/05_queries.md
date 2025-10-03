@@ -2,6 +2,7 @@
 
 The Ledger module provides several query endpoints to access ledger state and information.
 
+---
 <!-- TOC 2 2 -->
   - [LedgerClass](#ledgerclass)
   - [LedgerClasses](#ledgerclasses)

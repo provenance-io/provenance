@@ -2,6 +2,7 @@
 
 The Ledger module emits events to track state changes and provide transparency for ledger operations. Events are defined as protobuf types in `proto/provenance/ledger/v1/events.proto` and are emitted for all major state transitions including ledger creation, updates, entry additions, and destruction.
 
+---
 <!-- TOC 2 2 -->
   - [EventLedgerCreated](#eventledgercreated)
   - [EventLedgerUpdated](#eventledgerupdated)
