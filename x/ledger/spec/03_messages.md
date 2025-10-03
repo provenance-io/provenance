@@ -75,7 +75,7 @@ This request is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L75-L87
 
-See also: [LedgerKey](#ledgerkey)
+See also: [LedgerKey](#ledgerkey).
 
 ### MsgUpdateStatusResponse
 
@@ -115,7 +115,7 @@ This request is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/tx.proto#L115-L139
 
-See also: [LedgerKey](#ledgerkey), [PaymentFrequency](#paymentfrequency)
+See also: [LedgerKey](#ledgerkey), [PaymentFrequency](#paymentfrequency).
 
 ### MsgUpdatePaymentResponse
 
