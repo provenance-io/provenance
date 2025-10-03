@@ -26,6 +26,8 @@ Where:
 * `<ledger id>` is a string with the [ledger identifier](01_concepts.md#ledger-identifiers).
 * `protobuf(Ledger)` is a protobuf-encoded [Ledger](03_messages.md#ledger) object.
 
+The `Ledger.Key` field is set to `nil` before storing the ledger in state, and is re-added upon retrieval.
+
 
 ## Ledger Entries
 
