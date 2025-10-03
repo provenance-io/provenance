@@ -187,14 +187,17 @@ func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *types.Qu
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
-	settlements, err := qs.k.GetAllSettlements(ctx, &keyStr)
+	settlementLists, err := qs.k.GetAllSettlements(ctx, &keyStr)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryLedgerSettlementsResponse{
-		Settlements: settlements,
-	}, nil
+	rv := &types.QueryLedgerSettlementsResponse{}
+	for _, settlements := range settlementLists {
+		rv.Settlements = append(rv.Settlements, settlements.SettlementInstructions...)
+	}
+
+	return rv, nil
 }
 
 // LedgerSettlementsByCorrelationID returns settlements by correlation id.
@@ -207,7 +210,11 @@ func (qs LedgerQueryServer) LedgerSettlementsByCorrelationID(ctx context.Context
 		return nil, err
 	}
 
+	if settlements == nil {
+		return nil, types.NewErrCodeNotFound("settlement instructions")
+	}
+
 	return &types.QueryLedgerSettlementsByCorrelationIDResponse{
-		Settlements: settlements,
+		Settlements: settlements.SettlementInstructions,
 	}, nil
 }
