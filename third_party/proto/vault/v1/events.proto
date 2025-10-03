@@ -54,9 +54,9 @@ message EventSwapIn {
   // owner is the address of the account that initiated the swap.
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount_in is the amount of underlying assets that were swapped in.
-  cosmos.base.v1beta1.Coin amount_in = 2 [(gogoproto.nullable) = false];
+  string amount_in = 2;
   // shares_received is the amount of vault shares that were minted.
-  cosmos.base.v1beta1.Coin shares_received = 3 [(gogoproto.nullable) = false];
+  string shares_received = 3;
   // vault_address is the bech32 address of the vault.
   string vault_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
@@ -66,9 +66,9 @@ message EventSwapOut {
   // owner is the address of the account that initiated the swap.
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // shares_burned is the amount of vault shares that were burned.
-  cosmos.base.v1beta1.Coin shares_burned = 2 [(gogoproto.nullable) = false];
+  string shares_burned = 2;
   // amount_out is the amount of underlying assets that were sent to the recipient.
-  cosmos.base.v1beta1.Coin amount_out = 3 [(gogoproto.nullable) = false];
+  string amount_out = 3;
   // vault_address is the bech32 address of the vault.
   string vault_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
@@ -78,15 +78,15 @@ message EventVaultReconcile {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // principal_before is the principal amount before applying interest.
-  cosmos.base.v1beta1.Coin principal_before = 2 [(gogoproto.nullable) = false];
+  string principal_before = 2;
   // principal_after is the principal amount after applying interest.
-  cosmos.base.v1beta1.Coin principal_after = 3 [(gogoproto.nullable) = false];
+  string principal_after = 3;
   // rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing annual interest rate for the period.
   string rate = 4;
   // time is the payout duration in seconds.
   int64 time = 5;
   // interest_earned is the interest amount (can be positive or negative).
-  cosmos.base.v1beta1.Coin interest_earned = 6 [(gogoproto.nullable) = false];
+  string interest_earned = 6;
 }
 
 // EventVaultInterestChange is an event emitted when a vault's interest rate is changed.
@@ -106,7 +106,7 @@ message EventInterestDeposit {
   // admin is the address of the account that deposited the funds.
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds deposited.
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string amount = 3;
 }
 
 // EventInterestWithdrawal is an event emitted when unused interest funds are withdrawn.
@@ -116,7 +116,7 @@ message EventInterestWithdrawal {
   // admin is the address of the account that withdrew the funds.
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds withdrawn.
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string amount = 3;
 }
 
 // EventToggleSwapIn is an event emitted when swap-in operations are enabled or disabled for a vault.
@@ -146,7 +146,7 @@ message EventDepositPrincipalFunds {
   // admin is the address of the account that deposited the funds.
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds deposited.
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string amount = 3;
 }
 
 // EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the admin.
@@ -156,7 +156,7 @@ message EventWithdrawPrincipalFunds {
   // admin is the address of the account that withdrew the funds.
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds withdrawn.
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string amount = 3;
 }
 
 // EventMinInterestRateUpdated is emitted when the minimum interest rate is updated.
@@ -190,7 +190,7 @@ message EventSwapOutRequested {
   // redeem_denom is the denomination of the asset to be redeemed.
   string redeem_denom = 3;
   // shares is the amount of vault shares the user escrowed for this request.
-  cosmos.base.v1beta1.Coin shares = 4 [(gogoproto.nullable) = false];
+  string shares = 4;
   // request_id is the unique identifier for this pending swap out request.
   uint64 request_id = 5;
 }
@@ -202,7 +202,7 @@ message EventSwapOutCompleted {
   // owner is the bech32 address of the user who received the payout.
   string owner = 2;
   // assets is the amount of assets paid out to the user.
-  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
+  string assets = 3;
   // request_id is the unique identifier of the swap out request that was completed.
   uint64 request_id = 4;
 }
@@ -215,7 +215,7 @@ message EventSwapOutRefunded {
   // owner is the bech32 address of the user whose shares were refunded.
   string owner = 2;
   // shares is the amount of vault shares that were returned to the user.
-  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+  string shares = 3;
   // request_id is the unique identifier of the swap out request that failed.
   uint64 request_id = 4;
   // reason is a string detailing why the swap out failed.
@@ -241,7 +241,7 @@ message EventVaultPaused {
   // reason is the reason for pausing the vault.
   string reason = 3;
   // total_vault_value is the total value of the vault's assets at the time of pausing.
-  cosmos.base.v1beta1.Coin total_vault_value = 4 [(gogoproto.nullable) = false];
+  string total_vault_value = 4;
 }
 
 // EventVaultUnpaused is emitted when a vault is unpaused.
@@ -251,7 +251,7 @@ message EventVaultUnpaused {
   // admin is the address of the account that unpaused the vault.
   string admin = 2;
   // total_vault_value is the new total value of the vault's assets at the time of unpausing.
-  cosmos.base.v1beta1.Coin total_vault_value = 3 [(gogoproto.nullable) = false];
+  string total_vault_value = 3;
 }
 
 // EventBridgeAddressSet is emitted when the bridge address for a vault is configured or updated.
@@ -281,7 +281,7 @@ message EventBridgeMintShares {
   // bridge is the bech32 address of the bridge signer.
   string bridge = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // shares is the amount of shares minted.
-  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+  string shares = 3;
 }
 
 // EventBridgeBurnShares is emitted when shares are burned via the bridge flow.
@@ -291,5 +291,5 @@ message EventBridgeBurnShares {
   // bridge is the bech32 address of the bridge signer.
   string bridge = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // shares is the amount of shares burned.
-  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+  string shares = 3;
 }
