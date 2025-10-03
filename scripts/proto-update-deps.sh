@@ -29,6 +29,7 @@ IBC_PORT_V1_QUERY_URL='https://raw.githubusercontent.com/cosmos/ibc-go/v2.3.1/pr
 IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v8 | sed 's:.* => ::; s: :/tarball/:; s:/v8::;')"
 COSMOS_TARBALL_URL="$( go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::; s: :/tarball/:;' )"
 COMETBFT_TARBALL_URL="$( go list -m github.com/cometbft/cometbft | sed 's:.* => ::; s: :/tarball/:;' )"
+VAULT_TARBALL_URL="$( go list -m github.com/provlabs/vault | sed 's:.* => ::; s: :/tarball/:;' )"
 
 # gnu tar on ubuntu requires the '--wildcards' flag
 tar='tar zx --strip-components 1'
@@ -66,6 +67,9 @@ curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*
 
 rm -rf 'proto/tendermint'
 curl -f -sSL "$COMETBFT_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
+
+rm -rf 'proto/provlabs'
+curl -f -sSL "$VAULT_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
 
 ICS23_FILE='proto/cosmos/ics23/v1/proofs.proto'
 curl -f -sSL "$ICS23_PROTO_URL" -o "$ICS23_FILE" --create-dirs
