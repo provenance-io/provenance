@@ -23,9 +23,9 @@ Each ledger is recorded by its [ledger id](01_concepts.md#ledger-identifiers).
 
 Where:
 * `0x01` is the type byte, and has a value of `1` for these records.
-* `<ledger id>` is a sting with the [ledger identifier](01_concepts.md#ledger-identifiers).
+* `<ledger id>` is a string with the [ledger identifier](01_concepts.md#ledger-identifiers).
+* `protobuf(Ledger)` is a protobuf-encoded [Ledger](03_messages.md#ledger) object.
 
-See also: [Ledger](03_messages.md#ledger).
 
 ## Ledger Entries
 
@@ -37,11 +37,11 @@ Each ledger entry is stored by its [ledger id](01_concepts.md#ledger-identifiers
 
 Where:
 * `0x02` is the type byte, and has a value of `2` for these records.
-* `<ledger id>` is a sting with the [ledger identifier](01_concepts.md#ledger-identifiers).
+* `<ledger id>` is a string with the [ledger identifier](01_concepts.md#ledger-identifiers).
 * `0x00` is a null byte separator.
 * `<correlation id>` is a string with the correlation identifier for the ledger entry that these settlement instructions belong to.
+* `protobuf(LedgerEntry)` is a protobuf-encoded [LedgerEntry](03_messages.md#ledgerentry) object.
 
-See also: [LedgerEntry](03_messages.md#ledgerentry).
 
 ## Fund Transfers With Settlement
 
@@ -53,15 +53,16 @@ Information about each fund transfer with settlement is stored by its [ledger id
 
 Where:
 * `0x08` is the type byte, and has a value of `8` for these records.
-* `<ledger id>` is a sting with the [ledger identifier](01_concepts.md#ledger-identifiers).
+* `<ledger id>` is a string with the [ledger identifier](01_concepts.md#ledger-identifiers).
 * `0x00` is a null byte separator.
 * `<correlation id>` is a string with the correlation identifier for the ledger entry that these settlement instructions belong to.
+* `protobuf(StoredSettlementInstructions)` is a protobuf-encoded `StoredSettlementInstructions` object (see below).
 
 #### StoredSettlementInstructions
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger_settlement.proto#L51-L55
 
-See also: [SettlementInstructions](03_messages.md#settlementinstructions).
+See also: [SettlementInstruction](03_messages.md#settlementinstruction).
 
 
 ## Ledger Classes
@@ -75,8 +76,8 @@ Each ledger class is stored by its class id.
 Where:
 * `0x03` is the type byte, and has a value of `3` for these records.
 * `<class id>` is a string containing the ledger class identifier.
+* `protobuf(LedgerClass)` is a protobuf-encoded [LedgerClass](03_messages.md#ledgerclass) object.
 
-See also: [LedgerClass](03_messages.md#ledgerclass).
 
 ## Ledger Class Entry Types
 
@@ -91,8 +92,7 @@ Where:
 * `<class id>` is a string containing the ledger class identifier.
 * `0x00` is a null byte separator.
 * `<entry type id>` is a string with the entry type's identifier.
-
-See also: [LedgerClassEntryType](03_messages.md#ledgerclassentrytype).
+* `protobuf(LedgerClassEntryType)` is a protobuf-encoded [LedgerClassEntryType](03_messages.md#ledgerclassentrytype) object.
 
 
 ## Ledger Class Status Types
@@ -108,6 +108,8 @@ Where:
 * `<class id>` is a string containing the ledger class identifier.
 * `0x00` is a null byte separator.
 * `<status type id>` is a string containing the status type's identifier.
+* `protobuf(LedgerClassStatusType)` is a protobuf-encoded [LedgerClassStatusType](03_messages.md#ledgerclassstatustype) object.
+
 
 ## Ledger Class Bucket Types
 
@@ -122,3 +124,4 @@ Where:
 * `<class id>` is a string containing the ledger class identifier.
 * `0x00` is a null byte separator.
 * `<bucket type id>` is a string containing the bucket type's identifier.
+* `protobuf(LedgerClassBucketType)` is a protobuf-encoded [LedgerClassBucketType](03_messages.md#ledgerclassbuckettype) object.

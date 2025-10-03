@@ -48,16 +48,16 @@ The module maintains balances in different buckets. Each of these buckets is con
 Examples of potential buckets that may be configured by the ledger class maintainer:
 
 1. **Principal Bucket**
-   - Tracks the principal amount
-   - Affected by disbursements and principal payments
+   - Tracks the principal amount.
+   - Affected by disbursements and principal payments.
 
 2. **Interest Bucket**
-   - Tracks interest amounts
-   - Affected by interest accruals and payments
+   - Tracks interest amounts.
+   - Affected by interest accruals and payments.
 
 3. **Other Bucket**
-   - Tracks miscellaneous amounts
-   - Used for fees, adjustments, and special transactions
+   - Tracks miscellaneous amounts.
+   - Used for fees, adjustments, and special transactions.
 
 See also: [BucketBalance](03_messages.md#bucketbalance).
 
@@ -67,23 +67,23 @@ The module supports any type of entry type configured by the maintainer of the l
 
 Examples of potential entry types that may be configured by the ledger class maintainer:
 
-1. `DISBURSEMENT`: Represents funds being disbursed
-   - Example: Initial loan amount disbursed to borrower
+1. `DISBURSEMENT`: Represents funds being disbursed.
+   - Example: Initial loan amount disbursed to borrower.
 
-2. `SCHEDULED_PAYMENT`: Represents a scheduled payment
-   - Example: Regular monthly payment
+2. `SCHEDULED_PAYMENT`: Represents a scheduled payment.
+   - Example: Regular monthly payment.
 
-3. `UNSCHEDULED_PAYMENT`: Represents an unscheduled payment
-   - Example: Extra payment or early payoff
+3. `UNSCHEDULED_PAYMENT`: Represents an unscheduled payment.
+   - Example: Extra payment or early payoff.
 
-4. `FORECLOSURE_PAYMENT`: Represents a foreclosure-related payment
-   - Example: Payment from foreclosure proceeds
+4. `FORECLOSURE_PAYMENT`: Represents a foreclosure-related payment.
+   - Example: Payment from foreclosure proceeds.
 
-5. `FEE`: Represents a fee charged
-   - Example: Origination fee, late payment fee
+5. `FEE`: Represents a fee charged.
+   - Example: Origination fee, late payment fee.
 
-6. `OTHER`: Represents other types of financial activities
-   - Example: Adjustments, corrections, or special transactions
+6. `OTHER`: Represents other types of financial activities.
+   - Example: Adjustments, corrections, or special transactions.
 
 See also: [LedgerClassEntryType](03_messages.md#ledgerclassentrytype).
 
@@ -92,16 +92,16 @@ See also: [LedgerClassEntryType](03_messages.md#ledgerclassentrytype).
 The module supports any status for a ledger as configured by the maintainer of the ledger class.
 
 Examples of potential ledger statuses:
-1. `IN_REPAYMENT`: Normal repayment status
-2. `IN_FORECLOSURE`: Foreclosure process initiated
-3. `FORBEARANCE`: Temporary payment relief granted
-4. `DEFERMENT`: Payment deferral period
-5. `BANKRUPTCY`: Bankruptcy status
-6. `CLOSED`: Ledger is closed
-7. `CANCELLED`: Ledger is cancelled
-8. `SUSPENDED`: Ledger is suspended
-9. `PIF`: Ledger is Paid-in-full
-10. `OTHER`: Other status types
+1. `IN_REPAYMENT`: Normal repayment status.
+2. `IN_FORECLOSURE`: Foreclosure process initiated.
+3. `FORBEARANCE`: Temporary payment relief granted.
+4. `DEFERMENT`: Payment deferral period.
+5. `BANKRUPTCY`: Bankruptcy status.
+6. `CLOSED`: Ledger is closed.
+7. `CANCELLED`: Ledger is cancelled.
+8. `SUSPENDED`: Ledger is suspended.
+9. `PIF`: Ledger is Paid-in-full.
+10. `OTHER`: Other status types.
 
 See also: [LedgerClassStatusType](03_messages.md#ledgerclassstatustype).
 

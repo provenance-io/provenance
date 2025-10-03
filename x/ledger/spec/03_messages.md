@@ -347,10 +347,10 @@ Ledger and ledger entries can be created together and in bulk using a `MsgBulkCr
 This is essentially a combination of the [CreateLedger](#createledger) and [Append](#append) endpoints.
 
 This request is expected to fail if:
-- One or more of the ledgers already exists.
+- One or more of the ledgers already exist.
 - One or more of the NFTs do not exist.
 - One or more of the ledger classes do not exist.
-- One ore more of the ledger class status types do not exist.
+- One or more of the ledger class status types do not exist.
 - The `signer` does not have the authority to create a ledger for one or more provided NFTs.
 - The ledger does not exist for one or more ledger entries.
 - The `signer` does not have the authority to update the ledger for one or more ledger entries.

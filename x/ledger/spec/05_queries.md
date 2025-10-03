@@ -181,7 +181,7 @@ See also: [BucketBalance](03_messages.md#bucketbalance).
 
 ## LedgerSettlements
 
-To look up the settlemets for a ledger, use the `LedgerSettlements` query.
+To look up the settlements for a ledger, use the `LedgerSettlements` query.
 
 ### QueryLedgerSettlementsRequest
 
@@ -193,7 +193,7 @@ See also: [LedgerKey](03_messages.md#ledgerkey).
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L208-L211
 
-See also: [SettlementInstructions](03_messages.md#settlementinstructions).
+See also: [SettlementInstruction](03_messages.md#settlementinstruction).
 
 
 ## LedgerSettlementsByCorrelationID
@@ -210,4 +210,4 @@ See also: [LedgerKey](03_messages.md#ledgerkey).
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L220-L223
 
-See also: [StoredSettlementInstructions](#storedsettlementinstructions).
+See also: [SettlementInstruction](03_messages.md#settlementinstruction).
