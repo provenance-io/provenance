@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	vaulttypes "github.com/provlabs/vault/types"
+
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -12,8 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
-
-	vaulttypes "github.com/provlabs/vault/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
