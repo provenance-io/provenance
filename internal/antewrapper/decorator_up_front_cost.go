@@ -21,10 +21,12 @@ type DeductUpFrontCostDecorator struct {
 	fk FeegrantKeeper
 }
 
+// NewDeductUpFrontCostDecorator returns a new DeductUpFrontCostDecorator with the given keepers.
 func NewDeductUpFrontCostDecorator(ak ante.AccountKeeper, bk BankKeeper, fk FeegrantKeeper) DeductUpFrontCostDecorator {
 	return DeductUpFrontCostDecorator{ak: ak, bk: bk, fk: fk}
 }
 
+// AnteHandle implements the ante handler logic for DeductUpFrontCostDecorator.
 func (d DeductUpFrontCostDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	if err := d.checkDeductUpFrontCost(ctx, tx, simulate); err != nil {
 		return ctx, err
