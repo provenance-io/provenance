@@ -12,18 +12,18 @@ import (
 var _ types.QueryServer = LedgerQueryServer{}
 
 type LedgerQueryServer struct {
-	k Keeper
+	Keeper
 }
 
 func NewLedgerQueryServer(k Keeper) LedgerQueryServer {
 	return LedgerQueryServer{
-		k: k,
+		Keeper: k,
 	}
 }
 
 // LedgerClass returns the ledger class for a given ledger class id.
 func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *types.QueryLedgerClassRequest) (*types.QueryLedgerClassResponse, error) {
-	ledgerClass, err := qs.k.GetLedgerClass(ctx, req.LedgerClassId)
+	ledgerClass, err := qs.GetLedgerClass(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (qs LedgerQueryServer) LedgerClass(ctx context.Context, req *types.QueryLed
 
 // LedgerClasses returns a paginated list of all ledger classes.
 func (qs LedgerQueryServer) LedgerClasses(ctx context.Context, req *types.QueryLedgerClassesRequest) (*types.QueryLedgerClassesResponse, error) {
-	ledgerClasses, pageRes, err := qs.k.GetAllLedgerClasses(ctx, req.Pagination)
+	ledgerClasses, pageRes, err := qs.GetAllLedgerClasses(ctx, req.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (qs LedgerQueryServer) LedgerClasses(ctx context.Context, req *types.QueryL
 
 // LedgerClassEntryTypes returns the entry types for a given ledger class id.
 func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *types.QueryLedgerClassEntryTypesRequest) (*types.QueryLedgerClassEntryTypesResponse, error) {
-	entryTypes, err := qs.k.GetLedgerClassEntryTypes(ctx, req.LedgerClassId)
+	entryTypes, err := qs.GetLedgerClassEntryTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (qs LedgerQueryServer) LedgerClassEntryTypes(ctx context.Context, req *type
 
 // LedgerClassStatusTypes returns the status types for a given ledger class id.
 func (qs LedgerQueryServer) LedgerClassStatusTypes(ctx context.Context, req *types.QueryLedgerClassStatusTypesRequest) (*types.QueryLedgerClassStatusTypesResponse, error) {
-	statusTypes, err := qs.k.GetLedgerClassStatusTypes(ctx, req.LedgerClassId)
+	statusTypes, err := qs.GetLedgerClassStatusTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (qs LedgerQueryServer) LedgerClassStatusTypes(ctx context.Context, req *typ
 
 // LedgerClassBucketTypes returns the bucket types for a given ledger class id.
 func (qs LedgerQueryServer) LedgerClassBucketTypes(ctx context.Context, req *types.QueryLedgerClassBucketTypesRequest) (*types.QueryLedgerClassBucketTypesResponse, error) {
-	bucketTypes, err := qs.k.GetLedgerClassBucketTypes(ctx, req.LedgerClassId)
+	bucketTypes, err := qs.GetLedgerClassBucketTypes(ctx, req.LedgerClassId)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (qs LedgerQueryServer) LedgerClassBucketTypes(ctx context.Context, req *typ
 func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *types.QueryLedgerRequest) (*types.QueryLedgerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	l, err := qs.k.GetLedger(ctx, req.Key)
+	l, err := qs.GetLedger(ctx, req.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (qs LedgerQueryServer) Ledger(goCtx context.Context, req *types.QueryLedger
 
 // Ledgers returns a paginated list of all ledgers.
 func (qs LedgerQueryServer) Ledgers(ctx context.Context, req *types.QueryLedgersRequest) (*types.QueryLedgersResponse, error) {
-	ledgers, pageRes, err := qs.k.GetAllLedgers(ctx, req.Pagination)
+	ledgers, pageRes, err := qs.GetAllLedgers(ctx, req.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (qs LedgerQueryServer) Ledgers(ctx context.Context, req *types.QueryLedgers
 func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *types.QueryLedgerEntriesRequest) (*types.QueryLedgerEntriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	entries, err := qs.k.ListLedgerEntries(ctx, req.Key)
+	entries, err := qs.ListLedgerEntries(ctx, req.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -138,11 +138,11 @@ func (qs LedgerQueryServer) LedgerEntries(goCtx context.Context, req *types.Quer
 
 // LedgerEntry returns a specific ledger entry for an NFT.
 func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *types.QueryLedgerEntryRequest) (*types.QueryLedgerEntryResponse, error) {
-	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
+	if !qs.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
-	entry, err := qs.k.GetLedgerEntry(ctx, req.Key, req.CorrelationId)
+	entry, err := qs.GetLedgerEntry(ctx, req.Key, req.CorrelationId)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (qs LedgerQueryServer) LedgerEntry(ctx context.Context, req *types.QueryLed
 
 // LedgerBalancesAsOf returns the balances for a specific NFT as of a given date.
 func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *types.QueryLedgerBalancesAsOfRequest) (*types.QueryLedgerBalancesAsOfResponse, error) {
-	if !qs.k.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
+	if !qs.HasLedger(sdk.UnwrapSDKContext(ctx), req.Key) {
 		return nil, types.NewErrCodeNotFound("ledger")
 	}
 
@@ -168,7 +168,7 @@ func (qs LedgerQueryServer) LedgerBalancesAsOf(ctx context.Context, req *types.Q
 		return nil, types.NewErrCodeInvalidField("as-of-date", "invalid date format")
 	}
 
-	balances, err := qs.k.GetBalancesAsOf(ctx, req.Key, asOfDate)
+	balances, err := qs.GetBalancesAsOf(ctx, req.Key, asOfDate)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func (qs LedgerQueryServer) LedgerSettlements(ctx context.Context, req *types.Qu
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
-	settlementLists, err := qs.k.GetAllSettlements(ctx, &keyStr)
+	settlementLists, err := qs.GetAllSettlements(ctx, &keyStr)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func (qs LedgerQueryServer) LedgerSettlementsByCorrelationID(ctx context.Context
 	// convert the ledger key to a string
 	keyStr := req.Key.String()
 
-	settlements, err := qs.k.GetSettlements(ctx, &keyStr, req.CorrelationId)
+	settlements, err := qs.GetSettlements(ctx, &keyStr, req.CorrelationId)
 	if err != nil {
 		return nil, err
 	}
