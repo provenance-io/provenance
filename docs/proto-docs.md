@@ -5759,7 +5759,7 @@ QueryLedgerSettlementsByCorrelationIDResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `settlements` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) |  |  |
+| `settlements` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
 
 
@@ -5789,7 +5789,7 @@ QueryLedgerSettlementsResponse
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `settlements` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) | repeated |  |
+| `settlements` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
 
 
 

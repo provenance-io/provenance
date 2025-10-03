@@ -207,7 +207,7 @@ message QueryLedgerSettlementsRequest {
 
 // QueryLedgerSettlementsResponse
 message QueryLedgerSettlementsResponse {
-  repeated StoredSettlementInstructions settlements = 1;
+  repeated SettlementInstruction settlements = 1;
 }
 
 // QueryLedgerSettlementsByCorrelationIDRequest
@@ -219,5 +219,5 @@ message QueryLedgerSettlementsByCorrelationIDRequest {
 
 // QueryLedgerSettlementsByCorrelationIDResponse
 message QueryLedgerSettlementsByCorrelationIDResponse {
-  StoredSettlementInstructions settlements = 1;
+  repeated SettlementInstruction settlements = 1;
 }
