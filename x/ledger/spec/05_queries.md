@@ -29,7 +29,7 @@ Use the `LedgerClass` query to look up a specific ledger class.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L86-L89
 
-See also: [LedgerClass](03_messages.md#ledgerclass)
+See also: [LedgerClass](03_messages.md#ledgerclass).
 
 
 ## LedgerClasses
@@ -46,7 +46,7 @@ This query is paginated.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L97-L104
 
-See also: [LedgerClass](03_messages.md#ledgerclass)
+See also: [LedgerClass](03_messages.md#ledgerclass).
 
 
 ## LedgerClassEntryTypes
@@ -61,7 +61,7 @@ To get all ledger class entry types for a ledger class, use the `LedgerClassEntr
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L111-L114
 
-See also: [LedgerClassEntryType](03_messages.md#ledgerclassentrytype)
+See also: [LedgerClassEntryType](03_messages.md#ledgerclassentrytype).
 
 
 ## LedgerClassStatusTypes
@@ -76,7 +76,7 @@ To get all ledger class status types for a ledger class, use the `LedgerClassEnt
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L121-L124
 
-See also: [LedgerClassStatusType](03_messages.md#ledgerclassstatustype)
+See also: [LedgerClassStatusType](03_messages.md#ledgerclassstatustype).
 
 
 ## LedgerClassBucketTypes
@@ -91,7 +91,7 @@ The bucket types for a ledger class can be looked up using the `LedgerClassBucke
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L131-L134
 
-See also: [LedgerClassBucketType](03_messages.md#ledgerclassbuckettype)
+See also: [LedgerClassBucketType](03_messages.md#ledgerclassbuckettype).
 
 
 ## Ledger
@@ -102,13 +102,13 @@ To look up a specific ledger, use the `Ledger` query.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L136-L140
 
-See also: [LedgerKey](03_messages.md#ledgerkey)
+See also: [LedgerKey](03_messages.md#ledgerkey).
 
 ### QueryLedgerResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L142-L146
 
-See also: [Ledger](03_messages.md#ledger)
+See also: [Ledger](03_messages.md#ledger).
 
 
 ## Ledgers
@@ -125,7 +125,7 @@ This query is paginated.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L154-L161
 
-See also: [Ledger](03_messages.md#ledger)
+See also: [Ledger](03_messages.md#ledger).
 
 
 ## LedgerEntries
@@ -136,13 +136,13 @@ A ledger's entries are looked up using this `LedgerEntries` query.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L163-L167
 
-See also: [LedgerKey](03_messages.md#ledgerkey)
+See also: [LedgerKey](03_messages.md#ledgerkey).
 
 ### QueryLedgerEntriesResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L169-L173
 
-See also: [LedgerEntry](03_messages.md#ledgerentry)
+See also: [LedgerEntry](03_messages.md#ledgerentry).
 
 
 ## LedgerEntry
@@ -153,13 +153,13 @@ To get a specific ledger entry, use the `LedgerEntry` query.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L175-L181
 
-See also: [LedgerKey](03_messages.md#ledgerkey)
+See also: [LedgerKey](03_messages.md#ledgerkey).
 
 ### QueryLedgerEntryResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L183-L187
 
-See also: [LedgerEntry](03_messages.md#ledgerentry)
+See also: [LedgerEntry](03_messages.md#ledgerentry).
 
 
 ## LedgerBalancesAsOf
@@ -170,13 +170,13 @@ The `LedgerBalancesAsOf` returns the balance of a ledger as of a given date.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L189-L195
 
-See also: [LedgerKey](03_messages.md#ledgerkey)
+See also: [LedgerKey](03_messages.md#ledgerkey).
 
 ### QueryLedgerBalancesAsOfResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L197-L201
 
-See also: [BucketBalance](03_messages.md#bucketbalance)
+See also: [BucketBalance](03_messages.md#bucketbalance).
 
 
 ## LedgerSettlements
@@ -187,7 +187,7 @@ To look up the settlemets for a ledger, use the `LedgerSettlements` query.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L203-L206
 
-See also: [LedgerKey](03_messages.md#ledgerkey)
+See also: [LedgerKey](03_messages.md#ledgerkey).
 
 ### QueryLedgerSettlementsResponse
 
@@ -197,7 +197,7 @@ See also: [LedgerKey](03_messages.md#ledgerkey)
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger_settlement.proto#L51-L55
 
-See also: [SettlementInstructions](03_messages.md#settlementinstructions)
+See also: [SettlementInstructions](03_messages.md#settlementinstructions).
 
 
 ## LedgerSettlementsByCorrelationID
@@ -208,10 +208,10 @@ Specific ledger settlements can be looked up with the `LedgerSettlementsByCorrel
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L213-L218
 
-See also: [LedgerKey](03_messages.md#ledgerkey)
+See also: [LedgerKey](03_messages.md#ledgerkey).
 
 ### QueryLedgerSettlementsByCorrelationIDResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L220-L223
 
-See also: [StoredSettlementInstructions](#storedsettlementinstructions)
+See also: [StoredSettlementInstructions](#storedsettlementinstructions).
