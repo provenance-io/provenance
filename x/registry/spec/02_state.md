@@ -16,7 +16,6 @@ Where:
 * `<asset class id>` is a string containing the asset class identifier.
 * `0x00` is a null byte separator.
 * `<nft id>` is a string containing the NFT identifier.
+* `protobuf(RegistryEntry)` is a protobuf-encoded [RegistryEntry](01_concepts.md#registryentry) object.
 
 Records are created, updated, and deleted as needed.
-
-See also: [RegistryEntry](03_messages.md#registryentry)
