@@ -23,15 +23,15 @@ It is expected to fail if:
 
 ### MsgBurnAsset
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L39-L48
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L39-L48
 
-### AssetKey
+#### AssetKey
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/asset.proto#L51-L57
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/asset.proto#L51-L57
 
 ### MsgBurnAssetResponse
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L50-L51
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L50-L51
 
 
 ## CreateAsset
@@ -52,15 +52,15 @@ It is expected to fail if:
 
 ### MsgCreateAsset
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L53-L64
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L53-L64
 
-### Asset
+#### Asset
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/asset.proto#L33-L49
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/asset.proto#L33-L49
 
 ### MsgCreateAssetResponse
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L66-L67
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L66-L67
 
 
 ## CreateAssetClass
@@ -77,15 +77,15 @@ It is expected to fail if:
 
 ### MsgCreateAssetClass
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L69-L77
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L69-L77
 
-### AssetClass
+#### AssetClass
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/asset.proto#L9-L31
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/asset.proto#L9-L31
 
 ### MsgCreateAssetClassResponse
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L79-L80
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L79-L80
 
 
 ## CreatePool
@@ -105,13 +105,13 @@ It is expected to fail if:
 
 ### MsgCreatePool
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L82-L92
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L82-L92
 
 See also: [AssetKey](#assetkey).
 
 ### MsgCreatePoolResponse
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L94-L95
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L94-L95
 
 
 ## CreateTokenization
@@ -132,13 +132,13 @@ It is expected to fail if:
 
 ### MsgCreateTokenization
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L97-L107
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L97-L107
 
 See also: [AssetKey](#assetkey).
 
 ### MsgCreateTokenizationResponse
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L109-L110
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L109-L110
 
 
 ## CreateSecuritization
@@ -160,9 +160,9 @@ It is expected to fail if:
 
 ### MsgCreateSecuritization
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L112-L124
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L112-L124
 
 ### MsgCreateSecuritizationResponse
 
-+++ https://github.com/provenance-io/provenance/blob/x/asset/spec/proto/provenance/asset/v1/tx.proto#L126-L127
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L126-L127
 
