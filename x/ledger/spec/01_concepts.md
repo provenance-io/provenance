@@ -17,7 +17,7 @@ The module supports configurable entry types, status types, and balance buckets 
   - [Entry Types](#entry-types)
   - [Status Types](#status-types)
   - [Settlements](#settlements)
-  - [Key Generation](#key-generation)
+  - [Ledger Identifiers](#ledger-identifiers)
 
 ## Ledger Class
 
@@ -112,7 +112,7 @@ They allow owners or servicers of assets to record transfers of tokens against a
 
 See also: [SettlementInstruction](03_messages.md#settlementinstruction).
 
-## Key Generation
+## Ledger Identifiers
 
 Ledger identifiers are generated using bech32 encoding:
 - Combines `asset_class_id` and `nft_id` with a null byte delimiter

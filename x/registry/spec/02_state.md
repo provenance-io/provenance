@@ -1,6 +1,6 @@
 # Registry State
 
-The `x/registry` module uses key/value paris to store registry data in state.
+The `x/registry` module uses key/value pairs to store registry data in state.
 
 
 ## Registry Entry
