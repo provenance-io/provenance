@@ -57,7 +57,12 @@ Where:
 * `0x00` is a null byte separator.
 * `<correlation id>` is a string with the correlation identifier for the ledger entry that these settlement instructions belong to.
 
-See also: [StoredSettlementInstructions](05_queries.md#storedsettlementinstructions).
+#### StoredSettlementInstructions
+
++++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger_settlement.proto#L51-L55
+
+See also: [SettlementInstructions](03_messages.md#settlementinstructions).
+
 
 ## Ledger Classes
 

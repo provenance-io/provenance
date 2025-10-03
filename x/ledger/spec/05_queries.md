@@ -193,10 +193,6 @@ See also: [LedgerKey](03_messages.md#ledgerkey).
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/query.proto#L208-L211
 
-#### StoredSettlementInstructions
-
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/ledger_settlement.proto#L51-L55
-
 See also: [SettlementInstructions](03_messages.md#settlementinstructions).
 
 
