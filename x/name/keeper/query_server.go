@@ -36,7 +36,7 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 	return &types.QueryResolveResponse{Address: record.Address, Restricted: record.Restricted}, nil
 }
 
-// ReverseLookup using CollectionsPaginate with a custom filtered approach
+// ReverseLookup returns a paginated list of names owned by the specified address.
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
