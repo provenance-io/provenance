@@ -50,6 +50,9 @@ proto-tools-stamp
 #direnv setup
 .envrc
 
+#goenv, gvm config
+.go-version
+
 # proto generated files
 proto/gen/
 
