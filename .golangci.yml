@@ -80,6 +80,7 @@ linters.settings:
           - $gostd
           # Primary
           - github.com/provenance-io/provenance
+          - github.com/provlabs/vault
           - github.com/CosmWasm
           - cosmossdk.io
           - github.com/cosmos
