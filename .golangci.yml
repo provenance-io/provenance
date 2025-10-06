@@ -40,11 +40,85 @@ linters:
     - unused
     - whitespace
     - usetesting
+  settings:
+    depguard:
+      rules:
+        main:
+          list-type: lax
+          files:
+            - $all
+            - "!$test"
+          allow:
+            - $gostd
+            # Primary
+            - github.com/provenance-io/provenance
+            - github.com/provlabs/vault
+            - github.com/CosmWasm
+            - cosmossdk.io
+            - github.com/cosmos
+            - github.com/cometbft          
+            - github.com/armon/go-metrics
+            - google.golang.org
+            - github.com/spf13
+            - github.com/golang/protobuf
+            - github.com/google/uuid
+            - github.com/gorilla/mux
+            - github.com/grpc-ecosystem/grpc-gateway
+            - github.com/hashicorp/go-metrics
+            - github.com/rs/zerolog
+            - github.com/stretchr/testify   
+            - sigs.k8s.io/yaml
+          deny:
+            - pkg: "github.com/cosmos/cosmos-sdk/x/params"
+              desc: "The params module is no more."
+        test:
+          list-type: lax
+          files:
+            - "$test"
+          allow:
+            - $gostd
+            - github.com/stretchr/testify
+    errcheck:
+      exclude-functions:
+      - (fmt.State).Write
+    govet:
+      shadow: true
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    golint:
+      min-confidence: 0
+    dogsled:
+      max-blank-identifiers: 3
+    misspell:
+      locale: US
+      mode: default
+      ignore-rules:
+      - cancelled
+    nolintlint:
+      allow-unused: false
+      require-explanation: false
+      require-specific: false
 formatters:
   enable:
     - gofmt
     - goimports
     - gci
+  settings:
+    gci:
+      custom-order: true
+      sections:
+        - standard
+        - default
+        - prefix(github.com/cometbft)
+        - prefix(cosmossdk.io)
+        - prefix(github.com/cosmos)
+        - prefix(github.com/provenance-io)
+        - blank
+        - dot
 issues:
   exclude-rules:
     - text: "Use of weak random number generator"
@@ -67,79 +141,3 @@ issues:
         - revive
   max-issues-per-linter: 10000
   max-same-issues: 10000
-
-linters.settings:
-  depguard:
-    rules:
-      main:
-        list-type: lax
-        files:
-          - $all
-          - "!$test"
-        allow:
-          - $gostd
-          # Primary
-          - github.com/provenance-io/provenance
-          - github.com/provlabs/vault
-          - github.com/CosmWasm
-          - cosmossdk.io
-          - github.com/cosmos
-          - github.com/cometbft          
-          - github.com/armon/go-metrics
-          - google.golang.org
-          - github.com/spf13
-          - github.com/golang/protobuf
-          - github.com/google/uuid
-          - github.com/gorilla/mux
-          - github.com/grpc-ecosystem/grpc-gateway
-          - github.com/hashicorp/go-metrics
-          - github.com/rs/zerolog
-          - github.com/stretchr/testify   
-          - sigs.k8s.io/yaml
-        deny:
-          - pkg: "github.com/cosmos/cosmos-sdk/x/params"
-            desc: "The params module is no more."
-      test:
-        list-type: lax
-        files:
-          - "$test"
-        allow:
-          - $gostd
-          - github.com/stretchr/testify
-  errcheck:
-    exclude-functions:
-      - (fmt.State).Write
-  govet:
-    shadow: true
-    printf:
-      funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-  golint:
-    min-confidence: 0
-  dogsled:
-    max-blank-identifiers: 3
-  misspell:
-    locale: US
-    mode: default
-    ignore-rules:
-    - cancelled
-  nolintlint:
-    allow-unused: false
-    require-explanation: false
-    require-specific: false
-
-formatters.settings:
-  gci:
-    custom-order: true
-    sections:
-      - standard
-      - default
-      - prefix(github.com/cometbft)
-      - prefix(cosmossdk.io)
-      - prefix(github.com/cosmos)
-      - prefix(github.com/provenance-io)
-      - blank
-      - dot
