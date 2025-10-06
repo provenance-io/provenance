@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	finalProp := queries.GetGovProp(s.T(), s.network, propID)
 	s.Assert().Equal(govv1.StatusPassed, finalProp.Status, "proposal status")
 
-	// Check that that validator is still sanctioned.
+	// Check that the validator is still sanctioned.
 	isSanctOutBW2, err := cli.ExecTestCLICmd(s.clientCtx, isSanctCmd, isSanctArgs)
 	s.Require().NoError(err, "ExecTestCLICmd query sanction is-sanctioned (second time)")
 	isSanctOutBz2 := isSanctOutBW2.Bytes()
@@ -195,7 +195,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(err, "waiting for block %d (or 30 seconds)", lastHeight+5)
 	s.logHeight()
 
-	// Check that that validator is still sanctioned one last time.
+	// Check that the validator is still sanctioned one last time.
 	isSanctOutBW3, err := cli.ExecTestCLICmd(s.clientCtx, isSanctCmd, isSanctArgs)
 	s.Require().NoError(err, "ExecTestCLICmd query sanction is-sanctioned (third time)")
 	isSanctOutBz3 := isSanctOutBW3.Bytes()
