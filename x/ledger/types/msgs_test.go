@@ -192,7 +192,18 @@ func TestMsgTransferFundsWithSettlement_ValidateBasic(t *testing.T) {
 func TestMsgBulkCreate_ValidateBasic(t *testing.T) {
 	validAddr := sdk.AccAddress("bulk_signer____________").String()
 	lk := &LedgerKey{AssetClassId: "aclass", NftId: "nft1"}
-	l := &Ledger{Key: lk, LedgerClassId: "lclass", StatusTypeId: 1}
+	l := &Ledger{
+		Key:                        lk,
+		LedgerClassId:              "lclass",
+		StatusTypeId:               1,
+		NextPmtDate:                20250101,
+		NextPmtAmt:                 math.NewInt(100),
+		InterestRate:               5_000_000,
+		InterestDayCountConvention: DAY_COUNT_CONVENTION_THIRTY_360,
+		InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST,
+		PaymentFrequency:           PAYMENT_FREQUENCY_MONTHLY,
+		MaturityDate:               20260101,
+	}
 	entry := &LedgerEntry{EntryTypeId: 1, PostedDate: 20240101, EffectiveDate: 20240101, TotalAmt: math.NewInt(100), AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}}, CorrelationId: "c1"}
 	le := &LedgerAndEntries{LedgerKey: lk, Ledger: l, Entries: []*LedgerEntry{entry}}
 
@@ -202,6 +213,7 @@ func TestMsgBulkCreate_ValidateBasic(t *testing.T) {
 		exp  []string
 	}{
 		{name: "valid", msg: MsgBulkCreateRequest{Signer: validAddr, LedgerAndEntries: []*LedgerAndEntries{le}}},
+		{name: "empty signer", msg: MsgBulkCreateRequest{Signer: "", LedgerAndEntries: []*LedgerAndEntries{le}}, exp: []string{"invalid signer"}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
