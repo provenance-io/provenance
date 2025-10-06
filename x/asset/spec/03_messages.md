@@ -3,13 +3,13 @@
 The asset module has `Msg` endpoints for creating and managing assets, asset classes, pools, tokenizations, and securitizations.
 
 ---
-<!-- TOC -->
-  - [MsgBurnAsset](#burnasset)
-  - [MsgCreateAsset](#createasset)
-  - [MsgCreateAssetClass](#createassetclass)
-  - [MsgCreatePool](#createpool)
-  - [MsgCreateTokenization](#createtokenization)
-  - [MsgCreateSecuritization](#createsecuritization)
+<!-- TOC 2 2 -->
+  - [BurnAsset](#burnasset)
+  - [CreateAsset](#createasset)
+  - [CreateAssetClass](#createassetclass)
+  - [CreatePool](#createpool)
+  - [CreateTokenization](#createtokenization)
+  - [CreateSecuritization](#createsecuritization)
 
 
 ## BurnAsset
@@ -165,4 +165,3 @@ It is expected to fail if:
 ### MsgCreateSecuritizationResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/tx.proto#L126-L127
-

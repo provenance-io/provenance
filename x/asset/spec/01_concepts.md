@@ -3,7 +3,7 @@
 The `x/asset` module provides a comprehensive digital asset management system on the Provenance blockchain, leveraging the Cosmos SDK's NFT module as the underlying infrastructure.
 
 ---
-<!-- TOC -->
+<!-- TOC 2 2 -->
   - [Asset Classes](#asset-classes)
   - [Assets](#assets)
   - [Pools](#pools)
