@@ -660,6 +660,7 @@ func TestHandlersConsumeMsgs(t *testing.T) {
 		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTx",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams",
+		"/provenance.asset.v1.AssetData",
 		"/provenance.metadata.v1.MsgP8eMemorializeContractRequest",
 		"/provenance.metadata.v1.MsgWriteP8eContractSpecRequest",
 		"/provenance.msgfees.v1.MsgAddMsgFeeProposalRequest",
