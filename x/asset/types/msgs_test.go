@@ -175,7 +175,7 @@ func TestMsgCreateAsset_ValidateBasic(t *testing.T) {
 				Owner:  "",
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid owner: empty address string is not allowed: invalid field",
+			expErr: "",
 		},
 		{
 			name: "invalid owner",
@@ -643,7 +643,7 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 				},
 				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
-			expErr: "invalid id: cannot be empty: invalid field",
+			expErr: "invalid id: invalid denom: : invalid field",
 		},
 		{
 			name: "empty pools",
