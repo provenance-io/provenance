@@ -145,12 +145,12 @@ func (s *KeeperTestSuite) TestQueryGetRegistries() {
 			expErr: "empty request",
 		},
 		{
-			name: "all registries - empty filter invalid",
+			name: "all registries without filter",
 			req: &types.QueryGetRegistriesRequest{
 				Pagination: nil,
 			},
-			expErr:   "cannot be empty if provided",
-			expCount: 0,
+			expErr:   "",
+			expCount: 4, // All 4 registries created
 		},
 		{
 			name: "filter by asset class 'aclass'",
@@ -187,8 +187,8 @@ func (s *KeeperTestSuite) TestQueryGetRegistries() {
 					CountTotal: true,
 				},
 			},
-			expErr:   "cannot be empty if provided",
-			expCount: 0,
+			expErr:   "",
+			expCount: 2, // Limited to 2 registries
 		},
 		{
 			name: "with pagination offset",
@@ -199,8 +199,8 @@ func (s *KeeperTestSuite) TestQueryGetRegistries() {
 					CountTotal: true,
 				},
 			},
-			expErr:   "cannot be empty if provided",
-			expCount: 0,
+			expErr:   "",
+			expCount: 2, // 2 registries after skipping first 2
 		},
 	}
 
