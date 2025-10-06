@@ -306,8 +306,15 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	for i, applied := range le.AppliedAmounts {
-		if applied.BucketTypeId <= 0 {
-			errs = append(errs, fmt.Errorf("applied_amounts[%d].bucket_type_id: must be a positive integer", i))
+		if err := applied.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("applied_amounts[%d]: %w", i, err))
+		}
+	}
+
+	// Validate balance amounts
+	for i, balance := range le.BalanceAmounts {
+		if err := balance.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("balance_amounts[%d]: %w", i, err))
 		}
 	}
 
