@@ -16,11 +16,11 @@ The `QueryOracleAddress` query is used to obtain the address of the module's ora
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/oracle/v1/query.proto#L25-L26
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/oracle/v1/query.proto#L27-L28
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/oracle/v1/query.proto#L28-L32
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/oracle/v1/query.proto#L30-L34
 
 
 ---
@@ -29,10 +29,10 @@ The `QueryOracle` query forwards a query to the module's oracle.
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/oracle/v1/query.proto#L34-L38
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/oracle/v1/query.proto#L36-L40
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/oracle/v1/query.proto#L40-L44
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/oracle/v1/query.proto#L42-L46
 
 The data from the `query` field is a `CosmWasm query` forwarded to the `oracle`. 

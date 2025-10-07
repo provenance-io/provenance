@@ -13,11 +13,11 @@ Also, the `gas_adjustment` now only applies to the returned `estimated_gas` fiel
 
 ### CalculateTxFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/msgfees/v1/query.proto#L26-L38
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/msgfees/v1/query.proto#L26-L38
 
 ### CalculateTxFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/msgfees/v1/query.proto#L40-L62
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/msgfees/v1/query.proto#L40-L62
 
 ### CalculateTxFees Client Info
 
