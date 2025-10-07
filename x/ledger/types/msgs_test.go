@@ -1,10 +1,15 @@
 package types_test
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 
@@ -264,21 +269,83 @@ func TestMsgAddLedgerClassStatusType_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgAddLedgerClassEntryType_ValidateBasic(t *testing.T) {
-	validAddr := sdk.AccAddress("entry_add_signer_______").String()
-	et := &LedgerClassEntryType{Id: 1, Code: "ADJ", Description: "Adjustment"}
-
 	tests := []struct {
 		name string
 		msg  MsgAddLedgerClassEntryTypeRequest
 		exp  []string
 	}{
-		{name: "valid", msg: MsgAddLedgerClassEntryTypeRequest{Signer: validAddr, LedgerClassId: "lclass", EntryType: et}},
-		{name: "nil entry type", msg: MsgAddLedgerClassEntryTypeRequest{Signer: validAddr, LedgerClassId: "lclass", EntryType: nil}, exp: []string{"invalid entry_type", "cannot be nil"}},
+		{
+			name: "valid",
+			msg: MsgAddLedgerClassEntryTypeRequest{
+				Signer:        sdk.AccAddress("signer______________").String(),
+				LedgerClassId: "lclass",
+				EntryType:     &LedgerClassEntryType{Id: 1, Code: "ADJ", Description: "Adjustment"},
+			},
+		},
+		{
+			name: "no signer",
+			msg: MsgAddLedgerClassEntryTypeRequest{
+				Signer:        "",
+				LedgerClassId: "lclass",
+				EntryType:     &LedgerClassEntryType{Id: 1, Code: "ADJ", Description: "Adjustment"},
+			},
+			exp: []string{"invalid signer", "empty address string is not allowed", "invalid field"},
+		},
+		{
+			name: "bad signer",
+			msg: MsgAddLedgerClassEntryTypeRequest{
+				Signer:        "not-an-addr",
+				LedgerClassId: "lclass",
+				EntryType:     &LedgerClassEntryType{Id: 1, Code: "ADJ", Description: "Adjustment"},
+			},
+			exp: []string{"invalid signer", "decoding bech32 failed: invalid separator index -1", "invalid field"},
+		},
+		{
+			name: "no ledger class",
+			msg: MsgAddLedgerClassEntryTypeRequest{
+				Signer:        sdk.AccAddress("signer______________").String(),
+				LedgerClassId: "",
+				EntryType:     &LedgerClassEntryType{Id: 1, Code: "ADJ", Description: "Adjustment"},
+			},
+			exp: []string{"invalid ledger_class_id", "must be between 1 and 50 characters", "invalid field"},
+		},
+		{
+			name: "ledger class too long",
+			msg: MsgAddLedgerClassEntryTypeRequest{
+				Signer:        sdk.AccAddress("signer______________").String(),
+				LedgerClassId: "l" + strings.Repeat("c", MaxLenLedgerClassID),
+				EntryType:     &LedgerClassEntryType{Id: 1, Code: "ADJ", Description: "Adjustment"},
+			},
+			exp: []string{"invalid ledger_class_id", "must be between 1 and 50 characters", "invalid field"},
+		},
+		{
+			name: "nil entry type",
+			msg: MsgAddLedgerClassEntryTypeRequest{
+				Signer:        sdk.AccAddress("signer______________").String(),
+				LedgerClassId: "lclass",
+				EntryType:     nil,
+			},
+			exp: []string{"invalid entry_type", "cannot be nil", "invalid field"},
+		},
+		{
+			name: "invalid entry type",
+			msg: MsgAddLedgerClassEntryTypeRequest{
+				Signer:        sdk.AccAddress("signer______________").String(),
+				LedgerClassId: "lclass",
+				EntryType:     &LedgerClassEntryType{Id: -1, Code: "ADJ", Description: "Adjustment"},
+			},
+			exp: []string{"invalid entry_type", "id must be a non-negative integer", "invalid field"},
+		},
 	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			assertions.RequireErrorContents(t, err, tc.exp)
+			var err error
+			testFunc := func() {
+				err = tc.msg.ValidateBasic()
+			}
+			require.NotPanics(t, testFunc, "%T.ValidateBasic()", tc.msg)
+			assertions.RequireErrorContents(t, err, tc.exp, "%T.ValidateBasic() error", tc.msg)
 		})
 	}
 }

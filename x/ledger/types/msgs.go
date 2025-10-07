@@ -299,9 +299,7 @@ func (m MsgAddLedgerClassEntryTypeRequest) ValidateBasic() error {
 
 	if m.EntryType == nil {
 		errs = append(errs, NewErrCodeInvalidField("entry_type", "cannot be nil"))
-	}
-
-	if err := m.EntryType.Validate(); err != nil {
+	} else if err := m.EntryType.Validate(); err != nil {
 		errs = append(errs, NewErrCodeInvalidField("entry_type", "%s", err))
 	}
 
