@@ -120,6 +120,8 @@ linters-settings:
 
           - github.com/provenance-io/provenance
 
+          - github.com/provlabs/vault
+
           - github.com/spf13/cast
           - github.com/spf13/cobra
           - github.com/spf13/pflag

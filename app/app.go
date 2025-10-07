@@ -12,6 +12,9 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/gorilla/mux"
+	vaultmodule "github.com/provlabs/vault"
+	vaultkeeper "github.com/provlabs/vault/keeper"
+	vaulttypes "github.com/provlabs/vault/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
@@ -300,6 +303,8 @@ type App struct {
 	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
+	VaultKeeper *vaultkeeper.Keeper
+
 	TransferStack       *ibchooks.IBCMiddleware
 	Ics20WasmHooks      *ibchooks.WasmHooks
 	Ics20MarkerHooks    *ibchooks.MarkerHooks
@@ -406,6 +411,8 @@ func New(
 		ledger.StoreKey,
 		exchange.StoreKey,
 		nft.StoreKey,
+
+		vaulttypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys()
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -621,6 +628,17 @@ func New(
 		app.MetadataKeeper,
 	)
 
+	app.VaultKeeper = vaultkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[vaulttypes.StoreKey]),
+		runtime.EventService{},
+		address.Bech32Codec{Bech32Prefix: addrPrefix},
+		[]byte(govAuthority),
+		app.AccountKeeper,
+		app.MarkerKeeper,
+		app.BankKeeper,
+	)
+
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return app.MsgServiceRouter().Handler(msg)
 	})
@@ -796,6 +814,8 @@ func New(
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
+		vaultmodule.NewAppModule(app.VaultKeeper, app.MarkerKeeper, app.BankKeeper, address.Bech32Codec{Bech32Prefix: addrPrefix}),
+
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
 		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper),
@@ -847,6 +867,7 @@ func New(
 		attributetypes.ModuleName,
 		authz.ModuleName,
 		triggertypes.ModuleName,
+		vaulttypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -856,6 +877,7 @@ func New(
 		feegrant.ModuleName,
 		group.ModuleName,
 		triggertypes.ModuleName,
+		vaulttypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -900,6 +922,8 @@ func New(
 		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
 		assettypes.ModuleName,
+
+		vaulttypes.ModuleName,
 
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -958,6 +982,8 @@ func New(
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
 		assettypes.ModuleName,
+
+		vaulttypes.ModuleName,
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,

@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	vaulttypes "github.com/provlabs/vault/types"
+
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -49,7 +51,7 @@ type appUpgrade struct {
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"bouvardia-rc1": { // Upgrade for v1.26.0-rc1.
-		Added:   []string{flatfeestypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey},
+		Added:   []string{flatfeestypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey, vaulttypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -73,7 +75,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"bouvardia": { // Upgrade for v1.26.0.
-		Added:   []string{flatfeestypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey},
+		Added:   []string{flatfeestypes.StoreKey, registryTypes.StoreKey, ledgerTypes.StoreKey, vaulttypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -448,6 +450,9 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgDestroyRequest", feeDefCoin(10)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgRevokeGrantAllowanceRequest", feeDefCoin(10)),
 
+		// Msgs that cost $0.02.
+		flatfeestypes.NewMsgFee("/provenance.attribute.v1.MsgAddAttributeRequest", feeDefCoin(20)),
+
 		// Msgs that cost $0.05.
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgExec", feeDefCoin(50)),
 		flatfeestypes.NewMsgFee("/cosmos.authz.v1beta1.MsgRevoke", feeDefCoin(50)),
@@ -512,7 +517,6 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		// The default cost is $0.15. All Msg types not in this list will use the default.
 
 		// Msgs that cost $0.25.
-		flatfeestypes.NewMsgFee("/provenance.attribute.v1.MsgAddAttributeRequest", feeDefCoin(250)),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgIbcTransferRequest", feeDefCoin(250)),
 		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgBindNameRequest", feeDefCoin(250)),
 		flatfeestypes.NewMsgFee("/provenance.oracle.v1.MsgSendQueryOracleRequest", feeDefCoin(250)),

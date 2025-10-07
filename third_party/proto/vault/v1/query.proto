@@ -1,0 +1,143 @@
+syntax = "proto3";
+package vault.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "vault/v1/vault.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// Query is the service for the vault module's query endpoints.
+service Query {
+  // Vaults returns a paginated list of all vaults.
+  rpc Vaults(QueryVaultsRequest) returns (QueryVaultsResponse) {
+    option (google.api.http).get = "/vault/v1/vaults";
+  }
+
+  // Vault returns the configuration and state of a specific vault.
+  rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{id}";
+  }
+
+  // EstimateSwapIn estimates the amount of shares that would be received for a given amount of underlying assets.
+  rpc EstimateSwapIn(QueryEstimateSwapInRequest) returns (QueryEstimateSwapInResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_in";
+  }
+
+  // EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
+  rpc EstimateSwapOut(QueryEstimateSwapOutRequest) returns (QueryEstimateSwapOutResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_out";
+  }
+
+  // PendingSwapOuts returns a paginated list of all pending swap outs.
+  rpc PendingSwapOuts(QueryPendingSwapOutsRequest) returns (QueryPendingSwapOutsResponse) {
+    option (google.api.http).get = "/vault/v1/pending_swap_outs";
+  }
+}
+
+// QueryPendingSwapOutsRequest is the request message for the Query/PendingSwapOuts endpoint.
+message QueryPendingSwapOutsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryPendingSwapOutsResponse is the response message for the Query/PendingSwapOuts endpoint.
+message QueryPendingSwapOutsResponse {
+  // pending_swap_outs is a list of all pending swap outs.
+  repeated PendingSwapOutWithTimeout pending_swap_outs = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// PendingSwapOutWithTimeout is a pending swap out with its timeout.
+message PendingSwapOutWithTimeout {
+  // request_id is the unique identifier for the pending swap out request.
+  uint64 request_id = 1;
+  // pending_swap_out contains the details of the swap out request.
+  PendingSwapOut pending_swap_out = 2 [(gogoproto.nullable) = false];
+  // timeout is the time at which the pending swap out will expire if not processed.
+  google.protobuf.Timestamp timeout = 3 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryVaultsRequest is the request message for the Query/Vaults endpoint.
+message QueryVaultsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryVaultsResponse is the response message for the Query/Vaults endpoint.
+message QueryVaultsResponse {
+  // vaults is a list of all vaults.
+  repeated VaultAccount vaults = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVaultRequest is the request message for the Query/Vault endpoint.
+message QueryVaultRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+}
+
+// QueryVaultResponse is the response message for the Query/Vault endpoint.
+message QueryVaultResponse {
+  // vault is the requested vault.
+  VaultAccount vault = 1 [(gogoproto.nullable) = false];
+  // principal is the total amount of principal held in the vault's marker.
+  AccountBalance principal = 2 [(gogoproto.nullable) = false];
+  // reserves is the total amount of reserves held in the vault account for interest payments.
+  AccountBalance reserves = 3 [(gogoproto.nullable) = false];
+}
+
+// QueryEstimateSwapInRequest is the request message for the Query/EstimateSwapIn endpoint.
+message QueryEstimateSwapInRequest {
+  // vault_address is the bech32 address of the vault to query.
+  string vault_address = 1;
+  // assets is the amount of underlying or payment denom to swap in.
+  cosmos.base.v1beta1.Coin assets = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryEstimateSwapInResponse is the response message for the Query/EstimateSwapIn endpoint.
+message QueryEstimateSwapInResponse {
+  // assets is the estimated amount of shares that would be received.
+  cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
+  // The block height when the estimate occurred.
+  int64 height = 2;
+  // The UTC block time when the estimate occurred.
+  google.protobuf.Timestamp time = 3 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryEstimateSwapOutRequest is the request message for the Query/EstimateSwapOut endpoint.
+message QueryEstimateSwapOutRequest {
+  // vault_address is the bech32 address of the vault to query.
+  string vault_address = 1;
+  // shares is the amount of shares to swap out.
+  string shares = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // redeem_denom is the payout denom to estimate; if empty, the underlying asset is used.
+  string redeem_denom = 3;
+}
+
+// QueryEstimateSwapOutResponse is the response message for the Query/EstimateSwapOut endpoint.
+message QueryEstimateSwapOutResponse {
+  // assets is the estimated amount of underlying assets that would be received.
+  cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
+  // The block height when the estimate occurred.
+  int64 height = 2;
+  // The UTC block time when the estimate occurred.
+  google.protobuf.Timestamp time = 3 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+}
