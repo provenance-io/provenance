@@ -44,11 +44,14 @@ tools-stamp
 tmp-swagger-gen
 proto-tools-stamp
 
-#emacs tmp files
+# emacs tmp files
 .#*
 
-#direnv setup
+# direnv setup
 .envrc
+
+# goenv, gvm config
+.go-version
 
 # proto generated files
 proto/gen/
