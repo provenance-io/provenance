@@ -9,16 +9,17 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
-	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
 )
 
 type TestSuite struct {
@@ -71,11 +72,11 @@ func (s *TestSuite) SetupTest() {
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
 
-	s.pastDate = 19999 // Oct 9, 2024.
-	s.pastDT = time.Date(2024, 10, 9, 16, 20, 0, 0, time.UTC)
+	s.pastDT = time.Date(2024, 10, 1, 16, 20, 0, 0, time.UTC)
+	s.pastDate = helper.DaysSinceEpoch(s.pastDT.UTC())
 	s.pastDateStr = s.pastDT.Format("2006-01-02")
-	s.curDate = 20000  // Oct 10, 2024.
 	s.curDT = time.Date(2024, 10, 10, 16, 20, 0, 0, time.UTC)
+	s.curDate = helper.DaysSinceEpoch(s.curDT.UTC())
 	s.curDateStr = s.curDT.Format("2006-01-02")
 
 	// Load the test ledger class configs
@@ -88,13 +89,15 @@ func (s *TestSuite) ConfigureTest() {
 	s.validNFTClass = nft.Class{
 		Id: "test-nft-class-id",
 	}
-	s.nftKeeper.SaveClass(s.ctx, s.validNFTClass)
+	err := s.nftKeeper.SaveClass(s.ctx, s.validNFTClass)
+	s.Require().NoError(err, "nftkeeper.SaveClass")
 
 	s.validNFT = nft.NFT{
 		ClassId: s.validNFTClass.Id,
 		Id:      "test-nft-id",
 	}
-	s.nftKeeper.Mint(s.ctx, s.validNFT, s.addr1)
+	err = s.nftKeeper.Mint(s.ctx, s.validNFT, s.addr1)
+	s.Require().NoError(err, "nftkeeper.Mint")
 
 	s.validLedgerClass = ledger.LedgerClass{
 		LedgerClassId:     "test-ledger-class-id",
@@ -102,55 +105,64 @@ func (s *TestSuite) ConfigureTest() {
 		MaintainerAddress: s.addr1.String(),
 		Denom:             s.bondDenom,
 	}
-	s.keeper.AddLedgerClass(s.ctx, s.validLedgerClass)
+	err = s.keeper.AddLedgerClass(s.ctx, s.validLedgerClass)
+	s.Require().NoError(err, "keeper.AddLedgerClass")
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	err = s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          1,
 		Code:        "SCHEDULED_PAYMENT",
 		Description: "Scheduled Payment",
 	})
+	s.Require().NoError(err, "keeper.AddClassEntryType SCHEDULED_PAYMENT")
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	err = s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          2,
 		Code:        "DISBURSEMENT",
 		Description: "Disbursement",
 	})
+	s.Require().NoError(err, "keeper.AddClassEntryType DISBURSEMENT")
 
-	s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
+	err = s.keeper.AddClassEntryType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassEntryType{
 		Id:          3,
 		Code:        "ORIGINATION_FEE",
 		Description: "Origination Fee",
 	})
+	s.Require().NoError(err, "keeper.AddClassEntryType ORIGINATION_FEE")
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          1,
 		Code:        "PRINCIPAL",
 		Description: "Principal",
 	})
+	s.Require().NoError(err, "keeper.AddClassBucketType PRINCIPAL")
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          2,
 		Code:        "INTEREST",
 		Description: "Interest",
 	})
+	s.Require().NoError(err, "keeper.AddClassBucketType INTEREST")
 
-	s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
+	err = s.keeper.AddClassBucketType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassBucketType{
 		Id:          3,
 		Code:        "ESCROW",
 		Description: "Escrow",
 	})
+	s.Require().NoError(err, "keeper.AddClassBucketType ESCROW")
 
-	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	err = s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          1,
 		Code:        "IN_REPAYMENT",
 		Description: "In Repayment",
 	})
+	s.Require().NoError(err, "keeper.AddClassStatusType IN_REPAYMENT")
 
-	s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
+	err = s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, ledger.LedgerClassStatusType{
 		Id:          2,
 		Code:        "IN_DEFERMENT",
 		Description: "In Deferment",
 	})
+	s.Require().NoError(err, "keeper.AddClassStatusType IN_DEFERMENT")
 }
 
 func TestKeeperTestSuite(t *testing.T) {
