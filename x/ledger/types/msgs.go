@@ -186,13 +186,10 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("applied_amounts", "cannot be empty"))
 	}
 
-	// Calculate total of all balance amounts
-	totalBalanceAmt := math.NewInt(0)
 	for i, balanceAmount := range m.BalanceAmounts {
 		if err := balanceAmount.Validate(); err != nil {
 			errs = append(errs, NewErrCodeInvalidField(fmt.Sprintf("balance_amounts[%d]", i), "%s", err))
 		}
-		totalBalanceAmt = totalBalanceAmt.Add(balanceAmount.BalanceAmt.Abs())
 	}
 
 	// Validate applied_amounts bucket_type_ids
@@ -200,11 +197,6 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 		if err := applied.Validate(); err != nil {
 			errs = append(errs, NewErrCodeInvalidField(fmt.Sprintf("applied_amounts[%d]", i), "%s", err))
 		}
-	}
-
-	// Validate that total balance amounts equal sum of applied amounts
-	if err := validateEntryAmounts(totalBalanceAmt, m.AppliedAmounts); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("applied_amounts", "%s", err))
 	}
 
 	return errors.Join(errs...)

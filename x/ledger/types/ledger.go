@@ -296,18 +296,29 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	// Validate amounts are non-negative
+	totOK := true
 	if le.TotalAmt.IsNil() || le.TotalAmt.IsNegative() {
 		errs = append(errs, fmt.Errorf("total_amt: must be a non-negative integer"))
+		totOK = false
 	}
 
 	// Validate applied_amounts
+	amtsOK := true
 	if len(le.AppliedAmounts) == 0 {
 		errs = append(errs, fmt.Errorf("applied_amounts: cannot be empty"))
+		amtsOK = false
 	}
 
 	for i, applied := range le.AppliedAmounts {
 		if err := applied.Validate(); err != nil {
 			errs = append(errs, fmt.Errorf("applied_amounts[%d]: %w", i, err))
+			amtsOK = false
+		}
+	}
+
+	if totOK && amtsOK {
+		if err := validateEntryAmounts(le.TotalAmt, le.AppliedAmounts); err != nil {
+			errs = append(errs, fmt.Errorf("applied_amounts: %w", err))
 		}
 	}
 
@@ -316,10 +327,6 @@ func (le *LedgerEntry) Validate() error {
 		if err := balance.Validate(); err != nil {
 			errs = append(errs, fmt.Errorf("balance_amounts[%d]: %w", i, err))
 		}
-	}
-
-	if err := validateEntryAmounts(le.TotalAmt, le.AppliedAmounts); err != nil {
-		errs = append(errs, fmt.Errorf("applied_amounts: %w", err))
 	}
 
 	return errors.Join(errs...)
@@ -332,8 +339,8 @@ func (lba *LedgerBucketAmount) Validate() error {
 		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
 	}
 
-	if lba.AppliedAmt.IsNil() || lba.AppliedAmt.IsNegative() {
-		errs = append(errs, fmt.Errorf("applied_amt: must be a non-negative integer"))
+	if lba.AppliedAmt.IsNil() {
+		errs = append(errs, fmt.Errorf("applied_amt: must not be nil"))
 	}
 
 	return errors.Join(errs...)
@@ -346,8 +353,8 @@ func (bb *BucketBalance) Validate() error {
 		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
 	}
 
-	if bb.BalanceAmt.IsNil() || bb.BalanceAmt.IsNegative() {
-		errs = append(errs, fmt.Errorf("balance_amt: must be a non-negative integer"))
+	if bb.BalanceAmt.IsNil() {
+		errs = append(errs, fmt.Errorf("balance_amt: must not be nil"))
 	}
 
 	return errors.Join(errs...)

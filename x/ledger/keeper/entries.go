@@ -201,6 +201,10 @@ func (k Keeper) UpdateEntryBalances(ctx context.Context, ledgerKey *types.Ledger
 	// Bucket balances represent the current state of funds in each bucket.
 	existingEntry.BalanceAmounts = balanceAmounts
 
+	if err = existingEntry.Validate(); err != nil {
+		return err
+	}
+
 	// Store the updated entry back to the state store.
 	ledgerKeyStr := ledgerKey.String()
 	err = k.LedgerEntries.Set(ctx, collections.Join(ledgerKeyStr, correlationID), *existingEntry)
