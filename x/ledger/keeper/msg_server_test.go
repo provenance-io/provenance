@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
@@ -287,7 +288,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 	tests := []struct {
 		name    string
 		req     *ledger.MsgUpdateBalancesRequest
-		expErr  error
+		expErr  string
 		expResp *ledger.MsgUpdateBalancesResponse
 	}{
 		{
@@ -298,7 +299,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 				CorrelationId: "test-correlation-id-update-balances",
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
 					{
-						AppliedAmt:   math.NewInt(200),
+						AppliedAmt:   math.NewInt(100),
 						BucketTypeId: 1,
 					},
 				},
@@ -330,7 +331,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 					},
 				},
 			},
-			expErr: ledger.ErrUnauthorized,
+			expErr: "unauthorized access: signer is not the nft owner: unauthorized",
 		},
 		{
 			name: "non-existent entry",
@@ -351,7 +352,32 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 					},
 				},
 			},
-			expErr: ledger.ErrNotFound,
+			expErr: "\"entry\" not found: not found",
+		},
+		{
+			name: "incorrect applied amounts total",
+			req: &ledger.MsgUpdateBalancesRequest{
+				Key:           s.existingLedger.Key,
+				Signer:        s.validAddress1.String(),
+				CorrelationId: "test-correlation-id-update-balances",
+				AppliedAmounts: []*ledger.LedgerBucketAmount{
+					{
+						AppliedAmt:   math.NewInt(50),
+						BucketTypeId: 1,
+					},
+					{
+						AppliedAmt:   math.NewInt(-49),
+						BucketTypeId: 2,
+					},
+				},
+				BalanceAmounts: []*ledger.BucketBalance{
+					{
+						BucketTypeId: 1,
+						BalanceAmt:   math.NewInt(200),
+					},
+				},
+			},
+			expErr: "applied_amounts: total amount must equal sum of abs(applied amounts)",
 		},
 	}
 
@@ -360,13 +386,12 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 			msgServer := keeper.NewMsgServer(s.keeper)
 			resp, err := msgServer.UpdateBalances(s.ctx, tc.req)
 
-			if tc.expErr != nil {
-				s.Require().Error(err, "UpdateBalances should fail")
-				s.Require().ErrorIs(err, tc.expErr)
-				s.Require().Nil(resp, "response should be nil on error")
+			if len(tc.expErr) != 0 {
+				s.Assert().EqualError(err, tc.expErr, "UpdateBalances should fail")
+				s.Assert().Nil(resp, "response should be nil on error")
 			} else {
-				s.Require().NoError(err, "UpdateBalances should succeed")
-				s.Require().Equal(tc.expResp, resp, "response should match expected")
+				s.Assert().NoError(err, "UpdateBalances should succeed")
+				s.Assert().Equal(tc.expResp, resp, "response should match expected")
 			}
 		})
 	}
@@ -1314,7 +1339,7 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 		correlationId  string
 		balanceAmounts []*ledger.BucketBalance
 		appliedAmounts []*ledger.LedgerBucketAmount
-		expErr         error
+		expErr         string
 	}{
 		{
 			name:          "non-existent entry",
@@ -1328,14 +1353,14 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 			},
 			appliedAmounts: []*ledger.LedgerBucketAmount{
 				{
-					AppliedAmt:   math.NewInt(200),
+					AppliedAmt:   math.NewInt(100),
 					BucketTypeId: 1,
 				},
 			},
-			expErr: ledger.NewErrCodeNotFound("entry"),
+			expErr: "\"entry\" not found: not found",
 		},
 		{
-			name:          "valid update",
+			name:          "incorrect applied amounts",
 			ledgerKey:     s.existingLedger.Key,
 			correlationId: "test-correlation-id-update",
 			balanceAmounts: []*ledger.BucketBalance{
@@ -1350,19 +1375,35 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 					BucketTypeId: 1,
 				},
 			},
-			expErr: nil,
+			expErr: "applied_amounts: total amount must equal sum of abs(applied amounts)",
+		},
+		{
+			name:          "valid update",
+			ledgerKey:     s.existingLedger.Key,
+			correlationId: "test-correlation-id-update",
+			balanceAmounts: []*ledger.BucketBalance{
+				{
+					BucketTypeId: 1,
+					BalanceAmt:   math.NewInt(200),
+				},
+			},
+			appliedAmounts: []*ledger.LedgerBucketAmount{
+				{
+					AppliedAmt:   math.NewInt(75),
+					BucketTypeId: 1,
+				},
+				{
+					AppliedAmt:   math.NewInt(-25),
+					BucketTypeId: 2,
+				},
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.UpdateEntryBalances(s.ctx, tc.ledgerKey, tc.correlationId, tc.balanceAmounts, tc.appliedAmounts)
-			if tc.expErr != nil {
-				s.Require().Error(err, "UpdateEntryBalances should fail")
-				s.Require().ErrorIs(err, tc.expErr)
-			} else {
-				s.Require().NoError(err, "UpdateEntryBalances should succeed")
-			}
+			err = s.keeper.UpdateEntryBalances(s.ctx, tc.ledgerKey, tc.correlationId, tc.balanceAmounts, tc.appliedAmounts)
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UpdateEntryBalances")
 		})
 	}
 }
