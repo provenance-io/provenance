@@ -16,11 +16,11 @@ Use the `Asset` query to look up a specific asset by its class ID and asset ID.
 
 ### QueryAssetRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L36-L43
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L36-L43
 
 ### QueryAssetResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L45-L49
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L45-L49
 
 See also: [Asset](03_messages.md#asset).
 
@@ -33,11 +33,11 @@ This query is paginated.
 
 ### QueryAssetsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L51-L61
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L51-L61
 
 ### QueryAssetsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L63-L70
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L63-L70
 
 See also: [Asset](03_messages.md#asset).
 
@@ -48,11 +48,11 @@ Use the `AssetClass` query to look up a specific asset class by its ID.
 
 ### QueryAssetClassRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L72-L76
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L72-L76
 
 ### QueryAssetClassResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L78-L82
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L78-L82
 
 See also: [AssetClass](03_messages.md#assetclass).
 
@@ -65,10 +65,10 @@ This query is paginated.
 
 ### QueryAssetClassesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L84-L88
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L84-L88
 
 ### QueryAssetClassesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/asset/v1/query.proto#L90-L97
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/asset/v1/query.proto#L90-L97
 
 See also: [AssetClass](03_messages.md#assetclass).

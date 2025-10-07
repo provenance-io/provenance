@@ -15,13 +15,13 @@ All roles and addresses associated with an NFT can be looked up using the `GetRe
 
 ### QueryGetRegistryRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/query.proto#L35-L41
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/query.proto#L35-L41
 
 See also: [RegistryKey](01_concepts.md#registrykey).
 
 ### QueryGetRegistryResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/query.proto#L43-L49
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/query.proto#L43-L49
 
 See also: [RegistryEntry](01_concepts.md#registryentry).
 
@@ -35,11 +35,11 @@ This query is paginated.
 
 ### QueryGetRegistriesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/query.proto#L51-L59
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/query.proto#L51-L59
 
 ### QueryGetRegistriesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/query.proto#L61-L70
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/query.proto#L61-L70
 
 See also: [RegistryEntry](01_concepts.md#registryentry).
 
@@ -50,10 +50,10 @@ To check if a specific address has a certain role for an NFT, use the `HasRole` 
 
 ### QueryHasRoleRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/query.proto#L72-L86
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/query.proto#L72-L86
 
 See also: [RegistryKey](01_concepts.md#registrykey), [RegistryRole](01_concepts.md#registryrole).
 
 ### QueryHasRoleResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/query.proto#L88-L94
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/query.proto#L88-L94

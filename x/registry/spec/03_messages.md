@@ -23,13 +23,13 @@ It is expected to fail if:
 
 ### MsgRegisterNFT
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L39-L55
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L39-L55
 
 See also: [RegistryKey](01_concepts.md#registrykey), [RolesEntry](01_concepts.md#rolesentry).
 
 ### MsgRegisterNFTResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L57-L59
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L57-L59
 
 
 ## GrantRole
@@ -44,13 +44,13 @@ It is expected to fail if:
 
 ### MsgGrantRole
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L61-L81
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L61-L81
 
 See also: [RegistryKey](01_concepts.md#registrykey), [RegistryRole](01_concepts.md#registryrole).
 
 ### MsgGrantRoleResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L83-L85
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L83-L85
 
 
 ## RevokeRole
@@ -65,13 +65,13 @@ It is expected to fail if:
 
 ### MsgRevokeRole
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L87-L107
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L87-L107
 
 See also: [RegistryKey](01_concepts.md#registrykey), [RegistryRole](01_concepts.md#registryrole).
 
 ### MsgRevokeRoleResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L109-L111
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L109-L111
 
 
 ## UnregisterNFT
@@ -85,13 +85,13 @@ It is expected to fail if:
 
 ### MsgUnregisterNFT
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L113-L125
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L113-L125
 
 See also: [RegistryKey](01_concepts.md#registrykey).
 
 ### MsgUnregisterNFTResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L127-L129
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L127-L129
 
 
 ## RegistryBulkUpdate
@@ -105,10 +105,10 @@ It is expected to fail if:
 
 ### MsgRegistryBulkUpdate
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L131-L143
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L131-L143
 
 See also: [RegistryEntry](01_concepts.md#registryentry).
 
 ### MsgRegistryBulkUpdateResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/registry/v1/tx.proto#L145-L147
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/registry/v1/tx.proto#L145-L147

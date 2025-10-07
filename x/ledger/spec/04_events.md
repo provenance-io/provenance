@@ -37,7 +37,7 @@ Event type: `provenance.ledger.v1.EventLedgerUpdated`
 
 ### UpdateType
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/ledger/v1/events.proto#L35-L52
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/events.proto#L35-L52
 
 
 ## EventLedgerEntryAdded
