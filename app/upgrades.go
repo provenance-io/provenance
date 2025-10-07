@@ -10,8 +10,8 @@ import (
 
 	vaulttypes "github.com/provlabs/vault/types"
 
-	nftTypes "cosmossdk.io/x/nft"
 	storetypes "cosmossdk.io/store/types"
+	nftTypes "cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
