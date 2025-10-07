@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/ledger/keeper"
@@ -90,8 +88,7 @@ func (s *TestSuite) TestLedgerQueryServer_BalancesAsOf() {
 	entry := &ledger.LedgerEntry{EntryTypeId: 1, PostedDate: s.pastDate, EffectiveDate: s.pastDate, TotalAmt: s.int(100), AppliedAmounts: []*ledger.LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: s.int(100)}}, CorrelationId: "qs-bal"}
 	s.Require().NoError(s.keeper.AppendEntries(s.ctx, key, []*ledger.LedgerEntry{entry}))
 
-	date := time.Now().UTC().Format("2006-01-02")
-	bresp, err := qs.LedgerBalancesAsOf(s.ctx, &ledger.QueryLedgerBalancesAsOfRequest{Key: key, AsOfDate: date})
+	bresp, err := qs.LedgerBalancesAsOf(s.ctx, &ledger.QueryLedgerBalancesAsOfRequest{Key: key, AsOfDate: s.curDateStr})
 	s.Require().NoError(err)
 	s.Require().NotNil(bresp)
 	s.Require().GreaterOrEqual(len(bresp.BucketBalances), 1)

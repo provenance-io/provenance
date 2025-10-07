@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"time"
-
 	"cosmossdk.io/math"
 
 	"github.com/provenance-io/provenance/x/ledger/helper"
@@ -119,11 +117,11 @@ func (s *TestSuite) TestGetBalances() {
 	s.Require().NoError(err, "ListLedgerEntries error")
 	s.Require().Equal(3, len(entries), "number of entries")
 
-	now := time.Now().UTC()
+	now := s.curDT
 	s.Require().Less(s.pastDate, helper.DaysSinceEpoch(now))
 
 	// Get balances
-	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.Key, time.Now().UTC())
+	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.Key, s.curDT)
 	s.Require().NoError(err, "GetBalances error")
 	s.Require().Equal(3, len(balances), "number of bucket balances")
 

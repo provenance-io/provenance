@@ -17,7 +17,6 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
-	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
@@ -40,7 +39,12 @@ type TestSuite struct {
 	addr2 sdk.AccAddress
 	addr3 sdk.AccAddress
 
-	pastDate int32
+	pastDate    int32
+	pastDateStr string
+	pastDT      time.Time
+	curDate     int32
+	curDateStr  string
+	curDT       time.Time
 
 	validLedgerClass ledger.LedgerClass
 	validNFTClass    nft.Class
@@ -67,15 +71,19 @@ func (s *TestSuite) SetupTest() {
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
 
-	// Create a timestamp 24 hours in the past to avoid future date errors
-	s.pastDate = helper.DaysSinceEpoch(time.Now().Add(-24 * time.Hour).UTC())
+	s.pastDate = 19999 // Oct 9, 2024.
+	s.pastDT = time.Date(2024, 10, 9, 16, 20, 0, 0, time.UTC)
+	s.pastDateStr = s.pastDT.Format("2006-01-02")
+	s.curDate = 20000  // Oct 10, 2024.
+	s.curDT = time.Date(2024, 10, 10, 16, 20, 0, 0, time.UTC)
+	s.curDateStr = s.curDT.Format("2006-01-02")
 
 	// Load the test ledger class configs
 	s.ConfigureTest()
 }
 
 func (s *TestSuite) ConfigureTest() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = s.ctx.WithBlockTime(s.curDT)
 
 	s.validNFTClass = nft.Class{
 		Id: "test-nft-class-id",

@@ -31,6 +31,7 @@ type MsgServerTestSuite struct {
 	keeper           keeper.Keeper
 	bondDenom        string
 	pastDate         int32
+	now              time.Time
 	validLedgerClass ledger.LedgerClass
 	validNFTClass    nft.Class
 	validNFT         nft.NFT
@@ -51,7 +52,8 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.Require().NoError(err, "app.StakingKeeper.BondDenom(s.ctx)")
 
 	// Create a timestamp 24 hours in the past to avoid future date errors
-	s.pastDate = helper.DaysSinceEpoch(time.Now().Add(-24 * time.Hour).UTC())
+	s.now = time.Date(2021, 6, 9, 16, 20, 0, 0, time.UTC)
+	s.pastDate = helper.DaysSinceEpoch(s.now.Add(-24 * time.Hour).UTC())
 
 	s.validAddress1, err = sdk.AccAddressFromBech32("cosmos156vfr4kpaa0f07y673awf3u87eeemygldsjwu5")
 	s.Require().NoError(err, "AccAddressFromBech32 error")
@@ -67,7 +69,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 }
 
 func (s *MsgServerTestSuite) ConfigureTest() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = s.ctx.WithBlockTime(s.now)
 
 	s.validNFTClass = nft.Class{
 		Id: "test-nft-class-id",
@@ -1192,7 +1194,7 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 			entries: []*ledger.LedgerEntry{
 				{
 					EntryTypeId:   1,
-					PostedDate:    helper.DaysSinceEpoch(time.Now().Add(24 * time.Hour).UTC()),
+					PostedDate:    helper.DaysSinceEpoch(s.now.Add(24 * time.Hour).UTC()),
 					EffectiveDate: s.pastDate,
 					TotalAmt:      math.NewInt(100),
 					AppliedAmounts: []*ledger.LedgerBucketAmount{

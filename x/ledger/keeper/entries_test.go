@@ -108,7 +108,7 @@ func (s *TestSuite) TestAppendEntry() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err := s.keeper.AppendEntries(s.ctx, tc.key, []*ledger.LedgerEntry{&tc.entry})
+			err = s.keeper.AppendEntries(s.ctx, tc.key, []*ledger.LedgerEntry{&tc.entry})
 			s.assertErrorValue(err, tc.expErr, "AppendEntry")
 		})
 	}
