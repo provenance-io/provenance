@@ -244,9 +244,7 @@ func (k Keeper) ListLedgerEntries(ctx context.Context, key *types.LedgerKey) ([]
 
 	// Sort the entries by effective date and sequence number.
 	// This ensures proper chronological ordering of ledger entries.
-	slices.SortFunc(entries, func(a, b *types.LedgerEntry) int {
-		return a.Compare(b)
-	})
+	slices.SortFunc(entries, (*types.LedgerEntry).Compare)
 
 	return entries, nil
 }

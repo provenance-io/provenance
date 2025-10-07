@@ -28,7 +28,7 @@ func (s *TestSuite) TestGetBalances() {
 			EntryTypeId:   2,
 			PostedDate:    s.pastDate,
 			EffectiveDate: s.pastDate,
-			Sequence:      1,
+			Sequence:      3,
 			TotalAmt:      math.NewInt(1000),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
 				{
@@ -37,20 +37,21 @@ func (s *TestSuite) TestGetBalances() {
 					AppliedAmt:   math.NewInt(1000),
 				},
 			},
+			// This entry has sequence 3, so this balance amount is used for type 1.
 			BalanceAmounts: []*ledger.BucketBalance{
 				{
 					BucketTypeId: 1,
 					BalanceAmt:   math.NewInt(1000),
 				},
 			},
-			CorrelationId: "test-correlation-id-1",
+			CorrelationId: "test-correlation-id-3",
 		},
 		{
 			// Origination Fee
 			EntryTypeId:   3,
 			PostedDate:    s.pastDate,
 			EffectiveDate: s.pastDate,
-			Sequence:      1,
+			Sequence:      2,
 			TotalAmt:      math.NewInt(10),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
 				{
@@ -59,6 +60,7 @@ func (s *TestSuite) TestGetBalances() {
 					AppliedAmt:   math.NewInt(10),
 				},
 			},
+			// This entry has sequence 2, so bucket type 1 here is overwritten by the sequence 3 entry.
 			BalanceAmounts: []*ledger.BucketBalance{
 				{
 					BucketTypeId: 1,
@@ -91,6 +93,7 @@ func (s *TestSuite) TestGetBalances() {
 					AppliedAmt:   math.NewInt(100),
 				},
 			},
+			// This entry has sequence 1, so bucket type 1 is overwritten, but 2 and 3 are.
 			BalanceAmounts: []*ledger.BucketBalance{
 				{
 					BucketTypeId: 1,
@@ -105,8 +108,13 @@ func (s *TestSuite) TestGetBalances() {
 					BalanceAmt:   math.NewInt(100),
 				},
 			},
-			CorrelationId: "test-correlation-id-3",
+			CorrelationId: "test-correlation-id-1",
 		},
+	}
+	exp := []*ledger.BucketBalance{
+		entries[0].BalanceAmounts[0],
+		entries[2].BalanceAmounts[1],
+		entries[2].BalanceAmounts[2],
 	}
 
 	// Add entries to the ledger
@@ -122,15 +130,6 @@ func (s *TestSuite) TestGetBalances() {
 
 	// Get balances
 	balances, err := s.keeper.GetBalancesAsOf(s.ctx, l.Key, s.curDT)
-	s.Require().NoError(err, "GetBalances error")
-	s.Require().Equal(3, len(balances), "number of bucket balances")
-
-	// Assert by bucket id to avoid relying on slice ordering.
-	got := map[int32]math.Int{}
-	for _, bb := range balances {
-		got[bb.BucketTypeId] = bb.BalanceAmt
-	}
-	s.Require().Equal(math.NewInt(910), got[1])
-	s.Require().Equal(math.NewInt(-300), got[2])
-	s.Require().Equal(math.NewInt(100), got[3])
+	s.Require().NoError(err, "GetBalancesAsOf error")
+	s.Assert().Equal(exp, balances, "GetBalancesAsOf balances")
 }
