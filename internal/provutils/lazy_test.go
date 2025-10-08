@@ -93,7 +93,7 @@ func TestLazyTester(t *testing.T) {
 	})
 
 	t.Run("marked when provided as .With", func(t *testing.T) {
-		// This test is more of a demostration of current behavior.
+		// This test is more of a demonstration of current behavior.
 		// It'd be great if .With didn't resolve the value, but it does.
 		str := "I'm in the middle of my Wordle."
 		val := NewLazyTester(str)

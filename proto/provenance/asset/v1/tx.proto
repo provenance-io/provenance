@@ -1,0 +1,127 @@
+syntax = "proto3";
+package provenance.asset.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/asset/types";
+
+option java_package        = "io.provenance.asset.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "provenance/asset/v1/asset.proto";
+
+// Msg defines the asset module's message service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // BurnAsset burns/removes an NFT (but does not remove its registry).
+  rpc BurnAsset(MsgBurnAsset) returns (MsgBurnAssetResponse);
+
+  // CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema.
+  rpc CreateAsset(MsgCreateAsset) returns (MsgCreateAssetResponse);
+
+  // CreateAssetClass creates an NFT class and validates the json schema data field.
+  rpc CreateAssetClass(MsgCreateAssetClass) returns (MsgCreateAssetClassResponse);
+
+  // CreatePool creates a marker for the pool and transfers the assets to the pool marker.
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+
+  // CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker.
+  rpc CreateTokenization(MsgCreateTokenization) returns (MsgCreateTokenizationResponse);
+
+  // CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the
+  // securitization marker.
+  rpc CreateSecuritization(MsgCreateSecuritization) returns (MsgCreateSecuritizationResponse);
+}
+
+// MsgBurnAsset is the message type for burning an existing asset.
+message MsgBurnAsset {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // asset defines the asset by key to be burned.
+  AssetKey asset = 1;
+
+  // signer defines the address of asset owner.
+  string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgBurnAssetResponse is the response type for the BurnAsset RPC method.
+message MsgBurnAssetResponse {}
+
+// MsgCreateAsset is the message type for creating a new asset.
+message MsgCreateAsset {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // asset defines the asset to be created.
+  Asset asset = 1;
+  // owner defines the owner address for the created asset.
+  // if owner is not provided, signer will be used.
+  string owner = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // signer defines the address of the message sender.
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgCreateAssetResponse is the response type for the CreateAsset RPC method.
+message MsgCreateAssetResponse {}
+
+// MsgCreateAssetClass is the message type for creating a new asset class.
+message MsgCreateAssetClass {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // asset_class defines the asset class to be created.
+  AssetClass asset_class = 1;
+  // signer defines the address of the message sender.
+  string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgCreateAssetClassResponse is the response type for the CreateAssetClass RPC method.
+message MsgCreateAssetClassResponse {}
+
+// MsgCreatePool is the message type for creating a new pool.
+message MsgCreatePool {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // pool defines the pool to be created.
+  cosmos.base.v1beta1.Coin pool = 1 [(gogoproto.nullable) = false];
+  // assets defines the list of assets by keys to be included in the pool.
+  repeated AssetKey assets = 2;
+  // signer defines the address of the message sender.
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgCreatePoolResponse is the response type for the CreatePool RPC method.
+message MsgCreatePoolResponse {}
+
+// MsgCreateTokenization is the message type for creating a new tokenization.
+message MsgCreateTokenization {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // token defines the new token supply and symbol.
+  cosmos.base.v1beta1.Coin token = 1 [(gogoproto.nullable) = false];
+  // asset defines the asset by key to be tokenized.
+  AssetKey asset = 2;
+  // signer defines the address of the message sender.
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgCreateTokenizationResponse is the response type for the CreateTokenization RPC method.
+message MsgCreateTokenizationResponse {}
+
+// MsgCreateSecuritization is the message type for creating a new securitization.
+message MsgCreateSecuritization {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // id defines the unique identifier for the securitization.
+  string id = 1;
+  // pools defines the list of pool identifiers to be included in the securitization.
+  repeated string pools = 2;
+  // tranches defines the list of tranches for the securitization.
+  repeated cosmos.base.v1beta1.Coin tranches = 3;
+  // signer defines the address of the message sender.
+  string signer = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgCreateSecuritizationResponse is the response type for the CreateSecuritization RPC method.
+message MsgCreateSecuritizationResponse {}

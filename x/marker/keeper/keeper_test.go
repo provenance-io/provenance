@@ -27,6 +27,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -2232,7 +2233,7 @@ func TestClearSendDeny(t *testing.T) {
 		marker sdk.AccAddress
 	}{
 		{
-			name:   "non existant marker",
+			name:   "non existent marker",
 			pairs:  []SendDenyPair{},
 			marker: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
 		},
@@ -2317,7 +2318,7 @@ func TestGetSendDenyList(t *testing.T) {
 		expected []sdk.AccAddress
 	}{
 		{
-			name:     "non existant marker",
+			name:     "non existent marker",
 			pairs:    []SendDenyPair{},
 			marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
 			expected: []sdk.AccAddress{},

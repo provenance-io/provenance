@@ -3,8 +3,9 @@ package ibcratelimit_test
 import (
 	"testing"
 
-	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
 func TestNewEventAckRevertFailure(t *testing.T) {

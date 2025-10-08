@@ -1,0 +1,55 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "provenance/ledger/v1/ledger.proto";
+
+// FundingTransferStatus represents the current status of a funding transfer.
+enum FundingTransferStatus {
+  // Unspecified funding transfer status.
+  FUNDING_TRANSFER_STATUS_UNSPECIFIED = 0;
+  // Pending funding transfer status.
+  FUNDING_TRANSFER_STATUS_PENDING = 1;
+  // Processing funding transfer status.
+  FUNDING_TRANSFER_STATUS_PROCESSING = 2;
+  // Completed funding transfer status.
+  FUNDING_TRANSFER_STATUS_COMPLETED = 3;
+  // Failed funding transfer status.
+  FUNDING_TRANSFER_STATUS_FAILED = 4;
+}
+
+// FundTransferWithSettlement represents a fund transfer with settlement instructions.
+message FundTransferWithSettlement {
+  // The ledger key identifying the ledger for this transfer.
+  LedgerKey key = 1;
+  // The correlation ID of the ledger entry associated with this transfer.
+  string                         ledger_entry_correlation_id = 2;
+  repeated SettlementInstruction settlement_instructions     = 3;
+}
+
+// SettlementInstruction represents blockchain-specific settlement instructions.
+message SettlementInstruction {
+  // The amount to be transferred.
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+
+  // The recipient's blockchain address.
+  string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // The current status of the funding transfer.
+  FundingTransferStatus status = 3;
+
+  // An optional memo or note for the transaction.
+  string memo = 4;
+}
+
+// StoredSettlementInstructions is used as the stored version of settlement instructions against a ledger key and entry
+// correlation id.
+message StoredSettlementInstructions {
+  repeated SettlementInstruction settlement_instructions = 1;
+}

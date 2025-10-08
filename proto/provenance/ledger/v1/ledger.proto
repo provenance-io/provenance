@@ -1,0 +1,288 @@
+syntax = "proto3";
+package provenance.ledger.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
+option java_package        = "io.provenance.ledger.v1";
+option java_multiple_files = true;
+
+// LedgerClass contains the configuration for a ledger related to a particular class of asset. The asset class
+// is defined by the either a scope spec `x/metadata`, or nft class `x/nft`. Ultimately, the configuration will
+// assist in verifying the types that are associated with particular ledger entries.
+message LedgerClass {
+  // Unique ID for the ledger class (eg. 1, 2, 3, etc.).
+  // This is necessary since the nft class does not have an owner.
+  string ledger_class_id = 1 [(gogoproto.jsontag) = "ledgerClassId,omitempty"];
+
+  // Scope Specification ID or NFT Class ID.
+  string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
+
+  // Denom that this class of asset will be ledgered in.
+  string denom = 3 [(gogoproto.jsontag) = "denom,omitempty"];
+
+  // Address of the maintainer for the ledger class.
+  string maintainer_address = 4
+      [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.jsontag) = "maintainerAddress,omitempty"];
+}
+
+// LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
+// for minimal data storage while providing a human readable description of the entry type.
+message LedgerClassEntryType {
+  // Unique ID for the entry type (eg. 1, 2, 3, etc.).
+  int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
+
+  // Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER").
+  string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
+
+  // Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other").
+  string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
+}
+
+// LedgerClassStatusType defines the status types for a ledger class.
+// These status types are used to track the status of underlying loan throughout the loan life cycle.
+message LedgerClassStatusType {
+  // Unique ID for the status type (eg. 1, 2, 3, etc.).
+  int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
+
+  // Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY",
+  // "CLOSED", "CANCELLED", "SUSPENDED", "OTHER").
+  string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
+
+  // Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy",
+  // "Closed", "Cancelled", "Suspended", "Other").
+  string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
+}
+
+// LedgerKey is used as the unique key for an asset's ledger in the keeper.
+message LedgerKey {
+  option (gogoproto.goproto_stringer) = false;
+
+  // Identifier for the nft that this ledger is linked to.
+  // This could be a `x/metadata` scope id or an `x/nft` nft id.
+  // In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass.
+  string nft_id = 1 [(gogoproto.jsontag) = "nftId,omitempty"];
+
+  // Scope Specification ID or NFT Class ID.
+  string asset_class_id = 2 [(gogoproto.jsontag) = "assetClassId,omitempty"];
+}
+
+// Ledger defines an servicing ledger for an asset.
+message Ledger {
+  // The ledger key identifying the ledger.
+  LedgerKey key = 1 [(gogoproto.jsontag) = "key,omitempty"];
+
+  // The ledger class ID for the ledger.
+  string ledger_class_id = 2 [(gogoproto.jsontag) = "ledgerClassId,omitempty"];
+
+  // The status of the ledger.
+  int32 status_type_id = 3 [(gogoproto.jsontag) = "statusTypeId,omitempty"];
+
+  // The next payment date (days since epoch).
+  int32 next_pmt_date = 4 [(gogoproto.jsontag) = "nextPmtDate,omitempty"];
+
+  // The next payment amount.
+  // The units of this field are defined by the denom field in this ledger's class.
+  string next_pmt_amt = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "nextPmtAmt,omitempty"
+  ];
+
+  // The interest rate. Min = 0, Max = 100,000,000 = 100%, e.g. 4,321,987 = 4.321987%.
+  int32 interest_rate = 6 [(gogoproto.jsontag) = "interestRate,omitempty"];
+
+  // The maturity date (days since epoch).
+  int32 maturity_date = 7 [(gogoproto.jsontag) = "maturityDate,omitempty"];
+
+  // The day count convention for interest calculations.
+  DayCountConvention interest_day_count_convention = 8
+      [(gogoproto.jsontag) = "interestDayCountConvention,omitempty", (gogoproto.casttype) = "DayCountConvention"];
+
+  // The interest accrual method for interest calculations.
+  InterestAccrualMethod interest_accrual_method = 9
+      [(gogoproto.jsontag) = "interestAccrualMethod,omitempty", (gogoproto.casttype) = "InterestAccrualMethod"];
+
+  // The payment frequency.
+  PaymentFrequency payment_frequency = 10
+      [(gogoproto.jsontag) = "paymentFrequency,omitempty", (gogoproto.casttype) = "PaymentFrequency"];
+}
+
+// LedgerClassBucketType represents a bucket type for a ledger class.
+message LedgerClassBucketType {
+  // Unique ID for the bucket type (eg. 1, 2, 3, etc.).
+  int32 id = 1 [(gogoproto.jsontag) = "id,omitempty"];
+
+  // Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER").
+  string code = 2 [(gogoproto.jsontag) = "code,omitempty"];
+
+  // Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other").
+  string description = 3 [(gogoproto.jsontag) = "description,omitempty"];
+}
+
+// LedgerEntry is an single entry in the ledger. An entry would be a payment, disbursement, adjustment, etc...
+message LedgerEntry {
+  // The correlation ID for tracking ledger entries with external systems (max 50 characters).
+  string correlation_id = 1 [(gogoproto.jsontag) = "correlationId,omitempty"];
+
+  // If this entry reverses another entry, the correlation ID of the entry it reverses.
+  string reverses_correlation_id = 2 [(gogoproto.jsontag) = "reversesCorrelationId,omitempty"];
+
+  // If true, this entry is a void and should not be included in the ledger balance calculations.
+  bool is_void = 3 [(gogoproto.jsontag) = "isVoid,omitempty"];
+
+  // Sequence number of the ledger entry (less than 100). This field is used to maintain the correct
+  // order of entries when multiple entries share the same effective date. Entries are sorted first
+  // by effective date, then by sequence.
+  uint32 sequence = 4 [(gogoproto.jsontag) = "sequence,omitempty"];
+
+  // The type of ledger entry specified by the LedgerClassEntryType.id.
+  int32 entry_type_id = 5 [(gogoproto.jsontag) = "entryTypeId,omitempty"];
+
+  // The posted date (days since epoch).
+  int32 posted_date = 7 [(gogoproto.jsontag) = "postedDate,omitempty"];
+
+  // The effective date (days since epoch).
+  int32 effective_date = 8 [(gogoproto.jsontag) = "effectiveDate,omitempty"];
+
+  // The total amount of the ledger entry.
+  // The units of this field are defined by the denom field in this ledger's class.
+  string total_amt = 9 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "totalAmt,omitempty"
+  ];
+
+  // The applied amounts for each bucket.
+  repeated LedgerBucketAmount applied_amounts = 10 [(gogoproto.jsontag) = "appliedAmounts,omitempty"];
+
+  // The balances for each bucket.
+  repeated BucketBalance balance_amounts = 11 [(gogoproto.jsontag) = "balanceAmounts,omitempty"];
+}
+
+// LedgerBucketAmount is the amount applied to a bucket. Applications to a bucket increase or
+// decrease the balance of the bucket.
+message LedgerBucketAmount {
+  // The bucket type specified by the LedgerClassBucketType.id.
+  int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
+
+  // The amount applied to the bucket.
+  // The units of this field are defined by the denom field in this ledger's class.
+  string applied_amt = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "appliedAmt,omitempty"
+  ];
+}
+
+// BucketBalance represents the balance for a specific bucket type.
+message BucketBalance {
+  // The bucket type specified by the LedgerClassBucketType.id.
+  int32 bucket_type_id = 1 [(gogoproto.jsontag) = "bucketTypeId,omitempty"];
+
+  // The balance of the bucket.
+  // The units of this field are defined by the denom field in this ledger's class.
+  string balance_amt = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "balanceAmt,omitempty"
+  ];
+}
+
+// LedgerAndEntries represents a ledger with its associated entries.
+message LedgerAndEntries {
+  // The ledger key identifying the ledger.
+  LedgerKey ledger_key = 1 [(gogoproto.jsontag) = "ledgerKey,omitempty"];
+  // The ledger data.
+  Ledger ledger = 2 [(gogoproto.jsontag) = "ledger,omitempty"];
+  // The ledger entries.
+  repeated LedgerEntry entries = 3 [(gogoproto.jsontag) = "entries,omitempty"];
+}
+
+// Day Count Conventions used in interest calculations.
+enum DayCountConvention {
+  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
+  // Unspecified day count convention.
+  DAY_COUNT_CONVENTION_UNSPECIFIED = 0;
+
+  // Actual/365: Uses the actual number of days in the period with a fixed denominator of 365
+  // (or sometimes 365.25 to adjust for leap years).
+  DAY_COUNT_CONVENTION_ACTUAL_365 = 1;
+
+  // Actual/360: Uses the actual number of days in the period but divides by 360.
+  DAY_COUNT_CONVENTION_ACTUAL_360 = 2;
+
+  // 30/360: Assumes each month has 30 days and the year has 360 days.
+  DAY_COUNT_CONVENTION_THIRTY_360 = 3;
+
+  // Actual/Actual: Uses the actual number of days in the period and the actual days in the year
+  // (365 or 366, depending on the year).
+  DAY_COUNT_CONVENTION_ACTUAL_ACTUAL = 4;
+
+  // 365/365: Always uses 365 days in the denominator regardless of leap years.
+  DAY_COUNT_CONVENTION_DAYS_365 = 5;
+
+  // 360/360: Always uses 360 days in both the numerator and denominator.
+  DAY_COUNT_CONVENTION_DAYS_360 = 6;
+}
+
+// Interest Accrual Methods describing how interest is calculated over time.
+enum InterestAccrualMethod {
+  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
+  // Unspecified interest accrual method.
+  INTEREST_ACCRUAL_METHOD_UNSPECIFIED = 0;
+
+  // Simple Interest: Calculated only on the principal amount.
+  INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST = 1;
+
+  // Compound Interest: Calculated on both the principal and on previously accumulated interest.
+  INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST = 2;
+
+  // Daily Compounding: Interest is compounded on a daily basis.
+  INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING = 3;
+
+  // Monthly Compounding: Interest is compounded each month.
+  INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING = 4;
+
+  // Quarterly Compounding: Interest is compounded every quarter.
+  INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING = 5;
+
+  // Annually Compounding: Interest is compounded once per year.
+  INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING = 6;
+
+  // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
+  INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7;
+}
+
+// Payment frequencies for loan repayments.
+enum PaymentFrequency {
+  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
+  // Unspecified payment frequency.
+  PAYMENT_FREQUENCY_UNSPECIFIED = 0;
+
+  // Daily payments.
+  PAYMENT_FREQUENCY_DAILY = 1;
+
+  // Weekly or biweekly payments.
+  PAYMENT_FREQUENCY_WEEKLY = 2;
+
+  // Monthly payments (most common for consumer loans and mortgages).
+  PAYMENT_FREQUENCY_MONTHLY = 3;
+
+  // Quarterly payments.
+  PAYMENT_FREQUENCY_QUARTERLY = 4;
+
+  // Annual payments.
+  PAYMENT_FREQUENCY_ANNUALLY = 5;
+}
