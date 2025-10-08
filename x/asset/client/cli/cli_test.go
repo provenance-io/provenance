@@ -155,6 +155,7 @@ func (s *CmdTestSuite) createTestAssetClass(id, name, symbol string) {
 	// Wait for next block to ensure data is committed
 	err = testutil.WaitForNextBlock(s.testnet)
 	s.Require().NoError(err, "WaitForNextBlock after creating class %s", id)
+	s.T().Logf("Created test asset class %s", id)
 }
 
 // createTestAsset creates a test asset via transaction.
@@ -178,6 +179,7 @@ func (s *CmdTestSuite) createTestAsset(classID, assetID, owner string) {
 	// Wait for next block to ensure data is committed
 	err = testutil.WaitForNextBlock(s.testnet)
 	s.Require().NoError(err, "WaitForNextBlock after creating asset %s/%s", classID, assetID)
+	s.T().Logf("Created test asset %s/%s", classID, assetID)
 }
 
 // TestQueryAssetCmd tests the query asset command.
