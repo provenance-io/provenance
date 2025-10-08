@@ -26,8 +26,14 @@ func (k Keeper) BulkCreate(goCtx context.Context, ledgers []*types.LedgerAndEntr
 
 		// Add ledger entries
 		// All errors are handled in the AppendEntries function (dupes, ledger, etc).
-		if err := k.AppendEntries(ctx, ledgerAndEntries.LedgerKey, ledgerAndEntries.Entries); err != nil {
-			return err
+		if len(ledgerAndEntries.Entries) > 0 {
+			key := ledgerAndEntries.LedgerKey
+			if key == nil && ledgerAndEntries.Ledger != nil {
+				key = ledgerAndEntries.Ledger.Key
+			}
+			if err := k.AppendEntries(ctx, key, ledgerAndEntries.Entries); err != nil {
+				return err
+			}
 		}
 
 		// Done with this entry, write it!
