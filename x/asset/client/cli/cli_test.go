@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -24,8 +23,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -116,6 +113,8 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.createTestAssetClass("test-class-2", "Test Class 2", "TC2")
 	s.createTestAsset("test-class-1", "test-asset-1", s.addr0.String())
 	s.createTestAsset("test-class-1", "test-asset-2", s.addr1.String())
+	err = testutil.WaitForNextBlock(s.testnet)
+	s.Require().NoError(err, "WaitForNextBlock at end of suite setup")
 }
 
 // TearDownSuite tears down the test suite by cleaning up the test network.
@@ -680,76 +679,6 @@ func (s *CmdTestSuite) TestTxCreateSecuritizationCmd() {
 		})
 	}
 }
-
-// Helper functions
-
-// getEncodingConfig gets the encoding config for tests.
-func getEncodingConfig(t *testing.T) params.EncodingConfig {
-	encCfg := app.MakeTestEncodingConfig(t)
-	return encCfg
-}
-
-// newClientContext returns a new client context for testing.
-func newClientContext(t *testing.T) client.Context {
-	ctx := client.Context{}
-	ctx = clientContextWithCodec(t, ctx)
-	return clientContextWithKeyring(t, ctx)
-}
-
-// clientContextWithCodec adds a codec to the client context.
-func clientContextWithCodec(t *testing.T, clientCtx client.Context) client.Context {
-	encCfg := getEncodingConfig(t)
-	return clientCtx.
-		WithCodec(encCfg.Marshaler).
-		WithInterfaceRegistry(encCfg.InterfaceRegistry).
-		WithTxConfig(encCfg.TxConfig)
-}
-
-const (
-	// keyringName is the name of a keyring entry for testing.
-	keyringName = "keyringaddr"
-	// keyringAddr is the address associated with keyringName.
-	keyringAddr = "cosmos177zjzs7mh79j0cx6wcxq8dayetkftkx2crt4u6"
-	// keyringMnemonic is the mnemonic for the keyring test account.
-	keyringMnemonic = "arrive guilt slab motor cable dish wink learn dirt album simple prefer bid roast trim still round embark shrug obscure artwork radio intact slim"
-)
-
-// clientContextWithKeyring adds a keyring to the client context.
-func clientContextWithKeyring(t *testing.T, clientCtx client.Context) client.Context {
-	kr, err := client.NewKeyringFromBackend(clientCtx, keyring.BackendMemory)
-	require.NoError(t, err, "NewKeyringFromBackend")
-	clientCtx = clientCtx.WithKeyring(kr)
-
-	_, err = clientCtx.Keyring.NewAccount(keyringName, keyringMnemonic,
-		keyring.DefaultBIP39Passphrase, hd.CreateHDPath(118, 0, 0).String(), hd.Secp256k1)
-	require.NoError(t, err, "adding %s to the keyring", keyringName)
-
-	return clientCtx
-}
-
-// joinErrs joins multiple error strings with newlines.
-func joinErrs(errs ...string) string {
-	result := ""
-	for i, err := range errs {
-		if i > 0 {
-			result += "\n"
-		}
-		result += err
-	}
-	return result
-}
-
-// Command Setup Tests
-// These tests validate that commands are set up correctly with proper flags and configuration.
-
-const (
-	// mutExc is the annotation key for mutually exclusive flags.
-	mutExc = "cobra_annotation_mutually_exclusive"
-	// oneReq is the annotation key for one-required flags.
-	oneReq = "cobra_annotation_one_required"
-	// required is the annotation key for required flags.
-	required = "cobra_annotation_required"
-)
 
 // setupTestCase contains the stuff that runSetupTestCase should check.
 type setupTestCase struct {
