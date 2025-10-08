@@ -86,7 +86,10 @@ message MsgCreateVaultRequest {
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
-message MsgCreateVaultResponse {}
+message MsgCreateVaultResponse {
+  // vault_address is the bech32 address of the newly created vault.
+  string vault_address = 1;
+}
 
 // MsgSwapInRequest is the request message for depositing underlying assets into a vault in exchange for shares.
 message MsgSwapInRequest {
@@ -101,7 +104,10 @@ message MsgSwapInRequest {
 }
 
 // MsgSwapInResponse is the response message for a successful SwapIn.
-message MsgSwapInResponse {}
+message MsgSwapInResponse {
+  // shares_received is the amount of vault shares minted to the depositor.
+  cosmos.base.v1beta1.Coin shares_received = 1 [(gogoproto.nullable) = false];
+}
 
 // MsgSwapOutRequest is the request message for redeeming vault shares in exchange for underlying assets.
 message MsgSwapOutRequest {
