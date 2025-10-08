@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -148,14 +149,8 @@ func (s *CmdTestSuite) createTestAssetClass(id, name, symbol string) {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	}
-	clientCtx := s.getClientCtx()
-	_, err := clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdCreateAssetClass(), args)
-	s.Require().NoError(err, "failed to create test asset class %s", id)
 
-	// Wait for next block to ensure data is committed
-	err = testutil.WaitForNextBlock(s.testnet)
-	s.Require().NoError(err, "WaitForNextBlock after creating class %s", id)
-	s.T().Logf("Created test asset class %s", id)
+	testcli.NewTxExecutor(assetcli.GetCmdCreateAssetClass(), args).Execute(s.T(), s.testnet)
 }
 
 // createTestAsset creates a test asset via transaction.
@@ -172,14 +167,8 @@ func (s *CmdTestSuite) createTestAsset(classID, assetID, owner string) {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1)).String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	}
-	clientCtx := s.getClientCtx()
-	_, err := clitestutil.ExecTestCLICmd(clientCtx, assetcli.GetCmdCreateAsset(), args)
-	s.Require().NoError(err, "failed to create test asset %s/%s", classID, assetID)
 
-	// Wait for next block to ensure data is committed
-	err = testutil.WaitForNextBlock(s.testnet)
-	s.Require().NoError(err, "WaitForNextBlock after creating asset %s/%s", classID, assetID)
-	s.T().Logf("Created test asset %s/%s", classID, assetID)
+	testcli.NewTxExecutor(assetcli.GetCmdCreateAsset(), args).Execute(s.T(), s.testnet)
 }
 
 // TestQueryAssetCmd tests the query asset command.
