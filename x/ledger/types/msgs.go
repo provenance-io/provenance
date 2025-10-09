@@ -100,7 +100,7 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 	}
 
 	// Validate next payment amount bounds
-	if m.NextPmtAmt.IsNegative() {
+	if m.NextPmtAmt.IsNil() || m.NextPmtAmt.IsNegative() {
 		errs = append(errs, NewErrCodeInvalidField("next_pmt_amt", "cannot be negative"))
 	}
 
