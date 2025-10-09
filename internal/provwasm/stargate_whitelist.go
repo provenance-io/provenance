@@ -313,11 +313,11 @@ func init() {
 	setWhitelistedQuery("/provenance.trigger.v1.Query/Triggers", &triggertypes.QueryTriggersResponse{})
 
 	// vault
-	setWhitelistedQuery("/problabs.vault.v1.Query/Vaults", &vaulttypes.QueryVaultsResponse{})
-	setWhitelistedQuery("/problabs.vault.v1.Query/Vault", &vaulttypes.QueryVaultResponse{})
-	setWhitelistedQuery("/problabs.vault.v1.Query/EstimateSwapIn", &vaulttypes.QueryEstimateSwapInResponse{})
-	setWhitelistedQuery("/problabs.vault.v1.Query/EstimateSwapOut", &vaulttypes.QueryEstimateSwapOutResponse{})
-	setWhitelistedQuery("/problabs.vault.v1.Query/PendingSwapOuts", &vaulttypes.QueryPendingSwapOutsResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/Vaults", &vaulttypes.QueryVaultsResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/Vault", &vaulttypes.QueryVaultResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/EstimateSwapIn", &vaulttypes.QueryEstimateSwapInResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/EstimateSwapOut", &vaulttypes.QueryEstimateSwapOutResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/PendingSwapOuts", &vaulttypes.QueryPendingSwapOutsResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
