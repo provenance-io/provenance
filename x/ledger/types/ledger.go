@@ -218,7 +218,7 @@ func (l *Ledger) Validate() error {
 	}
 
 	// Validate next payment amount if provided
-	if l.NextPmtAmt.IsNegative() {
+	if l.NextPmtAmt.IsNil() || l.NextPmtAmt.IsNegative() {
 		errs = append(errs, fmt.Errorf("next_pmt_amt: must be a non-negative integer"))
 	}
 
