@@ -100,6 +100,12 @@ func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNF
 	return &types.MsgUnregisterNFTResponse{}, nil
 }
 
+// These are addresses with special access to the RegistryBulkUpdate endpoint.
+var (
+	authority1 = "pb1" // TODO: Set this.
+	authority2 = "tp1" // TODO: Set this.
+)
+
 // RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
 // This creates multiple registry entries, or updates if one exists.
 func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistryBulkUpdate) (*types.MsgRegistryBulkUpdateResponse, error) {
@@ -110,8 +116,10 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 		}
 
 		// Validate that the signer owns the NFT
-		if err := k.ValidateNFTOwner(ctx, &entry.Key.AssetClassId, &entry.Key.NftId, msg.Signer); err != nil {
-			return nil, fmt.Errorf("[%d]: %w", i, err)
+		if msg.Signer != authority1 && msg.Signer != authority2 {
+			if err := k.ValidateNFTOwner(ctx, &entry.Key.AssetClassId, &entry.Key.NftId, msg.Signer); err != nil {
+				return nil, fmt.Errorf("[%d]: %w", i, err)
+			}
 		}
 
 		// Get the original registry, so we know what we're updating.
