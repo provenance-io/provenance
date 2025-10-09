@@ -16,11 +16,11 @@ The flatfees module params can be looked up using the `Params` query.
 
 ### QueryParamsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L42-L43
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L46-L47
 
 ### QueryParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L45-L49
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L49-L53
 
 See also: [Params](06_params.md#params).
 
@@ -35,11 +35,11 @@ To skip this conversion (and get the costs as they are defined) set `do_not_conv
 
 ### QueryAllMsgFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L51-L57
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L55-L61
 
 ### QueryAllMsgFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L59-L65
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L63-L71
 
 See also: [MsgFee](03_messages.md#msgfee).
 
@@ -54,11 +54,11 @@ To skip this conversion (and get the cost as it is defined) set `do_not_convert`
 
 ### QueryMsgFeeRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L67-L73
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L73-L79
 
 ### QueryMsgFeeResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L75-L79
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L81-L85
 
 See also: [MsgFee](03_messages.md#msgfee).
 
@@ -71,8 +71,8 @@ The `gas_adjustment` only applies to the `estimated_gas` (it does not affect the
 
 ### QueryCalculateTxFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L81-L89
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L87-L95
 
 ### QueryCalculateTxFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/query.proto#L91-L102
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/query.proto#L97-L108

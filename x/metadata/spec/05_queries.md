@@ -39,12 +39,12 @@ If a requested entry or specification isn't found, an empty wrapper containing o
 The `Params` query gets the parameters of the metadata module.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L252-L256
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L277-L281
 
 There are no inputs for this query.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L258-L265
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L283-L290
 
 
 ---
@@ -53,7 +53,7 @@ There are no inputs for this query.
 The `Scope` query gets a scope.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L267-L287
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L292-L312
 
 The `scope_id`, if provided, must either be scope uuid, e.g. `91978ba2-5f35-459a-86a7-feca1b0512e0` or a scope address,
 e.g. `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`. The session addr, if provided, must be a bech32 session address,
@@ -73,7 +73,7 @@ By default, sessions and records are not included.
 Set `include_sessions` and/or `include_records` to true to include sessions and/or records.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L289-L300
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L314-L325
 
 
 ---
@@ -84,12 +84,12 @@ The `ScopesAll` query gets all scopes.
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L312-L321
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L337-L346
 
 The only input to this query is pagination information.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L323-L332
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L348-L357
 
 
 ---
@@ -98,7 +98,7 @@ The only input to this query is pagination information.
 The `Sessions` query gets sessions.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L334-L357
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L359-L382
 
 The `scope_id` can either be scope uuid, e.g. `91978ba2-5f35-459a-86a7-feca1b0512e0` or a scope address, e.g.
 `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`. Similarly, the `session_id` can either be a uuid or session address, e.g.
@@ -127,7 +127,7 @@ By default, the scope and records are not included.
 Set `include_scope` and/or `include_records` to true to include the scope and/or records.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L359-L370
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L384-L395
 
 
 ---
@@ -138,12 +138,12 @@ The `SessionsAll` query gets all sessions.
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L382-L391
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L407-L416
 
 The only input to this query is pagination information.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L393-L402
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L418-L427
 
 
 ---
@@ -152,7 +152,7 @@ The only input to this query is pagination information.
 The `Records` query gets records.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L404-L427
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L429-L452
 
 The `record_addr`, if provided, must be a bech32 record address, e.g.
 `record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3`. The `scope_id` can either be scope uuid, e.g.
@@ -176,7 +176,7 @@ By default, the scope and sessions are not included.
 Set `include_scope` and/or `include_sessions` to true to include the scope and/or sessions.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L429-L440
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L454-L465
 
 
 ---
@@ -187,12 +187,12 @@ The `RecordsAll` query gets all records.
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L452-L461
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L477-L486
 
 The only input to this query is pagination information.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L463-L472
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L488-L497
 
 
 ---
@@ -205,12 +205,12 @@ A scope is owned by an address if the address is listed as either an owner, or t
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L474-L482
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L499-L507
 
 The `address` should be a bech32 address string.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L484-L493
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L509-L518
 
 
 ---
@@ -221,12 +221,12 @@ The `ValueOwnership` query gets the ids of scopes that list an address as the va
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L495-L503
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L520-L528
 
 The `address` should be a bech32 address string.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L505-L514
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L530-L539
 
 
 ---
@@ -235,13 +235,13 @@ The `address` should be a bech32 address string.
 The `ScopeSpecification` query gets a scope specification.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L516-L533
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L541-L558
 
 The `specification_id` can either be a uuid, e.g. `dc83ea70-eacd-40fe-9adf-1cf6148bf8a2` or a bech32 scope
 specification address, e.g. `scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m`.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L535-L546
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L560-L571
 
 
 ---
@@ -252,12 +252,12 @@ The `ScopeSpecificationsAll` query gets all scope specifications.
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L556-L565
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L581-L590
 
 The only input to this query is pagination information.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L567-L576
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L592-L601
 
 
 ---
@@ -266,7 +266,7 @@ The only input to this query is pagination information.
 The `ContractSpecification` query gets a contract specification.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L578-L594
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L603-L619
 
 The `specification_id` can either be a uuid, e.g. `def6bc0a-c9dd-4874-948f-5206e6060a84`, a bech32 contract
 specification address, e.g. `contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn`, or a bech32 record specification
@@ -278,7 +278,7 @@ Set `include_record_specs` to true to include them in the result.
 
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L596-L606
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L621-L631
 
 
 ---
@@ -289,12 +289,12 @@ The `ContractSpecificationsAll` query gets all contract specifications.
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L616-L625
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L641-L650
 
 The only input to this query is pagination information.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L627-L636
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L652-L661
 
 
 ---
@@ -306,7 +306,7 @@ The only difference between this query and `ContractSpecification` with `include
 this query does not return the contract specification.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L638-L652
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L663-L677
 
 The `specification_id` can either be a uuid, e.g. `def6bc0a-c9dd-4874-948f-5206e6060a84`, a bech32 contract
 specification address, e.g. `contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn`, or a bech32 record specification
@@ -314,7 +314,7 @@ address, e.g. `recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez
 address, then the contract specification that contains that record specification is used.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L654-L666
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L679-L691
 
 
 ---
@@ -323,7 +323,7 @@ address, then the contract specification that contains that record specification
 The `RecordSpecification` query gets a record specification.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L668-L685
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L693-L710
 
 The `specification_id` can either be a uuid, e.g. `def6bc0a-c9dd-4874-948f-5206e6060a84` or a bech32 contract specification
 address, e.g. `contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn`.
@@ -335,7 +335,7 @@ It is required if the `specification_id` is a uuid or contract specification add
 It is ignored if the `specification_id` is a record specification address.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L687-L694
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L712-L719
 
 
 ---
@@ -346,12 +346,12 @@ The `RecordSpecificationsAll` query gets all record specifications.
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L704-L713
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L729-L738
 
 The only input to this query is pagination information.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L715-L724
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L740-L749
 
 
 ---
@@ -361,12 +361,12 @@ The `GetByAddr` query looks up metadata entries and/or specifications for a give
 The results of this query are not wrapped with id information like the other queries, and only returns the exact entries requested.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L726-L730
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L751-L755
 
 The `addrs` can contain any valid metadata address bech32 strings.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L732-L748
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L757-L773
 
 Any invalid or nonexistent `addrs` will be in the `not_found` list.
 
@@ -376,12 +376,12 @@ Any invalid or nonexistent `addrs` will be in the `not_found` list.
 The `OSLocatorParams` query gets the parameters of the Object Store Locator sub-module.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L750-L754
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L775-L779
 
 There are no inputs for this query.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L756-L763
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L781-L788
 
 
 ---
@@ -390,12 +390,12 @@ There are no inputs for this query.
 The `OSLocator` query gets an Object Store Locator for an address.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L765-L771
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L790-L796
 
 The `owner` should be a bech32 address string.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L773-L779
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L798-L804
 
 
 ---
@@ -404,12 +404,12 @@ The `owner` should be a bech32 address string.
 The `OSLocatorsByURI` query gets the object store locators by URI.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L781-L789
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L806-L814
 
 The `uri` is string the URI to find object store locators for.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L791-L799
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L816-L824
 
 
 ---
@@ -418,13 +418,13 @@ The `uri` is string the URI to find object store locators for.
 The `OSLocatorsByScope` query gets the object store locators for the owners and value owner of a scope.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L801-L807
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L826-L832
 
 The `scope_id`, must either be scope uuid, e.g. `91978ba2-5f35-459a-86a7-feca1b0512e0` or a scope address,
 e.g. `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L809-L815
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L834-L840
 
 
 ---
@@ -435,12 +435,12 @@ The `OSAllLocators` query gets all object store locators.
 This query is paginated.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L817-L823
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L842-L848
 
 The only input to this query is pagination information.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L825-L833
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L850-L858
 
 ---
 ## AccountData
@@ -448,9 +448,9 @@ The only input to this query is pagination information.
 The `AccountData` query gets the account data associated with a scope.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L835-L840
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L860-L865
 
 The `metadata_addr` must be a scope id, e.g. `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/metadata/v1/query.proto#L842-L846
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/metadata/v1/query.proto#L867-L871
