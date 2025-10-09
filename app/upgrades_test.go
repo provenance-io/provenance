@@ -1367,27 +1367,39 @@ func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
 }
 
 func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
-	// Load the actual genesis data from the gzipped file using the same method as the upgrade handler.
-	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
+	filePaths, err := getBouvardiaLedgerDataFilePaths()
+	s.Require().NoError(err, "getBouvardiaLedgerDataFilePaths()")
 
-	// Read the gzipped file data
-	data, err := upgradeDataFS.ReadFile(filePath)
-	s.Require().NoError(err, "Failed to read file %s", filePath)
+	for _, filePath := range filePaths {
+		s.Run(filePath, func() {
+			// Read the gzipped file data
+			data, err := upgradeDataFS.ReadFile(filePath)
+			s.Require().NoError(err, "Failed to read file %s", filePath)
 
-	// Create gzip reader for decompression.
-	reader := bytes.NewReader(data)
-	gzReader, err := gzip.NewReader(reader)
-	s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
-	defer gzReader.Close()
+			// Create gzip reader for decompression.
+			reader := bytes.NewReader(data)
+			gzReader, err := gzip.NewReader(reader)
+			s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
+			defer gzReader.Close()
 
-	// Decode the entire JSON into a GenesisState.
-	var genesisState ledgerTypes.GenesisState
-	decoder := json.NewDecoder(gzReader)
-	s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
+			// Decode the entire JSON into a GenesisState.
+			var genesisState ledgerTypes.GenesisState
+			decoder := json.NewDecoder(gzReader)
+			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
 
-	// Validate GenesisState.
-	err = genesisState.Validate()
-	s.Require().NoError(err, "GenesisState validation failed")
+			// Validate GenesisState.
+			err = genesisState.Validate()
+			s.Require().NoError(err, "GenesisState validation failed")
 
-	s.T().Log("Successfully validated all ledger genesis state components")
+			count := 0
+			count += len(genesisState.LedgerClasses)
+			count += len(genesisState.LedgerClassEntryTypes)
+			count += len(genesisState.LedgerClassStatusTypes)
+			count += len(genesisState.LedgerClassBucketTypes)
+			count += len(genesisState.Ledgers)
+			count += len(genesisState.LedgerEntries)
+			count += len(genesisState.SettlementInstructions)
+			s.Require().NotZero(count, "Total number of records found in the file")
+		})
+	}
 }
