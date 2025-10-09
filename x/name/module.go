@@ -125,6 +125,11 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	// Register migration
+	migrator := keeper.NewMigrator(am.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 2, migrator.MigrateKVToCollections2to3); err != nil {
+		panic(fmt.Sprintf("failed to register migration for %s: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the name module. It returns
@@ -168,4 +173,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return 3 }
