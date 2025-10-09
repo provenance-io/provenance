@@ -4,6 +4,7 @@ if [ "$1" = '-v' ] || [ "$1" = '--verbose' ]; then
   VERBOSE=1
 fi
 proto_dir='./proto'
+proto_provlabs_dir='./third_party/proto/provlabs'
 temp_dir='./tmp-swagger-gen'
 temp_file="$temp_dir/swagger-new.yaml"
 template_file='./proto/buf.gen.swagger.yaml'
@@ -14,6 +15,13 @@ set -eo pipefail
 
 mkdir -p "$temp_dir"
 proto_files=$( find "$proto_dir" -type f -name '*.proto' -print0 | xargs -0 grep -El '^service +[^ ]+ +\{' )
+
+# Include provlabs proto files if the directory exists
+if [ -d "$proto_provlabs_dir" ]; then
+  proto_files_third_party=$( find "$proto_provlabs_dir" -type f -name '*.proto' -print0 | xargs -0 grep -El '^service +[^ ]+ +\{' || true )
+  proto_files="$proto_files $proto_files_third_party"
+fi
+
 for file in $proto_files; do
   [ -n "$VERBOSE" ] && printf 'Generating swagger file for [%s].\n' "$file"
   buf generate --template "$template_file" "$file"
