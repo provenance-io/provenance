@@ -7,6 +7,9 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"slices"
+	"strings"
 
 	vaulttypes "github.com/provlabs/vault/types"
 
@@ -585,12 +588,46 @@ type LedgerKeeper interface {
 }
 
 // streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
-func streamImportLedgerData(goCtx context.Context, lk LedgerKeeper) error {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	filePath := "upgrade_data/bouvardia_ledger_genesis.json.gz"
-
+func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	ctx.Logger().Info("Starting streaming import of ledger data.")
 
+	filePaths, err := getBouvardiaLedgerDataFilePaths()
+
+	ctx.Logger().Debug(fmt.Sprintf("Found %d ledger data files to import.", len(filePaths)))
+	for i, filePath := range filePaths {
+		ctx.Logger().Debug(fmt.Sprintf("Importing ledger data file %d of %d: %s", i+1, len(filePaths), filePath))
+		if err = streamImportLedgerDataFile(ctx, lk, filePath); err != nil {
+			return fmt.Errorf("failed to import ledger data file %s: %w", filePath, err)
+		}
+	}
+
+	ctx.Logger().Info("Completed streaming import of ledger data.")
+	return nil
+}
+
+// getBouvardiaLedgerDataFilePaths returns the name and paths of the files in the "upgrade_data" directory related to the
+// bouvardia ledger data load. You can get the file contents using upgradeDataFS.ReadFile(filePath).
+func getBouvardiaLedgerDataFilePaths() ([]string, error) {
+	dirContents, err := upgradeDataFS.ReadDir("upgrade_data")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read upgrade data directory: %w", err)
+	}
+
+	fileNames := make([]string, 0, len(dirContents))
+	for _, dc := range dirContents {
+		name := dc.Name()
+		if dc.IsDir() || !strings.HasPrefix(name, "bouvardia_ledger_genesis") || !strings.HasSuffix(name, ".gz") {
+			continue
+		}
+		fileNames = append(fileNames, filepath.Join("upgrade_data", name))
+	}
+	slices.Sort(fileNames)
+
+	return fileNames, nil
+}
+
+// streamImportLedgerDataFile will import the provided gzipped ledger genesis file into state.
+func streamImportLedgerDataFile(ctx sdk.Context, lk LedgerKeeper, filePath string) error {
 	// Read the gzipped file data
 	data, err := upgradeDataFS.ReadFile(filePath)
 	if err != nil {
@@ -647,19 +684,16 @@ func streamImportLedgerData(goCtx context.Context, lk LedgerKeeper) error {
 		return fmt.Errorf("expected JSON object end '}' in %s, got %v", filePath, token)
 	}
 
-	ctx.Logger().Info("Completed streaming import of ledger data.")
-
 	return nil
 }
 
 // processGenesisField processes a single field from the GenesisState JSON.
-func processGenesisField(goCtx context.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
 	switch fieldName {
 	case "ledgerClasses":
 		var ledgerClasses []ledgerTypes.LedgerClass
 		if err := decoder.Decode(&ledgerClasses); err != nil {
-			return fmt.Errorf("failed to decode ledgerClasses: %w", err)
+			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
 		genesis := &ledgerTypes.GenesisState{LedgerClasses: ledgerClasses}
 		lk.ImportLedgerClasses(ctx, genesis)
@@ -668,7 +702,7 @@ func processGenesisField(goCtx context.Context, lk LedgerKeeper, decoder *json.D
 	case "ledgerClassEntryTypes":
 		var entryTypes []ledgerTypes.GenesisLedgerClassEntryType
 		if err := decoder.Decode(&entryTypes); err != nil {
-			return fmt.Errorf("failed to decode ledgerClassEntryTypes: %w", err)
+			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
 		genesis := &ledgerTypes.GenesisState{LedgerClassEntryTypes: entryTypes}
 		lk.ImportLedgerClassEntryTypes(ctx, genesis)
@@ -677,7 +711,7 @@ func processGenesisField(goCtx context.Context, lk LedgerKeeper, decoder *json.D
 	case "ledgerClassStatusTypes":
 		var statusTypes []ledgerTypes.GenesisLedgerClassStatusType
 		if err := decoder.Decode(&statusTypes); err != nil {
-			return fmt.Errorf("failed to decode ledgerClassStatusTypes: %w", err)
+			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
 		genesis := &ledgerTypes.GenesisState{LedgerClassStatusTypes: statusTypes}
 		lk.ImportLedgerClassStatusTypes(ctx, genesis)
@@ -686,7 +720,7 @@ func processGenesisField(goCtx context.Context, lk LedgerKeeper, decoder *json.D
 	case "ledgerClassBucketTypes":
 		var bucketTypes []ledgerTypes.GenesisLedgerClassBucketType
 		if err := decoder.Decode(&bucketTypes); err != nil {
-			return fmt.Errorf("failed to decode ledgerClassBucketTypes: %w", err)
+			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
 		genesis := &ledgerTypes.GenesisState{LedgerClassBucketTypes: bucketTypes}
 		lk.ImportLedgerClassBucketTypes(ctx, genesis)
@@ -704,7 +738,7 @@ func processGenesisField(goCtx context.Context, lk LedgerKeeper, decoder *json.D
 	case "ledgerEntries":
 		var entries []ledgerTypes.GenesisLedgerEntry
 		if err := decoder.Decode(&entries); err != nil {
-			return fmt.Errorf("failed to decode ledgerEntries: %w", err)
+			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
 		genesis := &ledgerTypes.GenesisState{LedgerEntries: entries}
 		lk.ImportLedgerEntries(ctx, genesis)
@@ -713,7 +747,7 @@ func processGenesisField(goCtx context.Context, lk LedgerKeeper, decoder *json.D
 	case "settlementInstructions":
 		var settlements []ledgerTypes.GenesisStoredSettlementInstructions
 		if err := decoder.Decode(&settlements); err != nil {
-			return fmt.Errorf("failed to decode settlementInstructions: %w", err)
+			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
 		genesis := &ledgerTypes.GenesisState{SettlementInstructions: settlements}
 		lk.ImportStoredSettlementInstructions(ctx, genesis)
