@@ -1,24 +1,34 @@
 syntax = "proto3";
-package vault.v1;
+package provlabs.vault.v1;
 
 import "gogoproto/gogo.proto";
-import "vault/v1/vault.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
+// QueueEntry is a (time, addr) pair used by the vault payout deferral queue.
 message QueueEntry {
+  // time is the UNIX timestamp (in seconds) when the entry becomes eligible.
   uint64 time = 1;
+  // addr is the bech32 vault address associated with the entry.
   string addr = 2;
 }
 
+// PendingSwapOutQueueEntry represents a single pending swap-out request queued for later processing.
 message PendingSwapOutQueueEntry {
+  // time is the UNIX timestamp (in seconds) when this pending swap-out was enqueued or becomes eligible.
   int64 time = 1;
+  // id is the unique identifier of the pending swap-out request.
   uint64 id = 2;
+  // swap_out contains the pending swap-out details.
   PendingSwapOut swap_out = 3 [(gogoproto.nullable) = false];
 }
 
+// PendingSwapOutQueue holds the latest sequence number and all queued swap-out entries.
 message PendingSwapOutQueue {
+  // latest_sequence_number is the most recently assigned pending swap-out ID.
   uint64 latest_sequence_number = 1;
+  // entries contains all currently queued pending swap-out entries.
   repeated PendingSwapOutQueueEntry entries = 2 [(gogoproto.nullable) = false];
 }
 

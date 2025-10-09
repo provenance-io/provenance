@@ -1,5 +1,5 @@
 syntax = "proto3";
-package vault.v1;
+package provlabs.vault.v1;
 
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";

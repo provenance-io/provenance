@@ -1,5 +1,5 @@
 syntax = "proto3";
-package vault.v1;
+package provlabs.vault.v1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
@@ -51,8 +51,10 @@ service Msg {
   // ExpeditePendingSwapOut expedites a pending swap out from a vault.
   rpc ExpeditePendingSwapOut(MsgExpeditePendingSwapOutRequest) returns (MsgExpeditePendingSwapOutResponse);
 
+  // PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
   rpc PauseVault(MsgPauseVaultRequest) returns (MsgPauseVaultResponse);
 
+  // UnpauseVault re-enables user-facing swap operations for a vault (admin only).
   rpc UnpauseVault(MsgUnpauseVaultRequest) returns (MsgUnpauseVaultResponse);
 
   // SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
