@@ -275,6 +275,22 @@
         ]
       }
     },
+    { 
+      "url": "./tmp-swagger-gen/provlabs/vault/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Vault"
+        ]
+      }
+    },
+    { 
+      "url": "./tmp-swagger-gen/provlabs/vault/v1/tx.swagger.json" , 
+      "tags": {
+        "add": [
+          "Vault"
+        ]
+      }
+    },
     {
       "url": "./client/docs/swagger_third_party.yaml",
       "dereference": {
