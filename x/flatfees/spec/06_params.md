@@ -16,8 +16,8 @@ The current params can be looked up using the [Params](05_queries.md#params) que
 
 ## Params
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/flatfees.proto#L12-L24
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/flatfees.proto#L12-L24
 
 ## ConversionFactor
 
-+++ https://github.com/provenance-io/provenance/blob/v1.25.0/proto/provenance/flatfees/v1/flatfees.proto#L26-L42
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/flatfees/v1/flatfees.proto#L26-L42
