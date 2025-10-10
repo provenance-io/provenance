@@ -352,7 +352,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 					},
 				},
 			},
-			expErr: "\"entry\" not found: not found",
+			expErr: "entry not found: not found",
 		},
 		{
 			name: "incorrect applied amounts total",
@@ -1357,7 +1357,7 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 					BucketTypeId: 1,
 				},
 			},
-			expErr: "\"entry\" not found: not found",
+			expErr: "entry not found: not found",
 		},
 		{
 			name:          "incorrect applied amounts",

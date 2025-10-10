@@ -53,7 +53,7 @@ func NewErrCodeUnauthorized(why string) error {
 }
 
 func NewErrCodeAlreadyExists(field string) error {
-	return cerrs.Wrapf(ErrAlreadyExists, "%q already exists", field)
+	return cerrs.Wrapf(ErrAlreadyExists, "%s already exists", field)
 }
 
 func NewErrCodeInternal(msg string) error {
@@ -61,5 +61,5 @@ func NewErrCodeInternal(msg string) error {
 }
 
 func NewErrCodeNotFound(key string) error {
-	return cerrs.Wrapf(ErrNotFound, "%q not found", key)
+	return cerrs.Wrapf(ErrNotFound, "%s not found", key)
 }
