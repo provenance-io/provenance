@@ -11,6 +11,7 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
+	nfttypes "cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,17 +28,20 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
+	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
+	ledgertypes "github.com/provenance-io/provenance/x/ledger/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/provenance-io/provenance/x/quarantine"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -161,6 +165,15 @@ func init() {
 	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/Inflation", &minttypes.QueryInflationResponse{})
 	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/AnnualProvisions", &minttypes.QueryAnnualProvisionsResponse{})
 
+	// nft
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Balance", &nfttypes.QueryBalanceResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Class", &nfttypes.QueryClassResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Classes", &nfttypes.QueryClassesResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/NFT", &nfttypes.QueryNFTResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/NFTs", &nfttypes.QueryNFTsResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Owner", &nfttypes.QueryOwnerResponse{})
+	setWhitelistedQuery("/cosmos.nft.v1beta1.Query/Supply", &nfttypes.QuerySupplyResponse{})
+
 	// slashing
 	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/Params", &slashingtypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/SigningInfo", &slashingtypes.QuerySigningInfoResponse{})
@@ -201,6 +214,12 @@ func init() {
 	// ==========================================================
 	// provenance queries
 	// ==========================================================
+
+	// asset
+	setWhitelistedQuery("/provenance.asset.v1.Query/Asset", &assettypes.QueryAssetResponse{})
+	setWhitelistedQuery("/provenance.asset.v1.Query/Assets", &assettypes.QueryAssetsResponse{})
+	setWhitelistedQuery("/provenance.asset.v1.Query/AssetClass", &assettypes.QueryAssetClassResponse{})
+	setWhitelistedQuery("/provenance.asset.v1.Query/AssetClasses", &assettypes.QueryAssetClassesResponse{})
 
 	// attribute
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Params", &attributetypes.QueryParamsResponse{})
@@ -244,6 +263,18 @@ func init() {
 
 	// ibchooks
 	setWhitelistedQuery("/provenance.ibchooks.v1.Query/Params", &ibchookstypes.QueryParamsResponse{})
+
+	// ledger
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClass", &ledgertypes.QueryLedgerClassResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassEntryTypes", &ledgertypes.QueryLedgerClassEntryTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassStatusTypes", &ledgertypes.QueryLedgerClassStatusTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerClassBucketTypes", &ledgertypes.QueryLedgerClassBucketTypesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/Ledger", &ledgertypes.QueryLedgerResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntries", &ledgertypes.QueryLedgerEntriesResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerEntry", &ledgertypes.QueryLedgerEntryResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerBalancesAsOf", &ledgertypes.QueryLedgerBalancesAsOfResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlements", &ledgertypes.QueryLedgerSettlementsResponse{})
+	setWhitelistedQuery("/provenance.ledger.v1.Query/LedgerSettlementsByCorrelationID", &ledgertypes.QueryLedgerSettlementsByCorrelationIDResponse{})
 
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
@@ -301,6 +332,10 @@ func init() {
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/QuarantinedFunds", &quarantine.QueryQuarantinedFundsResponse{})
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/AutoResponses", &quarantine.QueryAutoResponsesResponse{})
+
+	// registry
+	setWhitelistedQuery("/provenance.registry.v1.Query/GetRegistry", &registrytypes.QueryGetRegistryResponse{})
+	setWhitelistedQuery("/provenance.registry.v1.Query/HasRole", &registrytypes.QueryHasRoleResponse{})
 
 	// sanction
 	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/IsSanctioned", &sanction.QueryIsSanctionedResponse{})
