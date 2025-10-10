@@ -102,8 +102,8 @@ func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNF
 
 // These are addresses with special access to the RegistryBulkUpdate endpoint.
 var (
-	authority1 = "pb1" // TODO: Set this.
-	authority2 = "tp1" // TODO: Set this.
+	authority1 = "pb1q3xhmqrjukjuhmccy4p6xza6q0uxwclled4wrf"
+	authority2 = "tp1q3xhmqrjukjuhmccy4p6xza6q0uxwcll2xszpr"
 )
 
 // RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
