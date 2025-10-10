@@ -1,6 +1,9 @@
 package types
 
-import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // DefaultGenesisState returns the initial set of name -> address bindings.
 func DefaultGenesisState() *GenesisState {
@@ -10,11 +13,12 @@ func DefaultGenesisState() *GenesisState {
 // Validate performs genesis state validation returning an error upon any failure.
 // It calls the Validate function for each entry in the GenesisState.
 func (genesisState GenesisState) Validate() error {
+	var errs []error
 	// Validate each ledger class.
 	for i, ledgerClass := range genesisState.LedgerClasses {
 		err := ledgerClass.Validate()
 		if err != nil {
-			return sdkerrors.ErrInvalidType.Wrapf("ledger class %d validation failed: %v", i, err)
+			errs = append(errs, fmt.Errorf("ledger class %d validation failed: %v", i, err))
 		}
 	}
 
@@ -22,7 +26,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, entryType := range genesisState.LedgerClassEntryTypes {
 		err := entryType.EntryType.Validate()
 		if err != nil {
-			return sdkerrors.ErrInvalidType.Wrapf("ledger class entry type %d validation failed: %v", i, err)
+			errs = append(errs, fmt.Errorf("ledger class entry type %d validation failed: %v", i, err))
 		}
 	}
 
@@ -30,7 +34,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, statusType := range genesisState.LedgerClassStatusTypes {
 		err := statusType.StatusType.Validate()
 		if err != nil {
-			return sdkerrors.ErrInvalidType.Wrapf("ledger class status Type %d validation failed: %v", i, err)
+			errs = append(errs, fmt.Errorf("ledger class status Type %d validation failed: %v", i, err))
 		}
 	}
 
@@ -38,7 +42,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, bucketType := range genesisState.LedgerClassBucketTypes {
 		err := bucketType.BucketType.Validate()
 		if err != nil {
-			return sdkerrors.ErrInvalidType.Wrapf("ledger class bucket type %d validation failed: %v", i, err)
+			errs = append(errs, fmt.Errorf("ledger class bucket type %d validation failed: %v", i, err))
 		}
 	}
 
@@ -46,7 +50,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, ledgers := range genesisState.Ledgers {
 		err := ledgers.Ledger.Validate()
 		if err != nil {
-			return sdkerrors.ErrInvalidType.Wrapf("ledger %d validation failed: %v", i, err)
+			errs = append(errs, fmt.Errorf("ledger %d validation failed: %v", i, err))
 		}
 	}
 
@@ -54,7 +58,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, ledgerEntries := range genesisState.LedgerEntries {
 		err := ledgerEntries.Entry.Validate()
 		if err != nil {
-			return sdkerrors.ErrInvalidType.Wrapf("ledger entry %d validation failed: %v", i, err)
+			errs = append(errs, fmt.Errorf("ledger entry %d validation failed: %v", i, err))
 		}
 	}
 
@@ -63,10 +67,10 @@ func (genesisState GenesisState) Validate() error {
 		for j, instruction := range settlement.SettlementInstructions.SettlementInstructions {
 			err := instruction.Validate()
 			if err != nil {
-				return sdkerrors.ErrInvalidType.Wrapf("settlement instruction %d.%d validation failed: %v", i, j, err)
+				errs = append(errs, fmt.Errorf("settlement instruction %d.%d validation failed: %v", i, j, err))
 			}
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
