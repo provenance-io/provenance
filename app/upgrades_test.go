@@ -53,13 +53,22 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
-	// Alert: This function is SetupSuite. That means all tests in here
-	// will use the same app with the same store and data.
+	s.SetupBouvardia()
 	defer SetLoggerMaker(SetLoggerMaker(BufferedInfoLoggerMaker(&s.logBuffer)))
 	s.app = Setup(s.T())
 	s.logBuffer.Reset()
 	s.startTime = time.Now()
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.startTime})
+}
+
+// SetupBouvardia does some setup that needs to be done for some of the bouvardia upgrade tests.
+// TODO: Delete this method with the bouvardia stuff.
+func (s *UpgradeTestSuite) SetupBouvardia() {
+	// Currently, the upgrade_data files have testnet addresses, so we need to use the testnet config.
+	SetConfig(true, false)
+	// When all tests are run together (e.g. make test), there's a chance some key addresses have already been seen,
+	// (e.g. the bank module account), and the cache has the wrong HRP for those entries, so we need to disable it.
+	sdk.SetAddrCacheEnabled(false)
 }
 
 // GetLogOutput gets the log buffer contents. This (probably) also clears the log buffer.
