@@ -249,7 +249,7 @@ func MarkerSupplyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "supply [address|denom]",
 		Short:   "Get total supply for marker (DEPRECATED - see help)",
-		Long:    strings.TrimSpace(fmt.Sprintf(`DEPRECATED: This command returns the marker's initial/target supply, not actual circulating supply.`, version.AppName, version.AppName)),
+		Long:    strings.TrimSpace(`DEPRECATED: This command returns the marker's initial/target supply, not actual circulating supply.`),
 		Example: fmt.Sprintf(`$ %s query marker supply "nhash"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
