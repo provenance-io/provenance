@@ -244,10 +244,12 @@ func MarkerEscrowCmd() *cobra.Command {
 }
 
 // MarkerSupplyCmd is the CLI command for querying marker module registrations.
+// Deprecated: This command returns initial/target supply, not actual circulating supply.
 func MarkerSupplyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "supply [address|denom]",
-		Short:   "Get total supply for marker",
+		Short:   "Get total supply for marker (DEPRECATED - see help)",
+		Long:    strings.TrimSpace(fmt.Sprintf(`DEPRECATED: This command returns the marker's initial/target supply, not actual circulating supply.`, version.AppName, version.AppName)),
 		Example: fmt.Sprintf(`$ %s query marker supply "nhash"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
