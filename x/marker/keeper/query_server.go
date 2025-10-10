@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -102,6 +103,7 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 }
 
 // Supply query for supply of coin on a marker account
+// Deprecated: This endpoint returns the initial/target supply from marker account, not actual circulating supply.
 func (k Keeper) Supply(c context.Context, req *types.QuerySupplyRequest) (*types.QuerySupplyResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -111,6 +113,11 @@ func (k Keeper) Supply(c context.Context, req *types.QuerySupplyRequest) (*types
 	if err != nil {
 		return nil, err
 	}
+	k.Logger(ctx).Warn(
+		"DEPRECATED: marker supply query used - this returns initial/target supply, not actual circulating supply. Use bank module SupplyOf query instead. Will be removed in v3.0.0",
+		"marker_id", req.Id,
+		"migration_path", fmt.Sprintf("/cosmos/bank/v1beta1/supply/%s", req.Id),
+	)
 	return &types.QuerySupplyResponse{Amount: marker.GetSupply()}, nil
 }
 
