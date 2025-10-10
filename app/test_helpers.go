@@ -512,14 +512,14 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 
 // MakeTestEncodingConfig creates an encoding config suitable for unit tests.
 func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
-	tempDir, err := os.MkdirTemp("", "tempprovapp")
+	tempDir, err := os.MkdirTemp("", "tempprovapp") //nolint:usetesting // Not using t.TempDir() here to allow t to be nil and so the dir is cleaned up sooner.
 	switch {
 	case t != nil:
 		require.NoError(t, err, "failed to create temp dir %q", tempDir)
 	case err != nil:
 		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
 	}
-	defer os.RemoveAll(tempDir)
+	defer os.RemoveAll(tempDir) //nolint:errcheck // cleanup best-effort, ignore errors.
 
 	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	return tempApp.GetEncodingConfig()

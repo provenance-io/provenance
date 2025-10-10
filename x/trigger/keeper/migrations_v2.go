@@ -29,9 +29,10 @@ func (m Migrator) DeleteGasLimits(ctx sdk.Context, logger log.Logger) {
 	// We need to make sure the iterator is closed before deleting stuff,
 	// but we also need to make sure it closes if things go weird.
 	iter := storetypes.KVStorePrefixIterator(store, GasLimitKeyPrefix)
+
 	closeIter := func() {
 		if iter != nil {
-			iter.Close()
+			iter.Close() //nolint:errcheck,gosec // safe: closing iterator.
 			iter = nil
 		}
 	}

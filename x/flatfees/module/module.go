@@ -1,3 +1,4 @@
+// Package module defines the app module for the flatfees functionality.
 package module
 
 import (

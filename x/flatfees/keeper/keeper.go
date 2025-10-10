@@ -34,6 +34,7 @@ type Keeper struct {
 	simulate types.BaseAppSimulateFunc
 }
 
+// NewKeeper creates and returns a new Keeper instance for the flatfees module.
 func NewKeeper(
 	cdc codec.Codec,
 	storeService storetypes.KVStoreService,
