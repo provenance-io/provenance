@@ -592,6 +592,9 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	ctx.Logger().Info("Starting streaming import of ledger data.")
 
 	filePaths, err := getBouvardiaLedgerDataFilePaths()
+	if err != nil {
+		return fmt.Errorf("failed to get ledger data file paths: %w", err)
+	}
 
 	ctx.Logger().Debug(fmt.Sprintf("Found %d ledger data files to import.", len(filePaths)))
 	for i, filePath := range filePaths {
