@@ -260,7 +260,7 @@ func MarkerSupplyCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 			id := strings.ToLower(strings.TrimSpace(args[0]))
 
-			var response *types.QuerySupplyResponse
+			var response *types.QuerySupplyResponse //nolint:staticcheck // SA1019: QuerySupplyResponse is deprecated, keeping for now.
 			if response, err = queryClient.Supply(
 				context.Background(),
 				&types.QuerySupplyRequest{Id: id},
