@@ -99,18 +99,8 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
 	}
 
-	// Validate next payment amount bounds
-	if m.NextPmtAmt.IsNil() || m.NextPmtAmt.IsNegative() {
-		errs = append(errs, NewErrCodeInvalidField("next_pmt_amt", "cannot be negative"))
-	}
-
-	// Validate next payment date
-	if m.NextPmtDate <= 0 {
-		errs = append(errs, NewErrCodeInvalidField("next_pmt_date", "must be a positive integer"))
-	}
-
-	if err := m.PaymentFrequency.Validate(); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("payment_frequency", "invalid payment frequency"))
+	if err := ValidatePmtFields(m.NextPmtDate, m.NextPmtAmt, m.PaymentFrequency); err != nil {
+		errs = append(errs, err)
 	}
 
 	return errors.Join(errs...)

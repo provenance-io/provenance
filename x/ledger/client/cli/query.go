@@ -81,12 +81,17 @@ func GetCmd() *cobra.Command {
 				return fmt.Errorf("ledger not found for asset class id %s and nft id %s", assetClassID, nftID)
 			}
 
+			nextPmtAmt := "0"
+			if !l.Ledger.NextPmtAmt.IsNil() {
+				nextPmtAmt = l.Ledger.NextPmtAmt.String()
+			}
+
 			// Convert to PlainText
 			plainText := LedgerPlainText{
 				Key:                        req.Key,
 				Status:                     strconv.Itoa(int(l.Ledger.StatusTypeId)),
 				NextPmtDate:                helper.EpochDaysToYMD(l.Ledger.NextPmtDate),
-				NextPmtAmt:                 l.Ledger.NextPmtAmt.String(),
+				NextPmtAmt:                 nextPmtAmt,
 				InterestRate:               strconv.FormatInt(int64(l.Ledger.InterestRate), 10),
 				MaturityDate:               helper.EpochDaysToYMD(l.Ledger.MaturityDate),
 				InterestDayCountConvention: l.Ledger.InterestDayCountConvention,

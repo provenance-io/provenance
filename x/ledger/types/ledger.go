@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
@@ -212,14 +214,9 @@ func (l *Ledger) Validate() error {
 		errs = append(errs, fmt.Errorf("status_type_id: must be a positive integer"))
 	}
 
-	// Validate next payment date format if provided
-	if l.NextPmtDate <= 0 {
-		errs = append(errs, fmt.Errorf("next_pmt_date: must be after 1970-01-01"))
-	}
-
-	// Validate next payment amount if provided
-	if l.NextPmtAmt.IsNil() || l.NextPmtAmt.IsNegative() {
-		errs = append(errs, fmt.Errorf("next_pmt_amt: must be a non-negative integer"))
+	// Validate the next payment date and amount and the payment frequency.
+	if err := ValidatePmtFields(l.NextPmtDate, l.NextPmtAmt, l.PaymentFrequency); err != nil {
+		errs = append(errs, err)
 	}
 
 	// Validate interest rate if provided (reasonable bounds: 0-100000000 for 0-100%)
@@ -240,7 +237,23 @@ func (l *Ledger) Validate() error {
 		errs = append(errs, fmt.Errorf("interest_accrual_method: %w", err))
 	}
 
-	if err := l.PaymentFrequency.Validate(); err != nil {
+	return errors.Join(errs...)
+}
+
+// ValidatePmtFields returns an error if any of the provided fields have invalid values.
+func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int, paymentFrequence PaymentFrequency) error {
+	var errs []error
+	// Validate the next payment date. Allow zero to indicate "not provided."
+	if nextPmtDate < 0 {
+		errs = append(errs, fmt.Errorf("next_pmt_date: must be after 1970-01-01"))
+	}
+
+	// NextPmtAmt is allowed to be nil (not provided), zero, or positive; but not negative.
+	if !nextPmtAmt.IsNil() && nextPmtAmt.IsNegative() {
+		errs = append(errs, fmt.Errorf("next_pmt_amt: must be a non-negative integer"))
+	}
+
+	if err := paymentFrequence.Validate(); err != nil {
 		errs = append(errs, fmt.Errorf("payment_frequency: %w", err))
 	}
 

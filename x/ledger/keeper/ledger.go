@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -171,6 +171,11 @@ func (k Keeper) AddLedger(ctx context.Context, l types.Ledger) error {
 		return types.NewErrCodeInvalidField("status_type_id", "status type doesn't exist")
 	}
 
+	// If no NextPmtAmt was given, set it to zero.
+	if l.NextPmtAmt.IsNil() {
+		l.NextPmtAmt = sdkmath.ZeroInt()
+	}
+
 	// We omit the nftAddress out of the data we store intentionally as a minor optimization since it is also our data key.
 	keyStr := l.Key.String()
 
@@ -269,7 +274,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx context.Context, lk *types.LedgerKe
 // UpdateLedgerPayment updates the payment configuration of an existing ledger.
 // This function allows modification of the next payment amount, date, and frequency.
 // These parameters define the payment schedule for the ledger.
-func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, nextPmtAmt math.Int, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
+func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, nextPmtAmt sdkmath.Int, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
 	if err != nil {
@@ -278,6 +283,9 @@ func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, ne
 
 	// Update the ledger payment configuration.
 	ledger.NextPmtAmt = nextPmtAmt
+	if ledger.NextPmtAmt.IsNil() {
+		ledger.NextPmtAmt = sdkmath.ZeroInt()
+	}
 	ledger.NextPmtDate = nextPmtDate
 	ledger.PaymentFrequency = paymentFrequency
 

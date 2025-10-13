@@ -92,9 +92,9 @@ func TestMsgUpdatePayment_ValidateBasic(t *testing.T) {
 		msg  MsgUpdatePaymentRequest
 		exp  []string
 	}{
-		{name: "valid", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(10), NextPmtDate: 20250101, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}},
-		{name: "neg amount", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(-1), NextPmtDate: 20250101, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}, exp: []string{"invalid next_pmt_amt", "cannot be negative"}},
-		{name: "bad date", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(10), NextPmtDate: 0, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}, exp: []string{"invalid next_pmt_date", "positive"}},
+		{name: "valid", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(10), NextPmtDate: 20089, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}},
+		{name: "neg amount", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(-1), NextPmtDate: 20089, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}, exp: []string{"next_pmt_amt", "must be a non-negative integer"}},
+		{name: "bad date", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(10), NextPmtDate: -1, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}, exp: []string{"next_pmt_date", "must be after 1970-01-01"}},
 	}
 
 	for _, tc := range tests {

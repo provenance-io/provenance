@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/provenance-io/provenance/x/ledger/types"
 )
@@ -224,6 +225,11 @@ func (k Keeper) ImportLedgerClassBucketTypes(ctx context.Context, state *types.G
 // ImportLedgers writes all of the Ledgers to the Ledgers state collection.
 func (k Keeper) ImportLedgers(ctx context.Context, state *types.GenesisState) {
 	for i, l := range state.Ledgers {
+		// Set the NextPmtAmt to zero if it's nil.
+		if l.Ledger.NextPmtAmt.IsNil() {
+			l.Ledger.NextPmtAmt = sdkmath.ZeroInt()
+		}
+
 		// Remove the key from the ledger to avoid storing it twice. Easy optimization.
 		key := l.Ledger.Key.String()
 		l.Ledger.Key = nil
