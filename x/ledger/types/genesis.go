@@ -18,7 +18,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, ledgerClass := range genesisState.LedgerClasses {
 		err := ledgerClass.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Errorf("ledger class %d validation failed: %v", i, err))
+			errs = append(errs, fmt.Errorf("ledger class %d validation failed: %w", i, err))
 		}
 	}
 
@@ -26,7 +26,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, entryType := range genesisState.LedgerClassEntryTypes {
 		err := entryType.EntryType.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Errorf("ledger class entry type %d validation failed: %v", i, err))
+			errs = append(errs, fmt.Errorf("ledger class entry type %d validation failed: %w", i, err))
 		}
 	}
 
@@ -34,7 +34,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, statusType := range genesisState.LedgerClassStatusTypes {
 		err := statusType.StatusType.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Errorf("ledger class status Type %d validation failed: %v", i, err))
+			errs = append(errs, fmt.Errorf("ledger class status Type %d validation failed: %w", i, err))
 		}
 	}
 
@@ -42,7 +42,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, bucketType := range genesisState.LedgerClassBucketTypes {
 		err := bucketType.BucketType.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Errorf("ledger class bucket type %d validation failed: %v", i, err))
+			errs = append(errs, fmt.Errorf("ledger class bucket type %d validation failed: %w", i, err))
 		}
 	}
 
@@ -50,7 +50,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, ledgers := range genesisState.Ledgers {
 		err := ledgers.Ledger.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Errorf("ledger %d validation failed: %v", i, err))
+			errs = append(errs, fmt.Errorf("ledger %d validation failed: %w", i, err))
 		}
 	}
 
@@ -58,7 +58,7 @@ func (genesisState GenesisState) Validate() error {
 	for i, ledgerEntries := range genesisState.LedgerEntries {
 		err := ledgerEntries.Entry.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Errorf("ledger entry %d validation failed: %v", i, err))
+			errs = append(errs, fmt.Errorf("ledger entry %d validation failed: %w", i, err))
 		}
 	}
 
@@ -67,7 +67,7 @@ func (genesisState GenesisState) Validate() error {
 		for j, instruction := range settlement.SettlementInstructions.SettlementInstructions {
 			err := instruction.Validate()
 			if err != nil {
-				errs = append(errs, fmt.Errorf("settlement instruction %d.%d validation failed: %v", i, j, err))
+				errs = append(errs, fmt.Errorf("settlement instruction %d.%d validation failed: %w", i, j, err))
 			}
 		}
 	}
