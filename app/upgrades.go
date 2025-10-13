@@ -59,6 +59,9 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+			if err = increaseMemoLength(ctx, app); err != nil {
+				return nil, err
+			}
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
@@ -78,6 +81,9 @@ var upgrades = map[string]appUpgrade{
 			}
 			removeInactiveValidatorDelegations(ctx, app)
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = increaseMemoLength(ctx, app); err != nil {
 				return nil, err
 			}
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
@@ -310,6 +316,19 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
+
+// increaseMemoLength will increase the max memo length to 1024 bytes.
+func increaseMemoLength(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Increasing max memo length to 1024 bytes.")
+	params := app.AccountKeeper.GetParams(ctx)
+	params.MaxMemoCharacters = 1024
+	err := app.AccountKeeper.Params.Set(ctx, params)
+	if err != nil {
+		return fmt.Errorf("could not set x/auth params: %w", err)
+	}
+	ctx.Logger().Info("Done increasing max memo length to 1024 bytes.")
+	return nil
+}
 
 // FlatFeesKeeper has the flatfees keeper methods needed for setting up flat fees.
 // Part of the bouvardia upgrade.
