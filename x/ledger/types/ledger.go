@@ -296,15 +296,11 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	// Validate amounts are non-negative
-	totOK := true
+	totOK, amtsOK := true, true
 	if le.TotalAmt.IsNil() || le.TotalAmt.IsNegative() {
 		errs = append(errs, fmt.Errorf("total_amt: must be a non-negative integer"))
 		totOK = false
-	}
-
-	// Validate applied_amounts
-	amtsOK := true
-	if len(le.AppliedAmounts) == 0 {
+	} else if !le.TotalAmt.IsZero() && len(le.AppliedAmounts) == 0 {
 		errs = append(errs, fmt.Errorf("applied_amounts: cannot be empty"))
 		amtsOK = false
 	}
