@@ -12,7 +12,7 @@ func (s *CmdTestSuite) TestGetTxCmd() {
 	cmd := cli.GetTxCmd()
 	s.Require().NotNil(cmd, "GetTxCmd should not return nil")
 	s.Require().Equal(types.ModuleName, cmd.Use, "command use should be module name")
-	s.Require().Equal("Asset transaction subcommands", cmd.Short, "command short description")
+	s.Require().Equal("Transaction commands for the asset module", cmd.Short, "command short description")
 	s.Require().True(cmd.DisableFlagParsing, "flag parsing should be disabled")
 	s.Require().Equal(2, cmd.SuggestionsMinimumDistance, "suggestions minimum distance")
 
