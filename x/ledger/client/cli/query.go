@@ -155,11 +155,11 @@ $ %s query ledger ledgers --page-key <page_key>`, version.AppName, version.AppNa
 	return cmd
 }
 
-// GetAttributeParamsCmd returns the command handler for name parameter querying.
+// GetLedgerEntriesCmd returns the command handler for name parameter querying.
 func GetLedgerEntriesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "entries <asset_class_id> <nft_id>",
-		Short:   "Query the ledger for the specified nft address",
+		Short:   "Get ledger entries for the specified nft address",
 		Example: fmt.Sprintf(`$ %s query ledger entries class-123 nft-123`, version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
