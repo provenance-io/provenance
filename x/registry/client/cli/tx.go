@@ -18,7 +18,7 @@ import (
 func CmdTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Registry transaction subcommands",
+		Short:                      "Transaction commands for the registry module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

@@ -18,7 +18,7 @@ import (
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
-// CmdTx creates the tx command (and sub-commands) for the exchange module.
+// CmdTx creates the tx command (and sub-commands) for the ledger module.
 func CmdTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        ledger.ModuleName,

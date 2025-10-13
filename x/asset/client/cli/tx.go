@@ -21,7 +21,7 @@ var cmdStart = version.AppName + " tx " + types.ModuleName
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Asset transaction subcommands",
+		Short:                      "Transaction commands for the asset module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

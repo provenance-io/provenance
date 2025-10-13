@@ -21,7 +21,7 @@ import (
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
-// GetQueryCmd is the top-level command for attribute CLI queries.
+// CmdQuery is the top-level command for ledger CLI queries.
 func CmdQuery() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        ledger.ModuleName,
@@ -99,7 +99,7 @@ func GetCmd() *cobra.Command {
 				PaymentFrequency:           l.Ledger.PaymentFrequency,
 			}
 
-			// PRint the struct as json
+			// Print the struct as JSON.
 			json, err := json.MarshalIndent(plainText, "", "  ")
 			if err != nil {
 				return err
