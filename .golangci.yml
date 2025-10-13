@@ -32,7 +32,6 @@ linters:
     - prealloc
     - predeclared
     - promlinter
-    # - revive
     - staticcheck
     - tparallel
     - unconvert
