@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MaxLedgerEntrySequence = 99
+	MaxLedgerEntrySequence = 299
 	MaxLenLedgerClassID    = 50
 	MaxLenCorrelationID    = 50
 	MaxLenCode             = 50
@@ -278,8 +278,8 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	// Validate sequence number (should be < 100 as per proto comment)
-	if le.Sequence >= MaxLedgerEntrySequence {
-		errs = append(errs, fmt.Errorf("sequence: must be less than %d", MaxLedgerEntrySequence))
+	if err := ValidateSequence(le.Sequence); err != nil {
+		errs = append(errs, err)
 	}
 
 	// Validate entry_type_id is positive
@@ -326,6 +326,14 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// ValidateSequence returns an error if the sequence number is too large.
+func ValidateSequence(seq uint32) error {
+	if seq >= MaxLedgerEntrySequence {
+		return fmt.Errorf("sequence: must be less than %d", MaxLedgerEntrySequence)
+	}
+	return nil
 }
 
 // Validate validates the LedgerBucketAmount type

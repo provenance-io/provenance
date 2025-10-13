@@ -133,8 +133,8 @@ func (k Keeper) saveNewEntry(goCtx context.Context, ledgerKey *types.LedgerKey, 
 			}
 			if pushNext {
 				// Prevent overflow of allowed range.
-				if entry.Sequence >= types.MaxLedgerEntrySequence {
-					return nil, types.NewErrCodeInvalidField("sequence", "too many same-day entries (100+)")
+				if err := types.ValidateSequence(entry.Sequence); err != nil {
+					return nil, err
 				}
 
 				// Update the sequence number of the existing entry to resolve the conflict.
