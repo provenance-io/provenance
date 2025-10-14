@@ -156,10 +156,10 @@ message LedgerEntry {
     (gogoproto.jsontag)    = "totalAmt,omitempty"
   ];
 
-  // The applied amounts for each bucket.
+  // Applied amounts represent how the entry affects different buckets.
   repeated LedgerBucketAmount applied_amounts = 10 [(gogoproto.jsontag) = "appliedAmounts,omitempty"];
 
-  // The balances for each bucket.
+  // Bucket balances represent the current state of funds in each bucket.
   repeated BucketBalance balance_amounts = 11 [(gogoproto.jsontag) = "balanceAmounts,omitempty"];
 }
 

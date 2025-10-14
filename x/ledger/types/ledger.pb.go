@@ -641,9 +641,9 @@ type LedgerEntry struct {
 	// The total amount of the ledger entry.
 	// The units of this field are defined by the denom field in this ledger's class.
 	TotalAmt cosmossdk_io_math.Int `protobuf:"bytes,9,opt,name=total_amt,json=totalAmt,proto3,customtype=cosmossdk.io/math.Int" json:"totalAmt,omitempty"`
-	// The applied amounts for each bucket.
+	// Applied amounts represent how the entry affects different buckets.
 	AppliedAmounts []*LedgerBucketAmount `protobuf:"bytes,10,rep,name=applied_amounts,json=appliedAmounts,proto3" json:"appliedAmounts,omitempty"`
-	// The balances for each bucket.
+	// Bucket balances represent the current state of funds in each bucket.
 	BalanceAmounts []*BucketBalance `protobuf:"bytes,11,rep,name=balance_amounts,json=balanceAmounts,proto3" json:"balanceAmounts,omitempty"`
 }
 

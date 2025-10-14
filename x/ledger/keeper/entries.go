@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -181,29 +182,27 @@ func (k Keeper) saveNewEntry(goCtx context.Context, ledgerKey *types.LedgerKey, 
 // - appliedAmounts: New applied amounts for the entry
 //
 // Returns an error if the entry doesn't exist or if the update fails.
-func (k Keeper) UpdateEntryBalances(ctx context.Context, ledgerKey *types.LedgerKey, correlationID string, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
+func (k Keeper) UpdateEntryBalances(ctx context.Context, ledgerKey *types.LedgerKey, correlationID string, totalAmt sdkmath.Int, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
 	// Retrieve the existing entry to ensure it exists before updating.
 	existingEntry, err := k.GetLedgerEntry(ctx, ledgerKey, correlationID)
 	if err != nil {
 		return err
 	}
 
-	// Return error if the entry doesn't exist.
+	// This can only be used to update an entry that already exists.
 	if existingEntry == nil {
 		return types.NewErrCodeNotFound("entry")
 	}
 
-	// Update the entry with the new applied amounts.
-	// Applied amounts represent how the entry affects different buckets.
-	existingEntry.AppliedAmounts = appliedAmounts
-
-	// Update the entry with the new bucket balances.
-	// Bucket balances represent the current state of funds in each bucket.
-	existingEntry.BalanceAmounts = balanceAmounts
-
-	if err = existingEntry.Validate(); err != nil {
+	// Make sure everything provided was okay.
+	if err = types.ValidateLedgerEntryAmounts(totalAmt, appliedAmounts, balanceAmounts); err != nil {
 		return err
 	}
+
+	// Update the entry's fields.
+	existingEntry.TotalAmt = totalAmt
+	existingEntry.AppliedAmounts = appliedAmounts
+	existingEntry.BalanceAmounts = balanceAmounts
 
 	// Store the updated entry back to the state store.
 	ledgerKeyStr := ledgerKey.String()

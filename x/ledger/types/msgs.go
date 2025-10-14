@@ -167,24 +167,8 @@ func (m MsgUpdateBalancesRequest) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("correlation_id", "%s", err))
 	}
 
-	if len(m.BalanceAmounts) == 0 {
-		errs = append(errs, NewErrCodeInvalidField("balance_amounts", "cannot be empty"))
-	}
-	if len(m.AppliedAmounts) == 0 {
-		errs = append(errs, NewErrCodeInvalidField("applied_amounts", "cannot be empty"))
-	}
-
-	for i, balanceAmount := range m.BalanceAmounts {
-		if err := balanceAmount.Validate(); err != nil {
-			errs = append(errs, NewErrCodeInvalidField(fmt.Sprintf("balance_amounts[%d]", i), "%s", err))
-		}
-	}
-
-	// Validate applied_amounts bucket_type_ids
-	for i, applied := range m.AppliedAmounts {
-		if err := applied.Validate(); err != nil {
-			errs = append(errs, NewErrCodeInvalidField(fmt.Sprintf("applied_amounts[%d]", i), "%s", err))
-		}
+	if err := ValidateLedgerEntryAmounts(m.TotalAmt, m.AppliedAmounts, m.BalanceAmounts); err != nil {
+		errs = append(errs, err)
 	}
 
 	return errors.Join(errs...)

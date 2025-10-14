@@ -188,11 +188,20 @@ message MsgUpdateBalancesRequest {
   // The correlation id of the ledger entry.
   string correlation_id = 3;
 
-  // The applied amounts to be updated.
-  repeated LedgerBucketAmount applied_amounts = 4;
+  // The total amount of the ledger entry.
+  // The units of this field are defined by the denom field in this ledger's class.
+  string total_amt = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "totalAmt,omitempty"
+  ];
 
-  // The bucket balances to update.
-  repeated BucketBalance balance_amounts = 5;
+  // Applied amounts represent how the entry affects different buckets.
+  repeated LedgerBucketAmount applied_amounts = 5;
+
+  // Bucket balances represent the current state of funds in each bucket.
+  repeated BucketBalance balance_amounts = 6;
 }
 
 // MsgUpdateBalancesResponse represents the response from updating ledger balances.

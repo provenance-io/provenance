@@ -4911,8 +4911,9 @@ MsgUpdateBalancesRequest represents a request to update balances for a ledger en
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose balances are being updated. |
 | `signer` | [string](#string) |  | The signer that is updating the balances. |
 | `correlation_id` | [string](#string) |  | The correlation id of the ledger entry. |
-| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts to be updated. |
-| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The bucket balances to update. |
+| `total_amt` | [string](#string) |  | The total amount of the ledger entry. The units of this field are defined by the denom field in this ledger's class. |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts represent how the entry affects different buckets. |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | Bucket balances represent the current state of funds in each bucket. |
 
 
 
@@ -5371,8 +5372,8 @@ LedgerEntry is an single entry in the ledger. An entry would be a payment, disbu
 | `posted_date` | [int32](#int32) |  | The posted date (days since epoch). |
 | `effective_date` | [int32](#int32) |  | The effective date (days since epoch). |
 | `total_amt` | [string](#string) |  | The total amount of the ledger entry. The units of this field are defined by the denom field in this ledger's class. |
-| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | The applied amounts for each bucket. |
-| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | The balances for each bucket. |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts represent how the entry affects different buckets. |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | Bucket balances represent the current state of funds in each bucket. |
 
 
 
