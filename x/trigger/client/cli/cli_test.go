@@ -62,7 +62,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountAddr = addr
 
 	s.cfg = testutil.DefaultTestNetworkConfig()
-	genesisState := s.cfg.GenesisState
 
 	s.cfg.NumValidators = 1
 	s.GenerateAccountsWithKeyrings(2)
@@ -75,24 +74,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 	genBalances = append(genBalances, banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: sdk.NewCoins(
 		sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000)).Sort()})
-	var bankGenState banktypes.GenesisState
-	bankGenState.Params = banktypes.DefaultParams()
-	bankGenState.Balances = genBalances
-	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankGenState)
-	s.Require().NoError(err, "should be able to marshal bank genesis state when setting up suite")
-	genesisState[banktypes.ModuleName] = bankDataBz
 
-	var authData authtypes.GenesisState
+	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankGenState *banktypes.GenesisState) *banktypes.GenesisState {
+		bankGenState.Params = banktypes.DefaultParams()
+		bankGenState.Balances = genBalances
+		return bankGenState
+	})
+
+	// Configure Genesis data for auth module
 	var genAccounts []authtypes.GenesisAccount
-	authData.Params = authtypes.DefaultParams()
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0))
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
-	authData.Accounts = accounts
-	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err, "should be able to marshal auth genesis state when setting up suite")
-	genesisState[authtypes.ModuleName] = authDataBz
+
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authData *authtypes.GenesisState) *authtypes.GenesisState {
+		authData.Params = authtypes.DefaultParams()
+		accounts, err := authtypes.PackAccounts(genAccounts)
+		s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
+		authData.Accounts = accounts
+		return authData
+	})
 
 	now := time.Now().UTC()
 	s.startingTriggerID = uint64(7)
@@ -117,18 +117,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 	}
 
-	triggerData := triggertypes.NewGenesisState(
-		s.startingTriggerID,
-		s.startingQueueIndex,
-		s.triggers,
-		s.queuedTriggers,
-	)
-
-	triggerDataBz, err := s.cfg.Codec.MarshalJSON(triggerData)
-	s.Require().NoError(err, "should be able to marshal trigger genesis state when setting up suite")
-	genesisState[triggertypes.ModuleName] = triggerDataBz
-
-	s.cfg.GenesisState = genesisState
+	testutil.MutateGenesisState(s.T(), &s.cfg, triggertypes.ModuleName, &triggertypes.GenesisState{}, func(triggerData *triggertypes.GenesisState) *triggertypes.GenesisState {
+		*triggerData = *triggertypes.NewGenesisState(
+			s.startingTriggerID,
+			s.startingQueueIndex,
+			s.triggers,
+			s.queuedTriggers,
+		)
+		return triggerData
+	})
 
 	s.cfg.ChainID = antewrapper.SimAppChainID
 
