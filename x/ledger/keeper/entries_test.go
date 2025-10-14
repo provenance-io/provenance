@@ -42,8 +42,8 @@ func (s *TestSuite) TestAppendEntry() {
 				EffectiveDate: s.pastDate,
 				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-					{AppliedAmt:   math.NewInt(50),BucketTypeId: 2},
+					{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt: math.NewInt(50), BucketTypeId: 2},
 				},
 				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(9950)}},
 			},
@@ -62,8 +62,8 @@ func (s *TestSuite) TestAppendEntry() {
 				EffectiveDate: s.pastDate,
 				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-					{AppliedAmt:   math.NewInt(-50), BucketTypeId: 2},
+					{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt: math.NewInt(-50), BucketTypeId: 2},
 				},
 				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 			},
@@ -82,8 +82,8 @@ func (s *TestSuite) TestAppendEntry() {
 				EffectiveDate: s.pastDate,
 				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-					{AppliedAmt:   math.NewInt(-50), BucketTypeId: 2},
+					{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt: math.NewInt(-50), BucketTypeId: 2},
 				},
 				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 			},
@@ -123,8 +123,8 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 			Sequence:      1,
 			TotalAmt:      math.NewInt(100),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
-				{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-				{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
+				{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+				{AppliedAmt: math.NewInt(50), BucketTypeId: 2},
 			},
 			BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 		},
@@ -136,8 +136,8 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 			Sequence:      2,
 			TotalAmt:      math.NewInt(100),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
-				{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-				{AppliedAmt:   math.NewInt(50),BucketTypeId: 2},
+				{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+				{AppliedAmt: math.NewInt(50), BucketTypeId: 2},
 			},
 			BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(12345)}},
 		},
@@ -149,8 +149,8 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 			Sequence:      3,
 			TotalAmt:      math.NewInt(100),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
-				{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-				{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
+				{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+				{AppliedAmt: math.NewInt(50), BucketTypeId: 2},
 			},
 			BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(99950)}},
 		},
@@ -197,8 +197,8 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 		Sequence:      2,
 		TotalAmt:      math.NewInt(100),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-			{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
+			{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+			{AppliedAmt: math.NewInt(50), BucketTypeId: 2},
 		},
 		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(99950)}},
 	}
@@ -270,8 +270,8 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 		Sequence:      2,
 		TotalAmt:      math.NewInt(200),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{AppliedAmt:   math.NewInt(100), BucketTypeId: 1},
-			{AppliedAmt:   math.NewInt(100), BucketTypeId: 2},
+			{AppliedAmt: math.NewInt(100), BucketTypeId: 1},
+			{AppliedAmt: math.NewInt(100), BucketTypeId: 2},
 		},
 		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(99950)}},
 	}
@@ -312,8 +312,8 @@ func (s *TestSuite) TestRequireGetLedgerEntry() {
 		Sequence:      1,
 		TotalAmt:      math.NewInt(100),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
-			{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
+			{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+			{AppliedAmt: math.NewInt(50), BucketTypeId: 2},
 		},
 		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 	}

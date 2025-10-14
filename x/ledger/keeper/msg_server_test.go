@@ -325,7 +325,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 				Key:           s.existingLedger.Key,
 				Signer:        s.validAddress1.String(),
 				CorrelationId: "test-correlation-id-update-balances",
-				TotalAmt:       math.NewInt(100),
+				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
 					{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
 					{AppliedAmt: math.NewInt(-49), BucketTypeId: 2},

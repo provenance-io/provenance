@@ -62,11 +62,11 @@ func (s *TestSuite) TestLedgerQueryServer_LedgerAndEntries() {
 
 	// Add an entry and query entries
 	entry := &ledger.LedgerEntry{
-		CorrelationId: "qs-1",
-		EntryTypeId: 1,
-		PostedDate: s.pastDate,
-		EffectiveDate: s.pastDate,
-		TotalAmt: s.int(100),
+		CorrelationId:  "qs-1",
+		EntryTypeId:    1,
+		PostedDate:     s.pastDate,
+		EffectiveDate:  s.pastDate,
+		TotalAmt:       s.int(100),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: s.int(100)}},
 		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: s.int(100)}},
 	}

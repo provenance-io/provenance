@@ -109,11 +109,11 @@ func TestMsgAppend_ValidateBasic(t *testing.T) {
 	validAddr := sdk.AccAddress("append_signer___________").String()
 	validKey := &LedgerKey{AssetClassId: "aclass", NftId: "nft1"}
 	entry := &LedgerEntry{
-		CorrelationId: "c1",
-		EntryTypeId: 1,
-		PostedDate: 20240101,
-		EffectiveDate: 20240101,
-		TotalAmt: math.NewInt(100),
+		CorrelationId:  "c1",
+		EntryTypeId:    1,
+		PostedDate:     20240101,
+		EffectiveDate:  20240101,
+		TotalAmt:       math.NewInt(100),
 		AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}},
 		BalanceAmounts: []*BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 	}
@@ -274,11 +274,11 @@ func TestMsgBulkCreate_ValidateBasic(t *testing.T) {
 		MaturityDate:               20260101,
 	}
 	entry := &LedgerEntry{
-		CorrelationId: "c1",
-		EntryTypeId: 1,
-		PostedDate: 20240101,
-		EffectiveDate: 20240101,
-		TotalAmt: math.NewInt(100),
+		CorrelationId:  "c1",
+		EntryTypeId:    1,
+		PostedDate:     20240101,
+		EffectiveDate:  20240101,
+		TotalAmt:       math.NewInt(100),
 		AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}},
 		BalanceAmounts: []*BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 	}
