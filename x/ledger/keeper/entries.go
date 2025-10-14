@@ -182,7 +182,7 @@ func (k Keeper) saveNewEntry(goCtx context.Context, ledgerKey *types.LedgerKey, 
 // - appliedAmounts: New applied amounts for the entry
 //
 // Returns an error if the entry doesn't exist or if the update fails.
-func (k Keeper) UpdateEntryBalances(ctx context.Context, ledgerKey *types.LedgerKey, correlationID string, totalAmt sdkmath.Int, balanceAmounts []*types.BucketBalance, appliedAmounts []*types.LedgerBucketAmount) error {
+func (k Keeper) UpdateEntryBalances(ctx context.Context, ledgerKey *types.LedgerKey, correlationID string, totalAmt sdkmath.Int, appliedAmounts []*types.LedgerBucketAmount, balanceAmounts []*types.BucketBalance) error {
 	// Retrieve the existing entry to ensure it exists before updating.
 	existingEntry, err := k.GetLedgerEntry(ctx, ledgerKey, correlationID)
 	if err != nil {

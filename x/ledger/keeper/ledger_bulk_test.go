@@ -17,14 +17,13 @@ func (s *TestSuite) TestBulkCreate() {
 
 	l := &ledger.Ledger{Key: newKey, LedgerClassId: s.validLedgerClass.LedgerClassId, StatusTypeId: 1}
 	entry := &ledger.LedgerEntry{
+		CorrelationId: "bc-1",
 		EntryTypeId:   1,
 		PostedDate:    s.pastDate,
 		EffectiveDate: s.pastDate,
 		TotalAmt:      math.NewInt(100),
-		AppliedAmounts: []*ledger.LedgerBucketAmount{{
-			BucketTypeId: 1, AppliedAmt: math.NewInt(100),
-		}},
-		CorrelationId: "bc-1",
+		AppliedAmounts: []*ledger.LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}},
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 	}
 	le := &ledger.LedgerAndEntries{LedgerKey: newKey, Ledger: l, Entries: []*ledger.LedgerEntry{entry}}
 

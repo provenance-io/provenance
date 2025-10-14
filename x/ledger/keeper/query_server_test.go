@@ -61,7 +61,15 @@ func (s *TestSuite) TestLedgerQueryServer_LedgerAndEntries() {
 	s.Require().NotNil(lsresp)
 
 	// Add an entry and query entries
-	entry := &ledger.LedgerEntry{EntryTypeId: 1, PostedDate: s.pastDate, EffectiveDate: s.pastDate, TotalAmt: s.int(100), AppliedAmounts: []*ledger.LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: s.int(100)}}, CorrelationId: "qs-1"}
+	entry := &ledger.LedgerEntry{
+		CorrelationId: "qs-1",
+		EntryTypeId: 1,
+		PostedDate: s.pastDate,
+		EffectiveDate: s.pastDate,
+		TotalAmt: s.int(100),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: s.int(100)}},
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: s.int(100)}},
+	}
 	s.Require().NoError(s.keeper.AppendEntries(s.ctx, key, []*ledger.LedgerEntry{entry}))
 
 	ersp, err := qs.LedgerEntries(s.ctx, &ledger.QueryLedgerEntriesRequest{Key: key})

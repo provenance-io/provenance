@@ -108,7 +108,15 @@ func TestMsgUpdatePayment_ValidateBasic(t *testing.T) {
 func TestMsgAppend_ValidateBasic(t *testing.T) {
 	validAddr := sdk.AccAddress("append_signer___________").String()
 	validKey := &LedgerKey{AssetClassId: "aclass", NftId: "nft1"}
-	entry := &LedgerEntry{EntryTypeId: 1, PostedDate: 20240101, EffectiveDate: 20240101, TotalAmt: math.NewInt(100), AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}}, CorrelationId: "c1"}
+	entry := &LedgerEntry{
+		CorrelationId: "c1",
+		EntryTypeId: 1,
+		PostedDate: 20240101,
+		EffectiveDate: 20240101,
+		TotalAmt: math.NewInt(100),
+		AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}},
+		BalanceAmounts: []*BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
+	}
 
 	tests := []struct {
 		name string
@@ -159,11 +167,67 @@ func TestMsgUpdateBalances_ValidateBasic(t *testing.T) {
 		msg  MsgUpdateBalancesRequest
 		exp  []string
 	}{
-		{name: "valid", msg: MsgUpdateBalancesRequest{Signer: validAddr, Key: validKey, CorrelationId: "c1", BalanceAmounts: []*BucketBalance{bal}, AppliedAmounts: []*LedgerBucketAmount{applied}}},
-		{name: "empty balances", msg: MsgUpdateBalancesRequest{Signer: validAddr, Key: validKey, CorrelationId: "c1", BalanceAmounts: []*BucketBalance{}, AppliedAmounts: []*LedgerBucketAmount{applied}}, exp: []string{"invalid balance_amounts", "cannot be empty"}},
-		{name: "empty applied", msg: MsgUpdateBalancesRequest{Signer: validAddr, Key: validKey, CorrelationId: "c1", BalanceAmounts: []*BucketBalance{bal}, AppliedAmounts: []*LedgerBucketAmount{}}, exp: []string{"invalid applied_amounts", "cannot be empty"}},
-		{name: "bad correlation id", msg: MsgUpdateBalancesRequest{Signer: validAddr, Key: validKey, CorrelationId: "", BalanceAmounts: []*BucketBalance{bal}, AppliedAmounts: []*LedgerBucketAmount{applied}}, exp: []string{"invalid correlation_id", "between"}},
+		{
+			name: "valid",
+			msg: MsgUpdateBalancesRequest{
+				Signer:         validAddr,
+				Key:            validKey,
+				CorrelationId:  "c1",
+				TotalAmt:       applied.AppliedAmt,
+				AppliedAmounts: []*LedgerBucketAmount{applied},
+				BalanceAmounts: []*BucketBalance{bal},
+			},
+		},
+		{
+			name: "wrong total",
+			msg: MsgUpdateBalancesRequest{
+				Signer:         validAddr,
+				Key:            validKey,
+				CorrelationId:  "c1",
+				TotalAmt:       applied.AppliedAmt.SubRaw(1),
+				AppliedAmounts: []*LedgerBucketAmount{applied},
+				BalanceAmounts: []*BucketBalance{bal},
+			},
+			exp: []string{"applied_amounts", "total amount must equal sum of abs(applied amounts)"},
+		},
+		{
+			name: "empty balances",
+			msg: MsgUpdateBalancesRequest{
+				Signer:         validAddr,
+				Key:            validKey,
+				CorrelationId:  "c1",
+				TotalAmt:       applied.AppliedAmt,
+				AppliedAmounts: []*LedgerBucketAmount{applied},
+				BalanceAmounts: []*BucketBalance{},
+			},
+			exp: []string{"balance_amounts", "cannot be empty"},
+		},
+		{
+			name: "empty applied",
+			msg: MsgUpdateBalancesRequest{
+				Signer:         validAddr,
+				Key:            validKey,
+				CorrelationId:  "c1",
+				TotalAmt:       applied.AppliedAmt,
+				AppliedAmounts: []*LedgerBucketAmount{},
+				BalanceAmounts: []*BucketBalance{bal},
+			},
+			exp: []string{"applied_amounts", "cannot be empty"},
+		},
+		{
+			name: "bad correlation id",
+			msg: MsgUpdateBalancesRequest{
+				Signer:         validAddr,
+				Key:            validKey,
+				CorrelationId:  "",
+				TotalAmt:       applied.AppliedAmt,
+				AppliedAmounts: []*LedgerBucketAmount{applied},
+				BalanceAmounts: []*BucketBalance{bal},
+			},
+			exp: []string{"correlation_id", "must be between"},
+		},
 	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -209,7 +273,15 @@ func TestMsgBulkCreate_ValidateBasic(t *testing.T) {
 		PaymentFrequency:           PAYMENT_FREQUENCY_MONTHLY,
 		MaturityDate:               20260101,
 	}
-	entry := &LedgerEntry{EntryTypeId: 1, PostedDate: 20240101, EffectiveDate: 20240101, TotalAmt: math.NewInt(100), AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}}, CorrelationId: "c1"}
+	entry := &LedgerEntry{
+		CorrelationId: "c1",
+		EntryTypeId: 1,
+		PostedDate: 20240101,
+		EffectiveDate: 20240101,
+		TotalAmt: math.NewInt(100),
+		AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: math.NewInt(100)}},
+		BalanceAmounts: []*BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
+	}
 	le := &LedgerAndEntries{LedgerKey: lk, Ledger: l, Entries: []*LedgerEntry{entry}}
 
 	tests := []struct {

@@ -139,7 +139,7 @@ func (k *MsgServer) UpdateBalances(goCtx context.Context, req *types.MsgUpdateBa
 		return nil, err
 	}
 
-	if err := k.UpdateEntryBalances(ctx, req.Key, req.CorrelationId, req.TotalAmt, req.BalanceAmounts, req.AppliedAmounts); err != nil {
+	if err := k.UpdateEntryBalances(ctx, req.Key, req.CorrelationId, req.TotalAmt, req.AppliedAmounts, req.BalanceAmounts); err != nil {
 		return nil, err
 	}
 

@@ -183,17 +183,13 @@ func (s *MsgServerTestSuite) TestAppend() {
 				Key: s.existingLedger.Key,
 				Entries: []*ledger.LedgerEntry{
 					{
-						EntryTypeId:   1,
-						PostedDate:    s.pastDate,
-						EffectiveDate: s.pastDate,
-						TotalAmt:      math.NewInt(100),
-						AppliedAmounts: []*ledger.LedgerBucketAmount{
-							{
-								AppliedAmt:   math.NewInt(100),
-								BucketTypeId: 1,
-							},
-						},
-						CorrelationId: "test-correlation-id-append",
+						CorrelationId:  "test-correlation-id-append",
+						EntryTypeId:    1,
+						PostedDate:     s.pastDate,
+						EffectiveDate:  s.pastDate,
+						TotalAmt:       math.NewInt(100),
+						AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+						BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 					},
 				},
 				Signer: s.validAddress1.String(),
@@ -269,17 +265,13 @@ func (s *MsgServerTestSuite) TestAppend() {
 func (s *MsgServerTestSuite) TestUpdateBalances() {
 	// Add an entry first
 	entry := ledger.LedgerEntry{
-		EntryTypeId:   1,
-		PostedDate:    s.pastDate,
-		EffectiveDate: s.pastDate,
-		TotalAmt:      math.NewInt(100),
-		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{
-				AppliedAmt:   math.NewInt(100),
-				BucketTypeId: 1,
-			},
-		},
-		CorrelationId: "test-correlation-id-update-balances",
+		CorrelationId:  "test-correlation-id-update-balances",
+		EntryTypeId:    1,
+		PostedDate:     s.pastDate,
+		EffectiveDate:  s.pastDate,
+		TotalAmt:       math.NewInt(100),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(1000000)}},
 	}
 
 	err := s.keeper.AppendEntries(s.ctx, s.existingLedger.Key, []*ledger.LedgerEntry{&entry})
@@ -294,63 +286,36 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 		{
 			name: "successful update balances",
 			req: &ledger.MsgUpdateBalancesRequest{
-				Key:           s.existingLedger.Key,
-				Signer:        s.validAddress1.String(),
-				CorrelationId: "test-correlation-id-update-balances",
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt:   math.NewInt(100),
-						BucketTypeId: 1,
-					},
-				},
-				BalanceAmounts: []*ledger.BucketBalance{
-					{
-						BucketTypeId: 1,
-						BalanceAmt:   math.NewInt(200),
-					},
-				},
+				Key:            s.existingLedger.Key,
+				Signer:         s.validAddress1.String(),
+				CorrelationId:  "test-correlation-id-update-balances",
+				TotalAmt:       math.NewInt(100),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
 			},
 			expResp: &ledger.MsgUpdateBalancesResponse{},
 		},
 		{
 			name: "unauthorized update balances",
 			req: &ledger.MsgUpdateBalancesRequest{
-				Key:           s.existingLedger.Key,
-				Signer:        s.validAddress2.String(),
-				CorrelationId: "test-correlation-id-update-balances",
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt:   math.NewInt(200),
-						BucketTypeId: 1,
-					},
-				},
-				BalanceAmounts: []*ledger.BucketBalance{
-					{
-						BucketTypeId: 1,
-						BalanceAmt:   math.NewInt(200),
-					},
-				},
+				Key:            s.existingLedger.Key,
+				Signer:         s.validAddress2.String(),
+				CorrelationId:  "test-correlation-id-update-balances",
+				TotalAmt:       math.NewInt(200),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(200), BucketTypeId: 1}},
+				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
 			},
 			expErr: "unauthorized access: signer is not the nft owner: unauthorized",
 		},
 		{
 			name: "non-existent entry",
 			req: &ledger.MsgUpdateBalancesRequest{
-				Key:           s.existingLedger.Key,
-				Signer:        s.validAddress1.String(),
-				CorrelationId: "non-existent-correlation-id",
-				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt:   math.NewInt(200),
-						BucketTypeId: 1,
-					},
-				},
-				BalanceAmounts: []*ledger.BucketBalance{
-					{
-						BucketTypeId: 1,
-						BalanceAmt:   math.NewInt(200),
-					},
-				},
+				Key:            s.existingLedger.Key,
+				Signer:         s.validAddress1.String(),
+				CorrelationId:  "non-existent-correlation-id",
+				TotalAmt:       math.NewInt(200),
+				AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(200), BucketTypeId: 1}},
+				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
 			},
 			expErr: "entry not found: not found",
 		},
@@ -360,22 +325,12 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 				Key:           s.existingLedger.Key,
 				Signer:        s.validAddress1.String(),
 				CorrelationId: "test-correlation-id-update-balances",
+				TotalAmt:       math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt:   math.NewInt(50),
-						BucketTypeId: 1,
-					},
-					{
-						AppliedAmt:   math.NewInt(-49),
-						BucketTypeId: 2,
-					},
+					{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt: math.NewInt(-49), BucketTypeId: 2},
 				},
-				BalanceAmounts: []*ledger.BucketBalance{
-					{
-						BucketTypeId: 1,
-						BalanceAmt:   math.NewInt(200),
-					},
-				},
+				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
 			},
 			expErr: "applied_amounts: total amount must equal sum of abs(applied amounts)",
 		},
@@ -1275,17 +1230,13 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 			name: "valid entry",
 			entries: []*ledger.LedgerEntry{
 				{
-					EntryTypeId:   1,
-					PostedDate:    s.pastDate,
-					EffectiveDate: s.pastDate,
-					TotalAmt:      math.NewInt(100),
-					AppliedAmounts: []*ledger.LedgerBucketAmount{
-						{
-							AppliedAmt:   math.NewInt(100),
-							BucketTypeId: 1,
-						},
-					},
-					CorrelationId: "test-correlation-id-valid",
+					CorrelationId:  "test-correlation-id-valid",
+					EntryTypeId:    1,
+					PostedDate:     s.pastDate,
+					EffectiveDate:  s.pastDate,
+					TotalAmt:       math.NewInt(100),
+					AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+					BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 				},
 			},
 			expErr: nil,
@@ -1317,17 +1268,13 @@ func (s *MsgServerTestSuite) TestAppendEntriesValidation() {
 func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 	// Add an entry first
 	entry := ledger.LedgerEntry{
-		EntryTypeId:   1,
-		PostedDate:    s.pastDate,
-		EffectiveDate: s.pastDate,
-		TotalAmt:      math.NewInt(100),
-		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{
-				AppliedAmt:   math.NewInt(100),
-				BucketTypeId: 1,
-			},
-		},
-		CorrelationId: "test-correlation-id-update",
+		CorrelationId:  "test-correlation-id-update",
+		EntryTypeId:    1,
+		PostedDate:     s.pastDate,
+		EffectiveDate:  s.pastDate,
+		TotalAmt:       math.NewInt(100),
+		AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000000)}},
 	}
 
 	err := s.keeper.AppendEntries(s.ctx, s.existingLedger.Key, []*ledger.LedgerEntry{&entry})
@@ -1337,73 +1284,69 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 		name           string
 		ledgerKey      *ledger.LedgerKey
 		correlationId  string
+		totalAmt       math.Int
 		balanceAmounts []*ledger.BucketBalance
 		appliedAmounts []*ledger.LedgerBucketAmount
 		expErr         string
 	}{
 		{
-			name:          "non-existent entry",
-			ledgerKey:     s.existingLedger.Key,
-			correlationId: "non-existent-correlation-id",
-			balanceAmounts: []*ledger.BucketBalance{
-				{
-					BucketTypeId: 1,
-					BalanceAmt:   math.NewInt(200),
-				},
-			},
-			appliedAmounts: []*ledger.LedgerBucketAmount{
-				{
-					AppliedAmt:   math.NewInt(100),
-					BucketTypeId: 1,
-				},
-			},
-			expErr: "entry not found: not found",
+			name:           "non-existent entry",
+			ledgerKey:      s.existingLedger.Key,
+			correlationId:  "non-existent-correlation-id",
+			totalAmt:       math.NewInt(100),
+			appliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+			balanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
+			expErr:         "entry not found: not found",
 		},
 		{
-			name:          "incorrect applied amounts",
-			ledgerKey:     s.existingLedger.Key,
-			correlationId: "test-correlation-id-update",
-			balanceAmounts: []*ledger.BucketBalance{
-				{
-					BucketTypeId: 1,
-					BalanceAmt:   math.NewInt(200),
-				},
-			},
-			appliedAmounts: []*ledger.LedgerBucketAmount{
-				{
-					AppliedAmt:   math.NewInt(200),
-					BucketTypeId: 1,
-				},
-			},
-			expErr: "applied_amounts: total amount must equal sum of abs(applied amounts)",
+			name:           "incorrect applied amounts",
+			ledgerKey:      s.existingLedger.Key,
+			correlationId:  "test-correlation-id-update",
+			totalAmt:       math.NewInt(199),
+			appliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(200), BucketTypeId: 1}},
+			balanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
+			expErr:         "applied_amounts: total amount must equal sum of abs(applied amounts)",
 		},
 		{
-			name:          "valid update",
+			name:          "valid update: same total",
 			ledgerKey:     s.existingLedger.Key,
 			correlationId: "test-correlation-id-update",
-			balanceAmounts: []*ledger.BucketBalance{
-				{
-					BucketTypeId: 1,
-					BalanceAmt:   math.NewInt(200),
-				},
-			},
+			totalAmt:      math.NewInt(100),
 			appliedAmounts: []*ledger.LedgerBucketAmount{
-				{
-					AppliedAmt:   math.NewInt(75),
-					BucketTypeId: 1,
-				},
-				{
-					AppliedAmt:   math.NewInt(-25),
-					BucketTypeId: 2,
-				},
+				{AppliedAmt: math.NewInt(75), BucketTypeId: 1},
+				{AppliedAmt: math.NewInt(-25), BucketTypeId: 2},
 			},
+			balanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
+		},
+		{
+			name:          "valid update: new total",
+			ledgerKey:     s.existingLedger.Key,
+			correlationId: "test-correlation-id-update",
+			totalAmt:      math.NewInt(150),
+			appliedAmounts: []*ledger.LedgerBucketAmount{
+				{AppliedAmt: math.NewInt(80), BucketTypeId: 1},
+				{AppliedAmt: math.NewInt(-30), BucketTypeId: 2},
+				{AppliedAmt: math.NewInt(40), BucketTypeId: 3},
+			},
+			balanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(9876543)}},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			err = s.keeper.UpdateEntryBalances(s.ctx, tc.ledgerKey, tc.correlationId, tc.balanceAmounts, tc.appliedAmounts)
+			err = s.keeper.UpdateEntryBalances(s.ctx, tc.ledgerKey, tc.correlationId, tc.totalAmt, tc.appliedAmounts, tc.balanceAmounts)
 			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UpdateEntryBalances")
+
+			// If we weren't expecting an error, check that the entry was actually updated.
+			if len(tc.expErr) != 0 {
+				return
+			}
+			curEntry, err := s.keeper.GetLedgerEntry(s.ctx, tc.ledgerKey, tc.correlationId)
+			s.Require().NoError(err, "GetLedgerEntry error")
+			s.Require().NotNil(curEntry, "GetLedgerEntry result")
+			s.Assert().Equal(tc.totalAmt, curEntry.TotalAmt, "total amount")
+			s.Assert().Equal(tc.appliedAmounts, curEntry.AppliedAmounts, "applied amounts")
+			s.Assert().Equal(tc.balanceAmounts, curEntry.BalanceAmounts, "balance amounts")
 		})
 	}
 }
@@ -1419,30 +1362,22 @@ func (s *MsgServerTestSuite) TestAppendEntriesMultipleValidation() {
 			name: "mixed valid and invalid entries",
 			entries: []*ledger.LedgerEntry{
 				{
-					EntryTypeId:   1,
-					PostedDate:    s.pastDate,
-					EffectiveDate: s.pastDate,
-					TotalAmt:      math.NewInt(100),
-					AppliedAmounts: []*ledger.LedgerBucketAmount{
-						{
-							AppliedAmt:   math.NewInt(100),
-							BucketTypeId: 1,
-						},
-					},
-					CorrelationId: "test-correlation-id-valid-1",
+					CorrelationId:  "test-correlation-id-valid-1",
+					EntryTypeId:    1,
+					PostedDate:     s.pastDate,
+					EffectiveDate:  s.pastDate,
+					TotalAmt:       math.NewInt(100),
+					AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+					BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 				},
 				{
-					EntryTypeId:   999, // Invalid entry type
-					PostedDate:    s.pastDate,
-					EffectiveDate: s.pastDate,
-					TotalAmt:      math.NewInt(200),
-					AppliedAmounts: []*ledger.LedgerBucketAmount{
-						{
-							AppliedAmt:   math.NewInt(200),
-							BucketTypeId: 1,
-						},
-					},
-					CorrelationId: "test-correlation-id-invalid-1",
+					CorrelationId:  "test-correlation-id-invalid-1",
+					EntryTypeId:    999, // Invalid entry type
+					PostedDate:     s.pastDate,
+					EffectiveDate:  s.pastDate,
+					TotalAmt:       math.NewInt(200),
+					AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(200), BucketTypeId: 1}},
+					BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 				},
 			},
 			expErr: ledger.ErrInvalidField,
@@ -1451,30 +1386,22 @@ func (s *MsgServerTestSuite) TestAppendEntriesMultipleValidation() {
 			name: "all valid entries",
 			entries: []*ledger.LedgerEntry{
 				{
-					EntryTypeId:   1,
-					PostedDate:    s.pastDate,
-					EffectiveDate: s.pastDate,
-					TotalAmt:      math.NewInt(100),
-					AppliedAmounts: []*ledger.LedgerBucketAmount{
-						{
-							AppliedAmt:   math.NewInt(100),
-							BucketTypeId: 1,
-						},
-					},
-					CorrelationId: "test-correlation-id-valid-2",
+					CorrelationId:  "test-correlation-id-valid-2",
+					EntryTypeId:    1,
+					PostedDate:     s.pastDate,
+					EffectiveDate:  s.pastDate,
+					TotalAmt:       math.NewInt(100),
+					AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(100), BucketTypeId: 1}},
+					BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 				},
 				{
-					EntryTypeId:   2,
-					PostedDate:    s.pastDate,
-					EffectiveDate: s.pastDate,
-					TotalAmt:      math.NewInt(200),
-					AppliedAmounts: []*ledger.LedgerBucketAmount{
-						{
-							AppliedAmt:   math.NewInt(200),
-							BucketTypeId: 1,
-						},
-					},
-					CorrelationId: "test-correlation-id-valid-3",
+					CorrelationId:  "test-correlation-id-valid-3",
+					EntryTypeId:    2,
+					PostedDate:     s.pastDate,
+					EffectiveDate:  s.pastDate,
+					TotalAmt:       math.NewInt(200),
+					AppliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(200), BucketTypeId: 1}},
+					BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(100)}},
 				},
 			},
 			expErr: nil,

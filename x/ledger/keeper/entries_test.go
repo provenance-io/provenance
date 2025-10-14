@@ -36,21 +36,16 @@ func (s *TestSuite) TestAppendEntry() {
 				NftId:        s.validNFT.Id,
 			},
 			entry: ledger.LedgerEntry{
+				CorrelationId: "test-correlation-id-12",
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
 				EffectiveDate: s.pastDate,
 				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt:   math.NewInt(50),
-						BucketTypeId: 1,
-					},
-					{
-						AppliedAmt:   math.NewInt(50),
-						BucketTypeId: 2,
-					},
+					{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt:   math.NewInt(50),BucketTypeId: 2},
 				},
-				CorrelationId: "test-correlation-id-12",
+				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(9950)}},
 			},
 			expErr: "",
 		},
@@ -61,21 +56,16 @@ func (s *TestSuite) TestAppendEntry() {
 				NftId:        s.validNFT.Id,
 			},
 			entry: ledger.LedgerEntry{
+				CorrelationId: "test-correlation-id-13",
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
 				EffectiveDate: s.pastDate,
 				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt:   math.NewInt(50),
-						BucketTypeId: 1,
-					},
-					{
-						AppliedAmt:   math.NewInt(-50),
-						BucketTypeId: 2,
-					},
+					{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt:   math.NewInt(-50), BucketTypeId: 2},
 				},
-				CorrelationId: "test-correlation-id-13",
+				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 			},
 			expErr: "",
 		},
@@ -86,21 +76,16 @@ func (s *TestSuite) TestAppendEntry() {
 				NftId:        s.validNFT.Id,
 			},
 			entry: ledger.LedgerEntry{
+				CorrelationId: "test-correlation-id-15",
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
 				EffectiveDate: s.pastDate,
 				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{
-						AppliedAmt:   math.NewInt(50),
-						BucketTypeId: 1,
-					},
-					{
-						AppliedAmt:   math.NewInt(-50),
-						BucketTypeId: 2,
-					},
+					{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt:   math.NewInt(-50), BucketTypeId: 2},
 				},
-				CorrelationId: "test-correlation-id-15",
+				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 			},
 			expErr: "",
 		},
@@ -131,58 +116,43 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 	// Create test entries with the same effective date but different sequence numbers
 	entries := []*ledger.LedgerEntry{
 		{
+			CorrelationId: "test-correlation-id-1",
 			EntryTypeId:   1,
 			PostedDate:    s.pastDate,
 			EffectiveDate: s.pastDate,
 			Sequence:      1,
 			TotalAmt:      math.NewInt(100),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
-				{
-					AppliedAmt:   math.NewInt(50),
-					BucketTypeId: 1,
-				},
-				{
-					AppliedAmt:   math.NewInt(50),
-					BucketTypeId: 2,
-				},
+				{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+				{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
 			},
-			CorrelationId: "test-correlation-id-1",
+			BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 		},
 		{
+			CorrelationId: "test-correlation-id-2",
 			EntryTypeId:   1,
 			PostedDate:    s.pastDate,
 			EffectiveDate: s.pastDate,
 			Sequence:      2,
 			TotalAmt:      math.NewInt(100),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
-				{
-					AppliedAmt:   math.NewInt(50),
-					BucketTypeId: 1,
-				},
-				{
-					AppliedAmt:   math.NewInt(50),
-					BucketTypeId: 2,
-				},
+				{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+				{AppliedAmt:   math.NewInt(50),BucketTypeId: 2},
 			},
-			CorrelationId: "test-correlation-id-2",
+			BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(12345)}},
 		},
 		{
+			CorrelationId: "test-correlation-id-3",
 			EntryTypeId:   1,
 			PostedDate:    s.pastDate,
 			EffectiveDate: s.pastDate,
 			Sequence:      3,
 			TotalAmt:      math.NewInt(100),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
-				{
-					AppliedAmt:   math.NewInt(50),
-					BucketTypeId: 1,
-				},
-				{
-					AppliedAmt:   math.NewInt(50),
-					BucketTypeId: 2,
-				},
+				{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+				{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
 			},
-			CorrelationId: "test-correlation-id-3",
+			BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(99950)}},
 		},
 	}
 
@@ -214,28 +184,23 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 
 	// Verify sequence numbers
 	s.Require().Len(allEntries, 3, "number of entries")
-	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
-	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-2")
-	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-3")
+	s.Assert().Equal(1, int(allEntries[0].Sequence), "sequence number for correlation-id-1")
+	s.Assert().Equal(2, int(allEntries[1].Sequence), "sequence number for correlation-id-2")
+	s.Assert().Equal(3, int(allEntries[2].Sequence), "sequence number for correlation-id-3")
 
 	// Add another entry with sequence 2 to test sequence number adjustment
 	newEntry := ledger.LedgerEntry{
+		CorrelationId: "test-correlation-id-4",
 		EntryTypeId:   1,
 		PostedDate:    s.pastDate,
 		EffectiveDate: s.pastDate,
 		Sequence:      2,
 		TotalAmt:      math.NewInt(100),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{
-				AppliedAmt:   math.NewInt(50),
-				BucketTypeId: 1,
-			},
-			{
-				AppliedAmt:   math.NewInt(50),
-				BucketTypeId: 2,
-			},
+			{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+			{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
 		},
-		CorrelationId: "test-correlation-id-4",
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(99950)}},
 	}
 
 	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&newEntry})
@@ -247,10 +212,10 @@ func (s *TestSuite) TestAppendEntrySequenceNumbers() {
 
 	// Verify updated sequence numbers
 	s.Require().Len(allEntries, 4, "number of entries after adding new entry")
-	s.Require().Equal(uint32(1), allEntries[0].Sequence, "sequence number for correlation-id-1")
-	s.Require().Equal(uint32(2), allEntries[1].Sequence, "sequence number for correlation-id-4 (new entry)")
-	s.Require().Equal(uint32(3), allEntries[2].Sequence, "sequence number for correlation-id-2 (shifted)")
-	s.Require().Equal(uint32(4), allEntries[3].Sequence, "sequence number for correlation-id-3 (shifted)")
+	s.Assert().Equal(1, int(allEntries[0].Sequence), "sequence number for correlation-id-1")
+	s.Assert().Equal(2, int(allEntries[1].Sequence), "sequence number for correlation-id-4 (new entry)")
+	s.Assert().Equal(3, int(allEntries[2].Sequence), "sequence number for correlation-id-2 (shifted)")
+	s.Assert().Equal(4, int(allEntries[3].Sequence), "sequence number for correlation-id-3 (shifted)")
 }
 
 func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
@@ -269,22 +234,17 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 
 	// Create a test entry
 	entry := ledger.LedgerEntry{
+		CorrelationId: "test-correlation-id-1",
 		EntryTypeId:   1,
 		PostedDate:    s.pastDate,
 		EffectiveDate: s.pastDate,
 		Sequence:      1,
 		TotalAmt:      math.NewInt(100),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{
-				AppliedAmt:   math.NewInt(50),
-				BucketTypeId: 1,
-			},
-			{
-				AppliedAmt:   math.NewInt(50),
-				BucketTypeId: 2,
-			},
+			{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+			{AppliedAmt: math.NewInt(50), BucketTypeId: 2},
 		},
-		CorrelationId: "test-correlation-id-1",
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 	}
 
 	// Add the entry successfully
@@ -303,22 +263,17 @@ func (s *TestSuite) TestAppendEntryDuplicateCorrelationId() {
 
 	// Try to add a different entry with the same correlation ID
 	entry2 := ledger.LedgerEntry{
+		CorrelationId: "test-correlation-id-1",
 		EntryTypeId:   1,
 		PostedDate:    s.pastDate,
 		EffectiveDate: s.pastDate,
 		Sequence:      2,
 		TotalAmt:      math.NewInt(200),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{
-				AppliedAmt:   math.NewInt(100),
-				BucketTypeId: 1,
-			},
-			{
-				AppliedAmt:   math.NewInt(100),
-				BucketTypeId: 2,
-			},
+			{AppliedAmt:   math.NewInt(100), BucketTypeId: 1},
+			{AppliedAmt:   math.NewInt(100), BucketTypeId: 2},
 		},
-		CorrelationId: "test-correlation-id-1",
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(99950)}},
 	}
 
 	err = s.keeper.AppendEntries(s.ctx, l.Key, []*ledger.LedgerEntry{&entry2})
@@ -350,22 +305,17 @@ func (s *TestSuite) TestRequireGetLedgerEntry() {
 
 	// Create a test entry
 	entry := ledger.LedgerEntry{
+		CorrelationId: "test-correlation-id-require",
 		EntryTypeId:   1,
 		PostedDate:    s.pastDate,
 		EffectiveDate: s.pastDate,
 		Sequence:      1,
 		TotalAmt:      math.NewInt(100),
 		AppliedAmounts: []*ledger.LedgerBucketAmount{
-			{
-				AppliedAmt:   math.NewInt(50),
-				BucketTypeId: 1,
-			},
-			{
-				AppliedAmt:   math.NewInt(50),
-				BucketTypeId: 2,
-			},
+			{AppliedAmt:   math.NewInt(50), BucketTypeId: 1},
+			{AppliedAmt:   math.NewInt(50), BucketTypeId: 2},
 		},
-		CorrelationId: "test-correlation-id-require",
+		BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},
 	}
 
 	// Add the entry to the ledger

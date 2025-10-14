@@ -334,7 +334,7 @@ func ValidateLedgerEntryAmounts(totalAmt sdkmath.Int, appliedAmounts []*LedgerBu
 	}
 
 	// Make sure all the applied amounts are valid.
-	if err := ValidateAppliedAmounts(appliedAmounts); err != nil {
+	if err := validateSlice(appliedAmounts, "applied_amounts"); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -345,22 +345,16 @@ func ValidateLedgerEntryAmounts(totalAmt sdkmath.Int, appliedAmounts []*LedgerBu
 		}
 	}
 
+	if len(balanceAmounts) == 0 {
+		errs = append(errs, fmt.Errorf("balance_amounts: cannot be empty"))
+	}
+
 	// Make sure all the balance amounts are valid.
-	if err := ValidateBalanceAmounts(balanceAmounts); err != nil {
+	if err := validateSlice(balanceAmounts, "balance_amounts"); err != nil {
 		errs = append(errs, err)
 	}
 
 	return errors.Join(errs...)
-}
-
-// ValidateAppliedAmounts returns an error if any of the applied amounts are invalid.
-func ValidateAppliedAmounts(appliedAmounts []*LedgerBucketAmount) error {
-	return validateSlice(appliedAmounts, "applied_amounts")
-}
-
-// ValidateBalanceAmounts returns an error if any of the balance amounts are invalid.
-func ValidateBalanceAmounts(balanceAmounts []*BucketBalance) error {
-	return validateSlice(balanceAmounts, "balance_amounts")
 }
 
 // ValidateEntryAmounts checks if the amounts are valid
