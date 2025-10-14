@@ -200,7 +200,6 @@ func TestMsgUpdateBalances_ValidateBasic(t *testing.T) {
 				AppliedAmounts: []*LedgerBucketAmount{applied},
 				BalanceAmounts: []*BucketBalance{},
 			},
-			exp: []string{"balance_amounts", "cannot be empty"},
 		},
 		{
 			name: "empty applied",

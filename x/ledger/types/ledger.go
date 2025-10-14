@@ -345,10 +345,6 @@ func ValidateLedgerEntryAmounts(totalAmt sdkmath.Int, appliedAmounts []*LedgerBu
 		}
 	}
 
-	if len(balanceAmounts) == 0 {
-		errs = append(errs, fmt.Errorf("balance_amounts: cannot be empty"))
-	}
-
 	// Make sure all the balance amounts are valid.
 	if err := validateSlice(balanceAmounts, "balance_amounts"); err != nil {
 		errs = append(errs, err)
