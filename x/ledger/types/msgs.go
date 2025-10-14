@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -324,21 +322,6 @@ func (m MsgBulkCreateRequest) ValidateBasic() error {
 	}
 
 	return errors.Join(errs...)
-}
-
-// validateEntryAmounts checks if the amounts are valid
-func validateEntryAmounts(totalAmt math.Int, appliedAmounts []*LedgerBucketAmount) error {
-	// Check if total amount matches sum of applied amounts
-	totalApplied := math.NewInt(0)
-	for _, applied := range appliedAmounts {
-		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
-	}
-
-	if !totalAmt.Equal(totalApplied) {
-		return fmt.Errorf("total amount must equal sum of abs(applied amounts)")
-	}
-
-	return nil
 }
 
 // lenCheck returns an error if the provided str is shorter or longer than the provided bounds.

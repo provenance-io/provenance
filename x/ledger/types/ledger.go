@@ -308,36 +308,9 @@ func (le *LedgerEntry) Validate() error {
 		errs = append(errs, fmt.Errorf("effective_date: must be a valid integer"))
 	}
 
-	// Validate amounts are non-negative
-	totOK, amtsOK := true, true
-	if le.TotalAmt.IsNil() || le.TotalAmt.IsNegative() {
-		errs = append(errs, fmt.Errorf("total_amt: must be a non-negative integer"))
-		totOK = false
-	} else if !le.TotalAmt.IsZero() && len(le.AppliedAmounts) == 0 {
-		errs = append(errs, fmt.Errorf("applied_amounts: cannot be empty"))
-		amtsOK = false
+	if err := ValidateLedgerEntryAmounts(le.TotalAmt, le.AppliedAmounts, le.BalanceAmounts); err != nil {
+		errs = append(errs, err)
 	}
-
-	for i, applied := range le.AppliedAmounts {
-		if err := applied.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("applied_amounts[%d]: %w", i, err))
-			amtsOK = false
-		}
-	}
-
-	if totOK && amtsOK {
-		if err := validateEntryAmounts(le.TotalAmt, le.AppliedAmounts); err != nil {
-			errs = append(errs, fmt.Errorf("applied_amounts: %w", err))
-		}
-	}
-
-	// Validate balance amounts
-	for i, balance := range le.BalanceAmounts {
-		if err := balance.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("balance_amounts[%d]: %w", i, err))
-		}
-	}
-
 	return errors.Join(errs...)
 }
 
@@ -347,6 +320,74 @@ func ValidateSequence(seq uint32) error {
 		return fmt.Errorf("sequence: must be less than %d", MaxLedgerEntrySequence)
 	}
 	return nil
+}
+
+// ValidateLedgerEntryAmounts returns an error if there is anything wrong with the provided amounts.
+func ValidateLedgerEntryAmounts(totalAmt sdkmath.Int, appliedAmounts []*LedgerBucketAmount, balanceAmounts []*BucketBalance) error {
+	var errs []error
+
+	// Make sure the total is valid and if not zero, that there are applied amounts.
+	if totalAmt.IsNil() || totalAmt.IsNegative() {
+		errs = append(errs, fmt.Errorf("total_amt: must be a non-negative integer"))
+	} else if !totalAmt.IsZero() && len(appliedAmounts) == 0 {
+		errs = append(errs, fmt.Errorf("applied_amounts: cannot be empty"))
+	}
+
+	// Make sure all the applied amounts are valid.
+	if err := ValidateAppliedAmounts(appliedAmounts); err != nil {
+		errs = append(errs, err)
+	}
+
+	// If there isn't anything wrong yet, verify that the total matches the applied amounts.
+	if len(errs) == 0 {
+		if err := ValidateEntryAmounts(totalAmt, appliedAmounts); err != nil {
+			errs = append(errs, fmt.Errorf("applied_amounts: %w", err))
+		}
+	}
+
+	// Make sure all the balance amounts are valid.
+	if err := ValidateBalanceAmounts(balanceAmounts); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errors.Join(errs...)
+}
+
+// ValidateAppliedAmounts returns an error if any of the applied amounts are invalid.
+func ValidateAppliedAmounts(appliedAmounts []*LedgerBucketAmount) error {
+	return validateSlice(appliedAmounts, "applied_amounts")
+}
+
+// ValidateBalanceAmounts returns an error if any of the balance amounts are invalid.
+func ValidateBalanceAmounts(balanceAmounts []*BucketBalance) error {
+	return validateSlice(balanceAmounts, "balance_amounts")
+}
+
+// ValidateEntryAmounts checks if the amounts are valid
+func ValidateEntryAmounts(totalAmt sdkmath.Int, appliedAmounts []*LedgerBucketAmount) error {
+	// Check if the total amount matches the sum of applied amounts.
+	totalApplied := sdkmath.NewInt(0)
+	for _, applied := range appliedAmounts {
+		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
+	}
+
+	if !totalAmt.Equal(totalApplied) {
+		return fmt.Errorf("total amount must equal sum of abs(applied amounts)")
+	}
+
+	return nil
+}
+
+// validateSlice runs the Validate() method on each element of the slice and returns all errors it encounters.
+// The name parameter is used in the error messages.
+func validateSlice[S []E, E interface{ Validate() error }](vals S, name string) error {
+	var errs []error
+	for i, val := range vals {
+		if err := val.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("%s[%d]: %w", name, i, err))
+		}
+	}
+	return errors.Join(errs...)
 }
 
 // Validate validates the LedgerBucketAmount type
