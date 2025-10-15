@@ -201,7 +201,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 
 	validators, verr := app.StakingKeeper.GetAllValidators(ctx)
 	if verr != nil {
-		ctx.Logger().Error(fmt.Sprintf("Could not get all validators: %v.", perr))
+		ctx.Logger().Error(fmt.Sprintf("Could not get all validators: %v.", verr))
 		return
 	}
 
@@ -219,7 +219,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 
 				delegations, err := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
 				if err != nil {
-					ctx.Logger().Error(fmt.Sprintf("Could not delegations for validator %s: %v.", valAddress, perr))
+					ctx.Logger().Error(fmt.Sprintf("Could not delegations for validator %s: %v.", valAddress, err))
 					continue
 				}
 
