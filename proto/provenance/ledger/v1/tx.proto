@@ -40,7 +40,7 @@ service Msg {
   rpc TransferFundsWithSettlement(MsgTransferFundsWithSettlementRequest)
       returns (MsgTransferFundsWithSettlementResponse);
 
-  // Destroy destroys a ledger by NFT address.
+  // Destroy deletes a ledger and its ledger entries.
   rpc Destroy(MsgDestroyRequest) returns (MsgDestroyResponse);
 
   // CreateLedgerClass creates a new ledger class.

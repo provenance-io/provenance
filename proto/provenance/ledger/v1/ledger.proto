@@ -142,14 +142,14 @@ message LedgerEntry {
   int32 entry_type_id = 5 [(gogoproto.jsontag) = "entryTypeId,omitempty"];
 
   // The posted date (days since epoch).
-  int32 posted_date = 7 [(gogoproto.jsontag) = "postedDate,omitempty"];
+  int32 posted_date = 6 [(gogoproto.jsontag) = "postedDate,omitempty"];
 
   // The effective date (days since epoch).
-  int32 effective_date = 8 [(gogoproto.jsontag) = "effectiveDate,omitempty"];
+  int32 effective_date = 7 [(gogoproto.jsontag) = "effectiveDate,omitempty"];
 
   // The total amount of the ledger entry.
   // The units of this field are defined by the denom field in this ledger's class.
-  string total_amt = 9 [
+  string total_amt = 8 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
@@ -157,10 +157,10 @@ message LedgerEntry {
   ];
 
   // Applied amounts represent how the entry affects different buckets.
-  repeated LedgerBucketAmount applied_amounts = 10 [(gogoproto.jsontag) = "appliedAmounts,omitempty"];
+  repeated LedgerBucketAmount applied_amounts = 9 [(gogoproto.jsontag) = "appliedAmounts,omitempty"];
 
   // Bucket balances represent the current state of funds in each bucket.
-  repeated BucketBalance balance_amounts = 11 [(gogoproto.jsontag) = "balanceAmounts,omitempty"];
+  repeated BucketBalance balance_amounts = 10 [(gogoproto.jsontag) = "balanceAmounts,omitempty"];
 }
 
 // LedgerBucketAmount is the amount applied to a bucket. Applications to a bucket increase or

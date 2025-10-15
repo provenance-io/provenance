@@ -1607,7 +1607,7 @@ type MsgClient interface {
 	UpdateBalances(ctx context.Context, in *MsgUpdateBalancesRequest, opts ...grpc.CallOption) (*MsgUpdateBalancesResponse, error)
 	// TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions.
 	TransferFundsWithSettlement(ctx context.Context, in *MsgTransferFundsWithSettlementRequest, opts ...grpc.CallOption) (*MsgTransferFundsWithSettlementResponse, error)
-	// Destroy destroys a ledger by NFT address.
+	// Destroy deletes a ledger and its ledger entries.
 	Destroy(ctx context.Context, in *MsgDestroyRequest, opts ...grpc.CallOption) (*MsgDestroyResponse, error)
 	// CreateLedgerClass creates a new ledger class.
 	CreateLedgerClass(ctx context.Context, in *MsgCreateLedgerClassRequest, opts ...grpc.CallOption) (*MsgCreateLedgerClassResponse, error)
@@ -1773,7 +1773,7 @@ type MsgServer interface {
 	UpdateBalances(context.Context, *MsgUpdateBalancesRequest) (*MsgUpdateBalancesResponse, error)
 	// TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions.
 	TransferFundsWithSettlement(context.Context, *MsgTransferFundsWithSettlementRequest) (*MsgTransferFundsWithSettlementResponse, error)
-	// Destroy destroys a ledger by NFT address.
+	// Destroy deletes a ledger and its ledger entries.
 	Destroy(context.Context, *MsgDestroyRequest) (*MsgDestroyResponse, error)
 	// CreateLedgerClass creates a new ledger class.
 	CreateLedgerClass(context.Context, *MsgCreateLedgerClassRequest) (*MsgCreateLedgerClassResponse, error)
