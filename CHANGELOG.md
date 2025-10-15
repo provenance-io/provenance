@@ -52,6 +52,18 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.25.1](https://github.com/provenance-io/provenance/releases/tag/v1.25.1) 2025-10-14
+
+### Dependencies
+
+* `github.com/cometbft/cometbft` bumped to v0.38.19 (from v0.38.18) [PR 2483](https://github.com/provenance-io/provenance/pull/2483).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.25.0...v1.25.1
+
+---
+
 ## [v1.25.0](https://github.com/provenance-io/provenance/releases/tag/v1.25.0) 2025-07-11
 
 ### Features
