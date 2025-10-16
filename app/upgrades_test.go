@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1411,4 +1412,128 @@ func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
 			s.Require().NotZero(count, "Total number of records found in the file")
 		})
 	}
+}
+
+func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
+	// numGrid returns the provided numbers as a grid of numbers, 10 per line, right-justified.
+	numGrid := func(nums []int) string {
+		strs := make([]string, len(nums))
+		maxLen := 0
+		for i, num := range nums {
+			strs[i] = strconv.Itoa(num)
+			if len(strs[i]) > maxLen {
+				maxLen = len(strs[i])
+			}
+		}
+
+		grid := make([][]string, 0, len(strs)/10+1)
+		l := -1
+		for i, str := range strs {
+			if i%10 == 0 {
+				l++
+				grid = append(grid, make([]string, 0, 10))
+			}
+			grid[l] = append(grid[l], strings.Repeat(" ", maxLen-len(str)) + str)
+		}
+
+		lines := make([]string, len(grid))
+		for i, row := range grid {
+			lines[i] = strings.Join(row, "  ")
+		}
+		return strings.Join(lines, "\n")
+	}
+
+	filePaths, err := getBouvardiaLedgerDataFilePaths()
+	s.Require().NoError(err, "getBouvardiaLedgerDataFilePaths()")
+
+	count := 0
+	sumAbs := 0
+	sumRaw := 0
+	offByOne := 0
+	offByMore := 0
+	offBySmall := make(map[int64]int)
+	offByLarge := make(map[string]int)
+
+	for _, filePath := range filePaths {
+		s.Run(filePath, func() {
+			// Read the gzipped file data
+			data, err := upgradeDataFS.ReadFile(filePath)
+			s.Require().NoError(err, "Failed to read file %s", filePath)
+
+			// Create gzip reader for decompression.
+			reader := bytes.NewReader(data)
+			gzReader, err := gzip.NewReader(reader)
+			s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
+			defer gzReader.Close()
+
+			// Decode the entire JSON into a GenesisState.
+			var genesisState ledgerTypes.GenesisState
+			decoder := json.NewDecoder(gzReader)
+			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
+
+			var sumRawInds []int
+			var justOffInds []int
+			var wayOffInds []int
+			for i, entry := range genesisState.LedgerEntries {
+				count++
+				sumApplied := sdkmath.ZeroInt()
+				sumAbsApplied := sdkmath.ZeroInt()
+				for _, v := range entry.Entry.AppliedAmounts {
+					sumApplied = sumApplied.Add(v.AppliedAmt)
+					sumAbsApplied = sumAbsApplied.Add(v.AppliedAmt.Abs())
+				}
+
+				if entry.Entry.TotalAmt.Equal(sumAbsApplied) {
+					sumAbs++
+					continue
+				}
+
+				if entry.Entry.TotalAmt.Equal(sumApplied) {
+					sumRaw++
+					sumRawInds = append(sumRawInds, i)
+					continue
+				}
+
+				d := entry.Entry.TotalAmt.Sub(sumAbsApplied).Abs()
+				if d.Equal(sdkmath.OneInt()) {
+					offByOne++
+					justOffInds = append(justOffInds, i)
+					continue
+				}
+
+				offByMore++
+				wayOffInds = append(wayOffInds, i)
+				if d.IsInt64() {
+					offBySmall[d.Int64()]++
+				} else {
+					offByLarge[d.String()]++
+				}
+			}
+
+			if len(sumRawInds) > 0 {
+				s.Fail(fmt.Sprintf("Found %d entries that sum to total (without absolute value)", len(sumRawInds)), "%s", numGrid(sumRawInds))
+			}
+			if len(justOffInds) > 0 {
+				s.Fail(fmt.Sprintf("Found %d entries that are off-by-one", len(justOffInds)), "%s", numGrid(justOffInds))
+			}
+			if len(wayOffInds) > 0 {
+				s.Fail(fmt.Sprintf("Found %d entries that are off by more than one", len(wayOffInds)), "%s", numGrid(wayOffInds))
+			}
+		})
+	}
+
+	s.Run("summary", func() {
+		s.T().Logf("count total:       %7d", count)
+		s.T().Logf("sum(abs) == total: %7d", sumAbs)
+		s.T().Logf("sum == total:      %7d", sumRaw)
+		s.T().Logf("off-by-one:        %7d", offByOne)
+		s.T().Logf("off by more:       %7d", offByMore)
+
+		for _, d := range slices.Sorted(maps.Keys(offBySmall)) {
+			s.T().Logf("off by %10d: %7d", d, offBySmall[d])
+		}
+		for _, d := range slices.Sorted(maps.Keys(offByLarge)) {
+			s.T().Logf("off by %10s: %7d", d, offByLarge[d])
+		}
+	})
 }
