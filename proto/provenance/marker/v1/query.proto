@@ -131,13 +131,14 @@ message QueryHoldingResponse {
 }
 
 // QuerySupplyRequest is the request type for the Query/MarkerSupply method.
-// Deprecated: This returns initial/target supply. Use bank module's query for actual circulating supply.
+// Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 message QuerySupplyRequest {
+  option deprecated = true;
   // address or denom for the marker
   string id = 1;
 }
 // QuerySupplyResponse is the response type for the Query/MarkerSupply method.
-// Deprecated: This returns initial/target supply. Use bank module's SupplyOf query for actual circulating supply.
+// Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 message QuerySupplyResponse {
   option deprecated = true;
   // amount is the supply of the marker.
