@@ -44,8 +44,8 @@ service Query {
   }
 
   // query for supply of coin on a marker account
-  // Deprecated: query for supply of coin on a marker account
   // This endpoint returns the initial/target supply from marker account, not actual circulating supply.
+  // Deprecated: This query is deprecated in favor of the bank module's SupplyOf query.
   rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
     option deprecated                          = true;
     option (cosmos.query.v1.module_query_safe) = true;
@@ -131,12 +131,13 @@ message QueryHoldingResponse {
 }
 
 // QuerySupplyRequest is the request type for the Query/MarkerSupply method.
+// Deprecated: This returns initial/target supply. Use bank module's query for actual circulating supply.
 message QuerySupplyRequest {
   // address or denom for the marker
   string id = 1;
 }
 // QuerySupplyResponse is the response type for the Query/MarkerSupply method.
-// Deprecated: This returns initial/target supply. Use bank module's query for actual circulating supply.
+// Deprecated: This returns initial/target supply. Use bank module's SupplyOf query for actual circulating supply.
 message QuerySupplyResponse {
   option deprecated = true;
   // amount is the supply of the marker.
