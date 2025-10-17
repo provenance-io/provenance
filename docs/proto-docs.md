@@ -11586,7 +11586,7 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 ### QuerySupplyRequest
 QuerySupplyRequest is the request type for the Query/MarkerSupply method.
-Deprecated: This returns initial/target supply. Use bank module's query for actual circulating supply.
+Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 
 
 | Field | Type | Label | Description |
@@ -11602,7 +11602,7 @@ Deprecated: This returns initial/target supply. Use bank module's query for actu
 
 ### QuerySupplyResponse
 QuerySupplyResponse is the response type for the Query/MarkerSupply method.
-Deprecated: This returns initial/target supply. Use bank module's SupplyOf query for actual circulating supply.
+Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 
 
 | Field | Type | Label | Description |
