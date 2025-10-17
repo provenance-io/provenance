@@ -265,7 +265,7 @@ DEPRECATED: This command will be removed in the future. Users should use the q b
 			var response *types.QuerySupplyResponse //nolint:staticcheck // SA1019: QuerySupplyResponse is deprecated, keeping for now.
 			if response, err = queryClient.Supply(
 				context.Background(),
-				&types.QuerySupplyRequest{Id: id},
+				&types.QuerySupplyRequest{Id: id}, //nolint:staticcheck // SA1019: QuerySupplyResponse is deprecated, keeping for now.
 			); err != nil {
 				fmt.Printf("failed to query marker \"%s\" for total supply configuration: %v\n", id, err)
 				return nil
