@@ -183,7 +183,7 @@ type MarkerAccount struct {
 	Denom string `protobuf:"bytes,5,opt,name=denom,proto3" json:"denom,omitempty"`
 	// the total supply expected for a marker.  This is the amount that is minted when a marker is created.
 	// Note: This is a static configuration value, not the current circulating supply.
-	// To query the current circulating supply, use the bank module's query.
+	// To query the current circulating supply, use the bank module's SupplyOf query.
 	Supply cosmossdk_io_math.Int `protobuf:"bytes,6,opt,name=supply,proto3,customtype=cosmossdk.io/math.Int" json:"supply"`
 	// Marker type information
 	MarkerType MarkerType `protobuf:"varint,7,opt,name=marker_type,json=markerType,proto3,enum=provenance.marker.v1.MarkerType" json:"marker_type,omitempty"`

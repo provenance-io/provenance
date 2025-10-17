@@ -248,7 +248,6 @@ service Query {
     option (.google.api.http) = { get:"/provenance/marker/v1/params"  };
   }
   // query for supply of coin on a marker account
-  // Deprecated:This endpoint returns the initial/target supply from marker account, not actual circulating supply.
   rpc Supply ( .provenance.marker.v1.QuerySupplyRequest ) returns ( .provenance.marker.v1.QuerySupplyResponse ) {
     option (.google.api.http) = { get:"/provenance/marker/v1/supply/{id}"  };
   }

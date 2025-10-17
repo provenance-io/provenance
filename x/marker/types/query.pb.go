@@ -429,6 +429,7 @@ func (m *QueryHoldingResponse) GetPagination() *query.PageResponse {
 }
 
 // QuerySupplyRequest is the request type for the Query/MarkerSupply method.
+// Deprecated: This returns initial/target supply. Use bank module's query for actual circulating supply.
 type QuerySupplyRequest struct {
 	// address or denom for the marker
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -475,7 +476,7 @@ func (m *QuerySupplyRequest) GetId() string {
 }
 
 // QuerySupplyResponse is the response type for the Query/MarkerSupply method.
-// Deprecated: This returns initial/target supply.Use bank module's for actual circulating supply.
+// Deprecated: This returns initial/target supply. Use bank module's SupplyOf query for actual circulating supply.
 //
 // Deprecated: Do not use.
 type QuerySupplyResponse struct {
@@ -1146,8 +1147,8 @@ type QueryClient interface {
 	// query for all accounts holding the given marker coins
 	Holding(ctx context.Context, in *QueryHoldingRequest, opts ...grpc.CallOption) (*QueryHoldingResponse, error)
 	// query for supply of coin on a marker account
-	// Deprecated: query for supply of coin on a marker account
 	// This endpoint returns the initial/target supply from marker account, not actual circulating supply.
+	// Deprecated: This query is deprecated in favor of the bank module's SupplyOf query.
 	Supply(ctx context.Context, in *QuerySupplyRequest, opts ...grpc.CallOption) (*QuerySupplyResponse, error)
 	// query for coins on a marker account
 	Escrow(ctx context.Context, in *QueryEscrowRequest, opts ...grpc.CallOption) (*QueryEscrowResponse, error)
@@ -1271,8 +1272,8 @@ type QueryServer interface {
 	// query for all accounts holding the given marker coins
 	Holding(context.Context, *QueryHoldingRequest) (*QueryHoldingResponse, error)
 	// query for supply of coin on a marker account
-	// Deprecated: query for supply of coin on a marker account
 	// This endpoint returns the initial/target supply from marker account, not actual circulating supply.
+	// Deprecated: This query is deprecated in favor of the bank module's SupplyOf query.
 	Supply(context.Context, *QuerySupplyRequest) (*QuerySupplyResponse, error)
 	// query for coins on a marker account
 	Escrow(context.Context, *QueryEscrowRequest) (*QueryEscrowResponse, error)
