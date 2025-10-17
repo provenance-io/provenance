@@ -852,10 +852,10 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 	}
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "blah")
-	s.Assert().Error(err)
-	s.Assert().Equal("no address bound to name", err.Error())
+	s.Assert().Error(err, "GetAttributes")
+	s.Assert().Contains(err.Error(), "no address bound to name")
 	attributes, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "example.attribute")
-	s.Assert().NoError(err)
+	s.Assert().NoError(err, "GetAttributes should succeed")
 	s.Assert().Equal(1, len(attributes))
 	s.Assert().Equal(attr.Name, attributes[0].Name)
 	s.Assert().Equal(attr.Address, attributes[0].Address)
