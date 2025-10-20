@@ -642,6 +642,7 @@ type MsgClient interface {
 	UnregisterNFT(ctx context.Context, in *MsgUnregisterNFT, opts ...grpc.CallOption) (*MsgUnregisterNFTResponse, error)
 	// RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
 	// This creates multiple registry entries, or updates if one exists.
+	// Each registry in this will cost one MsgRegisterNFT.
 	RegistryBulkUpdate(ctx context.Context, in *MsgRegistryBulkUpdate, opts ...grpc.CallOption) (*MsgRegistryBulkUpdateResponse, error)
 }
 
@@ -714,6 +715,7 @@ type MsgServer interface {
 	UnregisterNFT(context.Context, *MsgUnregisterNFT) (*MsgUnregisterNFTResponse, error)
 	// RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
 	// This creates multiple registry entries, or updates if one exists.
+	// Each registry in this will cost one MsgRegisterNFT.
 	RegistryBulkUpdate(context.Context, *MsgRegistryBulkUpdate) (*MsgRegistryBulkUpdateResponse, error)
 }
 

@@ -1618,6 +1618,7 @@ type MsgClient interface {
 	// AddLedgerClassBucketType adds a bucket type to a ledger class.
 	AddLedgerClassBucketType(ctx context.Context, in *MsgAddLedgerClassBucketTypeRequest, opts ...grpc.CallOption) (*MsgAddLedgerClassBucketTypeResponse, error)
 	// BulkCreate creates ledgers and entries in bulk.
+	// Each ledger in this will cost one MsgCreateLedgerRequest.
 	BulkCreate(ctx context.Context, in *MsgBulkCreateRequest, opts ...grpc.CallOption) (*MsgBulkCreateResponse, error)
 }
 
@@ -1784,6 +1785,7 @@ type MsgServer interface {
 	// AddLedgerClassBucketType adds a bucket type to a ledger class.
 	AddLedgerClassBucketType(context.Context, *MsgAddLedgerClassBucketTypeRequest) (*MsgAddLedgerClassBucketTypeResponse, error)
 	// BulkCreate creates ledgers and entries in bulk.
+	// Each ledger in this will cost one MsgCreateLedgerRequest.
 	BulkCreate(context.Context, *MsgBulkCreateRequest) (*MsgBulkCreateResponse, error)
 }
 

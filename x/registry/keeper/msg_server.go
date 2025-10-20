@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -153,6 +155,9 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 			allEvents = append(allEvents, tev)
 		}
 		k.EmitEvents(ctx, allEvents...)
+
+		// And finally, charge for one registry creation.
+		antewrapper.ConsumeMsg(sdk.UnwrapSDKContext(ctx), &types.MsgRegisterNFT{})
 	}
 
 	return &types.MsgRegistryBulkUpdateResponse{}, nil

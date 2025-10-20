@@ -428,6 +428,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.ibchooks.v1.MsgUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.ibcratelimit.v1.MsgUpdateParamsRequest"),
+		flatfeestypes.NewMsgFee("/provenance.ledger.v1.MsgBulkCreateRequest"),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgChangeStatusProposalRequest"),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgRemoveAdministratorProposalRequest"),
 		flatfeestypes.NewMsgFee("/provenance.marker.v1.MsgSetAdministratorProposalRequest"),
@@ -446,6 +447,7 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgCreateRootNameRequest"),
 		flatfeestypes.NewMsgFee("/provenance.name.v1.MsgUpdateParamsRequest"),
 		flatfeestypes.NewMsgFee("/provenance.oracle.v1.MsgUpdateOracleRequest"),
+		flatfeestypes.NewMsgFee("/provenance.registry.v1.MsgRegistryBulkUpdate"),
 
 		// Msgs that cost $0.005.
 		flatfeestypes.NewMsgFee("/provenance.metadata.v1.MsgAddNetAssetValuesRequest", feeDefCoin(5)),

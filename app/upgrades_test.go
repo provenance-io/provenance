@@ -1433,7 +1433,7 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 				l++
 				grid = append(grid, make([]string, 0, 10))
 			}
-			grid[l] = append(grid[l], strings.Repeat(" ", maxLen-len(str)) + str)
+			grid[l] = append(grid[l], strings.Repeat(" ", maxLen-len(str))+str)
 		}
 
 		lines := make([]string, len(grid))

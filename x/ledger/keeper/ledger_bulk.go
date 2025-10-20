@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -36,6 +37,8 @@ func (k Keeper) BulkCreate(goCtx context.Context, ledgers []*types.LedgerAndEntr
 			}
 		}
 
+		// Charge for creating one ledger.
+		antewrapper.ConsumeMsg(ctx, &types.MsgCreateLedgerRequest{})
 		// Done with this entry, write it!
 		writeCache()
 	}

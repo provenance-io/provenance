@@ -33,6 +33,7 @@ service Msg {
 
   // RegistryBulkUpdate registers, or updates, multiple NFTs in the registry.
   // This creates multiple registry entries, or updates if one exists.
+  // Each registry in this will cost one MsgRegisterNFT.
   rpc RegistryBulkUpdate(MsgRegistryBulkUpdate) returns (MsgRegistryBulkUpdateResponse);
 }
 

@@ -5068,7 +5068,7 @@ Msg defines the ledger module Msg service.
 | `AddLedgerClassStatusType` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | AddLedgerClassStatusType adds a status type to a ledger class. |
 | `AddLedgerClassEntryType` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | AddLedgerClassEntryType adds an entry type to a ledger class. |
 | `AddLedgerClassBucketType` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | AddLedgerClassBucketType adds a bucket type to a ledger class. |
-| `BulkCreate` | [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest) | [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse) | BulkCreate creates ledgers and entries in bulk. |
+| `BulkCreate` | [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest) | [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse) | BulkCreate creates ledgers and entries in bulk. Each ledger in this will cost one MsgCreateLedgerRequest. |
 
  <!-- end services -->
 
@@ -8954,7 +8954,7 @@ This service provides transaction functionality for managing registry entries an
 | `GrantRole` | [MsgGrantRole](#provenance-registry-v1-MsgGrantRole) | [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse) | GrantRole grants a role to one or more addresses. This adds the specified addresses to the role for the given registry key. |
 | `RevokeRole` | [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole) | [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse) | RevokeRole revokes a role from one or more addresses. This removes the specified addresses from the role for the given registry key. |
 | `UnregisterNFT` | [MsgUnregisterNFT](#provenance-registry-v1-MsgUnregisterNFT) | [MsgUnregisterNFTResponse](#provenance-registry-v1-MsgUnregisterNFTResponse) | UnregisterNFT unregisters an NFT from the registry. This removes the entire registry entry for the specified key. |
-| `RegistryBulkUpdate` | [MsgRegistryBulkUpdate](#provenance-registry-v1-MsgRegistryBulkUpdate) | [MsgRegistryBulkUpdateResponse](#provenance-registry-v1-MsgRegistryBulkUpdateResponse) | RegistryBulkUpdate registers, or updates, multiple NFTs in the registry. This creates multiple registry entries, or updates if one exists. |
+| `RegistryBulkUpdate` | [MsgRegistryBulkUpdate](#provenance-registry-v1-MsgRegistryBulkUpdate) | [MsgRegistryBulkUpdateResponse](#provenance-registry-v1-MsgRegistryBulkUpdateResponse) | RegistryBulkUpdate registers, or updates, multiple NFTs in the registry. This creates multiple registry entries, or updates if one exists. Each registry in this will cost one MsgRegisterNFT. |
 
  <!-- end services -->
 

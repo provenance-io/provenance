@@ -56,6 +56,7 @@ service Msg {
   rpc AddLedgerClassBucketType(MsgAddLedgerClassBucketTypeRequest) returns (MsgAddLedgerClassBucketTypeResponse);
 
   // BulkCreate creates ledgers and entries in bulk.
+  // Each ledger in this will cost one MsgCreateLedgerRequest.
   rpc BulkCreate(MsgBulkCreateRequest) returns (MsgBulkCreateResponse);
 }
 
