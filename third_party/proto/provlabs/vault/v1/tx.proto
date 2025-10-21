@@ -37,24 +37,30 @@ service Msg {
   rpc ToggleSwapOut(MsgToggleSwapOutRequest) returns (MsgToggleSwapOutResponse);
 
   // DepositInterestFunds allows depositing funds into the vault for paying interest.
+  // May be signed by the vault admin or the configured asset manager.
   rpc DepositInterestFunds(MsgDepositInterestFundsRequest) returns (MsgDepositInterestFundsResponse);
 
-  // WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+  // WithdrawInterestFunds allows withdrawing unused interest funds.
+  // May be signed by the vault admin or the configured asset manager.
   rpc WithdrawInterestFunds(MsgWithdrawInterestFundsRequest) returns (MsgWithdrawInterestFundsResponse);
 
   // DepositPrincipalFunds allows depositing principal funds into a vault.
+  // May be signed by the vault admin or the configured asset manager.
   rpc DepositPrincipalFunds(MsgDepositPrincipalFundsRequest) returns (MsgDepositPrincipalFundsResponse);
 
   // WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+  // May be signed by the vault admin or the configured asset manager.
   rpc WithdrawPrincipalFunds(MsgWithdrawPrincipalFundsRequest) returns (MsgWithdrawPrincipalFundsResponse);
 
   // ExpeditePendingSwapOut expedites a pending swap out from a vault.
   rpc ExpeditePendingSwapOut(MsgExpeditePendingSwapOutRequest) returns (MsgExpeditePendingSwapOutResponse);
 
-  // PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
+  // PauseVault pauses user-facing swap operations for a vault and records a reason.
+  // May be signed by the vault admin or the configured asset manager.
   rpc PauseVault(MsgPauseVaultRequest) returns (MsgPauseVaultResponse);
 
-  // UnpauseVault re-enables user-facing swap operations for a vault (admin only).
+  // UnpauseVault re-enables user-facing swap operations for a vault.
+  // May be signed by the vault admin or the configured asset manager.
   rpc UnpauseVault(MsgUnpauseVaultRequest) returns (MsgUnpauseVaultResponse);
 
   // SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
@@ -68,6 +74,10 @@ service Msg {
 
   // BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
   rpc BridgeBurnShares(MsgBridgeBurnSharesRequest) returns (MsgBridgeBurnSharesResponse);
+
+  // SetAssetManager sets or clears the optional asset manager address for a vault.
+  // The vault admin must sign this transaction. Passing an empty address clears it.
+  rpc SetAssetManager(MsgSetAssetManagerRequest) returns (MsgSetAssetManagerResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -212,10 +222,11 @@ message MsgToggleSwapOutResponse {}
 
 // MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
 message MsgDepositInterestFundsRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the account depositing the funds.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the account depositing the funds.
+  // Must match either the vault admin or the configured asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault to which funds are being deposited.
   string vault_address = 2;
   // amount is the amount of funds to deposit.
@@ -227,10 +238,10 @@ message MsgDepositInterestFundsResponse {}
 
 // MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
 message MsgWithdrawInterestFundsRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the vault administrator initiating the withdrawal.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the vault administrator or asset manager initiating the withdrawal.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault from which funds are being withdrawn.
   string vault_address = 2;
   // amount is the amount of funds to withdraw.
@@ -242,10 +253,11 @@ message MsgWithdrawInterestFundsResponse {}
 
 // MsgDepositPrincipalFundsRequest is the request message for depositing principal funds into a vault.
 message MsgDepositPrincipalFundsRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the account depositing the funds.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the account depositing the funds.
+  // Must match either the vault admin or the configured asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault to which funds are being deposited.
   string vault_address = 2;
   // amount is the amount of funds to deposit.
@@ -257,10 +269,10 @@ message MsgDepositPrincipalFundsResponse {}
 
 // MsgWithdrawPrincipalFundsRequest is the request message for withdrawing principal funds from a vault.
 message MsgWithdrawPrincipalFundsRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the vault administrator initiating the withdrawal.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the vault administrator or asset manager initiating the withdrawal.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault from which funds are being withdrawn.
   string vault_address = 2;
   // amount is the amount of funds to withdraw.
@@ -272,10 +284,11 @@ message MsgWithdrawPrincipalFundsResponse {}
 
 // MsgExpeditePendingSwapOutRequest is the request message for expediting a swap out from a vault.
 message MsgExpeditePendingSwapOutRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the vault administrator initiating the swap out.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the vault admin or asset manager initiating the expedite.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // request_id is the id of the pending swap out to expedite.
   uint64 request_id = 2;
 }
@@ -286,10 +299,10 @@ message MsgExpeditePendingSwapOutResponse {}
 // MsgPauseVaultRequest is the request message to pause a vault. When processed,
 // the vault disables user-facing swap operations and records the provided reason.
 message MsgPauseVaultRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the vault administrator initiating the pause.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the vault administrator or asset manager initiating the pause.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault to pause.
   string vault_address = 2;
   // reason is a human-readable explanation for pausing the vault. This is recorded
@@ -303,10 +316,10 @@ message MsgPauseVaultResponse {}
 // MsgUnpauseVaultRequest is the request message to unpause a vault. When processed,
 // the vault re-enables user-facing swap operations (subject to existing flags).
 message MsgUnpauseVaultRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the vault administrator initiating the unpause.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the vault administrator or asset manager initiating the unpause.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault to unpause.
   string vault_address = 2;
 }
@@ -373,3 +386,19 @@ message MsgBridgeBurnSharesRequest {
 
 // MsgBridgeBurnSharesResponse is the response message for the BridgeBurnShares endpoint.
 message MsgBridgeBurnSharesResponse {}
+
+// MsgSetAssetManagerRequest sets or clears the optional asset manager address for a vault.
+message MsgSetAssetManagerRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the address of the vault administrator.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault to update.
+  string vault_address = 2;
+  // asset_manager is the address that will be allowed to manage certain vault operations alongside the admin.
+  // Passing an empty string clears any configured asset manager.
+  string asset_manager = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgSetAssetManagerResponse is the response message for the SetAssetManager endpoint.
+message MsgSetAssetManagerResponse {}

@@ -74,6 +74,11 @@ message VaultAccount {
   // bridge_enabled indicates whether the bridge functionality is active. If false, the
   // bridge_address has no effect and cannot mint or burn.
   bool bridge_enabled = 19;
+
+  // asset_manager is an optional address that, when set, is authorized to manage certain
+  // collateral operations alongside the admin (e.g., pausing/unpausing, depositing/withdrawing
+  // principal or interest funds). If unset (empty string), only the admin may perform those actions.
+  string asset_manager = 20 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // AccountBalance represents the coin balance of a single account.
