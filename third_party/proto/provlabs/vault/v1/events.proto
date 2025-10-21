@@ -101,8 +101,8 @@ message EventVaultInterestChange {
 message EventInterestDeposit {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // admin is the address of the account that deposited the funds.
-  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address (admin or asset manager) that deposited the funds.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds deposited.
   string amount = 3;
 }
@@ -111,8 +111,8 @@ message EventInterestDeposit {
 message EventInterestWithdrawal {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // admin is the address of the account that withdrew the funds.
-  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address (admin or asset manager) that withdrew the funds.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds withdrawn.
   string amount = 3;
 }
@@ -137,22 +137,22 @@ message EventToggleSwapOut {
   bool enabled = 3;
 }
 
-// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the admin.
+// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the authority.
 message EventDepositPrincipalFunds {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // admin is the address of the account that deposited the funds.
-  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address (admin or asset manager) that deposited the funds.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds deposited.
   string amount = 3;
 }
 
-// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the admin.
+// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the authority.
 message EventWithdrawPrincipalFunds {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // admin is the address of the account that withdrew the funds.
-  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address (admin or asset manager) that withdrew the funds.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // amount is the amount of funds withdrawn.
   string amount = 3;
 }
@@ -220,22 +220,22 @@ message EventSwapOutRefunded {
   string reason = 5;
 }
 
-// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the admin.
+// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the authority.
 message EventPendingSwapOutExpedited {
   // request_id is the numerical identifier of the pending swap-out.
   uint64 request_id = 1;
   // vault is the bech32 address of the vault.
   string vault = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // admin is the address of the account that expedited the swap-out.
-  string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address (admin or asset manager) that expedited the swap-out.
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // EventVaultPaused is emitted when a vault is paused.
 message EventVaultPaused {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1;
-  // admin is the address of the account that paused the vault.
-  string admin = 2;
+  // authority is the address (admin or asset manager) that paused the vault.
+  string authority = 2;
   // reason is the reason for pausing the vault.
   string reason = 3;
   // total_vault_value is the total value of the vault's assets at the time of pausing.
@@ -246,8 +246,8 @@ message EventVaultPaused {
 message EventVaultUnpaused {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1;
-  // admin is the address of the account that unpaused the vault.
-  string admin = 2;
+  // authority is the address (admin or asset manager) that unpaused the vault.
+  string authority = 2;
   // total_vault_value is the new total value of the vault's assets at the time of unpausing.
   string total_vault_value = 3;
 }
@@ -290,4 +290,14 @@ message EventBridgeBurnShares {
   string bridge = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // shares is the amount of shares burned.
   string shares = 3;
+}
+
+// EventAssetManagerSet is emitted when a vault's asset manager is set or cleared.
+message EventAssetManagerSet {
+  // vault_address is the address of the vault whose asset manager was updated.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the admin who performed the update.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // asset_manager is the new asset manager address. If empty, it indicates the asset manager was cleared.
+  string asset_manager = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
