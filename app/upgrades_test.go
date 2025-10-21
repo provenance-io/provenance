@@ -1447,6 +1447,7 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 	s.Require().NoError(err, "getBouvardiaLedgerDataFilePaths()")
 
 	count := 0
+	noApplieds := 0
 	sumAbs := 0
 	sumRaw := 0
 	offByOne := 0
@@ -1471,6 +1472,7 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 			decoder := json.NewDecoder(gzReader)
 			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
 
+			var noAppliedsInds []int
 			var sumRawInds []int
 			var justOffInds []int
 			var wayOffInds []int
@@ -1485,6 +1487,12 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 
 				if entry.Entry.TotalAmt.Equal(sumAbsApplied) {
 					sumAbs++
+					continue
+				}
+
+				if len(entry.Entry.AppliedAmounts) == 0 && !entry.Entry.TotalAmt.IsZero() {
+					noAppliedsInds = append(noAppliedsInds, i)
+					noApplieds++
 					continue
 				}
 
@@ -1510,6 +1518,9 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 				}
 			}
 
+			if len(noAppliedsInds) > 0 {
+				s.Fail(fmt.Sprintf("Found %d entries without applied values", len(noAppliedsInds)), "%s", numGrid(noAppliedsInds))
+			}
 			if len(sumRawInds) > 0 {
 				s.Fail(fmt.Sprintf("Found %d entries that sum to total (without absolute value)", len(sumRawInds)), "%s", numGrid(sumRawInds))
 			}
@@ -1525,6 +1536,7 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 	s.Run("summary", func() {
 		s.T().Logf("count total:       %7d", count)
 		s.T().Logf("sum(abs) == total: %7d", sumAbs)
+		s.T().Logf("no applied amts  : %7d", noApplieds)
 		s.T().Logf("sum == total:      %7d", sumRaw)
 		s.T().Logf("off-by-one:        %7d", offByOne)
 		s.T().Logf("off by more:       %7d", offByMore)
