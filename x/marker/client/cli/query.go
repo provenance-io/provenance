@@ -246,8 +246,12 @@ func MarkerEscrowCmd() *cobra.Command {
 // MarkerSupplyCmd is the CLI command for querying marker module registrations.
 func MarkerSupplyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "supply [address|denom]",
-		Short:   "Get total supply for marker",
+		Use:   "supply [address|denom]",
+		Short: "Get total supply for marker (DEPRECATED - see help)",
+		Long: strings.TrimSpace(`Get total supply for marker
+This command returns the marker's initial/target supply, not actual circulating supply.
+DEPRECATED: This command will be removed in the future. Users should use the q bank total-supply-of command instead.
+`),
 		Example: fmt.Sprintf(`$ %s query marker supply "nhash"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -258,10 +262,10 @@ func MarkerSupplyCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 			id := strings.ToLower(strings.TrimSpace(args[0]))
 
-			var response *types.QuerySupplyResponse
+			var response *types.QuerySupplyResponse //nolint:staticcheck // SA1019: QuerySupplyResponse is deprecated, keeping for now.
 			if response, err = queryClient.Supply(
 				context.Background(),
-				&types.QuerySupplyRequest{Id: id},
+				&types.QuerySupplyRequest{Id: id}, //nolint:staticcheck // SA1019: QuerySupplyResponse is deprecated, keeping for now.
 			); err != nil {
 				fmt.Printf("failed to query marker \"%s\" for total supply configuration: %v\n", id, err)
 				return nil

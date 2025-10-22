@@ -43,6 +43,8 @@ message MarkerAccount {
   // value denomination and total supply for the token.
   string denom = 5;
   // the total supply expected for a marker.  This is the amount that is minted when a marker is created.
+  // Note: This is a static configuration value, not the current circulating supply.
+  // To query the current circulating supply, use the bank module's SupplyOf query.
   string supply = 6 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
   // Marker type information
   MarkerType marker_type = 7;
