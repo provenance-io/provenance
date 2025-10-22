@@ -171,49 +171,43 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.flagPageKey = "--" + flags.FlagPageKey
 
 	// Add the accounts to the auth module gen state.
-	var authGen authtypes.GenesisState
-	err := s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[authtypes.ModuleName], &authGen)
-	s.Require().NoError(err, "UnmarshalJSON auth gen state")
-	newAccounts, err := authtypes.PackAccounts(authtypes.GenesisAccounts{
-		authtypes.NewBaseAccount(s.addr1, nil, 0, 1),
-		authtypes.NewBaseAccount(s.addr2, nil, 0, 1),
-		authtypes.NewBaseAccount(s.addr3, nil, 0, 1),
-		authtypes.NewBaseAccount(s.addr4, nil, 0, 1),
-		authtypes.NewBaseAccount(s.addr5, nil, 0, 1),
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authGen *authtypes.GenesisState) *authtypes.GenesisState {
+		newAccounts, err := authtypes.PackAccounts(authtypes.GenesisAccounts{
+			authtypes.NewBaseAccount(s.addr1, nil, 0, 1),
+			authtypes.NewBaseAccount(s.addr2, nil, 0, 1),
+			authtypes.NewBaseAccount(s.addr3, nil, 0, 1),
+			authtypes.NewBaseAccount(s.addr4, nil, 0, 1),
+			authtypes.NewBaseAccount(s.addr5, nil, 0, 1),
+		})
+		s.Require().NoError(err, "PackAccounts")
+		authGen.Accounts = append(authGen.Accounts, newAccounts...)
+		return authGen
 	})
-	s.Require().NoError(err, "PackAccounts")
-	authGen.Accounts = append(authGen.Accounts, newAccounts...)
-	s.cfg.GenesisState[authtypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&authGen)
-	s.Require().NoError(err, "MarshalJSON auth gen state")
 
 	// Give each of them balances.
-	var bankGen banktypes.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[banktypes.ModuleName], &bankGen)
-	s.Require().NoError(err, "UnmarshalJSON bank gen state")
-	bankGen.Balances = append(bankGen.Balances,
-		banktypes.Balance{Address: s.addr1.String(), Coins: s.addr1Bal},
-		banktypes.Balance{Address: s.addr2.String(), Coins: s.addr2Bal},
-		banktypes.Balance{Address: s.addr3.String(), Coins: s.addr3Bal},
-		banktypes.Balance{Address: s.addr4.String(), Coins: s.addr4Bal},
-		banktypes.Balance{Address: s.addr5.String(), Coins: s.addr5Bal},
-	)
-	s.cfg.GenesisState[banktypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&bankGen)
-	s.Require().NoError(err, "MarshalJSON bank gen state")
+	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankGen *banktypes.GenesisState) *banktypes.GenesisState {
+		bankGen.Balances = append(bankGen.Balances,
+			banktypes.Balance{Address: s.addr1.String(), Coins: s.addr1Bal},
+			banktypes.Balance{Address: s.addr2.String(), Coins: s.addr2Bal},
+			banktypes.Balance{Address: s.addr3.String(), Coins: s.addr3Bal},
+			banktypes.Balance{Address: s.addr4.String(), Coins: s.addr4Bal},
+			banktypes.Balance{Address: s.addr5.String(), Coins: s.addr5Bal},
+		)
+		return bankGen
+	})
 
 	// Place some of their stuff on hold.
-	var holdGen hold.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[hold.ModuleName], &holdGen)
-	s.Require().NoError(err, "UnmarshalJSON hold gen state")
-	holdGen.Holds = append(holdGen.Holds,
-		&hold.AccountHold{Address: s.addr1.String(), Amount: s.addr1Hold},
-		&hold.AccountHold{Address: s.addr2.String(), Amount: s.addr2Hold},
-		&hold.AccountHold{Address: s.addr3.String(), Amount: s.addr3Hold},
-		&hold.AccountHold{Address: s.addr4.String(), Amount: s.addr4Hold},
-		&hold.AccountHold{Address: s.addr5.String(), Amount: s.addr5Hold},
-	)
-	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&holdGen)
-	s.Require().NoError(err, "MarshalJSON hold gen state")
-
+	testutil.MutateGenesisState(s.T(), &s.cfg, hold.ModuleName, &hold.GenesisState{}, func(holdGen *hold.GenesisState) *hold.GenesisState {
+		holdGen.Holds = append(holdGen.Holds,
+			&hold.AccountHold{Address: s.addr1.String(), Amount: s.addr1Hold},
+			&hold.AccountHold{Address: s.addr2.String(), Amount: s.addr2Hold},
+			&hold.AccountHold{Address: s.addr3.String(), Amount: s.addr3Hold},
+			&hold.AccountHold{Address: s.addr4.String(), Amount: s.addr4Hold},
+			&hold.AccountHold{Address: s.addr5.String(), Amount: s.addr5Hold},
+		)
+		return holdGen
+	})
+	var err error
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 

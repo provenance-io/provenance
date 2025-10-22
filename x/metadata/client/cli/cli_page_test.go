@@ -85,224 +85,222 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 
 	s.asJson = "--output=json"
 
-	var metadataData metadatatypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[metadatatypes.ModuleName], &metadataData), "unmarshalling JSON metadataData")
+	// Configure Genesis data for metadata module
+	testutil.MutateGenesisState(s.T(), &s.cfg, metadatatypes.ModuleName, &metadatatypes.GenesisState{}, func(metadataData *metadatatypes.GenesisState) *metadatatypes.GenesisState {
+		// Create 20 contract specifications, each with 2 record specifications.
+		cSpecs := map[string]*metadatatypes.ContractSpecification{}
+		rSpecs := map[string][]*metadatatypes.RecordSpecification{}
+		for i := 0; i < 20; i++ {
+			written := toWritten(i)
+			cSpec := metadatatypes.ContractSpecification{
+				SpecificationId: metadatatypes.ContractSpecMetadataAddress(uuid.New()),
+				Description: &metadatatypes.Description{
+					Name:        fmt.Sprintf("Contract Spec %d", i),
+					Description: fmt.Sprintf("The contract specification with number %s", written),
+					WebsiteUrl:  "",
+					IconUrl:     "",
+				},
+				OwnerAddresses:  []string{s.accountAddrStr},
+				PartiesInvolved: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+				Source:          metadatatypes.NewContractSpecificationSourceHash(written),
+				ClassName:       toClassName(written),
+			}
+			rSpec1 := metadatatypes.RecordSpecification{
+				SpecificationId: nil,
+				Name:            fmt.Sprintf("record %s 1 of 2", written),
+				Inputs: []*metadatatypes.InputSpecification{
+					{
+						Name:     written + "-1",
+						TypeName: "string",
+						Source:   metadatatypes.NewInputSpecificationSourceHash(written),
+					},
+				},
+				TypeName:           toClassName(toWritten(100 + i)),
+				ResultType:         metadatatypes.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
+				ResponsibleParties: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+			}
+			rSpec1.SpecificationId = cSpec.SpecificationId.MustGetAsRecordSpecAddress(rSpec1.Name)
+			rSpec2 := metadatatypes.RecordSpecification{
+				SpecificationId: nil,
+				Name:            fmt.Sprintf("record %s 2 of 2", written),
+				Inputs: []*metadatatypes.InputSpecification{
+					{
+						Name:     written + "-2",
+						TypeName: "string",
+						Source:   metadatatypes.NewInputSpecificationSourceHash(written),
+					},
+				},
+				TypeName:           toClassName(toWritten(100 + i)),
+				ResultType:         metadatatypes.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
+				ResponsibleParties: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+			}
+			rSpec2.SpecificationId = cSpec.SpecificationId.MustGetAsRecordSpecAddress(rSpec2.Name)
+			metadataData.ContractSpecifications = append(metadataData.ContractSpecifications, cSpec)
+			metadataData.RecordSpecifications = append(metadataData.RecordSpecifications, rSpec1, rSpec2)
+			cSpecs[cSpec.SpecificationId.String()] = &cSpec
+			rSpecs[cSpec.SpecificationId.String()] = []*metadatatypes.RecordSpecification{&rSpec1, &rSpec2}
+		}
 
-	// Create 20 contract specifications, each with 2 record specifications.
-	cSpecs := map[string]*metadatatypes.ContractSpecification{}
-	rSpecs := map[string][]*metadatatypes.RecordSpecification{}
-	for i := 0; i < 20; i++ {
-		written := toWritten(i)
-		cSpec := metadatatypes.ContractSpecification{
-			SpecificationId: metadatatypes.ContractSpecMetadataAddress(uuid.New()),
-			Description: &metadatatypes.Description{
-				Name:        fmt.Sprintf("Contract Spec %d", i),
-				Description: fmt.Sprintf("The contract specification with number %s", written),
-				WebsiteUrl:  "",
-				IconUrl:     "",
-			},
-			OwnerAddresses:  []string{s.accountAddrStr},
-			PartiesInvolved: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
-			Source:          metadatatypes.NewContractSpecificationSourceHash(written),
-			ClassName:       toClassName(written),
-		}
-		rSpec1 := metadatatypes.RecordSpecification{
-			SpecificationId: nil,
-			Name:            fmt.Sprintf("record %s 1 of 2", written),
-			Inputs: []*metadatatypes.InputSpecification{
-				{
-					Name:     written + "-1",
-					TypeName: "string",
-					Source:   metadatatypes.NewInputSpecificationSourceHash(written),
+		// Create 20 scope specifications, each with two contract specifications.
+		for i := 0; i < 20; i++ {
+			written := toWritten(i)
+			sSpec := metadatatypes.ScopeSpecification{
+				SpecificationId: metadatatypes.ScopeSpecMetadataAddress(uuid.New()),
+				Description: &metadatatypes.Description{
+					Name:        fmt.Sprintf("Scope Spec %d", i),
+					Description: fmt.Sprintf("The scope specification with number %s", written),
+					WebsiteUrl:  "",
+					IconUrl:     "",
 				},
-			},
-			TypeName:           toClassName(toWritten(100 + i)),
-			ResultType:         metadatatypes.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
-			ResponsibleParties: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
-		}
-		rSpec1.SpecificationId = cSpec.SpecificationId.MustGetAsRecordSpecAddress(rSpec1.Name)
-		rSpec2 := metadatatypes.RecordSpecification{
-			SpecificationId: nil,
-			Name:            fmt.Sprintf("record %s 2 of 2", written),
-			Inputs: []*metadatatypes.InputSpecification{
-				{
-					Name:     written + "-2",
-					TypeName: "string",
-					Source:   metadatatypes.NewInputSpecificationSourceHash(written),
-				},
-			},
-			TypeName:           toClassName(toWritten(100 + i)),
-			ResultType:         metadatatypes.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
-			ResponsibleParties: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
-		}
-		rSpec2.SpecificationId = cSpec.SpecificationId.MustGetAsRecordSpecAddress(rSpec2.Name)
-		metadataData.ContractSpecifications = append(metadataData.ContractSpecifications, cSpec)
-		metadataData.RecordSpecifications = append(metadataData.RecordSpecifications, rSpec1, rSpec2)
-		cSpecs[cSpec.SpecificationId.String()] = &cSpec
-		rSpecs[cSpec.SpecificationId.String()] = []*metadatatypes.RecordSpecification{&rSpec1, &rSpec2}
-	}
-	// Create 20 scope specifications, each with two contract specifications.
-	for i := 0; i < 20; i++ {
-		written := toWritten(i)
-		sSpec := metadatatypes.ScopeSpecification{
-			SpecificationId: metadatatypes.ScopeSpecMetadataAddress(uuid.New()),
-			Description: &metadatatypes.Description{
-				Name:        fmt.Sprintf("Scope Spec %d", i),
-				Description: fmt.Sprintf("The scope specification with number %s", written),
-				WebsiteUrl:  "",
-				IconUrl:     "",
-			},
-			OwnerAddresses:  []string{s.accountAddrStr},
-			PartiesInvolved: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
-			ContractSpecIds: []metadatatypes.MetadataAddress{
-				metadataData.ContractSpecifications[i].SpecificationId,
-				metadataData.ContractSpecifications[(i+1)%20].SpecificationId,
-			},
-		}
-		metadataData.ScopeSpecifications = append(metadataData.ScopeSpecifications, sSpec)
-	}
-	// Create 100 scopes, each with 2 sessions, and each session with 2 records.
-	// Scopes:
-	//    Use scope specification i % 20.
-	//    i % 5 == 0: 20 of them are owned by s.accountAddr and value owner is s.accountAddr.
-	//    i % 5 == 1: 20 of them are owned by s.accountAddr and value owner is s.user1Addr.
-	//    i % 5 == 2: 20 of them are owned by s.accountAddr + s.user1Addr and value owner is s.accountAddr
-	//    i % 5 == 3: 20 of them are owned by s.accountAddr + s.user1Addr and value owner is s.user1Addr.
-	//    i % 5 == 4: 20 of them are owned by s.user1Addr and value owner is s.user1Addr.
-	//        Result:
-	//            s.user1Addr is in the Owners field of 60.
-	//            s.accountAddr is in the Owners field of 80.
-	//            s.user1Addr is the value owner of 60.
-	//            s.accountAddr is the value owner of 40.
-	// Sessions:
-	//    Use each c spec on the scope spec
-	// Records:
-	//    Use each record spec in the contract spec
-	s.user1ScopesOwned = 60
-	s.accountScopesOwned = 80
-	s.user1ScopesValueOwned = 60
-	s.accountScopesValueOwned = 40
-	accountOwnerParty := metadatatypes.Party{Address: s.accountAddrStr, Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}
-	user1OwnerParty := metadatatypes.Party{Address: s.user1AddrStr, Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}
-	for si := 0; si < 100; si++ {
-		scopeSpec := metadataData.ScopeSpecifications[si%20]
-		records := []metadatatypes.Record{}
-		sessions := []metadatatypes.Session{}
-		scope := metadatatypes.Scope{
-			ScopeId:           metadatatypes.ScopeMetadataAddress(uuid.New()),
-			SpecificationId:   scopeSpec.SpecificationId,
-			DataAccess:        []string{},
-			Owners:            nil,
-			ValueOwnerAddress: "",
-		}
-		switch si % 5 {
-		case 0:
-			scope.Owners = []metadatatypes.Party{accountOwnerParty}
-			scope.ValueOwnerAddress = s.accountAddrStr
-		case 1:
-			scope.Owners = []metadatatypes.Party{accountOwnerParty}
-			scope.ValueOwnerAddress = s.user1AddrStr
-		case 2:
-			scope.Owners = []metadatatypes.Party{accountOwnerParty, user1OwnerParty}
-			scope.ValueOwnerAddress = s.accountAddrStr
-		case 3:
-			scope.Owners = []metadatatypes.Party{accountOwnerParty, user1OwnerParty}
-			scope.ValueOwnerAddress = s.user1AddrStr
-		case 4:
-			scope.Owners = []metadatatypes.Party{user1OwnerParty}
-			scope.ValueOwnerAddress = s.user1AddrStr
-		}
-		for ci, cSpecID := range scopeSpec.ContractSpecIds {
-			session := metadatatypes.Session{
-				SessionId:       scope.ScopeId.MustGetAsSessionAddress(uuid.New()),
-				SpecificationId: cSpecs[cSpecID.String()].SpecificationId,
-				Parties:         scope.Owners,
-				Name:            cSpecs[cSpecID.String()].ClassName,
-				Context:         []byte(toWritten(ci)),
-				Audit: &metadatatypes.AuditFields{
-					CreatedDate: time.Now(),
-					CreatedBy:   s.accountAddrStr,
-					Version:     1,
-					Message:     "initial state",
+				OwnerAddresses:  []string{s.accountAddrStr},
+				PartiesInvolved: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+				ContractSpecIds: []metadatatypes.MetadataAddress{
+					metadataData.ContractSpecifications[i].SpecificationId,
+					metadataData.ContractSpecifications[(i+1)%20].SpecificationId,
 				},
 			}
-			sessions = append(sessions, session)
-			for ri, rSpec := range rSpecs[cSpecID.String()] {
-				allWritten := fmt.Sprintf("%s%s%s", toWritten(si), strings.ToTitle(toWritten(ci)), strings.ToTitle(toWritten(ri)))
-				records = append(records, metadatatypes.Record{
-					SpecificationId: rSpec.SpecificationId,
-					Name:            rSpec.Name,
-					SessionId:       session.SessionId,
-					Process: metadatatypes.Process{
-						ProcessId: &metadatatypes.Process_Hash{Hash: allWritten},
-						Name:      toClassName(allWritten),
-						Method:    allWritten,
-					},
-					Inputs: []metadatatypes.RecordInput{
-						{
-							Name:     rSpec.Inputs[0].Name,
-							Source:   &metadatatypes.RecordInput_Hash{Hash: rSpec.Inputs[0].GetHash()},
-							TypeName: rSpec.Inputs[0].TypeName,
-							Status:   metadatatypes.RecordInputStatus_Record,
-						},
-					},
-					Outputs: []metadatatypes.RecordOutput{
-						{
-							Hash:   allWritten + "Out",
-							Status: metadatatypes.ResultStatus_RESULT_STATUS_PASS,
-						},
-					},
-				})
+			metadataData.ScopeSpecifications = append(metadataData.ScopeSpecifications, sSpec)
+		}
+
+		// Create 100 scopes, each with 2 sessions, and each session with 2 records.
+		// Scopes:
+		//    Use scope specification i % 20.
+		//    i % 5 == 0: 20 of them are owned by s.accountAddr and value owner is s.accountAddr.
+		//    i % 5 == 1: 20 of them are owned by s.accountAddr and value owner is s.user1Addr.
+		//    i % 5 == 2: 20 of them are owned by s.accountAddr + s.user1Addr and value owner is s.accountAddr
+		//    i % 5 == 3: 20 of them are owned by s.accountAddr + s.user1Addr and value owner is s.user1Addr.
+		//    i % 5 == 4: 20 of them are owned by s.user1Addr and value owner is s.user1Addr.
+		//        Result:
+		//            s.user1Addr is in the Owners field of 60.
+		//            s.accountAddr is in the Owners field of 80.
+		//            s.user1Addr is the value owner of 60.
+		//            s.accountAddr is the value owner of 40.
+		// Sessions:
+		//    Use each c spec on the scope spec
+		// Records:
+		//    Use each record spec in the contract spec
+		s.user1ScopesOwned = 60
+		s.accountScopesOwned = 80
+		s.user1ScopesValueOwned = 60
+		s.accountScopesValueOwned = 40
+		accountOwnerParty := metadatatypes.Party{Address: s.accountAddrStr, Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}
+		user1OwnerParty := metadatatypes.Party{Address: s.user1AddrStr, Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}
+		for si := 0; si < 100; si++ {
+			scopeSpec := metadataData.ScopeSpecifications[si%20]
+			records := []metadatatypes.Record{}
+			sessions := []metadatatypes.Session{}
+			scope := metadatatypes.Scope{
+				ScopeId:           metadatatypes.ScopeMetadataAddress(uuid.New()),
+				SpecificationId:   scopeSpec.SpecificationId,
+				DataAccess:        []string{},
+				Owners:            nil,
+				ValueOwnerAddress: "",
 			}
+			switch si % 5 {
+			case 0:
+				scope.Owners = []metadatatypes.Party{accountOwnerParty}
+				scope.ValueOwnerAddress = s.accountAddrStr
+			case 1:
+				scope.Owners = []metadatatypes.Party{accountOwnerParty}
+				scope.ValueOwnerAddress = s.user1AddrStr
+			case 2:
+				scope.Owners = []metadatatypes.Party{accountOwnerParty, user1OwnerParty}
+				scope.ValueOwnerAddress = s.accountAddrStr
+			case 3:
+				scope.Owners = []metadatatypes.Party{accountOwnerParty, user1OwnerParty}
+				scope.ValueOwnerAddress = s.user1AddrStr
+			case 4:
+				scope.Owners = []metadatatypes.Party{user1OwnerParty}
+				scope.ValueOwnerAddress = s.user1AddrStr
+			}
+			for ci, cSpecID := range scopeSpec.ContractSpecIds {
+				session := metadatatypes.Session{
+					SessionId:       scope.ScopeId.MustGetAsSessionAddress(uuid.New()),
+					SpecificationId: cSpecs[cSpecID.String()].SpecificationId,
+					Parties:         scope.Owners,
+					Name:            cSpecs[cSpecID.String()].ClassName,
+					Context:         []byte(toWritten(ci)),
+					Audit: &metadatatypes.AuditFields{
+						CreatedDate: time.Now(),
+						CreatedBy:   s.accountAddrStr,
+						Version:     1,
+						Message:     "initial state",
+					},
+				}
+				sessions = append(sessions, session)
+				for ri, rSpec := range rSpecs[cSpecID.String()] {
+					allWritten := fmt.Sprintf("%s%s%s", toWritten(si), strings.ToTitle(toWritten(ci)), strings.ToTitle(toWritten(ri)))
+					records = append(records, metadatatypes.Record{
+						SpecificationId: rSpec.SpecificationId,
+						Name:            rSpec.Name,
+						SessionId:       session.SessionId,
+						Process: metadatatypes.Process{
+							ProcessId: &metadatatypes.Process_Hash{Hash: allWritten},
+							Name:      toClassName(allWritten),
+							Method:    allWritten,
+						},
+						Inputs: []metadatatypes.RecordInput{
+							{
+								Name:     rSpec.Inputs[0].Name,
+								Source:   &metadatatypes.RecordInput_Hash{Hash: rSpec.Inputs[0].GetHash()},
+								TypeName: rSpec.Inputs[0].TypeName,
+								Status:   metadatatypes.RecordInputStatus_Record,
+							},
+						},
+						Outputs: []metadatatypes.RecordOutput{
+							{
+								Hash:   allWritten + "Out",
+								Status: metadatatypes.ResultStatus_RESULT_STATUS_PASS,
+							},
+						},
+					})
+				}
+			}
+			metadataData.Scopes = append(metadataData.Scopes, scope)
+			metadataData.Sessions = append(metadataData.Sessions, sessions...)
+			metadataData.Records = append(metadataData.Records, records...)
 		}
-		metadataData.Scopes = append(metadataData.Scopes, scope)
-		metadataData.Sessions = append(metadataData.Sessions, sessions...)
-		metadataData.Records = append(metadataData.Records, records...)
-	}
 
-	// Create 60 Object Store Locators
-	// i % 3 == 0 or 1: 40 of them with a unique URI
-	// i % 3 == 2: 20 of them with the URI https://provenance.io/
-	s.osLocatorURI = "https://provenance.io/"
-	s.osLocatorURICount = 0
-	for i := 0; i < 60; i++ {
-		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
-		osl := metadatatypes.ObjectStoreLocator{
-			Owner:         addr,
-			EncryptionKey: addr,
-			LocatorUri:    "",
+		// Create 60 Object Store Locators
+		// i % 3 == 0 or 1: 40 of them with a unique URI
+		// i % 3 == 2: 20 of them with the URI https://provenance.io/
+		s.osLocatorURI = "https://provenance.io/"
+		s.osLocatorURICount = 0
+		for i := 0; i < 60; i++ {
+			addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+			osl := metadatatypes.ObjectStoreLocator{
+				Owner:         addr,
+				EncryptionKey: addr,
+				LocatorUri:    "",
+			}
+			switch i % 3 {
+			case 0, 1:
+				osl.LocatorUri = fmt.Sprintf("http://%s.corn", toClassName(toWritten(i)))
+			case 2:
+				osl.LocatorUri = s.osLocatorURI
+				s.osLocatorURICount++
+			}
+			metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, osl)
 		}
-		switch i % 3 {
-		case 0, 1:
-			osl.LocatorUri = fmt.Sprintf("http://%s.corn", toClassName(toWritten(i)))
-		case 2:
-			osl.LocatorUri = s.osLocatorURI
-			s.osLocatorURICount++
-		}
-		metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, osl)
-	}
 
-	metadataDataBz, err := s.cfg.Codec.MarshalJSON(&metadataData)
-	s.Require().NoError(err, "marshalling JSON metadataData")
-	s.cfg.GenesisState[metadatatypes.ModuleName] = metadataDataBz
+		// Set the counts for later use
+		s.scopeSpecCount = len(metadataData.ScopeSpecifications)
+		s.contractSpecCount = len(metadataData.ContractSpecifications)
+		s.recordSpecCount = len(metadataData.RecordSpecifications)
+		s.scopeCount = len(metadataData.Scopes)
+		s.sessionCount = len(metadataData.Sessions)
+		s.recordCount = len(metadataData.Records)
+		s.osLocatorCount = len(metadataData.ObjectStoreLocators)
 
-	s.scopeSpecCount = len(metadataData.ScopeSpecifications)
-	s.contractSpecCount = len(metadataData.ContractSpecifications)
-	s.recordSpecCount = len(metadataData.RecordSpecifications)
-	s.scopeCount = len(metadataData.Scopes)
-	s.sessionCount = len(metadataData.Sessions)
-	s.recordCount = len(metadataData.Records)
-	s.osLocatorCount = len(metadataData.ObjectStoreLocators)
-
-	var authData authtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[authtypes.ModuleName], &authData), "unmarshalling JSON authData")
-	genAccount, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.accountAddr, s.accountKey.PubKey(), 1, 1))
-	s.Require().NoError(err, "creating Any BaseAccount for s.accountKey")
-	authData.Accounts = append(authData.Accounts, genAccount)
-
-	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err, "marshalling json authData")
-	s.cfg.GenesisState[authtypes.ModuleName] = authDataBz
+		return metadataData
+	})
+	// Configure Genesis data for auth module
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authData *authtypes.GenesisState) *authtypes.GenesisState {
+		genAccount, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.accountAddr, s.accountKey.PubKey(), 1, 1))
+		s.Require().NoError(err, "creating Any BaseAccount for s.accountKey")
+		authData.Accounts = append(authData.Accounts, genAccount)
+		return authData
+	})
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")

@@ -101,120 +101,116 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.account7Addr = s.accountAddresses[6]
 	s.account7Str = s.account7Addr.String()
 
-	genesisState := s.cfg.GenesisState
-
 	// Configure Genesis data for name module
 	attrModAddr := authtypes.NewModuleAddress(attributetypes.ModuleName)
-	var nameData nametypes.GenesisState
-	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("attribute", s.account1Addr, false))
-	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.attribute", s.account1Addr, false))
-	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord(attributetypes.AccountDataName, attrModAddr, true))
-	nameData.Params.AllowUnrestrictedNames = false
-	nameData.Params.MaxNameLevels = 3
-	nameData.Params.MinSegmentLength = 3
-	nameData.Params.MaxSegmentLength = 12
-	nameDataBz, err := s.cfg.Codec.MarshalJSON(&nameData)
-	s.Require().NoError(err)
-	genesisState[nametypes.ModuleName] = nameDataBz
+	testutil.MutateGenesisState(s.T(), &s.cfg, nametypes.ModuleName, &nametypes.GenesisState{}, func(nameData *nametypes.GenesisState) *nametypes.GenesisState {
+		nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("attribute", s.account1Addr, false))
+		nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.attribute", s.account1Addr, false))
+		nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord(attributetypes.AccountDataName, attrModAddr, true))
+		nameData.Params.AllowUnrestrictedNames = false
+		nameData.Params.MaxNameLevels = 3
+		nameData.Params.MinSegmentLength = 3
+		nameData.Params.MaxSegmentLength = 12
+		return nameData
+	})
 
-	var authData authtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
-	genAccount1, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
-		Address:       s.account1Str,
-		AccountNumber: 1,
-		Sequence:      0,
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authData *authtypes.GenesisState) *authtypes.GenesisState {
+		genAccount1, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+			Address:       s.account1Str,
+			AccountNumber: 1,
+			Sequence:      0,
+		})
+		s.Require().NoError(err, "NewAnyWithValue genAccount1")
+
+		genAccount5, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+			Address:       s.account5Str,
+			AccountNumber: 2,
+			Sequence:      0,
+		})
+		s.Require().NoError(err, "NewAnyWithValue genAccount5")
+
+		genAccount6, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+			Address:       s.account6Str,
+			AccountNumber: 3,
+			Sequence:      0,
+		})
+		s.Require().NoError(err, "NewAnyWithValue genAccount6")
+
+		genAccount7, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+			Address:       s.account7Str,
+			AccountNumber: 4,
+			Sequence:      0,
+		})
+		s.Require().NoError(err, "NewAnyWithValue genAccount7")
+
+		authData.Accounts = append(authData.Accounts, genAccount1, genAccount5, genAccount6, genAccount7)
+		return authData
 	})
-	s.Require().NoError(err, "NewAnyWithValue genAccount1")
-	genAccount5, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
-		Address:       s.account5Str,
-		AccountNumber: 2,
-		Sequence:      0,
-	})
-	s.Require().NoError(err, "NewAnyWithValue genAccount5")
-	genAccount6, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
-		Address:       s.account6Str,
-		AccountNumber: 3,
-		Sequence:      0,
-	})
-	s.Require().NoError(err, "NewAnyWithValue genAccount6")
-	genAccount7, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
-		Address:       s.account7Str,
-		AccountNumber: 4,
-		Sequence:      0,
-	})
-	s.Require().NoError(err, "NewAnyWithValue genAccount7")
-	authData.Accounts = append(authData.Accounts, genAccount1, genAccount5, genAccount6, genAccount7)
-	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err)
-	genesisState[authtypes.ModuleName] = authDataBz
 
 	balances := sdk.NewCoins(
 		sdk.NewCoin(s.cfg.BondDenom, s.cfg.AccountTokens),
 	).Sort()
-	var bankData banktypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankData))
-	bankData.Balances = append(bankData.Balances,
-		banktypes.Balance{Address: s.account1Str, Coins: balances},
-		banktypes.Balance{Address: s.account5Str, Coins: balances},
-		banktypes.Balance{Address: s.account6Str, Coins: balances},
-		banktypes.Balance{Address: s.account7Str, Coins: balances},
-	)
-	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankData)
-	s.Require().NoError(err)
-	genesisState[banktypes.ModuleName] = bankDataBz
+	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankData *banktypes.GenesisState) *banktypes.GenesisState {
+		bankData.Balances = append(bankData.Balances,
+			banktypes.Balance{Address: s.account1Str, Coins: balances},
+			banktypes.Balance{Address: s.account5Str, Coins: balances},
+			banktypes.Balance{Address: s.account6Str, Coins: balances},
+			banktypes.Balance{Address: s.account7Str, Coins: balances},
+		)
+		return bankData
+	})
 
 	// Configure Genesis data for attribute module
-	var attributeData attributetypes.GenesisState
-	attributeData.Attributes = append(attributeData.Attributes,
-		attributetypes.NewAttribute(
-			"example.attribute",
-			s.account1Str,
-			attributetypes.AttributeType_String,
-			[]byte("example attribute value string"),
-			nil, ""),
-		attributetypes.NewAttribute(
-			"example.attribute.count",
-			s.account1Str,
-			attributetypes.AttributeType_Int,
-			[]byte("2"),
-			nil, ""),
-		attributetypes.NewAttribute(
-			attributetypes.AccountDataName,
-			s.account1Str,
-			attributetypes.AttributeType_String,
-			[]byte("accountdata set at genesis"),
-			nil, ""),
-		attributetypes.NewAttribute(
-			attributetypes.AccountDataName,
-			s.account7Str,
-			attributetypes.AttributeType_String,
-			[]byte("more accountdata set at genesis"),
-			nil, ""),
-	)
-	s.accAttrCount = 500
-	for i := 0; i < s.accAttrCount; i++ {
+	testutil.MutateGenesisState(s.T(), &s.cfg, attributetypes.ModuleName, &attributetypes.GenesisState{}, func(attributeData *attributetypes.GenesisState) *attributetypes.GenesisState {
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
-				fmt.Sprintf("example.attribute.%s", toWritten(i)),
-				s.account3Str,
-				attributetypes.AttributeType_Int,
-				[]byte(fmt.Sprintf("%d", i)),
+				"example.attribute",
+				s.account1Str,
+				attributetypes.AttributeType_String,
+				[]byte("example attribute value string"),
 				nil, ""),
 			attributetypes.NewAttribute(
-				"example.attribute.overload",
-				s.account4Str,
+				"example.attribute.count",
+				s.account1Str,
+				attributetypes.AttributeType_Int,
+				[]byte("2"),
+				nil, ""),
+			attributetypes.NewAttribute(
+				attributetypes.AccountDataName,
+				s.account1Str,
 				attributetypes.AttributeType_String,
-				[]byte(toWritten(i)),
+				[]byte("accountdata set at genesis"),
+				nil, ""),
+			attributetypes.NewAttribute(
+				attributetypes.AccountDataName,
+				s.account7Str,
+				attributetypes.AttributeType_String,
+				[]byte("more accountdata set at genesis"),
 				nil, ""),
 		)
-	}
-	attributeData.Params.MaxValueLength = 128
-	attributeDataBz, err := s.cfg.Codec.MarshalJSON(&attributeData)
-	s.Require().NoError(err)
-	genesisState[attributetypes.ModuleName] = attributeDataBz
 
-	s.cfg.GenesisState = genesisState
+		s.accAttrCount = 500
+		for i := 0; i < s.accAttrCount; i++ {
+			attributeData.Attributes = append(attributeData.Attributes,
+				attributetypes.NewAttribute(
+					fmt.Sprintf("example.attribute.%s", toWritten(i)),
+					s.account3Str,
+					attributetypes.AttributeType_Int,
+					[]byte(fmt.Sprintf("%d", i)),
+					nil, ""),
+				attributetypes.NewAttribute(
+					"example.attribute.overload",
+					s.account4Str,
+					attributetypes.AttributeType_String,
+					[]byte(toWritten(i)),
+					nil, ""),
+			)
+		}
 
+		attributeData.Params.MaxValueLength = 128
+		return attributeData
+	})
+	var err error
 	s.cfg.ChainID = antewrapper.SimAppChainID
 	s.cfg.TimeoutCommit = 500 * time.Millisecond
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
