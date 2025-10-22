@@ -36,6 +36,27 @@ service Query {
   rpc PendingSwapOuts(QueryPendingSwapOutsRequest) returns (QueryPendingSwapOutsResponse) {
     option (google.api.http).get = "/vault/v1/pending_swap_outs";
   }
+
+  // VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
+  rpc VaultPendingSwapOuts(QueryVaultPendingSwapOutsRequest) returns (QueryVaultPendingSwapOutsResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{id}/pending_swap_outs";
+  }
+}
+
+// QueryVaultPendingSwapOutsRequest is the request message for the Query/VaultPendingSwapOuts endpoint.
+message QueryVaultPendingSwapOutsRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryVaultPendingSwapOutsResponse is the response message for the Query/VaultPendingSwapOuts endpoint.
+message QueryVaultPendingSwapOutsResponse {
+  // pending_swap_outs is a list of all pending swap outs.
+  repeated PendingSwapOutWithTimeout pending_swap_outs = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryPendingSwapOutsRequest is the request message for the Query/PendingSwapOuts endpoint.
@@ -93,6 +114,11 @@ message QueryVaultResponse {
   AccountBalance principal = 2 [(gogoproto.nullable) = false];
   // reserves is the total amount of reserves held in the vault account for interest payments.
   AccountBalance reserves = 3 [(gogoproto.nullable) = false];
+  // total_vault_value is the estimated total value of the vault in its
+  // underlying asset. It includes current principal and estimated unpaid
+  // interest (at query block height), but excludes reserves. The value is approximate and may differ
+  // from the reconciled amount.
+  cosmos.base.v1beta1.Coin total_vault_value = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryEstimateSwapInRequest is the request message for the Query/EstimateSwapIn endpoint.

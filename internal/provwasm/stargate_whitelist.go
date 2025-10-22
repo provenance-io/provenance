@@ -353,6 +353,7 @@ func init() {
 	setWhitelistedQuery("/provlabs.vault.v1.Query/EstimateSwapIn", &vaulttypes.QueryEstimateSwapInResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/EstimateSwapOut", &vaulttypes.QueryEstimateSwapOutResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/PendingSwapOuts", &vaulttypes.QueryPendingSwapOutsResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultPendingSwapOuts", &vaulttypes.QueryVaultPendingSwapOutsResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
