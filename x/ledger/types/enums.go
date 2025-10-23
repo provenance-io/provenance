@@ -10,21 +10,20 @@ import (
 // As a string, the name prefix is optional. I.e. "PAYMENT_FREQUENCY_DAILY" can be provided as just "DAILY".
 // It is not an error to get the _UNSPECIFIED value.
 func enumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]string) (int32, error) {
-	var namePrefix string
 	// Try to unmarshal as string first
-	var str string
-	if err := json.Unmarshal(data, &str); err == nil {
+	var strIn string
+	if err := json.Unmarshal(data, &strIn); err == nil {
 		// Convert string to enum value
-		str = strings.ToUpper(str)
+		str := strings.ToUpper(strIn)
 		if value, exists := values[str]; exists {
 			return value, nil
 		}
-		namePrefix = strings.TrimSuffix(names[0], "UNSPECIFIED") // E.g. DAY_COUNT_CONVENTION_
+		namePrefix := strings.TrimSuffix(names[0], "UNSPECIFIED") // E.g. DAY_COUNT_CONVENTION_
 		// Try without enum prefix
 		if value, exists := values[namePrefix+str]; exists {
 			return value, nil
 		}
-		return 0, fmt.Errorf("unknown %s string value: %s", strings.ToLower(strings.TrimSuffix(namePrefix, "_")), str)
+		return 0, fmt.Errorf("unknown %s string value: %q", strings.ToLower(strings.TrimSuffix(namePrefix, "_")), strIn)
 	}
 
 	// Try to unmarshal as integer
@@ -36,7 +35,7 @@ func enumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]str
 		return 0, fmt.Errorf("unknown %s integer value: %d", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), num)
 	}
 
-	return 0, fmt.Errorf("%s must be a string or integer, got: %s", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), string(data))
+	return 0, fmt.Errorf("%s must be a string or integer, got: %q", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), string(data))
 }
 
 // enumValidateExists returns an error if the provided value is not contained in the provided names map.
