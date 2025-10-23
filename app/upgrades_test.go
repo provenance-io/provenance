@@ -1062,6 +1062,7 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 		"INF Pruning expired consensus states for IBC.",
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
+		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
 		"INF Starting streaming import of ledger data.",
 	}
@@ -1074,6 +1075,7 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Pruning expired consensus states for IBC.",
 		"INF Removing inactive validator delegations.",
 		"INF Converting completed vesting accounts into base accounts.",
+		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
 		"INF Starting streaming import of ledger data.",
 	}
