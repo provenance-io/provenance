@@ -9,12 +9,10 @@ import (
 )
 
 const (
-	MaxLenAssetClassID = 128             // 128 characters
-	MaxLenAssetID      = 128             // 128 characters
-	MaxLenName         = 128             // 128 characters
-	MaxLenURI          = 512             // 512 characters
-	MaxLenURIHash      = 128             // 128 characters
-	MaxLenData         = 5 * 1024 * 1024 // 5MB
+	MaxLenName    = 128             // 128 characters
+	MaxLenURI     = 512             // 512 characters
+	MaxLenURIHash = 128             // 128 characters
+	MaxLenData    = 5 * 1024 * 1024 // 5MB
 )
 
 // Validate validates the Asset type fields.
