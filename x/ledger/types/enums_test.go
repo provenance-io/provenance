@@ -13,14 +13,15 @@ import (
 
 // TestEnum is an enum created for these unit tests.
 // It's just like one that would be auto-generated from a proto file.
-// enum TestEnum {
-//   TEST_ENUM_UNSPECIFIED = 0;
-//   TEST_ENUM_ONE = 1;
-//   TEST_ENUM_TWO = 2;
-//   TEST_ENUM_THREE = 3;
-//   TEST_ENUM_FOUR = 4;
-//   TEST_ENUM_FIVE = 5;
-// }
+//
+//	enum TestEnum {
+//	  TEST_ENUM_UNSPECIFIED = 0;
+//	  TEST_ENUM_ONE = 1;
+//	  TEST_ENUM_TWO = 2;
+//	  TEST_ENUM_THREE = 3;
+//	  TEST_ENUM_FOUR = 4;
+//	  TEST_ENUM_FIVE = 5;
+//	}
 type TestEnum int32
 
 const (
