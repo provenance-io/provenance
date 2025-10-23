@@ -180,17 +180,17 @@ func ValidateClassID(classID string) error {
 		return err
 	}
 
-	if _, isScopeSpec := MetadataScopeSpecID(classID); isScopeSpec {
+	if _, isScopeSpec := MetadataScopeSpecID(classID); !isScopeSpec {
 		// the class id is an asset class id
 		if !alNumDashRx.MatchString(classID) {
-			return fmt.Errorf("must only contain alphanumeric, '-', '.' characters")
+			return fmt.Errorf("%q must only contain alphanumeric, '-', '.' characters", classID)
 		}
 	}
 
 	return nil
 }
 
-// ValidateNFTID validates the nft id format
+// ValidateNftID validates the nft id format
 func ValidateNftID(nftID string) error {
 	if err := ValidateStringLength(nftID, 1, MaxLenNFTID); err != nil {
 		return err
@@ -199,14 +199,14 @@ func ValidateNftID(nftID string) error {
 	if _, isScope := MetadataScopeID(nftID); !isScope {
 		// the nft id is an asset id
 		if !alNumDashRx.MatchString(nftID) {
-			return fmt.Errorf("must only contain alphanumeric, '-', '.' characters")
+			return fmt.Errorf("%q must only contain alphanumeric, '-', '.' characters", nftID)
 		}
 	}
 
 	return nil
 }
 
-// metadataScopeID returns the metadata address for a given bech32 string.
+// MetadataScopeID returns the metadata address for a given bech32 string.
 // The bool is true if it's for a scope, false if other or invalid.
 func MetadataScopeID(bech32String string) (metadataTypes.MetadataAddress, bool) {
 	addr, hrp, err := metadataTypes.ParseMetadataAddressFromBech32(bech32String)
@@ -216,7 +216,7 @@ func MetadataScopeID(bech32String string) (metadataTypes.MetadataAddress, bool) 
 	return addr, hrp == metadataTypes.PrefixScope
 }
 
-// metadataScopeSpecID returns the metadata address for a given bech32 string.
+// MetadataScopeSpecID returns the metadata address for a given bech32 string.
 // The bool is true if it's for a scope spec, false if other or invalid.
 func MetadataScopeSpecID(bech32String string) (metadataTypes.MetadataAddress, bool) {
 	addr, hrp, err := metadataTypes.ParseMetadataAddressFromBech32(bech32String)

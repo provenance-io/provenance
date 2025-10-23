@@ -124,7 +124,7 @@ func TestRegistryKey_Validate(t *testing.T) {
 				AssetClassId: "test class",
 				NftId:        "test-nft",
 			},
-			expErr: "",
+			expErr: "\"test class\" must only contain alphanumeric, '-', '.' characters",
 		},
 		{
 			name: "nft id with whitespace",
@@ -132,7 +132,7 @@ func TestRegistryKey_Validate(t *testing.T) {
 				AssetClassId: "test-class",
 				NftId:        "test nft",
 			},
-			expErr: "must only contain alphanumeric",
+			expErr: "\"test nft\" must only contain alphanumeric, '-', '.' characters",
 		},
 		{
 			name: "valid metadata scope spec",
@@ -559,7 +559,7 @@ func TestValidateClassID(t *testing.T) {
 		{
 			name:    "with whitespace",
 			classID: "test class",
-			expErr:  "",
+			expErr:  "\"test class\" must only contain alphanumeric, '-', '.' characters",
 		},
 		{
 			name:    "valid metadata scope spec",
