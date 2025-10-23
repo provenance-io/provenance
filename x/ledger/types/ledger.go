@@ -28,6 +28,7 @@ func (lc *LedgerClass) Validate() error {
 	if lc == nil {
 		return fmt.Errorf("ledger class cannot be nil")
 	}
+
 	var errs []error
 	// Validate ledger class id format using asset class id validation
 	if err := registrytypes.ValidateClassID(lc.LedgerClassId); err != nil {
@@ -41,10 +42,8 @@ func (lc *LedgerClass) Validate() error {
 	// Check denom length first for nicer error messages.
 	if err := registrytypes.ValidateStringLength(lc.Denom, 2, MaxLenDenom); err != nil {
 		errs = append(errs, fmt.Errorf("denom: %w", err))
-	}
-
-	// Validate denom format (should be a valid coin denomination)
-	if err := sdk.ValidateDenom(lc.Denom); err != nil {
+	} else if err := sdk.ValidateDenom(lc.Denom); err != nil {
+		// Validate denom format (should be a valid coin denomination)
 		errs = append(errs, fmt.Errorf("denom must be a valid coin denomination: %w", err))
 	}
 
@@ -57,9 +56,13 @@ func (lc *LedgerClass) Validate() error {
 
 // Validate validates the LedgerClassEntryType type
 func (lcet *LedgerClassEntryType) Validate() error {
+	if lcet == nil {
+		return fmt.Errorf("ledger class entry type cannot be nil")
+	}
+
 	var errs []error
 	if lcet.Id < 0 {
-		errs = append(errs, fmt.Errorf("id must be a non-negative integer"))
+		errs = append(errs, fmt.Errorf("id: %d must be a non-negative integer", lcet.Id))
 	}
 
 	if err := lenCheck(lcet.Code, 1, MaxLenCode); err != nil {
@@ -75,9 +78,13 @@ func (lcet *LedgerClassEntryType) Validate() error {
 
 // Validate validates the LedgerClassStatusType type
 func (lcst *LedgerClassStatusType) Validate() error {
+	if lcst == nil {
+		return fmt.Errorf("ledger class status type cannot be nil")
+	}
+
 	var errs []error
 	if lcst.Id < 0 {
-		errs = append(errs, fmt.Errorf("id: must be a non-negative integer"))
+		errs = append(errs, fmt.Errorf("id: %d must be a non-negative integer", lcst.Id))
 	}
 
 	if err := lenCheck(lcst.Code, 1, MaxLenCode); err != nil {
@@ -151,6 +158,7 @@ func (lk *LedgerKey) Validate() error {
 	if lk == nil {
 		return fmt.Errorf("key cannot be nil")
 	}
+
 	var errs []error
 	if err := registrytypes.ValidateClassID(lk.AssetClassId); err != nil {
 		errs = append(errs, NewErrCodeInvalidField("asset_class_id", "%s", err))
