@@ -9,7 +9,6 @@ import (
 
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	"github.com/provenance-io/provenance/x/ledger/types"
-	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 func (s *TestSuite) TestNonExistentDenom() {
@@ -30,59 +29,6 @@ func (s *TestSuite) TestNonExistentDenom() {
 	err := s.keeper.AddLedgerClass(s.ctx, ledgerClass)
 	s.Require().Error(err, "CreateLedgerClass error")
 	s.Require().Contains(err.Error(), "denom doesn't have a supply", "CreateLedgerClass error")
-}
-
-func (s *TestSuite) TestCreateLedgerClassMaintainerNotOwner() {
-	s.T().Skip("Skipping test - authorization logic moved out of keeper")
-	err := s.keeper.AddClassStatusType(s.ctx, s.validLedgerClass.LedgerClassId, types.LedgerClassStatusType{
-		Id:          1,
-		Code:        "IN_REPAYMENT",
-		Description: "In Repayment",
-	})
-	s.Require().Error(err, "AddClassStatusType error")
-	s.Require().Contains(err.Error(), types.ErrCodeUnauthorized, "AddClassStatusType error")
-}
-
-// Test to ensure only the registered servicer or owner can create a ledger.
-func (s *TestSuite) TestCreateLedgerNotOwnerOrServicer() {
-	s.T().Skip("Skipping test - authorization logic moved out of keeper")
-	ledger := types.Ledger{
-		Key: &types.LedgerKey{
-			AssetClassId: s.validNFTClass.Id,
-			NftId:        s.validNFT.Id,
-		},
-		LedgerClassId: s.validLedgerClass.LedgerClassId,
-		StatusTypeId:  1,
-	}
-
-	err := s.keeper.AddLedger(s.ctx, ledger)
-	s.Require().Error(err, "CreateLedger error")
-	s.Require().Contains(err.Error(), "unauthorized", "CreateLedger error")
-
-	registryKey := &registrytypes.RegistryKey{
-		AssetClassId: s.validNFTClass.Id,
-		NftId:        s.validNFT.Id,
-	}
-
-	// Create a no role registry entry for the nft
-	err = s.registryKeeper.CreateRegistry(s.ctx, registryKey, []registrytypes.RolesEntry{})
-	s.Require().NoError(err, "CreateRegistry error")
-
-	err = s.keeper.AddLedger(s.ctx, ledger)
-	s.Require().Error(err, "CreateLedger error")
-
-	// Grant a role of servicer to the s.addr2 so that it can create the ledger
-	err = s.registryKeeper.GrantRole(s.ctx, registryKey, registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER, []string{s.addr2.String()})
-	s.Require().NoError(err, "GrantRole error")
-
-	// Verify that the registry granted the role to the s.addr2
-	hasRole, err := s.registryKeeper.HasRole(s.ctx, registryKey, registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER, s.addr2.String())
-	s.Require().NoError(err, "HasRole error")
-	s.Require().True(hasRole, "HasRole error")
-
-	// Verify that the s.addr2 can create the ledger as the servicer
-	err = s.keeper.AddLedger(s.ctx, ledger)
-	s.Require().NoError(err, "CreateLedger error")
 }
 
 func (s *TestSuite) TestCreateLedgerClass() {
