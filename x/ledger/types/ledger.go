@@ -25,6 +25,9 @@ const (
 
 // Validate validates the LedgerClass type
 func (lc *LedgerClass) Validate() error {
+	if lc == nil {
+		return fmt.Errorf("ledger class cannot be nil")
+	}
 	var errs []error
 	// Validate ledger class id format using asset class id validation
 	if err := registrytypes.ValidateClassID(lc.LedgerClassId); err != nil {
@@ -113,7 +116,7 @@ func (lk LedgerKey) String() string {
 	return b32
 }
 
-// Convert a bech32 string to a LedgerKey.
+// StringToLedgerKey converts a bech32 string to a LedgerKey.
 func StringToLedgerKey(s string) (*LedgerKey, error) {
 	hrp, b, err := bech32.DecodeAndConvert(s)
 	if err != nil {
@@ -134,28 +137,6 @@ func StringToLedgerKey(s string) (*LedgerKey, error) {
 		AssetClassId: parts[0],
 		NftId:        parts[1],
 	}, nil
-}
-
-// Implement Compare() for LedgerEntry
-func (le *LedgerEntry) Compare(b *LedgerEntry) int {
-	// First compare effective date (ISO8601 string)
-	if le.EffectiveDate < b.EffectiveDate {
-		return -1
-	}
-	if le.EffectiveDate > b.EffectiveDate {
-		return 1
-	}
-
-	// Then compare sequence number
-	if le.Sequence < b.Sequence {
-		return -1
-	}
-	if le.Sequence > b.Sequence {
-		return 1
-	}
-
-	// Equal
-	return 0
 }
 
 func (lk LedgerKey) ToRegistryKey() *registrytypes.RegistryKey {
@@ -219,7 +200,7 @@ func (l *Ledger) Validate() error {
 		errs = append(errs, err)
 	}
 
-	// Validate interest rate if provided (reasonable bounds: 0-100000000 for 0-100%)
+	// Validate interest rate if provided (reasonable bounds: 0-100,000,000 for 0-100%)
 	if l.InterestRate < 0 || l.InterestRate > 100_000_000 {
 		errs = append(errs, fmt.Errorf("interest_rate: must be between 0 and 100,000,000 (0-100%%)"))
 	}
@@ -241,7 +222,7 @@ func (l *Ledger) Validate() error {
 }
 
 // ValidatePmtFields returns an error if any of the provided fields have invalid values.
-func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int, paymentFrequence PaymentFrequency) error {
+func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int, paymentFrequency PaymentFrequency) error {
 	var errs []error
 	// Validate the next payment date. Allow zero to indicate "not provided."
 	if nextPmtDate < 0 {
@@ -253,7 +234,7 @@ func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int, paymentFrequen
 		errs = append(errs, fmt.Errorf("next_pmt_amt: must be a non-negative integer"))
 	}
 
-	if err := paymentFrequence.Validate(); err != nil {
+	if err := paymentFrequency.Validate(); err != nil {
 		errs = append(errs, fmt.Errorf("payment_frequency: %w", err))
 	}
 
@@ -276,6 +257,39 @@ func (lcbt *LedgerClassBucketType) Validate() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// Compare returns -1 if this is < b, 0 if this == b, and 1 if this is > b.
+func (le *LedgerEntry) Compare(b *LedgerEntry) int {
+	if le == b {
+		return 0
+	}
+	// nils are greatest (sorts them to the end).
+	if le == nil {
+		return 1
+	}
+	if b == nil {
+		return -1
+	}
+
+	// First compare effective date (ISO8601 string)
+	if le.EffectiveDate < b.EffectiveDate {
+		return -1
+	}
+	if le.EffectiveDate > b.EffectiveDate {
+		return 1
+	}
+
+	// Then compare sequence number
+	if le.Sequence < b.Sequence {
+		return -1
+	}
+	if le.Sequence > b.Sequence {
+		return 1
+	}
+
+	// Equal
+	return 0
 }
 
 // Validate validates the LedgerEntry type
