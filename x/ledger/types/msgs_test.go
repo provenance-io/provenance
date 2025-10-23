@@ -238,7 +238,7 @@ func TestMsgUpdateBalances_ValidateBasic(t *testing.T) {
 func TestMsgTransferFundsWithSettlement_ValidateBasic(t *testing.T) {
 	validAddr := sdk.AccAddress("transfer_signer________").String()
 	key := &LedgerKey{AssetClassId: "aclass", NftId: "nft1"}
-	si := &SettlementInstruction{Amount: sdk.NewInt64Coin("stake", 1), RecipientAddress: sdk.AccAddress("recipient_______________").String(), Status: FundingTransferStatus_FUNDING_TRANSFER_STATUS_PENDING}
+	si := &SettlementInstruction{Amount: sdk.NewInt64Coin("stake", 1), RecipientAddress: sdk.AccAddress("recipient_______________").String(), Status: FUNDING_TRANSFER_STATUS_PENDING}
 	ft := &FundTransferWithSettlement{Key: key, LedgerEntryCorrelationId: "c1", SettlementInstructions: []*SettlementInstruction{si}}
 
 	tests := []struct {

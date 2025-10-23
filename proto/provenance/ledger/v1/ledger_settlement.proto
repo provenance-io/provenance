@@ -12,6 +12,9 @@ import "provenance/ledger/v1/ledger.proto";
 
 // FundingTransferStatus represents the current status of a funding transfer.
 enum FundingTransferStatus {
+  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
   // Unspecified funding transfer status.
   FUNDING_TRANSFER_STATUS_UNSPECIFIED = 0;
   // Pending funding transfer status.

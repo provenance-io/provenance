@@ -56,7 +56,7 @@ func (k Keeper) ProcessTransferFundsWithSettlement(goCtx context.Context, signer
 
 		// Mark the transfer as completed in the settlement instruction.
 		// This tracks the status of each individual transfer within the settlement.
-		inst.Status = types.FundingTransferStatus_FUNDING_TRANSFER_STATUS_COMPLETED
+		inst.Status = types.FUNDING_TRANSFER_STATUS_COMPLETED
 
 		// Add the new transfer to the existing transfer list.
 		// This maintains a complete history of all settlements for this ledger entry.
