@@ -184,8 +184,8 @@ func (lk *LedgerKey) Equals(other *LedgerKey) bool {
 
 // Validate validates the Ledger type
 func (l *Ledger) Validate() error {
-	if l.Key == nil {
-		return fmt.Errorf("key cannot be nil")
+	if l == nil {
+		return fmt.Errorf("ledger cannot be nil")
 	}
 
 	var errs []error
@@ -251,9 +251,13 @@ func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int, paymentFrequen
 
 // Validate validates the LedgerClassBucketType type
 func (lcbt *LedgerClassBucketType) Validate() error {
+	if lcbt == nil {
+		return fmt.Errorf("ledger class bucket type cannot be nil")
+	}
+
 	var errs []error
 	if lcbt.Id < 0 {
-		errs = append(errs, fmt.Errorf("id: must be a non-negative integer"))
+		errs = append(errs, fmt.Errorf("id: %d must be a non-negative integer", lcbt.Id))
 	}
 
 	if err := lenCheck(lcbt.Code, 1, MaxLenCode); err != nil {
@@ -273,11 +277,11 @@ func (le *LedgerEntry) Compare(b *LedgerEntry) int {
 		return 0
 	}
 	// nils are greatest (sorts them to the end).
-	if le == nil {
-		return 1
-	}
 	if b == nil {
 		return -1
+	}
+	if le == nil {
+		return 1
 	}
 
 	// First compare effective date (ISO8601 string)
@@ -338,8 +342,8 @@ func (le *LedgerEntry) Validate() error {
 
 // ValidateSequence returns an error if the sequence number is too large.
 func ValidateSequence(seq uint32) error {
-	if seq >= MaxLedgerEntrySequence {
-		return fmt.Errorf("sequence: must be less than %d", MaxLedgerEntrySequence)
+	if seq > MaxLedgerEntrySequence {
+		return fmt.Errorf("sequence: cannot be more than %d", MaxLedgerEntrySequence)
 	}
 	return nil
 }
@@ -392,7 +396,7 @@ func ValidateEntryAmounts(totalAmt sdkmath.Int, appliedAmounts []*LedgerBucketAm
 
 // validateSlice runs the Validate() method on each element of the slice and returns all errors it encounters.
 // The name parameter is used in the error messages.
-func validateSlice[S []E, E interface{ Validate() error }](vals S, name string) error {
+func validateSlice[S ~[]E, E interface{ Validate() error }](vals S, name string) error {
 	var errs []error
 	for i, val := range vals {
 		if err := val.Validate(); err != nil {
@@ -404,6 +408,10 @@ func validateSlice[S []E, E interface{ Validate() error }](vals S, name string) 
 
 // Validate validates the LedgerBucketAmount type
 func (lba *LedgerBucketAmount) Validate() error {
+	if lba == nil {
+		return fmt.Errorf("ledger bucket amount cannot be nil")
+	}
+
 	var errs []error
 	if lba.BucketTypeId <= 0 {
 		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
@@ -418,6 +426,9 @@ func (lba *LedgerBucketAmount) Validate() error {
 
 // Validate validates the BucketBalance type
 func (bb *BucketBalance) Validate() error {
+	if bb == nil {
+		return fmt.Errorf("bucket balance cannot be nil")
+	}
 	var errs []error
 	if bb.BucketTypeId <= 0 {
 		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
@@ -460,10 +471,8 @@ func (lte *LedgerAndEntries) Validate() error {
 		}
 	}
 
-	for i, entry := range lte.Entries {
-		if err := entry.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("entries[%d]: %w", i, err))
-		}
+	if err := validateSlice(lte.Entries, "entries"); err != nil {
+		errs = append(errs, err)
 	}
 
 	return errors.Join(errs...)

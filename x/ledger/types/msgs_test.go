@@ -405,7 +405,7 @@ func TestMsgAddLedgerClassEntryType_ValidateBasic(t *testing.T) {
 				LedgerClassId: "lclass",
 				EntryType:     &LedgerClassEntryType{Id: -1, Code: "ADJ", Description: "Adjustment"},
 			},
-			exp: []string{"invalid entry_type", "id must be a non-negative integer", "invalid field"},
+			exp: []string{"invalid entry_type", "id: -1 must be a non-negative integer", "invalid field"},
 		},
 	}
 
