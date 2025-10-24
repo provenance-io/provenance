@@ -316,7 +316,7 @@ func (le *LedgerEntry) Validate() error {
 		errs = append(errs, fmt.Errorf("reverses_correlation_id: %w", err))
 	}
 
-	// Validate sequence number (should be < 100 as per proto comment)
+	// Validate sequence number (should be < 300 as per proto comment)
 	if err := ValidateSequence(le.Sequence); err != nil {
 		errs = append(errs, err)
 	}

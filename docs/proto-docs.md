@@ -5367,7 +5367,7 @@ LedgerEntry is an single entry in the ledger. An entry would be a payment, disbu
 | `correlation_id` | [string](#string) |  | The correlation ID for tracking ledger entries with external systems (max 50 characters). |
 | `reverses_correlation_id` | [string](#string) |  | If this entry reverses another entry, the correlation ID of the entry it reverses. |
 | `is_void` | [bool](#bool) |  | If true, this entry is a void and should not be included in the ledger balance calculations. |
-| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 100). This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
+| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 300). This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
 | `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id. |
 | `posted_date` | [int32](#int32) |  | The posted date (days since epoch). |
 | `effective_date` | [int32](#int32) |  | The effective date (days since epoch). |

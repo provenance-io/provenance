@@ -133,7 +133,7 @@ message LedgerEntry {
   // If true, this entry is a void and should not be included in the ledger balance calculations.
   bool is_void = 3 [(gogoproto.jsontag) = "isVoid,omitempty"];
 
-  // Sequence number of the ledger entry (less than 100). This field is used to maintain the correct
+  // Sequence number of the ledger entry (less than 300). This field is used to maintain the correct
   // order of entries when multiple entries share the same effective date. Entries are sorted first
   // by effective date, then by sequence.
   uint32 sequence = 4 [(gogoproto.jsontag) = "sequence,omitempty"];

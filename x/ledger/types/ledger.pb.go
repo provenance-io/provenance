@@ -628,7 +628,7 @@ type LedgerEntry struct {
 	ReversesCorrelationId string `protobuf:"bytes,2,opt,name=reverses_correlation_id,json=reversesCorrelationId,proto3" json:"reversesCorrelationId,omitempty"`
 	// If true, this entry is a void and should not be included in the ledger balance calculations.
 	IsVoid bool `protobuf:"varint,3,opt,name=is_void,json=isVoid,proto3" json:"isVoid,omitempty"`
-	// Sequence number of the ledger entry (less than 100). This field is used to maintain the correct
+	// Sequence number of the ledger entry (less than 300). This field is used to maintain the correct
 	// order of entries when multiple entries share the same effective date. Entries are sorted first
 	// by effective date, then by sequence.
 	Sequence uint32 `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
