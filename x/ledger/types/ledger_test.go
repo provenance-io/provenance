@@ -1085,7 +1085,241 @@ func TestLedgerEntry_Compare(t *testing.T) {
 	}
 }
 
-// TODO: func TestLedgerEntry_Validate(t *testing.T) {}
+func TestLedgerEntry_Validate(t *testing.T) {
+	tests := []struct {
+		name   string
+		le     *LedgerEntry
+		expErr string
+	}{
+		{
+			name:   "nil",
+			le:     nil,
+			expErr: "ledger entry cannot be nil",
+		},
+		{
+			name: "valid: base",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+		},
+		{
+			name: "no correlation id",
+			le: &LedgerEntry{
+				CorrelationId:  "",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "correlation_id: must be between 1 and 50 characters",
+		},
+		{
+			name: "correlation id too long",
+			le: &LedgerEntry{
+				CorrelationId:  strings.Repeat("c", 51),
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "correlation_id: must be between 1 and 50 characters",
+		},
+		{
+			name: "reverse correlation id too long",
+			le: &LedgerEntry{
+				CorrelationId:         "abcdefgh-ijkl",
+				ReversesCorrelationId: strings.Repeat("r", 51),
+				Sequence:              1,
+				EntryTypeId:           4,
+				PostedDate:            20200,
+				EffectiveDate:         20199,
+				TotalAmt:              sdkmath.NewInt(4),
+				AppliedAmounts:        []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts:        []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "reverses_correlation_id: must be between 0 and 50 characters",
+		},
+		{
+			name: "invalid sequence",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       300,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "sequence: cannot be more than 299",
+		},
+		{
+			name: "no entry type",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    0,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "entry_type_id: must be a positive integer",
+		},
+		{
+			name: "negative entry type",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    -1,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "entry_type_id: must be a positive integer",
+		},
+		{
+			name: "no posted date",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     0,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "posted_date: must be a positive integer",
+		},
+		{
+			name: "negative posted date",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     -1,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "posted_date: must be a positive integer",
+		},
+		{
+			name: "no effective date",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  0,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "effective_date: must be a positive integer",
+		},
+		{
+			name: "negative effective date",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  -1,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "effective_date: must be a positive integer",
+		},
+		{
+			name: "invalid total amt",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.Int{},
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "total_amt: must be a non-negative integer",
+		},
+		{
+			name: "invalid applied amount",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.Int{}}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "applied_amounts[0]: applied_amt: must not be nil",
+		},
+		{
+			name: "invalid balance amount",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.Int{}}},
+			},
+			expErr: "balance_amounts[0]: balance_amt: must not be nil",
+		},
+		{
+			name: "total does not equal sum of applied amounts",
+			le: &LedgerEntry{
+				CorrelationId:  "abcdefgh-ijkl",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(100),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+			},
+			expErr: "applied_amounts: total amount must equal sum of abs(applied amounts)",
+		},
+		// multiple errors
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.le.Validate()
+			}
+			require.NotPanics(t, testFunc, "%T.Validate()", tc.le)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%T.Validate() error", tc.le)
+		})
+	}
+}
 
 func TestValidateSequence(t *testing.T) {
 	tests := []struct {

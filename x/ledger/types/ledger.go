@@ -306,6 +306,10 @@ func (le *LedgerEntry) Compare(b *LedgerEntry) int {
 
 // Validate validates the LedgerEntry type
 func (le *LedgerEntry) Validate() error {
+	if le == nil {
+		return fmt.Errorf("ledger entry cannot be nil")
+	}
+
 	var errs []error
 	if err := lenCheck(le.CorrelationId, 1, MaxLenCorrelationID); err != nil {
 		errs = append(errs, fmt.Errorf("correlation_id: %w", err))
@@ -327,11 +331,11 @@ func (le *LedgerEntry) Validate() error {
 	}
 
 	if le.PostedDate <= 0 {
-		errs = append(errs, fmt.Errorf("posted_date: must be a valid integer"))
+		errs = append(errs, fmt.Errorf("posted_date: must be a positive integer"))
 	}
 
 	if le.EffectiveDate <= 0 {
-		errs = append(errs, fmt.Errorf("effective_date: must be a valid integer"))
+		errs = append(errs, fmt.Errorf("effective_date: must be a positive integer"))
 	}
 
 	if err := ValidateLedgerEntryAmounts(le.TotalAmt, le.AppliedAmounts, le.BalanceAmounts); err != nil {
