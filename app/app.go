@@ -38,6 +38,9 @@ import (
 	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/nft"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
+	nftmodule "cosmossdk.io/x/nft/module"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -135,6 +138,9 @@ import (
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/internal/provwasm"
+	assetkeeper "github.com/provenance-io/provenance/x/asset/keeper"
+	assetmodule "github.com/provenance-io/provenance/x/asset/module"
+	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -153,6 +159,9 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
+	ledgerkeeper "github.com/provenance-io/provenance/x/ledger/keeper"
+	ledgermodule "github.com/provenance-io/provenance/x/ledger/module"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -170,6 +179,9 @@ import (
 	"github.com/provenance-io/provenance/x/quarantine"
 	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
 	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
+	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
+	registrymodule "github.com/provenance-io/provenance/x/registry/module"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
@@ -198,12 +210,14 @@ var (
 		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		ibchookstypes.ModuleName:    nil,
 
+		assettypes.ModuleName:     nil,
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		wasmtypes.ModuleName:      {authtypes.Burner},
 		triggertypes.ModuleName:   nil,
 		oracletypes.ModuleName:    nil,
 		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		nft.ModuleName:            nil,
 	}
 )
 
@@ -247,6 +261,7 @@ type App struct {
 	CircuitKeeper         circuitkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
+	NFTKeeper             nftkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             govkeeper.Keeper
 	CrisisKeeper          *crisiskeeper.Keeper
@@ -271,9 +286,12 @@ type App struct {
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
+	AssetKeeper     assetkeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
+	RegistryKeeper  registrykeeper.Keeper
+	LedgerKeeper    ledgerkeeper.Keeper
 	ExchangeKeeper  exchangekeeper.Keeper
 	WasmKeeper      *wasmkeeper.Keeper
 	ContractKeeper  *wasmkeeper.PermissionedKeeper
@@ -389,7 +407,10 @@ func New(
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
+		registrytypes.StoreKey,
+		ledger.StoreKey,
 		exchange.StoreKey,
+		nft.StoreKey,
 
 		vaulttypes.StoreKey,
 	)
@@ -584,9 +605,22 @@ func New(
 		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper, app.BankKeeper,
 	)
 
+	app.NFTKeeper = nftkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[nft.StoreKey]),
+		appCodec,
+		app.AccountKeeper,
+		app.BankKeeper,
+	)
+
 	app.HoldKeeper = holdkeeper.NewKeeper(
 		appCodec, keys[hold.StoreKey], app.AccountKeeper, app.BankKeeper,
 	)
+
+	app.RegistryKeeper = registrykeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[registrytypes.StoreKey]), app.NFTKeeper, app.MetadataKeeper)
+
+	app.LedgerKeeper = ledgerkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[ledger.StoreKey]), app.BankKeeper, app.RegistryKeeper)
+
+	app.AssetKeeper = assetkeeper.NewKeeper(appCodec, app.MarkerKeeper, app.NFTKeeper, app.RegistryKeeper)
 
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
@@ -760,9 +794,11 @@ func New(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		circuit.NewAppModule(appCodec, app.CircuitKeeper),
+		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
+		assetmodule.NewAppModule(appCodec, app.AssetKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
@@ -772,6 +808,8 @@ func New(
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
+		registrymodule.NewAppModule(appCodec, app.RegistryKeeper),
+		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
@@ -875,11 +913,15 @@ func New(
 
 		quarantine.ModuleName,
 		sanction.ModuleName,
+		nft.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
 		hold.ModuleName,
+		registrytypes.ModuleName,
+		ledger.ModuleName,   // must be after the registry module.
 		exchange.ModuleName, // must be after the hold module.
+		assettypes.ModuleName,
 
 		vaulttypes.ModuleName,
 
@@ -921,6 +963,9 @@ func New(
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
 		circuittypes.ModuleName,
+		nft.ModuleName,
+		registrytypes.ModuleName,
+		ledger.ModuleName,
 
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
@@ -936,6 +981,7 @@ func New(
 		nametypes.ModuleName,
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
+		assettypes.ModuleName,
 
 		vaulttypes.ModuleName,
 

@@ -261,6 +261,108 @@
     - [DenomSplit](#provenance-exchange-v1-DenomSplit)
     - [Params](#provenance-exchange-v1-Params)
   
+- [provenance/ledger/v1/tx.proto](#provenance_ledger_v1_tx-proto)
+    - [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest)
+    - [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse)
+    - [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest)
+    - [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse)
+    - [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest)
+    - [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse)
+    - [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest)
+    - [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse)
+    - [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest)
+    - [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse)
+    - [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest)
+    - [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse)
+    - [MsgCreateLedgerRequest](#provenance-ledger-v1-MsgCreateLedgerRequest)
+    - [MsgCreateLedgerResponse](#provenance-ledger-v1-MsgCreateLedgerResponse)
+    - [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest)
+    - [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse)
+    - [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest)
+    - [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse)
+    - [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest)
+    - [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse)
+    - [MsgUpdateInterestRateRequest](#provenance-ledger-v1-MsgUpdateInterestRateRequest)
+    - [MsgUpdateInterestRateResponse](#provenance-ledger-v1-MsgUpdateInterestRateResponse)
+    - [MsgUpdateMaturityDateRequest](#provenance-ledger-v1-MsgUpdateMaturityDateRequest)
+    - [MsgUpdateMaturityDateResponse](#provenance-ledger-v1-MsgUpdateMaturityDateResponse)
+    - [MsgUpdatePaymentRequest](#provenance-ledger-v1-MsgUpdatePaymentRequest)
+    - [MsgUpdatePaymentResponse](#provenance-ledger-v1-MsgUpdatePaymentResponse)
+    - [MsgUpdateStatusRequest](#provenance-ledger-v1-MsgUpdateStatusRequest)
+    - [MsgUpdateStatusResponse](#provenance-ledger-v1-MsgUpdateStatusResponse)
+  
+    - [Msg](#provenance-ledger-v1-Msg)
+  
+- [provenance/ledger/v1/events.proto](#provenance_ledger_v1_events-proto)
+    - [EventFundTransferWithSettlement](#provenance-ledger-v1-EventFundTransferWithSettlement)
+    - [EventLedgerCreated](#provenance-ledger-v1-EventLedgerCreated)
+    - [EventLedgerDestroyed](#provenance-ledger-v1-EventLedgerDestroyed)
+    - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
+    - [EventLedgerUpdated](#provenance-ledger-v1-EventLedgerUpdated)
+  
+    - [UpdateType](#provenance-ledger-v1-UpdateType)
+  
+- [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
+    - [BucketBalance](#provenance-ledger-v1-BucketBalance)
+    - [Ledger](#provenance-ledger-v1-Ledger)
+    - [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries)
+    - [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount)
+    - [LedgerClass](#provenance-ledger-v1-LedgerClass)
+    - [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType)
+    - [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType)
+    - [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType)
+    - [LedgerEntry](#provenance-ledger-v1-LedgerEntry)
+    - [LedgerKey](#provenance-ledger-v1-LedgerKey)
+  
+    - [DayCountConvention](#provenance-ledger-v1-DayCountConvention)
+    - [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod)
+    - [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency)
+  
+- [provenance/ledger/v1/query.proto](#provenance_ledger_v1_query-proto)
+    - [QueryLedgerBalancesAsOfRequest](#provenance-ledger-v1-QueryLedgerBalancesAsOfRequest)
+    - [QueryLedgerBalancesAsOfResponse](#provenance-ledger-v1-QueryLedgerBalancesAsOfResponse)
+    - [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest)
+    - [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse)
+    - [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest)
+    - [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse)
+    - [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest)
+    - [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse)
+    - [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest)
+    - [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse)
+    - [QueryLedgerClassesRequest](#provenance-ledger-v1-QueryLedgerClassesRequest)
+    - [QueryLedgerClassesResponse](#provenance-ledger-v1-QueryLedgerClassesResponse)
+    - [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest)
+    - [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse)
+    - [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest)
+    - [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse)
+    - [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest)
+    - [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse)
+    - [QueryLedgerSettlementsByCorrelationIDRequest](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIDRequest)
+    - [QueryLedgerSettlementsByCorrelationIDResponse](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIDResponse)
+    - [QueryLedgerSettlementsRequest](#provenance-ledger-v1-QueryLedgerSettlementsRequest)
+    - [QueryLedgerSettlementsResponse](#provenance-ledger-v1-QueryLedgerSettlementsResponse)
+    - [QueryLedgersRequest](#provenance-ledger-v1-QueryLedgersRequest)
+    - [QueryLedgersResponse](#provenance-ledger-v1-QueryLedgersResponse)
+  
+    - [Query](#provenance-ledger-v1-Query)
+  
+- [provenance/ledger/v1/ledger_settlement.proto](#provenance_ledger_v1_ledger_settlement-proto)
+    - [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement)
+    - [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction)
+    - [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions)
+  
+    - [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus)
+  
+- [provenance/ledger/v1/genesis.proto](#provenance_ledger_v1_genesis-proto)
+    - [GenesisLedger](#provenance-ledger-v1-GenesisLedger)
+    - [GenesisLedgerClassBucketType](#provenance-ledger-v1-GenesisLedgerClassBucketType)
+    - [GenesisLedgerClassEntryType](#provenance-ledger-v1-GenesisLedgerClassEntryType)
+    - [GenesisLedgerClassStatusType](#provenance-ledger-v1-GenesisLedgerClassStatusType)
+    - [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry)
+    - [GenesisPair](#provenance-ledger-v1-GenesisPair)
+    - [GenesisState](#provenance-ledger-v1-GenesisState)
+    - [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions)
+  
 - [provenance/trigger/v1/tx.proto](#provenance_trigger_v1_tx-proto)
     - [MsgCreateTriggerRequest](#provenance-trigger-v1-MsgCreateTriggerRequest)
     - [MsgCreateTriggerResponse](#provenance-trigger-v1-MsgCreateTriggerResponse)
@@ -346,6 +448,48 @@
 - [provenance/attribute/v1/genesis.proto](#provenance_attribute_v1_genesis-proto)
     - [GenesisState](#provenance-attribute-v1-GenesisState)
   
+- [provenance/asset/v1/tx.proto](#provenance_asset_v1_tx-proto)
+    - [MsgBurnAsset](#provenance-asset-v1-MsgBurnAsset)
+    - [MsgBurnAssetResponse](#provenance-asset-v1-MsgBurnAssetResponse)
+    - [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset)
+    - [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass)
+    - [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse)
+    - [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse)
+    - [MsgCreatePool](#provenance-asset-v1-MsgCreatePool)
+    - [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse)
+    - [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization)
+    - [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse)
+    - [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization)
+    - [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse)
+  
+    - [Msg](#provenance-asset-v1-Msg)
+  
+- [provenance/asset/v1/events.proto](#provenance_asset_v1_events-proto)
+    - [EventAssetBurned](#provenance-asset-v1-EventAssetBurned)
+    - [EventAssetClassCreated](#provenance-asset-v1-EventAssetClassCreated)
+    - [EventAssetCreated](#provenance-asset-v1-EventAssetCreated)
+    - [EventPoolCreated](#provenance-asset-v1-EventPoolCreated)
+    - [EventSecuritizationCreated](#provenance-asset-v1-EventSecuritizationCreated)
+    - [EventTokenizationCreated](#provenance-asset-v1-EventTokenizationCreated)
+  
+- [provenance/asset/v1/asset.proto](#provenance_asset_v1_asset-proto)
+    - [Asset](#provenance-asset-v1-Asset)
+    - [AssetClass](#provenance-asset-v1-AssetClass)
+    - [AssetData](#provenance-asset-v1-AssetData)
+    - [AssetKey](#provenance-asset-v1-AssetKey)
+  
+- [provenance/asset/v1/query.proto](#provenance_asset_v1_query-proto)
+    - [QueryAssetClassRequest](#provenance-asset-v1-QueryAssetClassRequest)
+    - [QueryAssetClassResponse](#provenance-asset-v1-QueryAssetClassResponse)
+    - [QueryAssetClassesRequest](#provenance-asset-v1-QueryAssetClassesRequest)
+    - [QueryAssetClassesResponse](#provenance-asset-v1-QueryAssetClassesResponse)
+    - [QueryAssetRequest](#provenance-asset-v1-QueryAssetRequest)
+    - [QueryAssetResponse](#provenance-asset-v1-QueryAssetResponse)
+    - [QueryAssetsRequest](#provenance-asset-v1-QueryAssetsRequest)
+    - [QueryAssetsResponse](#provenance-asset-v1-QueryAssetsResponse)
+  
+    - [Query](#provenance-asset-v1-Query)
+  
 - [provenance/msgfees/v1/tx.proto](#provenance_msgfees_v1_tx-proto)
     - [MsgAddMsgFeeProposalRequest](#provenance-msgfees-v1-MsgAddMsgFeeProposalRequest)
     - [MsgAddMsgFeeProposalResponse](#provenance-msgfees-v1-MsgAddMsgFeeProposalResponse)
@@ -426,6 +570,47 @@
   
 - [provenance/oracle/v1/genesis.proto](#provenance_oracle_v1_genesis-proto)
     - [GenesisState](#provenance-oracle-v1-GenesisState)
+  
+- [provenance/registry/v1/tx.proto](#provenance_registry_v1_tx-proto)
+    - [MsgGrantRole](#provenance-registry-v1-MsgGrantRole)
+    - [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse)
+    - [MsgRegisterNFT](#provenance-registry-v1-MsgRegisterNFT)
+    - [MsgRegisterNFTResponse](#provenance-registry-v1-MsgRegisterNFTResponse)
+    - [MsgRegistryBulkUpdate](#provenance-registry-v1-MsgRegistryBulkUpdate)
+    - [MsgRegistryBulkUpdateResponse](#provenance-registry-v1-MsgRegistryBulkUpdateResponse)
+    - [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole)
+    - [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse)
+    - [MsgUnregisterNFT](#provenance-registry-v1-MsgUnregisterNFT)
+    - [MsgUnregisterNFTResponse](#provenance-registry-v1-MsgUnregisterNFTResponse)
+  
+    - [Msg](#provenance-registry-v1-Msg)
+  
+- [provenance/registry/v1/events.proto](#provenance_registry_v1_events-proto)
+    - [EventNFTRegistered](#provenance-registry-v1-EventNFTRegistered)
+    - [EventNFTUnregistered](#provenance-registry-v1-EventNFTUnregistered)
+    - [EventRegistryBulkUpdated](#provenance-registry-v1-EventRegistryBulkUpdated)
+    - [EventRoleGranted](#provenance-registry-v1-EventRoleGranted)
+    - [EventRoleRevoked](#provenance-registry-v1-EventRoleRevoked)
+  
+- [provenance/registry/v1/query.proto](#provenance_registry_v1_query-proto)
+    - [QueryGetRegistriesRequest](#provenance-registry-v1-QueryGetRegistriesRequest)
+    - [QueryGetRegistriesResponse](#provenance-registry-v1-QueryGetRegistriesResponse)
+    - [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest)
+    - [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse)
+    - [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest)
+    - [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse)
+  
+    - [Query](#provenance-registry-v1-Query)
+  
+- [provenance/registry/v1/genesis.proto](#provenance_registry_v1_genesis-proto)
+    - [GenesisState](#provenance-registry-v1-GenesisState)
+  
+- [provenance/registry/v1/registry.proto](#provenance_registry_v1_registry-proto)
+    - [RegistryEntry](#provenance-registry-v1-RegistryEntry)
+    - [RegistryKey](#provenance-registry-v1-RegistryKey)
+    - [RolesEntry](#provenance-registry-v1-RolesEntry)
+  
+    - [RegistryRole](#provenance-registry-v1-RegistryRole)
   
 - [provenance/ibchooks/v1/tx.proto](#provenance_ibchooks_v1_tx-proto)
     - [MsgEmitIBCAck](#provenance-ibchooks-v1-MsgEmitIBCAck)
@@ -4470,6 +4655,1446 @@ Params is a representation of the exchange module parameters.
 
 
 
+<a name="provenance_ledger_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/tx.proto
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest"></a>
+
+### MsgAddLedgerClassBucketTypeRequest
+MsgAddLedgerClassBucketTypeRequest represents a request to add a bucket type to a ledger class.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | Ledger class id to add the bucket type to. |
+| `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  | The bucket type to add to the ledger class. |
+| `signer` | [string](#string) |  | The signer that is adding the bucket type. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse"></a>
+
+### MsgAddLedgerClassBucketTypeResponse
+MsgAddLedgerClassBucketTypeResponse represents the response from adding a bucket type.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest"></a>
+
+### MsgAddLedgerClassEntryTypeRequest
+MsgAddLedgerClassEntryTypeRequest represents a request to add an entry type to a ledger class.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | Ledger class id to add the entry type to. |
+| `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  | The entry type to add to the ledger class. |
+| `signer` | [string](#string) |  | The signer that is adding the entry type. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse"></a>
+
+### MsgAddLedgerClassEntryTypeResponse
+MsgAddLedgerClassEntryTypeResponse represents the response from adding an entry type.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest"></a>
+
+### MsgAddLedgerClassStatusTypeRequest
+MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | Ledger class id to add the status type to. |
+| `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  | The status type to add to the ledger class. |
+| `signer` | [string](#string) |  | The signer that is adding the status type. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse"></a>
+
+### MsgAddLedgerClassStatusTypeResponse
+MsgAddLedgerClassStatusTypeResponse represents the response from adding a status type.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAppendRequest"></a>
+
+### MsgAppendRequest
+MsgAppendRequest represents a request to append entries to a ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose entries are being appended. |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The entries to append to the ledger. |
+| `signer` | [string](#string) |  | The signer that is appending the entries. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgAppendResponse"></a>
+
+### MsgAppendResponse
+MsgAppendResponse represents the response from appending entries to a ledger.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgBulkCreateRequest"></a>
+
+### MsgBulkCreateRequest
+MsgBulkCreateRequest represents a request to bulk create ledgers and entries.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | The signer that is bulk importing the ledger data. |
+| `ledger_and_entries` | [LedgerAndEntries](#provenance-ledger-v1-LedgerAndEntries) | repeated | The genesis state to bulk import. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgBulkCreateResponse"></a>
+
+### MsgBulkCreateResponse
+MsgBulkCreateResponse represents the response from bulk creating ledgers and entries.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateLedgerClassRequest"></a>
+
+### MsgCreateLedgerClassRequest
+MsgCreateLedgerClassRequest represents a request to create a new ledger class.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  | The ledger class to create. |
+| `signer` | [string](#string) |  | The signer that is creating the ledger class. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateLedgerClassResponse"></a>
+
+### MsgCreateLedgerClassResponse
+MsgCreateLedgerClassResponse represents the response from creating a ledger class.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateLedgerRequest"></a>
+
+### MsgCreateLedgerRequest
+MsgCreateLedgerRequest represents a request to create a new ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger to create. |
+| `signer` | [string](#string) |  | The signer address that can create ledgers. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgCreateLedgerResponse"></a>
+
+### MsgCreateLedgerResponse
+MsgCreateLedgerResponse represents the response from creating a ledger.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgDestroyRequest"></a>
+
+### MsgDestroyRequest
+MsgDestroyRequest represents a request to destroy a ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger to destroy. |
+| `signer` | [string](#string) |  | The signer that is destroying the ledger. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgDestroyResponse"></a>
+
+### MsgDestroyResponse
+MsgDestroyResponse represents the response from destroying a ledger.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgTransferFundsWithSettlementRequest"></a>
+
+### MsgTransferFundsWithSettlementRequest
+MsgTransferFundsWithSettlementRequest represents a request to transfer funds with settlement instructions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | The signer that is transferring the funds. |
+| `transfers` | [FundTransferWithSettlement](#provenance-ledger-v1-FundTransferWithSettlement) | repeated | The transfers to be made. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgTransferFundsWithSettlementResponse"></a>
+
+### MsgTransferFundsWithSettlementResponse
+MsgTransferFundsWithSettlementResponse represents the response from transferring funds with settlement.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateBalancesRequest"></a>
+
+### MsgUpdateBalancesRequest
+MsgUpdateBalancesRequest represents a request to update balances for a ledger entry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose balances are being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the balances. |
+| `correlation_id` | [string](#string) |  | The correlation id of the ledger entry. |
+| `total_amt` | [string](#string) |  | The total amount of the ledger entry. The units of this field are defined by the denom field in this ledger's class. |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts represent how the entry affects different buckets. |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | Bucket balances represent the current state of funds in each bucket. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateBalancesResponse"></a>
+
+### MsgUpdateBalancesResponse
+MsgUpdateBalancesResponse represents the response from updating ledger balances.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateInterestRateRequest"></a>
+
+### MsgUpdateInterestRateRequest
+MsgUpdateInterestRateRequest represents a request to update the interest rate configuration of a ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the interest rate. |
+| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateInterestRateResponse"></a>
+
+### MsgUpdateInterestRateResponse
+MsgUpdateInterestRateResponse represents the response from updating a ledger interest rate.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateMaturityDateRequest"></a>
+
+### MsgUpdateMaturityDateRequest
+MsgUpdateMaturityDateRequest represents a request to update the maturity date of a ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose maturity date is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the maturity date. |
+| `maturity_date` | [int32](#int32) |  | The new maturity date in days since epoch. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateMaturityDateResponse"></a>
+
+### MsgUpdateMaturityDateResponse
+MsgUpdateMaturityDateResponse represents the response from updating a ledger maturity date.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdatePaymentRequest"></a>
+
+### MsgUpdatePaymentRequest
+MsgUpdatePaymentRequest represents a request to update payment configuration of a ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the payment. |
+| `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. |
+| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdatePaymentResponse"></a>
+
+### MsgUpdatePaymentResponse
+MsgUpdatePaymentResponse represents the response from updating a ledger payment configuration.
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateStatusRequest"></a>
+
+### MsgUpdateStatusRequest
+MsgUpdateStatusRequest represents a request to update the status of a ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose status is being updated. |
+| `signer` | [string](#string) |  | The signer that is updating the status. |
+| `status_type_id` | [int32](#int32) |  | The new status type id of the ledger. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateStatusResponse"></a>
+
+### MsgUpdateStatusResponse
+MsgUpdateStatusResponse represents the response from updating a ledger status.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-ledger-v1-Msg"></a>
+
+### Msg
+Msg defines the ledger module Msg service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `CreateLedger` | [MsgCreateLedgerRequest](#provenance-ledger-v1-MsgCreateLedgerRequest) | [MsgCreateLedgerResponse](#provenance-ledger-v1-MsgCreateLedgerResponse) | CreateLedger creates a new NFT ledger. |
+| `UpdateStatus` | [MsgUpdateStatusRequest](#provenance-ledger-v1-MsgUpdateStatusRequest) | [MsgUpdateStatusResponse](#provenance-ledger-v1-MsgUpdateStatusResponse) | UpdateStatus updates the Status of a ledger. |
+| `UpdateInterestRate` | [MsgUpdateInterestRateRequest](#provenance-ledger-v1-MsgUpdateInterestRateRequest) | [MsgUpdateInterestRateResponse](#provenance-ledger-v1-MsgUpdateInterestRateResponse) | UpdateInterestRate updates the interest rate of a ledger. |
+| `UpdatePayment` | [MsgUpdatePaymentRequest](#provenance-ledger-v1-MsgUpdatePaymentRequest) | [MsgUpdatePaymentResponse](#provenance-ledger-v1-MsgUpdatePaymentResponse) | UpdatePayment updates the payment amount, next payment date, and payment frequency of a ledger. |
+| `UpdateMaturityDate` | [MsgUpdateMaturityDateRequest](#provenance-ledger-v1-MsgUpdateMaturityDateRequest) | [MsgUpdateMaturityDateResponse](#provenance-ledger-v1-MsgUpdateMaturityDateResponse) | UpdateMaturityDate updates the maturity date of a ledger. |
+| `Append` | [MsgAppendRequest](#provenance-ledger-v1-MsgAppendRequest) | [MsgAppendResponse](#provenance-ledger-v1-MsgAppendResponse) | Append adds an entry to a ledger. |
+| `UpdateBalances` | [MsgUpdateBalancesRequest](#provenance-ledger-v1-MsgUpdateBalancesRequest) | [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse) | UpdateBalances updates the balances for a ledger entry, allowing for retroactive adjustments to be applied. |
+| `TransferFundsWithSettlement` | [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest) | [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse) | TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions. |
+| `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy deletes a ledger and its ledger entries. |
+| `CreateLedgerClass` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | CreateLedgerClass creates a new ledger class. |
+| `AddLedgerClassStatusType` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | AddLedgerClassStatusType adds a status type to a ledger class. |
+| `AddLedgerClassEntryType` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | AddLedgerClassEntryType adds an entry type to a ledger class. |
+| `AddLedgerClassBucketType` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | AddLedgerClassBucketType adds a bucket type to a ledger class. |
+| `BulkCreate` | [MsgBulkCreateRequest](#provenance-ledger-v1-MsgBulkCreateRequest) | [MsgBulkCreateResponse](#provenance-ledger-v1-MsgBulkCreateResponse) | BulkCreate creates ledgers and entries in bulk. Each ledger in this will cost one MsgCreateLedgerRequest. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/events.proto
+
+
+
+<a name="provenance-ledger-v1-EventFundTransferWithSettlement"></a>
+
+### EventFundTransferWithSettlement
+EventFundTransferWithSettlement is emitted when funds are transferred with
+settlement instructions. This event is triggered by the
+MsgTransferFundsWithSettlement message handler when a fund transfer with
+settlement instructions is successfully processed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerCreated"></a>
+
+### EventLedgerCreated
+EventLedgerCreated is emitted when a new ledger is created for an asset.
+This event is triggered by the MsgCreateLedger message handler when a
+ledger is successfully created for a specific NFT or scope.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerDestroyed"></a>
+
+### EventLedgerDestroyed
+EventLedgerDestroyed is emitted when a ledger is destroyed.
+This event is triggered by the MsgDestroyLedger message handler when
+a ledger and all its associated data are successfully removed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerEntryAdded"></a>
+
+### EventLedgerEntryAdded
+EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
+This event is triggered by the MsgAppendLedgerEntry message handler when
+one or more ledger entries are successfully added to an existing ledger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerUpdated"></a>
+
+### EventLedgerUpdated
+EventLedgerUpdated is emitted when a ledger's configuration is updated.
+This event is triggered by various update message handlers such as
+MsgUpdateLedgerStatus, MsgUpdateLedgerInterestRate, MsgUpdateLedgerPayment,
+and MsgUpdateLedgerMaturityDate when a ledger's configuration is
+successfully modified.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+| `update_type` | [UpdateType](#provenance-ledger-v1-UpdateType) |  | What type of data update caused this event to be emitted. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-UpdateType"></a>
+
+### UpdateType
+UpdateType is the type of data update that caused the EventLedgerUpdated event to be emitted.
+This is used to identify the specific update that caused the event to be emitted.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `UPDATE_TYPE_UNSPECIFIED` | `0` | The update type is unspecified. |
+| `UPDATE_TYPE_STATUS` | `1` | The status of the ledger was updated. |
+| `UPDATE_TYPE_INTEREST_RATE` | `2` | The interest rate of the ledger was updated. |
+| `UPDATE_TYPE_PAYMENT` | `3` | The payment of the ledger was updated. |
+| `UPDATE_TYPE_MATURITY_DATE` | `4` | The maturity date of the ledger was updated. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_ledger-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/ledger.proto
+
+
+
+<a name="provenance-ledger-v1-BucketBalance"></a>
+
+### BucketBalance
+BucketBalance represents the balance for a specific bucket type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id. |
+| `balance_amt` | [string](#string) |  | The balance of the bucket. The units of this field are defined by the denom field in this ledger's class. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-Ledger"></a>
+
+### Ledger
+Ledger defines an servicing ledger for an asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `ledger_class_id` | [string](#string) |  | The ledger class ID for the ledger. |
+| `status_type_id` | [int32](#int32) |  | The status of the ledger. |
+| `next_pmt_date` | [int32](#int32) |  | The next payment date (days since epoch). |
+| `next_pmt_amt` | [string](#string) |  | The next payment amount. The units of this field are defined by the denom field in this ledger's class. |
+| `interest_rate` | [int32](#int32) |  | The interest rate. Min = 0, Max = 100,000,000 = 100%, e.g. 4,321,987 = 4.321987%. |
+| `maturity_date` | [int32](#int32) |  | The maturity date (days since epoch). |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The day count convention for interest calculations. |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The interest accrual method for interest calculations. |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The payment frequency. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerAndEntries"></a>
+
+### LedgerAndEntries
+LedgerAndEntries represents a ledger with its associated entries.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerBucketAmount"></a>
+
+### LedgerBucketAmount
+LedgerBucketAmount is the amount applied to a bucket. Applications to a bucket increase or
+decrease the balance of the bucket.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket_type_id` | [int32](#int32) |  | The bucket type specified by the LedgerClassBucketType.id. |
+| `applied_amt` | [string](#string) |  | The amount applied to the bucket. The units of this field are defined by the denom field in this ledger's class. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClass"></a>
+
+### LedgerClass
+LedgerClass contains the configuration for a ledger related to a particular class of asset. The asset class
+is defined by the either a scope spec `x/metadata`, or nft class `x/nft`. Ultimately, the configuration will
+assist in verifying the types that are associated with particular ledger entries.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | Unique ID for the ledger class (eg. 1, 2, 3, etc.). This is necessary since the nft class does not have an owner. |
+| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID. |
+| `denom` | [string](#string) |  | Denom that this class of asset will be ledgered in. |
+| `maintainer_address` | [string](#string) |  | Address of the maintainer for the ledger class. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClassBucketType"></a>
+
+### LedgerClassBucketType
+LedgerClassBucketType represents a bucket type for a ledger class.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [int32](#int32) |  | Unique ID for the bucket type (eg. 1, 2, 3, etc.). |
+| `code` | [string](#string) |  | Code for the bucket type (eg. "PRINCIPAL", "INTEREST", "FEE", "OTHER"). |
+| `description` | [string](#string) |  | Description of the bucket type (eg. "Principal", "Interest", "Fee", "Other"). |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClassEntryType"></a>
+
+### LedgerClassEntryType
+LedgerClassEntryType defines the types of possible ledger entries for a given asset class. These type codes allow
+for minimal data storage while providing a human readable description of the entry type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [int32](#int32) |  | Unique ID for the entry type (eg. 1, 2, 3, etc.). |
+| `code` | [string](#string) |  | Code for the entry type (eg. "DISBURSEMENT", "PAYMENT", "ADJUSTMENT", "INTEREST", "FEE", "OTHER"). |
+| `description` | [string](#string) |  | Description of the entry type (eg. "Disbursement", "Payment", "Adjustment", "Interest", "Fee", "Other"). |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerClassStatusType"></a>
+
+### LedgerClassStatusType
+LedgerClassStatusType defines the status types for a ledger class.
+These status types are used to track the status of underlying loan throughout the loan life cycle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [int32](#int32) |  | Unique ID for the status type (eg. 1, 2, 3, etc.). |
+| `code` | [string](#string) |  | Code for the status type (eg. "IN_REPAYMENT", "IN_FORECLOSURE", "FORBEARANCE", "DEFERMENT", "BANKRUPTCY", "CLOSED", "CANCELLED", "SUSPENDED", "OTHER"). |
+| `description` | [string](#string) |  | Description of the status type (eg. "In Repayment", "In Foreclosure", "Forbearance", "Deferment", "Bankruptcy", "Closed", "Cancelled", "Suspended", "Other"). |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerEntry"></a>
+
+### LedgerEntry
+LedgerEntry is an single entry in the ledger. An entry would be a payment, disbursement, adjustment, etc...
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `correlation_id` | [string](#string) |  | The correlation ID for tracking ledger entries with external systems (max 50 characters). |
+| `reverses_correlation_id` | [string](#string) |  | If this entry reverses another entry, the correlation ID of the entry it reverses. |
+| `is_void` | [bool](#bool) |  | If true, this entry is a void and should not be included in the ledger balance calculations. |
+| `sequence` | [uint32](#uint32) |  | Sequence number of the ledger entry (less than 300). This field is used to maintain the correct order of entries when multiple entries share the same effective date. Entries are sorted first by effective date, then by sequence. |
+| `entry_type_id` | [int32](#int32) |  | The type of ledger entry specified by the LedgerClassEntryType.id. |
+| `posted_date` | [int32](#int32) |  | The posted date (days since epoch). |
+| `effective_date` | [int32](#int32) |  | The effective date (days since epoch). |
+| `total_amt` | [string](#string) |  | The total amount of the ledger entry. The units of this field are defined by the denom field in this ledger's class. |
+| `applied_amounts` | [LedgerBucketAmount](#provenance-ledger-v1-LedgerBucketAmount) | repeated | Applied amounts represent how the entry affects different buckets. |
+| `balance_amounts` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | Bucket balances represent the current state of funds in each bucket. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-LedgerKey"></a>
+
+### LedgerKey
+LedgerKey is used as the unique key for an asset's ledger in the keeper.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an nft, the nft class must be registered in the ledger module as a LedgerClass. |
+| `asset_class_id` | [string](#string) |  | Scope Specification ID or NFT Class ID. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-DayCountConvention"></a>
+
+### DayCountConvention
+Day Count Conventions used in interest calculations.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention. |
+| `DAY_COUNT_CONVENTION_ACTUAL_365` | `1` | Actual/365: Uses the actual number of days in the period with a fixed denominator of 365 (or sometimes 365.25 to adjust for leap years). |
+| `DAY_COUNT_CONVENTION_ACTUAL_360` | `2` | Actual/360: Uses the actual number of days in the period but divides by 360. |
+| `DAY_COUNT_CONVENTION_THIRTY_360` | `3` | 30/360: Assumes each month has 30 days and the year has 360 days. |
+| `DAY_COUNT_CONVENTION_ACTUAL_ACTUAL` | `4` | Actual/Actual: Uses the actual number of days in the period and the actual days in the year (365 or 366, depending on the year). |
+| `DAY_COUNT_CONVENTION_DAYS_365` | `5` | 365/365: Always uses 365 days in the denominator regardless of leap years. |
+| `DAY_COUNT_CONVENTION_DAYS_360` | `6` | 360/360: Always uses 360 days in both the numerator and denominator. |
+
+
+
+<a name="provenance-ledger-v1-InterestAccrualMethod"></a>
+
+### InterestAccrualMethod
+Interest Accrual Methods describing how interest is calculated over time.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method. |
+| `INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST` | `1` | Simple Interest: Calculated only on the principal amount. |
+| `INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST` | `2` | Compound Interest: Calculated on both the principal and on previously accumulated interest. |
+| `INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING` | `3` | Daily Compounding: Interest is compounded on a daily basis. |
+| `INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING` | `4` | Monthly Compounding: Interest is compounded each month. |
+| `INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING` | `5` | Quarterly Compounding: Interest is compounded every quarter. |
+| `INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING` | `6` | Annually Compounding: Interest is compounded once per year. |
+| `INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING` | `7` | Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously. |
+
+
+
+<a name="provenance-ledger-v1-PaymentFrequency"></a>
+
+### PaymentFrequency
+Payment frequencies for loan repayments.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency. |
+| `PAYMENT_FREQUENCY_DAILY` | `1` | Daily payments. |
+| `PAYMENT_FREQUENCY_WEEKLY` | `2` | Weekly or biweekly payments. |
+| `PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
+| `PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
+| `PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/query.proto
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerBalancesAsOfRequest"></a>
+
+### QueryLedgerBalancesAsOfRequest
+QueryLedgerBalancesAsOfRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `as_of_date` | [string](#string) |  | The date to query balances as of (format: YYYY-MM-DD). |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerBalancesAsOfResponse"></a>
+
+### QueryLedgerBalancesAsOfResponse
+QueryLedgerBalancesAsOfResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket_balances` | [BucketBalance](#provenance-ledger-v1-BucketBalance) | repeated | BucketBalances represents the current balances for principal, interest, and other amounts. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassBucketTypesRequest"></a>
+
+### QueryLedgerClassBucketTypesRequest
+QueryLedgerClassBucketTypesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassBucketTypesResponse"></a>
+
+### QueryLedgerClassBucketTypesResponse
+QueryLedgerClassBucketTypesResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bucket_types` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassEntryTypesRequest"></a>
+
+### QueryLedgerClassEntryTypesRequest
+QueryLedgerClassEntryTypesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassEntryTypesResponse"></a>
+
+### QueryLedgerClassEntryTypesResponse
+QueryLedgerClassEntryTypesResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entry_types` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassRequest"></a>
+
+### QueryLedgerClassRequest
+QueryLedgerClassRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassResponse"></a>
+
+### QueryLedgerClassResponse
+QueryLedgerClassResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class` | [LedgerClass](#provenance-ledger-v1-LedgerClass) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassStatusTypesRequest"></a>
+
+### QueryLedgerClassStatusTypesRequest
+QueryLedgerClassStatusTypesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassStatusTypesResponse"></a>
+
+### QueryLedgerClassStatusTypesResponse
+QueryLedgerClassStatusTypesResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `status_types` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassesRequest"></a>
+
+### QueryLedgerClassesRequest
+QueryLedgerClassesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination is an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerClassesResponse"></a>
+
+### QueryLedgerClassesResponse
+QueryLedgerClassesResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | List of ledger classes. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerEntriesRequest"></a>
+
+### QueryLedgerEntriesRequest
+QueryLedgerEntriesRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger to query entries for. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerEntriesResponse"></a>
+
+### QueryLedgerEntriesResponse
+QueryLedgerEntriesResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) | repeated | The ledger entries. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerEntryRequest"></a>
+
+### QueryLedgerEntryRequest
+QueryLedgerEntryRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger. |
+| `correlation_id` | [string](#string) |  | The correlation ID of the entry to query (free-form string up to 50 characters). |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerEntryResponse"></a>
+
+### QueryLedgerEntryResponse
+QueryLedgerEntryResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  | The ledger entry. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerRequest"></a>
+
+### QueryLedgerRequest
+QueryLedgerRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger to query. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerResponse"></a>
+
+### QueryLedgerResponse
+QueryLedgerResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  | The ledger data. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIDRequest"></a>
+
+### QueryLedgerSettlementsByCorrelationIDRequest
+QueryLedgerSettlementsByCorrelationIDRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `correlation_id` | [string](#string) |  | The correlation ID to query settlements for. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIDResponse"></a>
+
+### QueryLedgerSettlementsByCorrelationIDResponse
+QueryLedgerSettlementsByCorrelationIDResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlements` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerSettlementsRequest"></a>
+
+### QueryLedgerSettlementsRequest
+QueryLedgerSettlementsRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgerSettlementsResponse"></a>
+
+### QueryLedgerSettlementsResponse
+QueryLedgerSettlementsResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlements` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgersRequest"></a>
+
+### QueryLedgersRequest
+QueryLedgersRequest
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination is an pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-QueryLedgersResponse"></a>
+
+### QueryLedgersResponse
+QueryLedgersResponse
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledgers` | [Ledger](#provenance-ledger-v1-Ledger) | repeated | List of ledgers. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-ledger-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for ledger module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `LedgerClass` | [QueryLedgerClassRequest](#provenance-ledger-v1-QueryLedgerClassRequest) | [QueryLedgerClassResponse](#provenance-ledger-v1-QueryLedgerClassResponse) | LedgerClass returns the ledger class for a given ledger class id. |
+| `LedgerClasses` | [QueryLedgerClassesRequest](#provenance-ledger-v1-QueryLedgerClassesRequest) | [QueryLedgerClassesResponse](#provenance-ledger-v1-QueryLedgerClassesResponse) | LedgerClasses returns a paginated list of ledger classes. |
+| `LedgerClassEntryTypes` | [QueryLedgerClassEntryTypesRequest](#provenance-ledger-v1-QueryLedgerClassEntryTypesRequest) | [QueryLedgerClassEntryTypesResponse](#provenance-ledger-v1-QueryLedgerClassEntryTypesResponse) | LedgerClassEntryTypes returns the entry types for a given ledger class id. |
+| `LedgerClassStatusTypes` | [QueryLedgerClassStatusTypesRequest](#provenance-ledger-v1-QueryLedgerClassStatusTypesRequest) | [QueryLedgerClassStatusTypesResponse](#provenance-ledger-v1-QueryLedgerClassStatusTypesResponse) | LedgerClassStatusTypes returns the status types for a given ledger class id. |
+| `LedgerClassBucketTypes` | [QueryLedgerClassBucketTypesRequest](#provenance-ledger-v1-QueryLedgerClassBucketTypesRequest) | [QueryLedgerClassBucketTypesResponse](#provenance-ledger-v1-QueryLedgerClassBucketTypesResponse) | LedgerClassBucketTypes returns the bucket types for a given ledger class id. |
+| `Ledger` | [QueryLedgerRequest](#provenance-ledger-v1-QueryLedgerRequest) | [QueryLedgerResponse](#provenance-ledger-v1-QueryLedgerResponse) | Ledger returns the ledger for a given ledger key. |
+| `Ledgers` | [QueryLedgersRequest](#provenance-ledger-v1-QueryLedgersRequest) | [QueryLedgersResponse](#provenance-ledger-v1-QueryLedgersResponse) | Ledgers returns a paginated list of ledgers. |
+| `LedgerEntries` | [QueryLedgerEntriesRequest](#provenance-ledger-v1-QueryLedgerEntriesRequest) | [QueryLedgerEntriesResponse](#provenance-ledger-v1-QueryLedgerEntriesResponse) | LedgerEntries returns the entries for a given ledger key. |
+| `LedgerEntry` | [QueryLedgerEntryRequest](#provenance-ledger-v1-QueryLedgerEntryRequest) | [QueryLedgerEntryResponse](#provenance-ledger-v1-QueryLedgerEntryResponse) | LedgerEntry returns a specific ledger entry for an NFT. |
+| `LedgerBalancesAsOf` | [QueryLedgerBalancesAsOfRequest](#provenance-ledger-v1-QueryLedgerBalancesAsOfRequest) | [QueryLedgerBalancesAsOfResponse](#provenance-ledger-v1-QueryLedgerBalancesAsOfResponse) | LedgerBalancesAsOf returns the balances for a specific NFT as of a given date. |
+| `LedgerSettlements` | [QueryLedgerSettlementsRequest](#provenance-ledger-v1-QueryLedgerSettlementsRequest) | [QueryLedgerSettlementsResponse](#provenance-ledger-v1-QueryLedgerSettlementsResponse) | LedgerSettlements returns all settlements for a ledger. |
+| `LedgerSettlementsByCorrelationID` | [QueryLedgerSettlementsByCorrelationIDRequest](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIDRequest) | [QueryLedgerSettlementsByCorrelationIDResponse](#provenance-ledger-v1-QueryLedgerSettlementsByCorrelationIDResponse) | LedgerSettlementsByCorrelationID returns settlements by correlation id. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_ledger_settlement-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/ledger_settlement.proto
+
+
+
+<a name="provenance-ledger-v1-FundTransferWithSettlement"></a>
+
+### FundTransferWithSettlement
+FundTransferWithSettlement represents a fund transfer with settlement instructions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | The ledger key identifying the ledger for this transfer. |
+| `ledger_entry_correlation_id` | [string](#string) |  | The correlation ID of the ledger entry associated with this transfer. |
+| `settlement_instructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-SettlementInstruction"></a>
+
+### SettlementInstruction
+SettlementInstruction represents blockchain-specific settlement instructions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | The amount to be transferred. |
+| `recipient_address` | [string](#string) |  | The recipient's blockchain address. |
+| `status` | [FundingTransferStatus](#provenance-ledger-v1-FundingTransferStatus) |  | The current status of the funding transfer. |
+| `memo` | [string](#string) |  | An optional memo or note for the transaction. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-StoredSettlementInstructions"></a>
+
+### StoredSettlementInstructions
+StoredSettlementInstructions is used as the stored version of settlement instructions against a ledger key and entry
+correlation id.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlement_instructions` | [SettlementInstruction](#provenance-ledger-v1-SettlementInstruction) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-FundingTransferStatus"></a>
+
+### FundingTransferStatus
+FundingTransferStatus represents the current status of a funding transfer.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `FUNDING_TRANSFER_STATUS_UNSPECIFIED` | `0` | Unspecified funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_PENDING` | `1` | Pending funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_PROCESSING` | `2` | Processing funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_COMPLETED` | `3` | Completed funding transfer status. |
+| `FUNDING_TRANSFER_STATUS_FAILED` | `4` | Failed funding transfer status. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_ledger_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ledger/v1/genesis.proto
+
+
+
+<a name="provenance-ledger-v1-GenesisLedger"></a>
+
+### GenesisLedger
+GenesisLedger is a single ledger type with its key. This is used for the genesis state import/export so that we
+can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger` | [Ledger](#provenance-ledger-v1-Ledger) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerClassBucketType"></a>
+
+### GenesisLedgerClassBucketType
+GenesisLedgerClassBucketType is a single ledger class bucket type with its key. This is used for the genesis state
+import/export so that we can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `bucket_type` | [LedgerClassBucketType](#provenance-ledger-v1-LedgerClassBucketType) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerClassEntryType"></a>
+
+### GenesisLedgerClassEntryType
+GenesisLedgerClassEntryType is a single ledger class entry type with its key. This is used for the genesis state
+import/export so that we can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `entry_type` | [LedgerClassEntryType](#provenance-ledger-v1-LedgerClassEntryType) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerClassStatusType"></a>
+
+### GenesisLedgerClassStatusType
+GenesisLedgerClassStatusType is a single ledger class status type with its key. This is used for the genesis state
+import/export so that we can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `status_type` | [LedgerClassStatusType](#provenance-ledger-v1-LedgerClassStatusType) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisLedgerEntry"></a>
+
+### GenesisLedgerEntry
+GenesisLedgerEntry is a single ledger entry with its key. This is used for the genesis state import/export so that we
+can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  |  |
+| `entry` | [LedgerEntry](#provenance-ledger-v1-LedgerEntry) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisPair"></a>
+
+### GenesisPair
+GenesisPair represents a simple pair of strings that can be used as the key for a collections export.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `p1` | [string](#string) |  |  |
+| `p2` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState represents the initial state of the ledger store.
+This structure matches the test.json format for bulk import.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_classes` | [LedgerClass](#provenance-ledger-v1-LedgerClass) | repeated | Ledger classes configuration. |
+| `ledger_class_entry_types` | [GenesisLedgerClassEntryType](#provenance-ledger-v1-GenesisLedgerClassEntryType) | repeated | Ledger class entry types configuration. |
+| `ledger_class_status_types` | [GenesisLedgerClassStatusType](#provenance-ledger-v1-GenesisLedgerClassStatusType) | repeated | Ledger class status types configuration. |
+| `ledger_class_bucket_types` | [GenesisLedgerClassBucketType](#provenance-ledger-v1-GenesisLedgerClassBucketType) | repeated | Ledger class bucket types configuration. |
+| `ledgers` | [GenesisLedger](#provenance-ledger-v1-GenesisLedger) | repeated | Ledgers. |
+| `ledger_entries` | [GenesisLedgerEntry](#provenance-ledger-v1-GenesisLedgerEntry) | repeated | Ledger entries. |
+| `settlement_instructions` | [GenesisStoredSettlementInstructions](#provenance-ledger-v1-GenesisStoredSettlementInstructions) | repeated | Settlement instructions for fund transfers. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-GenesisStoredSettlementInstructions"></a>
+
+### GenesisStoredSettlementInstructions
+GenesisStoredSettlementInstructions is a single settlement instruction with its key. This is used for the genesis
+state import/export so that we can avoid non-deterministic maps in the genesis functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [GenesisPair](#provenance-ledger-v1-GenesisPair) |  |  |
+| `settlement_instructions` | [StoredSettlementInstructions](#provenance-ledger-v1-StoredSettlementInstructions) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance_trigger_v1_tx-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5589,6 +7214,571 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+<a name="provenance_asset_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/tx.proto
+
+
+
+<a name="provenance-asset-v1-MsgBurnAsset"></a>
+
+### MsgBurnAsset
+MsgBurnAsset is the message type for burning an existing asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset` | [AssetKey](#provenance-asset-v1-AssetKey) |  | asset defines the asset by key to be burned. |
+| `signer` | [string](#string) |  | signer defines the address of asset owner. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgBurnAssetResponse"></a>
+
+### MsgBurnAssetResponse
+MsgBurnAssetResponse is the response type for the BurnAsset RPC method.
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateAsset"></a>
+
+### MsgCreateAsset
+MsgCreateAsset is the message type for creating a new asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset` | [Asset](#provenance-asset-v1-Asset) |  | asset defines the asset to be created. |
+| `owner` | [string](#string) |  | owner defines the owner address for the created asset. if owner is not provided, signer will be used. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateAssetClass"></a>
+
+### MsgCreateAssetClass
+MsgCreateAssetClass is the message type for creating a new asset class.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class defines the asset class to be created. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateAssetClassResponse"></a>
+
+### MsgCreateAssetClassResponse
+MsgCreateAssetClassResponse is the response type for the CreateAssetClass RPC method.
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateAssetResponse"></a>
+
+### MsgCreateAssetResponse
+MsgCreateAssetResponse is the response type for the CreateAsset RPC method.
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreatePool"></a>
+
+### MsgCreatePool
+MsgCreatePool is the message type for creating a new pool.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | pool defines the pool to be created. |
+| `assets` | [AssetKey](#provenance-asset-v1-AssetKey) | repeated | assets defines the list of assets by keys to be included in the pool. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreatePoolResponse"></a>
+
+### MsgCreatePoolResponse
+MsgCreatePoolResponse is the response type for the CreatePool RPC method.
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateSecuritization"></a>
+
+### MsgCreateSecuritization
+MsgCreateSecuritization is the message type for creating a new securitization.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | id defines the unique identifier for the securitization. |
+| `pools` | [string](#string) | repeated | pools defines the list of pool identifiers to be included in the securitization. |
+| `tranches` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | tranches defines the list of tranches for the securitization. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateSecuritizationResponse"></a>
+
+### MsgCreateSecuritizationResponse
+MsgCreateSecuritizationResponse is the response type for the CreateSecuritization RPC method.
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateTokenization"></a>
+
+### MsgCreateTokenization
+MsgCreateTokenization is the message type for creating a new tokenization.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `token` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | token defines the new token supply and symbol. |
+| `asset` | [AssetKey](#provenance-asset-v1-AssetKey) |  | asset defines the asset by key to be tokenized. |
+| `signer` | [string](#string) |  | signer defines the address of the message sender. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-MsgCreateTokenizationResponse"></a>
+
+### MsgCreateTokenizationResponse
+MsgCreateTokenizationResponse is the response type for the CreateTokenization RPC method.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-asset-v1-Msg"></a>
+
+### Msg
+Msg defines the asset module's message service.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `BurnAsset` | [MsgBurnAsset](#provenance-asset-v1-MsgBurnAsset) | [MsgBurnAssetResponse](#provenance-asset-v1-MsgBurnAssetResponse) | BurnAsset burns/removes an NFT (but does not remove its registry). |
+| `CreateAsset` | [MsgCreateAsset](#provenance-asset-v1-MsgCreateAsset) | [MsgCreateAssetResponse](#provenance-asset-v1-MsgCreateAssetResponse) | CreateAsset creates an NFT and a default registry for the asset and validates the data against the class schema. |
+| `CreateAssetClass` | [MsgCreateAssetClass](#provenance-asset-v1-MsgCreateAssetClass) | [MsgCreateAssetClassResponse](#provenance-asset-v1-MsgCreateAssetClassResponse) | CreateAssetClass creates an NFT class and validates the json schema data field. |
+| `CreatePool` | [MsgCreatePool](#provenance-asset-v1-MsgCreatePool) | [MsgCreatePoolResponse](#provenance-asset-v1-MsgCreatePoolResponse) | CreatePool creates a marker for the pool and transfers the assets to the pool marker. |
+| `CreateTokenization` | [MsgCreateTokenization](#provenance-asset-v1-MsgCreateTokenization) | [MsgCreateTokenizationResponse](#provenance-asset-v1-MsgCreateTokenizationResponse) | CreateTokenization creates a marker for a tokenization and transfers the asset to the tokenization marker. |
+| `CreateSecuritization` | [MsgCreateSecuritization](#provenance-asset-v1-MsgCreateSecuritization) | [MsgCreateSecuritizationResponse](#provenance-asset-v1-MsgCreateSecuritizationResponse) | CreateSecuritization creates markers for the securitization and tranches and transfers the assets to the securitization marker. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/events.proto
+
+
+
+<a name="provenance-asset-v1-EventAssetBurned"></a>
+
+### EventAssetBurned
+EventAssetBurned is emitted when an asset is burned.
+This event is triggered by the MsgBurnAsset message handler when an
+asset is successfully burned and removed from circulation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the burned asset. |
+| `id` | [string](#string) |  | id is the identifier of the burned asset. |
+| `owner` | [string](#string) |  | owner is the address of the account that owned the asset before it was burned. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventAssetClassCreated"></a>
+
+### EventAssetClassCreated
+EventAssetClassCreated is emitted when a new asset class is created.
+This event is triggered by the MsgCreateAssetClass message handler when
+an asset class is successfully created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id is the unique identifier of the created asset class. |
+| `class_name` | [string](#string) |  | class_name is the human-readable name of the asset class. |
+| `class_symbol` | [string](#string) |  | class_symbol is the symbol or ticker for the asset class. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventAssetCreated"></a>
+
+### EventAssetCreated
+EventAssetCreated is emitted when a new asset is created.
+This event is triggered by the MsgCreateAsset message handler when
+an asset is successfully created and minted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the created asset. |
+| `id` | [string](#string) |  | id is the identifier of the created asset. |
+| `owner` | [string](#string) |  | owner is the address of the account that owns the newly created asset. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventPoolCreated"></a>
+
+### EventPoolCreated
+EventPoolCreated is emitted when a new pool is created.
+This event is triggered by the MsgCreatePool message handler when
+a pool is successfully created with assets.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool` | [string](#string) |  | pool is the coin representation of the created pool. |
+| `asset_count` | [uint32](#uint32) |  | asset_count is the number of assets added to the pool. |
+| `owner` | [string](#string) |  | owner is the address of the account that created the pool. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventSecuritizationCreated"></a>
+
+### EventSecuritizationCreated
+EventSecuritizationCreated is emitted when a securitization is created.
+This event is triggered by the MsgCreateSecuritization message handler when
+a securitization is successfully created with tranches and pools.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `securitization_id` | [string](#string) |  | securitization_id is the unique identifier of the created securitization. |
+| `tranche_count` | [uint32](#uint32) |  | tranche_count is the number of tranches in the securitization. |
+| `pool_count` | [uint32](#uint32) |  | pool_count is the number of pools in the securitization. |
+| `owner` | [string](#string) |  | owner is the address of the account that created the securitization. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-EventTokenizationCreated"></a>
+
+### EventTokenizationCreated
+EventTokenizationCreated is emitted when a tokenization marker is created.
+This event is triggered by the MsgCreateTokenization message handler when
+a tokenization is successfully created for an asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tokenization` | [string](#string) |  | tokenization is the coin representation of the tokenization marker. |
+| `class_id` | [string](#string) |  | class_id is the asset class identifier of the tokenized asset. |
+| `id` | [string](#string) |  | id is the identifier of the tokenized asset. |
+| `owner` | [string](#string) |  | owner is the address of the account that created the tokenization. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_asset-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/asset.proto
+
+
+
+<a name="provenance-asset-v1-Asset"></a>
+
+### Asset
+Asset defines the asset. Similar to Nft.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id associated with the asset, similar to the contract address of ERC721. |
+| `id` | [string](#string) |  | id is a unique identifier of the asset. |
+| `uri` | [string](#string) |  | uri for the asset metadata stored off chain. |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri. |
+| `data` | [string](#string) |  | data is an app specific json data of the asset. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-AssetClass"></a>
+
+### AssetClass
+AssetClass defines the class type data for an Asset. Similar to NftClass.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | id defines the unique identifier of the asset classification, similar to the contract address of ERC721. |
+| `name` | [string](#string) |  | name defines the human-readable name of the asset classification. |
+| `symbol` | [string](#string) |  | symbol is an abbreviated name for asset classification. |
+| `description` | [string](#string) |  | description is a brief description of asset classification. |
+| `uri` | [string](#string) |  | uri for the class metadata stored off chain. It can define schema for Class and asset `Data` attributes. |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri. |
+| `data` | [string](#string) |  | data is the app specific json schema of the asset class. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-AssetData"></a>
+
+### AssetData
+AssetData defines the data type for Assets and Asset Classes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | value is the string stored in the data field of an asset or asset class. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-AssetKey"></a>
+
+### AssetKey
+AssetKey defines the lookup key for an Asset.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id associated with the asset, similar to the contract address of ERC721. |
+| `id` | [string](#string) |  | id is a unique identifier of the asset. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_asset_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/asset/v1/query.proto
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassRequest"></a>
+
+### QueryAssetClassRequest
+QueryAssetClassRequest is the request type for the Query/Class RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | class_id associated with the asset. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassResponse"></a>
+
+### QueryAssetClassResponse
+QueryAssetClassResponse is the response type for the Query/Class RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class` | [AssetClass](#provenance-asset-v1-AssetClass) |  | asset_class is the asset class returned from the query. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassesRequest"></a>
+
+### QueryAssetClassesRequest
+QueryAssetClassesRequest is the request type for the Query/Classes RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetClassesResponse"></a>
+
+### QueryAssetClassesResponse
+QueryAssetClassesResponse is the response type for the Query/Classes RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_classes` | [AssetClass](#provenance-asset-v1-AssetClass) | repeated | asset_classes are the asset classes returned from the query. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetRequest"></a>
+
+### QueryAssetRequest
+QueryAssetRequest is the request type for the Query/Asset RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id associated with the asset. |
+| `id` | [string](#string) |  | id is a unique identifier of the asset. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetResponse"></a>
+
+### QueryAssetResponse
+QueryAssetResponse is the response type for the Query/Asset RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset` | [Asset](#provenance-asset-v1-Asset) |  | asset is the asset returned from the query. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetsRequest"></a>
+
+### QueryAssetsRequest
+QueryAssetsRequest is the request type for the Query/Assets RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | class_id associated with the asset. |
+| `owner` | [string](#string) |  | owner is the owner address of the asset. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-asset-v1-QueryAssetsResponse"></a>
+
+### QueryAssetsResponse
+QueryAssetsResponse is the response type for the Query/Assets RPC methods.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [Asset](#provenance-asset-v1-Asset) | repeated | assets are the assets returned from the query. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-asset-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for the asset module.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `Asset` | [QueryAssetRequest](#provenance-asset-v1-QueryAssetRequest) | [QueryAssetResponse](#provenance-asset-v1-QueryAssetResponse) | Asset gets a specified asset by its class ID and asset ID. |
+| `Assets` | [QueryAssetsRequest](#provenance-asset-v1-QueryAssetsRequest) | [QueryAssetsResponse](#provenance-asset-v1-QueryAssetsResponse) | Assets gets all assets for a given address and class. |
+| `AssetClass` | [QueryAssetClassRequest](#provenance-asset-v1-QueryAssetClassRequest) | [QueryAssetClassResponse](#provenance-asset-v1-QueryAssetClassResponse) | AssetClass gets a specific asset class by its ID. |
+| `AssetClasses` | [QueryAssetClassesRequest](#provenance-asset-v1-QueryAssetClassesRequest) | [QueryAssetClassesResponse](#provenance-asset-v1-QueryAssetClassesResponse) | AssetClasses gets all asset classes. |
+
+ <!-- end services -->
+
+
+
 <a name="provenance_msgfees_v1_tx-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6585,6 +8775,527 @@ GenesisState defines the oracle module's genesis state.
 
 
  <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_tx-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/tx.proto
+
+
+
+<a name="provenance-registry-v1-MsgGrantRole"></a>
+
+### MsgGrantRole
+MsgGrantRole represents a message to grant a role to one or more addresses.
+This message adds the specified addresses to an existing role for the given registry key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | signer is the address that is authorized to grant the role. This address must have the appropriate permissions to modify role assignments. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to grant the role to. This identifies the specific registry entry to modify. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to grant. This specifies which role type is being assigned to the addresses. |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses to grant the role to. These addresses will be added to the specified role for the registry key. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgGrantRoleResponse"></a>
+
+### MsgGrantRoleResponse
+MsgGrantRoleResponse defines the response for GrantRole.
+This is an empty response indicating successful role grant.
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRegisterNFT"></a>
+
+### MsgRegisterNFT
+MsgRegisterNFT represents a message to register a new NFT in the registry.
+This message creates a new registry entry with the specified roles and addresses.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | signer is the address that is authorized to register NFTs. This address must have the appropriate permissions to create registry entries. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to register. This contains the NFT ID and asset class ID that uniquely identify the registry entry. |
+| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role. Each role entry defines a role type and the addresses authorized for that role. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRegisterNFTResponse"></a>
+
+### MsgRegisterNFTResponse
+MsgRegisterNFTResponse defines the response for RegisterNFT.
+This is an empty response indicating successful registration.
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRegistryBulkUpdate"></a>
+
+### MsgRegistryBulkUpdate
+MsgRegistryBulkUpdate represents a bulk update operation for multiple registry entries.
+This allows for efficient batch processing of registry modifications.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | signer is the address that is authorized to register NFTs. This address must have the appropriate permissions to create registry entries. |
+| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of bulk update entries to be processed. Each entry contains the registry entry to be updated. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRegistryBulkUpdateResponse"></a>
+
+### MsgRegistryBulkUpdateResponse
+MsgRegistryBulkUpdateResponse defines the response for RegistryBulkUpdate.
+This is an empty response indicating successful bulk update.
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRevokeRole"></a>
+
+### MsgRevokeRole
+MsgRevokeRole represents a message to revoke a role from one or more addresses.
+This message removes the specified addresses from an existing role for the given registry key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | signer is the address that is authorized to revoke the role. This address must have the appropriate permissions to modify role assignments. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to revoke the role from. This identifies the specific registry entry to modify. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the role to revoke. This specifies which role type is being removed from the addresses. |
+| `addresses` | [string](#string) | repeated | addresses is the list of addresses to revoke the role from. These addresses will be removed from the specified role for the registry key. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgRevokeRoleResponse"></a>
+
+### MsgRevokeRoleResponse
+MsgRevokeRoleResponse defines the response for RevokeRole.
+This is an empty response indicating successful role revocation.
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgUnregisterNFT"></a>
+
+### MsgUnregisterNFT
+MsgUnregisterNFT represents a message to unregister an NFT from the registry.
+This message removes the entire registry entry for the specified key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | signer is the address that is authorized to unregister NFTs. This address must have the appropriate permissions to remove registry entries. |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to remove. This identifies the specific registry entry to delete. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-MsgUnregisterNFTResponse"></a>
+
+### MsgUnregisterNFTResponse
+MsgUnregisterNFTResponse defines the response for UnregisterNFT.
+This is an empty response indicating successful unregistration.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-registry-v1-Msg"></a>
+
+### Msg
+Msg defines the registry Msg service.
+This service provides transaction functionality for managing registry entries and roles.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `RegisterNFT` | [MsgRegisterNFT](#provenance-registry-v1-MsgRegisterNFT) | [MsgRegisterNFTResponse](#provenance-registry-v1-MsgRegisterNFTResponse) | RegisterNFT registers a new NFT in the registry. This creates a new registry entry with the specified roles and addresses. |
+| `GrantRole` | [MsgGrantRole](#provenance-registry-v1-MsgGrantRole) | [MsgGrantRoleResponse](#provenance-registry-v1-MsgGrantRoleResponse) | GrantRole grants a role to one or more addresses. This adds the specified addresses to the role for the given registry key. |
+| `RevokeRole` | [MsgRevokeRole](#provenance-registry-v1-MsgRevokeRole) | [MsgRevokeRoleResponse](#provenance-registry-v1-MsgRevokeRoleResponse) | RevokeRole revokes a role from one or more addresses. This removes the specified addresses from the role for the given registry key. |
+| `UnregisterNFT` | [MsgUnregisterNFT](#provenance-registry-v1-MsgUnregisterNFT) | [MsgUnregisterNFTResponse](#provenance-registry-v1-MsgUnregisterNFTResponse) | UnregisterNFT unregisters an NFT from the registry. This removes the entire registry entry for the specified key. |
+| `RegistryBulkUpdate` | [MsgRegistryBulkUpdate](#provenance-registry-v1-MsgRegistryBulkUpdate) | [MsgRegistryBulkUpdateResponse](#provenance-registry-v1-MsgRegistryBulkUpdateResponse) | RegistryBulkUpdate registers, or updates, multiple NFTs in the registry. This creates multiple registry entries, or updates if one exists. Each registry in this will cost one MsgRegisterNFT. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/events.proto
+
+
+
+<a name="provenance-registry-v1-EventNFTRegistered"></a>
+
+### EventNFTRegistered
+EventNFTRegistered is the event emitted when a registry is created for an NFT.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  |  |
+| `asset_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventNFTUnregistered"></a>
+
+### EventNFTUnregistered
+EventNFTUnregistered is the event emitted when a registry is deleted from an NFT.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  |  |
+| `asset_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventRegistryBulkUpdated"></a>
+
+### EventRegistryBulkUpdated
+EventRegistryBulkUpdated is the event emitted to indicate that a registry has been updated as part of a bulk process.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  |  |
+| `asset_class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventRoleGranted"></a>
+
+### EventRoleGranted
+EventRoleGranted is the event emitted when an address is granted a role in a registry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  |  |
+| `asset_class_id` | [string](#string) |  |  |
+| `role` | [string](#string) |  |  |
+| `addresses` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-registry-v1-EventRoleRevoked"></a>
+
+### EventRoleRevoked
+EventRoleRevoked is the event emitted when an address has a role revoked in a registry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  |  |
+| `asset_class_id` | [string](#string) |  |  |
+| `role` | [string](#string) |  |  |
+| `addresses` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_query-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/query.proto
+
+
+
+<a name="provenance-registry-v1-QueryGetRegistriesRequest"></a>
+
+### QueryGetRegistriesRequest
+QueryGetRegistriesRequest is the paginated request type for the Query/GetRegistries RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. This identifies the class or specification that the NFTs belong to. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryGetRegistriesResponse"></a>
+
+### QueryGetRegistriesResponse
+QueryGetRegistriesResponse is the paginated response type for the Query/GetRegistries RPC method.
+It contains the complete registry entry for the requested key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `registries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | registries is the collection of registry entries. This includes all roles and addresses associated with the specified NFT and asset class. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination is the pagination details for this response. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryGetRegistryRequest"></a>
+
+### QueryGetRegistryRequest
+QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method.
+It contains the key information needed to retrieve a specific registry entry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to query. This contains the NFT ID and asset class ID that uniquely identify the registry entry. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryGetRegistryResponse"></a>
+
+### QueryGetRegistryResponse
+QueryGetRegistryResponse is the response type for the Query/GetRegistry RPC method.
+It contains the complete registry entry for the requested key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `registry` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) |  | registry is the registry entry for the requested key. This includes all roles and addresses associated with the specified NFT and asset class. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryHasRoleRequest"></a>
+
+### QueryHasRoleRequest
+QueryHasRoleRequest is the request type for the Query/HasRole RPC method.
+It contains the information needed to verify if an address has a specific role.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key is the registry key to query. This identifies the specific registry entry to check. |
+| `address` | [string](#string) |  | address is the blockchain address to check for the role. This is the address whose role permissions are being verified. |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the specific role to check for. This determines which role permission is being verified. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-QueryHasRoleResponse"></a>
+
+### QueryHasRoleResponse
+QueryHasRoleResponse is the response type for the Query/HasRole RPC method.
+It provides a boolean result indicating whether the address has the specified role.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `has_role` | [bool](#bool) |  | has_role is true if the address has the specified role for the given key. This boolean value indicates whether the role verification was successful. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance-registry-v1-Query"></a>
+
+### Query
+Query defines the gRPC querier service for the registry module.
+This service provides read-only access to registry data and role verification.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| `GetRegistry` | [QueryGetRegistryRequest](#provenance-registry-v1-QueryGetRegistryRequest) | [QueryGetRegistryResponse](#provenance-registry-v1-QueryGetRegistryResponse) | GetRegistry returns the registry entry for a given key. This method retrieves the complete registry entry including all roles and addresses. |
+| `GetRegistries` | [QueryGetRegistriesRequest](#provenance-registry-v1-QueryGetRegistriesRequest) | [QueryGetRegistriesResponse](#provenance-registry-v1-QueryGetRegistriesResponse) | GetRegistries returns all registry entries, optionally filtered by asset class ID. This method retrieves the complete registry entries including all roles and addresses. |
+| `HasRole` | [QueryHasRoleRequest](#provenance-registry-v1-QueryHasRoleRequest) | [QueryHasRoleResponse](#provenance-registry-v1-QueryHasRoleResponse) | HasRole returns true if the address has the specified role for the given key. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/genesis.proto
+
+
+
+<a name="provenance-registry-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState defines the registry module's genesis state.
+This contains all the registry entries that exist when the blockchain is first initialized.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [RegistryEntry](#provenance-registry-v1-RegistryEntry) | repeated | entries is the list of registry entries. These entries define the initial state of the registry module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_registry_v1_registry-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/registry/v1/registry.proto
+
+
+
+<a name="provenance-registry-v1-RegistryEntry"></a>
+
+### RegistryEntry
+RegistryEntry represents a single entry in the registry, mapping a blockchain address to its roles.
+Each entry contains the key information and the roles assigned to various addresses.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [RegistryKey](#provenance-registry-v1-RegistryKey) |  | key ties the registry entry to an asset class and NFT id. This provides the unique identifier for the registry entry. |
+| `roles` | [RolesEntry](#provenance-registry-v1-RolesEntry) | repeated | roles is a list of roles and addresses that can perform that role. Each role entry contains a role type and the addresses authorized for that role. |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RegistryKey"></a>
+
+### RegistryKey
+RegistryKey represents a unique identifier for registry entries.
+It links registry entries to specific NFT assets and their associated asset classes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft_id` | [string](#string) |  | Identifier for the nft that this ledger is linked to. This could be a `x/metadata` scope id or an `x/nft` nft id. In order to create a ledger for an NFT, the NFT class must be registered in the ledger module as a LedgerClass. |
+| `asset_class_id` | [string](#string) |  | asset_class_id is the Scope Specification ID or NFT Class ID. This identifies the class or specification that the NFT belongs to. If it is a Scope Specification, the address is used, e.g."scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m". Otherwise, it is the NFT Class ID, e.g. "heloc-loan-class". |
+
+
+
+
+
+
+<a name="provenance-registry-v1-RolesEntry"></a>
+
+### RolesEntry
+RolesEntry represents a mapping between a role and the addresses that can perform that role.
+This allows multiple addresses to be assigned the same role for a given registry entry.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `role` | [RegistryRole](#provenance-registry-v1-RegistryRole) |  | role is the type of role being assigned. |
+| `addresses` | [string](#string) | repeated | addresses is the list of blockchain addresses that can perform this role. These addresses have the permissions associated with the specified role. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance-registry-v1-RegistryRole"></a>
+
+### RegistryRole
+RegistryRole defines the different types of roles that can be assigned to addresses.
+These roles determine the permissions and capabilities that an address has within the registry system.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `REGISTRY_ROLE_UNSPECIFIED` | `0` | REGISTRY_ROLE_UNSPECIFIED indicates no role is assigned. This is the default state for addresses that have not been granted any specific permissions. |
+| `REGISTRY_ROLE_SERVICER` | `1` | REGISTRY_ROLE_SERVICER indicates the address has servicer privileges. Servicers are responsible for maintaining and servicing the underlying assets. |
+| `REGISTRY_ROLE_SUBSERVICER` | `2` | REGISTRY_ROLE_SUBSERVICER indicates the address has subservicer privileges. Subservicers assist servicers in their duties and may have limited administrative capabilities. |
+| `REGISTRY_ROLE_CONTROLLER` | `3` | REGISTRY_ROLE_CONTROLLER indicates the address has controller privileges. Controllers have administrative control over the registry entries and can modify roles. |
+| `REGISTRY_ROLE_CUSTODIAN` | `4` | REGISTRY_ROLE_CUSTODIAN indicates the address has custodian privileges. Custodians are responsible for holding and safeguarding the underlying assets. |
+| `REGISTRY_ROLE_BORROWER` | `5` | REGISTRY_ROLE_BORROWER indicates the address has borrower privileges. Borrowers can borrow against the underlying assets within defined parameters. |
+| `REGISTRY_ROLE_ORIGINATOR` | `6` | REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges. Originators are responsible for creating and originating the underlying assets. |
+
 
  <!-- end enums -->
 

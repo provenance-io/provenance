@@ -7,13 +7,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/protoadapt"
-
-	"cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -31,7 +29,6 @@ func RunGetSignersTests[R []M, M sdk.Msg](t *testing.T, allRequestMsgs R, msgMak
 	t.Helper()
 
 	encCfg := app.MakeTestEncodingConfig(t)
-	sigCtx := encCfg.InterfaceRegistry.SigningContext()
 
 	var msgTypes []string
 	msgTests := make(map[string][]*msgTestCases)
@@ -70,7 +67,7 @@ func RunGetSignersTests[R []M, M sdk.Msg](t *testing.T, allRequestMsgs R, msgMak
 			tests := testGroups[0]
 
 			for _, tc := range tests.TestCases {
-				genericRunner := tc.GetGenericTestRunner(sigCtx)
+				genericRunner := tc.GetGenericTestRunner(encCfg)
 				if tests.HasLegacy || tests.HasStrs {
 					t.Run(tc.Name+" generic", genericRunner)
 				} else {
@@ -119,18 +116,17 @@ type sigTestCase struct {
 	ExpSignersStrs []string
 }
 
-// GetGenericTestRunner returns a new test runner that ensures the sigCtx.GetSigners(...) method behaves as expected.
-func (tc *sigTestCase) GetGenericTestRunner(sigCtx *signing.Context) func(t *testing.T) {
+// GetGenericTestRunner returns a new test runner that ensures the Marshaler.GetMsgV1Signers(...) method behaves as expected.
+func (tc *sigTestCase) GetGenericTestRunner(encCfg params.EncodingConfig) func(t *testing.T) {
 	return func(t *testing.T) {
 		var actualBZ [][]byte
 		var err error
 		testFunc := func() {
-			msgV2 := protoadapt.MessageV2Of(tc.Msg)
-			actualBZ, err = sigCtx.GetSigners(msgV2)
+			actualBZ, _, err = encCfg.Marshaler.GetMsgV1Signers(tc.Msg)
 		}
-		require.NotPanics(t, testFunc, "sigCtx.GetSigners(msgV2)")
-		assertions.AssertErrorContents(t, err, tc.ExpInErr, "sigCtx.GetSigners(msgV2) error")
-		assert.Equal(t, tc.ExpSignersBz, actualBZ, "sigCtx.GetSigners(msgV2) result")
+		require.NotPanics(t, testFunc, "encCfg.Marshaler.GetMsgV1Signers(msgV2)")
+		assertions.AssertErrorContents(t, err, tc.ExpInErr, "encCfg.Marshaler.GetMsgV1Signers(msgV2) error")
+		assert.Equal(t, tc.ExpSignersBz, actualBZ, "encCfg.Marshaler.GetMsgV1Signers(msgV2) result")
 	}
 }
 

@@ -1,0 +1,40 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/registry/types";
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
+
+// EventNFTRegistered is the event emitted when a registry is created for an NFT.
+message EventNFTRegistered {
+  string nft_id         = 1;
+  string asset_class_id = 2;
+}
+
+// EventRoleGranted is the event emitted when an address is granted a role in a registry.
+message EventRoleGranted {
+  string          nft_id         = 1;
+  string          asset_class_id = 2;
+  string          role           = 3;
+  repeated string addresses      = 4;
+}
+
+// EventRoleRevoked is the event emitted when an address has a role revoked in a registry.
+message EventRoleRevoked {
+  string          nft_id         = 1;
+  string          asset_class_id = 2;
+  string          role           = 3;
+  repeated string addresses      = 4;
+}
+
+// EventNFTUnregistered is the event emitted when a registry is deleted from an NFT.
+message EventNFTUnregistered {
+  string nft_id         = 1;
+  string asset_class_id = 2;
+}
+
+// EventRegistryBulkUpdated is the event emitted to indicate that a registry has been updated as part of a bulk process.
+message EventRegistryBulkUpdated {
+  string nft_id         = 1;
+  string asset_class_id = 2;
+}
