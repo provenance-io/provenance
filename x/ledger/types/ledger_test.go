@@ -1460,7 +1460,131 @@ func TestValidateLedgerEntryAmounts(t *testing.T) {
 	}
 }
 
-// TODO: func TestValidateEntryAmounts(t *testing.T) {}
+func TestValidateEntryAmounts(t *testing.T) {
+	standardErr := "total amount must equal abs(sum of applied amounts)"
+
+	tests := []struct {
+		name           string
+		totalAmt       sdkmath.Int
+		appliedAmounts []*LedgerBucketAmount
+		expErr         string
+	}{
+		{
+			name:           "zero total, nil applied amounts",
+			totalAmt:       sdkmath.ZeroInt(),
+			appliedAmounts: nil,
+		},
+		{
+			name:           "zero total, empty applied amounts",
+			totalAmt:       sdkmath.ZeroInt(),
+			appliedAmounts: []*LedgerBucketAmount{},
+		},
+		{
+			name:     "zero total, with applied amounts",
+			totalAmt: sdkmath.ZeroInt(),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.ZeroInt()},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.ZeroInt()},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.ZeroInt()},
+			},
+		},
+		{
+			name:     "total equals sum of applied amounts",
+			totalAmt: sdkmath.NewInt(58),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(10)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(15)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(33)},
+			},
+		},
+		{
+			name:     "total equals sum of applied amounts with mixed signs",
+			totalAmt: sdkmath.NewInt(28),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(10)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(-15)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(33)},
+			},
+		},
+		{
+			name:     "total equals negative sum of applied amounts",
+			totalAmt: sdkmath.NewInt(58),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(-10)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(-15)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(-33)},
+			},
+		},
+		{
+			name:     "total equals negative sum of applied amounts mixed signs",
+			totalAmt: sdkmath.NewInt(28),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(-10)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(15)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(-33)},
+			},
+		},
+		{
+			name:     "total + 1 equals sum of applied amounts",
+			totalAmt: sdkmath.NewInt(20),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(13)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(8)},
+			},
+			expErr: standardErr,
+		},
+		{
+			name:     "total - 1 equals sum of applied amounts",
+			totalAmt: sdkmath.NewInt(22),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(13)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(8)},
+			},
+			expErr: standardErr,
+		},
+		{
+			name:     "total + 2 equals sum of applied amounts",
+			totalAmt: sdkmath.NewInt(76),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(13)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(8)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(57)},
+			},
+			expErr: standardErr,
+		},
+		{
+			name:     "total - 2 equals sum of applied amounts",
+			totalAmt: sdkmath.NewInt(80),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(13)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(8)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(57)},
+			},
+			expErr: standardErr,
+		},
+		{
+			name:     "total does not equal sum of applied amounts",
+			totalAmt: sdkmath.NewInt(50),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(27)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(80)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(42)},
+			},
+			expErr: standardErr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateEntryAmounts(tc.totalAmt, tc.appliedAmounts)
+			}
+			require.NotPanics(t, testFunc, "ValidateEntryAmounts")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateEntryAmounts error")
+		})
+	}
+}
 
 func TestLedgerBucketAmount_Validate(t *testing.T) {
 	lba := func(bucketTypeID int32, appliedAmt int64) *LedgerBucketAmount {
