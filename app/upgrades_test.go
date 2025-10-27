@@ -1064,7 +1064,7 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
-		"INF Starting streaming import of ledger data.",
+		"INF Starting import of ledger data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
@@ -1077,7 +1077,7 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
-		"INF Starting streaming import of ledger data.",
+		"INF Starting import of ledger data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
 }

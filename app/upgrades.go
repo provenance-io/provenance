@@ -610,7 +610,7 @@ type LedgerKeeper interface {
 
 // streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
 func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
-	ctx.Logger().Info("Starting streaming import of ledger data.")
+	ctx.Logger().Info("Starting import of ledger data.")
 
 	filePaths, err := getBouvardiaLedgerDataFilePaths()
 	if err != nil {
@@ -620,12 +620,17 @@ func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	ctx.Logger().Debug(fmt.Sprintf("Found %d ledger data files to import.", len(filePaths)))
 	for i, filePath := range filePaths {
 		ctx.Logger().Debug(fmt.Sprintf("Importing ledger data file %d of %d: %s", i+1, len(filePaths), filePath))
-		if err = streamImportLedgerDataFile(ctx, lk, filePath); err != nil {
+		// include a progress indicator that only gets used for ledger entries.
+		// The 00 file has all the other stuff, so doesn't need progress indicators.
+		// The 01 and up files ONLY have ledger entries, and we want progress for those.
+		// So there's len(filePaths)-1 of those files to go through, and we start at i = 1, which is handy.
+		progInd := fmt.Sprintf("[%2d/%2d]", i, len(filePaths)-1)
+		if err = streamImportLedgerDataFile(ctx, lk, filePath, progInd); err != nil {
 			return fmt.Errorf("failed to import ledger data file %s: %w", filePath, err)
 		}
 	}
 
-	ctx.Logger().Info("Completed streaming import of ledger data.")
+	ctx.Logger().Info("Completed import of ledger data.")
 	return nil
 }
 
@@ -651,7 +656,7 @@ func getBouvardiaLedgerDataFilePaths() ([]string, error) {
 }
 
 // streamImportLedgerDataFile will import the provided gzipped ledger genesis file into state.
-func streamImportLedgerDataFile(ctx sdk.Context, lk LedgerKeeper, filePath string) error {
+func streamImportLedgerDataFile(ctx sdk.Context, lk LedgerKeeper, filePath string, progInd string) error {
 	// Read the gzipped file data
 	data, err := upgradeDataFS.ReadFile(filePath)
 	if err != nil {
@@ -693,7 +698,7 @@ func streamImportLedgerDataFile(ctx sdk.Context, lk LedgerKeeper, filePath strin
 		}
 
 		// Process each field based on its name.
-		if err := processGenesisField(ctx, lk, decoder, fieldName); err != nil {
+		if err := processGenesisField(ctx, lk, decoder, fieldName, progInd); err != nil {
 			return fmt.Errorf("failed to process field %s in %s: %w", fieldName, filePath, err)
 		}
 	}
@@ -712,7 +717,7 @@ func streamImportLedgerDataFile(ctx sdk.Context, lk LedgerKeeper, filePath strin
 }
 
 // processGenesisField processes a single field from the GenesisState JSON.
-func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string) error {
+func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string, progInd string) error {
 	switch fieldName {
 	case "ledgerClasses":
 		var ledgerClasses []ledgerTypes.LedgerClass
@@ -766,7 +771,7 @@ func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder
 		}
 		genesis := &ledgerTypes.GenesisState{LedgerEntries: entries}
 		lk.ImportLedgerEntries(ctx, genesis)
-		ctx.Logger().Info("Imported ledger entries", "count", len(entries))
+		ctx.Logger().Info(progInd+": Imported ledger entries", "count", len(entries))
 
 	case "settlementInstructions":
 		var settlements []ledgerTypes.GenesisStoredSettlementInstructions
