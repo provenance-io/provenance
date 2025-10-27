@@ -388,11 +388,11 @@ func ValidateEntryAmounts(totalAmt sdkmath.Int, appliedAmounts []*LedgerBucketAm
 	// Check if the total amount matches the sum of applied amounts.
 	totalApplied := sdkmath.NewInt(0)
 	for _, applied := range appliedAmounts {
-		totalApplied = totalApplied.Add(applied.AppliedAmt.Abs())
+		totalApplied = totalApplied.Add(applied.AppliedAmt)
 	}
 
-	if !totalAmt.Equal(totalApplied) {
-		return fmt.Errorf("total amount must equal sum of abs(applied amounts)")
+	if !totalAmt.Equal(totalApplied.Abs()) {
+		return fmt.Errorf("total amount must equal abs(sum of applied amounts)")
 	}
 
 	return nil
@@ -417,8 +417,8 @@ func (lba *LedgerBucketAmount) Validate() error {
 	}
 
 	var errs []error
-	if lba.BucketTypeId <= 0 {
-		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
+	if lba.BucketTypeId < 0 {
+		errs = append(errs, fmt.Errorf("bucket_type_id: must be a non-negative integer"))
 	}
 
 	if lba.AppliedAmt.IsNil() {
@@ -434,8 +434,8 @@ func (bb *BucketBalance) Validate() error {
 		return fmt.Errorf("bucket balance cannot be nil")
 	}
 	var errs []error
-	if bb.BucketTypeId <= 0 {
-		errs = append(errs, fmt.Errorf("bucket_type_id: must be a positive integer"))
+	if bb.BucketTypeId < 0 {
+		errs = append(errs, fmt.Errorf("bucket_type_id: must be a non-negative integer"))
 	}
 
 	if bb.BalanceAmt.IsNil() {
