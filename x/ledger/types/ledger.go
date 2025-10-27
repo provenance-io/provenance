@@ -447,6 +447,10 @@ func (bb *BucketBalance) Validate() error {
 
 // Validate validates the LedgerAndEntries type
 func (lte *LedgerAndEntries) Validate() error {
+	if lte == nil {
+		return fmt.Errorf("ledger and entries cannot be nil")
+	}
+
 	// Validate the ledger key and ledger.
 	//  - One or both must be non-nil.
 	//  - If both are non-nil: validate each.
@@ -454,7 +458,7 @@ func (lte *LedgerAndEntries) Validate() error {
 	var errs []error
 	switch {
 	case lte.LedgerKey == nil && lte.Ledger == nil:
-		return fmt.Errorf("ledger_key, ledger: one or both must be non-nil")
+		return fmt.Errorf("a ledger or ledger_key is required")
 	case lte.LedgerKey != nil && lte.Ledger == nil:
 		if err := lte.LedgerKey.Validate(); err != nil {
 			errs = append(errs, fmt.Errorf("ledger_key: %w", err))
@@ -470,8 +474,8 @@ func (lte *LedgerAndEntries) Validate() error {
 		if err := lte.Ledger.Validate(); err != nil {
 			errs = append(errs, fmt.Errorf("ledger: %w", err))
 		}
-		if lte.LedgerKey.String() != lte.Ledger.Key.String() {
-			errs = append(errs, fmt.Errorf("ledger_key, ledger.key: must be the same value"))
+		if len(errs) == 0 && !lte.LedgerKey.Equals(lte.Ledger.Key) {
+			errs = append(errs, fmt.Errorf("ledger_key and ledger.key must be the same"))
 		}
 	}
 

@@ -1463,7 +1463,198 @@ func TestBucketBalance_Validate(t *testing.T) {
 	}
 }
 
-// TODO: func TestLedgerAndEntries_Validate(t *testing.T) {}
+func TestLedgerAndEntries_Validate(t *testing.T) {
+	tests := []struct {
+		name   string
+		lte    *LedgerAndEntries
+		expErr string
+	}{
+		{
+			name:   "nil",
+			lte:    nil,
+			expErr: "ledger and entries cannot be nil",
+		},
+		{
+			name: "valid: ledger",
+			lte: &LedgerAndEntries{
+				Ledger: &Ledger{
+					Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+					LedgerClassId:              "ledger-class-id",
+					StatusTypeId:               1,
+					NextPmtDate:                20384,
+					NextPmtAmt:                 sdkmath.NewInt(3),
+					PaymentFrequency:           PAYMENT_FREQUENCY_DAILY,
+					InterestRate:               3_400_000,
+					MaturityDate:               21000,
+					InterestDayCountConvention: DAY_COUNT_CONVENTION_ACTUAL_365,
+					InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING,
+				},
+				Entries: []*LedgerEntry{
+					{
+						CorrelationId:  "abcdefgh-ijkl",
+						Sequence:       1,
+						EntryTypeId:    4,
+						PostedDate:     20200,
+						EffectiveDate:  20199,
+						TotalAmt:       sdkmath.NewInt(4),
+						AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+						BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+					},
+				},
+			},
+		},
+		{
+			name: "valid: ledger key",
+			lte: &LedgerAndEntries{
+				LedgerKey: &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+				Entries: []*LedgerEntry{
+					{
+						CorrelationId:  "abcdefgh-ijkl",
+						Sequence:       1,
+						EntryTypeId:    4,
+						PostedDate:     20200,
+						EffectiveDate:  20199,
+						TotalAmt:       sdkmath.NewInt(4),
+						AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+						BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+					},
+				},
+			},
+		},
+		{
+			name: "valid: both ledger and ledger key",
+			lte: &LedgerAndEntries{
+				LedgerKey: &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+				Ledger: &Ledger{
+					Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+					LedgerClassId:              "ledger-class-id",
+					StatusTypeId:               1,
+					NextPmtDate:                20384,
+					NextPmtAmt:                 sdkmath.NewInt(3),
+					PaymentFrequency:           PAYMENT_FREQUENCY_DAILY,
+					InterestRate:               3_400_000,
+					MaturityDate:               21000,
+					InterestDayCountConvention: DAY_COUNT_CONVENTION_ACTUAL_365,
+					InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING,
+				},
+				Entries: []*LedgerEntry{
+					{
+						CorrelationId:  "abcdefgh-ijkl",
+						Sequence:       1,
+						EntryTypeId:    4,
+						PostedDate:     20200,
+						EffectiveDate:  20199,
+						TotalAmt:       sdkmath.NewInt(4),
+						AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+						BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+					},
+				},
+			},
+		},
+		{
+			name:   "invalid ledger key",
+			lte:    &LedgerAndEntries{LedgerKey: &LedgerKey{NftId: "", AssetClassId: "the-asset-class-id"}},
+			expErr: "ledger_key: invalid nft_id: must be between 1 and 128 characters: invalid field",
+		},
+		{
+			name:   "invalid ledger",
+			lte:    &LedgerAndEntries{
+				Ledger: &Ledger{
+					Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+					LedgerClassId:              "",
+					StatusTypeId:               1,
+					NextPmtDate:                20384,
+					NextPmtAmt:                 sdkmath.NewInt(3),
+					PaymentFrequency:           PAYMENT_FREQUENCY_DAILY,
+					InterestRate:               3_400_000,
+					MaturityDate:               21000,
+					InterestDayCountConvention: DAY_COUNT_CONVENTION_ACTUAL_365,
+					InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING,
+				},
+			},
+			expErr: "ledger: ledger_class_id: must be between 1 and 128 characters",
+		},
+		{
+			name:   "invalid ledger and ledger key",
+			lte:    &LedgerAndEntries{
+				LedgerKey: &LedgerKey{NftId: "", AssetClassId: "the-asset-class-id"},
+				Ledger: &Ledger{
+					Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+					LedgerClassId:              "",
+					StatusTypeId:               1,
+					NextPmtDate:                20384,
+					NextPmtAmt:                 sdkmath.NewInt(3),
+					PaymentFrequency:           PAYMENT_FREQUENCY_DAILY,
+					InterestRate:               3_400_000,
+					MaturityDate:               21000,
+					InterestDayCountConvention: DAY_COUNT_CONVENTION_ACTUAL_365,
+					InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING,
+				},
+			},
+			expErr: joinErrs("ledger_key: invalid nft_id: must be between 1 and 128 characters: invalid field",
+				"ledger: ledger_class_id: must be between 1 and 128 characters"),
+		},
+		{
+			name:   "conflicting keys",
+			lte: &LedgerAndEntries{
+				LedgerKey: &LedgerKey{NftId: "the-nft-id-1", AssetClassId: "the-asset-class-id"},
+				Ledger: &Ledger{
+					Key:                        &LedgerKey{NftId: "the-nft-id-2", AssetClassId: "the-asset-class-id"},
+					LedgerClassId:              "ledger-class-id",
+					StatusTypeId:               1,
+					NextPmtDate:                20384,
+					NextPmtAmt:                 sdkmath.NewInt(3),
+					PaymentFrequency:           PAYMENT_FREQUENCY_DAILY,
+					InterestRate:               3_400_000,
+					MaturityDate:               21000,
+					InterestDayCountConvention: DAY_COUNT_CONVENTION_ACTUAL_365,
+					InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING,
+				},
+			},
+			expErr: "ledger_key and ledger.key must be the same",
+		},
+		{
+			name:   "invalid entry",
+			lte: &LedgerAndEntries{
+				LedgerKey: &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+				Entries: []*LedgerEntry{
+					{
+						CorrelationId:  "abcdefgh-ijkl",
+						Sequence:       1,
+						EntryTypeId:    4,
+						PostedDate:     20200,
+						EffectiveDate:  20199,
+						TotalAmt:       sdkmath.NewInt(4),
+						AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
+						BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
+					},
+					{
+						CorrelationId:  "abcdefgh-mnop",
+						Sequence:       2,
+						EntryTypeId:    4,
+						PostedDate:     -3,
+						EffectiveDate:  20199,
+						TotalAmt:       sdkmath.NewInt(12),
+						AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(12)}},
+						BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9984)}},
+					},
+				},
+			},
+			expErr: "entries[1]: posted_date: must be a positive integer",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.lte.Validate()
+			}
+			require.NotPanics(t, testFunc, "%T.Validate()", tc.lte)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%T.Validate() error", tc.lte)
+		})
+	}
+}
 
 func TestDayCountConvention_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
