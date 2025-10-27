@@ -332,7 +332,7 @@ func (s *MsgServerTestSuite) TestUpdateBalances() {
 				},
 				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
 			},
-			expErr: "applied_amounts: total amount must equal sum of abs(applied amounts)",
+			expErr: "applied_amounts: total amount must equal abs(sum of applied amounts)",
 		},
 	}
 
@@ -1305,13 +1305,13 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 			totalAmt:       math.NewInt(199),
 			appliedAmounts: []*ledger.LedgerBucketAmount{{AppliedAmt: math.NewInt(200), BucketTypeId: 1}},
 			balanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(200)}},
-			expErr:         "applied_amounts: total amount must equal sum of abs(applied amounts)",
+			expErr:         "applied_amounts: total amount must equal abs(sum of applied amounts)",
 		},
 		{
 			name:          "valid update: same total",
 			ledgerKey:     s.existingLedger.Key,
 			correlationId: "test-correlation-id-update",
-			totalAmt:      math.NewInt(100),
+			totalAmt:      math.NewInt(50),
 			appliedAmounts: []*ledger.LedgerBucketAmount{
 				{AppliedAmt: math.NewInt(75), BucketTypeId: 1},
 				{AppliedAmt: math.NewInt(-25), BucketTypeId: 2},
@@ -1322,7 +1322,7 @@ func (s *MsgServerTestSuite) TestUpdateEntryBalancesValidation() {
 			name:          "valid update: new total",
 			ledgerKey:     s.existingLedger.Key,
 			correlationId: "test-correlation-id-update",
-			totalAmt:      math.NewInt(150),
+			totalAmt:      math.NewInt(90),
 			appliedAmounts: []*ledger.LedgerBucketAmount{
 				{AppliedAmt: math.NewInt(80), BucketTypeId: 1},
 				{AppliedAmt: math.NewInt(-30), BucketTypeId: 2},

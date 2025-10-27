@@ -188,7 +188,7 @@ func TestMsgUpdateBalances_ValidateBasic(t *testing.T) {
 				AppliedAmounts: []*LedgerBucketAmount{applied},
 				BalanceAmounts: []*BucketBalance{bal},
 			},
-			exp: []string{"applied_amounts", "total amount must equal sum of abs(applied amounts)"},
+			exp: []string{"applied_amounts", "total amount must equal abs(sum of applied amounts)"},
 		},
 		{
 			name: "empty balances",

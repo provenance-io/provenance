@@ -60,7 +60,7 @@ func (s *TestSuite) TestAppendEntry() {
 				EntryTypeId:   1,
 				PostedDate:    s.pastDate,
 				EffectiveDate: s.pastDate,
-				TotalAmt:      math.NewInt(100),
+				TotalAmt:      math.NewInt(0),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
 					{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
 					{AppliedAmt: math.NewInt(-50), BucketTypeId: 2},
@@ -82,7 +82,7 @@ func (s *TestSuite) TestAppendEntry() {
 				EffectiveDate: s.pastDate,
 				TotalAmt:      math.NewInt(100),
 				AppliedAmounts: []*ledger.LedgerBucketAmount{
-					{AppliedAmt: math.NewInt(50), BucketTypeId: 1},
+					{AppliedAmt: math.NewInt(150), BucketTypeId: 1},
 					{AppliedAmt: math.NewInt(-50), BucketTypeId: 2},
 				},
 				BalanceAmounts: []*ledger.BucketBalance{{BucketTypeId: 1, BalanceAmt: math.NewInt(10000)}},

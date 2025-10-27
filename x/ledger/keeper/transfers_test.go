@@ -75,7 +75,7 @@ func (s *TestSuite) TestGetBalances() {
 			PostedDate:    s.pastDate,
 			EffectiveDate: s.pastDate,
 			Sequence:      1,
-			TotalAmt:      math.NewInt(500),
+			TotalAmt:      math.NewInt(350),
 			AppliedAmounts: []*ledger.LedgerBucketAmount{
 				{
 					// Principal
@@ -90,7 +90,7 @@ func (s *TestSuite) TestGetBalances() {
 				{
 					// Escrow
 					BucketTypeId: 3,
-					AppliedAmt:   math.NewInt(100),
+					AppliedAmt:   math.NewInt(50),
 				},
 			},
 			// This entry has sequence 1, so bucket type 1 is overwritten, but 2 and 3 are.

@@ -1304,9 +1304,24 @@ func TestLedgerEntry_Validate(t *testing.T) {
 				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(4)}},
 				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.NewInt(9996)}},
 			},
-			expErr: "applied_amounts: total amount must equal sum of abs(applied amounts)",
+			expErr: "applied_amounts: total amount must equal abs(sum of applied amounts)",
 		},
-		// multiple errors
+		{
+			name: "multiple errors",
+			le: &LedgerEntry{
+				CorrelationId:  "",
+				Sequence:       1,
+				EntryTypeId:    4,
+				PostedDate:     20200,
+				EffectiveDate:  20199,
+				TotalAmt:       sdkmath.NewInt(4),
+				AppliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 3, AppliedAmt: sdkmath.Int{}}},
+				BalanceAmounts: []*BucketBalance{{BucketTypeId: 3, BalanceAmt: sdkmath.Int{}}},
+			},
+			expErr: joinErrs("correlation_id: must be between 1 and 50 characters",
+				"applied_amounts[0]: applied_amt: must not be nil",
+				"balance_amounts[0]: balance_amt: must not be nil"),
+		},
 	}
 
 	for _, tc := range tests {
@@ -1368,9 +1383,8 @@ func TestLedgerBucketAmount_Validate(t *testing.T) {
 		},
 		{name: "valid: base", lba: lba(4, 12345)},
 		{
-			name:   "zero bucket id",
-			lba:    lba(0, 12345),
-			expErr: "bucket_type_id: must be a positive integer",
+			name: "zero bucket id",
+			lba:  lba(0, 12345),
 		},
 		{name: "zero applied amount", lba: lba(1, 0)},
 		{name: "negative applied amount", lba: lba(1, -54321)},
@@ -1378,7 +1392,7 @@ func TestLedgerBucketAmount_Validate(t *testing.T) {
 		{
 			name:   "negative bucket id",
 			lba:    lba(-1, 12345),
-			expErr: "bucket_type_id: must be a positive integer",
+			expErr: "bucket_type_id: must be a non-negative integer",
 		},
 		{
 			name:   "nil applied amount",
@@ -1419,9 +1433,8 @@ func TestBucketBalance_Validate(t *testing.T) {
 		},
 		{name: "valid: base", lba: bb(4, 12345)},
 		{
-			name:   "zero bucket id",
-			lba:    bb(0, 12345),
-			expErr: "bucket_type_id: must be a positive integer",
+			name: "zero bucket id",
+			lba:  bb(0, 12345),
 		},
 		{name: "zero balance amount", lba: bb(1, 0)},
 		{name: "negative balance amount", lba: bb(1, -54321)},
@@ -1429,7 +1442,7 @@ func TestBucketBalance_Validate(t *testing.T) {
 		{
 			name:   "negative bucket id",
 			lba:    bb(-1, 12345),
-			expErr: "bucket_type_id: must be a positive integer",
+			expErr: "bucket_type_id: must be a non-negative integer",
 		},
 		{
 			name:   "nil balance amount",
@@ -1565,7 +1578,6 @@ func TestDayCountConvention_UnmarshalJSON(t *testing.T) {
 }
 
 func TestDayCountConvention_Validate(t *testing.T) {
-	// "unknown day_count_convention enum value: %d"
 	tests := []struct {
 		name   string
 		d      DayCountConvention
