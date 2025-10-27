@@ -9,8 +9,8 @@ import (
 
 // Validate validates the FundTransferWithSettlement type
 func (ft *FundTransferWithSettlement) Validate() error {
-	if ft.Key == nil {
-		return fmt.Errorf("key cannot be nil")
+	if ft == nil {
+		return fmt.Errorf("fund_transfer_with_settlement cannot be nil")
 	}
 
 	var errs []error
@@ -24,10 +24,8 @@ func (ft *FundTransferWithSettlement) Validate() error {
 	}
 
 	// Validate that the settlement instructions are valid
-	for _, si := range ft.SettlementInstructions {
-		if err := si.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("settlement_instructions: %w", err))
-		}
+	if err := validateSlice(ft.SettlementInstructions, "settlement_instructions"); err != nil {
+		errs = append(errs, err)
 	}
 
 	return errors.Join(errs...)
@@ -35,12 +33,13 @@ func (ft *FundTransferWithSettlement) Validate() error {
 
 // Validate validates the SettlementInstruction type
 func (si *SettlementInstruction) Validate() error {
+	if si == nil {
+		return fmt.Errorf("settlement_instruction cannot be nil")
+	}
+
 	var errs []error
 	if err := si.Amount.Validate(); err != nil {
-		errs = append(errs, err)
-	}
-	if si.Amount.IsNegative() {
-		errs = append(errs, fmt.Errorf("amount: must be a non-negative integer"))
+		errs = append(errs, fmt.Errorf("amount: %w", err))
 	}
 
 	if err := lenCheck(si.Memo, 0, MaxLenMemo); err != nil {
@@ -54,7 +53,7 @@ func (si *SettlementInstruction) Validate() error {
 
 	// Validate status enum
 	if err := si.Status.Validate(); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("status", "invalid funding transfer status"))
+		errs = append(errs, err)
 	}
 
 	return errors.Join(errs...)
