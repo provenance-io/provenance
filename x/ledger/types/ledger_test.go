@@ -1359,7 +1359,106 @@ func TestValidateSequence(t *testing.T) {
 	}
 }
 
-// TODO: func TestValidateLedgerEntryAmounts(t *testing.T) {}
+func TestValidateLedgerEntryAmounts(t *testing.T) {
+	tests := []struct {
+		name           string
+		totalAmt       sdkmath.Int
+		appliedAmounts []*LedgerBucketAmount
+		balanceAmounts []*BucketBalance
+		expErr         string
+	}{
+		{
+			name:     "nil total amt",
+			totalAmt: sdkmath.Int{},
+			expErr:   "total_amt: must be a non-negative integer",
+		},
+		{
+			name:     "negative total amount",
+			totalAmt: sdkmath.NewInt(-1),
+			expErr:   "total_amt: must be a non-negative integer",
+		},
+		{
+			name:           "zero total nil applied amounts",
+			totalAmt:       sdkmath.ZeroInt(),
+			appliedAmounts: nil,
+		},
+		{
+			name:           "zero total empty applied amounts",
+			totalAmt:       sdkmath.ZeroInt(),
+			appliedAmounts: []*LedgerBucketAmount{},
+		},
+		{
+			name:           "non-zero total nil applied amounts",
+			totalAmt:       sdkmath.NewInt(5),
+			appliedAmounts: nil,
+			expErr:         "applied_amounts: cannot be empty",
+		},
+		{
+			name:           "non-zero total empty applied amounts",
+			totalAmt:       sdkmath.NewInt(5),
+			appliedAmounts: []*LedgerBucketAmount{},
+			expErr:         "applied_amounts: cannot be empty",
+		},
+		{
+			name:     "zero total with applied amounts",
+			totalAmt: sdkmath.ZeroInt(),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.ZeroInt()},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.ZeroInt()},
+			},
+		},
+		{
+			name:     "invalid applied amounts",
+			totalAmt: sdkmath.NewInt(10),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(7)},
+				{BucketTypeId: -2, AppliedAmt: sdkmath.NewInt(3)},
+			},
+			expErr: "applied_amounts[1]: bucket_type_id: must be a non-negative integer",
+		},
+		{
+			name:     "total does not match applied amounts",
+			totalAmt: sdkmath.NewInt(10),
+			appliedAmounts: []*LedgerBucketAmount{
+				{BucketTypeId: 1, AppliedAmt: sdkmath.NewInt(7)},
+				{BucketTypeId: 2, AppliedAmt: sdkmath.NewInt(-5)},
+				{BucketTypeId: 3, AppliedAmt: sdkmath.NewInt(9)},
+			},
+			expErr: "applied_amounts: total amount must equal abs(sum of applied amounts)",
+		},
+		{
+			name:     "invalid balance amounts",
+			totalAmt: sdkmath.ZeroInt(),
+			balanceAmounts: []*BucketBalance{
+				{BucketTypeId: 1, BalanceAmt: sdkmath.NewInt(7)},
+				{BucketTypeId: 2, BalanceAmt: sdkmath.Int{}},
+				{BucketTypeId: -3, BalanceAmt: sdkmath.NewInt(9)},
+			},
+			expErr: joinErrs("balance_amounts[1]: balance_amt: must not be nil",
+				"balance_amounts[2]: bucket_type_id: must be a non-negative integer"),
+		},
+		{
+			name:           "multiple errors",
+			totalAmt:       sdkmath.Int{},
+			appliedAmounts: []*LedgerBucketAmount{{BucketTypeId: 1, AppliedAmt: sdkmath.Int{}}},
+			balanceAmounts: []*BucketBalance{{BucketTypeId: 1, BalanceAmt: sdkmath.Int{}}},
+			expErr: joinErrs("total_amt: must be a non-negative integer",
+				"applied_amounts[0]: applied_amt: must not be nil",
+				"balance_amounts[0]: balance_amt: must not be nil"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateLedgerEntryAmounts(tc.totalAmt, tc.appliedAmounts, tc.balanceAmounts)
+			}
+			require.NotPanics(t, testFunc, "ValidateLedgerEntryAmounts")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateLedgerEntryAmounts error")
+		})
+	}
+}
 
 // TODO: func TestValidateEntryAmounts(t *testing.T) {}
 
@@ -1557,8 +1656,8 @@ func TestLedgerAndEntries_Validate(t *testing.T) {
 			expErr: "ledger_key: invalid nft_id: must be between 1 and 128 characters: invalid field",
 		},
 		{
-			name:   "invalid ledger",
-			lte:    &LedgerAndEntries{
+			name: "invalid ledger",
+			lte: &LedgerAndEntries{
 				Ledger: &Ledger{
 					Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
 					LedgerClassId:              "",
@@ -1575,8 +1674,8 @@ func TestLedgerAndEntries_Validate(t *testing.T) {
 			expErr: "ledger: ledger_class_id: must be between 1 and 128 characters",
 		},
 		{
-			name:   "invalid ledger and ledger key",
-			lte:    &LedgerAndEntries{
+			name: "invalid ledger and ledger key",
+			lte: &LedgerAndEntries{
 				LedgerKey: &LedgerKey{NftId: "", AssetClassId: "the-asset-class-id"},
 				Ledger: &Ledger{
 					Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
@@ -1595,7 +1694,7 @@ func TestLedgerAndEntries_Validate(t *testing.T) {
 				"ledger: ledger_class_id: must be between 1 and 128 characters"),
 		},
 		{
-			name:   "conflicting keys",
+			name: "conflicting keys",
 			lte: &LedgerAndEntries{
 				LedgerKey: &LedgerKey{NftId: "the-nft-id-1", AssetClassId: "the-asset-class-id"},
 				Ledger: &Ledger{
@@ -1614,7 +1713,7 @@ func TestLedgerAndEntries_Validate(t *testing.T) {
 			expErr: "ledger_key and ledger.key must be the same",
 		},
 		{
-			name:   "invalid entry",
+			name: "invalid entry",
 			lte: &LedgerAndEntries{
 				LedgerKey: &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
 				Entries: []*LedgerEntry{
