@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/internal/provutils"
 )
 
 // Validate validates the FundTransferWithSettlement type
@@ -61,7 +63,7 @@ func (si *SettlementInstruction) Validate() error {
 
 // UnmarshalJSON implements json.Unmarshaler for FundingTransferStatus.
 func (s *FundingTransferStatus) UnmarshalJSON(data []byte) error {
-	value, err := enumUnmarshalJSON(data, FundingTransferStatus_value, FundingTransferStatus_name)
+	value, err := provutils.EnumUnmarshalJSON(data, FundingTransferStatus_value, FundingTransferStatus_name)
 	if err != nil {
 		return err
 	}
@@ -71,5 +73,5 @@ func (s *FundingTransferStatus) UnmarshalJSON(data []byte) error {
 
 // Validate returns an error if this FundingTransferStatus isn't a defined enum entry.
 func (s FundingTransferStatus) Validate() error {
-	return enumValidateExists(s, FundingTransferStatus_name)
+	return provutils.EnumValidateExists(s, FundingTransferStatus_name)
 }

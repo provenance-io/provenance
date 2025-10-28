@@ -1,4 +1,4 @@
-package types
+package provutils
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-// enumUnmarshalJSON unmarshals an enum entry from either a JSON string or number.
+// EnumUnmarshalJSON unmarshalls an enum entry from either a JSON string or number.
 // As a string, the name prefix is optional. I.e. "PAYMENT_FREQUENCY_DAILY" can be provided as just "DAILY".
 // It is not an error to get the _UNSPECIFIED value.
-func enumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]string) (int32, error) {
+func EnumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]string) (int32, error) {
 	// Try to unmarshal as string first
 	var strIn string
 	if err := json.Unmarshal(data, &strIn); err == nil {
@@ -19,7 +19,7 @@ func enumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]str
 			return value, nil
 		}
 		namePrefix := strings.TrimSuffix(names[0], "UNSPECIFIED") // E.g. DAY_COUNT_CONVENTION_
-		// Try without enum prefix
+		// Try without the enum prefix
 		if value, exists := values[namePrefix+str]; exists {
 			return value, nil
 		}
@@ -38,9 +38,9 @@ func enumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]str
 	return 0, fmt.Errorf("%s must be a string or integer, got: %q", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), string(data))
 }
 
-// enumValidateExists returns an error if the provided value is not contained in the provided names map.
+// EnumValidateExists returns an error if the provided value is not contained in the provided names map.
 // It does NOT return an error on the zero (_UNSPECIFIED) value.
-func enumValidateExists[E ~int32](value E, names map[int32]string) error {
+func EnumValidateExists[E ~int32](value E, names map[int32]string) error {
 	if _, exists := names[int32(value)]; !exists {
 		return fmt.Errorf("unknown %s enum value: %d", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), value)
 	}

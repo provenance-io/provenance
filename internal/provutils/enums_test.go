@@ -1,4 +1,4 @@
-package types
+package provutils_test
 
 import (
 	"testing"
@@ -7,8 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/provenance-io/provenance/testutil/assertions"
+
+	. "github.com/provenance-io/provenance/internal/provutils"
 )
 
 // TestEnum is an enum created for these unit tests.
@@ -140,11 +141,11 @@ func TestEnumUnmarshalJSON(t *testing.T) {
 			var act int32
 			var err error
 			testFunc := func() {
-				act, err = enumUnmarshalJSON([]byte(tc.data), TestEnum_value, TestEnum_name)
+				act, err = EnumUnmarshalJSON([]byte(tc.data), TestEnum_value, TestEnum_name)
 			}
-			require.NotPanics(t, testFunc, "enumUnmarshalJSON(%q)", tc.data)
-			assertions.AssertErrorValue(t, err, tc.expErr, "enumUnmarshalJSON(%q) error", tc.data)
-			assert.Equal(t, int(tc.exp), int(act), "enumUnmarshalJSON(%q) result", tc.data)
+			require.NotPanics(t, testFunc, "EnumUnmarshalJSON(%q)", tc.data)
+			assertions.AssertErrorValue(t, err, tc.expErr, "EnumUnmarshalJSON(%q) error", tc.data)
+			assert.Equal(t, int(tc.exp), int(act), "EnumUnmarshalJSON(%q) result", tc.data)
 		})
 	}
 }
@@ -169,10 +170,10 @@ func TestEnumValidateExists(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
 			testFunc := func() {
-				err = enumValidateExists(tc.value, TestEnum_name)
+				err = EnumValidateExists(tc.value, TestEnum_name)
 			}
-			require.NotPanics(t, testFunc, "enumValidateExists(%s)", tc.value)
-			assertions.AssertErrorValue(t, err, tc.expErr, "enumValidateExists(%s) error", tc.value)
+			require.NotPanics(t, testFunc, "EnumValidateExists(%s)", tc.value)
+			assertions.AssertErrorValue(t, err, tc.expErr, "EnumValidateExists(%s) error", tc.value)
 		})
 	}
 }

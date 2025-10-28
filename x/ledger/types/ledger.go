@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -488,7 +489,7 @@ func (lte *LedgerAndEntries) Validate() error {
 
 // UnmarshalJSON implements json.Unmarshaler for DayCount.
 func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
-	value, err := enumUnmarshalJSON(data, DayCountConvention_value, DayCountConvention_name)
+	value, err := provutils.EnumUnmarshalJSON(data, DayCountConvention_value, DayCountConvention_name)
 	if err != nil {
 		return err
 	}
@@ -498,12 +499,12 @@ func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
 
 // Validate returns an error if this DayCountConvention isn't a defined enum entry.
 func (d DayCountConvention) Validate() error {
-	return enumValidateExists(d, DayCountConvention_name)
+	return provutils.EnumValidateExists(d, DayCountConvention_name)
 }
 
 // UnmarshalJSON implements json.Unmarshaler for InterestAccrual.
 func (i *InterestAccrualMethod) UnmarshalJSON(data []byte) error {
-	value, err := enumUnmarshalJSON(data, InterestAccrualMethod_value, InterestAccrualMethod_name)
+	value, err := provutils.EnumUnmarshalJSON(data, InterestAccrualMethod_value, InterestAccrualMethod_name)
 	if err != nil {
 		return err
 	}
@@ -513,12 +514,12 @@ func (i *InterestAccrualMethod) UnmarshalJSON(data []byte) error {
 
 // Validate returns an error if this InterestAccrualMethod isn't a defined enum entry.
 func (i InterestAccrualMethod) Validate() error {
-	return enumValidateExists(i, InterestAccrualMethod_name)
+	return provutils.EnumValidateExists(i, InterestAccrualMethod_name)
 }
 
 // UnmarshalJSON implements json.Unmarshaler for PaymentFrequency.
 func (p *PaymentFrequency) UnmarshalJSON(data []byte) error {
-	value, err := enumUnmarshalJSON(data, PaymentFrequency_value, PaymentFrequency_name)
+	value, err := provutils.EnumUnmarshalJSON(data, PaymentFrequency_value, PaymentFrequency_name)
 	if err != nil {
 		return err
 	}
@@ -528,5 +529,5 @@ func (p *PaymentFrequency) UnmarshalJSON(data []byte) error {
 
 // Validate returns an error if this PaymentFrequency isn't a defined enum entry.
 func (p PaymentFrequency) Validate() error {
-	return enumValidateExists(p, PaymentFrequency_name)
+	return provutils.EnumValidateExists(p, PaymentFrequency_name)
 }

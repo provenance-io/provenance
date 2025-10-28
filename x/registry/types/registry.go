@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	metadataTypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -139,17 +140,27 @@ func (m *RolesEntry) Validate() error {
 	return errors.Join(errs...)
 }
 
+// UnmarshalJSON implements json.Unmarshaler for RegistryRole.
+func (r *RegistryRole) UnmarshalJSON(data []byte) error {
+	value, err := provutils.EnumUnmarshalJSON(data, RegistryRole_value, RegistryRole_name)
+	if err != nil {
+		return err
+	}
+	*r = RegistryRole(value)
+	return nil
+}
+
+// Validate returns an error if this DayCountConvention isn't a defined enum entry, or is unspecified.
 func (r RegistryRole) Validate() error {
-	var errs []error
-	if _, ok := RegistryRole_name[int32(r)]; !ok {
-		errs = append(errs, fmt.Errorf("invalid role"))
+	if err := provutils.EnumValidateExists(r, RegistryRole_name); err != nil {
+		return err
 	}
 
 	if r == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
-		errs = append(errs, fmt.Errorf("cannot be unspecified"))
+		return fmt.Errorf("cannot be unspecified")
 	}
 
-	return errors.Join(errs...)
+	return nil
 }
 
 // ShortString returns this.String() with the "REGISTRY_ROLE_" prefix removed.
