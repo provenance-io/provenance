@@ -43,8 +43,8 @@ func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, order uint64
 func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle func(trigger triggertypes.Trigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, triggertypes.GetEventListenerPrefix(eventName))
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
-	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		triggerID := binary.BigEndian.Uint64(iterator.Key()[41:49])
 		record, err := k.GetTrigger(ctx, triggerID)

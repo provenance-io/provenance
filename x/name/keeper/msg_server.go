@@ -37,7 +37,7 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Fetch the parent name record from the keeper.
-	record, err := s.Keeper.GetRecordByName(ctx, msg.Parent.Name)
+	record, err := s.GetRecordByName(ctx, msg.Parent.Name)
 	if err != nil {
 		ctx.Logger().Error("unable to find parent name record", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -49,18 +49,18 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 			ctx.Logger().Error("unable to parse parent address", "err", addrErr)
 			return nil, sdkerrors.ErrInvalidRequest.Wrap(addrErr.Error())
 		}
-		if !s.Keeper.ResolvesTo(ctx, msg.Parent.Name, parentAddress) {
+		if !s.ResolvesTo(ctx, msg.Parent.Name, parentAddress) {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("parent name %q is restricted and does not resolve to the provided parent address", record.Name)
 		}
 	}
 	// Combine names, normalize, and check for existing record
 	n := fmt.Sprintf("%s.%s", msg.Record.Name, msg.Parent.Name)
-	name, err := s.Keeper.Normalize(ctx, n)
+	name, err := s.Normalize(ctx, n)
 	if err != nil {
 		ctx.Logger().Error("invalid name", "name", name)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if s.Keeper.NameExists(ctx, name) {
+	if s.NameExists(ctx, name) {
 		ctx.Logger().Error("name already bound", "name", name)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameAlreadyBound.Error())
 	}
@@ -70,7 +70,7 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		ctx.Logger().Error("invalid address", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := s.Keeper.SetNameRecord(ctx, name, address, msg.Record.Restricted); err != nil {
+	if err := s.SetNameRecord(ctx, name, address, msg.Record.Restricted); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -104,7 +104,7 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Normalize
-	name, err := s.Keeper.Normalize(ctx, msg.Record.Name)
+	name, err := s.Normalize(ctx, msg.Record.Name)
 	if err != nil {
 		ctx.Logger().Error("invalid name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -116,24 +116,24 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Ensure the name exists
-	if !s.Keeper.NameExists(ctx, name) {
+	if !s.NameExists(ctx, name) {
 		ctx.Logger().Error("invalid name", "name", name)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("name does not exist")
 	}
 	// Ensure permission
-	if !s.Keeper.ResolvesTo(ctx, name, address) {
+	if !s.ResolvesTo(ctx, name, address) {
 		ctx.Logger().Error("msg sender cannot delete name", "name", name)
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete name")
 	}
 	// Delete
-	err = s.Keeper.DeleteRecord(ctx, name)
+	err = s.DeleteRecord(ctx, name)
 	if err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	// Remove all attributes from assigned accounts
-	err = s.Keeper.attrKeeper.PurgeAttribute(ctx, name, address)
+	err = s.attrKeeper.PurgeAttribute(ctx, name, address)
 	if err != nil {
 		return nil, err
 	}
@@ -162,13 +162,13 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameRequest) (*types.MsgModifyNameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	existing, _ := s.Keeper.GetRecordByName(ctx, msg.GetRecord().Name)
+	existing, _ := s.GetRecordByName(ctx, msg.GetRecord().Name)
 	if existing == nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameNotBound.Error())
 	}
 
-	if msg.GetAuthority() != s.Keeper.GetAuthority() && msg.GetAuthority() != existing.Address {
-		return nil, sdkerrors.ErrUnauthorized.Wrapf("expected %s or %s got %s", s.Keeper.GetAuthority(), existing.Address, msg.GetAuthority())
+	if msg.GetAuthority() != s.GetAuthority() && msg.GetAuthority() != existing.Address {
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("expected %s or %s got %s", s.GetAuthority(), existing.Address, msg.GetAuthority())
 	}
 
 	addr, err := sdk.AccAddressFromBech32(msg.GetRecord().Address)
@@ -176,7 +176,7 @@ func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameReq
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if err := s.Keeper.UpdateNameRecord(ctx, msg.GetRecord().Name, addr, msg.GetRecord().Restricted); err != nil {
+	if err := s.UpdateNameRecord(ctx, msg.GetRecord().Name, addr, msg.GetRecord().Restricted); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
@@ -187,8 +187,8 @@ func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameReq
 func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRootNameRequest) (*types.MsgCreateRootNameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if s.Keeper.GetAuthority() != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", s.Keeper.GetAuthority(), msg.Authority)
+	if s.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", s.GetAuthority(), msg.Authority)
 	}
 
 	err := s.Keeper.CreateRootName(ctx, msg.Record.Name, msg.Record.Address, msg.Record.Restricted)

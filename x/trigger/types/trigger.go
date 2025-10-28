@@ -114,9 +114,9 @@ func (e BlockHeightEvent) Validate() error {
 	return nil
 }
 
-// Validate checks if this event is valid with the current context.
+// ValidateContext checks if this event is valid with the current context.
 func (e BlockHeightEvent) ValidateContext(ctx sdk.Context) error {
-	if e.BlockHeight <= uint64(ctx.BlockHeight()) {
+	if e.BlockHeight <= uint64(ctx.BlockHeight()) { //nolint:gosec // block height is always >= 0
 		return ErrInvalidBlockHeight
 	}
 	return nil
@@ -129,7 +129,7 @@ func (e BlockTimeEvent) GetEventPrefix() string {
 
 // GetEventOrder gets the order for which this event should be processed
 func (e BlockTimeEvent) GetEventOrder() uint64 {
-	return uint64(e.Time.UnixNano())
+	return uint64(e.Time.UnixNano()) //nolint:gosec // time always >= Unix epoch
 }
 
 // Validate checks if the event data is valid.
