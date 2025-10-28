@@ -36,10 +36,10 @@ func TestMsgRegisterNFT_ValidateBasic(t *testing.T) {
 		{name: "empty signer", msg: MsgRegisterNFT{Signer: "", Key: validKey, Roles: validRoles}, exp: "invalid signer: empty address"},
 		{name: "bad signer", msg: MsgRegisterNFT{Signer: "bad", Key: validKey, Roles: validRoles}, exp: "invalid signer: decoding bech32"},
 		{name: "nil key", msg: MsgRegisterNFT{Signer: validAddr, Key: nil, Roles: validRoles}, exp: "invalid key: registry key cannot be nil"},
-		{name: "invalid key", msg: MsgRegisterNFT{Signer: validAddr, Key: &RegistryKey{AssetClassId: "", NftId: "nft1"}, Roles: validRoles}, exp: "invalid key: must be between"},
-		{name: "role unspecified", msg: MsgRegisterNFT{Signer: validAddr, Key: validKey, Roles: []RolesEntry{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Addresses: []string{validAddr}}}}, exp: "invalid role: cannot be unspecified"},
+		{name: "invalid key", msg: MsgRegisterNFT{Signer: validAddr, Key: &RegistryKey{AssetClassId: "", NftId: "nft1"}, Roles: validRoles}, exp: "invalid key: asset class id: must be between"},
+		{name: "role unspecified", msg: MsgRegisterNFT{Signer: validAddr, Key: validKey, Roles: []RolesEntry{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Addresses: []string{validAddr}}}}, exp: "invalid role: role: cannot be unspecified"},
 		{name: "role empty addresses", msg: MsgRegisterNFT{Signer: validAddr, Key: validKey, Roles: []RolesEntry{{Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{}}}}, exp: "invalid role: addresses cannot be empty"},
-		{name: "role bad address", msg: MsgRegisterNFT{Signer: validAddr, Key: validKey, Roles: []RolesEntry{{Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{"bad"}}}}, exp: "invalid role: address: decoding bech32"},
+		{name: "role bad address", msg: MsgRegisterNFT{Signer: validAddr, Key: validKey, Roles: []RolesEntry{{Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{"bad"}}}}, exp: "invalid role: address[0]: decoding bech32"},
 	}
 
 	for _, tc := range tests {
@@ -163,7 +163,7 @@ func TestMsgRegistryBulkUpdate_ValidateBasic(t *testing.T) {
 		{name: "bad signer", msg: MsgRegistryBulkUpdate{Signer: "bad", Entries: []RegistryEntry{entry}}, exp: "invalid signer: decoding bech32"},
 		{name: "no entries", msg: MsgRegistryBulkUpdate{Signer: validAddr, Entries: []RegistryEntry{}}, exp: "entries cannot be empty"},
 		{name: "too many entries", msg: MsgRegistryBulkUpdate{Signer: validAddr, Entries: over}, exp: "entries cannot be empty or greater than"},
-		{name: "invalid entry", msg: MsgRegistryBulkUpdate{Signer: validAddr, Entries: []RegistryEntry{{Key: nil}}}, exp: "invalid entry: registry key cannot be nil"},
+		{name: "invalid entry", msg: MsgRegistryBulkUpdate{Signer: validAddr, Entries: []RegistryEntry{{Key: nil}}}, exp: "invalid entry: 0: key: registry key cannot be nil"},
 	}
 
 	for _, tc := range tests {

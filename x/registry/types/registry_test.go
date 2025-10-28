@@ -402,7 +402,7 @@ func TestRegistryRole_Validate(t *testing.T) {
 		{
 			name:   "invalid role value",
 			role:   types.RegistryRole(999),
-			expErr: "invalid role",
+			expErr: "unknown registry_role enum value: 999",
 		},
 	}
 

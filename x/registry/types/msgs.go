@@ -107,9 +107,9 @@ func (m MsgRegistryBulkUpdate) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("entries cannot be empty or greater than %d", MaxRegistryBulkEntries))
 	}
 
-	for _, entry := range m.Entries {
+	for i, entry := range m.Entries {
 		if err := entry.Validate(); err != nil {
-			errs = append(errs, NewErrCodeInvalidField("entry", "%s", err))
+			errs = append(errs, NewErrCodeInvalidField("entry", "%d: %s", i, err))
 		}
 	}
 

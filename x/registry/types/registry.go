@@ -46,10 +46,15 @@ func (m *RegistryKey) Validate() error {
 		return fmt.Errorf("registry key cannot be nil")
 	}
 
-	return errors.Join(
-		ValidateNftID(m.NftId),
-		ValidateClassID(m.AssetClassId),
-	)
+	var errs []error
+	if err := ValidateNftID(m.NftId); err != nil {
+		errs = append(errs, fmt.Errorf("nft id: %w", err))
+	}
+	if err := ValidateClassID(m.AssetClassId); err != nil {
+		errs = append(errs, fmt.Errorf("asset class id: %w", err))
+	}
+
+	return errors.Join(errs...)
 }
 
 // CollKey returns the collections key that this RegistryKey represents.
@@ -76,7 +81,7 @@ func (m *RegistryEntry) Validate() error {
 
 	var errs []error
 	if err := m.Key.Validate(); err != nil {
-		errs = append(errs, err)
+		errs = append(errs, fmt.Errorf("key: %w", err))
 	}
 
 	// Validate roles
@@ -114,7 +119,7 @@ func (m *RolesEntry) Validate() error {
 
 	var errs []error
 	if err := m.Role.Validate(); err != nil {
-		errs = append(errs, err)
+		errs = append(errs, fmt.Errorf("role: %w", err))
 	}
 
 	// Validate addresses
@@ -124,17 +129,20 @@ func (m *RolesEntry) Validate() error {
 
 	// Check for duplicate addresses
 	seen := make(map[string]bool)
-	for _, address := range m.Addresses {
-		if err := ValidateStringLength(address, 1, MaxLenAddress); err != nil {
-			errs = append(errs, fmt.Errorf("address: %w", err))
-		}
-		if _, err := sdk.AccAddressFromBech32(address); err != nil {
-			errs = append(errs, fmt.Errorf("address: %w", err))
-		}
+	for i, address := range m.Addresses {
 		if seen[address] {
-			errs = append(errs, fmt.Errorf("duplicate address: %q", address))
+			errs = append(errs, fmt.Errorf("duplicate address[%d]: %q", i, address))
+			continue
 		}
 		seen[address] = true
+		if err := ValidateStringLength(address, 1, MaxLenAddress); err != nil {
+			errs = append(errs, fmt.Errorf("address[%d]: %w", i, err))
+			continue
+		}
+		if _, err := sdk.AccAddressFromBech32(address); err != nil {
+			errs = append(errs, fmt.Errorf("address[%d]: %w", i, err))
+			continue
+		}
 	}
 
 	return errors.Join(errs...)
