@@ -151,9 +151,9 @@ func (m MetadataAddress) Format(s fmt.State, verb rune) {
 	case 's':
 		s.Write([]byte(m.String()))
 	case 'p':
-		s.Write([]byte(fmt.Sprintf("%p", m.Bytes())))
+		s.Write(fmt.Appendf(nil, "%p", m.Bytes()))
 	default:
-		s.Write([]byte(fmt.Sprintf("%X", m.Bytes())))
+		s.Write(fmt.Appendf(nil, "%X", m.Bytes()))
 	}
 }
 
