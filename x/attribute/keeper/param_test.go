@@ -6,10 +6,11 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/attribute/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type ParamTestSuite struct {

@@ -3,11 +3,12 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/testutil"
 	"github.com/stretchr/testify/require"
 
-	"github.com/provenance-io/provenance/x/ibchooks/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil"
+
 	. "github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
@@ -52,7 +53,7 @@ func TestNewMsgUpdateParamsRequest(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgUpdateParamsRequest(tc.contracts, tc.authority)
+			msg := NewMsgUpdateParamsRequest(tc.contracts, tc.authority)
 			err := msg.ValidateBasic()
 			if tc.expErr != "" {
 				require.EqualError(t, err, tc.expErr, "MsgUpdateParamsRequest.ValidateBasic expected error message: %s, but got: %s", tc.expErr, err)

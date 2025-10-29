@@ -4248,7 +4248,7 @@ func TestMakeIndexKeyMarketExternalIDToOrder(t *testing.T) {
 				"814348F5-DE62-4954-81D1-65874E37C0BE"...),
 		},
 		{
-			name:       "market 67,305,985, a wierd external id",
+			name:       "market 67,305,985, a weird external id",
 			marketID:   67_305_985,
 			externalID: "ThisIsWierd",
 			expected:   append([]byte{keeper.KeyTypeMarketExternalIDToOrderIndex, 4, 3, 2, 1}, "ThisIsWierd"...),

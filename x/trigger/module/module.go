@@ -189,7 +189,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate1To2); err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1To2); err != nil {
 		panic(fmt.Errorf("failed to register x/trigger migration from version 1 to 2: %w", err))
 	}
 }

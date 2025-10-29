@@ -509,7 +509,7 @@ func TestMsgUpdateValueOwnersRequest_ValidateBasic(t *testing.T) {
 				Signers:           []string{"badsigner"},
 			},
 			// Not expecting an error here. This check is not part of ValidateBasic
-			// because of the assumption that GetSigners() is called ealier and will
+			// because of the assumption that GetSigners() is called earlier and will
 			// panic on a bad signer.
 			exp: "",
 		},

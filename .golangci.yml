@@ -94,6 +94,7 @@ linters-settings:
           - cosmossdk.io/x/circuit
           - cosmossdk.io/x/evidence
           - cosmossdk.io/x/feegrant
+          - cosmossdk.io/x/nft
           - cosmossdk.io/x/tx/signing
           - cosmossdk.io/x/upgrade
           - github.com/cosmos/cosmos-db

@@ -2,12 +2,15 @@ package app
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -27,10 +30,12 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 type UpgradeTestSuite struct {
@@ -49,13 +54,22 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
-	// Alert: This function is SetupSuite. That means all tests in here
-	// will use the same app with the same store and data.
+	s.SetupBouvardia()
 	defer SetLoggerMaker(SetLoggerMaker(BufferedInfoLoggerMaker(&s.logBuffer)))
 	s.app = Setup(s.T())
 	s.logBuffer.Reset()
 	s.startTime = time.Now()
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.startTime})
+}
+
+// SetupBouvardia does some setup that needs to be done for some of the bouvardia upgrade tests.
+// TODO: Delete this method with the bouvardia stuff.
+func (s *UpgradeTestSuite) SetupBouvardia() {
+	// Currently, the upgrade_data files have testnet addresses, so we need to use the testnet config.
+	SetConfig(true, false)
+	// When all tests are run together (e.g. make test), there's a chance some key addresses have already been seen,
+	// (e.g. the bank module account), and the cache has the wrong HRP for those entries, so we need to disable it.
+	sdk.SetAddrCacheEnabled(false)
 }
 
 // GetLogOutput gets the log buffer contents. This (probably) also clears the log buffer.
@@ -1050,6 +1064,8 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
+		"INF Starting import of ledger data.",
+		"INF Starting import of registry data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
@@ -1062,6 +1078,8 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Converting completed vesting accounts into base accounts.",
 		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
+		"INF Starting import of ledger data.",
+		"INF Starting import of registry data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
 }
@@ -1351,4 +1369,183 @@ func TestLogCostGrid(t *testing.T) {
 		}
 	}
 	t.Logf("Defined Costs at various conversion factors:\n%s\n%s\n%s", headLine, string(hrBz), strings.Join(lines, "\n"))
+}
+
+func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
+	// Test that the streaming ledger data import function works correctly.
+	// This test will only work if the gzipped file exists.
+	err := streamImportLedgerData(s.ctx, s.app.LedgerKeeper)
+	s.Require().NoError(err)
+
+	s.T().Log("Successfully stream imported ledger data")
+}
+
+func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
+	filePaths, err := getBouvardiaLedgerDataFilePaths()
+	s.Require().NoError(err, "getBouvardiaLedgerDataFilePaths()")
+
+	for _, filePath := range filePaths {
+		s.Run(filePath, func() {
+			// Read the gzipped file data
+			data, err := upgradeDataFS.ReadFile(filePath)
+			s.Require().NoError(err, "Failed to read file %s", filePath)
+
+			// Create gzip reader for decompression.
+			reader := bytes.NewReader(data)
+			gzReader, err := gzip.NewReader(reader)
+			s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
+			defer gzReader.Close()
+
+			// Decode the entire JSON into a GenesisState.
+			var genesisState ledgerTypes.GenesisState
+			decoder := json.NewDecoder(gzReader)
+			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
+
+			// Validate GenesisState.
+			err = genesisState.Validate()
+			s.Require().NoError(err, "GenesisState validation failed")
+
+			count := 0
+			count += len(genesisState.LedgerClasses)
+			count += len(genesisState.LedgerClassEntryTypes)
+			count += len(genesisState.LedgerClassStatusTypes)
+			count += len(genesisState.LedgerClassBucketTypes)
+			count += len(genesisState.Ledgers)
+			count += len(genesisState.LedgerEntries)
+			count += len(genesisState.SettlementInstructions)
+			s.Require().NotZero(count, "Total number of records found in the file")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
+	// numGrid returns the provided numbers as a grid of numbers, 10 per line, right-justified.
+	numGrid := func(nums []int) string {
+		strs := make([]string, len(nums))
+		maxLen := 0
+		for i, num := range nums {
+			strs[i] = strconv.Itoa(num)
+			if len(strs[i]) > maxLen {
+				maxLen = len(strs[i])
+			}
+		}
+
+		grid := make([][]string, 0, len(strs)/10+1)
+		l := -1
+		for i, str := range strs {
+			if i%10 == 0 {
+				l++
+				grid = append(grid, make([]string, 0, 10))
+			}
+			grid[l] = append(grid[l], strings.Repeat(" ", maxLen-len(str))+str)
+		}
+
+		lines := make([]string, len(grid))
+		for i, row := range grid {
+			lines[i] = strings.Join(row, "  ")
+		}
+		return strings.Join(lines, "\n")
+	}
+
+	filePaths, err := getBouvardiaLedgerDataFilePaths()
+	s.Require().NoError(err, "getBouvardiaLedgerDataFilePaths()")
+
+	count := 0
+	invalidCount := 0
+	offByZero := 0
+	offByOne := 0
+	offByMore := 0
+	offBySmall := make(map[int64]int)
+	offByLarge := make(map[string]int)
+
+	for _, filePath := range filePaths {
+		s.Run(filePath, func() {
+			// Read the gzipped file data
+			data, err := upgradeDataFS.ReadFile(filePath)
+			s.Require().NoError(err, "Failed to read file %s", filePath)
+
+			// Create gzip reader for decompression.
+			reader := bytes.NewReader(data)
+			gzReader, err := gzip.NewReader(reader)
+			s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
+			defer gzReader.Close()
+
+			// Decode the entire JSON into a GenesisState.
+			var genesisState ledgerTypes.GenesisState
+			decoder := json.NewDecoder(gzReader)
+			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
+
+			var justOffInds []int
+			var wayOffInds []int
+			var invalids []int
+			for i, entry := range genesisState.LedgerEntries {
+				count++
+
+				if err = entry.Entry.Validate(); err != nil {
+					invalidCount++
+					invalids = append(invalids, i)
+				}
+
+				sumApplied := sdkmath.ZeroInt()
+				for _, v := range entry.Entry.AppliedAmounts {
+					sumApplied = sumApplied.Add(v.AppliedAmt)
+				}
+				sumApplied = sumApplied.Abs()
+
+				d := entry.Entry.TotalAmt.Sub(sumApplied).Abs()
+				if d.Equal(sdkmath.ZeroInt()) {
+					offByZero++
+					continue
+				}
+
+				if d.Equal(sdkmath.OneInt()) {
+					offByOne++
+					justOffInds = append(justOffInds, i)
+					continue
+				}
+
+				offByMore++
+				wayOffInds = append(wayOffInds, i)
+				if d.IsInt64() {
+					offBySmall[d.Int64()]++
+				} else {
+					offByLarge[d.String()]++
+				}
+			}
+
+			if len(invalids) > 0 {
+				s.Fail(fmt.Sprintf("Found %d invalid entries", len(invalids)), "%s", numGrid(invalids))
+			}
+			if len(justOffInds) > 0 {
+				s.Fail(fmt.Sprintf("Found %d entries that are off-by-one", len(justOffInds)), "%s", numGrid(justOffInds))
+			}
+			if len(wayOffInds) > 0 {
+				s.Fail(fmt.Sprintf("Found %d entries that are off by more than one", len(wayOffInds)), "%s", numGrid(wayOffInds))
+			}
+		})
+	}
+
+	s.Run("summary", func() {
+		s.T().Logf("count:             %7d", count)
+		s.T().Logf("sum == total:      %7d", offByZero)
+		s.T().Logf("invalid:           %7d", invalidCount)
+		if offByOne != 0 {
+			s.T().Logf("off-by-one:        %7d", offByOne)
+		}
+		if offByMore != 0 {
+			s.T().Logf("off by more:       %7d", offByMore)
+		}
+
+		for _, d := range slices.Sorted(maps.Keys(offBySmall)) {
+			s.T().Logf("off by %10d: %7d", d, offBySmall[d])
+		}
+		for _, d := range slices.Sorted(maps.Keys(offByLarge)) {
+			s.T().Logf("off by %10s: %7d", d, offByLarge[d])
+		}
+	})
+}
+
+func (s *UpgradeTestSuite) TestImportRegistryData() {
+	err := importRegistryData(s.ctx, s.app.RegistryKeeper)
+	s.Require().NoError(err, "importRegistryData")
 }

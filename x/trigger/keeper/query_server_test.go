@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 

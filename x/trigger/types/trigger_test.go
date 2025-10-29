@@ -252,7 +252,7 @@ func TestBlockHeightEventValidateContext(t *testing.T) {
 			if len(tc.err) > 0 {
 				assert.EqualError(t, res, tc.err, "should have correct error for ValidateContext")
 			} else {
-				assert.NoError(t, res, "should have no error for succesful ValidateContext")
+				assert.NoError(t, res, "should have no error for successful ValidateContext")
 			}
 		})
 	}
