@@ -24,6 +24,7 @@ import (
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	provsdk "github.com/provenance-io/provenance/internal/sdk"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	ledgertypes "github.com/provenance-io/provenance/x/ledger/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -624,6 +625,8 @@ type LedgerKeeper interface {
 // streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
 func streamImportLedgerData(ctx sdk.Context, lk LedgerKeeper) error {
 	ctx.Logger().Info("Starting import of ledger data.")
+	// We don't want any events from this. There are just too many to handle.
+	ctx = ctx.WithEventManager(provsdk.NewNoOpEventManager())
 
 	filePaths, err := getBouvardiaLedgerDataFilePaths()
 	if err != nil {
@@ -811,6 +814,8 @@ type RegistryKeeper interface {
 // importRegistryData processes the gzipped registry genesis file.
 func importRegistryData(ctx sdk.Context, rk RegistryKeeper) error {
 	ctx.Logger().Info("Starting import of registry data.")
+	// We don't want any events from this. There are just too many to handle.
+	ctx = ctx.WithEventManager(provsdk.NewNoOpEventManager())
 
 	filePaths, err := getBouvardiaRegistryDataFilePaths()
 	if err != nil {
