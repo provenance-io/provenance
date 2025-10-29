@@ -21,7 +21,7 @@ const (
 	MaxLenAddress          = 90
 	MaxLenAssetClassID     = 128
 	MaxLenNFTID            = 128
-	MaxRegistryBulkEntries = 200
+	MaxRegistryBulkEntries = 1000
 )
 
 var alNumDashRx = regexp.MustCompile(`^[a-zA-Z0-9-.]+$`)
