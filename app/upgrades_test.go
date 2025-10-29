@@ -1065,6 +1065,7 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
 		"INF Starting import of ledger data.",
+		"INF Starting import of registry data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
@@ -1078,6 +1079,7 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Increasing max memo length to 1024 bytes.",
 		"INF Setting up flat fees.",
 		"INF Starting import of ledger data.",
+		"INF Starting import of registry data.",
 	}
 	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
 }
@@ -1541,4 +1543,9 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 			s.T().Logf("off by %10s: %7d", d, offByLarge[d])
 		}
 	})
+}
+
+func (s *UpgradeTestSuite) TestImportRegistryData() {
+	err := importRegistryData(s.ctx, s.app.RegistryKeeper)
+	s.Require().NoError(err, "importRegistryData")
 }

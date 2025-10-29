@@ -283,6 +283,11 @@ func (k Keeper) GetRegistry(ctx context.Context, key *types.RegistryKey) (*types
 	return &registryEntry, nil
 }
 
+// SetRegistry sets a registry entry for a given key.
+func (k Keeper) SetRegistry(ctx context.Context, entry types.RegistryEntry) error {
+	return k.Registry.Set(ctx, entry.Key.CollKey(), entry)
+}
+
 // GetRegistries returns the registries paginated
 func (k Keeper) GetRegistries(ctx context.Context, pagination *query.PageRequest, assetClassID string) ([]types.RegistryEntry, *query.PageResponse, error) {
 	var opts []func(opt *query.CollectionsPaginateOptions[collections.Pair[string, string]])

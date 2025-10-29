@@ -12,9 +12,3 @@ The paths will be `upgrade_data/<filename>`.
 - **Large files (> 10MB uncompressed)**: Should be split into chunks. Should also be gzipped.
 
 These files will increase the size of the compiled `provenanced` executable, and should be as small as possible.
-
-## bouvardia_ledger_genesis.json.gz
-
-This file contains a set of ledger data that is to be loaded during the `bouvardia` upgrade.
-It is a gzipped JSON file containing a `ledgerTypes.GenesisState` object.
-

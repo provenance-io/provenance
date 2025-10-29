@@ -69,13 +69,19 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
 			if err = increaseMemoLength(ctx, app); err != nil {
 				return nil, err
 			}
+
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
+
 			if err = streamImportLedgerData(ctx, app.LedgerKeeper); err != nil {
+				return nil, err
+			}
+			if err = importRegistryData(ctx, app.RegistryKeeper); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -96,15 +102,22 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
 			if err = increaseMemoLength(ctx, app); err != nil {
 				return nil, err
 			}
+
 			if err = setupFlatFees(ctx, app.FlatFeesKeeper); err != nil {
 				return nil, err
 			}
+
 			if err = streamImportLedgerData(ctx, app.LedgerKeeper); err != nil {
 				return nil, err
 			}
+			if err = importRegistryData(ctx, app.RegistryKeeper); err != nil {
+				return nil, err
+			}
+
 			return vm, nil
 		},
 	},
@@ -787,5 +800,88 @@ func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder
 		return fmt.Errorf("failed with unknown genesis field %s", fieldName)
 	}
 
+	return nil
+}
+
+// RegistryKeeper has the registry keeper methods needed for creating registry entries.
+type RegistryKeeper interface {
+	SetRegistry(ctx context.Context, registryEntry registryTypes.RegistryEntry) error
+}
+
+// importRegistryData processes the gzipped registry genesis file.
+func importRegistryData(ctx sdk.Context, rk RegistryKeeper) error {
+	ctx.Logger().Info("Starting import of registry data.")
+
+	filePaths, err := getBouvardiaRegistryDataFilePaths()
+	if err != nil {
+		return fmt.Errorf("failed to get registry data file paths: %w", err)
+	}
+
+	ctx.Logger().Debug(fmt.Sprintf("Found %d registry data files to import.", len(filePaths)))
+	for i, filePath := range filePaths {
+		ctx.Logger().Debug(fmt.Sprintf("Importing registry data file %d of %d: %s", i+1, len(filePaths), filePath))
+		if err = importRegistryDataFile(ctx, rk, filePath); err != nil {
+			return fmt.Errorf("failed to import registry data file %s: %w", filePath, err)
+		}
+	}
+
+	ctx.Logger().Info("Completed import of registry data.")
+	return nil
+}
+
+// getBouvardiaRegistryDataFilePaths returns the name and paths of the files in the "upgrade_data" directory related to the
+// bouvardia registry data load. You can get the file contents using upgradeDataFS.ReadFile(filePath).
+func getBouvardiaRegistryDataFilePaths() ([]string, error) {
+	dirContents, err := upgradeDataFS.ReadDir("upgrade_data")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read upgrade data directory: %w", err)
+	}
+
+	fileNames := make([]string, 0, len(dirContents))
+	for _, dc := range dirContents {
+		name := dc.Name()
+		if dc.IsDir() || !strings.HasPrefix(name, "bouvardia_registry_genesis") || !strings.HasSuffix(name, ".gz") {
+			continue
+		}
+		fileNames = append(fileNames, filepath.Join("upgrade_data", name))
+	}
+	slices.Sort(fileNames)
+
+	return fileNames, nil
+}
+
+// importRegistryDataFile will import the provided gzipped registry genesis file into state.
+func importRegistryDataFile(ctx sdk.Context, rk RegistryKeeper, filePath string) error {
+	data, err := upgradeDataFS.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file %s: %w", filePath, err)
+	}
+
+	reader := bytes.NewReader(data)
+	gzReader, err := gzip.NewReader(reader)
+	if err != nil {
+		return fmt.Errorf("failed to create gzip reader for %s: %w", filePath, err)
+	}
+	defer gzReader.Close()
+
+	var genState registryTypes.GenesisState
+	decoder := json.NewDecoder(gzReader)
+	err = decoder.Decode(&genState)
+	if err != nil {
+		return fmt.Errorf("failed to decode registry genesis state: %w", err)
+	}
+
+	ctx.Logger().Info(fmt.Sprintf("Importing %d registry entries", len(genState.Entries)))
+	for i, entry := range genState.Entries {
+		err = rk.SetRegistry(ctx, entry)
+		if err != nil {
+			return fmt.Errorf("failed to import registry entry %d: %w", i, err)
+		}
+		if (i+1)%10000 == 0 {
+			ctx.Logger().Info("Progress: Registry entries imported", "count", i+1)
+		}
+	}
+
+	ctx.Logger().Info(fmt.Sprintf("Done importing %d registry entries", len(genState.Entries)))
 	return nil
 }
