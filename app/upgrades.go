@@ -14,7 +14,7 @@ import (
 	vaulttypes "github.com/provlabs/vault/types"
 
 	storetypes "cosmossdk.io/store/types"
-	nftTypes "cosmossdk.io/x/nft"
+	nfttypes "cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -25,9 +25,9 @@ import (
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
-	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
+	ledgertypes "github.com/provenance-io/provenance/x/ledger/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-	registryTypes "github.com/provenance-io/provenance/x/registry/types"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -55,7 +55,7 @@ type appUpgrade struct {
 // I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"bouvardia-rc1": { // Upgrade for v1.26.0-rc1.
-		Added:   []string{flatfeestypes.StoreKey, ledgerTypes.StoreKey, nftTypes.StoreKey, registryTypes.StoreKey, vaulttypes.StoreKey},
+		Added:   []string{flatfeestypes.StoreKey, ledgertypes.StoreKey, nfttypes.StoreKey, registrytypes.StoreKey, vaulttypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -88,7 +88,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"bouvardia": { // Upgrade for v1.26.0.
-		Added:   []string{flatfeestypes.StoreKey, ledgerTypes.StoreKey, nftTypes.StoreKey, registryTypes.StoreKey, vaulttypes.StoreKey},
+		Added:   []string{flatfeestypes.StoreKey, ledgertypes.StoreKey, nfttypes.StoreKey, registrytypes.StoreKey, vaulttypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -612,13 +612,13 @@ var upgradeDataFS embed.FS
 
 // LedgerKeeper has the ledger keeper methods needed for creating ledgers and entries.
 type LedgerKeeper interface {
-	ImportLedgerClasses(ctx context.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerClassEntryTypes(ctx context.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerClassStatusTypes(ctx context.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerClassBucketTypes(ctx context.Context, state *ledgerTypes.GenesisState)
-	ImportLedgers(ctx context.Context, state *ledgerTypes.GenesisState)
-	ImportLedgerEntries(ctx context.Context, state *ledgerTypes.GenesisState)
-	ImportStoredSettlementInstructions(ctx context.Context, state *ledgerTypes.GenesisState)
+	ImportLedgerClasses(ctx context.Context, state *ledgertypes.GenesisState)
+	ImportLedgerClassEntryTypes(ctx context.Context, state *ledgertypes.GenesisState)
+	ImportLedgerClassStatusTypes(ctx context.Context, state *ledgertypes.GenesisState)
+	ImportLedgerClassBucketTypes(ctx context.Context, state *ledgertypes.GenesisState)
+	ImportLedgers(ctx context.Context, state *ledgertypes.GenesisState)
+	ImportLedgerEntries(ctx context.Context, state *ledgertypes.GenesisState)
+	ImportStoredSettlementInstructions(ctx context.Context, state *ledgertypes.GenesisState)
 }
 
 // streamImportLedgerData processes the gzipped genesis file using streaming for memory efficiency.
@@ -733,65 +733,65 @@ func streamImportLedgerDataFile(ctx sdk.Context, lk LedgerKeeper, filePath strin
 func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder, fieldName string, progInd string) error {
 	switch fieldName {
 	case "ledgerClasses":
-		var ledgerClasses []ledgerTypes.LedgerClass
+		var ledgerClasses []ledgertypes.LedgerClass
 		if err := decoder.Decode(&ledgerClasses); err != nil {
 			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
-		genesis := &ledgerTypes.GenesisState{LedgerClasses: ledgerClasses}
+		genesis := &ledgertypes.GenesisState{LedgerClasses: ledgerClasses}
 		lk.ImportLedgerClasses(ctx, genesis)
 		ctx.Logger().Info("Imported ledger classes", "count", len(ledgerClasses))
 
 	case "ledgerClassEntryTypes":
-		var entryTypes []ledgerTypes.GenesisLedgerClassEntryType
+		var entryTypes []ledgertypes.GenesisLedgerClassEntryType
 		if err := decoder.Decode(&entryTypes); err != nil {
 			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
-		genesis := &ledgerTypes.GenesisState{LedgerClassEntryTypes: entryTypes}
+		genesis := &ledgertypes.GenesisState{LedgerClassEntryTypes: entryTypes}
 		lk.ImportLedgerClassEntryTypes(ctx, genesis)
 		ctx.Logger().Info("Imported ledger class entry types", "count", len(entryTypes))
 
 	case "ledgerClassStatusTypes":
-		var statusTypes []ledgerTypes.GenesisLedgerClassStatusType
+		var statusTypes []ledgertypes.GenesisLedgerClassStatusType
 		if err := decoder.Decode(&statusTypes); err != nil {
 			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
-		genesis := &ledgerTypes.GenesisState{LedgerClassStatusTypes: statusTypes}
+		genesis := &ledgertypes.GenesisState{LedgerClassStatusTypes: statusTypes}
 		lk.ImportLedgerClassStatusTypes(ctx, genesis)
 		ctx.Logger().Info("Imported ledger class status types", "count", len(statusTypes))
 
 	case "ledgerClassBucketTypes":
-		var bucketTypes []ledgerTypes.GenesisLedgerClassBucketType
+		var bucketTypes []ledgertypes.GenesisLedgerClassBucketType
 		if err := decoder.Decode(&bucketTypes); err != nil {
 			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
-		genesis := &ledgerTypes.GenesisState{LedgerClassBucketTypes: bucketTypes}
+		genesis := &ledgertypes.GenesisState{LedgerClassBucketTypes: bucketTypes}
 		lk.ImportLedgerClassBucketTypes(ctx, genesis)
 		ctx.Logger().Info("Imported ledger class bucket types", "count", len(bucketTypes))
 
 	case "ledgers":
-		var ledgers []ledgerTypes.GenesisLedger
+		var ledgers []ledgertypes.GenesisLedger
 		if err := decoder.Decode(&ledgers); err != nil {
 			return fmt.Errorf("failed to decode ledgers: %w", err)
 		}
-		genesis := &ledgerTypes.GenesisState{Ledgers: ledgers}
+		genesis := &ledgertypes.GenesisState{Ledgers: ledgers}
 		lk.ImportLedgers(ctx, genesis)
 		ctx.Logger().Info("Imported ledgers", "count", len(ledgers))
 
 	case "ledgerEntries":
-		var entries []ledgerTypes.GenesisLedgerEntry
+		var entries []ledgertypes.GenesisLedgerEntry
 		if err := decoder.Decode(&entries); err != nil {
 			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
-		genesis := &ledgerTypes.GenesisState{LedgerEntries: entries}
+		genesis := &ledgertypes.GenesisState{LedgerEntries: entries}
 		lk.ImportLedgerEntries(ctx, genesis)
 		ctx.Logger().Info(progInd+": Imported ledger entries", "count", len(entries))
 
 	case "settlementInstructions":
-		var settlements []ledgerTypes.GenesisStoredSettlementInstructions
+		var settlements []ledgertypes.GenesisStoredSettlementInstructions
 		if err := decoder.Decode(&settlements); err != nil {
 			return fmt.Errorf("failed to decode %s: %w", fieldName, err)
 		}
-		genesis := &ledgerTypes.GenesisState{SettlementInstructions: settlements}
+		genesis := &ledgertypes.GenesisState{SettlementInstructions: settlements}
 		lk.ImportStoredSettlementInstructions(ctx, genesis)
 		ctx.Logger().Info("Imported settlement instructions", "count", len(settlements))
 
@@ -805,7 +805,7 @@ func processGenesisField(ctx sdk.Context, lk LedgerKeeper, decoder *json.Decoder
 
 // RegistryKeeper has the registry keeper methods needed for creating registry entries.
 type RegistryKeeper interface {
-	SetRegistry(ctx context.Context, registryEntry registryTypes.RegistryEntry) error
+	SetRegistry(ctx context.Context, registryEntry registrytypes.RegistryEntry) error
 }
 
 // importRegistryData processes the gzipped registry genesis file.
@@ -864,7 +864,7 @@ func importRegistryDataFile(ctx sdk.Context, rk RegistryKeeper, filePath string)
 	}
 	defer gzReader.Close()
 
-	var genState registryTypes.GenesisState
+	var genState registrytypes.GenesisState
 	decoder := json.NewDecoder(gzReader)
 	err = decoder.Decode(&genState)
 	if err != nil {
