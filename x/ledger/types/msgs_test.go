@@ -464,7 +464,7 @@ func TestMsgUpdateLedgerClass_ValidateBasic(t *testing.T) {
 				LedgerClassId:     "ledger-class-one",
 				MaintainerAddress: addr("maintainer_address"),
 			},
-			exp: "at lest one of new_asset_class_id, new_denom, or new_maintainer_address must be provided",
+			exp: "at least one of new_asset_class_id, new_denom, or new_maintainer_address must be provided",
 		},
 		{
 			name: "multiple errors",

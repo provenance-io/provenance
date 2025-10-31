@@ -276,7 +276,7 @@ func (m MsgUpdateLedgerClassRequest) ValidateBasic() error {
 	}
 
 	if !haveSomething {
-		errs = append(errs, fmt.Errorf("at lest one of new_asset_class_id, new_denom, or new_maintainer_address must be provided"))
+		errs = append(errs, fmt.Errorf("at least one of new_asset_class_id, new_denom, or new_maintainer_address must be provided"))
 	}
 
 	return errors.Join(errs...)
