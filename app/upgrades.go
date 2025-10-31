@@ -88,6 +88,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"bouvardia-rc2": {}, // Upgrade for v1.26.0-rc1.
 	"bouvardia": { // Upgrade for v1.26.0.
 		Added:   []string{flatfeestypes.StoreKey, ledgertypes.StoreKey, nfttypes.StoreKey, registrytypes.StoreKey, vaulttypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},

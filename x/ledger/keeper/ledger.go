@@ -13,24 +13,28 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/types"
 )
 
-// AddLedgerClass creates a new ledger class with validation checks.
-// This function validates that the asset class exists in the registry and that the denom has a supply.
-// It ensures that ledger classes are only created for valid asset classes and tokens.
-func (k Keeper) AddLedgerClass(ctx context.Context, l types.LedgerClass) error {
+// validateLedgerClass validates that all the fields contain legitimate values.
+func (k Keeper) validateLedgerClass(ctx context.Context, l *types.LedgerClass, shouldExist bool) error {
+	if l == nil {
+		return errors.New("ledger class is nil")
+	}
+
 	// Check if the asset class exists in the registry.
 	hasAssetClass := k.RegistryKeeper.AssetClassExists(ctx, &l.AssetClassId)
 	if !hasAssetClass {
 		return types.NewErrCodeInvalidField("asset_class_id", "asset_class doesn't exist")
 	}
 
-	// Check if the ledger class already exists to prevent duplicates.
-	has, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
+	// Ensure that the ledger class either exists or doesn't exist as requested.
+	exists, err := k.LedgerClasses.Has(ctx, l.LedgerClassId)
 	if err != nil {
 		return err
 	}
-
-	if has {
+	switch {
+	case exists && !shouldExist:
 		return types.NewErrCodeAlreadyExists("ledger class")
+	case !exists && shouldExist:
+		return types.NewErrCodeNotFound("ledger class")
 	}
 
 	// Validate that the denom exists in the bank keeper to avoid garbage tokens being used.
@@ -38,7 +42,34 @@ func (k Keeper) AddLedgerClass(ctx context.Context, l types.LedgerClass) error {
 		return types.NewErrCodeInvalidField("denom", "denom doesn't have a supply")
 	}
 
-	// Insert the ledger class into the state store.
+	return nil
+}
+
+// AddLedgerClass creates a new ledger class with validation checks.
+// This function validates that the asset class exists in the registry and that the denom has a supply.
+// It ensures that ledger classes are only created for valid asset classes and tokens.
+func (k Keeper) AddLedgerClass(ctx context.Context, l types.LedgerClass) error {
+	if err := k.validateLedgerClass(ctx, &l, false); err != nil {
+		return err
+	}
+
+	// Add the ledger class to the state store.
+	if err := k.LedgerClasses.Set(ctx, l.LedgerClassId, l); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateLedgerClass updates an existing ledger class with validation checks.
+// This function validates that the asset class exists in the registry and that the denom has a supply.
+// It ensures that ledger classes are only created for valid asset classes and tokens.
+func (k Keeper) UpdateLedgerClass(ctx context.Context, l types.LedgerClass) error {
+	if err := k.validateLedgerClass(ctx, &l, true); err != nil {
+		return err
+	}
+
+	// Update the ledger class in the state store.
 	if err := k.LedgerClasses.Set(ctx, l.LedgerClassId, l); err != nil {
 		return err
 	}

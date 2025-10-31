@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/errors"
@@ -17,6 +18,7 @@ import (
 	"github.com/provenance-io/provenance/x/ledger/helper"
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -30,6 +32,7 @@ type MsgServerTestSuite struct {
 	ctx sdk.Context
 
 	keeper           keeper.Keeper
+	msgServer        ledger.MsgServer
 	bondDenom        string
 	pastDate         int32
 	now              time.Time
@@ -47,6 +50,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(true)
 	s.keeper = s.app.LedgerKeeper
+	s.msgServer = keeper.NewMsgServer(s.keeper)
 
 	var err error
 	s.bondDenom, err = s.app.StakingKeeper.BondDenom(s.ctx)
@@ -928,6 +932,253 @@ func (s *MsgServerTestSuite) TestCreateLedgerClass() {
 	}
 }
 
+func (s *MsgServerTestSuite) TestUpdateLedgerClass() {
+	scopeSpecUUID, err := uuid.Parse("12345678-1234-1234-4321-cba987654321")
+	s.Require().NoError(err, "ParseUUID error")
+	scopeSpecId := metadatatypes.ScopeSpecMetadataAddress(scopeSpecUUID)
+	scopeSpec := metadatatypes.ScopeSpecification{
+		SpecificationId: scopeSpecId,
+		OwnerAddresses:  []string{s.validAddress1.String()},
+		PartiesInvolved: []metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpec)
+
+	var coins sdk.Coins
+	for _, denom := range []string{"apple", "banana", "cherry", "plum", "apricot"} {
+		coins = coins.Add(sdk.NewInt64Coin(denom, 100))
+	}
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, s.validAddress1, coins)
+	s.Require().NoError(err, "FundAccount error for extra coins")
+
+	tests := []struct {
+		name            string
+		origLedgerClass *ledger.LedgerClass // Gets set in the store before attempting the update. Skipped if nil.
+		req             *ledger.MsgUpdateLedgerClassRequest
+		expLedgerClass  *ledger.LedgerClass
+		expErr          string
+	}{
+		{
+			name:            "ledger class does not exist",
+			origLedgerClass: nil,
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "just-some-ledger-class",
+				MaintainerAddress: s.validAddress1.String(),
+				NewDenom:          "yellow",
+			},
+			expErr: "ledger_class not found: not found",
+		},
+		{
+			name: "wrong maintainer",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-exists",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "this-exists",
+				MaintainerAddress: s.validAddress2.String(),
+				NewAssetClassId:   scopeSpecId.String(),
+			},
+			expErr: "unauthorized access: signer is not the maintainer of the ledger class: unauthorized",
+		},
+		{
+			name: "new asset class id does not exist",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-exists-still",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "this-exists-still",
+				MaintainerAddress: s.validAddress1.String(),
+				NewAssetClassId:   "new." + s.validNFTClass.Id,
+			},
+			expErr: "invalid asset_class_id: asset_class doesn't exist: invalid field",
+		},
+		{
+			name: "update only asset class id",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-1",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "this-is-good-1",
+				MaintainerAddress: s.validAddress1.String(),
+				NewAssetClassId:   scopeSpecId.String(),
+			},
+			expLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-1",
+				AssetClassId:      scopeSpecId.String(),
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+		},
+		{
+			name: "update only denom",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-2",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "this-is-good-2",
+				MaintainerAddress: s.validAddress1.String(),
+				NewDenom:          "banana",
+			},
+			expLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-2",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "banana",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+		},
+		{
+			name: "update only maintainer",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-3",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "this-is-good-3",
+				MaintainerAddress:    s.validAddress1.String(),
+				NewMaintainerAddress: s.validAddress2.String(),
+			},
+			expLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-3",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress2.String(),
+			},
+		},
+		{
+			name: "update asset class id and denom",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-8",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apple",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "this-is-good-8",
+				MaintainerAddress: s.validAddress1.String(),
+				NewAssetClassId:   scopeSpecId.String(),
+				NewDenom:          "banana",
+			},
+			expLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-good-8",
+				AssetClassId:      scopeSpecId.String(),
+				Denom:             "banana",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+		},
+		{
+			name: "update asset class id and maintainer",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-okay-12",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "plum",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "this-is-okay-12",
+				MaintainerAddress:    s.validAddress1.String(),
+				NewAssetClassId:      scopeSpecId.String(),
+				NewMaintainerAddress: s.validAddress2.String(),
+			},
+			expLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-okay-12",
+				AssetClassId:      scopeSpecId.String(),
+				Denom:             "plum",
+				MaintainerAddress: s.validAddress2.String(),
+			},
+		},
+		{
+			name: "update denom and maintainer",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-fine",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "banana",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "this-is-fine",
+				MaintainerAddress:    s.validAddress1.String(),
+				NewDenom:             "cherry",
+				NewMaintainerAddress: s.validAddress2.String(),
+			},
+			expLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-fine",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "cherry",
+				MaintainerAddress: s.validAddress2.String(),
+			},
+		},
+		{
+			name: "update asset class id, denom, and maintainer",
+			origLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-crazy",
+				AssetClassId:      scopeSpecId.String(),
+				Denom:             "banana",
+				MaintainerAddress: s.validAddress2.String(),
+			},
+			req: &ledger.MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "this-is-crazy",
+				MaintainerAddress:    s.validAddress2.String(),
+				NewAssetClassId:      s.validNFTClass.Id,
+				NewDenom:             "apricot",
+				NewMaintainerAddress: s.validAddress1.String(),
+			},
+			expLedgerClass: &ledger.LedgerClass{
+				LedgerClassId:     "this-is-crazy",
+				AssetClassId:      s.validNFTClass.Id,
+				Denom:             "apricot",
+				MaintainerAddress: s.validAddress1.String(),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.origLedgerClass != nil {
+				err := s.keeper.LedgerClasses.Set(s.ctx, tc.origLedgerClass.LedgerClassId, *tc.origLedgerClass)
+				s.Require().NoError(err, "setup: LedgerClasses.Set")
+				defer func() {
+					err = s.keeper.LedgerClasses.Remove(s.ctx, tc.origLedgerClass.LedgerClassId)
+					s.Require().NoError(err, "teardown: LedgerClasses.Remove")
+				}()
+			}
+			var resp *ledger.MsgUpdateLedgerClassResponse
+			var err error
+			testFunc := func() {
+				resp, err = s.msgServer.UpdateLedgerClass(s.ctx, tc.req)
+			}
+			s.Require().NotPanics(testFunc, "UpdateLedgerClass")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UpdateLedgerClass error")
+			if len(tc.expErr) == 0 {
+				s.Require().NotNil(resp, "UpdateLedgerClass response")
+			}
+
+			// If there was an error (or we were expecting one), we're done. No need to check anything else.
+			if err != nil || len(tc.expErr) > 0 {
+				return
+			}
+
+			s.Require().NotNil(tc.expLedgerClass, "invalid test setup: a tc.expLedgerClass is required if not expecting an error")
+
+			act, err := s.keeper.LedgerClasses.Get(s.ctx, tc.expLedgerClass.LedgerClassId)
+			s.Require().NoError(err, "Getting the actual ledger class (after updating it)")
+			s.Assert().Equal(*tc.expLedgerClass, act, "LedgerClass after updating it")
+		})
+	}
+}
+
 // TestAddLedgerClassStatusType tests the AddLedgerClassStatusType message server method
 func (s *MsgServerTestSuite) TestAddLedgerClassStatusType() {
 	authorizedAddr := s.validAddress1
@@ -1092,75 +1343,6 @@ func (s *MsgServerTestSuite) TestAddLedgerClassBucketType() {
 		})
 	}
 }
-
-// TestBulkImport tests the BulkImport message server method
-// func (s *MsgServerTestSuite) TestBulkImport() {
-// 	tests := []struct {
-// 		name    string
-// 		req     *ledger.MsgBulkImportRequest
-// 		expErr  string
-// 		expResp *ledger.MsgBulkImportResponse
-// 	}{
-// 		{
-// 			name: "successful bulk import",
-// 			req: &ledger.MsgBulkImportRequest{
-// 				GenesisState: &ledger.GenesisState{
-// 					LedgerToEntries: []*ledger.LedgerToEntries{
-// 						{
-// 							Ledger: &ledger.Ledger{
-// 								Key: &ledger.LedgerKey{
-// 									AssetClassId: s.validNFTClass.Id,
-// 									NftId:        "bulk-import-nft",
-// 								},
-// 								LedgerClassId: s.validLedgerClass.LedgerClassId,
-// 								StatusTypeId:  1,
-// 							},
-// 							Entries: []*ledger.LedgerEntry{
-// 								{
-// 									EntryTypeId:   1,
-// 									PostedDate:    s.pastDate,
-// 									EffectiveDate: s.pastDate,
-// 									TotalAmt:      math.NewInt(100),
-// 									AppliedAmounts: []*ledger.LedgerBucketAmount{
-// 										{
-// 											AppliedAmt:   math.NewInt(100),
-// 											BucketTypeId: 1,
-// 										},
-// 									},
-// 									CorrelationId: "bulk-import-correlation-id",
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			expResp: &ledger.MsgBulkImportResponse{},
-// 		},
-// 		{
-// 			name: "empty genesis state",
-// 			req: &ledger.MsgBulkImportRequest{
-// 				GenesisState: &ledger.GenesisState{},
-// 			},
-// 			expResp: &ledger.MsgBulkImportResponse{},
-// 		},
-// 	}
-
-// 	for _, tc := range tests {
-// 		s.Run(tc.name, func() {
-// 			msgServer := keeper.NewMsgServer(s.keeper)
-// 			resp, err := msgServer.BulkImport(s.ctx, tc.req)
-
-// 			if tc.expErr != "" {
-// 				s.Require().Error(err, "BulkImport should fail")
-// 				s.Require().Contains(err.Error(), tc.expErr, "error message")
-// 				s.Require().Nil(resp, "response should be nil on error")
-// 			} else {
-// 				s.Require().NoError(err, "BulkImport should succeed")
-// 				s.Require().Equal(tc.expResp, resp, "response should match expected")
-// 			}
-// 		})
-// 	}
-// }
 
 // TestAppendEntriesValidation tests validation logic for AppendEntries
 func (s *MsgServerTestSuite) TestAppendEntriesValidation() {

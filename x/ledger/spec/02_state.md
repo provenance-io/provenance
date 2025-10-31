@@ -62,7 +62,7 @@ Where:
 
 #### StoredSettlementInstructions
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L51-L55
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L54-L58
 
 See also: [SettlementInstruction](03_messages.md#settlementinstruction).
 
