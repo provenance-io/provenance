@@ -14,6 +14,7 @@ The Ledger module provides several message types for creating and managing ledge
   - [TransferFundsWithSettlement](#transferfundswithsettlement)
   - [Destroy](#destroy)
   - [CreateLedgerClass](#createledgerclass)
+  - [UpdateLedgerClass](#updateledgerclass)
   - [AddLedgerClassStatusType](#addledgerclassstatustype)
   - [AddLedgerClassEntryType](#addledgerclassentrytype)
   - [AddLedgerClassBucketType](#addledgerclassbuckettype)
@@ -34,7 +35,7 @@ This request is expected to fail if:
 
 ### MsgCreateLedgerRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L62-L70
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L66-L74
 
 #### Ledger
 
@@ -58,7 +59,7 @@ This request is expected to fail if:
 
 ### MsgCreateLedgerResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L72-L73
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L76-L77
 
 
 ## UpdateStatus
@@ -73,13 +74,13 @@ This request is expected to fail if:
 
 ### MsgUpdateStatusRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L75-L87
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L79-L91
 
 See also: [LedgerKey](#ledgerkey).
 
 ### MsgUpdateStatusResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L89-L90
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L93-L94
 
 
 ## UpdateInterestRate
@@ -93,13 +94,13 @@ This request is expected to fail if:
 
 ### MsgUpdateInterestRateRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L92-L110
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L96-L114
 
 See also: [LedgerKey](#ledgerkey), [DayCountConvention](#daycountconvention), [InterestAccrualMethod](#interestaccrualmethod).
 
 ### MsgUpdateInterestRateResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L112-L113
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L116-L117
 
 
 ## UpdatePayment
@@ -113,13 +114,13 @@ This request is expected to fail if:
 
 ### MsgUpdatePaymentRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L115-L139
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L119-L143
 
 See also: [LedgerKey](#ledgerkey), [PaymentFrequency](#paymentfrequency).
 
 ### MsgUpdatePaymentResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L141-L142
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L145-L146
 
 
 ## UpdateMaturityDate
@@ -133,13 +134,13 @@ This request is expected to fail if:
 
 ### MsgUpdateMaturityDateRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L144-L156
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L148-L160
 
 See also: [LedgerKey](#ledgerkey).
 
 ### MsgUpdateMaturityDateResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L158-L159
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L162-L163
 
 
 ## Append
@@ -155,7 +156,7 @@ This request is expected to fail if:
 
 ### MsgAppendRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L161-L173
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L165-L177
 
 See also: [LedgerKey](#ledgerkey).
 
@@ -173,7 +174,7 @@ See also: [LedgerKey](#ledgerkey).
 
 ### MsgAppendResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L175-L176
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L179-L180
 
 
 ## UpdateBalances
@@ -188,13 +189,13 @@ This request is expected to fail if:
 
 ### MsgUpdateBalancesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L178-L205
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L182-L209
 
 See also: [LedgerKey](#ledgerkey), [LedgerBucketAmount](#ledgerbucketamount), [BucketBalance](#BucketBalance).
 
 ### MsgUpdateBalancesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L207-L208
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L211-L212
 
 
 ## TransferFundsWithSettlement
@@ -210,23 +211,23 @@ This request is expected to fail if:
 
 ### MsgTransferFundsWithSettlementRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L210-L219
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L214-L223
 
 #### FundTransferWithSettlement
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L27-L34
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L30-L37
 
 #### SettlementInstruction
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L36-L49
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L39-L52
 
 #### FundingTransferStatus
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L13-L25
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/ledger_settlement.proto#L13-L28
 
 ### MsgTransferFundsWithSettlementResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L221-L222
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L225-L226
 
 
 ## Destroy
@@ -240,13 +241,13 @@ This request is expected to fail if:
 
 ### MsgDestroyRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L224-L233
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L228-L237
 
 See also: [LedgerKey](#ledgerkey).
 
 ### MsgDestroyResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L235-L236
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L239-L240
 
 
 ## CreateLedgerClass
@@ -261,7 +262,7 @@ This request is expected to fail if:
 
 ### MsgCreateLedgerClassRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L238-L247
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L242-L251
 
 #### LedgerClass
 
@@ -269,7 +270,27 @@ This request is expected to fail if:
 
 ### MsgCreateLedgerClassResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L249-L250
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L253-L254
+
+
+## UpdateLedgerClass
+
+Ledger classes can be updated using a `MsgUpdateLedgerClassRequest`.
+
+This request is expected to fail if:
+- The ledger class does not exist.
+- The signer is not the maintainer of the ledger class.
+- The new asset class does not exist.
+- The new denom does not exist.
+- The msg is invalid.
+
+### MsgUpdateLedgerClassRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L256-L278
+
+### MsgUpdateLedgerClassResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L280-L281
 
 
 ## AddLedgerClassStatusType
@@ -284,7 +305,7 @@ This request is expected to fail if:
 
 ### MsgAddLedgerClassStatusTypeRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L252-L264
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L283-L295
 
 #### LedgerClassStatusType
 
@@ -292,7 +313,7 @@ This request is expected to fail if:
 
 ### MsgAddLedgerClassStatusTypeResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L266-L267
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L297-L298
 
 
 ## AddLedgerClassEntryType
@@ -307,7 +328,7 @@ This request is expected to fail if:
 
 ### MsgAddLedgerClassEntryTypeRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L269-L281
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L300-L312
 
 #### LedgerClassEntryType
 
@@ -315,7 +336,7 @@ This request is expected to fail if:
 
 ### MsgAddLedgerClassEntryTypeResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L283-L284
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L314-L315
 
 
 ## AddLedgerClassBucketType
@@ -330,7 +351,7 @@ This request is expected to fail if:
 
 ### MsgAddLedgerClassBucketTypeRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L286-L298
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L317-L329
 
 #### LedgerClassBucketType
 
@@ -338,7 +359,7 @@ This request is expected to fail if:
 
 ### MsgAddLedgerClassBucketTypeResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L300-L301
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L331-L332
 
 
 ## BulkCreate
@@ -360,7 +381,7 @@ This request is expected to fail if:
 
 ### MsgBulkCreateRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L303-L312
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L334-L343
 
 #### LedgerAndEntries
 
@@ -371,4 +392,4 @@ If both are provided, the two `LedgerKey`s must be equal.
 
 ### MsgBulkCreateResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L314-L315
++++ https://github.com/provenance-io/provenance/blob/v1.26.0/proto/provenance/ledger/v1/tx.proto#L345-L346
