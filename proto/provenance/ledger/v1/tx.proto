@@ -46,6 +46,9 @@ service Msg {
   // CreateLedgerClass creates a new ledger class.
   rpc CreateLedgerClass(MsgCreateLedgerClassRequest) returns (MsgCreateLedgerClassResponse);
 
+  // UpdateLedgerClass updates a ledger class.
+  rpc UpdateLedgerClass(MsgUpdateLedgerClassRequest) returns (MsgUpdateLedgerClassResponse);
+
   // AddLedgerClassStatusType adds a status type to a ledger class.
   rpc AddLedgerClassStatusType(MsgAddLedgerClassStatusTypeRequest) returns (MsgAddLedgerClassStatusTypeResponse);
 
@@ -249,6 +252,33 @@ message MsgCreateLedgerClassRequest {
 
 // MsgCreateLedgerClassResponse represents the response from creating a ledger class.
 message MsgCreateLedgerClassResponse {}
+
+// MsgCreateLedgerClassRequest represents a request to update a ledger class.
+message MsgUpdateLedgerClassRequest {
+  option (cosmos.msg.v1.signer) = "maintainer_address";
+
+  // Unique ID for the ledger class (eg. 1, 2, 3, etc.).
+  // This is necessary since the nft class does not have an owner.
+  string ledger_class_id = 1;
+
+  // maintainer_address is the address of the current maintainer of the ledger class.
+  string maintainer_address = 2;
+
+  // new_asset_class_id is the new asset class id that the ledger class should have.
+  // If this field is an empty string, the asset_class_id field will NOT be updated.
+  string new_asset_class_id = 3;
+
+  // new_denom is the new denom that the ledger class should have.
+  // If this field is an empty string, the denom field will NOT be updated.
+  string new_denom = 4;
+
+  // new_maintainer_address is the new maintainer_address that the ledger class should have.
+  // If this field is an empty string, the maintainer_address field will NOT be updated.
+  string new_maintainer_address = 5;
+}
+
+// MsgCreateLedgerClassResponse represents the response from updating a ledger class.
+message MsgUpdateLedgerClassResponse {}
 
 // MsgAddLedgerClassStatusTypeRequest represents a request to add a status type to a ledger class.
 message MsgAddLedgerClassStatusTypeRequest {

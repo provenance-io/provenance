@@ -28,6 +28,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgTransferFundsWithSettlementRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgDestroyRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgCreateLedgerClassRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateLedgerClassRequest{MaintainerAddress: signer} },
 		func(signer string) sdk.Msg { return &MsgAddLedgerClassStatusTypeRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgAddLedgerClassEntryTypeRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgAddLedgerClassBucketTypeRequest{Signer: signer} },
@@ -315,6 +316,181 @@ func TestMsgCreateLedgerClass_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			assertions.RequireErrorContents(t, err, tc.exp)
+		})
+	}
+}
+
+func TestMsgUpdateLedgerClass_ValidateBasic(t *testing.T) {
+	addr := func(name string) string {
+		switch {
+		case len(name) < 20:
+			name += strings.Repeat("_", 20-len(name))
+		case len(name) > 20 && len(name) < 32:
+			name += strings.Repeat("_", 32-len(name))
+		}
+		return sdk.AccAddress(name).String()
+	}
+
+	tests := []struct {
+		name string
+		msg  MsgUpdateLedgerClassRequest
+		exp  string
+	}{
+		{
+			name: "valid: all fields",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             "banana",
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+		},
+		{
+			name: "valid: only new asset class id",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "ledger-class-one",
+				MaintainerAddress: addr("maintainer_address"),
+				NewAssetClassId:   "asset-class-one",
+			},
+		},
+		{
+			name: "valid: only new denom",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "ledger-class-one",
+				MaintainerAddress: addr("maintainer_address"),
+				NewDenom:          "banana",
+			},
+		},
+		{
+			name: "valid: only new maintainer address",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+		},
+		{
+			name: "invalid ledger class id",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger_class_one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             "banana",
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+			exp: "ledger_class_id: \"ledger_class_one\" must only contain alphanumeric, '-', '.' characters",
+		},
+		{
+			name: "missing maintainer address",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    "",
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             "banana",
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+			exp: "invalid maintainer_address: empty address string is not allowed: invalid field",
+		},
+		{
+			name: "invalid maintainer address",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    "maintainer_address",
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             "banana",
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+			exp: "invalid maintainer_address: decoding bech32 failed: invalid separator index -1: invalid field",
+		},
+		{
+			name: "invalid new asset class id",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewAssetClassId:      "asset_class_one",
+				NewDenom:             "banana",
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+			exp: "new_asset_class_id: \"asset_class_one\" must only contain alphanumeric, '-', '.' characters",
+		},
+		{
+			name: "invalid new denom: too long",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             strings.Repeat("d", MaxLenDenom+1),
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+			exp: "new_denom: must be between 2 and 128 characters",
+		},
+		{
+			name: "invalid new denom: too short",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             "b",
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+			exp: "new_denom: must be between 2 and 128 characters",
+		},
+		{
+			name: "invalid new denom: regex fail",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             "banana$",
+				NewMaintainerAddress: addr("new_maintainer_address"),
+			},
+			exp: "new_denom: must be a valid coin denomination: invalid denom: banana$",
+		},
+		{
+			name: "invalid new maintainer address",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "ledger-class-one",
+				MaintainerAddress:    addr("maintainer_address"),
+				NewAssetClassId:      "asset-class-one",
+				NewDenom:             "banana",
+				NewMaintainerAddress: "new_maintainer_address",
+			},
+			exp: "new_maintainer_address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "nothing to update",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:     "ledger-class-one",
+				MaintainerAddress: addr("maintainer_address"),
+			},
+			exp: "at lest one of new_asset_class_id, new_denom, or new_maintainer_address must be provided",
+		},
+		{
+			name: "multiple errors",
+			msg: MsgUpdateLedgerClassRequest{
+				LedgerClassId:        "",
+				MaintainerAddress:    "",
+				NewAssetClassId:      "no_dice",
+				NewDenom:             "x",
+				NewMaintainerAddress: "alsono",
+			},
+			exp: "ledger_class_id: must be between 1 and 128 characters" + "\n" +
+				"invalid maintainer_address: empty address string is not allowed: invalid field" + "\n" +
+				"new_asset_class_id: \"no_dice\" must only contain alphanumeric, '-', '.' characters" + "\n" +
+				"new_denom: must be between 2 and 128 characters" + "\n" +
+				"new_maintainer_address: decoding bech32 failed: invalid bech32 string length 6",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.msg.ValidateBasic()
+			}
+			require.NotPanics(t, testFunc, "%T.ValidateBasic()", tc.msg)
+			assertions.AssertErrorValue(t, err, tc.exp, "%T.ValidateBasic() error", tc.msg)
 		})
 	}
 }

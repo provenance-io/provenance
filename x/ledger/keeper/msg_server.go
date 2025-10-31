@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/ledger/types"
 )
 
@@ -204,6 +206,34 @@ func (k *MsgServer) CreateLedgerClass(goCtx context.Context, req *types.MsgCreat
 	}
 
 	return &types.MsgCreateLedgerClassResponse{}, nil
+}
+
+// UpdateLedgerClass updates a ledger class.
+func (k *MsgServer) UpdateLedgerClass(ctx context.Context, req *types.MsgUpdateLedgerClassRequest) (*types.MsgUpdateLedgerClassResponse, error) {
+	lc, err := k.GetLedgerClass(ctx, req.LedgerClassId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ledger class: %w", err)
+	}
+	if lc == nil {
+		return nil, types.NewErrCodeNotFound("ledger_class")
+	}
+
+	if lc.MaintainerAddress != req.MaintainerAddress {
+		return nil, types.NewErrCodeUnauthorized("signer is not the maintainer of the ledger class")
+	}
+
+	newLC := types.LedgerClass{
+		LedgerClassId:     lc.LedgerClassId,
+		AssetClassId:      provutils.Ternary(len(req.NewAssetClassId) > 0, req.NewAssetClassId, lc.AssetClassId),
+		Denom:             provutils.Ternary(len(req.NewDenom) > 0, req.NewDenom, lc.Denom),
+		MaintainerAddress: provutils.Ternary(len(req.NewMaintainerAddress) > 0, req.NewMaintainerAddress, lc.MaintainerAddress),
+	}
+
+	if err = k.Keeper.UpdateLedgerClass(ctx, newLC); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateLedgerClassResponse{}, nil
 }
 
 // AddLedgerClassStatusType adds a status type to a ledger class.

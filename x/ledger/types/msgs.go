@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -19,6 +21,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgTransferFundsWithSettlementRequest)(nil),
 	(*MsgDestroyRequest)(nil),
 	(*MsgCreateLedgerClassRequest)(nil),
+	(*MsgUpdateLedgerClassRequest)(nil),
 	(*MsgAddLedgerClassStatusTypeRequest)(nil),
 	(*MsgAddLedgerClassEntryTypeRequest)(nil),
 	(*MsgAddLedgerClassBucketTypeRequest)(nil),
@@ -223,6 +226,57 @@ func (m MsgCreateLedgerClassRequest) ValidateBasic() error {
 
 	if err := m.LedgerClass.Validate(); err != nil {
 		errs = append(errs, NewErrCodeInvalidField("ledger_class", "%s", err))
+	}
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic implements the sdk.Msg interface for MsgUpdateLedgerClassRequest
+func (m MsgUpdateLedgerClassRequest) ValidateBasic() error {
+	var errs []error
+
+	// Validate ledger class id format using asset class id validation
+	if err := registrytypes.ValidateClassID(m.LedgerClassId); err != nil {
+		errs = append(errs, fmt.Errorf("ledger_class_id: %w", err))
+	}
+
+	// Make sure the maintainer address is valid.
+	if _, err := sdk.AccAddressFromBech32(m.MaintainerAddress); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("maintainer_address", "%s", err))
+	}
+
+	haveSomething := false
+
+	// If there's a new asset class, make sure it's okay.
+	if len(m.NewAssetClassId) > 0 {
+		haveSomething = true
+		if err := registrytypes.ValidateClassID(m.NewAssetClassId); err != nil {
+			errs = append(errs, fmt.Errorf("new_asset_class_id: %w", err))
+		}
+	}
+
+	// If there's a new denom, make sure it's okay.
+	if len(m.NewDenom) > 0 {
+		haveSomething = true
+		// Check denom length first for nicer error messages.
+		if err := registrytypes.ValidateStringLength(m.NewDenom, 2, MaxLenDenom); err != nil {
+			errs = append(errs, fmt.Errorf("new_denom: %w", err))
+		} else if err = sdk.ValidateDenom(m.NewDenom); err != nil {
+			// Validate denom format (should be a valid coin denomination)
+			errs = append(errs, fmt.Errorf("new_denom: must be a valid coin denomination: %w", err))
+		}
+	}
+
+	// If there's a new maintainer address, make sure it's valid too.
+	if len(m.NewMaintainerAddress) > 0 {
+		haveSomething = true
+		if _, err := sdk.AccAddressFromBech32(m.NewMaintainerAddress); err != nil {
+			errs = append(errs, fmt.Errorf("new_maintainer_address: %w", err))
+		}
+	}
+
+	if !haveSomething {
+		errs = append(errs, fmt.Errorf("at lest one of new_asset_class_id, new_denom, or new_maintainer_address must be provided"))
 	}
 
 	return errors.Join(errs...)

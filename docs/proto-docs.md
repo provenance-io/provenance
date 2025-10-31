@@ -284,6 +284,8 @@
     - [MsgUpdateBalancesResponse](#provenance-ledger-v1-MsgUpdateBalancesResponse)
     - [MsgUpdateInterestRateRequest](#provenance-ledger-v1-MsgUpdateInterestRateRequest)
     - [MsgUpdateInterestRateResponse](#provenance-ledger-v1-MsgUpdateInterestRateResponse)
+    - [MsgUpdateLedgerClassRequest](#provenance-ledger-v1-MsgUpdateLedgerClassRequest)
+    - [MsgUpdateLedgerClassResponse](#provenance-ledger-v1-MsgUpdateLedgerClassResponse)
     - [MsgUpdateMaturityDateRequest](#provenance-ledger-v1-MsgUpdateMaturityDateRequest)
     - [MsgUpdateMaturityDateResponse](#provenance-ledger-v1-MsgUpdateMaturityDateResponse)
     - [MsgUpdatePaymentRequest](#provenance-ledger-v1-MsgUpdatePaymentRequest)
@@ -4959,6 +4961,35 @@ MsgUpdateInterestRateResponse represents the response from updating a ledger int
 
 
 
+<a name="provenance-ledger-v1-MsgUpdateLedgerClassRequest"></a>
+
+### MsgUpdateLedgerClassRequest
+MsgCreateLedgerClassRequest represents a request to update a ledger class.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | Unique ID for the ledger class (eg. 1, 2, 3, etc.). This is necessary since the nft class does not have an owner. |
+| `maintainer_address` | [string](#string) |  | maintainer_address is the address of the current maintainer of the ledger class. |
+| `new_asset_class_id` | [string](#string) |  | new_asset_class_id is the new asset class id that the ledger class should have. If this field is an empty string, the asset_class_id field will NOT be updated. |
+| `new_denom` | [string](#string) |  | new_denom is the new denom that the ledger class should have. If this field is an empty string, the denom field will NOT be updated. |
+| `new_maintainer_address` | [string](#string) |  | new_maintainer_address is the new maintainer_address that the ledger class should have. If this field is an empty string, the maintainer_address field will NOT be updated. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-MsgUpdateLedgerClassResponse"></a>
+
+### MsgUpdateLedgerClassResponse
+MsgCreateLedgerClassResponse represents the response from updating a ledger class.
+
+
+
+
+
+
 <a name="provenance-ledger-v1-MsgUpdateMaturityDateRequest"></a>
 
 ### MsgUpdateMaturityDateRequest
@@ -5065,6 +5096,7 @@ Msg defines the ledger module Msg service.
 | `TransferFundsWithSettlement` | [MsgTransferFundsWithSettlementRequest](#provenance-ledger-v1-MsgTransferFundsWithSettlementRequest) | [MsgTransferFundsWithSettlementResponse](#provenance-ledger-v1-MsgTransferFundsWithSettlementResponse) | TransferFundsWithSettlement processes multiple fund transfers with manual settlement instructions. |
 | `Destroy` | [MsgDestroyRequest](#provenance-ledger-v1-MsgDestroyRequest) | [MsgDestroyResponse](#provenance-ledger-v1-MsgDestroyResponse) | Destroy deletes a ledger and its ledger entries. |
 | `CreateLedgerClass` | [MsgCreateLedgerClassRequest](#provenance-ledger-v1-MsgCreateLedgerClassRequest) | [MsgCreateLedgerClassResponse](#provenance-ledger-v1-MsgCreateLedgerClassResponse) | CreateLedgerClass creates a new ledger class. |
+| `UpdateLedgerClass` | [MsgUpdateLedgerClassRequest](#provenance-ledger-v1-MsgUpdateLedgerClassRequest) | [MsgUpdateLedgerClassResponse](#provenance-ledger-v1-MsgUpdateLedgerClassResponse) | UpdateLedgerClass updates a ledger class. |
 | `AddLedgerClassStatusType` | [MsgAddLedgerClassStatusTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeRequest) | [MsgAddLedgerClassStatusTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassStatusTypeResponse) | AddLedgerClassStatusType adds a status type to a ledger class. |
 | `AddLedgerClassEntryType` | [MsgAddLedgerClassEntryTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeRequest) | [MsgAddLedgerClassEntryTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassEntryTypeResponse) | AddLedgerClassEntryType adds an entry type to a ledger class. |
 | `AddLedgerClassBucketType` | [MsgAddLedgerClassBucketTypeRequest](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeRequest) | [MsgAddLedgerClassBucketTypeResponse](#provenance-ledger-v1-MsgAddLedgerClassBucketTypeResponse) | AddLedgerClassBucketType adds a bucket type to a ledger class. |
