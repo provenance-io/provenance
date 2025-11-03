@@ -138,7 +138,6 @@ var (
 	oldMainnetGasPricesAmt = sdkmath.NewInt(1905)
 	figureGasPricesAmt     = sdkmath.NewInt(9525)
 	oldTestnetGasPricesAmt = sdkmath.NewInt(19050)
-	zero = sdkmath.ZeroInt()
 )
 
 // isOldGasPrices returns true if the nhash and gas amounts indicate that a tx had one of our old gas prices.
