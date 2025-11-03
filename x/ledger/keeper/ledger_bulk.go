@@ -37,6 +37,8 @@ func (k Keeper) BulkCreate(goCtx context.Context, ledgers []*types.LedgerAndEntr
 			if err := k.AppendEntries(ctx, key, ledgerAndEntries.Entries); err != nil {
 				return err
 			}
+			// Charge for appending entries.
+			antewrapper.ConsumeMsg(ctx, &types.MsgAppendRequest{})
 		}
 
 		// Done with this entry, write it!
