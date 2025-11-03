@@ -23,6 +23,8 @@ func (k Keeper) BulkCreate(goCtx context.Context, ledgers []*types.LedgerAndEntr
 			if err := k.AddLedger(ctx, *ledgerAndEntries.Ledger); err != nil {
 				return err
 			}
+			// Charge for creating one ledger.
+			antewrapper.ConsumeMsg(ctx, &types.MsgCreateLedgerRequest{})
 		}
 
 		// Add ledger entries
@@ -37,8 +39,6 @@ func (k Keeper) BulkCreate(goCtx context.Context, ledgers []*types.LedgerAndEntr
 			}
 		}
 
-		// Charge for creating one ledger.
-		antewrapper.ConsumeMsg(ctx, &types.MsgCreateLedgerRequest{})
 		// Done with this entry, write it!
 		writeCache()
 	}
