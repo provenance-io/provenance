@@ -75,3 +75,39 @@ jobs:
           BASE_BRANCH="..origin/${{ steps.setup.outputs.base-branch }}"
           export BASE_BRANCH
           make proto-update-check
+  proto_format_and_gen:
+    runs-on: ubuntu-latest
+    name: Proto Format and Generation Check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: Check Proto Formatting
+        run: |
+          make proto-format
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Proto files need formatting. Run 'make proto-format' locally."
+            git status --porcelain
+            git diff
+            exit 1
+          fi
+      - name: Check Proto Generation
+        run: |
+          cp go.mod go.mod.backup
+          cp go.sum go.sum.backup 2>/dev/null || true
+          make proto-gen
+          mv go.mod.backup go.mod
+          [ -f go.sum.backup ] && mv go.sum.backup go.sum
+          go mod tidy
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Generated proto files are out of date. Run 'make proto-gen' locally."
+            git status --porcelain
+            git diff
+            exit 1
+          fi
