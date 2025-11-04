@@ -1,6 +1,8 @@
 syntax = "proto3";
 package provenance.ledger.v1;
 
+import "gogoproto/gogo.proto";
+
 option go_package          = "github.com/provenance-io/provenance/x/ledger/types";
 option java_package        = "io.provenance.ledger.v1";
 option java_multiple_files = true;
@@ -65,6 +67,20 @@ message EventLedgerEntryAdded {
   string correlation_id = 3;
 }
 
+// EventLedgerEntryUpdated is emitted when an existing ledger entry is updated.
+// This event is triggered by the UpdateBalances message handler when a ledger
+// entry is successfully updated.
+message EventLedgerEntryUpdated {
+  // asset class of the ledger.
+  string asset_class_id = 1;
+
+  // nft id of the ledger (scope id or nft id).
+  string nft_id = 2;
+
+  // correlation id of the ledger entry.
+  string correlation_id = 3;
+}
+
 // EventFundTransferWithSettlement is emitted when funds are transferred with
 // settlement instructions. This event is triggered by the
 // MsgTransferFundsWithSettlement message handler when a fund transfer with
@@ -89,4 +105,46 @@ message EventLedgerDestroyed {
 
   // nft id of the ledger (scope id or nft id).
   string nft_id = 2;
+}
+
+// EventLedgerClassCreated is emitted when a ledger class is created.
+// This event is triggered by the MsgCreateLedgerClassRequest message handler
+// when a new ledger class is created.
+message EventLedgerClassCreated {
+  // The id of the ledger class that was created.
+  string ledger_class_id = 1;
+  // The id of the asset class that the ledger class was created for.
+  string asset_class_id = 2;
+  // The denom that this ledger class uses.
+  string denom = 3;
+}
+
+// EventLedgerClassTypeCreated is emitted when any type for a ledger class is created.
+// This event is triggered by the MsgAddLedgerClassStatusTypeRequest, MsgAddLedgerClassEntryTypeRequest,
+// and MsgAddLedgerClassBucketTypeRequest message handlers when they create their respective types.
+message EventLedgerClassTypeCreated {
+  // The id of the ledger class that the type was created.
+  string ledger_class_id = 1;
+  // The specific type of thing that was created.
+  ClassTypeCreated update_type = 2;
+  // The id of the created type.
+  string id = 3;
+  // The code of the created type.
+  string code = 4;
+}
+
+// ClassTypeCreated is the type of data that caused the EventLedgerClassTypeCreated event to be emitted.
+// This is used to identify the specific type that was just created.
+enum ClassTypeCreated {
+  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
+  // CLASS_TYPE_CREATED_UNSPECIFIED indicates that the class type is unspecified.
+  CLASS_TYPE_CREATED_UNSPECIFIED = 0;
+  // CLASS_TYPE_CREATED_STATUS is for when a LedgerClassStatusType is created.
+  CLASS_TYPE_CREATED_STATUS = 1;
+  // CLASS_TYPE_CREATED_ENTRY is for when a LedgerClassEntryType is created.
+  CLASS_TYPE_CREATED_ENTRY = 2;
+  // CLASS_TYPE_CREATED_BUCKET is for when a LedgerClassBucketType is created.
+  CLASS_TYPE_CREATED_BUCKET = 3;
 }

@@ -295,11 +295,15 @@
   
 - [provenance/ledger/v1/events.proto](#provenance_ledger_v1_events-proto)
     - [EventFundTransferWithSettlement](#provenance-ledger-v1-EventFundTransferWithSettlement)
+    - [EventLedgerClassCreated](#provenance-ledger-v1-EventLedgerClassCreated)
+    - [EventLedgerClassTypeCreated](#provenance-ledger-v1-EventLedgerClassTypeCreated)
     - [EventLedgerCreated](#provenance-ledger-v1-EventLedgerCreated)
     - [EventLedgerDestroyed](#provenance-ledger-v1-EventLedgerDestroyed)
     - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
+    - [EventLedgerEntryUpdated](#provenance-ledger-v1-EventLedgerEntryUpdated)
     - [EventLedgerUpdated](#provenance-ledger-v1-EventLedgerUpdated)
   
+    - [ClassTypeCreated](#provenance-ledger-v1-ClassTypeCreated)
     - [UpdateType](#provenance-ledger-v1-UpdateType)
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
@@ -5101,6 +5105,45 @@ settlement instructions is successfully processed.
 
 
 
+<a name="provenance-ledger-v1-EventLedgerClassCreated"></a>
+
+### EventLedgerClassCreated
+EventLedgerClassCreated is emitted when a ledger class is created.
+This event is triggered by the MsgCreateLedgerClassRequest message handler
+when a new ledger class is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | The id of the ledger class that was created. |
+| `asset_class_id` | [string](#string) |  | The id of the asset class that the ledger class was created for. |
+| `denom` | [string](#string) |  | The denom that this ledger class uses. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerClassTypeCreated"></a>
+
+### EventLedgerClassTypeCreated
+EventLedgerClassTypeCreated is emitted when any type for a ledger class is created.
+This event is triggered by the MsgAddLedgerClassStatusTypeRequest, MsgAddLedgerClassEntryTypeRequest,
+and MsgAddLedgerClassBucketTypeRequest message handlers when they create their respective types.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | The id of the ledger class that the type was created. |
+| `update_type` | [ClassTypeCreated](#provenance-ledger-v1-ClassTypeCreated) |  | The specific type of thing that was created. |
+| `id` | [string](#string) |  | The id of the created type. |
+| `code` | [string](#string) |  | The code of the created type. |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-EventLedgerCreated"></a>
 
 ### EventLedgerCreated
@@ -5156,6 +5199,25 @@ one or more ledger entries are successfully added to an existing ledger.
 
 
 
+<a name="provenance-ledger-v1-EventLedgerEntryUpdated"></a>
+
+### EventLedgerEntryUpdated
+EventLedgerEntryUpdated is emitted when an existing ledger entry is updated.
+This event is triggered by the UpdateBalances message handler when a ledger
+entry is successfully updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry. |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-EventLedgerUpdated"></a>
 
 ### EventLedgerUpdated
@@ -5177,6 +5239,21 @@ successfully modified.
 
 
  <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-ClassTypeCreated"></a>
+
+### ClassTypeCreated
+ClassTypeCreated is the type of data that caused the EventLedgerClassTypeCreated event to be emitted.
+This is used to identify the specific type that was just created.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `CLASS_TYPE_CREATED_UNSPECIFIED` | `0` | CLASS_TYPE_CREATED_UNSPECIFIED indicates that the class type is unspecified. |
+| `CLASS_TYPE_CREATED_STATUS` | `1` | CLASS_TYPE_CREATED_STATUS is for when a LedgerClassStatusType is created. |
+| `CLASS_TYPE_CREATED_ENTRY` | `2` | CLASS_TYPE_CREATED_ENTRY is for when a LedgerClassEntryType is created. |
+| `CLASS_TYPE_CREATED_BUCKET` | `3` | CLASS_TYPE_CREATED_BUCKET is for when a LedgerClassBucketType is created. |
+
 
 
 <a name="provenance-ledger-v1-UpdateType"></a>

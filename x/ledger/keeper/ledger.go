@@ -43,6 +43,10 @@ func (k Keeper) AddLedgerClass(ctx context.Context, l types.LedgerClass) error {
 		return err
 	}
 
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassCreated(&l)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -64,6 +68,10 @@ func (k Keeper) AddClassEntryType(ctx context.Context, ledgerClassID string, l t
 
 	// Store the entry type in the state store.
 	if err := k.LedgerClassEntryTypes.Set(ctx, key, l); err != nil {
+		return err
+	}
+
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassEntryTypeCreated(ledgerClassID, &l)); err != nil {
 		return err
 	}
 
@@ -92,6 +100,10 @@ func (k Keeper) AddClassStatusType(ctx context.Context, ledgerClassID string, l 
 		return err
 	}
 
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassStatusTypeCreated(ledgerClassID, &l)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -115,6 +127,11 @@ func (k Keeper) AddClassBucketType(ctx context.Context, ledgerClassID string, l 
 	if err = k.LedgerClassBucketTypes.Set(ctx, key, l); err != nil {
 		return err
 	}
+
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassBucketTypeCreated(ledgerClassID, &l)); err != nil {
+		return err
+	}
+
 
 	return nil
 }
