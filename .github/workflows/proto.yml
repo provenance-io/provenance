@@ -97,29 +97,6 @@ jobs:
             git diff
             exit 1
           fi
-      - name: Debug Proto Generation
-        run: |
-          echo "=== Debugging proto generation ==="
-          echo "Current directory: $(pwd)"
-          echo "Directory contents:"
-          ls -la
-          echo "=== Running protocgen.sh manually ==="
-          docker run --rm -v $(pwd):/workspace --workdir /workspace ghcr.io/cosmos/proto-builder:0.15.1 sh -c "
-            find ./proto ./legacy_protos -type f -name '*.proto' -print0 | xargs -0 grep -l 'option go_package.*provenance' | head -1 | while IFS= read -r -d '' file; do
-              echo 'Generating for file: $file'
-              buf generate --template proto/buf.gen.gogo.yaml '$file'
-            done
-            echo '=== After buf generate ==='
-            ls -la
-            echo '=== Checking for github.com directory ==='
-            find . -name 'github.com' -type d
-            if [ -d 'github.com' ]; then
-              echo 'github.com directory exists, contents:'
-              find github.com -type f | head -10
-            else
-              echo 'github.com directory does not exist'
-            fi
-          "
       - name: Check Proto Generation
         run: |
           make proto-gen
