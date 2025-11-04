@@ -37,6 +37,9 @@ message EventLedgerUpdated {
 // UpdateType is the type of data update that caused the EventLedgerUpdated event to be emitted.
 // This is used to identify the specific update that caused the event to be emitted.
 enum UpdateType {
+  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_stringer) = true;
+
   // The update type is unspecified.
   UPDATE_TYPE_UNSPECIFIED = 0;
 
