@@ -126,7 +126,7 @@ message EventLedgerClassTypeCreated {
   // The id of the ledger class that the type was created.
   string ledger_class_id = 1;
   // The specific type of thing that was created.
-  ClassTypeCreated update_type = 2;
+  ClassTypeCreated type_created = 2;
   // The id of the created type.
   string id = 3;
   // The code of the created type.

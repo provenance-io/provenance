@@ -5135,7 +5135,7 @@ and MsgAddLedgerClassBucketTypeRequest message handlers when they create their r
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ledger_class_id` | [string](#string) |  | The id of the ledger class that the type was created. |
-| `update_type` | [ClassTypeCreated](#provenance-ledger-v1-ClassTypeCreated) |  | The specific type of thing that was created. |
+| `type_created` | [ClassTypeCreated](#provenance-ledger-v1-ClassTypeCreated) |  | The specific type of thing that was created. |
 | `id` | [string](#string) |  | The id of the created type. |
 | `code` | [string](#string) |  | The code of the created type. |
 

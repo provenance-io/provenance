@@ -59,7 +59,7 @@ func NewEventLedgerClassCreated(lc *LedgerClass) *EventLedgerClassCreated {
 func NewEventLedgerClassStatusTypeCreated(lcID string, t *LedgerClassStatusType) *EventLedgerClassTypeCreated {
 	return &EventLedgerClassTypeCreated{
 		LedgerClassId: lcID,
-		UpdateType:    CLASS_TYPE_CREATED_STATUS,
+		TypeCreated:   CLASS_TYPE_CREATED_STATUS,
 		Id:            strconv.Itoa(int(t.Id)),
 		Code:          t.Code,
 	}
@@ -68,7 +68,7 @@ func NewEventLedgerClassStatusTypeCreated(lcID string, t *LedgerClassStatusType)
 func NewEventLedgerClassEntryTypeCreated(lcID string, t *LedgerClassEntryType) *EventLedgerClassTypeCreated {
 	return &EventLedgerClassTypeCreated{
 		LedgerClassId: lcID,
-		UpdateType:    CLASS_TYPE_CREATED_ENTRY,
+		TypeCreated:   CLASS_TYPE_CREATED_ENTRY,
 		Id:            strconv.Itoa(int(t.Id)),
 		Code:          t.Code,
 	}
@@ -77,7 +77,7 @@ func NewEventLedgerClassEntryTypeCreated(lcID string, t *LedgerClassEntryType) *
 func NewEventLedgerClassBucketTypeCreated(lcID string, t *LedgerClassBucketType) *EventLedgerClassTypeCreated {
 	return &EventLedgerClassTypeCreated{
 		LedgerClassId: lcID,
-		UpdateType:    CLASS_TYPE_CREATED_BUCKET,
+		TypeCreated:   CLASS_TYPE_CREATED_BUCKET,
 		Id:            strconv.Itoa(int(t.Id)),
 		Code:          t.Code,
 	}
