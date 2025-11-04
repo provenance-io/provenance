@@ -88,6 +88,14 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"bouvardia-rc2": { // Upgrade for v1.26.0-rc2.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			if err := fixLedgerClass(ctx, app); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
 	"bouvardia": { // Upgrade for v1.26.0.
 		Added:   []string{flatfeestypes.StoreKey, ledgertypes.StoreKey, nfttypes.StoreKey, registrytypes.StoreKey, vaulttypes.StoreKey},
 		Deleted: []string{msgfeestypes.StoreKey},
@@ -888,5 +896,24 @@ func importRegistryDataFile(ctx sdk.Context, rk RegistryKeeper, filePath string)
 	}
 
 	ctx.Logger().Info(fmt.Sprintf("Done importing %d registry entries", len(genState.Entries)))
+	return nil
+}
+
+func fixLedgerClass(ctx sdk.Context, app *App) error {
+	lcID := "figure-servicing-1-0"
+	lc, err := app.LedgerKeeper.GetLedgerClass(ctx, lcID)
+	if err != nil {
+		return fmt.Errorf("failed to get ledger class %q: %w", lcID, err)
+	}
+	if lc == nil {
+		return fmt.Errorf("ledger class %q not found", lcID)
+	}
+
+	lc.AssetClassId = "scopespec1qj5hx4l3vgryhp5g3ks68wh53jkq3net7n"
+	err = app.LedgerKeeper.LedgerClasses.Set(ctx, lcID, *lc)
+	if err != nil {
+		return fmt.Errorf("failed to set ledger class %q: %w", lcID, err)
+	}
+
 	return nil
 }
