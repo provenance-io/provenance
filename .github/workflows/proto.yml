@@ -99,12 +99,7 @@ jobs:
           fi
       - name: Check Proto Generation
         run: |
-          cp go.mod go.mod.backup
-          cp go.sum go.sum.backup 2>/dev/null || true
           make proto-gen
-          mv go.mod.backup go.mod
-          [ -f go.sum.backup ] && mv go.sum.backup go.sum
-          go mod tidy
           if [ -n "$(git status --porcelain)" ]; then
             echo "::error::Generated proto files are out of date. Run 'make proto-gen' locally."
             git status --porcelain
