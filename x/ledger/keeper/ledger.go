@@ -132,7 +132,6 @@ func (k Keeper) AddClassBucketType(ctx context.Context, ledgerClassID string, l 
 		return err
 	}
 
-
 	return nil
 }
 
