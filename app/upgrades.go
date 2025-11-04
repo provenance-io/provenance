@@ -972,7 +972,7 @@ func fixRegistry(ctx sdk.Context, app *App) error {
 			return fmt.Errorf("failed to store registry entry with nft id %q: %w", re.Key.NftId, err)
 		}
 
-		if (i+1)%10000 == 0 {
+		if (i+1)%10000 == 0 || (i+1) == len(toFix) {
 			ctx.Logger().Info("Progress: Registry entries fixed", "count", i+1)
 		}
 	}
