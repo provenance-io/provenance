@@ -89,6 +89,7 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
       - name: Check Proto Formatting
+        if: always()
         run: |
           make proto-format
           if [ -n "$(git status --porcelain)" ]; then
@@ -98,6 +99,7 @@ jobs:
             exit 1
           fi
       - name: Check Proto Generation
+        if: always()
         run: |
           make proto-gen
           if [ -n "$(git status --porcelain)" ]; then
