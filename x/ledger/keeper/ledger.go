@@ -43,6 +43,10 @@ func (k Keeper) AddLedgerClass(ctx context.Context, l types.LedgerClass) error {
 		return err
 	}
 
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassCreated(&l)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -64,6 +68,10 @@ func (k Keeper) AddClassEntryType(ctx context.Context, ledgerClassID string, l t
 
 	// Store the entry type in the state store.
 	if err := k.LedgerClassEntryTypes.Set(ctx, key, l); err != nil {
+		return err
+	}
+
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassEntryTypeCreated(ledgerClassID, &l)); err != nil {
 		return err
 	}
 
@@ -92,6 +100,10 @@ func (k Keeper) AddClassStatusType(ctx context.Context, ledgerClassID string, l 
 		return err
 	}
 
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassStatusTypeCreated(ledgerClassID, &l)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -113,6 +125,10 @@ func (k Keeper) AddClassBucketType(ctx context.Context, ledgerClassID string, l 
 
 	// Add the bucket type to the state store.
 	if err = k.LedgerClassBucketTypes.Set(ctx, key, l); err != nil {
+		return err
+	}
+
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerClassBucketTypeCreated(ledgerClassID, &l)); err != nil {
 		return err
 	}
 
@@ -230,7 +246,7 @@ func (k Keeper) UpdateLedgerStatus(ctx context.Context, lk *types.LedgerKey, sta
 	}
 
 	// Emit the ledger updated event.
-	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_STATUS)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UPDATE_TYPE_STATUS)); err != nil {
 		return err
 	}
 
@@ -264,7 +280,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx context.Context, lk *types.LedgerKe
 	}
 
 	// Emit the ledger updated event.
-	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_INTEREST_RATE)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UPDATE_TYPE_INTEREST_RATE)); err != nil {
 		return err
 	}
 
@@ -301,7 +317,7 @@ func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, ne
 	}
 
 	// Emit the ledger updated event.
-	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_PAYMENT)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UPDATE_TYPE_PAYMENT)); err != nil {
 		return err
 	}
 
@@ -333,7 +349,7 @@ func (k Keeper) UpdateLedgerMaturityDate(ctx context.Context, lk *types.LedgerKe
 	}
 
 	// Emit the ledger updated event.
-	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UpdateType_UPDATE_TYPE_MATURITY_DATE)); err != nil {
+	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerUpdated(key, types.UPDATE_TYPE_MATURITY_DATE)); err != nil {
 		return err
 	}
 

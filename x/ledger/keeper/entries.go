@@ -211,6 +211,10 @@ func (k Keeper) UpdateEntryBalances(ctx context.Context, ledgerKey *types.Ledger
 		return err
 	}
 
+	if err = sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerEntryUpdated(ledgerKey, existingEntry.CorrelationId)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
