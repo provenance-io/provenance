@@ -1,6 +1,14 @@
 syntax = "proto3";
-package trigger.v1;
-message TestTriggerMessage{
-string field_one = 1;
-string field_two = 2;
+
+package provenance.trigger.v1";
+
+// TestTriggerMessage is a temporary message to validate CI workflow behavior.
+message TestTriggerMessage {
+  string field_one = 1;
+  string field_two = 2;
+}
+
+// TempGenTest is a new test message to trigger proto generation failure.
+message TempGenTest {
+  string temp_field = 1;
 }
