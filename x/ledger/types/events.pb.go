@@ -5,6 +5,7 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
@@ -28,15 +29,15 @@ type UpdateType int32
 
 const (
 	// The update type is unspecified.
-	UpdateType_UPDATE_TYPE_UNSPECIFIED UpdateType = 0
+	UPDATE_TYPE_UNSPECIFIED UpdateType = 0
 	// The status of the ledger was updated.
-	UpdateType_UPDATE_TYPE_STATUS UpdateType = 1
+	UPDATE_TYPE_STATUS UpdateType = 1
 	// The interest rate of the ledger was updated.
-	UpdateType_UPDATE_TYPE_INTEREST_RATE UpdateType = 2
+	UPDATE_TYPE_INTEREST_RATE UpdateType = 2
 	// The payment of the ledger was updated.
-	UpdateType_UPDATE_TYPE_PAYMENT UpdateType = 3
+	UPDATE_TYPE_PAYMENT UpdateType = 3
 	// The maturity date of the ledger was updated.
-	UpdateType_UPDATE_TYPE_MATURITY_DATE UpdateType = 4
+	UPDATE_TYPE_MATURITY_DATE UpdateType = 4
 )
 
 var UpdateType_name = map[int32]string{
@@ -61,6 +62,43 @@ func (x UpdateType) String() string {
 
 func (UpdateType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_805ee43b97f8de5c, []int{0}
+}
+
+// ClassTypeCreated is the type of data that caused the EventLedgerClassTypeCreated event to be emitted.
+// This is used to identify the specific type that was just created.
+type ClassTypeCreated int32
+
+const (
+	// CLASS_TYPE_CREATED_UNSPECIFIED indicates that the class type is unspecified.
+	CLASS_TYPE_CREATED_UNSPECIFIED ClassTypeCreated = 0
+	// CLASS_TYPE_CREATED_STATUS is for when a LedgerClassStatusType is created.
+	CLASS_TYPE_CREATED_STATUS ClassTypeCreated = 1
+	// CLASS_TYPE_CREATED_ENTRY is for when a LedgerClassEntryType is created.
+	CLASS_TYPE_CREATED_ENTRY ClassTypeCreated = 2
+	// CLASS_TYPE_CREATED_BUCKET is for when a LedgerClassBucketType is created.
+	CLASS_TYPE_CREATED_BUCKET ClassTypeCreated = 3
+)
+
+var ClassTypeCreated_name = map[int32]string{
+	0: "CLASS_TYPE_CREATED_UNSPECIFIED",
+	1: "CLASS_TYPE_CREATED_STATUS",
+	2: "CLASS_TYPE_CREATED_ENTRY",
+	3: "CLASS_TYPE_CREATED_BUCKET",
+}
+
+var ClassTypeCreated_value = map[string]int32{
+	"CLASS_TYPE_CREATED_UNSPECIFIED": 0,
+	"CLASS_TYPE_CREATED_STATUS":      1,
+	"CLASS_TYPE_CREATED_ENTRY":       2,
+	"CLASS_TYPE_CREATED_BUCKET":      3,
+}
+
+func (x ClassTypeCreated) String() string {
+	return proto.EnumName(ClassTypeCreated_name, int32(x))
+}
+
+func (ClassTypeCreated) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_805ee43b97f8de5c, []int{1}
 }
 
 // EventLedgerCreated is emitted when a new ledger is created for an asset.
@@ -185,7 +223,7 @@ func (m *EventLedgerUpdated) GetUpdateType() UpdateType {
 	if m != nil {
 		return m.UpdateType
 	}
-	return UpdateType_UPDATE_TYPE_UNSPECIFIED
+	return UPDATE_TYPE_UNSPECIFIED
 }
 
 // EventLedgerEntryAdded is emitted when a new entry is added to a ledger.
@@ -254,6 +292,72 @@ func (m *EventLedgerEntryAdded) GetCorrelationId() string {
 	return ""
 }
 
+// EventLedgerEntryUpdated is emitted when an existing ledger entry is updated.
+// This event is triggered by the UpdateBalances message handler when a ledger
+// entry is successfully updated.
+type EventLedgerEntryUpdated struct {
+	// asset class of the ledger.
+	AssetClassId string `protobuf:"bytes,1,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
+	// nft id of the ledger (scope id or nft id).
+	NftId string `protobuf:"bytes,2,opt,name=nft_id,json=nftId,proto3" json:"nft_id,omitempty"`
+	// correlation id of the ledger entry.
+	CorrelationId string `protobuf:"bytes,3,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+}
+
+func (m *EventLedgerEntryUpdated) Reset()         { *m = EventLedgerEntryUpdated{} }
+func (m *EventLedgerEntryUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventLedgerEntryUpdated) ProtoMessage()    {}
+func (*EventLedgerEntryUpdated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_805ee43b97f8de5c, []int{3}
+}
+func (m *EventLedgerEntryUpdated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventLedgerEntryUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventLedgerEntryUpdated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventLedgerEntryUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLedgerEntryUpdated.Merge(m, src)
+}
+func (m *EventLedgerEntryUpdated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventLedgerEntryUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLedgerEntryUpdated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventLedgerEntryUpdated proto.InternalMessageInfo
+
+func (m *EventLedgerEntryUpdated) GetAssetClassId() string {
+	if m != nil {
+		return m.AssetClassId
+	}
+	return ""
+}
+
+func (m *EventLedgerEntryUpdated) GetNftId() string {
+	if m != nil {
+		return m.NftId
+	}
+	return ""
+}
+
+func (m *EventLedgerEntryUpdated) GetCorrelationId() string {
+	if m != nil {
+		return m.CorrelationId
+	}
+	return ""
+}
+
 // EventFundTransferWithSettlement is emitted when funds are transferred with
 // settlement instructions. This event is triggered by the
 // MsgTransferFundsWithSettlement message handler when a fund transfer with
@@ -271,7 +375,7 @@ func (m *EventFundTransferWithSettlement) Reset()         { *m = EventFundTransf
 func (m *EventFundTransferWithSettlement) String() string { return proto.CompactTextString(m) }
 func (*EventFundTransferWithSettlement) ProtoMessage()    {}
 func (*EventFundTransferWithSettlement) Descriptor() ([]byte, []int) {
-	return fileDescriptor_805ee43b97f8de5c, []int{3}
+	return fileDescriptor_805ee43b97f8de5c, []int{4}
 }
 func (m *EventFundTransferWithSettlement) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -335,7 +439,7 @@ func (m *EventLedgerDestroyed) Reset()         { *m = EventLedgerDestroyed{} }
 func (m *EventLedgerDestroyed) String() string { return proto.CompactTextString(m) }
 func (*EventLedgerDestroyed) ProtoMessage()    {}
 func (*EventLedgerDestroyed) Descriptor() ([]byte, []int) {
-	return fileDescriptor_805ee43b97f8de5c, []int{4}
+	return fileDescriptor_805ee43b97f8de5c, []int{5}
 }
 func (m *EventLedgerDestroyed) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -378,46 +482,203 @@ func (m *EventLedgerDestroyed) GetNftId() string {
 	return ""
 }
 
+// EventLedgerClassCreated is emitted when a ledger class is created.
+// This event is triggered by the MsgCreateLedgerClassRequest message handler
+// when a new ledger class is created.
+type EventLedgerClassCreated struct {
+	// The id of the ledger class that was created.
+	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
+	// The id of the asset class that the ledger class was created for.
+	AssetClassId string `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
+	// The denom that this ledger class uses.
+	Denom string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *EventLedgerClassCreated) Reset()         { *m = EventLedgerClassCreated{} }
+func (m *EventLedgerClassCreated) String() string { return proto.CompactTextString(m) }
+func (*EventLedgerClassCreated) ProtoMessage()    {}
+func (*EventLedgerClassCreated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_805ee43b97f8de5c, []int{6}
+}
+func (m *EventLedgerClassCreated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventLedgerClassCreated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventLedgerClassCreated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventLedgerClassCreated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLedgerClassCreated.Merge(m, src)
+}
+func (m *EventLedgerClassCreated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventLedgerClassCreated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLedgerClassCreated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventLedgerClassCreated proto.InternalMessageInfo
+
+func (m *EventLedgerClassCreated) GetLedgerClassId() string {
+	if m != nil {
+		return m.LedgerClassId
+	}
+	return ""
+}
+
+func (m *EventLedgerClassCreated) GetAssetClassId() string {
+	if m != nil {
+		return m.AssetClassId
+	}
+	return ""
+}
+
+func (m *EventLedgerClassCreated) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+// EventLedgerClassTypeCreated is emitted when any type for a ledger class is created.
+// This event is triggered by the MsgAddLedgerClassStatusTypeRequest, MsgAddLedgerClassEntryTypeRequest,
+// and MsgAddLedgerClassBucketTypeRequest message handlers when they create their respective types.
+type EventLedgerClassTypeCreated struct {
+	// The id of the ledger class that the type was created.
+	LedgerClassId string `protobuf:"bytes,1,opt,name=ledger_class_id,json=ledgerClassId,proto3" json:"ledger_class_id,omitempty"`
+	// The specific type of thing that was created.
+	TypeCreated ClassTypeCreated `protobuf:"varint,2,opt,name=type_created,json=typeCreated,proto3,enum=provenance.ledger.v1.ClassTypeCreated" json:"type_created,omitempty"`
+	// The id of the created type.
+	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+	// The code of the created type.
+	Code string `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty"`
+}
+
+func (m *EventLedgerClassTypeCreated) Reset()         { *m = EventLedgerClassTypeCreated{} }
+func (m *EventLedgerClassTypeCreated) String() string { return proto.CompactTextString(m) }
+func (*EventLedgerClassTypeCreated) ProtoMessage()    {}
+func (*EventLedgerClassTypeCreated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_805ee43b97f8de5c, []int{7}
+}
+func (m *EventLedgerClassTypeCreated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventLedgerClassTypeCreated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventLedgerClassTypeCreated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventLedgerClassTypeCreated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLedgerClassTypeCreated.Merge(m, src)
+}
+func (m *EventLedgerClassTypeCreated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventLedgerClassTypeCreated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLedgerClassTypeCreated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventLedgerClassTypeCreated proto.InternalMessageInfo
+
+func (m *EventLedgerClassTypeCreated) GetLedgerClassId() string {
+	if m != nil {
+		return m.LedgerClassId
+	}
+	return ""
+}
+
+func (m *EventLedgerClassTypeCreated) GetTypeCreated() ClassTypeCreated {
+	if m != nil {
+		return m.TypeCreated
+	}
+	return CLASS_TYPE_CREATED_UNSPECIFIED
+}
+
+func (m *EventLedgerClassTypeCreated) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *EventLedgerClassTypeCreated) GetCode() string {
+	if m != nil {
+		return m.Code
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterEnum("provenance.ledger.v1.UpdateType", UpdateType_name, UpdateType_value)
+	proto.RegisterEnum("provenance.ledger.v1.ClassTypeCreated", ClassTypeCreated_name, ClassTypeCreated_value)
 	proto.RegisterType((*EventLedgerCreated)(nil), "provenance.ledger.v1.EventLedgerCreated")
 	proto.RegisterType((*EventLedgerUpdated)(nil), "provenance.ledger.v1.EventLedgerUpdated")
 	proto.RegisterType((*EventLedgerEntryAdded)(nil), "provenance.ledger.v1.EventLedgerEntryAdded")
+	proto.RegisterType((*EventLedgerEntryUpdated)(nil), "provenance.ledger.v1.EventLedgerEntryUpdated")
 	proto.RegisterType((*EventFundTransferWithSettlement)(nil), "provenance.ledger.v1.EventFundTransferWithSettlement")
 	proto.RegisterType((*EventLedgerDestroyed)(nil), "provenance.ledger.v1.EventLedgerDestroyed")
+	proto.RegisterType((*EventLedgerClassCreated)(nil), "provenance.ledger.v1.EventLedgerClassCreated")
+	proto.RegisterType((*EventLedgerClassTypeCreated)(nil), "provenance.ledger.v1.EventLedgerClassTypeCreated")
 }
 
 func init() { proto.RegisterFile("provenance/ledger/v1/events.proto", fileDescriptor_805ee43b97f8de5c) }
 
 var fileDescriptor_805ee43b97f8de5c = []byte{
-	// 432 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x93, 0x41, 0x8b, 0xd3, 0x40,
-	0x14, 0xc7, 0x3b, 0x5b, 0x5d, 0xf0, 0xa9, 0x25, 0x8c, 0xbb, 0x76, 0x45, 0x8c, 0xb5, 0x28, 0x2c,
-	0x82, 0x09, 0xbb, 0x7e, 0x82, 0xd8, 0xce, 0x42, 0xc0, 0x2d, 0x31, 0x99, 0x20, 0xf5, 0x12, 0xb2,
-	0x9d, 0xd7, 0x6e, 0xa0, 0x3b, 0x13, 0x26, 0xd3, 0x62, 0xf0, 0xec, 0xdd, 0x83, 0x07, 0x3f, 0x92,
-	0xc7, 0x3d, 0x7a, 0x94, 0xf6, 0x8b, 0x48, 0xb2, 0x68, 0xa3, 0xf4, 0x56, 0xf0, 0x36, 0xf3, 0xff,
-	0xfd, 0xe7, 0xbd, 0x37, 0x8f, 0xf7, 0xe0, 0x59, 0xae, 0xd5, 0x12, 0x65, 0x2a, 0x27, 0xe8, 0xce,
-	0x51, 0xcc, 0x50, 0xbb, 0xcb, 0x13, 0x17, 0x97, 0x28, 0x4d, 0xe1, 0xe4, 0x5a, 0x19, 0x45, 0x0f,
-	0x36, 0x16, 0xe7, 0xc6, 0xe2, 0x2c, 0x4f, 0xfa, 0xef, 0x80, 0xb2, 0xca, 0xf5, 0xb6, 0x56, 0x06,
-	0x1a, 0x53, 0x83, 0x82, 0x3e, 0x87, 0x4e, 0x5a, 0x14, 0x68, 0x92, 0xc9, 0x3c, 0x2d, 0x8a, 0x24,
-	0x13, 0x47, 0xa4, 0x47, 0x8e, 0xef, 0x84, 0xf7, 0x6a, 0x75, 0x50, 0x89, 0xbe, 0xa0, 0x87, 0xb0,
-	0x2f, 0xa7, 0xa6, 0xa2, 0x7b, 0x35, 0xbd, 0x2d, 0xa7, 0xc6, 0x17, 0xfd, 0xaf, 0xe4, 0xaf, 0x98,
-	0x71, 0x2e, 0x76, 0x8e, 0x49, 0x3d, 0xb8, 0xbb, 0xa8, 0xe3, 0x24, 0xa6, 0xcc, 0xf1, 0xa8, 0xdd,
-	0x23, 0xc7, 0x9d, 0xd3, 0x9e, 0xb3, 0xed, 0x4b, 0xce, 0x4d, 0x42, 0x5e, 0xe6, 0x18, 0xc2, 0xe2,
-	0xcf, 0xb9, 0xff, 0x09, 0x0e, 0x1b, 0x55, 0x31, 0x69, 0x74, 0xe9, 0x09, 0xb1, 0x6b, 0x61, 0x2f,
-	0xa0, 0x33, 0x51, 0x5a, 0xe3, 0x3c, 0x35, 0x99, 0x92, 0x15, 0x6e, 0xd7, 0xf8, 0x7e, 0x43, 0xf5,
-	0x45, 0xff, 0x33, 0x81, 0xa7, 0x75, 0xf6, 0xb3, 0x85, 0x14, 0x5c, 0xa7, 0xb2, 0x98, 0xa2, 0x7e,
-	0x9f, 0x99, 0xcb, 0x08, 0x8d, 0x99, 0xe3, 0x15, 0x4a, 0xf3, 0x5f, 0xea, 0x88, 0xe0, 0xa0, 0xd1,
-	0x84, 0x21, 0x16, 0x46, 0xab, 0x72, 0xc7, 0x1e, 0xbc, 0xfc, 0x46, 0x00, 0x36, 0x4d, 0xa7, 0x8f,
-	0xa1, 0x1b, 0x07, 0x43, 0x8f, 0xb3, 0x84, 0x8f, 0x03, 0x96, 0xc4, 0xa3, 0x28, 0x60, 0x03, 0xff,
-	0xcc, 0x67, 0x43, 0xab, 0x45, 0x1f, 0x02, 0x6d, 0xc2, 0x88, 0x7b, 0x3c, 0x8e, 0x2c, 0x42, 0x9f,
-	0xc0, 0xa3, 0xa6, 0xee, 0x8f, 0x38, 0x0b, 0x59, 0xc4, 0x93, 0xd0, 0xe3, 0xcc, 0xda, 0xa3, 0x5d,
-	0x78, 0xd0, 0xc4, 0x81, 0x37, 0x3e, 0x67, 0x23, 0x6e, 0xb5, 0xff, 0x7d, 0x77, 0xee, 0xf1, 0x38,
-	0xf4, 0xf9, 0x38, 0xa9, 0x24, 0xeb, 0xd6, 0x9b, 0xd9, 0xf7, 0x95, 0x4d, 0xae, 0x57, 0x36, 0xf9,
-	0xb9, 0xb2, 0xc9, 0x97, 0xb5, 0xdd, 0xba, 0x5e, 0xdb, 0xad, 0x1f, 0x6b, 0xbb, 0x05, 0xdd, 0x4c,
-	0x6d, 0x1d, 0x9f, 0x80, 0x7c, 0x38, 0x9d, 0x65, 0xe6, 0x72, 0x71, 0xe1, 0x4c, 0xd4, 0x95, 0xbb,
-	0xb1, 0xbc, 0xca, 0x54, 0xe3, 0xe6, 0x7e, 0xfc, 0xbd, 0x67, 0xd5, 0x40, 0x16, 0x17, 0xfb, 0xf5,
-	0x92, 0xbd, 0xfe, 0x15, 0x00, 0x00, 0xff, 0xff, 0x86, 0xf2, 0xe4, 0x1b, 0x89, 0x03, 0x00, 0x00,
+	// 609 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0xcd, 0x26, 0x6d, 0x05, 0xd3, 0x36, 0x58, 0x4b, 0x4a, 0xd2, 0x96, 0x9a, 0x12, 0x41, 0x55,
+	0x55, 0x22, 0x51, 0xcb, 0x17, 0xb8, 0xc9, 0x56, 0xb2, 0x68, 0xa3, 0x60, 0x6f, 0x84, 0xc2, 0xc5,
+	0x4a, 0xbd, 0xdb, 0xd4, 0x52, 0xea, 0x8d, 0xec, 0x4d, 0x44, 0x84, 0x38, 0x22, 0x71, 0xe4, 0xc0,
+	0x91, 0x13, 0x70, 0xe0, 0x03, 0xf8, 0x08, 0x8e, 0x3d, 0x72, 0x44, 0xed, 0x8f, 0x20, 0xaf, 0x69,
+	0xe3, 0x1a, 0x23, 0x81, 0x8a, 0xb8, 0xad, 0xe7, 0xbd, 0x99, 0xf7, 0x76, 0x66, 0xbc, 0x70, 0x7f,
+	0x18, 0x88, 0x31, 0xf7, 0x7b, 0xbe, 0xcb, 0xeb, 0x03, 0xce, 0xfa, 0x3c, 0xa8, 0x8f, 0xb7, 0xeb,
+	0x7c, 0xcc, 0x7d, 0x19, 0xd6, 0x86, 0x81, 0x90, 0x02, 0x97, 0xa6, 0x94, 0x5a, 0x4c, 0xa9, 0x8d,
+	0xb7, 0x57, 0x4a, 0x7d, 0xd1, 0x17, 0x8a, 0x50, 0x8f, 0x4e, 0x31, 0xb7, 0xfa, 0x14, 0x30, 0x89,
+	0x72, 0xf7, 0x15, 0xaf, 0x11, 0xf0, 0x9e, 0xe4, 0x0c, 0x3f, 0x80, 0x62, 0x2f, 0x0c, 0xb9, 0x74,
+	0xdc, 0x41, 0x2f, 0x0c, 0x1d, 0x8f, 0x55, 0xd0, 0x3a, 0xda, 0xbc, 0x69, 0x2d, 0xa8, 0x68, 0x23,
+	0x0a, 0x9a, 0x0c, 0x2f, 0xc1, 0x9c, 0x7f, 0x24, 0x23, 0x34, 0xaf, 0xd0, 0x59, 0xff, 0x48, 0x9a,
+	0xac, 0xfa, 0x0e, 0x5d, 0xa9, 0xd9, 0x19, 0xb2, 0x6b, 0xd7, 0xc4, 0x06, 0xcc, 0x8f, 0x54, 0x1d,
+	0x47, 0x4e, 0x86, 0xbc, 0x52, 0x58, 0x47, 0x9b, 0xc5, 0x9d, 0xf5, 0x5a, 0xd6, 0x45, 0x6b, 0xb1,
+	0x20, 0x9d, 0x0c, 0xb9, 0x05, 0xa3, 0xcb, 0x73, 0xf5, 0x25, 0x2c, 0x25, 0x5c, 0x11, 0x5f, 0x06,
+	0x13, 0x83, 0xb1, 0xeb, 0x1a, 0x7b, 0x08, 0x45, 0x57, 0x04, 0x01, 0x1f, 0xf4, 0xa4, 0x27, 0xfc,
+	0x08, 0x2e, 0x28, 0x78, 0x31, 0x11, 0x35, 0x59, 0xf5, 0x15, 0x94, 0xd3, 0xe2, 0xff, 0xa4, 0x2f,
+	0x7f, 0x28, 0xff, 0x1a, 0xc1, 0x3d, 0xa5, 0xbf, 0x37, 0xf2, 0x19, 0x0d, 0x7a, 0x7e, 0x78, 0xc4,
+	0x83, 0x67, 0x9e, 0x3c, 0xb6, 0xb9, 0x94, 0x03, 0x7e, 0xc2, 0x7d, 0xf9, 0x5f, 0x7c, 0xd8, 0x50,
+	0x4a, 0xb4, 0xa1, 0xc9, 0x43, 0x19, 0x88, 0xc9, 0x75, 0xf7, 0xed, 0x6a, 0x6f, 0x15, 0xf9, 0x62,
+	0x8f, 0x37, 0xe0, 0x56, 0xbc, 0x17, 0xe9, 0xc2, 0x8b, 0x83, 0x29, 0xd9, 0xcc, 0xd2, 0xcf, 0x67,
+	0xe8, 0x97, 0x60, 0x96, 0x71, 0x5f, 0x9c, 0xfc, 0xbc, 0x5b, 0xfc, 0x51, 0xfd, 0x82, 0x60, 0x35,
+	0xad, 0x1f, 0x2d, 0xdc, 0xdf, 0x7a, 0x30, 0x61, 0x21, 0xda, 0x6d, 0xc7, 0x8d, 0xf3, 0x94, 0x83,
+	0xe2, 0xce, 0x46, 0xf6, 0x8e, 0xa7, 0x55, 0xac, 0x79, 0x99, 0x90, 0x2c, 0x42, 0xfe, 0x72, 0x02,
+	0x79, 0x8f, 0x61, 0x0c, 0x33, 0xae, 0x60, 0xbc, 0x32, 0xa3, 0x22, 0xea, 0xbc, 0xf5, 0x01, 0x01,
+	0x4c, 0xff, 0x14, 0xbc, 0x0a, 0xe5, 0x4e, 0xbb, 0x69, 0x50, 0xe2, 0xd0, 0x6e, 0x9b, 0x38, 0x9d,
+	0x96, 0xdd, 0x26, 0x0d, 0x73, 0xcf, 0x24, 0x4d, 0x2d, 0x87, 0xef, 0x00, 0x4e, 0x82, 0x36, 0x35,
+	0x68, 0xc7, 0xd6, 0x10, 0x5e, 0x83, 0xe5, 0x64, 0xdc, 0x6c, 0x51, 0x62, 0x11, 0x9b, 0x3a, 0x96,
+	0x41, 0x89, 0x96, 0xc7, 0x65, 0xb8, 0x9d, 0x84, 0xdb, 0x46, 0xf7, 0x80, 0xb4, 0xa8, 0x56, 0x48,
+	0xe7, 0x1d, 0x18, 0xb4, 0x63, 0x99, 0xb4, 0xeb, 0x44, 0x21, 0x6d, 0x66, 0xe5, 0xc6, 0x9b, 0x8f,
+	0x7a, 0xee, 0xf3, 0x27, 0x1d, 0x6d, 0xbd, 0x47, 0xa0, 0xfd, 0xd2, 0xd0, 0x2a, 0xe8, 0x8d, 0x7d,
+	0xc3, 0xb6, 0xe3, 0xe4, 0x86, 0x45, 0x0c, 0x4a, 0x9a, 0x29, 0xc7, 0x6b, 0xb0, 0x9c, 0xc1, 0xb9,
+	0x34, 0x7e, 0x17, 0x2a, 0x19, 0x30, 0x69, 0x51, 0xab, 0xab, 0xe5, 0x7f, 0x93, 0xbc, 0xdb, 0x69,
+	0x3c, 0x21, 0x54, 0x2b, 0x4c, 0xed, 0xed, 0xf6, 0xbf, 0x9e, 0xe9, 0xe8, 0xf4, 0x4c, 0x47, 0xdf,
+	0xcf, 0x74, 0xf4, 0xf6, 0x5c, 0xcf, 0x9d, 0x9e, 0xeb, 0xb9, 0x6f, 0xe7, 0x7a, 0x0e, 0xca, 0x9e,
+	0xc8, 0x1c, 0x5c, 0x1b, 0x3d, 0xdf, 0xe9, 0x7b, 0xf2, 0x78, 0x74, 0x58, 0x73, 0xc5, 0x49, 0x7d,
+	0x4a, 0x79, 0xe4, 0x89, 0xc4, 0x57, 0xfd, 0xc5, 0xc5, 0xdb, 0x1e, 0x8d, 0x35, 0x3c, 0x9c, 0x53,
+	0x8f, 0xf5, 0xe3, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xba, 0xf7, 0x5c, 0x21, 0xfd, 0x05, 0x00,
+	0x00,
 }
 
 func (m *EventLedgerCreated) Marshal() (dAtA []byte, err error) {
@@ -543,6 +804,50 @@ func (m *EventLedgerEntryAdded) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *EventLedgerEntryUpdated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventLedgerEntryUpdated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventLedgerEntryUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.CorrelationId) > 0 {
+		i -= len(m.CorrelationId)
+		copy(dAtA[i:], m.CorrelationId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.CorrelationId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.NftId) > 0 {
+		i -= len(m.NftId)
+		copy(dAtA[i:], m.NftId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.NftId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.AssetClassId) > 0 {
+		i -= len(m.AssetClassId)
+		copy(dAtA[i:], m.AssetClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *EventFundTransferWithSettlement) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -624,6 +929,99 @@ func (m *EventLedgerDestroyed) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *EventLedgerClassCreated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventLedgerClassCreated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventLedgerClassCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.AssetClassId) > 0 {
+		i -= len(m.AssetClassId)
+		copy(dAtA[i:], m.AssetClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetClassId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.LedgerClassId) > 0 {
+		i -= len(m.LedgerClassId)
+		copy(dAtA[i:], m.LedgerClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.LedgerClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventLedgerClassTypeCreated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventLedgerClassTypeCreated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventLedgerClassTypeCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Code) > 0 {
+		i -= len(m.Code)
+		copy(dAtA[i:], m.Code)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Code)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Id)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.TypeCreated != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.TypeCreated))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.LedgerClassId) > 0 {
+		i -= len(m.LedgerClassId)
+		copy(dAtA[i:], m.LedgerClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.LedgerClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvents(v)
 	base := offset
@@ -693,6 +1091,27 @@ func (m *EventLedgerEntryAdded) Size() (n int) {
 	return n
 }
 
+func (m *EventLedgerEntryUpdated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AssetClassId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.NftId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.CorrelationId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
 func (m *EventFundTransferWithSettlement) Size() (n int) {
 	if m == nil {
 		return 0
@@ -725,6 +1144,51 @@ func (m *EventLedgerDestroyed) Size() (n int) {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	l = len(m.NftId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventLedgerClassCreated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.LedgerClassId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.AssetClassId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventLedgerClassTypeCreated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.LedgerClassId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.TypeCreated != 0 {
+		n += 1 + sovEvents(uint64(m.TypeCreated))
+	}
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Code)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -1130,6 +1594,152 @@ func (m *EventLedgerEntryAdded) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *EventLedgerEntryUpdated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventLedgerEntryUpdated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventLedgerEntryUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NftId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NftId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CorrelationId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CorrelationId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *EventFundTransferWithSettlement) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1368,6 +1978,317 @@ func (m *EventLedgerDestroyed) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.NftId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventLedgerClassCreated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventLedgerClassCreated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventLedgerClassCreated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventLedgerClassTypeCreated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventLedgerClassTypeCreated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventLedgerClassTypeCreated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LedgerClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LedgerClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeCreated", wireType)
+			}
+			m.TypeCreated = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TypeCreated |= ClassTypeCreated(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Code = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
