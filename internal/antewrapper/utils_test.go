@@ -141,41 +141,49 @@ func TestIsOldGasPrices(t *testing.T) {
 		1_117_028, 2_027_998, 3_756_542,
 	}
 
+	testGasPrices := []int64{1905, 9525, 19050}
+
 	type testCase struct {
+		id    string
 		nhash sdkmath.Int
 		gas   sdkmath.Int
 		exp   bool
 	}
 	var tests []testCase
 
-	mults := []sdkmath.Int{sdkmath.NewInt(1905), sdkmath.NewInt(19050)}
 	for _, gas := range testGasses {
 		gasInt := sdkmath.NewInt(gas)
-		for _, mult := range mults {
-			nhashInt := gasInt.Mul(mult)
+		for _, gasPrices := range testGasPrices {
+			nhashInt := gasInt.MulRaw(gasPrices)
 			tests = append(tests,
-				testCase{gas: gasInt, nhash: nhashInt, exp: true},
-				testCase{gas: gasInt.AddRaw(-1), nhash: nhashInt, exp: false},
-				testCase{gas: gasInt.AddRaw(1), nhash: nhashInt, exp: false},
-				testCase{gas: gasInt, nhash: nhashInt.AddRaw(-1), exp: false},
-				testCase{gas: gasInt, nhash: nhashInt.AddRaw(1), exp: false},
+				testCase{id: "a", gas: gasInt, nhash: nhashInt, exp: true},
+				// When gas == 2, this case has gas: 1. If gasPrices is 9525, that's an old gas price configuration.
+				// For all other configurations, this test case expects false. Note: 9525 * 2 = 19050.
+				testCase{id: "b", gas: gasInt.AddRaw(-1), nhash: nhashInt, exp: gas == 2 && gasPrices == 9525},
+				// When gas == 1, this case has gas: 2. If gasPrices is 19050, that's an old gas price configuration.
+				// For all other configurations, this test case expects false. Note: 9525 * 2 = 19050.
+				testCase{id: "c", gas: gasInt.AddRaw(1), nhash: nhashInt, exp: gas == 1 && gasPrices == 19050},
+				testCase{id: "d", gas: gasInt, nhash: nhashInt.AddRaw(-1), exp: false},
+				testCase{id: "e", gas: gasInt, nhash: nhashInt.AddRaw(1), exp: false},
 			)
 			if gas == 0 {
+				// If gas == 0, nhashInt is always zero; looping over the other gas prices gives the same test cases.
+				// Also, in that case, the subtractions create the same cases involving negatives, as the ones below.
 				break
 			}
 			tests = append(tests,
-				testCase{gas: gasInt.Neg(), nhash: nhashInt, exp: false},
-				testCase{gas: gasInt, nhash: nhashInt.Neg(), exp: false},
-				testCase{gas: gasInt.Neg(), nhash: nhashInt.Neg(), exp: true},
+				testCase{id: "f", gas: gasInt.Neg(), nhash: nhashInt, exp: false},
+				testCase{id: "g", gas: gasInt, nhash: nhashInt.Neg(), exp: false},
+				testCase{id: "h", gas: gasInt.Neg(), nhash: nhashInt.Neg(), exp: true},
 			)
 		}
 		if gas != 0 {
-			tests = append(tests, testCase{gas: gasInt, nhash: gasInt, exp: false})
+			tests = append(tests, testCase{id: "i", gas: gasInt, nhash: gasInt, exp: false})
 		}
 	}
 
 	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%t=%s, %s", tc.exp, tc.nhash, tc.gas), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s: %t=%s, %s", tc.id, tc.exp, tc.gas, tc.nhash), func(t *testing.T) {
 			var act bool
 			testFunc := func() {
 				act = isOldGasPrices(tc.nhash, tc.gas)
