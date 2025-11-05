@@ -514,6 +514,15 @@
   
     - [Query](#provenance-msgfees-v1-Query)
   
+- [provenance/msgfees/v1/genesis.proto](#provenance_msgfees_v1_genesis-proto)
+    - [GenesisState](#provenance-msgfees-v1-GenesisState)
+  
+- [provenance/msgfees/v1/msgfees.proto](#provenance_msgfees_v1_msgfees-proto)
+    - [EventMsgFee](#provenance-msgfees-v1-EventMsgFee)
+    - [EventMsgFees](#provenance-msgfees-v1-EventMsgFees)
+    - [MsgFee](#provenance-msgfees-v1-MsgFee)
+    - [Params](#provenance-msgfees-v1-Params)
+  
 - [provenance/msgfees/v1/proposals.proto](#provenance_msgfees_v1_proposals-proto)
     - [AddMsgFeeProposal](#provenance-msgfees-v1-AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance-msgfees-v1-RemoveMsgFeeProposal)
@@ -8114,6 +8123,129 @@ Query defines the gRPC querier service for msgfees module.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | `CalculateTxFees` | [CalculateTxFeesRequest](#provenance-msgfees-v1-CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. Deprecated: This query is deprecated. It is replaced by the CalculateTxFees query in the x/flatfees module. This query endpoint will be removed in a future release. |
+
+ <!-- end services -->
+
+
+
+<a name="provenance_msgfees_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/genesis.proto
+
+
+
+<a name="provenance-msgfees-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of msg fees, persisted from the store
+Deprecated: The msgfees module is deprecated in favor of the flatfees module.
+The msgfees module no longer stores any data, so there's no need for a genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines all the parameters of the module. |
+| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_msgfees_v1_msgfees-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/msgfees.proto
+
+
+
+<a name="provenance-msgfees-v1-EventMsgFee"></a>
+
+### EventMsgFee
+EventMsgFee final event property for msg fee on type
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type` | [string](#string) |  |  |
+| `count` | [string](#string) |  |  |
+| `total` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-msgfees-v1-EventMsgFees"></a>
+
+### EventMsgFees
+EventMsgFees event emitted with summary of msg fees
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [EventMsgFee](#provenance-msgfees-v1-EventMsgFee) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-msgfees-v1-MsgFee"></a>
+
+### MsgFee
+MsgFee is the core of what gets stored on the blockchain to define a msg-based fee.
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message with the added fee, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional_fee is the extra fee that is required for the given message type (can be in any denom). |
+| `recipient` | [string](#string) |  | recipient is an option address that will receive a portion of the additional fee. There can only be a recipient if the recipient_basis_points is not zero. |
+| `recipient_basis_points` | [uint32](#uint32) |  | recipient_basis_points is an optional portion of the additional fee to be sent to the recipient. Must be between 0 and 10,000 (inclusive).<br>If there is a recipient, this must not be zero. If there is not a recipient, this must be zero.<br>The recipient will receive additional_fee * recipient_basis_points / 10,000. The fee collector will receive the rest, i.e. additional_fee * (10,000 - recipient_basis_points) / 10,000. |
+
+
+
+
+
+
+<a name="provenance-msgfees-v1-Params"></a>
+
+### Params
+Params defines the set of params for the msgfees module.
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+This type is no longer used.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.<br>Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil<br>Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

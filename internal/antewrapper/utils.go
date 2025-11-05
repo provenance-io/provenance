@@ -136,13 +136,16 @@ func GetGasWanted(logger log.Logger, feeTx sdk.FeeTx) (uint64, error) {
 
 var (
 	oldMainnetGasPricesAmt = sdkmath.NewInt(1905)
+	figureGasPricesAmt     = sdkmath.NewInt(9525)
 	oldTestnetGasPricesAmt = sdkmath.NewInt(19050)
 )
 
 // isOldGasPrices returns true if the nhash and gas amounts indicate that a tx had one of our old gas prices.
 // Prior to flat-fees, we told everyone to use gas-prices of 1905nhash (or 19050nhash on testnet).
 func isOldGasPrices(nhash, gas sdkmath.Int) bool {
-	return nhash.Equal(gas.Mul(oldMainnetGasPricesAmt)) || nhash.Equal(gas.Mul(oldTestnetGasPricesAmt))
+	return nhash.Equal(gas.Mul(oldMainnetGasPricesAmt)) ||
+		nhash.Equal(gas.Mul(oldTestnetGasPricesAmt)) ||
+		nhash.Equal(gas.Mul(figureGasPricesAmt))
 }
 
 // txGasLimitShouldApply returns true iff the tx gas limit should be applied.
