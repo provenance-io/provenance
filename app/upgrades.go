@@ -697,7 +697,7 @@ func streamImportLedgerDataFile(ctx sdk.Context, lk LedgerKeeper, filePath strin
 	if err != nil {
 		return fmt.Errorf("failed to create gzip reader for %s: %w", filePath, err)
 	}
-	defer gzReader.Close()
+	defer gzReader.Close() ///nolint:errcheck // close error safe to ignore in this context.
 
 	// Use JSON decoder for streaming JSON parsing.
 	decoder := json.NewDecoder(gzReader)
@@ -879,7 +879,7 @@ func importRegistryDataFile(ctx sdk.Context, rk RegistryKeeper, filePath string)
 	if err != nil {
 		return fmt.Errorf("failed to create gzip reader for %s: %w", filePath, err)
 	}
-	defer gzReader.Close()
+	defer gzReader.Close() ///nolint:errcheck // close error safe to ignore in this context.
 
 	var genState registrytypes.GenesisState
 	decoder := json.NewDecoder(gzReader)
