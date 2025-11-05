@@ -161,7 +161,7 @@ func SignAndDeliver(
 	chainID string, accNums, accSeqs []uint64, _ bool, blockTime time.Time, nextValHash []byte, priv ...cryptotypes.PrivKey,
 ) (*abci.ResponseFinalizeBlock, error) {
 	tx, err := simtestutil.GenSignedMockTx(
-		rand.New(rand.NewSource(1)), //nolint:gosec // G304
+		rand.New(rand.NewSource(1)), //nolint:gosec
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
