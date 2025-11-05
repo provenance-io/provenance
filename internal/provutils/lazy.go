@@ -61,7 +61,7 @@ func (l *LazyStringer[T]) String() string {
 // See also: LazyStringer
 type LazySprintf struct {
 	format string
-	args   []interface{}
+	args   []any
 }
 
 // NewLazySprintf defers fmt.Sprintf until the Stringer interface is invoked.
@@ -71,7 +71,7 @@ type LazySprintf struct {
 // immediately even if the logger doesn't output anything, so it's best to just provide what you want directly.
 //
 // See also: NewLazyStringer.
-func NewLazySprintf(format string, args ...interface{}) *LazySprintf {
+func NewLazySprintf(format string, args ...any) *LazySprintf {
 	return &LazySprintf{format, args}
 }
 
