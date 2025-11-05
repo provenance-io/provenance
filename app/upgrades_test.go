@@ -1070,6 +1070,24 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestBouvardiaRC2() {
+	expInLog := []string{
+		"INF Fixing ledger class id=figure-servicing-1-0",
+		"INF Fixing registry entries",
+	}
+	expNotInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Increasing max memo length to 1024 bytes.",
+		"INF Setting up flat fees.",
+		"INF Starting import of ledger data.",
+		"INF Starting import of registry data.",
+	}
+	s.AssertUpgradeHandlerLogs("bouvardia-rc2", expInLog, expNotInLog)
+}
+
 func (s *UpgradeTestSuite) TestBouvardia() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
@@ -1081,7 +1099,11 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Starting import of ledger data.",
 		"INF Starting import of registry data.",
 	}
-	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
+	expNotInLog := []string{
+		"INF Fixing ledger class id=figure-servicing-1-0",
+		"INF Fixing registry entries",
+	}
+	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, expNotInLog)
 }
 
 type MockFlatFeesKeeper struct {
