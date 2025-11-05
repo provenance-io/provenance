@@ -29,13 +29,13 @@ func WriteSlice[S ~[]E, E any](t testing.TB, name string, vals S) {
 // Then, there'll be one line for each variable, each with the format "<name> = <value>" (with the = lined up).
 //
 // See also: WriteSlice.
-func WriteVariables(t testing.TB, header string, namesAndValues ...interface{}) {
+func WriteVariables(t testing.TB, header string, namesAndValues ...any) {
 	t.Helper()
 	t.Log(newNamedValues(t, namesAndValues).GetLogString(header))
 }
 
 // WriteVariable writes the provided named variable to the test logs in the format "<name> = <value>".
-func WriteVariable(t testing.TB, name string, value interface{}) {
+func WriteVariable(t testing.TB, name string, value any) {
 	t.Helper()
 	t.Logf("%s = %s", name, valueString(value))
 }
@@ -48,11 +48,11 @@ func createSliceLogString[S ~[]E, E any](name string, vals S) string {
 // namedValue associates a name with a value.
 type namedValue struct {
 	Name  string
-	Value interface{}
+	Value any
 }
 
 // newNamedValue creates a new namedValue.
-func newNamedValue(name string, value interface{}) *namedValue {
+func newNamedValue(name string, value any) *namedValue {
 	return &namedValue{Name: name, Value: value}
 }
 
@@ -67,7 +67,7 @@ type namedValues []*namedValue
 // The test fails immediately if an odd number of namesAndValues are provided or if any name args are not a string.
 //
 // E.g. newNamedValues(t, "addr1", addr1, "addr2", addr2)
-func newNamedValues(t testing.TB, namesAndValues []interface{}) namedValues {
+func newNamedValues(t testing.TB, namesAndValues []any) namedValues {
 	t.Helper()
 	if len(namesAndValues) == 0 {
 		return nil
@@ -124,7 +124,7 @@ func (s namedValues) GetLogString(header string) string {
 }
 
 // valueString creates a string of the given value.
-func valueString(value interface{}) string {
+func valueString(value any) string {
 	if value == nil {
 		return "<nil>"
 	}
