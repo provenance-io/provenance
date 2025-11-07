@@ -753,6 +753,22 @@ func TestLedger_Validate(t *testing.T) {
 			expErr: "payment_frequency: unknown payment_frequency enum value: -1",
 		},
 		{
+			name: "unspecified payment frequency",
+			l: &Ledger{
+				Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+				LedgerClassId:              "ledger-class-id",
+				StatusTypeId:               1,
+				NextPmtDate:                20384,
+				NextPmtAmt:                 sdkmath.NewInt(3),
+				PaymentFrequency:           PAYMENT_FREQUENCY_UNSPECIFIED,
+				InterestRate:               3_400_000,
+				MaturityDate:               21000,
+				InterestDayCountConvention: DAY_COUNT_CONVENTION_ACTUAL_365,
+				InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING,
+			},
+			expErr: "payment_frequency: payment_frequency must be specified",
+		},
+		{
 			name: "negative interest rate",
 			l: &Ledger{
 				Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
@@ -817,6 +833,22 @@ func TestLedger_Validate(t *testing.T) {
 			expErr: "interest_day_count_convention: unknown day_count_convention enum value: -1",
 		},
 		{
+			name: "unspecified interest day count convention",
+			l: &Ledger{
+				Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+				LedgerClassId:              "ledger-class-id",
+				StatusTypeId:               1,
+				NextPmtDate:                20384,
+				NextPmtAmt:                 sdkmath.NewInt(3),
+				PaymentFrequency:           PAYMENT_FREQUENCY_DAILY,
+				InterestRate:               3_400_000,
+				MaturityDate:               21000,
+				InterestDayCountConvention: DAY_COUNT_CONVENTION_UNSPECIFIED,
+				InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING,
+			},
+			expErr: "interest_day_count_convention: day_count_convention must be specified",
+		},
+		{
 			name: "invalid interest accrual method",
 			l: &Ledger{
 				Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
@@ -831,6 +863,22 @@ func TestLedger_Validate(t *testing.T) {
 				InterestAccrualMethod:      -1,
 			},
 			expErr: "interest_accrual_method: unknown interest_accrual_method enum value: -1",
+		},
+		{
+			name: "unspecified interest accrual method",
+			l: &Ledger{
+				Key:                        &LedgerKey{NftId: "the-nft-id", AssetClassId: "the-asset-class-id"},
+				LedgerClassId:              "ledger-class-id",
+				StatusTypeId:               1,
+				NextPmtDate:                20384,
+				NextPmtAmt:                 sdkmath.NewInt(3),
+				PaymentFrequency:           PAYMENT_FREQUENCY_DAILY,
+				InterestRate:               3_400_000,
+				MaturityDate:               21000,
+				InterestDayCountConvention: DAY_COUNT_CONVENTION_ACTUAL_365,
+				InterestAccrualMethod:      INTEREST_ACCRUAL_METHOD_UNSPECIFIED,
+			},
+			expErr: "interest_accrual_method: interest_accrual_method must be specified",
 		},
 		{
 			name: "multiple errors",
@@ -866,56 +914,37 @@ func TestLedger_Validate(t *testing.T) {
 
 func TestValidatePmtFields(t *testing.T) {
 	tests := []struct {
-		name             string
-		nextPmtDate      int32
-		nextPmtAmt       sdkmath.Int
-		paymentFrequency PaymentFrequency
-		expErr           string
+		name        string
+		nextPmtDate int32
+		nextPmtAmt  sdkmath.Int
+		expErr      string
 	}{
 		{
-			name:             "valid: baseline",
-			nextPmtDate:      20444,
-			nextPmtAmt:       sdkmath.NewInt(5000),
-			paymentFrequency: PAYMENT_FREQUENCY_ANNUALLY,
+			name:        "valid: baseline",
+			nextPmtDate: 20444,
+			nextPmtAmt:  sdkmath.NewInt(5000),
 		},
 		{
-			name:             "valid: nil next pmt amt",
-			nextPmtDate:      20445,
-			nextPmtAmt:       sdkmath.Int{},
-			paymentFrequency: PAYMENT_FREQUENCY_QUARTERLY,
+			name:        "valid: nil next pmt amt",
+			nextPmtDate: 20445,
+			nextPmtAmt:  sdkmath.Int{},
 		},
 		{
-			name:             "valid: zero next pmt amt",
-			nextPmtDate:      20,
-			nextPmtAmt:       sdkmath.ZeroInt(),
-			paymentFrequency: PAYMENT_FREQUENCY_MONTHLY,
+			name:        "valid: zero next pmt amt",
+			nextPmtDate: 20,
+			nextPmtAmt:  sdkmath.ZeroInt(),
 		},
 		{
-			name:             "valid: unspecified payment frequency",
-			nextPmtDate:      10444,
-			nextPmtAmt:       sdkmath.NewInt(43382),
-			paymentFrequency: PAYMENT_FREQUENCY_UNSPECIFIED,
+			name:        "negative next pmt date",
+			nextPmtDate: -1,
+			nextPmtAmt:  sdkmath.NewInt(123),
+			expErr:      "next_pmt_date: must be after 1970-01-01",
 		},
 		{
-			name:             "negative next pmt date",
-			nextPmtDate:      -1,
-			nextPmtAmt:       sdkmath.NewInt(123),
-			paymentFrequency: PAYMENT_FREQUENCY_WEEKLY,
-			expErr:           "next_pmt_date: must be after 1970-01-01",
-		},
-		{
-			name:             "negative next pmt amt",
-			nextPmtDate:      20432,
-			nextPmtAmt:       sdkmath.NewInt(-1),
-			paymentFrequency: PAYMENT_FREQUENCY_DAILY,
-			expErr:           "next_pmt_amt: must be a non-negative integer",
-		},
-		{
-			name:             "invalid payment frequency",
-			nextPmtDate:      12345,
-			nextPmtAmt:       sdkmath.NewInt(1),
-			paymentFrequency: 12,
-			expErr:           "payment_frequency: unknown payment_frequency enum value: 12",
+			name:        "negative next pmt amt",
+			nextPmtDate: 20432,
+			nextPmtAmt:  sdkmath.NewInt(-1),
+			expErr:      "next_pmt_amt: must be a non-negative integer",
 		},
 	}
 
@@ -923,10 +952,10 @@ func TestValidatePmtFields(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
 			testFunc := func() {
-				err = ValidatePmtFields(tc.nextPmtDate, tc.nextPmtAmt, tc.paymentFrequency)
+				err = ValidatePmtFields(tc.nextPmtDate, tc.nextPmtAmt)
 			}
-			require.NotPanics(t, testFunc, "ValidatePmtFields(%d, %s, %s)", tc.nextPmtDate, tc.nextPmtAmt, tc.paymentFrequency)
-			assertions.AssertErrorValue(t, err, tc.expErr, "ValidatePmtFields(%d, %s, %s) error", tc.nextPmtDate, tc.nextPmtAmt, tc.paymentFrequency)
+			require.NotPanics(t, testFunc, "ValidatePmtFields(%d, %s)", tc.nextPmtDate, tc.nextPmtAmt)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidatePmtFields(%d, %s) error", tc.nextPmtDate, tc.nextPmtAmt)
 		})
 	}
 }
