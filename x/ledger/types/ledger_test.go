@@ -1970,10 +1970,19 @@ func TestDayCountConvention_UnmarshalJSON(t *testing.T) {
 		{name: "days_360: short: mixed case", data: `"dayS_360"`, exp: DAY_COUNT_CONVENTION_DAYS_360},
 		{name: "days_360: int", data: "6", exp: DAY_COUNT_CONVENTION_DAYS_360},
 
+		// DAY_COUNT_CONVENTION_NOT_DEFINED
+		{name: "not defined: long: upper case", data: `"DAY_COUNT_CONVENTION_NOT_DEFINED"`, exp: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "not defined: long: lower case", data: `"day_count_convention_not_defined"`, exp: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "not defined: long: mixed case", data: `"day_COUNT_ConventiON_NOT_defIned"`, exp: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "not defined: short: upper case", data: `"NOT_DEFINED"`, exp: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "not defined: short: lower case", data: `"not_defined"`, exp: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "not defined: short: mixed case", data: `"not_DefiNEd"`, exp: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "not defined: int", data: "7", exp: DAY_COUNT_CONVENTION_NOT_DEFINED},
+
 		{
 			name:   "unknown int: too large",
-			data:   "7",
-			expErr: "unknown day_count_convention integer value: 7",
+			data:   "8",
+			expErr: "unknown day_count_convention integer value: 8",
 		},
 	}
 
@@ -2005,7 +2014,8 @@ func TestDayCountConvention_Validate(t *testing.T) {
 		{name: "actual_actual", d: DAY_COUNT_CONVENTION_ACTUAL_ACTUAL},
 		{name: "days_365", d: DAY_COUNT_CONVENTION_DAYS_365},
 		{name: "days_360", d: DAY_COUNT_CONVENTION_DAYS_360},
-		{name: "seven", d: 7, expErr: "unknown day_count_convention enum value: 7"},
+		{name: "not_defined ", d: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "eight", d: 8, expErr: "unknown day_count_convention enum value: 8"},
 	}
 
 	for _, tc := range tests {
@@ -2016,6 +2026,36 @@ func TestDayCountConvention_Validate(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "%T.Validate()", tc.d)
 			assertions.AssertErrorValue(t, err, tc.expErr, "%T.Validate() error", tc.d)
+		})
+	}
+}
+
+func TestDayCountConvention_ValidateSpecified(t *testing.T) {
+	tests := []struct {
+		name   string
+		d      DayCountConvention
+		expErr string
+	}{
+		{name: "negative one", d: -1, expErr: "unknown day_count_convention enum value: -1"},
+		{name: "unspecified", d: DAY_COUNT_CONVENTION_UNSPECIFIED, expErr: "day_count_convention must be specified"},
+		{name: "actual_365", d: DAY_COUNT_CONVENTION_ACTUAL_365},
+		{name: "actual_360", d: DAY_COUNT_CONVENTION_ACTUAL_360},
+		{name: "thirty_360", d: DAY_COUNT_CONVENTION_THIRTY_360},
+		{name: "actual_actual", d: DAY_COUNT_CONVENTION_ACTUAL_ACTUAL},
+		{name: "days_365", d: DAY_COUNT_CONVENTION_DAYS_365},
+		{name: "days_360", d: DAY_COUNT_CONVENTION_DAYS_360},
+		{name: "not_defined ", d: DAY_COUNT_CONVENTION_NOT_DEFINED},
+		{name: "eight", d: 8, expErr: "unknown day_count_convention enum value: 8"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.d.ValidateSpecified()
+			}
+			require.NotPanics(t, testFunc, "%T.ValidateSpecified()", tc.d)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%T.ValidateSpecified() error", tc.d)
 		})
 	}
 }
@@ -2120,10 +2160,19 @@ func TestInterestAccrualMethod_UnmarshalJSON(t *testing.T) {
 		{name: "continuous_compounding: short: mixed case", data: `"continuous_COMPOUNDING"`, exp: INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING},
 		{name: "continuous_compounding: int", data: "7", exp: INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING},
 
+		// INTEREST_ACCRUAL_METHOD_NOT_DEFINED
+		{name: "not_defined: long: upper case", data: `"INTEREST_ACCRUAL_METHOD_NOT_DEFINED"`, exp: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "not_defined: long: lower case", data: `"interest_accRUAL_METHOD_not_Defined"`, exp: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "not_defined: long: mixed case", data: `"INTEREST_ACCRUAL_METHOD_NOT_DEFINED"`, exp: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "not_defined: short: upper case", data: `"NOT_DEFINED"`, exp: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "not_defined: short: lower case", data: `"not_defined"`, exp: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "not_defined: short: mixed case", data: `"NOT_defIned"`, exp: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "not_defined: int", data: "8", exp: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+
 		{
 			name:   "unknown int: too large",
-			data:   "8",
-			expErr: "unknown interest_accrual_method integer value: 8",
+			data:   "9",
+			expErr: "unknown interest_accrual_method integer value: 9",
 		},
 	}
 
@@ -2156,7 +2205,8 @@ func TestInterestAccrualMethod_Validate(t *testing.T) {
 		{name: "quarterly_compounding", i: INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING},
 		{name: "annual_compounding", i: INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING},
 		{name: "continuous_compounding", i: INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING},
-		{name: "eight", i: 8, expErr: "unknown interest_accrual_method enum value: 8"},
+		{name: "not_defined", i: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "nine", i: 9, expErr: "unknown interest_accrual_method enum value: 9"},
 	}
 
 	for _, tc := range tests {
@@ -2167,6 +2217,37 @@ func TestInterestAccrualMethod_Validate(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "%T.Validate()", tc.i)
 			assertions.AssertErrorValue(t, err, tc.expErr, "%T.Validate() error", tc.i)
+		})
+	}
+}
+
+func TestInterestAccrualMethod_ValidateSpecified(t *testing.T) {
+	tests := []struct {
+		name   string
+		i      InterestAccrualMethod
+		expErr string
+	}{
+		{name: "negative one", i: -1, expErr: "unknown interest_accrual_method enum value: -1"},
+		{name: "unspecified", i: INTEREST_ACCRUAL_METHOD_UNSPECIFIED, expErr: "interest_accrual_method must be specified"},
+		{name: "simple_interest", i: INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST},
+		{name: "compound_interest", i: INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST},
+		{name: "daily_compounding", i: INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING},
+		{name: "monthly_compounding", i: INTEREST_ACCRUAL_METHOD_MONTHLY_COMPOUNDING},
+		{name: "quarterly_compounding", i: INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING},
+		{name: "annual_compounding", i: INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING},
+		{name: "continuous_compounding", i: INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING},
+		{name: "not_defined", i: INTEREST_ACCRUAL_METHOD_NOT_DEFINED},
+		{name: "nine", i: 9, expErr: "unknown interest_accrual_method enum value: 9"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.i.ValidateSpecified()
+			}
+			require.NotPanics(t, testFunc, "%T.ValidateSpecified()", tc.i)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%T.ValidateSpecified() error", tc.i)
 		})
 	}
 }
@@ -2253,10 +2334,19 @@ func TestPaymentFrequency_UnmarshalJSON(t *testing.T) {
 		{name: "annually: short: mixed case", data: `"aNNuaLLy"`, exp: PAYMENT_FREQUENCY_ANNUALLY},
 		{name: "annually: int", data: "5", exp: PAYMENT_FREQUENCY_ANNUALLY},
 
+		// PAYMENT_FREQUENCY_NOT_DEFINED
+		{name: "not_defined: long: upper case", data: `"PAYMENT_FREQUENCY_NOT_DEFINED"`, exp: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "not_defined: long: lower case", data: `"payment_frequency_not_defined"`, exp: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "not_defined: long: mixed case", data: `"payment_frequency_not_Defined"`, exp: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "not_defined: short: upper case", data: `"NOT_DEFINED"`, exp: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "not_defined: short: lower case", data: `"not_defined"`, exp: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "not_defined: short: mixed case", data: `"not_DEFined"`, exp: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "not_defined: int", data: "6", exp: PAYMENT_FREQUENCY_NOT_DEFINED},
+
 		{
 			name:   "unknown int: too large",
-			data:   "6",
-			expErr: "unknown payment_frequency integer value: 6",
+			data:   "7",
+			expErr: "unknown payment_frequency integer value: 7",
 		},
 	}
 
@@ -2287,7 +2377,8 @@ func TestPaymentFrequency_Validate(t *testing.T) {
 		{name: "monthly", p: PAYMENT_FREQUENCY_MONTHLY},
 		{name: "quarterly", p: PAYMENT_FREQUENCY_QUARTERLY},
 		{name: "annually", p: PAYMENT_FREQUENCY_ANNUALLY},
-		{name: "six", p: 6, expErr: "unknown payment_frequency enum value: 6"},
+		{name: "not_defined", p: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "seven", p: 7, expErr: "unknown payment_frequency enum value: 7"},
 	}
 
 	for _, tc := range tests {
@@ -2298,6 +2389,35 @@ func TestPaymentFrequency_Validate(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "%T.Validate()", tc.p)
 			assertions.AssertErrorValue(t, err, tc.expErr, "%T.Validate() error", tc.p)
+		})
+	}
+}
+
+func TestPaymentFrequency_ValidateSpecified(t *testing.T) {
+	tests := []struct {
+		name   string
+		p      PaymentFrequency
+		expErr string
+	}{
+		{name: "negative one", p: -1, expErr: "unknown payment_frequency enum value: -1"},
+		{name: "unspecified", p: PAYMENT_FREQUENCY_UNSPECIFIED, expErr: "payment_frequency must be specified"},
+		{name: "daily", p: PAYMENT_FREQUENCY_DAILY},
+		{name: "weekly", p: PAYMENT_FREQUENCY_WEEKLY},
+		{name: "monthly", p: PAYMENT_FREQUENCY_MONTHLY},
+		{name: "quarterly", p: PAYMENT_FREQUENCY_QUARTERLY},
+		{name: "annually", p: PAYMENT_FREQUENCY_ANNUALLY},
+		{name: "not_defined", p: PAYMENT_FREQUENCY_NOT_DEFINED},
+		{name: "seven", p: 7, expErr: "unknown payment_frequency enum value: 7"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.p.ValidateSpecified()
+			}
+			require.NotPanics(t, testFunc, "%T.ValidateSpecified()", tc.p)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%T.ValidateSpecified() error", tc.p)
 		})
 	}
 }

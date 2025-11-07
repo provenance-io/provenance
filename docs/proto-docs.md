@@ -4940,9 +4940,9 @@ MsgUpdateInterestRateRequest represents a request to update the interest rate co
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated. |
 | `signer` | [string](#string) |  | The signer that is updating the interest rate. |
-| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. |
-| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. |
-| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. |
+| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. This field is NOT optional. If not provided (or provided as zero), then the ledger's interest_rate field will be updated to be zero. |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. This field is optional. If not provided (or set to unspecified), the interest day count convention will not be updated. |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. This field is optional. If not provided (or set to unspecified), the interest accrual method will not be updated. |
 
 
 
@@ -4996,9 +4996,9 @@ MsgUpdatePaymentRequest represents a request to update payment configuration of 
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated. |
 | `signer` | [string](#string) |  | The signer that is updating the payment. |
-| `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. |
-| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. |
-| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. |
+| `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. This field is NOT optional. If you don't provide a value (or provide it as zero), then the ledger's next_pmt_amt field will be updated to be zero. |
+| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. This field is not optional and cannot be zero. |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. This field is optional. If set to unspecified, it will be ignored and the payment_frequency will not be changed. |
 
 
 
