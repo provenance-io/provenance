@@ -177,3 +177,31 @@ func TestEnumValidateExists(t *testing.T) {
 		})
 	}
 }
+
+func TestEnumValidateSpecified(t *testing.T) {
+	tests := []struct {
+		name   string
+		value  TestEnum
+		expErr string
+	}{
+		{name: "unspecified", value: TEST_ENUM_UNSPECIFIED, expErr: "test_enum must be specified"},
+		{name: "one", value: TEST_ENUM_ONE},
+		{name: "two", value: TEST_ENUM_TWO},
+		{name: "three", value: TEST_ENUM_THREE},
+		{name: "four", value: TEST_ENUM_FOUR},
+		{name: "five", value: TEST_ENUM_FIVE},
+		{name: "negative one", value: -1, expErr: "unknown test_enum enum value: -1"},
+		{name: "six", value: 6, expErr: "unknown test_enum enum value: 6"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = EnumValidateSpecified(tc.value, TestEnum_name)
+			}
+			require.NotPanics(t, testFunc, "EnumValidateSpecified(%s)", tc.value)
+			assertions.AssertErrorValue(t, err, tc.expErr, "EnumValidateSpecified(%s) error", tc.value)
+		})
+	}
+}
