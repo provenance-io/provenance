@@ -5405,13 +5405,14 @@ Day Count Conventions used in interest calculations.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention. |
+| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention.<br>This value is never a field's actual value, it just indicates that, for a given request, the day count convention is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that the day count convention is not being provided, and so should not be updated.<br>DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided. DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value. |
 | `DAY_COUNT_CONVENTION_ACTUAL_365` | `1` | Actual/365: Uses the actual number of days in the period with a fixed denominator of 365 (or sometimes 365.25 to adjust for leap years). |
 | `DAY_COUNT_CONVENTION_ACTUAL_360` | `2` | Actual/360: Uses the actual number of days in the period but divides by 360. |
 | `DAY_COUNT_CONVENTION_THIRTY_360` | `3` | 30/360: Assumes each month has 30 days and the year has 360 days. |
 | `DAY_COUNT_CONVENTION_ACTUAL_ACTUAL` | `4` | Actual/Actual: Uses the actual number of days in the period and the actual days in the year (365 or 366, depending on the year). |
 | `DAY_COUNT_CONVENTION_DAYS_365` | `5` | 365/365: Always uses 365 days in the denominator regardless of leap years. |
 | `DAY_COUNT_CONVENTION_DAYS_360` | `6` | 360/360: Always uses 360 days in both the numerator and denominator. |
+| `DAY_COUNT_CONVENTION_NOT_DEFINED` | `7` | Not Defined: The day count convention is not defined.<br>This value indicates that the day count convention should be on record as not having a value. It could mean that the day count convention is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have a day count convention. It could also just mean that the day count convention has not yet been defined for the entry.<br>DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided. DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value. |
 
 
 
@@ -5422,7 +5423,7 @@ Interest Accrual Methods describing how interest is calculated over time.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method. |
+| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method.<br>This value is never a field's actual value, it just indicates that, for a given request, the interest accrual method is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that the interest accrual method is not being provided, and so should not be updated.<br>INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided. INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value. |
 | `INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST` | `1` | Simple Interest: Calculated only on the principal amount. |
 | `INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST` | `2` | Compound Interest: Calculated on both the principal and on previously accumulated interest. |
 | `INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING` | `3` | Daily Compounding: Interest is compounded on a daily basis. |
@@ -5430,6 +5431,7 @@ Interest Accrual Methods describing how interest is calculated over time.
 | `INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING` | `5` | Quarterly Compounding: Interest is compounded every quarter. |
 | `INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING` | `6` | Annually Compounding: Interest is compounded once per year. |
 | `INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING` | `7` | Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously. |
+| `INTEREST_ACCRUAL_METHOD_NOT_DEFINED` | `8` | Not Defined: The interest accrual method is not defined.<br>This value indicates that the interest accrual method should be on record as not having a value. It could mean that the interest accrual method is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have an interest accrual method. It could also just mean that the interest accrual method has not yet been defined for the entry.<br>INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided. INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value. |
 
 
 
@@ -5440,12 +5442,13 @@ Payment frequencies for loan repayments.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency. |
+| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency.<br>This value is never a field's actual value, it just indicates that, for a given request, the payment frequency is not being provided. E.g. if this value is provided in a MsgUpdatePaymentRequest, it indicates that the payment frequency is not being provided, and so should not be updated.<br>PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided. PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value. |
 | `PAYMENT_FREQUENCY_DAILY` | `1` | Daily payments. |
 | `PAYMENT_FREQUENCY_WEEKLY` | `2` | Weekly or biweekly payments. |
 | `PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
 | `PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
 | `PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
+| `PAYMENT_FREQUENCY_NOT_DEFINED` | `6` | Not Defined: The payment frequency is not defined.<br>This value indicates that the payment frequency should be on record as not having a value. It could mean that the payment frequency is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have a payment frequency. It could also just mean that the payment frequency has not yet been defined for the entry.<br>PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided. PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value. |
 
 
  <!-- end enums -->
