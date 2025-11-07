@@ -48,8 +48,8 @@ linters:
             - $all
             - "!$test"
           allow:
-            - $gostd
             # Primary
+            - $gostd
             - github.com/provenance-io/provenance
             - github.com/provlabs/vault
             - github.com/CosmWasm
