@@ -240,6 +240,8 @@ func (k Keeper) UpdateLedgerStatus(ctx context.Context, lk *types.LedgerKey, sta
 // UpdateLedgerInterestRate updates the interest rate configuration of an existing ledger.
 // This function allows modification of the interest rate, day count convention, and accrual method.
 // These parameters affect how interest is calculated and applied to the ledger.
+// If interestDayCountConvention is not specified, that field will not be updated.
+// If interestAccrualMethod is not specified, that field will not be updated.
 func (k Keeper) UpdateLedgerInterestRate(ctx context.Context, lk *types.LedgerKey, interestRate int32, interestDayCountConvention types.DayCountConvention, interestAccrualMethod types.InterestAccrualMethod) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
@@ -249,8 +251,12 @@ func (k Keeper) UpdateLedgerInterestRate(ctx context.Context, lk *types.LedgerKe
 
 	// Update the ledger interest rate configuration.
 	ledger.InterestRate = interestRate
-	ledger.InterestDayCountConvention = interestDayCountConvention
-	ledger.InterestAccrualMethod = interestAccrualMethod
+	if interestDayCountConvention != types.DAY_COUNT_CONVENTION_UNSPECIFIED {
+		ledger.InterestDayCountConvention = interestDayCountConvention
+	}
+	if interestAccrualMethod != types.INTEREST_ACCRUAL_METHOD_UNSPECIFIED {
+		ledger.InterestAccrualMethod = interestAccrualMethod
+	}
 
 	keyStr := ledger.Key.String()
 
@@ -274,6 +280,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx context.Context, lk *types.LedgerKe
 // UpdateLedgerPayment updates the payment configuration of an existing ledger.
 // This function allows modification of the next payment amount, date, and frequency.
 // These parameters define the payment schedule for the ledger.
+// If thepaymentFrequency is unspecified, that field will NOT be changed.
 func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, nextPmtAmt sdkmath.Int, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
@@ -287,7 +294,9 @@ func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, ne
 		ledger.NextPmtAmt = sdkmath.ZeroInt()
 	}
 	ledger.NextPmtDate = nextPmtDate
-	ledger.PaymentFrequency = paymentFrequency
+	if paymentFrequency != types.PAYMENT_FREQUENCY_UNSPECIFIED {
+		ledger.PaymentFrequency = paymentFrequency
+	}
 
 	keyStr := ledger.Key.String()
 
