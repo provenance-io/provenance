@@ -1,1 +1,1 @@
-*	The `MarkerSupply` query has been deprecated. Please use the `SupplyOf` query from the `bank` module instead, which provides equivalent functionality [#1676](https://github.com/provenance-io/provenance/issues/1676).
+*	`MarkerSupply` query has been deprecated. Please use the `SupplyOf` query from the `bank` module instead, which provides equivalent functionality [#1676](https://github.com/provenance-io/provenance/issues/1676).
