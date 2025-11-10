@@ -296,7 +296,7 @@ func (k Keeper) UpdateLedgerInterestRate(ctx context.Context, lk *types.LedgerKe
 // UpdateLedgerPayment updates the payment configuration of an existing ledger.
 // This function allows modification of the next payment amount, date, and frequency.
 // These parameters define the payment schedule for the ledger.
-// If thepaymentFrequency is unspecified, that field will NOT be changed.
+// If the paymentFrequency is unspecified, that field will NOT be changed.
 func (k Keeper) UpdateLedgerPayment(ctx context.Context, lk *types.LedgerKey, nextPmtAmt sdkmath.Int, nextPmtDate int32, paymentFrequency types.PaymentFrequency) error {
 	// Retrieve the existing ledger to ensure it exists.
 	ledger, err := k.RequireGetLedger(ctx, lk)
