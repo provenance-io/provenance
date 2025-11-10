@@ -56,7 +56,6 @@ func (s *NameRecordTestSuite) TestNameRecordValidateBasic() {
 		},
 	}
 	for n, tc := range cases {
-		tc := tc
 
 		s.Run(n, func() {
 			err := tc.name.Validate()

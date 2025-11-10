@@ -126,7 +126,6 @@ func (s *IntegrationTestSuite) TestQueryOracleAddress() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
