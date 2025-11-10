@@ -523,8 +523,8 @@ func (i InterestAccrualMethod) Validate() error {
 }
 
 // ValidateSpecified returns an error if this InterestAccrualMethod isn't a defined enum entry or is the zero (UNSPECIFIED) value).
-func (d InterestAccrualMethod) ValidateSpecified() error {
-	return provutils.EnumValidateSpecified(d, InterestAccrualMethod_name)
+func (i InterestAccrualMethod) ValidateSpecified() error {
+	return provutils.EnumValidateSpecified(i, InterestAccrualMethod_name)
 }
 
 // UnmarshalJSON implements json.Unmarshaler for PaymentFrequency.
@@ -543,6 +543,6 @@ func (p PaymentFrequency) Validate() error {
 }
 
 // ValidateSpecified returns an error if this PaymentFrequency isn't a defined enum entry or is the zero (UNSPECIFIED) value).
-func (d PaymentFrequency) ValidateSpecified() error {
-	return provutils.EnumValidateSpecified(d, PaymentFrequency_name)
+func (p PaymentFrequency) ValidateSpecified() error {
+	return provutils.EnumValidateSpecified(p, PaymentFrequency_name)
 }
