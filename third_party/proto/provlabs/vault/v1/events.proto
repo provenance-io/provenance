@@ -47,6 +47,39 @@ message EventVaultCreated {
   string underlying_asset = 4;
 }
 
+// EventDenomUnit describes a single denom unit entry that is included in the
+// share denom metadata emitted with EventSetShareDenomMetadata.
+message EventDenomUnit {
+  // denom is the unit name (e.g., "nushare", "ushare").
+  string denom = 1;
+  // exponent is the base-10 exponent for this unit relative to the base denom.
+  // For example, exponent=6 means 1 display unit = 10^6 base units.
+  string exponent = 2;
+  // aliases lists optional alternative names for this unit. May be empty.
+  repeated string aliases = 3;
+}
+
+// EventSetShareDenomMetadata is emitted when denom metadata is set for a vault’s
+// share denom (via MsgSetShareDenomMetadata).
+message EventSetShareDenomMetadata {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // metadata_base is the base denomination (e.g., "nushare").
+  string metadata_base = 2;
+  // metadata_description is a human-readable description of the share denom.
+  string metadata_description = 3;
+  // metadata_display is the display denomination (e.g., "ushare" or "SHARE").
+  string metadata_display = 4;
+  // metadata_denom_units lists all denom units and their exponents.
+  repeated EventDenomUnit metadata_denom_units = 5;
+  // administrator is the bech32 address of the signer that set the metadata.
+  string administrator = 6;
+  // metadata_name is the descriptive name for the share denom.
+  string metadata_name = 7;
+  // metadata_symbol is the short ticker-style symbol (optional).
+  string metadata_symbol = 8;
+}
+
 // EventSwapIn is an event emitted when assets are swapped in for vault shares.
 message EventSwapIn {
   // owner is the address of the account that initiated the swap.

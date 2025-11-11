@@ -73,6 +73,8 @@ func TestMsgUpdateInterestRate_ValidateBasic(t *testing.T) {
 		{name: "empty signer", msg: MsgUpdateInterestRateRequest{Signer: "", Key: validKey}, exp: []string{"invalid signer"}},
 		{name: "invalid key", msg: MsgUpdateInterestRateRequest{Signer: validAddr, Key: &LedgerKey{AssetClassId: "", NftId: "nft1"}}, exp: []string{"invalid key", "asset_class_id"}},
 		{name: "rate out of bounds", msg: MsgUpdateInterestRateRequest{Signer: validAddr, Key: validKey, InterestRate: 101_000_000}, exp: []string{"invalid interest_rate", "between"}},
+		{name: "day count out of bounds", msg: MsgUpdateInterestRateRequest{Signer: validAddr, Key: validKey, InterestDayCountConvention: 100}, exp: []string{"invalid interest_day_count_convention", "unknown day_count_convention enum value: 100"}},
+		{name: "accrual method out of bounds", msg: MsgUpdateInterestRateRequest{Signer: validAddr, Key: validKey, InterestAccrualMethod: 100}, exp: []string{"invalid interest_accrual_method", "unknown interest_accrual_method enum value: 100"}},
 	}
 
 	for _, tc := range tests {
@@ -95,6 +97,7 @@ func TestMsgUpdatePayment_ValidateBasic(t *testing.T) {
 		{name: "valid", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(10), NextPmtDate: 20089, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}},
 		{name: "neg amount", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(-1), NextPmtDate: 20089, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}, exp: []string{"next_pmt_amt", "must be a non-negative integer"}},
 		{name: "bad date", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(10), NextPmtDate: -1, PaymentFrequency: PAYMENT_FREQUENCY_MONTHLY}, exp: []string{"next_pmt_date", "must be after 1970-01-01"}},
+		{name: "bad payment freq", msg: MsgUpdatePaymentRequest{Signer: validAddr, Key: validKey, NextPmtAmt: math.NewInt(10), NextPmtDate: 20089, PaymentFrequency: -1}, exp: []string{"payment_frequency", "unknown payment_frequency enum value: -1"}},
 	}
 
 	for _, tc := range tests {
