@@ -52,6 +52,31 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.26.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.26.0-rc2) 2025-11-11
+
+### Improvements
+
+* Recognize 9525nhash as old gas prices too [PR 2517](https://github.com/provenance-io/provenance/pull/2517).
+* Fix how the ledger bulk endpoint charges fees [PR 2518](https://github.com/provenance-io/provenance/pull/2518).
+* Emit events when a ledger class or class type is created, and when a ledger entry is updated [PR 2522](https://github.com/provenance-io/provenance/pull/2522).
+* Add _NOT_DEFINED values to the ledger enums [PR 2528](https://github.com/provenance-io/provenance/pull/2528).
+
+### Bug Fixes
+
+* Bring back (but deprecate) some msgfees proto stuff [PR 2523](https://github.com/provenance-io/provenance/pull/2523).
+* In the bouvardia-rc2 upgrade, fix the ledger class and the registry entries added with -rc1 [PR 2524](https://github.com/provenance-io/provenance/pull/2524).
+
+### Dependencies
+
+* `github.com/provlabs/vault` bumped to v1.0.12 (from v1.0.9) [PR 2525](https://github.com/provenance-io/provenance/pull/2525).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.26.0-rc1...v1.26.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.25.1...v1.26.0-rc2
+
+---
+
 ## [v1.26.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.26.0-rc1) 2025-10-29
 
 ### Features
