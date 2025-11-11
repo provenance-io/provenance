@@ -210,6 +210,13 @@ enum DayCountConvention {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified day count convention.
+  //
+  // This value is never a field's actual value, it just indicates that, for a given request, the day count convention
+  // is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that the day
+  // count convention is not being provided, and so should not be updated.
+  //
+  // DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided.
+  // DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value.
   DAY_COUNT_CONVENTION_UNSPECIFIED = 0;
 
   // Actual/365: Uses the actual number of days in the period with a fixed denominator of 365
@@ -231,6 +238,17 @@ enum DayCountConvention {
 
   // 360/360: Always uses 360 days in both the numerator and denominator.
   DAY_COUNT_CONVENTION_DAYS_360 = 6;
+
+  // Not Defined: The day count convention is not defined.
+  //
+  // This value indicates that the day count convention should be on record as not having a value. It could mean that
+  // the day count convention is not one of the other values in this enum, or it could mean that it doesn't make sense
+  // for the entry to have a day count convention. It could also just mean that the day count convention has not yet
+  // been defined for the entry.
+  //
+  // DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided.
+  // DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value.
+  DAY_COUNT_CONVENTION_NOT_DEFINED = 7;
 }
 
 // Interest Accrual Methods describing how interest is calculated over time.
@@ -239,6 +257,13 @@ enum InterestAccrualMethod {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified interest accrual method.
+  //
+  // This value is never a field's actual value, it just indicates that, for a given request, the interest accrual
+  // method is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that
+  // the interest accrual method is not being provided, and so should not be updated.
+  //
+  // INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided.
+  // INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value.
   INTEREST_ACCRUAL_METHOD_UNSPECIFIED = 0;
 
   // Simple Interest: Calculated only on the principal amount.
@@ -261,6 +286,17 @@ enum InterestAccrualMethod {
 
   // Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously.
   INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING = 7;
+
+  // Not Defined: The interest accrual method is not defined.
+  //
+  // This value indicates that the interest accrual method should be on record as not having a value. It could mean that
+  // the interest accrual method is not one of the other values in this enum, or it could mean that it doesn't make
+  // sense for the entry to have an interest accrual method. It could also just mean that the interest accrual method
+  // has not yet been defined for the entry.
+  //
+  // INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided.
+  // INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value.
+  INTEREST_ACCRUAL_METHOD_NOT_DEFINED = 8;
 }
 
 // Payment frequencies for loan repayments.
@@ -269,6 +305,13 @@ enum PaymentFrequency {
   option (gogoproto.goproto_enum_stringer) = true;
 
   // Unspecified payment frequency.
+  //
+  // This value is never a field's actual value, it just indicates that, for a given request, the payment frequency is
+  // not being provided. E.g. if this value is provided in a MsgUpdatePaymentRequest, it indicates that the payment
+  // frequency is not being provided, and so should not be updated.
+  //
+  // PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided.
+  // PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value.
   PAYMENT_FREQUENCY_UNSPECIFIED = 0;
 
   // Daily payments.
@@ -285,4 +328,15 @@ enum PaymentFrequency {
 
   // Annual payments.
   PAYMENT_FREQUENCY_ANNUALLY = 5;
+
+  // Not Defined: The payment frequency is not defined.
+  //
+  // This value indicates that the payment frequency should be on record as not having a value. It could mean that the
+  // payment frequency is not one of the other values in this enum, or it could mean that it doesn't make sense for the
+  // entry to have a payment frequency. It could also just mean that the payment frequency has not yet been defined for
+  // the entry.
+  //
+  // PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided.
+  // PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value.
+  PAYMENT_FREQUENCY_NOT_DEFINED = 6;
 }

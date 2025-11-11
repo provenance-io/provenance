@@ -75,10 +75,12 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("interest_rate", "must be between 0 and 100,000,000 (0-100%%)"))
 	}
 
+	// interest day count convention is allowed to be unspecified here to indicate that the field isn't to be updated.'
 	if err := m.InterestDayCountConvention.Validate(); err != nil {
 		errs = append(errs, NewErrCodeInvalidField("interest_day_count_convention", "%s", err))
 	}
 
+	// interest accrual method is allowed to be unspecified here to indicate that the field isn't to be updated.'
 	if err := m.InterestAccrualMethod.Validate(); err != nil {
 		errs = append(errs, NewErrCodeInvalidField("interest_accrual_method", "%s", err))
 	}
@@ -97,8 +99,13 @@ func (m MsgUpdatePaymentRequest) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
 	}
 
-	if err := ValidatePmtFields(m.NextPmtDate, m.NextPmtAmt, m.PaymentFrequency); err != nil {
+	if err := ValidatePmtFields(m.NextPmtDate, m.NextPmtAmt); err != nil {
 		errs = append(errs, err)
+	}
+
+	// payment frequency is allowed to be unspecified here to indicate that the field isn't to be updated.
+	if err := m.PaymentFrequency.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("payment_frequency", "%s", err))
 	}
 
 	return errors.Join(errs...)
