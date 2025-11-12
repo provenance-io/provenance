@@ -11205,7 +11205,7 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `access_control` | [AccessGrant](#provenance-marker-v1-AccessGrant) | repeated | Access control lists |
 | `status` | [MarkerStatus](#provenance-marker-v1-MarkerStatus) |  | Indicates the current status of this marker record. |
 | `denom` | [string](#string) |  | value denomination and total supply for the token. |
-| `supply` | [string](#string) |  | the total supply expected for a marker. This is the amount that is minted when a marker is created. |
+| `supply` | [string](#string) |  | the total supply expected for a marker. This is the amount that is minted when a marker is created. Note: This is a static configuration value, not the current circulating supply. To query the current circulating supply, use the bank module's SupplyOf query. |
 | `marker_type` | [MarkerType](#provenance-marker-v1-MarkerType) |  | Marker type information |
 | `supply_fixed` | [bool](#bool) |  | A fixed supply will mint additional coin automatically if the total supply decreases below a set value. This may occur if the coin is burned or an account holding the coin is slashed. (default: true) |
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
@@ -11586,6 +11586,7 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 ### QuerySupplyRequest
 QuerySupplyRequest is the request type for the Query/MarkerSupply method.
+Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 
 
 | Field | Type | Label | Description |
@@ -11601,6 +11602,7 @@ QuerySupplyRequest is the request type for the Query/MarkerSupply method.
 
 ### QuerySupplyResponse
 QuerySupplyResponse is the response type for the Query/MarkerSupply method.
+Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 
 
 | Field | Type | Label | Description |
@@ -11629,7 +11631,7 @@ Query defines the gRPC querier service for marker module.
 | `AllMarkers` | [QueryAllMarkersRequest](#provenance-marker-v1-QueryAllMarkersRequest) | [QueryAllMarkersResponse](#provenance-marker-v1-QueryAllMarkersResponse) | Returns a list of all markers on the blockchain |
 | `Marker` | [QueryMarkerRequest](#provenance-marker-v1-QueryMarkerRequest) | [QueryMarkerResponse](#provenance-marker-v1-QueryMarkerResponse) | query for a single marker by denom or address |
 | `Holding` | [QueryHoldingRequest](#provenance-marker-v1-QueryHoldingRequest) | [QueryHoldingResponse](#provenance-marker-v1-QueryHoldingResponse) | query for all accounts holding the given marker coins |
-| `Supply` | [QuerySupplyRequest](#provenance-marker-v1-QuerySupplyRequest) | [QuerySupplyResponse](#provenance-marker-v1-QuerySupplyResponse) | query for supply of coin on a marker account |
+| `Supply` | [QuerySupplyRequest](#provenance-marker-v1-QuerySupplyRequest) | [QuerySupplyResponse](#provenance-marker-v1-QuerySupplyResponse) | query for supply of coin on a marker account This endpoint returns the initial/target supply from marker account, not actual circulating supply. Deprecated: This query is deprecated in favor of the bank module's SupplyOf query. |
 | `Escrow` | [QueryEscrowRequest](#provenance-marker-v1-QueryEscrowRequest) | [QueryEscrowResponse](#provenance-marker-v1-QueryEscrowResponse) | query for coins on a marker account |
 | `Access` | [QueryAccessRequest](#provenance-marker-v1-QueryAccessRequest) | [QueryAccessResponse](#provenance-marker-v1-QueryAccessResponse) | query for access records on an account |
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance-marker-v1-QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance-marker-v1-QueryDenomMetadataResponse) | query for access records on an account |
