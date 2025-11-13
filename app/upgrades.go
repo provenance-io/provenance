@@ -617,6 +617,9 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 
 		// Msgs that cost $18.00.
 		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateAsset", feeDefCoin(18000)),
+
+		// Msgs that cost $250.00.
+		flatfeestypes.NewMsgFee("/provlabs.vault.v1.MsgCreateVaultRequest", feeDefCoin(250000)),
 	}
 }
 
