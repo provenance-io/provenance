@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/google/uuid"
+
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 const (
@@ -146,6 +147,8 @@ func (m MetadataAddress) Equals(m2 MetadataAddress) bool {
 // %s formats as bech32 address string (same as m.String()).
 // %p formats as the address of 0th element in base 16 notation, with leading 0x.
 // all others format as base 16, upper-case, two characters per byte.
+//
+//nolint:gosec // G104: ignore write error, safe for formatter.
 func (m MetadataAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

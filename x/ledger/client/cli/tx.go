@@ -74,7 +74,7 @@ $ provenanced tx ledger create "asset-class-1" "nft-1" "ledger-class-1" 1 --from
 					NftId:        nftID,
 				},
 				LedgerClassId: ledgerClassID,
-				StatusTypeId:  int32(statusTypeID), //nolint:gosec // Controlled conversion
+				StatusTypeId:  int32(statusTypeID),
 			}
 
 			// Get optional fields from flags
@@ -322,7 +322,7 @@ func CmdAddLedgerClassStatusType() *cobra.Command {
 			msg := &ledger.MsgAddLedgerClassStatusTypeRequest{
 				LedgerClassId: ledgerClassID,
 				StatusType: &ledger.LedgerClassStatusType{
-					Id:          int32(id), //nolint:gosec // Controlled conversion
+					Id:          int32(id),
 					Code:        code,
 					Description: description,
 				},
@@ -362,7 +362,7 @@ func CmdAddLedgerClassEntryType() *cobra.Command {
 			msg := &ledger.MsgAddLedgerClassEntryTypeRequest{
 				LedgerClassId: ledgerClassID,
 				EntryType: &ledger.LedgerClassEntryType{
-					Id:          int32(id), //nolint:gosec // Controlled conversion
+					Id:          int32(id),
 					Code:        code,
 					Description: description,
 				},
@@ -402,7 +402,7 @@ func CmdAddLedgerClassBucketType() *cobra.Command {
 			msg := &ledger.MsgAddLedgerClassBucketTypeRequest{
 				LedgerClassId: ledgerClassID,
 				BucketType: &ledger.LedgerClassBucketType{
-					Id:          int32(id), //nolint:gosec // Controlled conversion
+					Id:          int32(id),
 					Code:        code,
 					Description: description,
 				},

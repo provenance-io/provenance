@@ -332,7 +332,7 @@ func (m msgServer) createMarker(goCtx context.Context, token sdk.Coin, addr stri
 	}
 
 	// Add the marker account by setting it
-	err = m.Keeper.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
+	err = m.markerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
 	if err != nil {
 		return &markertypes.MarkerAccount{}, types.NewErrCodeInternal(fmt.Sprintf("failed to add marker account: %s", err))
 	}
