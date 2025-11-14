@@ -260,7 +260,6 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -370,7 +369,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -514,7 +512,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -942,7 +939,6 @@ func TestMsgSupplyDecreaseProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgSupplyDecreaseProposalRequest{
 				Authority: tc.authority,
@@ -1007,7 +1003,6 @@ func TestMsgSetAdministratorProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := NewMsgSetAdministratorProposalRequest(tc.denom, tc.accessGrant, tc.authority)
 
@@ -1066,7 +1061,6 @@ func TestMsgRemoveAdministratorProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgRemoveAdministratorProposalRequest{
 				Authority:      tc.authority,
@@ -1127,7 +1121,6 @@ func TestMsgChangeStatusProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgChangeStatusProposalRequest{
 				Denom:     tc.denom,
@@ -1201,7 +1194,6 @@ func TestMsgWithdrawEscrowProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgWithdrawEscrowProposalRequest{
 				Denom:         tc.denom,
@@ -1274,7 +1266,6 @@ func TestMsgSetDenomMetadataProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgSetDenomMetadataProposalRequest{
 				Metadata:  tc.metadata,
@@ -1343,7 +1334,6 @@ func TestMsgUpdateParamsRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectError {
