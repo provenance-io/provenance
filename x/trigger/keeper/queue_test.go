@@ -285,3 +285,76 @@ func (s *KeeperTestSuite) TestGetAllQueueItems() {
 		})
 	}
 }
+
+// TestQueueCollectionsOperations tests queue operations with collections
+func (s *KeeperTestSuite) TestQueueCollectionsOperations() {
+	ctx := s.ctx
+	k := s.app.TriggerKeeper
+
+	s.Require().True(k.QueueIsEmpty(ctx), "Queue should initially be empty")
+
+	trigger := s.CreateTrigger(1, s.accountAddr.String(), &types.BlockHeightEvent{BlockHeight: 100}, &types.MsgDestroyTriggerRequest{})
+	k.QueueTrigger(ctx, trigger)
+
+	s.Require().False(k.QueueIsEmpty(ctx), "Queue should not be empty after enqueue")
+
+	item := k.QueuePeek(ctx)
+	s.Require().NotNil(item, "QueuePeek should return the first queued item")
+	s.Require().Equal(trigger.Id, item.Trigger.Id, "Peeked trigger ID should match enqueued trigger")
+
+    k.Dequeue(ctx)
+
+	s.Require().True(k.QueueIsEmpty(ctx), "Queue should be empty after dequeue")
+}
+
+func (s *KeeperTestSuite) TestQueueMultipleItems() {
+	ctx := s.ctx
+	k := s.app.TriggerKeeper
+
+	for i := uint64(1); i <= 3; i++ {
+		trigger := s.CreateTrigger(i, s.accountAddr.String(), &types.BlockHeightEvent{BlockHeight: 100 + i}, &types.MsgDestroyTriggerRequest{})
+		k.QueueTrigger(ctx, trigger)
+	}
+
+	length, err := k.GetQueueLength(ctx) // use getQueueLength
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), length, "Queue should have 3 items after enqueue")
+
+	item := k.QueuePeek(ctx)
+	s.Require().NotNil(item)
+	s.Require().Equal(uint64(1), item.Trigger.Id, "First item should have ID 1 (FIFO)")
+
+	k.Dequeue(ctx)
+
+	item = k.QueuePeek(ctx)
+	s.Require().NotNil(item)
+	s.Require().Equal(uint64(2), item.Trigger.Id, "Second item should have ID 2 after dequeue")
+
+	length, err = k.GetQueueLength(ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(2), length, "Queue length should decrease to 2 after dequeue")
+}
+
+func (s *KeeperTestSuite) TestQueueLengthConsistency() {
+	ctx := s.ctx
+	k := s.app.TriggerKeeper
+
+	length, err := k.GetQueueLength(ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(0), length)
+
+	for i := uint64(1); i <= 3; i++ {
+		trigger := s.CreateTrigger(i, s.accountAddr.String(), &types.BlockHeightEvent{BlockHeight: 100 + i}, &types.MsgDestroyTriggerRequest{})
+		k.QueueTrigger(ctx, trigger)
+	}
+
+	length, err = k.GetQueueLength(ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), length, "Queue length should be 3 after enqueueing 3 items")
+
+    k.Dequeue(ctx)
+
+	length, err = k.GetQueueLength(ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(2), length, "Queue length should decrease to 2 after one dequeue")
+}

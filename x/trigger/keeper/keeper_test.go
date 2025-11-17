@@ -99,3 +99,21 @@ func (s *KeeperTestSuite) CreateTrigger(id uint64, owner string, event types.Tri
 	anyMsg, _ := codectypes.NewAnyWithValue(event)
 	return types.NewTrigger(id, owner, anyMsg, actions)
 }
+
+// TestCollectionsBackwardCompatibility tests that new collections code can read old data format
+func (s *KeeperTestSuite) TestCollectionsBackwardCompatibility() {
+	ctx := s.ctx
+	trigger := s.CreateTrigger(1, s.accountAddr.String(), &types.BlockHeightEvent{BlockHeight: 100}, &types.MsgDestroyTriggerRequest{})
+
+	// Store using old-style key format (simulate existing data)
+	store := ctx.KVStore(s.app.GetKey(types.ModuleName))
+	oldKey := types.GetTriggerKey(1)
+	bz := s.app.AppCodec().MustMarshal(&trigger)
+	store.Set(oldKey, bz)
+
+	// Try to read using NEW collections method
+	retrieved, err := s.app.TriggerKeeper.GetTrigger(ctx, 1)
+	s.Require().NoError(err, "GetTrigger should successfully read old-format trigger data")
+	s.Require().Equal(trigger.Id, retrieved.Id, "retrieved trigger ID should match stored trigger ID")
+	s.Require().Equal(trigger.Owner, retrieved.Owner, "retrieved trigger owner should match stored trigger owner")
+}
