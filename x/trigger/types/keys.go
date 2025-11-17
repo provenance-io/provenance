@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
+
+	"cosmossdk.io/collections"
 )
 
 const (
@@ -54,17 +56,17 @@ const (
 //     | 1 |
 var (
 	// TriggerKeyPrefix is an initial byte to help group all trigger keys
-	TriggerKeyPrefix = []byte{0x01}
+	TriggerKeyPrefix = collections.NewPrefix(1) // was 0x01
 	// EventListenerKeyPrefix is an initial byte to help group all event listener keys
-	EventListenerKeyPrefix = []byte{0x02}
+	EventListenerKeyPrefix = collections.NewPrefix(2) // was 0x02
 	// QueueKeyPrefix is an initial byte to help group all queue entry keys
-	QueueKeyPrefix = []byte{0x03}
+	QueueKeyPrefix = collections.NewPrefix(3) // was 0x03
 	// NextTriggerIDKey is the key to obtain the next valid trigger id
-	NextTriggerIDKey = []byte{0x05}
+	NextTriggerIDKey = collections.NewPrefix(5) // was 0x05
 	// QueueStartIndexKey is the key to obtain the queue's starting index
-	QueueStartIndexKey = []byte{0x06}
-	// QueueLengthKey is the key to obtain the queue's length
-	QueueLengthKey = []byte{0x07}
+	QueueStartIndexKey = collections.NewPrefix(6) // was 0x06
+	// QueueLengthPrefix is the key to obtain the queue's length
+	QueueLengthKey = collections.NewPrefix(7) // was 0x07
 )
 
 // The following type bytes were once used, but now are not:
