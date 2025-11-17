@@ -8,8 +8,15 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	triggerID := k.getTriggerID(ctx)
-	queueStartIndex := k.getQueueStartIndex(ctx)
+	triggerID, err := k.getTriggerID(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	queueStartIndex, err := k.getQueueStartIndex(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	triggers, err := k.GetAllTriggers(ctx)
 	if err != nil {

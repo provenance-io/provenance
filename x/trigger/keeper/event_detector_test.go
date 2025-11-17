@@ -258,7 +258,7 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 			for _, event := range tc.triggers {
 				actions, _ := sdktx.SetMsgs([]sdk.Msg{&types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}})
 				anyMsg, _ := codectypes.NewAnyWithValue(event)
-				trigger := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, s.accountAddresses[0].String(), anyMsg, actions)
+				trigger,_ := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, s.accountAddresses[0].String(), anyMsg, actions)
 				s.app.TriggerKeeper.RegisterTrigger(s.ctx, trigger)
 				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 				registered = append(registered, trigger)
