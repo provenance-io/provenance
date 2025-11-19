@@ -487,6 +487,18 @@ func (lte *LedgerAndEntries) Validate() error {
 	return errors.Join(errs...)
 }
 
+// GetKey returns the LedgerKey field if populated, or else the Ledger.Key field.
+// Returns nil if neither field is populated.
+func (lte *LedgerAndEntries) GetKey() *LedgerKey {
+	if lte == nil {
+		return nil
+	}
+	if lte.LedgerKey != nil {
+		return lte.LedgerKey
+	}
+	return lte.Ledger.GetKey()
+}
+
 // UnmarshalJSON implements json.Unmarshaler for DayCount.
 func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
 	value, err := provutils.EnumUnmarshalJSON(data, DayCountConvention_value, DayCountConvention_name)
