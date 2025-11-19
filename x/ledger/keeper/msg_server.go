@@ -282,7 +282,7 @@ func (k *MsgServer) BulkCreate(goCtx context.Context, req *types.MsgBulkCreateRe
 
 	// Signer has to be able to add ledgers and entries for every key.
 	for _, ledgerToEntries := range req.LedgerAndEntries {
-		if err := k.RequireAuthorization(ctx, req.Signer, ledgerToEntries.LedgerKey.ToRegistryKey()); err != nil {
+		if err := k.RequireAuthorization(ctx, req.Signer, ledgerToEntries.GetKey().ToRegistryKey()); err != nil {
 			return nil, err
 		}
 	}
