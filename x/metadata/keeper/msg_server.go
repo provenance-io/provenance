@@ -423,7 +423,7 @@ func (k msgServer) WriteContractSpecification(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteContractSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck,gosec // G115: the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // errcheck: the error was checked when msg.ValidateBasic was called;
 	msg.ConvertOptionalFields()
 
 	var existing *types.ContractSpecification
