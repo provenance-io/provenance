@@ -107,6 +107,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdWithdrawEscrowProposal(),
 		GetUpdateMarkerParamsCmd(),
 		GetGrantMultiAuthzCmd(),
+		GetCmdSetDenomMetadata(),
 	)
 	return txCmd
 }
@@ -1493,6 +1494,60 @@ func GetCmdSetDenomMetadataProposal() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	govcli.AddGovPropFlagsToCmd(cmd)
 	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+func GetCmdSetDenomMetadata() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "set-denom-metadata <denom> <name> <symbol> <description> <display> <exponent>",
+		Aliases: []string{"sdm"},
+		Args:    cobra.ExactArgs(6),
+		Short:   "Set denom metadata for a marker as the admin",
+		Long:    strings.TrimSpace(`Set denom metadata for a marker as the marker admin.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker set-denom-metadata mycoin "My Coin" "MYC" "My coin description" "myc" 6 --from mykey`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			denom := args[0]
+			name := args[1]
+			symbol := args[2]
+			description := args[3]
+			display := args[4]
+
+			exponent, err := strconv.ParseUint(args[5], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid exponent: %v", args[5])
+			}
+
+			metadata := banktypes.Metadata{
+				Description: description,
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    denom,
+						Exponent: 0,
+					},
+					{
+						Denom:    display,
+						Exponent: uint32(exponent), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+					},
+				},
+				Base:    denom,
+				Display: display,
+				Name:    name,
+				Symbol:  symbol,
+			}
+
+			authority := clientCtx.GetFromAddress().String()
+			msg := &types.MsgSetDenomMetadataRequest{Metadata: metadata, Administrator: authority}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
