@@ -87,7 +87,6 @@ service Msg {
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
 
   // AddNetAssetValues sets the net asset value for a scope.
-  // Note: When setting NAVs amounts are in usd units where 1usd = $1.00.
   rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
 }
 
@@ -611,8 +610,8 @@ message MsgAddNetAssetValuesRequest {
 
   string          scope_id = 1;
   repeated string signers  = 2;
-  // Net asset values to set. The "usd" denomination represents whole-dollar amounts,
-  // where 1usd = $1.00.
+  // Net asset values to set.
+  // The price can use a special "usd" denom, where 1usd = $0.001 and 1000usd = $1.000.
   repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
 }
 
