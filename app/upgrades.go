@@ -13,6 +13,7 @@ import (
 
 	vaulttypes "github.com/provlabs/vault/types"
 
+	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 	nfttypes "cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -83,6 +84,17 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			if err = importRegistryData(ctx, app.RegistryKeeper); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
+	"bouvardia-rc2": { // Upgrade for v1.26.0-rc2.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			if err := fixLedgerClass(ctx, app); err != nil {
+				return nil, err
+			}
+			if err := fixRegistry(ctx, app); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -605,6 +617,9 @@ func MakeFlatFeesCosts() []*flatfeestypes.MsgFee {
 
 		// Msgs that cost $18.00.
 		flatfeestypes.NewMsgFee("/provenance.asset.v1.MsgCreateAsset", feeDefCoin(18000)),
+
+		// Msgs that cost $250.00.
+		flatfeestypes.NewMsgFee("/provlabs.vault.v1.MsgCreateVaultRequest", feeDefCoin(250000)),
 	}
 }
 
@@ -888,5 +903,83 @@ func importRegistryDataFile(ctx sdk.Context, rk RegistryKeeper, filePath string)
 	}
 
 	ctx.Logger().Info(fmt.Sprintf("Done importing %d registry entries", len(genState.Entries)))
+	return nil
+}
+
+const (
+	ledgerClassIDToFix = "figure-servicing-1-0"
+	correctDenom       = "uylds.fcc"
+	correctAssetClass  = "scopespec1qj5hx4l3vgryhp5g3ks68wh53jkq3net7n"
+	wrongAssetClass    = "scopespec1qj3easdmlssy5z5af63r2zfm0j0qw9rcxd"
+)
+
+// fixLedgerClass corrects the denom and asset class id of the one ledger class
+// that was originally created with the rc1 upgrade.
+func fixLedgerClass(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Fixing ledger class", "id", ledgerClassIDToFix)
+	ctx = ctx.WithEventManager(provsdk.NewNoOpEventManager())
+
+	lc, err := app.LedgerKeeper.GetLedgerClass(ctx, ledgerClassIDToFix)
+	if err != nil {
+		return fmt.Errorf("failed to get ledger class %q: %w", ledgerClassIDToFix, err)
+	}
+	if lc == nil {
+		// I don't want this to stop the upgrade, so just log it and return nil.
+		ctx.Logger().Error("Ledger class not found. Skipping fix.", "id", ledgerClassIDToFix)
+		return nil
+	}
+
+	lc.AssetClassId = correctAssetClass
+	lc.Denom = correctDenom
+	err = app.LedgerKeeper.LedgerClasses.Set(ctx, ledgerClassIDToFix, *lc)
+	if err != nil {
+		return fmt.Errorf("failed to set ledger class %q: %w", ledgerClassIDToFix, err)
+	}
+
+	ctx.Logger().Info("Done fixing ledger class", "id", ledgerClassIDToFix)
+	return nil
+}
+
+// fixRegistry corrects all the registry entries created during the rc1 upgrade
+// to have the correct asset class id.
+func fixRegistry(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Fixing registry entries")
+	ctx = ctx.WithEventManager(provsdk.NewNoOpEventManager())
+
+	// First, get all the registry entries that we need to update.
+	// We don't update them yet because it's not wise to update the data that you're iterating over.
+	var toFix []registrytypes.RegistryEntry
+	err := app.RegistryKeeper.Registry.Walk(ctx, nil, func(_ collections.Pair[string, string], value registrytypes.RegistryEntry) (stop bool, err error) {
+		if value.Key.AssetClassId == wrongAssetClass {
+			toFix = append(toFix, value)
+		}
+		return false, nil
+	})
+	if err != nil {
+		return fmt.Errorf("error while finding registry entries to fix: %w", err)
+	}
+
+	// Now fix all of them.
+	ctx.Logger().Info(fmt.Sprintf("Found %d registry entries to fix", len(toFix)))
+	for i, re := range toFix {
+		// Delete the old one.
+		err = app.RegistryKeeper.Registry.Remove(ctx, re.Key.CollKey())
+		if err != nil {
+			return fmt.Errorf("failed to delete bad registry entry with nft id %q: %w", re.Key.NftId, err)
+		}
+
+		// Fix it and re-add it.
+		re.Key.AssetClassId = correctAssetClass
+		err = app.RegistryKeeper.SetRegistry(ctx, re)
+		if err != nil {
+			return fmt.Errorf("failed to store registry entry with nft id %q: %w", re.Key.NftId, err)
+		}
+
+		if (i+1)%10000 == 0 || (i+1) == len(toFix) {
+			ctx.Logger().Info("Progress: Registry entries fixed", "count", i+1)
+		}
+	}
+
+	ctx.Logger().Info("Done fixing registry entries")
 	return nil
 }

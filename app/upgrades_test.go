@@ -1070,6 +1070,24 @@ func (s *UpgradeTestSuite) TestBouvardiaRC1() {
 	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestBouvardiaRC2() {
+	expInLog := []string{
+		"INF Fixing ledger class id=figure-servicing-1-0",
+		"INF Fixing registry entries",
+	}
+	expNotInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Pruning expired consensus states for IBC.",
+		"INF Removing inactive validator delegations.",
+		"INF Converting completed vesting accounts into base accounts.",
+		"INF Increasing max memo length to 1024 bytes.",
+		"INF Setting up flat fees.",
+		"INF Starting import of ledger data.",
+		"INF Starting import of registry data.",
+	}
+	s.AssertUpgradeHandlerLogs("bouvardia-rc2", expInLog, expNotInLog)
+}
+
 func (s *UpgradeTestSuite) TestBouvardia() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
@@ -1081,7 +1099,11 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 		"INF Starting import of ledger data.",
 		"INF Starting import of registry data.",
 	}
-	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, nil)
+	expNotInLog := []string{
+		"INF Fixing ledger class id=figure-servicing-1-0",
+		"INF Fixing registry entries",
+	}
+	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, expNotInLog)
 }
 
 type MockFlatFeesKeeper struct {
@@ -1235,35 +1257,63 @@ func TestMakeFlatFeesParams(t *testing.T) {
 	assert.Equal(t, "nhash", params.ConversionFactor.ConvertedAmount.Denom, "params.ConversionFactor.ConvertedAmount.Denom")
 }
 
-func TestMakeMsgFees(t *testing.T) {
+func (s *UpgradeTestSuite) TestMakeFlatFeesCosts() {
+	// First, get a list of all valid msgTypeURLs directly from the interface registry.
+	msgTypeURLsList := s.app.interfaceRegistry.ListImplementations("cosmos.base.v1beta1.Msg")
+	slices.Sort(msgTypeURLsList)
+	msgTypeURLs := make(map[string]bool)
+	for _, msgTypeURL := range msgTypeURLsList {
+		msgTypeURLs[msgTypeURL] = true
+	}
+
 	var msgFees []*flatfeestypes.MsgFee
 	testFunc := func() {
 		msgFees = MakeFlatFeesCosts()
 	}
-	require.NotPanics(t, testFunc, "MakeFlatFeesCosts()")
-	require.NotNil(t, msgFees, "MakeFlatFeesCosts() result")
-	require.NotEmpty(t, msgFees, "MakeFlatFeesCosts() result")
+	s.Require().NotPanics(testFunc, "MakeFlatFeesCosts()")
+	s.Require().NotNil(msgFees, "MakeFlatFeesCosts() result")
+	s.Require().NotEmpty(msgFees, "MakeFlatFeesCosts() result")
+
+	// Keep track of the ones that we've seen so that we can log the ones with default costs at the end.
+	seen := make(map[string]bool)
 
 	for i, msgFee := range msgFees {
-		t.Run(fmt.Sprintf("%d: %s", i, msgFee.MsgTypeUrl), func(t *testing.T) {
+		s.Run(fmt.Sprintf("%d: %s", i, msgFee.MsgTypeUrl), func() {
+			seen[msgFee.MsgTypeUrl] = true
+
+			// Make sure the entry is valid.
 			err := msgFee.Validate()
-			assert.NoError(t, err, "msgFee.Validate()")
+			s.Assert().NoError(err, "msgFee.Validate()")
 			if len(msgFee.Cost) != 0 {
-				if assert.Len(t, msgFee.Cost, 1, "msgFee.Cost") {
-					assert.Equal(t, flatfeestypes.DefaultFeeDefinitionDenom, msgFee.Cost[0].Denom, "msgFee.Cost[0].Denom")
+				if s.Assert().Len(msgFee.Cost, 1, "msgFee.Cost") {
+					s.Assert().Equal(flatfeestypes.DefaultFeeDefinitionDenom, msgFee.Cost[0].Denom, "msgFee.Cost[0].Denom")
 				}
 			}
+
+			// Make sure the msgTypeURL is valid.
+			isValidMsgTypeURL := msgTypeURLs[msgFee.MsgTypeUrl]
+			s.Assert().True(isValidMsgTypeURL, "%q is not a valid msgTypeURL", msgFee.MsgTypeUrl)
 
 			// Make sure the msg type doesn't appear anywhere else in the list.
 			for j, msgFee2 := range msgFees {
 				if i == j {
 					continue
 				}
-				assert.NotEqual(t, msgFee.MsgTypeUrl, msgFee2.MsgTypeUrl,
+				s.Assert().NotEqual(msgFee.MsgTypeUrl, msgFee2.MsgTypeUrl,
 					"MsgTypeUrl of msgFees[%d]=%s and msgFees[%d]=%s", i, msgFee.Cost, j, msgFee2.Cost)
 			}
 		})
 	}
+
+	s.Run("Msgs with Default cost", func() {
+		unseen := make([]string, 0, len(msgTypeURLsList)-len(msgFees))
+		for _, msgTypeURL := range msgTypeURLsList {
+			if _, ok := seen[msgTypeURL]; !ok {
+				unseen = append(unseen, msgTypeURL)
+			}
+		}
+		s.T().Logf("MsgTypeURLs with default cost (%d):\n%s", len(unseen), strings.Join(unseen, "\n"))
+	})
 }
 
 func TestLogCostGrid(t *testing.T) {
