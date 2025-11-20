@@ -1541,7 +1541,7 @@ func GetCmdSetDenomMetadata() *cobra.Command {
 			}
 
 			authority := clientCtx.GetFromAddress().String()
-			msg := types.NewMsgSetDenomMetadataRequest(metadata, authority)
+			msg := &types.MsgSetDenomMetadataRequest{Metadata: metadata, Administrator: authority}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
