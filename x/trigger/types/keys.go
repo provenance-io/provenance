@@ -90,7 +90,7 @@ func GetEventListenerKey(eventName string, order uint64, id TriggerID) []byte {
 func GetEventListenerPrefix(eventName string) []byte {
 	eventNameBytes := GetEventNameBytes(eventName)
 
-	key := EventListenerKeyPrefix
+	key := EventListenerKeyPrefix.Bytes()
 	key = append(key, eventNameBytes...)
 	return key
 }
@@ -100,38 +100,38 @@ func GetTriggerKey(id TriggerID) []byte {
 	triggerIDBytes := make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBytes, id)
 
-	key := TriggerKeyPrefix
+	key := []byte(TriggerKeyPrefix)
 	key = append(key, triggerIDBytes...)
 	return key
 }
 
 // GetNextTriggerIDKey gets the key for getting the next trigger ID.
 func GetNextTriggerIDKey() []byte {
-	return NextTriggerIDKey
+	return NextTriggerIDKey.Bytes()
 }
 
 // GetQueueKeyPrefix gets the queue's key prefix
 func GetQueueKeyPrefix() []byte {
-	return QueueKeyPrefix
+	return QueueKeyPrefix.Bytes()
 }
 
 // GetQueueKey gets the key for storing in the queue.
 func GetQueueKey(index uint64) []byte {
 	indexBytes := GetQueueIndexBytes(index)
 
-	key := QueueKeyPrefix
+	key := QueueKeyPrefix.Bytes()
 	key = append(key, indexBytes...)
 	return key
 }
 
 // GetQueueStartIndexKey gets the key for storing the start index
 func GetQueueStartIndexKey() []byte {
-	return QueueStartIndexKey
+	return QueueStartIndexKey.Bytes()
 }
 
 // GetQueueLengthKey gets the key for storing the queue length
 func GetQueueLengthKey() []byte {
-	return QueueLengthKey
+	return QueueLengthKey.Bytes()
 }
 
 // GetQueueIndexFromBytes returns the index in uint64 format from a byte array
