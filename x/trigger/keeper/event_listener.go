@@ -18,7 +18,10 @@ func (k Keeper) SetEventListener(ctx sdk.Context, trigger triggertypes.Trigger) 
 	if err != nil {
 		return err
 	}
-	eventHash := getEventNameHash(event.GetEventPrefix())
+	eventHash, err := getEventNameHash(event.GetEventPrefix())
+	if err != nil {
+		return err
+	}
 	key := collections.Join3(eventHash, event.GetEventOrder(), trigger.GetId())
 	return k.EventListeners.Set(ctx, key)
 }
@@ -30,7 +33,10 @@ func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigge
 		return false, err
 	}
 
-	eventHash := getEventNameHash(event.GetEventPrefix())
+	eventHash, err := getEventNameHash(event.GetEventPrefix())
+	if err != nil {
+		return false, err
+	}
 	key := collections.Join3(eventHash, event.GetEventOrder(), trigger.GetId())
 
 	exists, err := k.EventListeners.Has(ctx, key)
@@ -51,7 +57,10 @@ func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigge
 
 // GetEventListener Gets the event listener from the store.
 func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, order uint64, triggerID triggertypes.TriggerID) (trigger triggertypes.Trigger, err error) {
-	eventHash := getEventNameHash(eventName)
+	eventHash, err := getEventNameHash(eventName)
+	if err != nil {
+		return triggertypes.Trigger{}, err
+	}
 	key := collections.Join3(eventHash, order, triggerID)
 
 	exists, err := k.EventListeners.Has(ctx, key)
@@ -68,8 +77,10 @@ func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, order uint64
 
 // IterateEventListeners Iterates through all the event listeners.
 func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle func(trigger triggertypes.Trigger) (stop bool, err error)) error {
-	eventHash := getEventNameHash(eventName)
-
+	eventHash, err := getEventNameHash(eventName)
+	if err != nil {
+		return err
+	}
 	rng := collections.NewPrefixedTripleRange[[]byte, uint64, uint64](eventHash)
 
 	iter, err := k.EventListeners.Iterate(ctx, rng)
@@ -104,7 +115,10 @@ func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle 
 
 // HasEventListener checks if a specific event listener exists
 func (k Keeper) HasEventListener(ctx sdk.Context, eventName string, order uint64, triggerID uint64) (bool, error) {
-	eventHash := getEventNameHash(eventName)
+	eventHash, err := getEventNameHash(eventName)
+	if err != nil {
+		return false, err
+	}
 	key := collections.Join3(eventHash, order, triggerID)
 	return k.EventListeners.Has(ctx, key)
 }
@@ -130,11 +144,11 @@ func (k Keeper) GetEventListenerCount(ctx sdk.Context, eventName string) (uint64
 }
 
 // getEventNameHash returns a 32-byte hash of the event name
-func getEventNameHash(name string) []byte {
+func getEventNameHash(name string) ([]byte, error) {
 	eventName := strings.ToLower(strings.TrimSpace(name))
 	if len(eventName) == 0 {
-		panic("invalid event name: cannot be empty")
+		return nil, triggertypes.ErrEventNotFound
 	}
 	hash := sha256.Sum256([]byte(eventName))
-	return hash[:]
+	return hash[:], nil
 }
