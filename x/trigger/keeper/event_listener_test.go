@@ -165,7 +165,8 @@ func (s *KeeperTestSuite) TestRemoveEventListener() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			success, _ := s.app.TriggerKeeper.RemoveEventListener(s.ctx, tc.trigger)
+			success, err := s.app.TriggerKeeper.RemoveEventListener(s.ctx, tc.trigger)
+			s.Require().NoError(err, "RemoveEventListener should not return an error")
 			s.Equal(tc.expected, success, "should return the correct result for RemoveEventListener")
 		})
 	}
@@ -188,7 +189,6 @@ func (s *KeeperTestSuite) TestCollectionsSetAndGetEventListener() {
 	trigger1 := types.NewTrigger(1, s.accountAddresses[0].String(), eventAny1, actions)
 	trigger2 := types.NewTrigger(2, s.accountAddresses[0].String(), eventAny1, actions)
 	trigger3 := types.NewTrigger(3, s.accountAddresses[0].String(), eventAny2, actions)
-
 
 	s.Require().NoError(k.SetTrigger(ctx, trigger1), "failed to set trigger1")
 	s.Require().NoError(k.SetTrigger(ctx, trigger2), "failed to set trigger2")
