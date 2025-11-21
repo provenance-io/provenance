@@ -236,8 +236,8 @@ func (s *KeeperTestSuite) TestTriggerCollectionsOperations() {
 	s.Require().False(exists, "HasTrigger should return false for non-existing ID")
 
 	// Test RemoveTrigger
-	k.RemoveTrigger(ctx, 1)
-	s.Require().NoError(err, "RemoveTrigger should not return an error for existing ID")
+	removed := k.RemoveTrigger(ctx, 1)
+	s.Require().True(removed, "RemoveTrigger should indicate successful removal for existing ID")
 
 	// Verify removal
 	exists, err = k.HasTrigger(ctx, 1)

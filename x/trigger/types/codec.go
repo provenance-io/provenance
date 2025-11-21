@@ -71,8 +71,8 @@ func (f FixedBytes32KeyCodec) Decode(buffer []byte) (int, []byte, error) {
 }
 
 // Size returns the buffer size need to encode key T in binary format.
-func (f FixedBytes32KeyCodec) Size(key []byte) int {
-	return 32 // Fixed size
+func (f FixedBytes32KeyCodec) Size(key []byte) int { //nolint:revive
+	return 32
 }
 
 // Stringify returns a string representation of T.
@@ -101,12 +101,12 @@ func (f FixedBytes32KeyCodec) SizeNonTerminal(key []byte) int {
 }
 
 // EncodeJSON encodes the value as JSON.
-func (f FixedBytes32KeyCodec) EncodeJSON(value []byte) ([]byte, error) {
+func (f FixedBytes32KeyCodec) EncodeJSON(_ []byte) ([]byte, error) {
 	return nil, errors.New("EncodeJSON not implemented for FixedBytes32KeyCodec")
 }
 
 // DecodeJSON decodes the provided JSON bytes into an instance of T.
-func (f FixedBytes32KeyCodec) DecodeJSON(b []byte) ([]byte, error) {
+func (f FixedBytes32KeyCodec) DecodeJSON(_ []byte) ([]byte, error) {
 	return nil, errors.New("DecodeJSON not implemented for FixedBytes32KeyCodec")
 }
 
