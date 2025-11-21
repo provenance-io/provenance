@@ -644,7 +644,7 @@ func New(
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return app.MsgServiceRouter().Handler(msg)
 	})
-	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], runtime.NewKVStoreService(keys[triggertypes.StoreKey]), app.MsgServiceRouter())
+	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[triggertypes.StoreKey]), app.MsgServiceRouter())
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], nil,
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
