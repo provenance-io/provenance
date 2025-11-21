@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
