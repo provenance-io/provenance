@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/collections"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,9 +13,9 @@ import (
 )
 
 type Keeper struct {
-	storeKey storetypes.StoreKey
-	cdc      codec.BinaryCodec
-	router   baseapp.IMsgServiceRouter
+	cdc          codec.BinaryCodec
+	router       baseapp.IMsgServiceRouter
+	StoreService store.KVStoreService
 	// Collections Schema
 	Schema         collections.Schema
 	TriggersMap    collections.Map[uint64, types.Trigger]                         // prefix 0x01
@@ -30,16 +29,14 @@ type Keeper struct {
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key storetypes.StoreKey,
 	storeService store.KVStoreService,
 	router baseapp.IMsgServiceRouter,
 
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeKey: key,
-		cdc:      cdc,
-		router:   router,
+		cdc:    cdc,
+		router: router,
 		// Primary trigger storage
 		TriggersMap: collections.NewMap(sb, types.TriggerKeyPrefix, "triggers", collections.Uint64Key, codec.CollValue[types.Trigger](cdc)),
 		// Event listeners with custom key codec for compatibility
