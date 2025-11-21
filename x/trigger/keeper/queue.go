@@ -6,14 +6,16 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // QueueTrigger Creates a QueuedTrigger and Enqueues it
 func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
-	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight())) //nolint:gosec // safe: block height always ≥ 0
-	k.Enqueue(ctx, item)
+	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight()))
+	err := k.Enqueue(ctx, item)
+	if err != nil {
+		ctx.Logger().Error("failed to queue trigger", "trigger_id", trigger.Id, "err", err)
+	}
 }
 
 // QueuePeek Returns the next item to be dequeued.
@@ -110,10 +112,7 @@ func (k Keeper) Dequeue(ctx sdk.Context) {
 func (k Keeper) QueueIsEmpty(ctx sdk.Context) bool {
 	length, err := k.QueueLength.Get(ctx)
 	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return true
-		}
-		return false
+		return errors.Is(err, collections.ErrNotFound)
 	}
 	return length == 0
 }
@@ -159,8 +158,8 @@ func (k Keeper) SetQueueItem(ctx sdk.Context, index uint64, item types.QueuedTri
 	return k.Queue.Set(ctx, index, item)
 }
 
-// removeQueueIndex Removes the queue's index from the store.
-func (k Keeper) removeQueueIndex(ctx sdk.Context, index uint64) (bool, error) {
+// RemoveQueueIndex Removes the queue's index from the store.
+func (k Keeper) RemoveQueueIndex(ctx sdk.Context, index uint64) (bool, error) {
 	exists, err := k.Queue.Has(ctx, index)
 	if err != nil {
 		return false, err
@@ -177,8 +176,8 @@ func (k Keeper) removeQueueIndex(ctx sdk.Context, index uint64) (bool, error) {
 	return true, nil
 }
 
-// iterateQueue Iterates through all the queue items.
-func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
+// IterateQueue Iterates through all the queue items.
+func (k Keeper) IterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
 	iter, err := k.Queue.Iterate(ctx, nil)
 	if err != nil {
 		return err

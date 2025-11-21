@@ -302,7 +302,7 @@ func (s *KeeperTestSuite) TestQueueCollectionsOperations() {
 	s.Require().NotNil(item, "QueuePeek should return the first queued item")
 	s.Require().Equal(trigger.Id, item.Trigger.Id, "Peeked trigger ID should match enqueued trigger")
 
-    k.Dequeue(ctx)
+	k.Dequeue(ctx)
 
 	s.Require().True(k.QueueIsEmpty(ctx), "Queue should be empty after dequeue")
 }
@@ -352,7 +352,7 @@ func (s *KeeperTestSuite) TestQueueLengthConsistency() {
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(3), length, "Queue length should be 3 after enqueueing 3 items")
 
-    k.Dequeue(ctx)
+	k.Dequeue(ctx)
 
 	length, err = k.GetQueueLength(ctx)
 	s.Require().NoError(err)

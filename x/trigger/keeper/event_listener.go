@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/trigger/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -57,10 +56,10 @@ func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, order uint64
 
 	exists, err := k.EventListeners.Has(ctx, key)
 	if err != nil {
-		return types.Trigger{}, err
+		return triggertypes.Trigger{}, err
 	}
 	if !exists {
-		return types.Trigger{}, types.ErrEventNotFound
+		return triggertypes.Trigger{}, triggertypes.ErrEventNotFound
 	}
 
 	// Fetch the actual trigger
@@ -123,7 +122,8 @@ func (k Keeper) RemoveAllEventListenersForTrigger(ctx sdk.Context, triggerID uin
 // GetEventListenerCount returns the number of event listeners for a specific event
 func (k Keeper) GetEventListenerCount(ctx sdk.Context, eventName string) (uint64, error) {
 	count := uint64(0)
-	err := k.IterateEventListeners(ctx, eventName, func(trigger types.Trigger) (bool, error) {
+	err := k.IterateEventListeners(ctx, eventName, func(trigger types.Trigger) (bool, error) { //nolint:revive // safe conversion
+
 		count++
 		return false, nil
 	})

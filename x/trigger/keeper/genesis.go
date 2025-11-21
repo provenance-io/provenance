@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/trigger/types"
@@ -37,18 +39,25 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(err)
 	}
 
-	k.setTriggerID(ctx, data.TriggerId)
-	k.setQueueStartIndex(ctx, data.QueueStart)
+	must := func(err error, msg string) {
+		if err != nil {
+			panic(fmt.Errorf("%s: %w", msg, err))
+		}
+	}
+
+	must(k.setTriggerID(ctx, data.TriggerId), "failed to set trigger ID")
+	must(k.setQueueStartIndex(ctx, data.QueueStart), "failed to set queue start index")
+
 	if len(data.QueuedTriggers) == 0 {
-		k.setQueueLength(ctx, 0)
+		must(k.setQueueLength(ctx, 0), "failed to initialize queue length")
 	}
 
 	for _, queuedTrigger := range data.QueuedTriggers {
-		k.Enqueue(ctx, queuedTrigger)
+		must(k.Enqueue(ctx, queuedTrigger), "failed to enqueue trigger")
 	}
 
 	for _, trigger := range data.Triggers {
-		k.SetTrigger(ctx, trigger)
-		k.SetEventListener(ctx, trigger)
+		must(k.SetTrigger(ctx, trigger), fmt.Sprintf("failed to set trigger %d", trigger.Id))
+		must(k.SetEventListener(ctx, trigger), fmt.Sprintf("failed to set event listener for trigger %d", trigger.Id))
 	}
 }

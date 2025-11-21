@@ -35,8 +35,9 @@ func NewKeeper(
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		cdc:    cdc,
-		router: router,
+		cdc:          cdc,
+		router:       router,
+		StoreService: storeService,
 		// Primary trigger storage
 		TriggersMap: collections.NewMap(sb, types.TriggerKeyPrefix, "triggers", collections.Uint64Key, codec.CollValue[types.Trigger](cdc)),
 		// Event listeners with custom key codec for compatibility

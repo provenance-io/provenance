@@ -55,7 +55,9 @@ func (m Migrator) DeleteGasLimits(ctx sdk.Context, logger log.Logger) {
 
 	logger.Info(fmt.Sprintf("Deleting %d trigger gas limits.", len(toDelete)))
 	for _, key := range toDelete {
-		store.Delete(key)
+		if err := store.Delete(key); err != nil {
+			logger.Error("Failed to delete gas limit key", "key", key, "err", err)
+		}
 	}
 	logger.Info(fmt.Sprintf("Done deleting %d trigger gas limits.", len(toDelete)))
 }
