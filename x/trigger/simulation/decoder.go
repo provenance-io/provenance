@@ -38,6 +38,9 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			return fmt.Sprintf("QueuedTrigger: A:[%v] B:[%v]\n", attribA, attribB)
 		case bytes.Equal(kvA.Key[:1], types.NextTriggerIDKey):
 			var attribA, attribB uint64
+			if len(kvA.Key) < 1+types.TriggerIDLength {
+				return fmt.Sprintf("invalid trigger key length: %d", len(kvA.Key))
+			}
 			attribA = types.GetTriggerIDFromBytes(kvA.Value)
 			attribB = types.GetTriggerIDFromBytes(kvB.Value)
 
