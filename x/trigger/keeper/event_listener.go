@@ -45,7 +45,7 @@ func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigge
 	if err != nil {
 		return false, err
 	}
-	key := collections.Join3(eventHash, event.GetEventOrder(), trigger.GetId())
+	key := triggertypes.GetEventListenerKey(eventHash, event.GetEventOrder(), trigger.GetId())
 
 	exists, err := k.EventListeners.Has(ctx, key)
 	if err != nil {
@@ -69,8 +69,7 @@ func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, order uint64
 	if err != nil {
 		return triggertypes.Trigger{}, err
 	}
-	key := collections.Join3(eventHash, order, triggerID)
-
+	key := triggertypes.GetEventListenerKey(eventHash, order, triggerID)
 	exists, err := k.EventListeners.Has(ctx, key)
 	if err != nil {
 		return triggertypes.Trigger{}, err
@@ -127,7 +126,7 @@ func (k Keeper) HasEventListener(ctx sdk.Context, eventName string, order uint64
 	if err != nil {
 		return false, err
 	}
-	key := collections.Join3(eventHash, order, triggerID)
+	key := triggertypes.GetEventListenerKey(eventHash, order, triggerID)
 	return k.EventListeners.Has(ctx, key)
 }
 

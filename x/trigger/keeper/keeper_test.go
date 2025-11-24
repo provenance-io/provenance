@@ -6,7 +6,6 @@ import (
 	"time"
 
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -32,6 +31,7 @@ type KeeperTestSuite struct {
 	ctx         sdk.Context
 	queryClient types.QueryClient
 	msgServer   types.MsgServer
+	keeper      keeper.Keeper
 
 	accountAddr      sdk.AccAddress
 	accountKey       *secp256k1.PrivKey
