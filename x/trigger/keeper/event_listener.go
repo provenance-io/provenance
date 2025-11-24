@@ -130,7 +130,7 @@ func (k Keeper) HasEventListener(ctx sdk.Context, eventName string, order uint64
 	return k.EventListeners.Has(ctx, key)
 }
 
-// RemoveAllEventListenersForTrigger removes all event listeners for a specific trigger
+// RemoveEventListenerForTriggerID removes all event listeners for a specific trigger
 func (k Keeper) RemoveEventListenerForTriggerID(ctx sdk.Context, triggerID uint64) error {
 	trigger, err := k.GetTrigger(ctx, triggerID)
 	if err != nil {
