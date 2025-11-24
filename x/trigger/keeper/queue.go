@@ -61,15 +61,10 @@ func (k Keeper) Enqueue(ctx sdk.Context, item types.QueuedTrigger) error {
 		length = 0
 	}
 
-	// Calculate position for new item
 	position := startIndex + length
-
-	// Store the item
 	if err := k.Queue.Set(ctx, position, item); err != nil {
 		return err
 	}
-
-	// Update queue length
 	return k.QueueLength.Set(ctx, length+1)
 }
 
@@ -79,24 +74,20 @@ func (k Keeper) Dequeue(ctx sdk.Context) {
 		panic("unable to dequeue from empty queue.")
 	}
 
-	// Get the start index
 	startIndex, err := k.QueueStartIndex.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	// Get the queue length
 	length, err := k.QueueLength.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	// Remove the first item
 	if err := k.Queue.Remove(ctx, startIndex); err != nil {
 		panic(err)
 	}
 
-	// Update queue metadata
 	newStart := startIndex + 1
 	newLength := length - 1
 
