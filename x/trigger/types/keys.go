@@ -139,6 +139,9 @@ func GetQueueIndexBytes(index uint64) (queueIndexBz []byte) {
 
 // GetTriggerIDFromBytes returns triggerID in uint64 format from a byte array
 func GetTriggerIDFromBytes(bz []byte) TriggerID {
+	if len(bz) < TriggerIDLength {
+		panic(fmt.Sprintf("insufficient bytes for trigger ID: got %d, need %d", len(bz), TriggerIDLength))
+	}
 	return binary.BigEndian.Uint64(bz)
 }
 

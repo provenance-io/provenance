@@ -180,7 +180,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		// This should only ever happen if using a pre-defined value for the trigger id.
 		panic(fmt.Errorf("cannot run sims with a %s param [%d] larger than max int (%d)", TriggerID, triggerID, math.MaxInt))
 	}
-	triggerIDInt := int(triggerID)
+	triggerIDInt := int(triggerID) //nolint:gosec // safe uint64 -> int conversion after explicit bound check.
 	triggerIDs, queueTriggerIDs := randomTriggerAndQueueIDs(simState.Rand, numIniTrig, numIniTrigQueued, triggerIDInt)
 	var triggers []types.Trigger
 	simState.AppParams.GetOrGenerate(
