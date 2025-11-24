@@ -75,6 +75,7 @@ func (k Keeper) GetAllTriggers(ctx sdk.Context) (triggers []types.Trigger, err e
 	return
 }
 
+// HasTrigger check trigger id exists.
 func (k Keeper) HasTrigger(ctx sdk.Context, id uint64) (bool, error) {
 	_, err := k.TriggersMap.Get(ctx, id)
 	if errors.Is(err, collections.ErrNotFound) {
@@ -88,27 +89,23 @@ func (k Keeper) HasTrigger(ctx sdk.Context, id uint64) (bool, error) {
 
 // NewTriggerWithID Creates a trigger with the latest ID.
 func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *codectypes.Any, actions []*codectypes.Any) (types.Trigger, error) {
-	// Get current ID
 	currentID, err := k.NextTriggerID.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return types.Trigger{}, err
 	}
 
 	if errors.Is(err, collections.ErrNotFound) {
-		currentID = 0 // Start from 1
+		currentID = 0
 	}
 
-	// Calculate next ID
 	nextID := currentID + 1
 
-	// Set the next ID for future use
 	if err := k.NextTriggerID.Set(ctx, nextID); err != nil {
 		return types.Trigger{}, err
 	}
 
-	// Create trigger with the new ID (currentID + 1)
 	trigger := types.Trigger{
-		Id:      nextID, // Use nextID, not currentID
+		Id:      nextID,
 		Owner:   owner,
 		Event:   event,
 		Actions: actions,
@@ -138,7 +135,7 @@ func (k Keeper) getTriggerID(ctx sdk.Context) (triggerID types.TriggerID, err er
 	currentID, err := k.NextTriggerID.Get(ctx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return 0, nil // No triggers created yet
+			return 0, nil
 		}
 		return 0, err
 	}
