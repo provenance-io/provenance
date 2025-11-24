@@ -250,7 +250,7 @@ func (s *KeeperTestSuite) TestCollectionsRemoveAllEventListenersForTrigger() {
 	s.Require().NoError(k.SetTrigger(ctx, trigger), "failed to set trigger for RemoveAllEventListeners test")
 	s.Require().NoError(k.SetEventListener(ctx, trigger), "failed to set event listener for trigger")
 
-	err := k.RemoveAllEventListenersForTrigger(ctx, trigger.Id)
+	err := k.RemoveEventListenerForTriggerID(ctx, trigger.Id)
 	s.Require().NoError(err, "failed to remove all event listeners for trigger")
 
 	eventI, _ := trigger.GetTriggerEventI()

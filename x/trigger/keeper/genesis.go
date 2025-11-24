@@ -39,25 +39,48 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(err)
 	}
 
-	must := func(err error, msg string) {
-		if err != nil {
-			panic(fmt.Errorf("%s: %w", msg, err))
+	// set trigger ID
+	if err := k.setTriggerID(ctx, data.TriggerId); err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Failed to set trigger ID: %v", err))
+		return
+	}
+
+	// set queue start index
+	if err := k.setQueueStartIndex(ctx, data.QueueStart); err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Failed to set queue start index: %v", err))
+		return
+	}
+
+	// initialize queue length if needed
+	if len(data.QueuedTriggers) == 0 {
+		if err := k.setQueueLength(ctx, 0); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Failed to initialize queue length: %v", err))
+			return
 		}
 	}
 
-	must(k.setTriggerID(ctx, data.TriggerId), "failed to set trigger ID")
-	must(k.setQueueStartIndex(ctx, data.QueueStart), "failed to set queue start index")
-
-	if len(data.QueuedTriggers) == 0 {
-		must(k.setQueueLength(ctx, 0), "failed to initialize queue length")
-	}
-
+	// enqueue queued triggers
 	for _, queuedTrigger := range data.QueuedTriggers {
-		must(k.Enqueue(ctx, queuedTrigger), "failed to enqueue trigger")
+		if err := k.Enqueue(ctx, queuedTrigger); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Failed to enqueue trigger: %v", err))
+			return
+		}
 	}
 
+	// set triggers and event listeners
 	for _, trigger := range data.Triggers {
-		must(k.SetTrigger(ctx, trigger), fmt.Sprintf("failed to set trigger %d", trigger.Id))
-		must(k.SetEventListener(ctx, trigger), fmt.Sprintf("failed to set event listener for trigger %d", trigger.Id))
+		if err := k.SetTrigger(ctx, trigger); err != nil {
+			ctx.Logger().Error(fmt.Sprintf(
+				"Failed to set trigger %d: %v", trigger.Id, err,
+			))
+			return
+		}
+
+		if err := k.SetEventListener(ctx, trigger); err != nil {
+			ctx.Logger().Error(fmt.Sprintf(
+				"Failed to set event listener for trigger %d: %v", trigger.Id, err,
+			))
+			return
+		}
 	}
 }

@@ -74,25 +74,16 @@ var (
 //  - GasLimitKeyPrefix = []byte{0x04}
 
 // GetEventListenerKey converts an event name, order, and trigger ID into an event registry key format.
-func GetEventListenerKey(eventName string, order uint64, id TriggerID) []byte {
-	triggerIDBytes := make([]byte, TriggerIDLength)
-	binary.BigEndian.PutUint64(triggerIDBytes, id)
-	orderBytes := make([]byte, EventOrderLength)
-	binary.BigEndian.PutUint64(orderBytes, order)
-
-	key := GetEventListenerPrefix(eventName)
-	key = append(key, orderBytes...)
-	key = append(key, triggerIDBytes...)
-	return key
+func GetEventListenerKey(eventHash []byte, order uint64, id TriggerID) collections.Triple[[]byte, uint64, uint64] {
+	if len(eventHash) == 0 {
+		panic("invalid event name: ")
+	}
+	return collections.Join3(eventHash, order, id)
 }
 
-// GetEventListenerPrefix converts an event name into a prefix for event registry.
-func GetEventListenerPrefix(eventName string) []byte {
-	eventNameBytes := GetEventNameBytes(eventName)
-
-	key := EventListenerKeyPrefix.Bytes()
-	key = append(key, eventNameBytes...)
-	return key
+func GetEventListenerPrefix(eventHash []byte) []byte {
+	prefix := EventListenerKeyPrefix.Bytes()
+	return append(prefix, eventHash...)
 }
 
 // GetTriggerKey converts a trigger into key format.
@@ -100,7 +91,7 @@ func GetTriggerKey(id TriggerID) []byte {
 	triggerIDBytes := make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBytes, id)
 
-	key := []byte(TriggerKeyPrefix)
+	key := TriggerKeyPrefix.Bytes()
 	key = append(key, triggerIDBytes...)
 	return key
 }

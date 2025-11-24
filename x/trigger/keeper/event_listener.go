@@ -3,6 +3,7 @@ package keeper
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"strings"
 
 	"cosmossdk.io/collections"
@@ -16,14 +17,21 @@ import (
 func (k Keeper) SetEventListener(ctx sdk.Context, trigger triggertypes.Trigger) error {
 	event, err := trigger.GetTriggerEventI()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get trigger event for trigger %d: %w", trigger.Id, err)
 	}
+
 	eventHash, err := getEventNameHash(event.GetEventPrefix())
 	if err != nil {
-		return err
+		return fmt.Errorf("could not compute event hash for trigger %d: %w", trigger.Id, err)
 	}
-	key := collections.Join3(eventHash, event.GetEventOrder(), trigger.GetId())
-	return k.EventListeners.Set(ctx, key)
+
+	key := triggertypes.GetEventListenerKey(eventHash, event.GetEventOrder(), trigger.GetId())
+
+	if err := k.EventListeners.Set(ctx, key); err != nil {
+		return fmt.Errorf("failed to store event listener for trigger %d: %w", trigger.Id, err)
+	}
+
+	return nil
 }
 
 // RemoveEventListener Removes the trigger from the event listener store.
@@ -124,7 +132,7 @@ func (k Keeper) HasEventListener(ctx sdk.Context, eventName string, order uint64
 }
 
 // RemoveAllEventListenersForTrigger removes all event listeners for a specific trigger
-func (k Keeper) RemoveAllEventListenersForTrigger(ctx sdk.Context, triggerID uint64) error {
+func (k Keeper) RemoveEventListenerForTriggerID(ctx sdk.Context, triggerID uint64) error {
 	trigger, err := k.GetTrigger(ctx, triggerID)
 	if err != nil {
 		return err
