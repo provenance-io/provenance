@@ -43,10 +43,7 @@ func (k Keeper) Triggers(ctx context.Context, req *types.QueryTriggersRequest) (
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	triggers, pageRes, err := query.CollectionPaginate[uint64, types.Trigger, *collections.Map[uint64, types.Trigger], types.Trigger](
-		sdkCtx,
-		&k.TriggersMap,
-		pagination,
+	triggers, pageRes, err := query.CollectionPaginate(sdkCtx, &k.TriggersMap, pagination,
 		func(key uint64, trigger types.Trigger) (types.Trigger, error) {
 			trigger.Id = key
 			return trigger, nil
