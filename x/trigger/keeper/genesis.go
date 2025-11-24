@@ -30,6 +30,13 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	queueLength, err := k.GetQueueLength(ctx)
+	if err == nil && queueLength != uint64(len(queue)) {
+		ctx.Logger().Warn("Queue length mismatch during export",
+			"stored", queueLength,
+			"actual", len(queue))
+	}
+
 	return types.NewGenesisState(triggerID, queueStartIndex, triggers, queue)
 }
 
@@ -39,48 +46,35 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(err)
 	}
 
-	// set trigger ID
+	// Set trigger ID
 	if err := k.setTriggerID(ctx, data.TriggerId); err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Failed to set trigger ID: %v", err))
-		return
+		panic(fmt.Sprintf("Failed to set trigger ID: %v", err))
 	}
 
-	// set queue start index
+	// Set queue start index
 	if err := k.setQueueStartIndex(ctx, data.QueueStart); err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Failed to set queue start index: %v", err))
-		return
+		panic(fmt.Sprintf("Failed to set queue start index: %v", err))
 	}
 
-	// initialize queue length if needed
-	if len(data.QueuedTriggers) == 0 {
-		if err := k.setQueueLength(ctx, 0); err != nil {
-			ctx.Logger().Error(fmt.Sprintf("Failed to initialize queue length: %v", err))
-			return
-		}
+	// FIX: Initialize queue length BEFORE enqueuing
+	if err := k.setQueueLength(ctx, 0); err != nil {
+		panic(fmt.Sprintf("Failed to initialize queue length: %v", err))
 	}
 
-	// enqueue queued triggers
+	// Enqueue queued triggers
 	for _, queuedTrigger := range data.QueuedTriggers {
 		if err := k.Enqueue(ctx, queuedTrigger); err != nil {
-			ctx.Logger().Error(fmt.Sprintf("Failed to enqueue trigger: %v", err))
-			return
+			panic(fmt.Sprintf("Failed to enqueue trigger: %v", err))
 		}
 	}
 
-	// set triggers and event listeners
+	// Set triggers and event listeners
 	for _, trigger := range data.Triggers {
 		if err := k.SetTrigger(ctx, trigger); err != nil {
-			ctx.Logger().Error(fmt.Sprintf(
-				"Failed to set trigger %d: %v", trigger.Id, err,
-			))
-			return
+			panic(fmt.Sprintf("Failed to set trigger %d: %v", trigger.Id, err))
 		}
-
 		if err := k.SetEventListener(ctx, trigger); err != nil {
-			ctx.Logger().Error(fmt.Sprintf(
-				"Failed to set event listener for trigger %d: %v", trigger.Id, err,
-			))
-			return
+			panic(fmt.Sprintf("Failed to set event listener for trigger %d: %v", trigger.Id, err))
 		}
 	}
 }
