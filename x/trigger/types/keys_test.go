@@ -10,22 +10,24 @@ import (
 )
 
 func TestGetEventListenerKey(t *testing.T) {
-	key1 := GetEventListenerKey("event", 5, 1)
-	key2 := GetEventListenerKey("event", 2, 0)
+	eventHash := GetEventNameBytes("event") // correctly hashed
+	key1 := GetEventListenerKey(eventHash, 5, 1)
+	key2 := GetEventListenerKey(eventHash, 2, 0)
 
-	assert.EqualValues(t, EventListenerKeyPrefix, key1[0:1], "should have correct prefix on GetEventListenerKey for key1")
-	assert.EqualValues(t, EventListenerKeyPrefix, key2[0:1], "should have correct prefix on GetEventListenerKey for key2")
-	assert.EqualValues(t, GetEventNameBytes("event"), key1[1:33], "should have correct name bytes in GetEventListenerKey for key1")
-	assert.EqualValues(t, GetEventNameBytes("event"), key2[1:33], "should have correct name bytes in GetEventListenerKey for key2")
-	assert.EqualValues(t, int(5), int(binary.BigEndian.Uint64(key1[33:41])), "should have correct order bytes in GetEventListenerKey for key1")
-	assert.EqualValues(t, int(2), int(binary.BigEndian.Uint64(key2[33:41])), "should have correct order bytes in GetEventListenerKey for key2")
-	assert.EqualValues(t, int(1), int(binary.BigEndian.Uint64(key1[41:49])), "should have correct trigger id bytes in GetEventListenerKey for key1")
-	assert.EqualValues(t, int(0), int(binary.BigEndian.Uint64(key2[41:49])), "should have correct trigger id bytes in GetEventListenerKey for key2")
-	assert.PanicsWithValue(t, "invalid event name: ", func() { GetEventListenerKey("", 2, 0) }, "should panic with error message when given invalid event name")
+	assert.EqualValues(t, eventHash, key1.K1(), "should have correct event hash for key1")
+	assert.EqualValues(t, eventHash, key2.K1(), "should have correct event hash for key2")
+	assert.EqualValues(t, eventHash, key1.K1(), "should have correct name bytes in GetEventListenerKey for key1")
+	assert.EqualValues(t, eventHash, key2.K1(), "should have correct name bytes in GetEventListenerKey for key2")
+	assert.EqualValues(t, int(5), key1.K2(), "should have correct order bytes in GetEventListenerKey for key1")
+	assert.EqualValues(t, int(2), key2.K2(), "should have correct order bytes in GetEventListenerKey for key2")
+	assert.EqualValues(t, int(1), key1.K3(), "should have correct trigger id bytes in GetEventListenerKey for key1")
+	assert.EqualValues(t, int(0), key2.K3(), "should have correct trigger id bytes in GetEventListenerKey for key2")
+	assert.PanicsWithValue(t, "invalid event name: ", func() { GetEventListenerKey([]byte(""), 2, 0) }, "should panic with error message when given invalid event name")
 }
 
 func TestGetEventListenerPrefix(t *testing.T) {
-	key := GetEventListenerPrefix("event")
+	eventHash := GetEventNameBytes("event")
+	key := GetEventListenerPrefix(eventHash)
 
 	assert.EqualValues(t, EventListenerKeyPrefix, key[0:1], "should receive correct prefix for GetEventListenerPrefix")
 	assert.EqualValues(t, GetEventNameBytes("event"), key[1:33], "should receive correct name bytes for GetEventListenerPrefix")
