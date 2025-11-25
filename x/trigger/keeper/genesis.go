@@ -56,19 +56,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(fmt.Sprintf("Failed to set queue start index: %v", err))
 	}
 
-	// FIX: Initialize queue length BEFORE enqueuing
-	if err := k.setQueueLength(ctx, 0); err != nil {
-		panic(fmt.Sprintf("Failed to initialize queue length: %v", err))
+	queueLength := uint64(len(data.QueuedTriggers))
+	if err := k.setQueueLength(ctx, queueLength); err != nil {
+		panic(fmt.Sprintf("Failed to set queue length: %v", err))
 	}
 
-	// Enqueue queued triggers
 	for _, queuedTrigger := range data.QueuedTriggers {
 		if err := k.Enqueue(ctx, queuedTrigger); err != nil {
 			panic(fmt.Sprintf("Failed to enqueue trigger: %v", err))
 		}
 	}
 
-	// Set triggers and event listeners
 	for _, trigger := range data.Triggers {
 		if err := k.SetTrigger(ctx, trigger); err != nil {
 			panic(fmt.Sprintf("Failed to set trigger %d: %v", trigger.Id, err))

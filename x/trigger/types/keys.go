@@ -127,6 +127,9 @@ func GetQueueLengthKey() []byte {
 
 // GetQueueIndexFromBytes returns the index in uint64 format from a byte array
 func GetQueueIndexFromBytes(bz []byte) uint64 {
+	if len(bz) < QueueIndexLength {
+		return 0
+	}
 	return binary.BigEndian.Uint64(bz)
 }
 
@@ -140,7 +143,7 @@ func GetQueueIndexBytes(index uint64) (queueIndexBz []byte) {
 // GetTriggerIDFromBytes returns triggerID in uint64 format from a byte array
 func GetTriggerIDFromBytes(bz []byte) TriggerID {
 	if len(bz) < TriggerIDLength {
-		panic(fmt.Sprintf("insufficient bytes for trigger ID: got %d, need %d", len(bz), TriggerIDLength))
+		return 0
 	}
 	return binary.BigEndian.Uint64(bz)
 }
