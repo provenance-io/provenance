@@ -115,7 +115,7 @@ func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *codectype
 
 // setTriggerID Sets the next trigger ID.
 func (k Keeper) setTriggerID(ctx sdk.Context, triggerID types.TriggerID) error {
-	return k.NextTriggerID.Set(ctx, triggerID-1) // Store as current, so next is triggerID
+	return k.NextTriggerID.Set(ctx, triggerID)
 }
 
 // getNextTriggerID Gets the latest trigger ID and updates the next one.
