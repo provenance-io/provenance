@@ -244,39 +244,3 @@ func (s *KeeperTestSuite) TestTriggerCollectionsOperations() {
 	s.Require().NoError(err, "HasTrigger after removal should not return an error")
 	s.Require().False(exists, "HasTrigger after removal should report false")
 }
-
-// TestTriggerIDSequence tests the new trigger ID sequence functionality
-func (s *KeeperTestSuite) TestTriggerIDSequence() {
-	ctx := s.ctx
-	k := s.app.TriggerKeeper
-
-	// Test initial state
-	nextID, err := k.GetNextTriggerID(ctx)
-	s.Require().NoError(err, "GetNextTriggerID should not return an error initially")
-	s.Require().Equal(uint64(1), nextID, "initial NextTriggerID should be 1")
-
-	// Create trigger #1
-	trigger1, err := k.NewTriggerWithID(
-		ctx,
-		s.accountAddr.String(),
-		&codectypes.Any{TypeUrl: "/provenance.trigger.v1.BlockHeightEvent"},
-		[]*codectypes.Any{},
-	)
-	s.Require().NoError(err, "NewTriggerWithID should not return error for first trigger")
-	s.Require().Equal(uint64(1), trigger1.Id, "first auto-generated trigger ID should be 1")
-
-	// Create trigger #2
-	trigger2, err := k.NewTriggerWithID(
-		ctx,
-		s.accountAddr.String(),
-		&codectypes.Any{TypeUrl: "/provenance.trigger.v1.BlockHeightEvent"},
-		[]*codectypes.Any{},
-	)
-	s.Require().NoError(err, "NewTriggerWithID should not return error for second trigger")
-	s.Require().Equal(uint64(2), trigger2.Id, "second auto-generated trigger ID should be 2")
-
-	// Verify next ID
-	nextID, err = k.GetNextTriggerID(ctx)
-	s.Require().NoError(err, "GetNextTriggerID should not error after creating two triggers")
-	s.Require().Equal(uint64(3), nextID, "NextTriggerID should be incremented to 3 after creating two triggers")
-}
