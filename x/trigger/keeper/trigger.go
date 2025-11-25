@@ -88,56 +88,50 @@ func (k Keeper) HasTrigger(ctx sdk.Context, id uint64) (bool, error) {
 }
 
 // NewTriggerWithID Creates a trigger with the latest ID.
-func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *codectypes.Any, actions []*codectypes.Any) (types.Trigger, error) {
-	currentID, err := k.NextTriggerID.Get(ctx)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return types.Trigger{}, err
-	}
-
-	if errors.Is(err, collections.ErrNotFound) {
-		currentID = 0
-	}
-
-	nextID := currentID + 1
-
-	if err := k.NextTriggerID.Set(ctx, nextID); err != nil {
+func (k Keeper) NewTriggerWithID(
+	ctx sdk.Context,
+	owner string,
+	event *codectypes.Any,
+	actions []*codectypes.Any,
+) (types.Trigger, error) {
+	// Get the next ID (and increment the store internally)
+	currentID, err := k.getNextTriggerID(ctx)
+	if err != nil {
 		return types.Trigger{}, err
 	}
 
 	trigger := types.Trigger{
-		Id:      nextID,
+		Id:      currentID,
 		Owner:   owner,
 		Event:   event,
 		Actions: actions,
 	}
+
 	return trigger, nil
 }
 
 // setTriggerID Sets the next trigger ID.
 func (k Keeper) setTriggerID(ctx sdk.Context, triggerID types.TriggerID) error {
-	return k.NextTriggerID.Set(ctx, triggerID-1)
+	return k.NextTriggerID.Set(ctx, triggerID)
 }
 
 // getNextTriggerID Gets the latest trigger ID and updates the next one.
-func (k Keeper) GetNextTriggerID(ctx sdk.Context) (triggerID types.TriggerID, err error) {
-	currentID, err := k.NextTriggerID.Get(ctx)
+func (k Keeper) getNextTriggerID(ctx sdk.Context) (types.TriggerID, error) {
+	nextID, err := k.getTriggerID(ctx)
 	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return 1, nil // First ID will be 1
-		}
 		return 0, err
 	}
-	return currentID + 1, nil
+	if err := k.setTriggerID(ctx, nextID+1); err != nil {
+		return 0, err
+	}
+	return nextID, nil
 }
 
 // getTriggerID Gets the latest trigger ID.
-func (k Keeper) getTriggerID(ctx sdk.Context) (triggerID types.TriggerID, err error) {
-	currentID, err := k.NextTriggerID.Get(ctx)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return 1, nil
-		}
-		return 0, err
+func (k Keeper) getTriggerID(ctx sdk.Context) (types.TriggerID, error) {
+	id, err := k.NextTriggerID.Get(ctx)
+	if errors.Is(err, collections.ErrNotFound) {
+		return 1, nil
 	}
-	return currentID, nil
+	return id, err
 }
