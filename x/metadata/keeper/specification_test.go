@@ -847,7 +847,6 @@ func (s *SpecKeeperTestSuite) TestValidateWriteRecordSpecification() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := s.app.MetadataKeeper.ValidateWriteRecordSpecification(s.FreshCtx(), tt.existing, *tt.proposed)
 			if err != nil {
@@ -1184,7 +1183,6 @@ func (s *SpecKeeperTestSuite) TestValidateWriteContractSpecification() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := s.app.MetadataKeeper.ValidateWriteContractSpecification(s.FreshCtx(), tt.existing, *tt.proposed)
 			if err != nil {

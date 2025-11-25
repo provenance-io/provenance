@@ -193,9 +193,7 @@ func (s *ScopeTestSuite) TestScopeAddAccess() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-
 			tt.scope.AddDataAccess(tt.dataAccess)
 			require.Equal(t, tt.scope.DataAccess, tt.expected)
 		})
@@ -247,9 +245,7 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-
 			tt.scope.RemoveDataAccess(tt.dataAccess)
 			require.Equal(t, tt.scope.DataAccess, tt.expected)
 		})
@@ -685,7 +681,6 @@ func (s *ScopeTestSuite) TestRecordValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.record.ValidateBasic()
 			if (err != nil) != tt.wantErr {
@@ -695,7 +690,6 @@ func (s *ScopeTestSuite) TestRecordValidateBasic() {
 			if tt.wantErr {
 				require.Equal(t, tt.want, err.Error())
 			}
-
 		})
 	}
 }
@@ -714,8 +708,10 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 		{
 			"valid session",
 			NewSession("name", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				&AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE},
+			},
+				&AuditFields{
+					CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 					UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 					Message: "message",
 				}),
@@ -724,43 +720,50 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 		{
 			"valid session - no audit",
 			NewSession("name", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE},
+			}, nil),
 			"",
 		},
 		{
 			"valid session with generic party type 1",
 			NewSession("session_with_generic_1", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_1}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_1},
+			}, nil),
 			"",
 		},
 		{
 			"valid session with generic party type 2",
 			NewSession("session_with_generic_2", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_2}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_2},
+			}, nil),
 			"",
 		},
 		{
 			"valid session with generic party type 3",
 			NewSession("session_with_generic_3", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_3}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_3},
+			}, nil),
 			"",
 		},
 		{
 			"valid session with generic party type 4",
 			NewSession("session_with_generic_4", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_4}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_4},
+			}, nil),
 			"",
 		},
 		{
 			"valid session with generic party type 5",
 			NewSession("session_with_generic_5", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_5}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_5},
+			}, nil),
 			"",
 		},
 		{
 			"valid session with generic party type 6",
 			NewSession("session_with_generic_6", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_6}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_GENERIC_6},
+			}, nil),
 			"",
 		},
 		{
@@ -768,25 +771,29 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 			NewSession("session_mixed_parties", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE},
 				{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Role: PartyType_PARTY_TYPE_GENERIC_1},
-				{Address: "cosmos1xcy3els9ua75kdm783c3qu0rfa2eplesldfevn", Role: PartyType_PARTY_TYPE_GENERIC_3}}, nil),
+				{Address: "cosmos1xcy3els9ua75kdm783c3qu0rfa2eplesldfevn", Role: PartyType_PARTY_TYPE_GENERIC_3},
+			}, nil),
 			"",
 		},
 		{
 			"invalid session, invalid prefix",
 			NewSession("my_perfect_session", recordID, contractSpec, []Party{
-				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
+				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN},
+			}, nil),
 			"invalid session identifier (expected: session, got record)",
 		},
 		{
 			"invalid session, invalid party address",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
-				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
+				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN},
+			}, nil),
 			"invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			"invalid session, invalid party type",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED},
+			}, nil),
 			"invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
 		},
 		{
@@ -797,14 +804,17 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 		{
 			"invalid session, invalid spec id",
 			NewSession("my_perfect_session", sessionID, recordID, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE},
+			}, nil),
 			"invalid contract specification identifier (expected: contractspec, got record)",
 		},
 		{
 			"Invalid session, max audit message length too long",
 			NewSession("name", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				&AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE},
+			},
+				&AuditFields{
+					CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 					UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 					Message: "messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage  1",
 				}),
@@ -813,7 +823,6 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.session.ValidateBasic()
 			if len(tc.errMsg) > 0 {
@@ -2067,7 +2076,6 @@ func TestNetAssetValueValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.nav.Validate()
 			if len(tt.expErr) > 0 {

@@ -136,7 +136,6 @@ func TestAccessListByNames(t *testing.T) {
 		{"Multiple unknown values", "foo,bar,baz", AccessList{Access_Unknown, Access_Unknown, Access_Unknown}, true, false},
 	}
 	for i, tc := range cases {
-		i, tc := i, tc
 		t.Run(tc.name, func(t *testing.T) {
 			result := AccessListByNames(tc.accessNames)
 			if tc.expectEqual {
@@ -168,7 +167,6 @@ func TestAccessOneOf(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.expectPass != tc.permission.IsOneOf(tc.permissions...) {
 				require.Fail(t, "failed %s", tc.name)
@@ -189,7 +187,6 @@ func TestValidatePermissions(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		i, tc := i, tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := validateAccess(tc.permissions)
 			if tc.expectPass {

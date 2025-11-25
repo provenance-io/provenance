@@ -144,7 +144,6 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
@@ -474,7 +473,6 @@ func (suite *HooksTestSuite) TestAcks() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":2}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {

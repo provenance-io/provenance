@@ -174,7 +174,6 @@ func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -189,6 +188,7 @@ func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 func sovSpecTests(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
+
 func encodeVarintSpecTests(dAtA []byte, offset int, v uint64) int {
 	offset -= sovSpecTests(v)
 	base := offset
@@ -219,10 +219,12 @@ func (*WeirdSource) isInputSpecification_Source()    {}
 func (m *WeirdSource) Size() (n int) {
 	return 1 + sovSpecTests(uint64(n))
 }
+
 func (m *WeirdSource) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
+
 func (m *WeirdSource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Value != 0 {
@@ -439,7 +441,6 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -694,7 +695,6 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -833,7 +833,6 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -1121,7 +1120,6 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.desc.ValidateBasic("")
 			if err != nil {
