@@ -414,8 +414,8 @@ func MakeFlatFeesParams() flatfeestypes.Params {
 	return flatfeestypes.Params{
 		DefaultCost: feeDefCoin(150),
 		ConversionFactor: flatfeestypes.ConversionFactor{
-			// 1 hash = $0.036, so 1000000000nhash = 36musd
-			DefinitionAmount: feeDefCoin(36),
+			// 1 hash = $0.030, so 1000000000nhash = 30musd
+			DefinitionAmount: feeDefCoin(30),
 			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1000000000),
 		},
 	}
