@@ -1424,7 +1424,7 @@ func TestLogCostGrid(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
 	err := streamImportLedgerData(s.ctx, s.app.LedgerKeeper)
-	s.GetLogOutput("importRegistryData")
+	s.GetLogOutput("streamImportLedgerData")
 	s.Require().NoError(err)
 }
 
