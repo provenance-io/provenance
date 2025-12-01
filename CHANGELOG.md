@@ -57,8 +57,8 @@ See: [.changelog/unreleased](.changelog/unreleased)
 ### Features
 
 * Publish Docker images to GitHub Container Registry (GHCR) [#904](https://github.com/provenance-io/provenance/issues/904).
-* enabled module_query_safe option on deterministic queries [#2005](https://github.com/provenance-io/provenance/issues/2005).
-* support for flexible party types added [#2149](https://github.com/provenance-io/provenance/issues/2149).
+* Enabled `module_query_safe` option on deterministic queries [#2005](https://github.com/provenance-io/provenance/issues/2005).
+* Support for flexible party types added [#2149](https://github.com/provenance-io/provenance/issues/2149).
 * Charge fees based only on `Msg` type (and not gas) [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
   Gas is still monitored to prevent DDOS and is still limited to 4,000,000 per transaction and 60,000,000 per block.
 * Create the `x/flatfees` module for managing the costs of msgs [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
@@ -76,7 +76,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 ### Improvements
 
 * Refactor test setups to use testutil.MutateGenesisState [#2013](https://github.com/provenance-io/provenance/issues/2013).
-* Added documentation to NetAssetValues fields in proto clarifying that amounts are in `usd` units, where 1usd =$1.00 [#2291](https://github.com/provenance-io/provenance/issues/2291).
+* Added documentation on NetAssetValues fields in proto clarifying that amounts in `usd` units are milli-dollars, where 1usd = $0.001 ([#2291](https://github.com/provenance-io/provenance/issues/2291), [PR 2540](https://github.com/provenance-io/provenance/pull/2540)).
 * Triggers no longer track or use the extra gas provided when creating the trigger [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
   Users pay for the trigger msg execution when creating the trigger (based on msg type).
 * Renamed `pioconfig` stuff to use `Prov` instead of `Provenance` [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
@@ -88,9 +88,8 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * Recognize 9525nhash as old gas prices too [PR 2517](https://github.com/provenance-io/provenance/pull/2517).
 * Fix how the ledger bulk endpoint charges fees [PR 2518](https://github.com/provenance-io/provenance/pull/2518).
 * Emit events when a ledger class or class type is created, and when a ledger entry is updated [PR 2522](https://github.com/provenance-io/provenance/pull/2522).
-* Add _NOT_DEFINED values to the ledger enums [PR 2528](https://github.com/provenance-io/provenance/pull/2528).
+* Add `_NOT_DEFINED` values to the ledger enums [PR 2528](https://github.com/provenance-io/provenance/pull/2528).
 * Set the cost of creating a vault [PR 2536](https://github.com/provenance-io/provenance/pull/2536).
-* Changed documentation on NetAssetValues fields in proto clarifying that amounts in `usd` units are milli-dollars, where 1usd = $0.001 [PR 2540](https://github.com/provenance-io/provenance/pull/2540).
 
 ### Bug Fixes
 
@@ -101,7 +100,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * Add missing `AddTxFlagsToCmd` to `gov-root-name` [PR 2456](https://github.com/provenance-io/provenance/pull/2456).
 * Fix vault stargate whitelist type url typo [PR 2479](https://github.com/provenance-io/provenance/pull/2479).
 * Bring back (but deprecate) some msgfees proto stuff [PR 2523](https://github.com/provenance-io/provenance/pull/2523).
-* In the bouvardia-rc2 upgrade, fix the ledger class and the registry entries added with -rc1 [PR 2524](https://github.com/provenance-io/provenance/pull/2524).
+* In the `bouvardia-rc2` upgrade, fix the ledger class and the registry entries added with -rc1 [PR 2524](https://github.com/provenance-io/provenance/pull/2524).
 * In the ledger BulkCreate endpoint, properly get the ledger key to check authorization [PR 2541](https://github.com/provenance-io/provenance/pull/2541).
 * Add missing set denom metadata cli for markers [PR 2543](https://github.com/provenance-io/provenance/pull/2543).
 
