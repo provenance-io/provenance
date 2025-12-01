@@ -36,6 +36,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
+	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 )
 
 type UpgradeTestSuite struct {
@@ -65,8 +66,8 @@ func (s *UpgradeTestSuite) SetupTest() {
 // SetupBouvardia does some setup that needs to be done for some of the bouvardia upgrade tests.
 // TODO: Delete this method with the bouvardia stuff.
 func (s *UpgradeTestSuite) SetupBouvardia() {
-	// Currently, the upgrade_data files have testnet addresses, so we need to use the testnet config.
-	SetConfig(true, false)
+	// Currently, the upgrade_data files have mainnet addresses, so we need to use the mainnet config.
+	SetConfig(false, false)
 	// When all tests are run together (e.g. make test), there's a chance some key addresses have already been seen,
 	// (e.g. the bank module account), and the cache has the wrong HRP for those entries, so we need to disable it.
 	sdk.SetAddrCacheEnabled(false)
@@ -1422,12 +1423,9 @@ func TestLogCostGrid(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
-	// Test that the streaming ledger data import function works correctly.
-	// This test will only work if the gzipped file exists.
 	err := streamImportLedgerData(s.ctx, s.app.LedgerKeeper)
+	s.GetLogOutput("streamImportLedgerData")
 	s.Require().NoError(err)
-
-	s.T().Log("Successfully stream imported ledger data")
 }
 
 func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
@@ -1597,5 +1595,32 @@ func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
 
 func (s *UpgradeTestSuite) TestImportRegistryData() {
 	err := importRegistryData(s.ctx, s.app.RegistryKeeper)
+	s.GetLogOutput("importRegistryData")
 	s.Require().NoError(err, "importRegistryData")
+}
+
+func (s *UpgradeTestSuite) TestRegistryGenesisStateValidation() {
+	filePaths, err := getBouvardiaRegistryDataFilePaths()
+	s.Require().NoError(err, "getBouvardiaRegistryDataFilePaths()")
+
+	for _, filePath := range filePaths {
+		s.Run(filePath, func() {
+			// Read the gzipped file data
+			data, err := upgradeDataFS.ReadFile(filePath)
+			s.Require().NoError(err, "Failed to read file %s", filePath)
+
+			// Create gzip reader for decompression.
+			reader := bytes.NewReader(data)
+			gzReader, err := gzip.NewReader(reader)
+			s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
+			defer gzReader.Close()
+
+			var genesisState registrytypes.GenesisState
+			decoder := json.NewDecoder(gzReader)
+			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
+
+			err = genesisState.Validate()
+			s.Require().NoError(err, "GenesisState validation failed")
+		})
+	}
 }
