@@ -1,57 +1,31 @@
-## [v1.26.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.26.0-rc2) 2025-11-11
+## [v1.26.0](https://github.com/provenance-io/provenance/releases/tag/v1.26.0) 2025-12-01
 
 Provenance Blockchain version `v1.26.0` contains some exciting new features.
 
 **Important**: All users should now use `1nhash` for `gas-prices` and a multiplier of `1.0` (the default).
 
-Fees on Provenance Blockchain are now based on msg type instead of gas.
+Fees on the Provenance Blockchain are now based on msg type instead of gas.
 The standard Tx simulation process now returns the fee amount as gas wanted (i.e. it no longer reflects an actual gas amount).
 By using `1nhash` for gas prices when simulating, existing client(s) will properly set the fee for the Tx.
 
 The new `x/flatfees` module manages the costs of each Msg type.
 Costs are defined in milli-US-dollars (musd).
 A conversion factor (defined in module params) is used to determine the amount of nhash equivalent to the musd cost of a Msg.
-This conversion factor will be constant to start, but can be updated manually (via governance proposal) or in the future, might update automatically.
+This conversion factor will be constant to start but can be updated manually (via governance proposal).
+In the future, the conversion factor might be updated automatically based on market conditions.
 By keeping the conversion factor in-line with the cost of hash, fees will remain constant in terms of how much they cost in US dollars (even though the required amounts of hash might change).
-
-### Improvements
-
-* Recognize 9525nhash as old gas prices too [PR 2517](https://github.com/provenance-io/provenance/pull/2517).
-* Fix how the ledger bulk endpoint charges fees [PR 2518](https://github.com/provenance-io/provenance/pull/2518).
-* Emit events when a ledger class or class type is created, and when a ledger entry is updated [PR 2522](https://github.com/provenance-io/provenance/pull/2522).
-* Add _NOT_DEFINED values to the ledger enums [PR 2528](https://github.com/provenance-io/provenance/pull/2528).
-
-### Bug Fixes
-
-* Bring back (but deprecate) some msgfees proto stuff [PR 2523](https://github.com/provenance-io/provenance/pull/2523).
-* In the bouvardia-rc2 upgrade, fix the ledger class and the registry entries added with -rc1 [PR 2524](https://github.com/provenance-io/provenance/pull/2524).
-
-### Dependencies
-
-* `github.com/provlabs/vault` bumped to v1.0.12 (from v1.0.9) [PR 2525](https://github.com/provenance-io/provenance/pull/2525).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.26.0-rc1...v1.26.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.25.1...v1.26.0-rc2
 
 ---
 
-## [v1.26.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.26.0-rc1) 2025-10-29
+This upgrade also adds several other modules:
 
-Provenance Blockchain version `v1.26.0` contains some exciting new features.
+* The `x/ledger` module manages financial tracking for NFTs and metadata scopes.
+* The `x/registry` module assigns roles to addresses associated NFTs (including scopes).
+* The `x/asset` module provides a comprehensive digital asset management system on the Provenance blockchain.
+* The `x/nft` module is the Cosmos-SDK's standard way of recording and managing NFTs.
+* The `x/vault` module provides a system for tokenized vaults built on Provenance’s marker and account model.
 
-**Important**: All users should now use `1nhash` for `gas-prices` and a multiplier of `1.0` (the default).
-
-Fees on Provenance Blockchain are now based on msg type instead of gas.
-The standard Tx simulation process now returns the fee amount as gas wanted (i.e. it no longer reflects an actual gas amount).
-By using `1nhash` for gas prices when simulating, existing client(s) will properly set the fee for the Tx.
-
-The new `x/flatfees` module manages the costs of each Msg type.
-Costs are defined in milli-US-dollars (musd).
-A conversion factor (defined in module params) is used to determine the amount of nhash equivalent to the musd cost of a Msg.
-This conversion factor will be constant to start, but can be updated manually (via governance proposal) or in the future, might update automatically.
-By keeping the conversion factor in-line with the cost of hash, fees will remain constant in terms of how much they cost in US dollars (even though the required amounts of hash might change).
+The Asset, Ledger, and Registry modules, together, provide mechanisms for tracking the worth of the scopes and nfts on Provenance.
 
 ### Features
 
@@ -75,7 +49,7 @@ By keeping the conversion factor in-line with the cost of hash, fees will remain
 ### Improvements
 
 * Refactor test setups to use testutil.MutateGenesisState [#2013](https://github.com/provenance-io/provenance/issues/2013).
-* Added documentation to NetAssetValues fields in proto clarifying that amounts are in `usd` units, where 1usd =$1.00 [#2291](https://github.com/provenance-io/provenance/issues/2291).
+* Added documentation on NetAssetValues fields in proto clarifying that amounts in `usd` units are milli-dollars, where 1usd = $0.001 ([#2291](https://github.com/provenance-io/provenance/issues/2291), [PR 2540](https://github.com/provenance-io/provenance/pull/2540)).
 * Triggers no longer track or use the extra gas provided when creating the trigger [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
   Users pay for the trigger msg execution when creating the trigger (based on msg type).
 * Renamed `pioconfig` stuff to use `Prov` instead of `Provenance` [PR 2318](https://github.com/provenance-io/provenance/pull/2318).
@@ -84,15 +58,24 @@ By keeping the conversion factor in-line with the cost of hash, fees will remain
 * Fix the casing of 'as' in our dockerfiles [#2452](https://github.com/provenance-io/provenance/issues/2452).
 * Add gitignore entry for goenv and gvm config file [PR 2467](https://github.com/provenance-io/provenance/pull/2467).
 * Increase the max memo length to 1024 bytes (from 256) [PR 2482](https://github.com/provenance-io/provenance/pull/2482).
+* Recognize 9525nhash as old gas prices too [PR 2517](https://github.com/provenance-io/provenance/pull/2517).
+* Fix how the ledger bulk endpoint charges fees [PR 2518](https://github.com/provenance-io/provenance/pull/2518).
+* Emit events when a ledger class or class type is created, and when a ledger entry is updated [PR 2522](https://github.com/provenance-io/provenance/pull/2522).
+* Add `_NOT_DEFINED` values to the ledger enums [PR 2528](https://github.com/provenance-io/provenance/pull/2528).
+* Set the cost of creating a vault [PR 2536](https://github.com/provenance-io/provenance/pull/2536).
 
 ### Bug Fixes
 
-* Moved `MsgExecuteContract.proto` from proto to `legacy_protos` directory [#2399](https://github.com/provenance-io/provenance/issues/2399).
+* Moved `MsgExecuteContract.proto` from proto to legacy_protos directory [#2399](https://github.com/provenance-io/provenance/issues/2399).
 * Fix the staking restriction error message that contained the wrong amount [PR 2433](https://github.com/provenance-io/provenance/pull/2433).
 * Use 6 digits (instead of 2) from the percent when calculating max staking amount [PR 2433](https://github.com/provenance-io/provenance/pull/2433).
 * Fix docker builds by generating the go code to x/wasm instead of the uncopied legacy_protos/ [PR 2443](https://github.com/provenance-io/provenance/pull/2443).
 * Add missing `AddTxFlagsToCmd` to `gov-root-name` [PR 2456](https://github.com/provenance-io/provenance/pull/2456).
 * Fix vault stargate whitelist type url typo [PR 2479](https://github.com/provenance-io/provenance/pull/2479).
+* Bring back (but deprecate) some msgfees proto stuff [PR 2523](https://github.com/provenance-io/provenance/pull/2523).
+* In the `bouvardia-rc2` upgrade, fix the ledger class and the registry entries added with -rc1 [PR 2524](https://github.com/provenance-io/provenance/pull/2524).
+* In the ledger BulkCreate endpoint, properly get the ledger key to check authorization [PR 2541](https://github.com/provenance-io/provenance/pull/2541).
+* Add missing set denom metadata cli for markers [PR 2543](https://github.com/provenance-io/provenance/pull/2543).
 
 ### Deprecated
 
@@ -239,7 +222,7 @@ By keeping the conversion factor in-line with the cost of hash, fees will remain
 * `github.com/pelletier/go-toml/v2` bumped to v2.2.4 (from v2.2.2) [PR 2445](https://github.com/provenance-io/provenance/pull/2445).
 * `github.com/polyfloyd/go-errorlint` added at v1.6.0 [PR 2458](https://github.com/provenance-io/provenance/pull/2458).
 * `github.com/provlabs/vault` added at v1.0.3 [PR 2458](https://github.com/provenance-io/provenance/pull/2458).
-* `github.com/provlabs/vault` bumped to v1.0.9 (from v1.0.3) ([PR 2465](https://github.com/provenance-io/provenance/pull/2465), [PR 2477](https://github.com/provenance-io/provenance/pull/2477), [PR 2501](https://github.com/provenance-io/provenance/pull/2501), [PR 2506](https://github.com/provenance-io/provenance/pull/2506)).
+* `github.com/provlabs/vault` bumped to v1.0.12 (from v1.0.3) ([PR 2465](https://github.com/provenance-io/provenance/pull/2465), [PR 2477](https://github.com/provenance-io/provenance/pull/2477), [PR 2501](https://github.com/provenance-io/provenance/pull/2501), [PR 2506](https://github.com/provenance-io/provenance/pull/2506), [PR 2525](https://github.com/provenance-io/provenance/pull/2525)).
 * `github.com/quasilyte/gogrep` added at v0.5.0 [PR 2458](https://github.com/provenance-io/provenance/pull/2458).
 * `github.com/quasilyte/go-ruleguard/dsl` added at v0.3.22 [PR 2458](https://github.com/provenance-io/provenance/pull/2458).
 * `github.com/quasilyte/go-ruleguard` added at v0.4.3-0.20240823090925-0fe6f58b47b1 [PR 2458](https://github.com/provenance-io/provenance/pull/2458).
@@ -329,5 +312,5 @@ By keeping the conversion factor in-line with the cost of hash, fees will remain
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.25.1...v1.26.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.25.1...v1.26.0
 
