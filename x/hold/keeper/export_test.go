@@ -2,8 +2,6 @@ package keeper
 
 import (
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/hold"
@@ -27,14 +25,9 @@ func (k Keeper) WithAccountKeeper(ak hold.AccountKeeper) Keeper {
 	return k
 }
 
-// GetStoreKey exposes this keeper's storekey for unit tests.
-func (k Keeper) GetStoreKey() storetypes.StoreKey {
-	return k.storeKey
-}
-
 // SetHoldCoinAmount exposes this keeper's setHoldCoinAmount function for unit tests.
-func (k Keeper) SetHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
-	return k.setHoldCoinAmount(store, addr, denom, amount)
+func (k Keeper) SetHoldCoinAmount(ctx sdk.Context, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
+	return k.setHoldCoinAmount(ctx, addr, denom, amount)
 }
 
 // GetSpendableForDenoms exposes this keeper's getSpendableForDenoms function for unit tests.
