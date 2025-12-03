@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,28 +23,52 @@ import (
 
 type Keeper struct {
 	cdc           codec.BinaryCodec
-	storeKey      storetypes.StoreKey
+	StoreService  store.KVStoreService
 	accountKeeper hold.AccountKeeper
 	bankKeeper    hold.BankKeeper
 	authority     string
+	Schema        collections.Schema
+	Holds         collections.Map[collections.Pair[sdk.AccAddress, string], sdkmath.Int]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
-	rv := Keeper{
+func NewKeeper(cdc codec.BinaryCodec, store_service store.KVStoreService, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
+	sb := collections.NewSchemaBuilder(store_service)
+
+	// Create the pair key codec using our custom codecs
+	pairKeyCodec := collections.PairKeyCodec(
+		hold.AddressKeyCodec{},
+		hold.DenomKeyCodec{},
+	)
+
+	k := Keeper{
 		cdc:           cdc,
-		storeKey:      storeKey,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		StoreService:  store_service,
+		Holds: collections.NewMap(
+			sb,
+			KeyPrefixHoldCoin,
+			"holds",
+			pairKeyCodec,
+			hold.IntValueCodec{},
+		),
 	}
-	bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins)
-	return rv
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+
+	bankKeeper.AppendLockedCoinsGetter(k.GetLockedCoins)
+	return k
 }
 
 // setHoldCoinAmount updates the store with the provided hold info.
 // If the amount is zero, the hold coin entry for addr+denom is deleted.
 // Otherwise, the hold coin entry for addr+denom is created/updated in the provided amount.
-func (k Keeper) setHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
+func (k Keeper) setHoldCoinAmount(ctx sdk.Context, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
 	if len(denom) == 0 {
 		return fmt.Errorf("cannot store hold with an empty denom for %s", addr)
 	}
@@ -52,25 +76,21 @@ func (k Keeper) setHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress,
 		return fmt.Errorf("cannot store negative hold amount %s%s for %s", amount, denom, addr)
 	}
 
-	key := CreateHoldCoinKey(addr, denom)
+	key := collections.Join(addr, denom)
 	if amount.IsZero() {
-		store.Delete(key)
-		return nil
+		return k.Holds.Remove(ctx, key)
 	}
-
-	amountBz, err := amount.Marshal()
-	if err != nil {
-		return err
-	}
-	store.Set(key, amountBz)
-	return nil
+	return k.Holds.Set(ctx, key, amount)
 }
 
 // getHoldCoinAmount gets (from the store) the amount marked as on hold for the given address and denom.
-func (k Keeper) getHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string) (sdkmath.Int, error) {
-	key := CreateHoldCoinKey(addr, denom)
-	amountBz := store.Get(key)
-	return UnmarshalHoldCoinValue(amountBz)
+func (k Keeper) getHoldCoinAmount(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdkmath.Int, error) {
+	key := collections.Join(addr, denom)
+	amount, err := k.Holds.Get(ctx, key)
+	if errors.Is(err, collections.ErrNotFound) {
+		return sdkmath.ZeroInt(), nil
+	}
+	return amount, err
 }
 
 // ValidateNewHold checks the account's spendable balance to make sure it has at least as much as the funds provided.
@@ -137,20 +157,19 @@ func (k Keeper) AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins, r
 		return err
 	}
 
-	store := ctx.KVStore(k.storeKey)
 	var fundsAdded sdk.Coins
 	var errs []error
 	for _, toAdd := range funds {
 		if toAdd.IsZero() {
 			continue
 		}
-		onHold, err := k.getHoldCoinAmount(store, addr, toAdd.Denom)
+		onHold, err := k.getHoldCoinAmount(ctx, addr, toAdd.Denom)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to get current %s hold amount for %s: %w", toAdd.Denom, addr, err))
 			continue
 		}
 		newHoldAmt := onHold.Add(toAdd.Amount)
-		err = k.setHoldCoinAmount(store, addr, toAdd.Denom, newHoldAmt)
+		err = k.setHoldCoinAmount(ctx, addr, toAdd.Denom, newHoldAmt)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to place %s on hold for %s: %w", toAdd, addr, err))
 		}
@@ -176,7 +195,6 @@ func (k Keeper) ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coin
 		return fmt.Errorf("cannot release %q from hold for %s: amounts cannot be negative", funds, addr)
 	}
 
-	store := ctx.KVStore(k.storeKey)
 	var fundsReleased sdk.Coins
 	var errs []error
 	for _, toRelease := range funds {
@@ -184,7 +202,7 @@ func (k Keeper) ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coin
 			continue
 		}
 
-		onHold, err := k.getHoldCoinAmount(store, addr, toRelease.Denom)
+		onHold, err := k.getHoldCoinAmount(ctx, addr, toRelease.Denom)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to get current %s hold amount for %s: %w", toRelease.Denom, addr, err))
 			continue
@@ -196,7 +214,7 @@ func (k Keeper) ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coin
 			continue
 		}
 
-		err = k.setHoldCoinAmount(store, addr, toRelease.Denom, newAmount)
+		err = k.setHoldCoinAmount(ctx, addr, toRelease.Denom, newAmount)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to release %s from hold for %s: %w", toRelease, addr, err))
 			continue
@@ -218,30 +236,44 @@ func (k Keeper) ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coin
 // GetHoldCoin gets the amount of a denom on hold for a given account.
 // Will return a zero Coin of the given denom if the store does not have an entry for it.
 func (k Keeper) GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error) {
-	var err error
-	rv := sdk.Coin{Denom: denom}
-	rv.Amount, err = k.getHoldCoinAmount(ctx.KVStore(k.storeKey), addr, denom)
+	key := collections.Join(addr, denom)
+	amount, err := k.Holds.Get(ctx, key)
 	if err != nil {
-		return rv, fmt.Errorf("could not get hold coin amount for %s: %w", addr, err)
+		// Not found → zero coin, no error
+		if errors.Is(err, collections.ErrNotFound) {
+			return sdk.NewCoin(denom, sdkmath.ZeroInt()), nil
+		}
+		return sdk.NewCoin(denom, sdkmath.ZeroInt()),
+			fmt.Errorf("could not get hold coin amount for %s: %w", addr, err)
 	}
-	return rv, nil
+	return sdk.NewCoin(denom, amount), nil
 }
 
 // GetHoldCoins gets all funds on hold for a given account.
 func (k Keeper) GetHoldCoins(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error) {
-	var rv sdk.Coins
-	err := k.IterateHolds(ctx, addr, func(coin sdk.Coin) bool {
-		rv = rv.Add(coin)
-		return false
-	})
+	var coins sdk.Coins
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](addr)
+	var errs []error
+	iterator, err := k.Holds.Iterate(ctx, rng)
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		kv, err := iterator.KeyValue()
+		if err != nil {
+			denom := ""
+			key, keyErr := iterator.Key()
+			if keyErr == nil {
+				denom = key.K2()
+			}
+			errs = append(errs, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err))
+			continue
+		}
+		coins = coins.Add(sdk.NewCoin(kv.Key.K2(), kv.Value))
+	}
 
-	return rv, err
-}
-
-// getHoldCoinPrefixStore returns a kv store prefixed for hold coin entries for the provided address.
-func (k Keeper) getHoldCoinPrefixStore(ctx sdk.Context, addr sdk.AccAddress) storetypes.KVStore {
-	pre := CreateHoldCoinKeyAddrPrefix(addr)
-	return prefix.NewStore(ctx.KVStore(k.storeKey), pre)
+	return coins, errors.Join(errs...)
 }
 
 // IterateHolds iterates over all funds on hold for a given account.
@@ -249,24 +281,28 @@ func (k Keeper) getHoldCoinPrefixStore(ctx sdk.Context, addr sdk.AccAddress) sto
 // If an error is encountered while reading from the store, that entry is skipped and an error is
 // returned for it when iteration is completed.
 func (k Keeper) IterateHolds(ctx sdk.Context, addr sdk.AccAddress, process func(sdk.Coin) bool) error {
-	store := k.getHoldCoinPrefixStore(ctx, addr)
-
-	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
-
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](addr)
 	var errs []error
-	for ; iter.Valid(); iter.Next() {
-		key := iter.Key()
-		value := iter.Value()
+	iterator, err := k.Holds.Iterate(ctx, rng)
+	if err != nil {
+		return err
+	}
 
-		denom := string(key)
-		amount, err := UnmarshalHoldCoinValue(value)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		kv, err := iterator.KeyValue()
 		if err != nil {
+			denom := ""
+			key, keyErr := iterator.Key()
+			if keyErr == nil {
+				denom = key.K2()
+			}
 			errs = append(errs, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err))
 			continue
 		}
-
-		if process(sdk.Coin{Denom: denom, Amount: amount}) {
+		coin := sdk.NewCoin(kv.Key.K2(), kv.Value)
+		if process(coin) {
 			break
 		}
 	}
@@ -274,37 +310,36 @@ func (k Keeper) IterateHolds(ctx sdk.Context, addr sdk.AccAddress, process func(
 	return errors.Join(errs...)
 }
 
-// getAllHoldCoinPrefixStore returns a kv store prefixed for all hold coin entries.
-func (k Keeper) getAllHoldCoinPrefixStore(ctx sdk.Context) storetypes.KVStore {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), KeyPrefixHoldCoin)
-}
-
 // IterateAllHolds iterates over all hold coin entries for all accounts.
 // The process function should return whether to stop: false = keep iterating, true = stop.
 // If an error is encountered while reading from the store, that entry is skipped and an error is
 // returned for it when iteration is completed.
 func (k Keeper) IterateAllHolds(ctx sdk.Context, process func(sdk.AccAddress, sdk.Coin) bool) error {
-	store := k.getAllHoldCoinPrefixStore(ctx)
-
-	iter := store.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 	var errs []error
-	for ; iter.Valid(); iter.Next() {
-		key := iter.Key()
-		value := iter.Value()
+	iterator, err := k.Holds.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
 
-		addr, denom := ParseHoldCoinKeyUnprefixed(key)
-		amount, err := UnmarshalHoldCoinValue(value)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		kv, err := iterator.KeyValue()
 		if err != nil {
+			addr := sdk.AccAddress(nil)
+			denom := ""
+			key, keyErr := iterator.Key()
+			if keyErr == nil {
+				addr = key.K1()
+				denom = key.K2()
+			}
 			errs = append(errs, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err))
 			continue
 		}
-
-		if process(addr, sdk.Coin{Denom: denom, Amount: amount}) {
+		coin := sdk.NewCoin(kv.Key.K2(), kv.Value)
+		if process(kv.Key.K1(), coin) {
 			break
 		}
 	}
-
 	return errors.Join(errs...)
 }
 

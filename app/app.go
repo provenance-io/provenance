@@ -615,7 +615,7 @@ func New(
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
-		appCodec, keys[hold.StoreKey], app.AccountKeeper, app.BankKeeper,
+		appCodec, runtime.NewKVStoreService(keys[hold.StoreKey]), app.AccountKeeper, app.BankKeeper,
 	)
 
 	app.RegistryKeeper = registrykeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[registrytypes.StoreKey]), app.NFTKeeper, app.MetadataKeeper)
