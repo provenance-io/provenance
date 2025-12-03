@@ -209,7 +209,8 @@ func (s *TestSuite) dumpHoldState() []string {
 	store := s.getStore()
 	var rv []string
 
-	iter, _ := store.Iterator(nil, nil)
+	iter, err := store.Iterator(nil, nil)
+	s.Require().NoError(err, "store.Iterator(nil, nil)")
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {

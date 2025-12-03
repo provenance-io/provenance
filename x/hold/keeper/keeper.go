@@ -31,8 +31,8 @@ type Keeper struct {
 	Holds         collections.Map[collections.Pair[sdk.AccAddress, string], sdkmath.Int]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, store_service store.KVStoreService, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
-	sb := collections.NewSchemaBuilder(store_service)
+func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, accountKeeper hold.AccountKeeper, bankKeeper hold.BankKeeper) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
 
 	// Create the pair key codec using our custom codecs
 	pairKeyCodec := collections.PairKeyCodec(
@@ -45,7 +45,7 @@ func NewKeeper(cdc codec.BinaryCodec, store_service store.KVStoreService, accoun
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		StoreService:  store_service,
+		StoreService:  storeService,
 		Holds: collections.NewMap(
 			sb,
 			KeyPrefixHoldCoin,
