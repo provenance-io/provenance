@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -172,9 +172,7 @@ func missingRolesString(parties []*types.PartyDetails, reqRoles []types.PartyTyp
 		}
 	}
 	// Sort the missing roles so that this result can be deterministic.
-	sort.Slice(missingRoles, func(i, j int) bool {
-		return missingRoles[i] < missingRoles[j]
-	})
+	slices.Sort(missingRoles)
 
 	// Order the messages for each of the missing roles.
 	missing := make([]string, len(missingRoles))

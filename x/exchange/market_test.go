@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 	"testing"
 
@@ -3155,9 +3154,7 @@ func TestPermission_Validate(t *testing.T) {
 
 	t.Run("all values have a test case", func(t *testing.T) {
 		allVals := slices.Collect(maps.Keys(Permission_name))
-		sort.Slice(allVals, func(i, j int) bool {
-			return allVals[i] < allVals[j]
-		})
+		slices.Sort(allVals)
 
 		for _, val := range allVals {
 			perm := Permission(val)
@@ -3332,9 +3329,7 @@ func TestParsePermission(t *testing.T) {
 
 	t.Run("all values have a test case", func(t *testing.T) {
 		allVals := slices.Collect(maps.Keys(Permission_name))
-		sort.Slice(allVals, func(i, j int) bool {
-			return allVals[i] < allVals[j]
-		})
+		slices.Sort(allVals)
 
 		for _, val := range allVals {
 			perm := Permission(val)

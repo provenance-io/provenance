@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -518,9 +518,7 @@ func TestWithdrawCoins(t *testing.T) {
 				rv.Permissions = append(rv.Permissions, perm)
 			}
 		}
-		sort.Slice(rv.Permissions, func(i, j int) bool {
-			return rv.Permissions[i] < rv.Permissions[j]
-		})
+		slices.Sort(rv.Permissions)
 		return rv
 	}
 	allAccess := func(addr sdk.AccAddress) types.AccessGrant {
@@ -1033,9 +1031,7 @@ func TestTransferCoin(t *testing.T) {
 				rv.Permissions = append(rv.Permissions, perm)
 			}
 		}
-		sort.Slice(rv.Permissions, func(i, j int) bool {
-			return rv.Permissions[i] < rv.Permissions[j]
-		})
+		slices.Sort(rv.Permissions)
 		return rv
 	}
 	allAccess := func(addr sdk.AccAddress) types.AccessGrant {

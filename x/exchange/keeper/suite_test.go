@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -519,9 +520,7 @@ func (s *TestSuite) sortMarket(market *exchange.Market) *exchange.Market {
 			return bytes.Compare(addrI, addrJ) < 0
 		})
 		for _, ag := range market.AccessGrants {
-			sort.Slice(ag.Permissions, func(i, j int) bool {
-				return ag.Permissions[i] < ag.Permissions[j]
-			})
+			slices.Sort(ag.Permissions)
 		}
 	}
 	return market
