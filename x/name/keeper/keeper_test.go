@@ -136,8 +136,11 @@ func (s *KeeperTestSuite) TestNameNormalization() {
 		{"allow single dash per comp", args{name: "test-field.my-service.pio"}, "test-field.my-service.pio", false},
 		{"allow digits", args{name: "test.normalize.v1.pio"}, "test.normalize.v1.pio", false},
 		{"allow unicode chars", args{name: "tœst.nørmålize.v1.pio"}, "tœst.nørmålize.v1.pio", false},
-		{"allow uuid as comp", args{name: "6443a1e8-ec9b-4ff1-b200-d639424bcba4.service.pb"},
-			"6443a1e8-ec9b-4ff1-b200-d639424bcba4.service.pb", false},
+		{
+			"allow uuid as comp",
+			args{name: "6443a1e8-ec9b-4ff1-b200-d639424bcba4.service.pb"},
+			"6443a1e8-ec9b-4ff1-b200-d639424bcba4.service.pb", false,
+		},
 		// Invalid names / components
 		{"fail on empty name", args{name: ""}, "", true},
 		{"fail when too short", args{name: "z"}, "", true},
@@ -212,8 +215,6 @@ func (s *KeeperTestSuite) TestSetName() {
 		},
 	}
 	for n, tc := range cases {
-		tc := tc
-
 		s.Run(n, func() {
 			err := s.app.NameKeeper.SetNameRecord(s.ctx, tc.recordName, tc.accAddr, tc.recordRestrict)
 			if tc.wantErr {
@@ -282,7 +283,6 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 		err := s.app.NameKeeper.DeleteRecord(s.ctx, "example.name")
 		s.Require().NoError(err)
 	})
-
 }
 
 func (s *KeeperTestSuite) TestModifyRecord() {
@@ -299,7 +299,6 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 		addr2Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user2Addr)
 		s.Require().NoError(err, "GetRecordsByAddress(user2)")
 		s.Assert().Equal(expUser2Recs, addr2Recs, "GetRecordsByAddress(user2)")
-
 	})
 	s.Run("update to new owner", func() {
 		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, jackthecat, s.user1Addr, true)
@@ -375,7 +374,6 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 		s.Require().NoError(err, "IterateRecords error")
 		s.Require().Equal(expRecords, records, "records iterated over")
 	})
-
 }
 
 func (s *KeeperTestSuite) TestSecp256r1KeyAlgo() {
@@ -573,7 +571,6 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestCreateRootNameProposals() {
-
 	testCases := []struct {
 		testName   string
 		name       string
@@ -643,8 +640,6 @@ func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.testName, func() {
 			err := s.app.NameKeeper.CreateRootName(s.ctx, tc.name, tc.owner.String(), tc.restricted)
 

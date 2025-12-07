@@ -86,14 +86,14 @@ func TestAllMsgsGetSigners(t *testing.T) {
 }
 
 func TestWriteScopeRoute(t *testing.T) {
-	var scope = &Scope{
+	scope := &Scope{
 		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
 		Owners:            OwnerPartyList("data_owner"),
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
-	var msg = NewMsgWriteScopeRequest(*scope, []string{}, 0)
+	msg := NewMsgWriteScopeRequest(*scope, []string{}, 0)
 
 	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
 
@@ -138,14 +138,14 @@ usd_mills: "0"
 }
 
 func TestWriteScopeValidation(t *testing.T) {
-	var scope = &Scope{
+	scope := &Scope{
 		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
 		Owners:            OwnerPartyList("data_owner"),
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
-	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"}, 0)
+	msg := NewMsgWriteScopeRequest(*scope, []string{"invalid"}, 0)
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
 
@@ -211,8 +211,6 @@ func TestAddScopeDataAccessValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
@@ -262,8 +260,6 @@ func TestDeleteScopeDataAccessValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
@@ -389,8 +385,6 @@ func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
@@ -683,8 +677,6 @@ func TestMsgAddContractSpecToScopeSpecRequestValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
@@ -729,8 +721,6 @@ func TestMsgDeleteContractSpecFromScopeSpecRequestValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
@@ -744,7 +734,7 @@ func TestMsgDeleteContractSpecFromScopeSpecRequestValidateBasic(t *testing.T) {
 }
 
 func TestBindOSLocator(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	bindRequestMsg := NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.NoError(t, err)
@@ -756,7 +746,7 @@ func TestBindOSLocator(t *testing.T) {
 }
 
 func TestModifyOSLocator(t *testing.T) {
-	var modifyRequest = NewMsgModifyOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	modifyRequest := NewMsgModifyOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := modifyRequest.ValidateBasic()
 	require.NoError(t, err)
@@ -768,7 +758,7 @@ func TestModifyOSLocator(t *testing.T) {
 }
 
 func TestDeleteOSLocator(t *testing.T) {
-	var deleteRequest = NewMsgDeleteOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	deleteRequest := NewMsgDeleteOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := deleteRequest.ValidateBasic()
 	require.NoError(t, err)
@@ -780,21 +770,21 @@ func TestDeleteOSLocator(t *testing.T) {
 }
 
 func TestBindOSLocatorInvalid(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "vamonos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	bindRequestMsg := NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "vamonos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)
 }
 
 func TestBindOSLocatorInvalidAddr(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "", LocatorUri: "http://foo.com"})
+	bindRequestMsg := NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "", LocatorUri: "http://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)
 }
 
 func TestBindOSLocatorInvalidURI(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "", LocatorUri: "foo://foo.com"})
+	bindRequestMsg := NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "", LocatorUri: "foo://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)

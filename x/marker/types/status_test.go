@@ -8,7 +8,6 @@ import (
 )
 
 func init() {
-
 }
 
 func TestStatuses(t *testing.T) {
@@ -62,7 +61,6 @@ func TestStatuses(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// check parse from string
 			s, err := MarkerStatusFromString(tt.name)

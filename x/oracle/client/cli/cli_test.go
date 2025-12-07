@@ -126,8 +126,6 @@ func (s *IntegrationTestSuite) TestQueryOracleAddress() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetQueryOracleAddressCmd(), []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
