@@ -51,7 +51,7 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	// Determine how much gas to give the gas meter.
 	// By default, it's the TxGasLimit.
 	// If the user provided a gas limit, use that instead.
-	// Or, if the tx isn't limited, and the user didn't provide their own limit, use half the tx block limit.
+	// Or, if the tx isn't limited, and the user didn't provide their own limit, use half the block gas limit.
 	// This allows gov props to use a higher gas limit than the usual Tx gas limit.
 	gasLimit := TxGasLimit
 	switch {
@@ -65,7 +65,7 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	newCtx = ante.SetGasMeter(simulate, ctx, gasLimit)
 	// Now wrap that gas meter in our flat-fee gas meter.
 	newCtx = ctx.WithGasMeter(NewFlatFeeGasMeter(newCtx.GasMeter(), newCtx.Logger(), d.ffk))
-	// Note: We don't set the costs yet, because we want to check a few more things before doing that work.
+	// Note: We don't set the costs yet because we want to check a few more things before doing that work.
 
 	// Ensure that the requested gas does not exceed either the configured block maximum, or the tx maximum.
 	// If there's no block maximum defined, we can't do that check, and we interpret that as an indication
