@@ -1028,16 +1028,16 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 // Create strings with the log statements that start off the reusable upgrade functions.
 var (
 	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
-	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
+	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
 )
 
 func (s *UpgradeTestSuite) TestCarnationRC1() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
-		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
 	}
 	s.AssertUpgradeHandlerLogs("carnation-rc1", expInLog, nil)
@@ -1046,8 +1046,8 @@ func (s *UpgradeTestSuite) TestCarnationRC1() {
 func (s *UpgradeTestSuite) TestCarnation() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
-		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
 	}
 	s.AssertUpgradeHandlerLogs("carnation", expInLog, nil)
