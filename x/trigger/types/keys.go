@@ -3,7 +3,7 @@ package types
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	fmt "fmt"
+	"fmt"
 	"strings"
 )
 
@@ -63,9 +63,10 @@ var (
 	NextTriggerIDKey = []byte{0x05}
 	// QueueStartIndexKey is the key to obtain the queue's starting index
 	QueueStartIndexKey = []byte{0x06}
-	// QueueStartIndexKey is the key to obtain the queue's length
+	// QueueLengthKey is the key to obtain the queue's length
 	QueueLengthKey = []byte{0x07}
 )
+
 // The following type bytes were once used, but now are not:
 //
 //  - GasLimitKeyPrefix = []byte{0x04}
