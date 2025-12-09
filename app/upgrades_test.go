@@ -1106,6 +1106,26 @@ func (s *UpgradeTestSuite) TestBouvardia() {
 	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, expNotInLog)
 }
 
+func (s *UpgradeTestSuite) TestCarnationRC1() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("carnation-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestCarnation() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("carnation", expInLog, nil)
+}
+
 type MockFlatFeesKeeper struct {
 	SetParamsErrs  []string
 	SetParamsCalls []flatfeestypes.Params

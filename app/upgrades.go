@@ -134,6 +134,38 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"carnation-rc1": { // Upgrade for v1.27.0-rc1.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
+	"carnation": { // Upgrade for v1.27.0-rc1.
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			removeInactiveValidatorDelegations(ctx, app)
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+	},
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
