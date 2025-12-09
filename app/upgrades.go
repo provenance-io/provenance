@@ -54,7 +54,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"carnation": { // Upgrade for v1.27.0-rc1.
+	"carnation": { // Upgrade for v1.27.0.
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
