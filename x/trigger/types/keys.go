@@ -66,6 +66,9 @@ var (
 	// QueueStartIndexKey is the key to obtain the queue's length
 	QueueLengthKey = []byte{0x07}
 )
+// The following type bytes were once used, but now are not:
+//
+//  - GasLimitKeyPrefix = []byte{0x04}
 
 // GetEventListenerKey converts an event name, order, and trigger ID into an event registry key format.
 func GetEventListenerKey(eventName string, order uint64, id TriggerID) []byte {
