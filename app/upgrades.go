@@ -296,7 +296,7 @@ func storeWasmCode(ctx sdk.Context, app *App) {
 		ctx.Logger().Info("Done storing the ProvLabs vault smart contract.")
 	}()
 
-	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/<upgrade_name>/provlabs_vault_smart_contract.wasm")
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_smart_contract.wasm")
 	if err != nil {
 		ctx.Logger().Error("Could not read smart contract.", "error", err)
 		return
@@ -311,13 +311,13 @@ func storeWasmCode(ctx sdk.Context, app *App) {
 }
 
 // wasmMsgSrvr has just the StoreCode endpoint needed for this upgrade.
-// TODO: Remove with the <upgrade name> handlers.
+// TODO: Remove with the carnation handlers.
 type wasmMsgSrvr interface {
 	StoreCode(context.Context, *wasmtypes.MsgStoreCode) (*wasmtypes.MsgStoreCodeResponse, error)
 }
 
 // executeStoreCodeMsg executes a MsgStoreCode.
-// TODO: Remove with the <upgrade name> handlers.
+// TODO: Remove with the carnation handlers.
 func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmtypes.MsgStoreCode) {
 	cacheCtx, writeCache := ctx.CacheContext()
 	resp, err := wasmMsgServer.StoreCode(cacheCtx, msg)
