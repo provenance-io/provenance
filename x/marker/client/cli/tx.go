@@ -108,6 +108,7 @@ func NewTxCmd() *cobra.Command {
 		GetUpdateMarkerParamsCmd(),
 		GetGrantMultiAuthzCmd(),
 		GetCmdSetDenomMetadata(),
+		GetCmdSetDenomMetadataProposal(),
 	)
 	return txCmd
 }
