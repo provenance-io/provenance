@@ -289,7 +289,7 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 }
 
 // storeWasmCode will store the provided wasm contract.
-// TODO: Remove with the umber handlers.
+// TODO: Remove with the carnation handlers.
 func storeWasmCode(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Storing the ProvLabs vault smart contract.")
 	defer func() {
