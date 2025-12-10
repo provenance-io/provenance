@@ -296,7 +296,7 @@ func storeWasmCode(ctx sdk.Context, app *App) {
 		ctx.Logger().Info("Done storing the ProvLabs vault smart contract.")
 	}()
 
-	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/umber/provlabs_vault_smart_contract.wasm")
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/<upgrade_name>/provlabs_vault_smart_contract.wasm")
 	if err != nil {
 		ctx.Logger().Error("Could not read smart contract.", "error", err)
 		return
