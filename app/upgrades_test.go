@@ -1108,7 +1108,7 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 			upgradeFiles: embed.FS{},
 			expLogs: []string{
 				"INF Storing the NUVA Vault Manager Smart Contract.",
-				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm: file does not exist\"",
+				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm: file does not exist\"",
 				"INF Done storing the NUVA Vault Manager Smart Contract.",
 			},
 		},
@@ -1129,7 +1129,7 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 }
 
 func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
-	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm")
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm")
 	s.Require().NoError(err, "reading wasm file")
 	msg := &wasmtypes.MsgStoreCode{
 		Sender:                s.app.GovKeeper.GetAuthority(),

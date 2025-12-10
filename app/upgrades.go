@@ -302,7 +302,7 @@ func storeWasmCode(ctx sdk.Context, app *App) {
 		ctx.Logger().Info("Done storing the NUVA Vault Manager Smart Contract.")
 	}()
 
-	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm")
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm")
 	if err != nil {
 		ctx.Logger().Error("Could not read smart contract.", "error", err)
 		return
