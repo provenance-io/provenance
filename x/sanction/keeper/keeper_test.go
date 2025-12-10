@@ -887,7 +887,7 @@ func (s *KeeperTestSuite) TestKeeper_getLatestTempEntry() {
 		var expected []byte
 		var actual []byte
 		testFunc := func() {
-			actual = s.Keeper.GetLatestTempEntry(store, nil)
+			actual = s.Keeper.GetLatestTempEntry(s.SdkCtx, nil)
 		}
 		s.Require().NotPanics(testFunc, "getLatestTempEntry")
 		s.Assert().Equal(expected, actual, "getLatestTempEntry result")
@@ -897,7 +897,7 @@ func (s *KeeperTestSuite) TestKeeper_getLatestTempEntry() {
 		var expected []byte
 		var actual []byte
 		testFunc := func() {
-			actual = s.Keeper.GetLatestTempEntry(store, sdk.AccAddress{})
+			actual = s.Keeper.GetLatestTempEntry(s.SdkCtx, sdk.AccAddress{})
 		}
 		s.Require().NotPanics(testFunc, "getLatestTempEntry")
 		s.Assert().Equal(expected, actual, "getLatestTempEntry result")
@@ -907,7 +907,7 @@ func (s *KeeperTestSuite) TestKeeper_getLatestTempEntry() {
 		var expected []byte
 		var actual []byte
 		testFunc := func() {
-			actual = s.Keeper.GetLatestTempEntry(store, s.addr1)
+			actual = s.Keeper.GetLatestTempEntry(s.SdkCtx, s.addr1)
 		}
 		s.Require().NotPanics(testFunc, "getLatestTempEntry")
 		s.Assert().Equal(expected, actual, "getLatestTempEntry result")
@@ -920,7 +920,7 @@ func (s *KeeperTestSuite) TestKeeper_getLatestTempEntry() {
 		expected := []byte{keeper.SanctionB}
 		var actual []byte
 		testFunc := func() {
-			actual = s.Keeper.GetLatestTempEntry(store, addr)
+			actual = s.Keeper.GetLatestTempEntry(s.SdkCtx, addr)
 		}
 		s.Require().NotPanics(testFunc, "getLatestTempEntry")
 		s.Assert().Equal(expected, actual, "getLatestTempEntry result")
@@ -933,7 +933,7 @@ func (s *KeeperTestSuite) TestKeeper_getLatestTempEntry() {
 		expected := []byte{keeper.UnsanctionB}
 		var actual []byte
 		testFunc := func() {
-			actual = s.Keeper.GetLatestTempEntry(store, addr)
+			actual = s.Keeper.GetLatestTempEntry(s.SdkCtx, addr)
 		}
 		s.Require().NotPanics(testFunc, "getLatestTempEntry")
 		s.Assert().Equal(expected, actual, "getLatestTempEntry result")
@@ -949,7 +949,7 @@ func (s *KeeperTestSuite) TestKeeper_getLatestTempEntry() {
 		expected := []byte{keeper.SanctionB}
 		var actual []byte
 		testFunc := func() {
-			actual = s.Keeper.GetLatestTempEntry(store, addr)
+			actual = s.Keeper.GetLatestTempEntry(s.SdkCtx, addr)
 		}
 		s.Require().NotPanics(testFunc, "getLatestTempEntry")
 		s.Assert().Equal(expected, actual, "getLatestTempEntry result")
@@ -965,7 +965,7 @@ func (s *KeeperTestSuite) TestKeeper_getLatestTempEntry() {
 		expected := []byte{keeper.UnsanctionB}
 		var actual []byte
 		testFunc := func() {
-			actual = s.Keeper.GetLatestTempEntry(store, addr)
+			actual = s.Keeper.GetLatestTempEntry(s.SdkCtx, addr)
 		}
 		s.Require().NotPanics(testFunc, "getLatestTempEntry")
 		s.Assert().Equal(expected, actual, "getLatestTempEntry result")
@@ -1680,12 +1680,11 @@ func (s *KeeperTestSuite) TestKeeper_GetSetParams() {
 	sanction.DefaultImmediateSanctionMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("sanct", 93))
 	sanction.DefaultImmediateUnsanctionMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("usanct", 49))
 
-	store := s.GetStore()
 	s.Require().NotPanics(func() {
-		s.Keeper.DeleteParam(store, keeper.ParamNameImmediateSanctionMinDeposit)
+		s.Keeper.DeleteParam(s.SdkCtx, keeper.ParamNameImmediateSanctionMinDeposit)
 	}, "deleteParam(%q)", keeper.ParamNameImmediateSanctionMinDeposit)
 	s.Require().NotPanics(func() {
-		s.Keeper.DeleteParam(store, keeper.ParamNameImmediateUnsanctionMinDeposit)
+		s.Keeper.DeleteParam(s.SdkCtx, keeper.ParamNameImmediateUnsanctionMinDeposit)
 	}, "deleteParam(%q)", keeper.ParamNameImmediateUnsanctionMinDeposit)
 
 	s.Run("get with no entries in store", func() {
@@ -1802,12 +1801,11 @@ func (s *KeeperTestSuite) TestKeeper_IterateParams() {
 		value string
 	}
 
-	store := s.GetStore()
 	s.Require().NotPanics(func() {
-		s.Keeper.DeleteParam(store, keeper.ParamNameImmediateSanctionMinDeposit)
+		s.Keeper.DeleteParam(s.SdkCtx, keeper.ParamNameImmediateSanctionMinDeposit)
 	}, "deleteParam(%q)", keeper.ParamNameImmediateSanctionMinDeposit)
 	s.Require().NotPanics(func() {
-		s.Keeper.DeleteParam(store, keeper.ParamNameImmediateUnsanctionMinDeposit)
+		s.Keeper.DeleteParam(s.SdkCtx, keeper.ParamNameImmediateUnsanctionMinDeposit)
 	}, "deleteParam(%q)", keeper.ParamNameImmediateUnsanctionMinDeposit)
 
 	s.Run("no entries", func() {
@@ -1834,7 +1832,7 @@ func (s *KeeperTestSuite) TestKeeper_IterateParams() {
 	// Write them in reverse order from expected.
 	for i := len(expected) - 1; i >= 0; i-- {
 		s.Require().NotPanics(func() {
-			s.Keeper.SetParam(store, expected[i].key, expected[i].value)
+			s.Keeper.SetParam(s.SdkCtx, expected[i].key, expected[i].value)
 		}, "setParam(%q, %q)", expected[i].key, expected[i].value)
 	}
 
@@ -1904,9 +1902,8 @@ func (s *KeeperTestSuite) TestKeeper_GetImmediateSanctionMinDeposit() {
 		delete bool
 	}
 
-	store := s.GetStore()
 	testFuncSetSanct := func() {
-		s.Keeper.SetParam(store, keeper.ParamNameImmediateUnsanctionMinDeposit, "98unsanct")
+		s.Keeper.SetParam(s.SdkCtx, keeper.ParamNameImmediateUnsanctionMinDeposit, "98unsanct")
 	}
 	s.Require().NotPanics(testFuncSetSanct, "setParam(%q, %q)", keeper.ParamNameImmediateUnsanctionMinDeposit, "98unsanct")
 
@@ -1947,13 +1944,13 @@ func (s *KeeperTestSuite) TestKeeper_GetImmediateSanctionMinDeposit() {
 			for _, p := range tc.prep {
 				if p.set {
 					testFuncSet := func() {
-						s.Keeper.SetParam(store, keeper.ParamNameImmediateSanctionMinDeposit, p.value)
+						s.Keeper.SetParam(s.SdkCtx, keeper.ParamNameImmediateSanctionMinDeposit, p.value)
 					}
 					s.Require().NotPanics(testFuncSet, "setParam(%q, %q)", keeper.ParamNameImmediateSanctionMinDeposit, p.value)
 				}
 				if p.delete {
 					testFuncDelete := func() {
-						s.Keeper.DeleteParam(store, keeper.ParamNameImmediateSanctionMinDeposit)
+						s.Keeper.DeleteParam(s.SdkCtx, keeper.ParamNameImmediateSanctionMinDeposit)
 					}
 					s.Require().NotPanics(testFuncDelete, "deleteParam(%q)", keeper.ParamNameImmediateSanctionMinDeposit)
 				}
@@ -1992,9 +1989,8 @@ func (s *KeeperTestSuite) TestKeeper_GetImmediateUnsanctionMinDeposit() {
 		delete bool
 	}
 
-	store := s.GetStore()
 	testFuncSetSanct := func() {
-		s.Keeper.SetParam(store, keeper.ParamNameImmediateSanctionMinDeposit, "99sanct")
+		s.Keeper.SetParam(s.SdkCtx, keeper.ParamNameImmediateSanctionMinDeposit, "99sanct")
 	}
 	s.Require().NotPanics(testFuncSetSanct, "setParam(%q, %q)", keeper.ParamNameImmediateSanctionMinDeposit, "99sanct")
 
@@ -2035,13 +2031,13 @@ func (s *KeeperTestSuite) TestKeeper_GetImmediateUnsanctionMinDeposit() {
 			for _, p := range tc.prep {
 				if p.set {
 					testFuncSet := func() {
-						s.Keeper.SetParam(store, keeper.ParamNameImmediateUnsanctionMinDeposit, p.value)
+						s.Keeper.SetParam(s.SdkCtx, keeper.ParamNameImmediateUnsanctionMinDeposit, p.value)
 					}
 					s.Require().NotPanics(testFuncSet, "setParam(%q, %q)", keeper.ParamNameImmediateUnsanctionMinDeposit, p.value)
 				}
 				if p.delete {
 					testFuncDelete := func() {
-						s.Keeper.DeleteParam(store, keeper.ParamNameImmediateUnsanctionMinDeposit)
+						s.Keeper.DeleteParam(s.SdkCtx, keeper.ParamNameImmediateUnsanctionMinDeposit)
 					}
 					s.Require().NotPanics(testFuncDelete, "deleteParam(%q)", keeper.ParamNameImmediateUnsanctionMinDeposit)
 				}
@@ -2057,7 +2053,6 @@ func (s *KeeperTestSuite) TestKeeper_GetImmediateUnsanctionMinDeposit() {
 }
 
 func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
-	store := s.GetStore()
 	var toDelete []string
 
 	newParamName := "new param"
@@ -2065,7 +2060,7 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 		var actual string
 		var ok bool
 		testFuncGet := func() {
-			actual, ok = s.Keeper.GetParam(store, newParamName)
+			actual, ok = s.Keeper.GetParam(s.SdkCtx, newParamName)
 		}
 		s.Require().NotPanics(testFuncGet, "getParam(%q)", newParamName)
 		s.Assert().Equal("", actual, "getParam(%q) result string", newParamName)
@@ -2076,12 +2071,12 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 	s.Run("set param new param", func() {
 		var alreadyExists bool
 		testFuncGet := func() {
-			_, alreadyExists = s.Keeper.GetParam(store, newParamName)
+			_, alreadyExists = s.Keeper.GetParam(s.SdkCtx, newParamName)
 		}
 		s.Require().NotPanics(testFuncGet, "getParam(%q) on param that should not exist yet", newParamName)
 		s.Require().False(alreadyExists, "getParam(%q) result bool on param that should not exist yet", newParamName)
 		testFuncSet := func() {
-			s.Keeper.SetParam(store, newParamName, newParamValue)
+			s.Keeper.SetParam(s.SdkCtx, newParamName, newParamValue)
 		}
 		s.Require().NotPanics(testFuncSet, "setParam(%q, %q)", newParamName, newParamValue)
 		toDelete = append(toDelete, newParamName)
@@ -2091,7 +2086,7 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 		var actual string
 		var ok bool
 		testFuncGet := func() {
-			actual, ok = s.Keeper.GetParam(store, newParamName)
+			actual, ok = s.Keeper.GetParam(s.SdkCtx, newParamName)
 		}
 		s.Require().NotPanics(testFuncGet, "getParam(%q)", newParamName)
 		s.Require().True(ok, "getParam(%q) result bool", newParamName)
@@ -2102,14 +2097,14 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 		name := "fruits"
 		value := "bananas, apples, pears, papaya, pineapple, pomegranate"
 		testFuncSet := func() {
-			s.Keeper.SetParam(store, name, value)
+			s.Keeper.SetParam(s.SdkCtx, name, value)
 		}
 		s.Require().NotPanics(testFuncSet, "setParam(%q, %q)", name, value)
 		toDelete = append(toDelete, name)
 		var actual string
 		var ok bool
 		testFuncGet := func() {
-			actual, ok = s.Keeper.GetParam(store, name)
+			actual, ok = s.Keeper.GetParam(s.SdkCtx, name)
 		}
 		s.Require().NotPanics(testFuncGet, "getParam(%q)", name)
 		s.Assert().True(ok, "getParam(%q) result bool", name)
@@ -2120,7 +2115,7 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 		var actual string
 		var ok bool
 		testFuncGet := func() {
-			actual, ok = s.Keeper.GetParam(store, newParamName)
+			actual, ok = s.Keeper.GetParam(s.SdkCtx, newParamName)
 		}
 		s.Require().NotPanics(testFuncGet, "getParam(%q)", newParamName)
 		s.Require().True(ok, "getParam(%q) result bool", newParamName)
@@ -2130,20 +2125,20 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 	s.Run("update and get first param", func() {
 		var alreadyExists bool
 		testFuncGet1 := func() {
-			_, alreadyExists = s.Keeper.GetParam(store, newParamName)
+			_, alreadyExists = s.Keeper.GetParam(s.SdkCtx, newParamName)
 		}
 		s.Require().NotPanics(testFuncGet1, "getParam(%q) on param that should not exist yet", newParamName)
 		s.Require().True(alreadyExists, "getParam(%q) result bool on param that should not exist yet", newParamName)
 		newParamValue = "this is an updated new param value"
 		testFuncSet := func() {
-			s.Keeper.SetParam(store, newParamName, newParamValue)
+			s.Keeper.SetParam(s.SdkCtx, newParamName, newParamValue)
 		}
 		s.Require().NotPanics(testFuncSet, "setParam(%q, %q)", newParamName, newParamValue)
 
 		var actual string
 		var ok bool
 		testFuncGet2 := func() {
-			actual, ok = s.Keeper.GetParam(store, newParamName)
+			actual, ok = s.Keeper.GetParam(s.SdkCtx, newParamName)
 		}
 		s.Require().NotPanics(testFuncGet2, "getParam(%q)", newParamName)
 		s.Require().True(ok, "getParam(%q) result bool", newParamName)
@@ -2153,13 +2148,13 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 	for _, name := range toDelete {
 		s.Run("delete "+name, func() {
 			testDeleteFunc := func() {
-				s.Keeper.DeleteParam(store, name)
+				s.Keeper.DeleteParam(s.SdkCtx, name)
 			}
 			s.Require().NotPanics(testDeleteFunc, "deleteParam(%q)", name)
 			var actual string
 			var ok bool
 			testGetFunc := func() {
-				actual, ok = s.Keeper.GetParam(store, name)
+				actual, ok = s.Keeper.GetParam(s.SdkCtx, name)
 			}
 			s.Require().NotPanics(testGetFunc, "getParam(%q)", name)
 			s.Assert().False(ok, "getParam(%q) result bool", name)
@@ -2169,7 +2164,7 @@ func (s *KeeperTestSuite) TestKeeper_getSetDeleteParam() {
 
 	s.Run("delete new param again", func() {
 		testDeleteFunc := func() {
-			s.Keeper.DeleteParam(store, newParamName)
+			s.Keeper.DeleteParam(s.SdkCtx, newParamName)
 		}
 		s.Require().NotPanics(testDeleteFunc, "deleteParam(%q)", newParamName)
 	})
@@ -2234,10 +2229,9 @@ func (s *KeeperTestSuite) TestKeeper_getParamAsCoinsOrDefault() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			if tc.setFirst {
-				store := s.GetStore()
-				s.Keeper.SetParam(store, tc.param, tc.setTo)
+				s.Keeper.SetParam(s.SdkCtx, tc.param, tc.setTo)
 				defer func() {
-					s.Keeper.DeleteParam(store, tc.param)
+					s.Keeper.DeleteParam(s.SdkCtx, tc.param)
 				}()
 			}
 			var actual sdk.Coins
