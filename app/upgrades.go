@@ -285,6 +285,8 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 	ctx.Logger().Info("Done unlocking select vesting accounts.")
 }
 
+func storeWasmCode(ctx sdk.Context, app *App) {}
+
 // Create a use of the standard helpers so that the linter neither complains about it not being used,
 // nor complains about a nolint:unused directive that isn't needed because the function is used.
 var (
