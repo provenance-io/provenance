@@ -1036,7 +1036,7 @@ var (
 	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
 	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
-	LogMsgProvLabsWasmStoreStart               = "INF Storing the ProvLabs vault proxy smart contract."
+	LogMsgProvLabsWasmStoreStart               = "INF Storing the NUVA Vault Manager Smart Contract."
 )
 
 func (s *UpgradeTestSuite) TestCarnationRC1() {
@@ -1098,18 +1098,18 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 			name:         "success",
 			upgradeFiles: UpgradeFiles,
 			expLogs: []string{
-				"INF Storing the ProvLabs vault proxy smart contract.",
+				"INF Storing the NUVA Vault Manager Smart Contract.",
 				"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\".",
-				"INF Done storing the ProvLabs vault proxy smart contract.",
+				"INF Done storing the NUVA Vault Manager Smart Contract.",
 			},
 		},
 		{
 			name:         "failed to read file",
 			upgradeFiles: embed.FS{},
 			expLogs: []string{
-				"INF Storing the ProvLabs vault proxy smart contract.",
+				"INF Storing the NUVA Vault Manager Smart Contract.",
 				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm: file does not exist\"",
-				"INF Done storing the ProvLabs vault proxy smart contract.",
+				"INF Done storing the NUVA Vault Manager Smart Contract.",
 			},
 		},
 	}

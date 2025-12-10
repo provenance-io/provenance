@@ -297,9 +297,9 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 // storeWasmCode will store the provided wasm contract.
 // TODO: Remove with the carnation handlers.
 func storeWasmCode(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Storing the ProvLabs vault proxy smart contract.")
+	ctx.Logger().Info("Storing the NUVA Vault Manager Smart Contract.")
 	defer func() {
-		ctx.Logger().Info("Done storing the ProvLabs vault proxy smart contract.")
+		ctx.Logger().Info("Done storing the NUVA Vault Manager Smart Contract.")
 	}()
 
 	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm")
