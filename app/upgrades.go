@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -51,6 +54,9 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
+			storeWasmCode(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -67,6 +73,9 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
+			storeWasmCode(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -283,6 +292,48 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 	}
 
 	ctx.Logger().Info("Done unlocking select vesting accounts.")
+}
+
+// storeWasmCode will store the provided wasm contract.
+// TODO: Remove with the carnation handlers.
+func storeWasmCode(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Storing the NUVA Vault Manager Smart Contract.")
+	defer func() {
+		ctx.Logger().Info("Done storing the NUVA Vault Manager Smart Contract.")
+	}()
+
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm")
+	if err != nil {
+		ctx.Logger().Error("Could not read smart contract.", "error", err)
+		return
+	}
+
+	msg := &wasmtypes.MsgStoreCode{
+		Sender:                app.GovKeeper.GetAuthority(),
+		WASMByteCode:          codeBz,
+		InstantiatePermission: &wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody},
+	}
+	executeStoreCodeMsg(ctx, wasmkeeper.NewMsgServerImpl(app.WasmKeeper), msg)
+}
+
+// wasmMsgSrvr has just the StoreCode endpoint needed for this upgrade.
+// TODO: Remove with the carnation handlers.
+type wasmMsgSrvr interface {
+	StoreCode(context.Context, *wasmtypes.MsgStoreCode) (*wasmtypes.MsgStoreCodeResponse, error)
+}
+
+// executeStoreCodeMsg executes a MsgStoreCode.
+// TODO: Remove with the carnation handlers.
+func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmtypes.MsgStoreCode) {
+	cacheCtx, writeCache := ctx.CacheContext()
+	resp, err := wasmMsgServer.StoreCode(cacheCtx, msg)
+	if err != nil {
+		ctx.Logger().Error("Could not store smart contract.", "error", err)
+		return
+	}
+	writeCache()
+	ctx.Logger().Info(fmt.Sprintf("Smart contract stored with codeID: %d and checksum: %q.",
+		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }
 
 // Create a use of the standard helpers so that the linter neither complains about it not being used,
