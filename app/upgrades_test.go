@@ -1036,7 +1036,7 @@ var (
 	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
 	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
-	LogMsgProvLabsWasmStoreStart               = "INF Storing the ProvLabs vault smart contract"
+	LogMsgProvLabsWasmStoreStart               = "INF Storing the ProvLabs vault proxy smart contract."
 )
 
 func (s *UpgradeTestSuite) TestCarnationRC1() {
@@ -1098,18 +1098,18 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 			name:         "success",
 			upgradeFiles: UpgradeFiles,
 			expLogs: []string{
-				"INF Storing the ProvLabs vault smart contract",
-				"INF Smart contract stored with codeID: 1 and checksum: \"7e643e228169980aff5d75d576873d34b368d30a154dc617d2ed9b0093c97128\".",
-				"INF Done storing the ProvLabs vault smart contract.",
+				"INF Storing the ProvLabs vault proxy smart contract.",
+				"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\".",
+				"INF Done storing the ProvLabs vault proxy smart contract.",
 			},
 		},
 		{
 			name:         "failed to read file",
 			upgradeFiles: embed.FS{},
 			expLogs: []string{
-				"INF Storing the ProvLabs vault smart contract",
-				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/provlabs_vault_smart_contract.wasm: file does not exist\"",
-				"INF Done storing the ProvLabs vault smart contract.",
+				"INF Storing the ProvLabs vault proxy smart contract.",
+				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm: file does not exist\"",
+				"INF Done storing the ProvLabs vault proxy smart contract.",
 			},
 		},
 	}
@@ -1129,7 +1129,7 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 }
 
 func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
-	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_smart_contract.wasm")
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm")
 	s.Require().NoError(err, "reading wasm file")
 	msg := &wasmtypes.MsgStoreCode{
 		Sender:                s.app.GovKeeper.GetAuthority(),
@@ -1149,7 +1149,7 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 		},
 		{
 			name:    "storage succeeds",
-			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"7e643e228169980aff5d75d576873d34b368d30a154dc617d2ed9b0093c97128\"."},
+			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\"."},
 		},
 	}
 

@@ -54,7 +54,9 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
 			storeWasmCode(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -295,12 +297,12 @@ func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
 // storeWasmCode will store the provided wasm contract.
 // TODO: Remove with the carnation handlers.
 func storeWasmCode(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Storing the ProvLabs vault smart contract.")
+	ctx.Logger().Info("Storing the ProvLabs vault proxy smart contract.")
 	defer func() {
-		ctx.Logger().Info("Done storing the ProvLabs vault smart contract.")
+		ctx.Logger().Info("Done storing the ProvLabs vault proxy smart contract.")
 	}()
 
-	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_smart_contract.wasm")
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/provlabs_vault_proxy_smart_contract.wasm")
 	if err != nil {
 		ctx.Logger().Error("Could not read smart contract.", "error", err)
 		return
