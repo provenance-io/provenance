@@ -54,6 +54,7 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+			storeWasmCode(ctx, app)
 			return vm, nil
 		},
 	},
@@ -70,6 +71,9 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
+			storeWasmCode(ctx, app)
+
 			return vm, nil
 		},
 	},
