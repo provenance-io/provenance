@@ -1644,8 +1644,8 @@ github.com/provenance-io/ibc-go/v8 v8.6.1-pio-1 h1:UxoldL0jEaRRPmyLEeac6TGdPY6GR
 github.com/provenance-io/ibc-go/v8 v8.6.1-pio-1/go.mod h1:Hd3kDFNOhQ/EnYt8qb84/r78tA/lOYC3IkLMbpurs3I=
 github.com/provenance-io/wasmd v0.52.0-pio-1 h1:dptBg/BB0aCHxO0Yqk8Jvkxr01tYLUFg4ybat7TdWBw=
 github.com/provenance-io/wasmd v0.52.0-pio-1/go.mod h1:hyy1wt7c589Cs4kOK2cYdtphzCd2Xo20q/t7tfby7oI=
-github.com/provlabs/vault v1.0.12 h1:DJFGj7ko42tJKK9qnyYEilkrZKbNt4JZ6UCKb3rMYk0=
-github.com/provlabs/vault v1.0.12/go.mod h1:bNr+PxO3lltlHz9cEF9nOJ+vV8SrfXZw+WwFI+AAVDk=
+github.com/provlabs/vault v1.0.13 h1:IOiSef83C/4D27DgKXm4eMGAwx1a9neXqG9F1F/p7YE=
+github.com/provlabs/vault v1.0.13/go.mod h1:bNr+PxO3lltlHz9cEF9nOJ+vV8SrfXZw+WwFI+AAVDk=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9 h1:cu+rMHYCZIE9+StrjgwKn+cKta7wmDi9qBgVAb09e1g=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9/go.mod h1:Ha7fmwkYtr49a2VtWplC/lP/LKqJf3uLBH1CLIP5DFg=
 github.com/quasilyte/go-ruleguard v0.4.3-0.20240823090925-0fe6f58b47b1 h1:+Wl/0aFp0hpuHM3H//KMft64WQ1yX9LdJY64Qm/gFCo=
