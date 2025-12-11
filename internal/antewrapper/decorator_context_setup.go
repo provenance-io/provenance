@@ -61,7 +61,7 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	case gasWanted != DefaultGasLimit:
 		gasLimit = gasWanted
 	case !txIsLimited && maxBlockGas > 0:
-		gasLimit = uint64(maxBlockGas / 2)
+		gasLimit = uint64(maxBlockGas / 2) //nolint:gosec // safe: maxBlockGas is non-negative
 	}
 
 	// Note that SetGasMeter uses an infinite gas meter if simulating or at height 0 (init genesis).
