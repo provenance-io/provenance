@@ -432,7 +432,7 @@ func (k QueryServer) ValidateCreateMarket(goCtx context.Context, req *exchange.Q
 
 	// The SDK *should* already be using a cache context for queries, but I'm doing it here too just to be on the safe side.
 	ctx, _ := sdk.UnwrapSDKContext(goCtx).CacheContext()
-	marketID, err := k.Keeper.CreateMarket(ctx, msg.Market)
+	marketID, err := k.CreateMarket(ctx, msg.Market)
 	if err != nil {
 		resp.Error = err.Error()
 		return resp, nil
