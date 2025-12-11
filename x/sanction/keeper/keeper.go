@@ -268,7 +268,7 @@ func (k Keeper) DeleteGovPropTempEntries(ctx sdk.Context, govPropID uint64) erro
 	var indexToRemove []collections.Pair[uint64, sdk.AccAddress]
 
 	err := k.ProposalIndex.Walk(ctx, nil,
-		func(key collections.Pair[uint64, sdk.AccAddress], value []byte) (stop bool, err error) {
+		func(key collections.Pair[uint64, sdk.AccAddress], _ []byte) (stop bool, err error) {
 			if key.K1() == govPropID {
 				addr := key.K2()
 				toRemove = append(toRemove, collections.Join(addr, govPropID))
@@ -311,7 +311,7 @@ func (k Keeper) DeleteAddrTempEntries(ctx sdk.Context, addrs ...sdk.AccAddress) 
 
 		// Collect all temporary entries for this address
 		err := k.TemporaryEntriesStore.Walk(ctx, nil,
-			func(key collections.Pair[sdk.AccAddress, uint64], value []byte) (stop bool, err error) {
+			func(key collections.Pair[sdk.AccAddress, uint64], _ []byte) (stop bool, err error) {
 				if key.K1().Equals(addr) {
 					tempKeys = append(tempKeys, key)
 					indexKeys = append(indexKeys, collections.Join(key.K2(), addr))
@@ -341,26 +341,13 @@ func (k Keeper) DeleteAddrTempEntries(ctx sdk.Context, addrs ...sdk.AccAddress) 
 	return nil
 }
 
-// getSanctionedAddressPrefixStore returns a kv store prefixed for sanctioned addresses, and the prefix bytes.
-// func (k Keeper) getSanctionedAddressPrefixStore(ctx sdk.Context) storetypes.KVStore {
-// 	return prefix.NewStore(ctx.KVStore(k.storeKey), SanctionedPrefix)
-// }
-
 // IterateSanctionedAddresses iterates over all of the permanently sanctioned addresses.
 // The callback takes in the sanctioned address and should return whether to stop iteration (true = stop, false = keep going).
 func (k Keeper) IterateSanctionedAddresses(ctx sdk.Context, cb func(addr sdk.AccAddress) (stop bool)) error {
-	return k.SanctionedAddressesStore.Walk(ctx, nil, func(addr sdk.AccAddress, value []byte) (stop bool, err error) {
+	return k.SanctionedAddressesStore.Walk(ctx, nil, func(addr sdk.AccAddress, _ []byte) (stop bool, err error) {
 		return cb(addr), nil
 	})
 }
-
-// getTemporaryEntryPrefixStore returns a kv store prefixed for temporary sanction/unsanction entries, and the prefix bytes used.
-// If an addr is provided, the store is prefixed for just the given address.
-// If addr is empty, it will be prefixed for all temporary entries.
-// func (k Keeper) getTemporaryEntryPrefixStore(ctx sdk.Context, addr sdk.AccAddress) (storetypes.KVStore, []byte) {
-// 	pre := CreateTemporaryAddrPrefix(addr)
-// 	return prefix.NewStore(ctx.KVStore(k.storeKey), pre), pre
-// }
 
 // IterateTemporaryEntries iterates over each of the temporary entries.
 // If an address is provided, only the temporary entries for that address are iterated,
@@ -378,20 +365,11 @@ func (k Keeper) IterateTemporaryEntries(ctx sdk.Context, addr sdk.AccAddress, cb
 	})
 }
 
-// getProposalIndexPrefixStore returns a kv store prefixed for the gov prop -> temporary sanction/unsanction index entries,
-// and the prefix bytes used.
-// If a gov prop id is provided, the store is prefixed for just that proposal.
-// If not provided, it will be prefixed for all temp index entries.
-// func (k Keeper) getProposalIndexPrefixStore(ctx sdk.Context, govPropID *uint64) (storetypes.KVStore, []byte) {
-// 	pre := CreateProposalTempIndexPrefix(govPropID)
-// 	return prefix.NewStore(ctx.KVStore(k.storeKey), pre), pre
-// }
-
 // IterateProposalIndexEntries iterates over all of the index entries for temp entries.
 // The callback takes in the gov prop id and address.
 // The callback should return whether to stop iteration (true = stop, false = keep going).
 func (k Keeper) IterateProposalIndexEntries(ctx sdk.Context, govPropID *uint64, cb func(govPropID uint64, addr sdk.AccAddress) (stop bool)) error {
-	return k.ProposalIndex.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress], value []byte) (stop bool, err error) {
+	return k.ProposalIndex.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress], _ []byte) (stop bool, err error) {
 		if govPropID != nil && key.K1() != *govPropID {
 			return false, nil
 		}
@@ -480,6 +458,8 @@ func (k Keeper) GetImmediateUnsanctionMinDeposit(ctx sdk.Context) sdk.Coins {
 }
 
 // getParam returns a param value and whether it existed.
+//
+//nolint:unused // used only in test cases
 func (k Keeper) getParam(ctx sdk.Context, name string) (string, bool) {
 	key, err := k.ParameterStore.Get(ctx, name)
 	if err != nil {
@@ -490,27 +470,39 @@ func (k Keeper) getParam(ctx sdk.Context, name string) (string, bool) {
 }
 
 // setParam sets a param value.
+//
+//nolint:unused // used only in test cases
 func (k Keeper) setParam(ctx sdk.Context, name, value string) {
-	k.ParameterStore.Set(ctx, name, []byte(value))
+	if err := k.ParameterStore.Set(ctx, name, []byte(value)); err != nil {
+		panic(fmt.Errorf("failed to set parameter %q: %w", name, err))
+	}
 }
 
 // deleteParam deletes a param value.
+//
+//nolint:unused // used only in test cases
 func (k Keeper) deleteParam(ctx sdk.Context, name string) {
-	k.ParameterStore.Remove(ctx, name)
+	if err := k.ParameterStore.Remove(ctx, name); err != nil {
+		panic(fmt.Errorf("failed to delete parameter %q: %w", name, err))
+	}
 }
 
 // getParamAsCoinsOrDefault gets a param value and converts it to a coins if possible.
 // If the param doesn't exist, the default is returned.
 // If the param's value cannot be converted to a Coins, the default is returned.
+//
+//nolint:unused // used only in test cases
 func (k Keeper) getParamAsCoinsOrDefault(ctx sdk.Context, name string, dflt sdk.Coins) sdk.Coins {
 	coins, has := k.getParam(ctx, name)
 	if !has {
 		return dflt
 	}
-	return toCoinsOrDefault(string(coins), dflt)
+	return toCoinsOrDefault(coins, dflt)
 }
 
 // toCoinsOrDefault converts a string to coins if possible or else returns the provided default.
+//
+//nolint:unused // used only in test cases
 func toCoinsOrDefault(coins string, dflt sdk.Coins) sdk.Coins {
 	rv, err := sdk.ParseCoinsNormalized(coins)
 	if err != nil {

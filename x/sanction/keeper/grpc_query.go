@@ -50,7 +50,7 @@ func (k Keeper) SanctionedAddresses(goCtx context.Context, req *sanction.QuerySa
 		ctx,
 		k.SanctionedAddressesStore,
 		pagination,
-		func(key sdk.AccAddress, value []byte) (string, error) {
+		func(key sdk.AccAddress, _ []byte) (string, error) {
 			return key.String(), nil
 		},
 	)
@@ -198,10 +198,12 @@ func (k Keeper) temporaryEntriesForAddress(
 	}
 
 	// Apply offset/limit AFTER collection
+	//nolint:gosec // safe conversion: offset/limit are always small (<2^63) from pagination
 	start := int(offset)
 	if start > len(items) {
 		start = len(items)
 	}
+	//nolint:gosec // safe conversion: limit is small (<2^63)
 	end := start + int(limit)
 	if end > len(items) {
 		end = len(items)
