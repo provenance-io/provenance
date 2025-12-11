@@ -37,6 +37,9 @@ func RandomSanctionedAddresses(r *rand.Rand, accounts []simtypes.Account) []stri
 // * 10% chance of having a temp sanction,
 // * 10% chance of having a temp unsanction,
 // * 80% chance of being ignored.
+// G115: Int63n used for simulation randomness; casting to uint64 is safe and intentional.
+//
+//nolint:gosec
 func RandomTempEntries(r *rand.Rand, accounts []simtypes.Account) []*sanction.TemporaryEntry {
 	var rv []*sanction.TemporaryEntry
 	for _, acct := range accounts {
@@ -44,13 +47,13 @@ func RandomTempEntries(r *rand.Rand, accounts []simtypes.Account) []*sanction.Te
 		case 0:
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000), //nolint:gosec // G115: Int63n used for simulation randomness; casting to uint64 is safe and intentional.
+				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000),
 				Status:     sanction.TEMP_STATUS_SANCTIONED,
 			})
 		case 1:
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000), //nolint:gosec // G115: Int63n used for simulation randomness; casting to uint64 is safe and intentional.
+				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000),
 				Status:     sanction.TEMP_STATUS_UNSANCTIONED,
 			})
 		}
