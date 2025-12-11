@@ -44,13 +44,13 @@ func RandomTempEntries(r *rand.Rand, accounts []simtypes.Account) []*sanction.Te
 		case 0:
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000), //nolint // safe cast for simulation
+				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000), //nolint:gosec // G115: safe cast; Int63n >= 0
 				Status:     sanction.TEMP_STATUS_SANCTIONED,
 			})
 		case 1:
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000), //nolint // safe cast for simulation
+				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000), //nolint:gosec // G115: safe cast; Int63n >= 0
 				Status:     sanction.TEMP_STATUS_UNSANCTIONED,
 			})
 		}
