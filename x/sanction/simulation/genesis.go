@@ -42,17 +42,15 @@ func RandomTempEntries(r *rand.Rand, accounts []simtypes.Account) []*sanction.Te
 	for _, acct := range accounts {
 		switch r.Int63n(10) {
 		case 0:
-			// G115: Int63n used for simulation randomness; casting to uint64 is safe and intentional.
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000), //nolint:gosec
+				ProposalId: uint64(r.Int63n(1000) + 1_000_000_000), //nolint // safe cast for simulation
 				Status:     sanction.TEMP_STATUS_SANCTIONED,
 			})
 		case 1:
-			// G115: Int63n used for simulation randomness; casting to uint64 is safe and intentional.
 			rv = append(rv, &sanction.TemporaryEntry{
 				Address:    acct.Address.String(),
-				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000), //nolint:gosec
+				ProposalId: uint64(r.Int63n(1000) + 2_000_000_000), //nolint // safe cast for simulation
 				Status:     sanction.TEMP_STATUS_UNSANCTIONED,
 			})
 		}
