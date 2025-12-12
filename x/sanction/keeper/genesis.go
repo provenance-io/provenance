@@ -65,10 +65,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *sanction.GenesisState {
 // This is designed for use with ExportGenesis. See also IterateSanctionedAddresses.
 func (k Keeper) GetAllSanctionedAddresses(ctx sdk.Context) []string {
 	var rv []string
-	k.IterateSanctionedAddresses(ctx, func(addr sdk.AccAddress) bool {
+	if err := k.IterateSanctionedAddresses(ctx, func(addr sdk.AccAddress) bool {
 		rv = append(rv, addr.String())
 		return false
-	})
+	}); err != nil {
+		panic(fmt.Errorf("failed to iterate sanctioned addresses: %w", err))
+	}
 	return rv
 }
 
@@ -76,7 +78,7 @@ func (k Keeper) GetAllSanctionedAddresses(ctx sdk.Context) []string {
 // This is designed for use with ExportGenesis. See also IterateTemporaryEntries.
 func (k Keeper) GetAllTemporaryEntries(ctx sdk.Context) []*sanction.TemporaryEntry {
 	var rv []*sanction.TemporaryEntry
-	k.IterateTemporaryEntries(ctx, nil, func(addr sdk.AccAddress, id uint64, isSanction bool) bool {
+	if err := k.IterateTemporaryEntries(ctx, nil, func(addr sdk.AccAddress, id uint64, isSanction bool) bool {
 		status := sanction.TEMP_STATUS_SANCTIONED
 		if !isSanction {
 			status = sanction.TEMP_STATUS_UNSANCTIONED
@@ -87,6 +89,8 @@ func (k Keeper) GetAllTemporaryEntries(ctx sdk.Context) []*sanction.TemporaryEnt
 			Status:     status,
 		})
 		return false
-	})
+	}); err != nil {
+		panic(fmt.Errorf("failed to iterate temporary entries: %w", err))
+	}
 	return rv
 }
