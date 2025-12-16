@@ -4953,9 +4953,9 @@ MsgUpdateInterestRateRequest represents a request to update the interest rate co
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated. |
 | `signer` | [string](#string) |  | The signer that is updating the interest rate. |
-| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. |
-| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. |
-| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. |
+| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. This field is NOT optional. If not provided (or provided as zero), then the ledger's interest_rate field will be updated to be zero. |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. This field is optional. If not provided (or set to unspecified), the interest day count convention will not be updated. |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. This field is optional. If not provided (or set to unspecified), the interest accrual method will not be updated. |
 
 
 
@@ -5009,9 +5009,9 @@ MsgUpdatePaymentRequest represents a request to update payment configuration of 
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated. |
 | `signer` | [string](#string) |  | The signer that is updating the payment. |
-| `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. |
-| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. |
-| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. |
+| `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. This field is NOT optional. If you don't provide a value (or provide it as zero), then the ledger's next_pmt_amt field will be updated to be zero. |
+| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. This field is not optional and cannot be zero. |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. This field is optional. If set to unspecified, it will be ignored and the payment_frequency will not be changed. |
 
 
 
@@ -5491,13 +5491,14 @@ Day Count Conventions used in interest calculations.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention. |
+| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention.<br>This value is never a field's actual value, it just indicates that, for a given request, the day count convention is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that the day count convention is not being provided, and so should not be updated.<br>DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided. DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value. |
 | `DAY_COUNT_CONVENTION_ACTUAL_365` | `1` | Actual/365: Uses the actual number of days in the period with a fixed denominator of 365 (or sometimes 365.25 to adjust for leap years). |
 | `DAY_COUNT_CONVENTION_ACTUAL_360` | `2` | Actual/360: Uses the actual number of days in the period but divides by 360. |
 | `DAY_COUNT_CONVENTION_THIRTY_360` | `3` | 30/360: Assumes each month has 30 days and the year has 360 days. |
 | `DAY_COUNT_CONVENTION_ACTUAL_ACTUAL` | `4` | Actual/Actual: Uses the actual number of days in the period and the actual days in the year (365 or 366, depending on the year). |
 | `DAY_COUNT_CONVENTION_DAYS_365` | `5` | 365/365: Always uses 365 days in the denominator regardless of leap years. |
 | `DAY_COUNT_CONVENTION_DAYS_360` | `6` | 360/360: Always uses 360 days in both the numerator and denominator. |
+| `DAY_COUNT_CONVENTION_NOT_DEFINED` | `7` | Not Defined: The day count convention is not defined.<br>This value indicates that the day count convention should be on record as not having a value. It could mean that the day count convention is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have a day count convention. It could also just mean that the day count convention has not yet been defined for the entry.<br>DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided. DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value. |
 
 
 
@@ -5508,7 +5509,7 @@ Interest Accrual Methods describing how interest is calculated over time.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method. |
+| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method.<br>This value is never a field's actual value, it just indicates that, for a given request, the interest accrual method is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that the interest accrual method is not being provided, and so should not be updated.<br>INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided. INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value. |
 | `INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST` | `1` | Simple Interest: Calculated only on the principal amount. |
 | `INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST` | `2` | Compound Interest: Calculated on both the principal and on previously accumulated interest. |
 | `INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING` | `3` | Daily Compounding: Interest is compounded on a daily basis. |
@@ -5516,6 +5517,7 @@ Interest Accrual Methods describing how interest is calculated over time.
 | `INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING` | `5` | Quarterly Compounding: Interest is compounded every quarter. |
 | `INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING` | `6` | Annually Compounding: Interest is compounded once per year. |
 | `INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING` | `7` | Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously. |
+| `INTEREST_ACCRUAL_METHOD_NOT_DEFINED` | `8` | Not Defined: The interest accrual method is not defined.<br>This value indicates that the interest accrual method should be on record as not having a value. It could mean that the interest accrual method is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have an interest accrual method. It could also just mean that the interest accrual method has not yet been defined for the entry.<br>INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided. INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value. |
 
 
 
@@ -5526,12 +5528,13 @@ Payment frequencies for loan repayments.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency. |
+| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency.<br>This value is never a field's actual value, it just indicates that, for a given request, the payment frequency is not being provided. E.g. if this value is provided in a MsgUpdatePaymentRequest, it indicates that the payment frequency is not being provided, and so should not be updated.<br>PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided. PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value. |
 | `PAYMENT_FREQUENCY_DAILY` | `1` | Daily payments. |
 | `PAYMENT_FREQUENCY_WEEKLY` | `2` | Weekly or biweekly payments. |
 | `PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
 | `PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
 | `PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
+| `PAYMENT_FREQUENCY_NOT_DEFINED` | `6` | Not Defined: The payment frequency is not defined.<br>This value indicates that the payment frequency should be on record as not having a value. It could mean that the payment frequency is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have a payment frequency. It could also just mean that the payment frequency has not yet been defined for the entry.<br>PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided. PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value. |
 
 
  <!-- end enums -->
@@ -10141,7 +10144,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated | Net asset values to set. The "usd" denomination represents whole-dollar amounts, where 1usd = $1.00. |
+| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated | Net asset values to set. The price can use a special "usd" denom, where 1usd = $0.001 and 1000usd = $1.000. |
 
 
 
@@ -10844,7 +10847,7 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance-marker-v1-MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance-marker-v1-MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority |
-| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a marker. Note: When setting NAVs with the "usd" denom, amounts are in whole dollars where 1 = $1.00 USD. |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a marker. |
 | `SetAdministratorProposal` | [MsgSetAdministratorProposalRequest](#provenance-marker-v1-MsgSetAdministratorProposalRequest) | [MsgSetAdministratorProposalResponse](#provenance-marker-v1-MsgSetAdministratorProposalResponse) | SetAdministratorProposal sets administrators with specific access on the marker |
 | `RemoveAdministratorProposal` | [MsgRemoveAdministratorProposalRequest](#provenance-marker-v1-MsgRemoveAdministratorProposalRequest) | [MsgRemoveAdministratorProposalResponse](#provenance-marker-v1-MsgRemoveAdministratorProposalResponse) | RemoveAdministratorProposal removes administrators with specific access on the marker |
 | `ChangeStatusProposal` | [MsgChangeStatusProposalRequest](#provenance-marker-v1-MsgChangeStatusProposalRequest) | [MsgChangeStatusProposalResponse](#provenance-marker-v1-MsgChangeStatusProposalResponse) | ChangeStatusProposal is a governance proposal change marker status |
@@ -12496,7 +12499,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  |  |
 | `signers` | [string](#string) | repeated |  |
-| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated | Net asset values to set. The "usd" denomination represents whole-dollar amounts, where 1usd = $1.00. |
+| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated | Net asset values to set. The price can use a special "usd" denom, where 1usd = $0.001 and 1000usd = $1.000. |
 
 
 
@@ -13274,7 +13277,7 @@ Msg defines the Metadata Msg service.
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance-metadata-v1-MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance-metadata-v1-MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance-metadata-v1-MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance-metadata-v1-MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-metadata-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-metadata-v1-MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. |
-| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a scope. Note: When setting NAVs amounts are in usd units where 1usd = $1.00. |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a scope. |
 
  <!-- end services -->
 

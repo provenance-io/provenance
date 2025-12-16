@@ -231,10 +231,16 @@ type MsgUpdateInterestRateRequest struct {
 	// The signer that is updating the interest rate.
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
 	// The new interest rate of the ledger.
+	// This field is NOT optional. If not provided (or provided as zero),
+	// then the ledger's interest_rate field will be updated to be zero.
 	InterestRate int32 `protobuf:"varint,3,opt,name=interest_rate,json=interestRate,proto3" json:"interest_rate,omitempty"`
 	// The new interest day count convention of the ledger.
+	// This field is optional. If not provided (or set to unspecified),
+	// the interest day count convention will not be updated.
 	InterestDayCountConvention DayCountConvention `protobuf:"varint,4,opt,name=interest_day_count_convention,json=interestDayCountConvention,proto3,enum=provenance.ledger.v1.DayCountConvention" json:"interest_day_count_convention,omitempty"`
 	// The new interest accrual method of the ledger.
+	// This field is optional. If not provided (or set to unspecified),
+	// the interest accrual method will not be updated.
 	InterestAccrualMethod InterestAccrualMethod `protobuf:"varint,5,opt,name=interest_accrual_method,json=interestAccrualMethod,proto3,enum=provenance.ledger.v1.InterestAccrualMethod" json:"interest_accrual_method,omitempty"`
 }
 
@@ -351,10 +357,14 @@ type MsgUpdatePaymentRequest struct {
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
 	// The new next payment amount of the ledger.
 	// The units of this field are defined by the denom field in this ledger's class.
+	// This field is NOT optional. If you don't provide a value (or provide it as zero),
+	// then the ledger's next_pmt_amt field will be updated to be zero.
 	NextPmtAmt cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=next_pmt_amt,json=nextPmtAmt,proto3,customtype=cosmossdk.io/math.Int" json:"nextPmtAmt,omitempty"`
 	// The new next payment date in days since epoch.
+	// This field is not optional and cannot be zero.
 	NextPmtDate int32 `protobuf:"varint,4,opt,name=next_pmt_date,json=nextPmtDate,proto3" json:"next_pmt_date,omitempty"`
 	// The new payment frequency of the ledger.
+	// This field is optional. If set to unspecified, it will be ignored and the payment_frequency will not be changed.
 	PaymentFrequency PaymentFrequency `protobuf:"varint,5,opt,name=payment_frequency,json=paymentFrequency,proto3,enum=provenance.ledger.v1.PaymentFrequency" json:"payment_frequency,omitempty"`
 }
 
