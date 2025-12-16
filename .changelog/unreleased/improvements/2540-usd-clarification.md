@@ -1,1 +1,0 @@
-* Changed documentation on NetAssetValues fields in proto clarifying that amounts in `usd` units are milli-dollars, where 1usd = $0.001 [PR 2540](https://github.com/provenance-io/provenance/pull/2540).

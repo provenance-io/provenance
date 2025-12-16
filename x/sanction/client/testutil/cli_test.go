@@ -82,6 +82,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		propFile,
 		"--" + flags.FlagKeyringBackend, keyring.BackendTest,
 		"--" + flags.FlagFrom, propMsg.Proposer,
+		"--" + flags.FlagGas, "300000",
 		"--" + flags.FlagFees, feeAmt.String(),
 		"--" + flags.FlagSkipConfirmation,
 		"--" + flags.FlagBroadcastMode, flags.BroadcastSync,
