@@ -146,6 +146,7 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 				DefinitionAmount: sdk.NewInt64Coin("apple", 25),
 				ConvertedAmount:  sdk.NewInt64Coin("banana", 3),
 			},
+			OracleAddresses: []string{},
 		},
 		MsgFees: []*MsgFee{
 			NewMsgFee("/msg.one", sdk.NewInt64Coin("apple", 400)),
@@ -206,7 +207,12 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 			if tc.cdc == nil {
 				tc.cdc = appCdc
 			}
-
+			if tc.expState.Params.OracleAddresses == nil {
+				tc.expState.Params.OracleAddresses = []string{}
+			}
+			if tc.expState.MsgFees == nil {
+				tc.expState.MsgFees = []*MsgFee{}
+			}
 			var actState *GenesisState
 			var err error
 			testFunc := func() {

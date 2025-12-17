@@ -57,6 +57,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 						DefinitionAmount: sdk.NewInt64Coin("apple", 7),
 						ConvertedAmount:  sdk.NewInt64Coin("orange", 3),
 					},
+					OracleAddresses: nil,
 				},
 				MsgFees: []*types.MsgFee{
 					types.NewMsgFee("free"),

@@ -38,6 +38,8 @@ func NewTxCmd() *cobra.Command {
 		NewCmdUpdateParams(),
 		NewCmdUpdateConversionFactor(),
 		NewCmdUpdateMsgFees(),
+		NewCmdAddOracleAddress(),
+		NewCmdRemoveOracleAddress(),
 	)
 
 	return txCmd
@@ -259,5 +261,79 @@ $ %[1]s update --unset '/cosmos.bank.v1beta1.MsgSend'
 	provcli.AddAuthorityFlagToCmd(cmd)
 	cmd.Flags().StringArray(FlagSet, nil, "One or more MsgFees to set, arg format is <msg-type-url>=<cost>")
 	cmd.Flags().StringSlice(FlagUnset, nil, "One or more msg type urls to unset")
+	return cmd
+}
+
+// NewCmdAddOracleAddress creates the cmd to submit a gov prop to add an oracle address.
+func NewCmdAddOracleAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-oracle <oracle-address> <gov prop flags>",
+		Short: "Submit a governance proposal to add an oracle address",
+		Long: strings.TrimSpace(`Submit a governance proposal to add an oracle address that can update the conversion factor.
+The <oracle-address> must be a valid bech32 address.
+Only governance can add oracle addresses.
+`),
+		Example: fmt.Sprintf(`$ %s add-oracle cosmos1abc... --from mykey --title "Add Oracle" --summary "Add trusted oracle for conversion factor updates"`, cmdStart),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+				return fmt.Errorf("invalid oracle address %q: %w", args[0], err)
+			}
+
+			flagSet := cmd.Flags()
+			msg := &types.MsgAddOracleAddressRequest{
+				Authority:     provcli.GetAuthority(flagSet),
+				OracleAddress: args[0],
+			}
+
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+// NewCmdRemoveOracleAddress creates the cmd to submit a gov prop to remove an oracle address.
+func NewCmdRemoveOracleAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-oracle <oracle-address> <gov prop flags>",
+		Short: "Submit a governance proposal to remove an oracle address",
+		Long: strings.TrimSpace(`Submit a governance proposal to remove an oracle address.
+The <oracle-address> must be a valid bech32 address.
+Only governance can remove oracle addresses.
+`),
+		Example: fmt.Sprintf(`$ %s remove-oracle cosmos1abc... --from mykey --title "Remove Oracle" --summary "Remove oracle address"`, cmdStart),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+				return fmt.Errorf("invalid oracle address %q: %w", args[0], err)
+			}
+
+			flagSet := cmd.Flags()
+			msg := &types.MsgRemoveOracleAddressRequest{
+				Authority:     provcli.GetAuthority(flagSet),
+				OracleAddress: args[0],
+			}
+
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	return cmd
 }
