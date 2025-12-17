@@ -531,6 +531,10 @@
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
   
 - [provenance/flatfees/v1/tx.proto](#provenance_flatfees_v1_tx-proto)
+    - [MsgAddOracleAddressRequest](#provenance-flatfees-v1-MsgAddOracleAddressRequest)
+    - [MsgAddOracleAddressResponse](#provenance-flatfees-v1-MsgAddOracleAddressResponse)
+    - [MsgRemoveOracleAddressRequest](#provenance-flatfees-v1-MsgRemoveOracleAddressRequest)
+    - [MsgRemoveOracleAddressResponse](#provenance-flatfees-v1-MsgRemoveOracleAddressResponse)
     - [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest)
     - [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse)
     - [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest)
@@ -8383,6 +8387,58 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 
 
 
+<a name="provenance-flatfees-v1-MsgAddOracleAddressRequest"></a>
+
+### MsgAddOracleAddressRequest
+MsgAddOracleAddressRequest is the request for the AddOracleAddress governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `oracle_address` | [string](#string) |  | oracle_address is the address to be added to the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgAddOracleAddressResponse"></a>
+
+### MsgAddOracleAddressResponse
+MsgAddOracleAddressResponse is the response for the AddOracleAddress governance endpoint.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgRemoveOracleAddressRequest"></a>
+
+### MsgRemoveOracleAddressRequest
+MsgRemoveOracleAddressRequest is the request for the RemoveOracleAddress governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `oracle_address` | [string](#string) |  | oracle_address is the address to be removed from the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgRemoveOracleAddressResponse"></a>
+
+### MsgRemoveOracleAddressResponse
+MsgRemoveOracleAddressResponse is the response for the RemoveOracleAddress governance endpoint.
+
+
+
+
+
+
 <a name="provenance-flatfees-v1-MsgUpdateConversionFactorRequest"></a>
 
 ### MsgUpdateConversionFactorRequest
@@ -8478,6 +8534,8 @@ Msg defines the flatfees Msg service.
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse) | UpdateParams is a governance endpoint for updating the x/flatfees params. |
 | `UpdateConversionFactor` | [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest) | [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse) | UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params. |
 | `UpdateMsgFees` | [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest) | [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse) | UpdateMsgFees is a governance endpoint for updating fees for specific msgs. |
+| `AddOracleAddress` | [MsgAddOracleAddressRequest](#provenance-flatfees-v1-MsgAddOracleAddressRequest) | [MsgAddOracleAddressResponse](#provenance-flatfees-v1-MsgAddOracleAddressResponse) | AddOracleAddress is a governance endpoint for adding an oracle address that can update the conversion factor. |
+| `RemoveOracleAddress` | [MsgRemoveOracleAddressRequest](#provenance-flatfees-v1-MsgRemoveOracleAddressRequest) | [MsgRemoveOracleAddressResponse](#provenance-flatfees-v1-MsgRemoveOracleAddressResponse) | RemoveOracleAddress is a governance endpoint for removing an oracle address. |
 
  <!-- end services -->
 
@@ -8534,6 +8592,7 @@ Params defines the set of params for the flatfees module.
 | ----- | ---- | ----- | ----------- |
 | `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. The denom used here should be the same as used to define the specific msg costs. The recommended denom is musd. |
 | `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. The definition_amount should have the same denom as the default cost. The denom of the converted amount should be the denom that fees are paid in, e.g. nhash. |
+| `oracle_addresses` | [string](#string) | repeated | oracle_addresses is the list of addresses allowed to update the conversion factor without governance. |
 
 
 

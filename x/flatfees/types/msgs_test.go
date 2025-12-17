@@ -22,8 +22,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateConversionFactorRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateMsgFeesRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgAddOracleAddressRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgRemoveOracleAddressRequest{Authority: signer} },
 	}
-
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
 }
 

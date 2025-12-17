@@ -11,6 +11,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateParamsRequest)(nil),
 	(*MsgUpdateConversionFactorRequest)(nil),
 	(*MsgUpdateMsgFeesRequest)(nil),
+	(*MsgAddOracleAddressRequest)(nil),
+	(*MsgRemoveOracleAddressRequest)(nil),
 }
 
 // ValidateBasic performs basic validation for MsgUpdateParamsRequest.
@@ -70,5 +72,33 @@ func (m MsgUpdateMsgFeesRequest) ValidateBasic() error {
 		seenUnset[url] = i
 	}
 
+	return nil
+}
+
+// ValidateBasic performs basic validation on MsgAddOracleAddressRequest
+func (m MsgAddOracleAddressRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority: %w", err)
+	}
+	if m.OracleAddress == "" {
+		return fmt.Errorf("oracle address cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(m.OracleAddress); err != nil {
+		return fmt.Errorf("invalid oracle address: %w", err)
+	}
+	return nil
+}
+
+// ValidateBasic performs basic validation on MsgRemoveOracleAddressRequest
+func (m MsgRemoveOracleAddressRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority: %w", err)
+	}
+	if m.OracleAddress == "" {
+		return fmt.Errorf("oracle address cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(m.OracleAddress); err != nil {
+		return fmt.Errorf("invalid oracle address: %w", err)
+	}
 	return nil
 }
