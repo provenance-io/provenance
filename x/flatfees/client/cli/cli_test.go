@@ -350,8 +350,8 @@ func (s *CLITestSuite) TestNewTxCmd() {
 		{name: "update", aliases: []string{"costs"}},
 		{name: "conversion-factor"},
 		{name: "params"},
-		{name: "add-oracle-address", aliases: []string{"costs"}},
-		{name: "remove-oracle-address", aliases: []string{"costs"}},
+		{name: "add-oracle"},
+		{name: "remove-oracle"},
 	}
 	s.assertBaseCmd(cli.NewTxCmd, subCmds)
 }
@@ -1096,7 +1096,7 @@ func (s *CLITestSuite) TestCmdRemoveOracleAddress_AddressValidation() {
 				"--summary", "Remove oracle address.",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5)).String()),
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
