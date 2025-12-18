@@ -240,7 +240,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close() ///nolint:errcheck // close error safe to ignore in this context.
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {

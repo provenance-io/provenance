@@ -98,8 +98,8 @@ linters:
       ignore-rules:
       - cancelled
     nolintlint:
-      allow-unused: false
-      require-explanation: false
+      allow-unused: true
+      require-explanation: true
       require-specific: false
 formatters:
   enable:

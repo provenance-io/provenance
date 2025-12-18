@@ -118,7 +118,7 @@ func GetNameKeyBytes(name string) []byte {
 func GetAttributeExpireTimePrefix(expireTime time.Time) []byte {
 	key := AttributeExpirationKeyPrefix
 	expireTimeBz := make([]byte, 8)
-	binary.BigEndian.PutUint64(expireTimeBz, uint64(expireTime.Unix())) //nolint:gosec
+	binary.BigEndian.PutUint64(expireTimeBz, uint64(expireTime.Unix())) //nolint:gosec // Unix timestamp cast is safe and non-security-sensitive.
 	return append(key, expireTimeBz...)
 }
 

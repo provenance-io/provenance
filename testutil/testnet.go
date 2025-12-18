@@ -16,7 +16,7 @@ const TestnetEnvVar = "PIO_TESTNET"
 //
 // Standard usage: defer testutil.UnsetTestnetEnvVar()()
 //
-//nolint:errcheck,gosec
+//nolint:errcheck,gosec // test-only code, no security impact
 func UnsetTestnetEnvVar() func() {
 	if origVal, ok := os.LookupEnv(TestnetEnvVar); ok {
 		os.Unsetenv(TestnetEnvVar)
