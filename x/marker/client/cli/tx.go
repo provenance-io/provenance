@@ -1801,11 +1801,11 @@ From stdin:
 				}
 
 			case strings.HasPrefix(authInput, "@"):
-				filePath := filepath.Clean(strings.TrimPrefix(authInput, "@"))
+				filePath := strings.TrimPrefix(authInput, "@")
 				if filePath == "" {
 					return fmt.Errorf("missing file path after '@'")
 				}
-
+				filePath = filepath.Clean(filePath)
 				f, err := os.Open(filePath) // Use filePath directly
 				if err != nil {
 					if os.IsNotExist(err) {
