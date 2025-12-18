@@ -2,11 +2,12 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -25,7 +26,10 @@ func (k Keeper) TriggerByID(ctx context.Context, req *types.QueryTriggerByIDRequ
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	trigger, err := k.GetTrigger(sdkCtx, req.GetId())
 	if err != nil {
-		return &types.QueryTriggerByIDResponse{}, err
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, types.ErrTriggerNotFound
+		}
+		return nil, err
 	}
 	return &types.QueryTriggerByIDResponse{Trigger: &trigger}, nil
 }
@@ -39,28 +43,20 @@ func (k Keeper) Triggers(ctx context.Context, req *types.QueryTriggersRequest) (
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	response := types.QueryTriggersResponse{}
-	kvStore := sdkCtx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.TriggerKeyPrefix)
-	pageResponse, err := query.FilteredPaginate(prefixStore, pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		var trigger types.Trigger
-		vErr := trigger.Unmarshal(value)
-
-		if vErr != nil {
-			return false, vErr
-		}
-
-		if accumulate {
-			response.Triggers = append(response.Triggers, trigger)
-		}
-
-		return true, nil
-	})
-
+	triggers, pageRes, err := query.CollectionPaginate(sdkCtx, &k.TriggersMap, pagination,
+		func(key uint64, trigger types.Trigger) (types.Trigger, error) {
+			trigger.Id = key
+			return trigger, nil
+		},
+	)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to query all triggers: %v", err)
+		return nil, status.Errorf(codes.Internal, "unable to query triggers: %v", err)
 	}
-	response.Pagination = pageResponse
 
-	return &response, nil
+	response := &types.QueryTriggersResponse{
+		Triggers:   triggers,
+		Pagination: pageRes,
+	}
+
+	return response, nil
 }
