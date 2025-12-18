@@ -389,7 +389,7 @@ func (k Keeper) DestroyLedger(ctx context.Context, lk *types.LedgerKey) error {
 	if err != nil {
 		return err
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	// Store the keys that we need to remove.
 	keysToRemove := make([]collections.Pair[string, string], 0)

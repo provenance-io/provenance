@@ -1,3 +1,4 @@
+// Package simulation provides simulation logic for the flatfees module.
 package simulation
 
 // DONTCOVER

@@ -35,7 +35,7 @@ func (k msgServer) WriteScope(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteScope")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	transferAgents, err := k.ValidateWriteScope(ctx, msg)
@@ -286,7 +286,7 @@ func (k msgServer) WriteSession(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteSession")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	var existing *types.Session
@@ -315,7 +315,7 @@ func (k msgServer) WriteRecord(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteRecord")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
@@ -371,7 +371,7 @@ func (k msgServer) WriteScopeSpecification(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G104: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	var existing *types.ScopeSpecification
@@ -423,7 +423,7 @@ func (k msgServer) WriteContractSpecification(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteContractSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // errcheck: the error was checked when msg.ValidateBasic was called;
 	msg.ConvertOptionalFields()
 
 	var existing *types.ContractSpecification
@@ -569,7 +569,7 @@ func (k msgServer) WriteRecordSpecification(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	//nolint:errcheck,gosec // G115: the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
 	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()
@@ -652,13 +652,13 @@ func (k msgServer) BindOSLocator(
 	if strings.TrimSpace(msg.Locator.EncryptionKey) != "" {
 		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
 	}
-	if k.Keeper.OSLocatorExists(ctx, ownerAddress) {
+	if k.OSLocatorExists(ctx, ownerAddress) {
 		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	// Bind owner to URI
-	if err := k.Keeper.SetOSLocator(ctx, ownerAddress, encryptionKey, msg.Locator.LocatorUri); err != nil {
+	if err := k.SetOSLocator(ctx, ownerAddress, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -683,18 +683,18 @@ func (k msgServer) DeleteOSLocator(
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+	if !k.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+	if !k.VerifyCorrectOwner(ctx, ownerAddr) {
 		ctx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete os locator.")
 	}
 
 	// Delete
-	if err := k.Keeper.RemoveOSLocator(ctx, ownerAddr); err != nil {
+	if err := k.RemoveOSLocator(ctx, ownerAddr); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -723,12 +723,12 @@ func (k msgServer) ModifyOSLocator(
 		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
 	}
 
-	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+	if !k.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+	if !k.VerifyCorrectOwner(ctx, ownerAddr) {
 		ctx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete os locator.")
 	}

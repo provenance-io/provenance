@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -583,7 +584,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 	}
 
 	cmd.Flags().String(FlagPacketTimeoutHeight, "0-1000", "Packet timeout block height. The timeout is disabled when set to 0-0.")
-	cmd.Flags().Uint64(FlagPacketTimeoutTimestamp, uint64((time.Duration(10) * time.Minute).Nanoseconds()), "Packet timeout timestamp in nanoseconds from now. Default is 10 minutes. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(FlagPacketTimeoutTimestamp, uint64((time.Duration(10) * time.Minute).Nanoseconds()), "Packet timeout timestamp in nanoseconds from now. Default is 10 minutes. The timeout is disabled when set to 0.") //nolint:gosec // G115: safe conversion from int64 to uint64.
 	cmd.Flags().Bool(FlagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
 	cmd.Flags().String(FlagMemo, "", "Memo to be sent along with the packet.")
 	flags.AddTxFlagsToCmd(cmd)
@@ -1392,7 +1393,7 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 		}
 		partsPerAddress := strings.Split(p, ",")
 		// if it has an address has to have at least one access associated with it
-		if !(len(partsPerAddress) > 1) {
+		if len(partsPerAddress) <= 1 {
 			panic("at least one grant should be provided with address")
 		}
 		var permissions types.AccessList
@@ -1479,7 +1480,7 @@ func GetCmdSetDenomMetadataProposal() *cobra.Command {
 					},
 					{
 						Denom:    display,
-						Exponent: uint32(exponent), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+						Exponent: uint32(exponent),
 					},
 				},
 				Base:    denom,
@@ -1532,7 +1533,7 @@ func GetCmdSetDenomMetadata() *cobra.Command {
 					},
 					{
 						Denom:    display,
-						Exponent: uint32(exponent), //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
+						Exponent: uint32(exponent),
 					},
 				},
 				Base:    denom,
@@ -1804,7 +1805,7 @@ From stdin:
 				if filePath == "" {
 					return fmt.Errorf("missing file path after '@'")
 				}
-
+				filePath = filepath.Clean(filePath)
 				f, err := os.Open(filePath) // Use filePath directly
 				if err != nil {
 					if os.IsNotExist(err) {
@@ -1813,7 +1814,7 @@ From stdin:
 					// For other errors like permissions or invalid characters, os.Open will return relevant error.
 					return fmt.Errorf("failed to open file %s: %w", filePath, err)
 				}
-				defer f.Close()
+				defer f.Close() //nolint:errcheck // closing file, error not critical.
 
 				limitedReader := io.LimitReader(f, maxInputSize+1) // +1 to detect overflow
 				authzJSON, err = io.ReadAll(limitedReader)
