@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -1636,9 +1635,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 
 	// Put all the step values in order.
 	steps := slices.Collect(maps.Keys(stepsMap))
-	sort.Slice(steps, func(i, j int) bool {
-		return steps[i] < steps[j]
-	})
+	slices.Sort(steps)
 
 	// Run through all the steps, take the appropriate actions, and look up and log the results.
 	stepResults := make([]*stepResult, len(steps))

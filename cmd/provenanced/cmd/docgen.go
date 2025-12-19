@@ -54,7 +54,7 @@ A successful command will not only generate files in the selected formats but al
 
 			dir := args[0]
 			if !exists(dir) {
-				err = os.Mkdir(dir, 0755)
+				err = os.Mkdir(dir, 0755) //nolint:gosec // G301: permission is safe and intended.
 				if err != nil {
 					return err
 				}
