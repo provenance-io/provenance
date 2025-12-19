@@ -3,7 +3,7 @@ package exchange
 import (
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
@@ -541,9 +541,7 @@ func AllPermissions() []Permission {
 			rv = append(rv, Permission(val))
 		}
 	}
-	sort.Slice(rv, func(i, j int) bool {
-		return rv[i] < rv[j]
-	})
+	slices.Sort(rv)
 	return rv
 }
 

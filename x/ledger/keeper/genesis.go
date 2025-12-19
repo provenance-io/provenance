@@ -183,7 +183,7 @@ func (k Keeper) ImportLedgerClassEntryTypes(ctx context.Context, state *types.Ge
 			panic(fmt.Errorf("invalid LedgerClassEntryTypes[%d].Key.P2: %w", i, err))
 		}
 
-		key := collections.Join(l.Key.P1, int32(id)) //nolint:gosec // Parsed above as 32-bits, so we know it fits.
+		key := collections.Join(l.Key.P1, int32(id)) // Parsed above as 32-bits, so we know it fits.
 		if err = k.LedgerClassEntryTypes.Set(ctx, key, l.EntryType); err != nil {
 			panic(fmt.Errorf("error storing LedgerClassEntryTypes[%d]: %w", i, err))
 		}
@@ -199,7 +199,7 @@ func (k Keeper) ImportLedgerClassStatusTypes(ctx context.Context, state *types.G
 			panic(fmt.Errorf("invalid LedgerClassStatusTypes[%d].Key.P2: %w", i, err))
 		}
 
-		key := collections.Join(l.Key.P1, int32(id)) //nolint:gosec // Parsed above as 32-bits, so we know it fits.
+		key := collections.Join(l.Key.P1, int32(id)) // Parsed above as 32-bits, so we know it fits.
 		if err := k.LedgerClassStatusTypes.Set(ctx, key, l.StatusType); err != nil {
 			panic(fmt.Errorf("error storing LedgerClassStatusTypes[%d]: %w", i, err))
 		}
@@ -215,7 +215,7 @@ func (k Keeper) ImportLedgerClassBucketTypes(ctx context.Context, state *types.G
 			panic(fmt.Errorf("invalid LedgerClassBucketTypes[%d].Key.P2: %w", i, err))
 		}
 
-		key := collections.Join(l.Key.P1, int32(id)) //nolint:gosec // Parsed above as 32-bits, so we know it fits.
+		key := collections.Join(l.Key.P1, int32(id)) // Parsed above as 32-bits, so we know it fits.
 		if err = k.LedgerClassBucketTypes.Set(ctx, key, l.BucketType); err != nil {
 			panic(fmt.Errorf("error storing LedgerClassBucketTypes[%d]: %w", i, err))
 		}

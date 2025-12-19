@@ -117,7 +117,8 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 	// Init an attribute record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
+
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.Attribute{}
@@ -358,7 +359,7 @@ func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []s
 	store := ctx.KVStore(k.storeKey)
 	keyPrefix := types.AttributeNameKeyPrefix(name)
 	it := storetypes.KVStorePrefixIterator(store, keyPrefix)
-	defer it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; it.Valid(); it.Next() {
 		addressBytes, err := types.GetAddressFromKey(it.Key())
 		if err != nil {
@@ -393,7 +394,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	iter := storetypes.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
 	defer func() {
 		if iter != nil {
-			iter.Close()
+			iter.Close() //nolint:errcheck,gosec // close error safe to ignore in this context
 		}
 	}()
 
@@ -408,7 +409,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			attrToDelete = append(attrToDelete, attr)
 		}
 	}
-	iter.Close()
+	iter.Close() //nolint:errcheck,gosec // close error safe to ignore in this context
 	iter = nil
 
 	for _, attr := range attrToDelete {
@@ -470,7 +471,7 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 // getAddrAttributesKeysByName returns an list of attribute keys for the an account and attribute name
 func (k Keeper) getAddrAttributesKeysByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attributeKeys [][]byte) {
 	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
-	defer it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; it.Valid(); it.Next() {
 		attributeKeys = append(attributeKeys, it.Key())
 	}
@@ -484,7 +485,7 @@ type namePred = func(string) bool
 func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []types.Attribute, err error) {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
 		if err = k.cdc.Unmarshal(it.Value(), &attr); err != nil {
@@ -537,7 +538,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	for ; iterator.Valid(); iterator.Next() {
 		expirationKeys = append(expirationKeys, iterator.Key())
 	}
-	iterator.Close()
+	iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 
 	count := 0
 	for _, expirationKey := range expirationKeys {
