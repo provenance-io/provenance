@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"sort"
 	"testing"
 	"time"
 
@@ -296,9 +295,7 @@ func assertNoDupeAccountNumbers(t *testing.T, _ sdk.Context, _ *App, accts []sdk
 		byAcctNum[acctNum] = append(byAcctNum[acctNum], acct)
 		acctNums = append(acctNums, acctNum)
 	}
-	sort.Slice(acctNums, func(i, j int) bool {
-		return acctNums[i] < acctNums[j]
-	})
+	slices.Sort(acctNums)
 	rv := true
 	for i, acctNum := range acctNums {
 		if i > 0 && acctNums[i-1] == acctNum {
