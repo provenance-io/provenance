@@ -1,3 +1,4 @@
+// Package antewrapper provides ante decorators and related utilities for transaction processing.
 package antewrapper
 
 import (
@@ -19,10 +20,12 @@ type ProvSetUpContextDecorator struct {
 	ffk FlatFeesKeeper
 }
 
+// NewProvSetUpContextDecorator creates a new ProvSetUpContextDecorator with the given FlatFeesKeeper.
 func NewProvSetUpContextDecorator(ffk FlatFeesKeeper) ProvSetUpContextDecorator {
 	return ProvSetUpContextDecorator{ffk: ffk}
 }
 
+// AnteHandle implements the ante handler logic for ProvSetUpContextDecorator.
 func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	ctx.Logger().Debug("Starting ProvSetUpContextDecorator.AnteHandle.", "simulate", simulate, "IsCheckTx", ctx.IsCheckTx())
 
@@ -42,26 +45,40 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		return newCtx, err
 	}
 
-	// Set up the gas meter with the Tx gas limit since gasWanted isn't reliable anymore.
-	// This way, even if it's the default, it'll only run out of gas if it's too big for a Tx.
+	var maxBlockGas int64
+	if bp := ctx.ConsensusParams().Block; bp != nil {
+		maxBlockGas = bp.GetMaxGas()
+	}
+	txIsLimited := txGasLimitShouldApply(ctx.ChainID(), tx.GetMsgs())
+
+	// Determine how much gas to give the gas meter.
+	// By default, it's the TxGasLimit.
+	// If the user provided a gas limit, use that instead.
+	// Or, if the tx isn't limited, and the user didn't provide their own limit, use half the block gas limit.
+	// This allows gov props to use a higher gas limit than the usual Tx gas limit.
+	gasLimit := TxGasLimit
+	switch {
+	case gasWanted != DefaultGasLimit:
+		gasLimit = gasWanted
+	case !txIsLimited && maxBlockGas > 0:
+		gasLimit = uint64(maxBlockGas / 2) //nolint:gosec // safe: maxBlockGas is non-negative
+	}
+
 	// Note that SetGasMeter uses an infinite gas meter if simulating or at height 0 (init genesis).
-	newCtx = ante.SetGasMeter(simulate, ctx, TxGasLimit)
+	newCtx = ante.SetGasMeter(simulate, ctx, gasLimit)
 	// Now wrap that gas meter in our flat-fee gas meter.
 	newCtx = ctx.WithGasMeter(NewFlatFeeGasMeter(newCtx.GasMeter(), newCtx.Logger(), d.ffk))
-	// Note: We don't set the costs yet, because we want to check a few more things before doing that work.
+	// Note: We don't set the costs yet because we want to check a few more things before doing that work.
 
 	// Ensure that the requested gas does not exceed either the configured block maximum, or the tx maximum.
 	// If there's no block maximum defined, we can't do that check, and we interpret that as an indication
 	// that there shouldn't be a tx limit either.
-	if bp := ctx.ConsensusParams().Block; bp != nil {
-		maxBlockGas := bp.GetMaxGas()
-		if maxBlockGas > 0 {
-			if gasWanted > uint64(maxBlockGas) {
-				return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds block max gas %d", gasWanted, maxBlockGas)
-			}
-			if txGasLimitShouldApply(ctx.ChainID(), tx.GetMsgs()) && gasWanted > TxGasLimit {
-				return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds tx max gas %d", gasWanted, TxGasLimit)
-			}
+	if maxBlockGas > 0 {
+		if gasWanted > uint64(maxBlockGas) {
+			return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds block max gas %d", gasWanted, maxBlockGas)
+		}
+		if txIsLimited && gasWanted > TxGasLimit {
+			return newCtx, sdkerrors.ErrInvalidGasLimit.Wrapf("tx gas limit %d exceeds tx max gas %d", gasWanted, TxGasLimit)
 		}
 	}
 

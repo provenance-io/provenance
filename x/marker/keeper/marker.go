@@ -92,7 +92,7 @@ func (k Keeper) AddAccess(
 	switch m.GetStatus() {
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
 	case types.StatusFinalized, types.StatusActive:
-		if !(caller.Equals(m.GetManager()) && m.GetStatus() == types.StatusFinalized) &&
+		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
 			!m.AddressHasAccess(caller, types.Access_Admin) &&
 			!k.accountControlsAllSupply(ctx, caller, m) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
@@ -134,7 +134,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	switch m.GetStatus() {
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
 	case types.StatusFinalized, types.StatusActive:
-		if !(caller.Equals(m.GetManager()) && m.GetStatus() == types.StatusFinalized) &&
+		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
 			!m.AddressHasAccess(caller, types.Access_Admin) &&
 			!k.accountControlsAllSupply(ctx, caller, m) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
