@@ -18,7 +18,7 @@ import (
 func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
-	defer it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; it.Valid(); it.Next() {
 		scope := k.mustReadScopeBz(it.Value())
 		k.PopulateScopeValueOwner(ctx, &scope)
@@ -34,7 +34,8 @@ func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress,
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressScopeCacheIteratorPrefix(address)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
+
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
 		if err := scopeID.Unmarshal(it.Key()[len(prefix):]); err != nil {
@@ -54,7 +55,8 @@ func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.Met
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID)
 	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
+
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
 		if err := scopeID.Unmarshal(it.Key()[len(prefix):]); err != nil {
@@ -186,7 +188,11 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix, _ := id.ScopeRecordIteratorPrefix() // Can't return an error because we know it's a valid scope id.
 	iter := storetypes.KVStorePrefixIterator(store, prefix)
-	defer iter.Close()
+	defer func() {
+		if err := iter.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close RemoveScope", "error", err)
+		}
+	}()
 	for ; iter.Valid(); iter.Next() {
 		k.RemoveRecord(ctx, iter.Key())
 	}
@@ -866,7 +872,7 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, metadataDenom, priceDenom stri
 
 // SetNetAssetValue adds/updates a net asset value to scope
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValue types.NetAssetValue, source string) error {
-	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight()) //nolint:gosec // G115
 	if err := netAssetValue.Validate(); err != nil {
 		return err
 	}
@@ -897,7 +903,8 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress,
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
-	defer it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
+
 	for ; it.Valid(); it.Next() {
 		var scopeNav types.NetAssetValue
 		err := k.cdc.Unmarshal(it.Value(), &scopeNav)
@@ -918,7 +925,7 @@ func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddr
 	for ; it.Valid(); it.Next() {
 		keys = append(keys, it.Key())
 	}
-	it.Close()
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for _, key := range keys {
 		store.Delete(key)

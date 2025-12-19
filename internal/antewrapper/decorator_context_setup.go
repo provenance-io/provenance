@@ -1,3 +1,4 @@
+// Package antewrapper provides ante decorators and related utilities for transaction processing.
 package antewrapper
 
 import (
@@ -19,10 +20,12 @@ type ProvSetUpContextDecorator struct {
 	ffk FlatFeesKeeper
 }
 
+// NewProvSetUpContextDecorator creates a new ProvSetUpContextDecorator with the given FlatFeesKeeper.
 func NewProvSetUpContextDecorator(ffk FlatFeesKeeper) ProvSetUpContextDecorator {
 	return ProvSetUpContextDecorator{ffk: ffk}
 }
 
+// AnteHandle implements the ante handler logic for ProvSetUpContextDecorator.
 func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	ctx.Logger().Debug("Starting ProvSetUpContextDecorator.AnteHandle.", "simulate", simulate, "IsCheckTx", ctx.IsCheckTx())
 
@@ -58,7 +61,7 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	case gasWanted != DefaultGasLimit:
 		gasLimit = gasWanted
 	case !txIsLimited && maxBlockGas > 0:
-		gasLimit = uint64(maxBlockGas / 2)
+		gasLimit = uint64(maxBlockGas / 2) //nolint:gosec // safe: maxBlockGas is non-negative
 	}
 
 	// Note that SetGasMeter uses an infinite gas meter if simulating or at height 0 (init genesis).

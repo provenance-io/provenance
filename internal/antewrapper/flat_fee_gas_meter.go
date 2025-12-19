@@ -70,6 +70,7 @@ type FlatFeeGasMeter struct {
 
 var _ storetypes.GasMeter = (*FlatFeeGasMeter)(nil)
 
+// NewFlatFeeGasMeter creates a new FlatFeeGasMeter wrapping the base GasMeter, logger, and FlatFeesKeeper.
 func NewFlatFeeGasMeter(base storetypes.GasMeter, logger log.Logger, ffk FlatFeesKeeper) *FlatFeeGasMeter {
 	return &FlatFeeGasMeter{
 		GasMeter:  base,

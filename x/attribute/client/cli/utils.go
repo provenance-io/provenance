@@ -81,7 +81,7 @@ func ReadAccountDataFlags(flagSet *flag.FlagSet) (string, error) {
 		return value, nil
 	}
 
-	bz, err := os.ReadFile(file)
+	bz, err := os.ReadFile(file) //nolint:gosec // G304: path controlled internally, safe to read.
 	if err != nil {
 		return "", fmt.Errorf("failed to read value from --%s: %w", FlagFile, err)
 	}

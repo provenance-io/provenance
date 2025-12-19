@@ -90,7 +90,7 @@ func queryTriggerByID(client client.Context, queryClient types.QueryClient, arg 
 	var response *types.QueryTriggerByIDResponse
 	response, err = queryClient.TriggerByID(
 		context.Background(),
-		&types.QueryTriggerByIDRequest{Id: uint64(triggerID)},
+		&types.QueryTriggerByIDRequest{Id: uint64(triggerID)}, //nolint:gosec // G115: safe int to uint64 conversion
 	)
 	if err != nil {
 		return fmt.Errorf("failed to query trigger %d: %w", triggerID, err)
