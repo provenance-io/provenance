@@ -1,8 +1,8 @@
 module github.com/provenance-io/provenance
 
-go 1.23.2
+go 1.25
 
-toolchain go1.23.5
+toolchain go1.25.0
 
 require (
 	cosmossdk.io/api v0.7.6
