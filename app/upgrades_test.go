@@ -2,26 +2,22 @@ package app
 
 import (
 	"bytes"
-	"compress/gzip"
-	"encoding/json"
+	"context"
+	"embed"
 	"errors"
 	"fmt"
-	"maps"
 	"regexp"
-	"slices"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,9 +29,6 @@ import (
 
 	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
-	"github.com/provenance-io/provenance/testutil/assertions"
-	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
-	ledgerTypes "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 type UpgradeTestSuite struct {
@@ -54,22 +47,11 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
-	s.SetupBouvardia()
 	defer SetLoggerMaker(SetLoggerMaker(BufferedInfoLoggerMaker(&s.logBuffer)))
 	s.app = Setup(s.T())
 	s.logBuffer.Reset()
 	s.startTime = time.Now()
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.startTime})
-}
-
-// SetupBouvardia does some setup that needs to be done for some of the bouvardia upgrade tests.
-// TODO: Delete this method with the bouvardia stuff.
-func (s *UpgradeTestSuite) SetupBouvardia() {
-	// Currently, the upgrade_data files have testnet addresses, so we need to use the testnet config.
-	SetConfig(true, false)
-	// When all tests are run together (e.g. make test), there's a chance some key addresses have already been seen,
-	// (e.g. the bank module account), and the cache has the wrong HRP for those entries, so we need to disable it.
-	sdk.SetAddrCacheEnabled(false)
 }
 
 // GetLogOutput gets the log buffer contents. This (probably) also clears the log buffer.
@@ -1051,551 +1033,136 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 // Create strings with the log statements that start off the reusable upgrade functions.
 var (
 	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
-	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
+	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
+	LogMsgProvLabsWasmStoreStart               = "INF Storing the NUVA Vault Manager Smart Contract."
 )
 
-func (s *UpgradeTestSuite) TestBouvardiaRC1() {
+func (s *UpgradeTestSuite) TestCarnationRC1() {
 	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Pruning expired consensus states for IBC.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Increasing max memo length to 1024 bytes.",
-		"INF Setting up flat fees.",
-		"INF Starting import of ledger data.",
-		"INF Starting import of registry data.",
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+		LogMsgProvLabsWasmStoreStart,
 	}
-	s.AssertUpgradeHandlerLogs("bouvardia-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("carnation-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestBouvardiaRC2() {
+func (s *UpgradeTestSuite) TestCarnation() {
 	expInLog := []string{
-		"INF Fixing ledger class id=figure-servicing-1-0",
-		"INF Fixing registry entries",
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+		LogMsgProvLabsWasmStoreStart,
 	}
-	expNotInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Pruning expired consensus states for IBC.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Increasing max memo length to 1024 bytes.",
-		"INF Setting up flat fees.",
-		"INF Starting import of ledger data.",
-		"INF Starting import of registry data.",
-	}
-	s.AssertUpgradeHandlerLogs("bouvardia-rc2", expInLog, expNotInLog)
+	s.AssertUpgradeHandlerLogs("carnation", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestBouvardia() {
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Pruning expired consensus states for IBC.",
-		"INF Removing inactive validator delegations.",
-		"INF Converting completed vesting accounts into base accounts.",
-		"INF Increasing max memo length to 1024 bytes.",
-		"INF Setting up flat fees.",
-		"INF Starting import of ledger data.",
-		"INF Starting import of registry data.",
+// wrappedWasmMsgSrvr is a wasmtypes.MsgServer that lets us inject an error to return from StoreCode.
+type wrappedWasmMsgSrvr struct {
+	wasmMsgServer wasmtypes.MsgServer
+	storeCodeErr  string
+}
+
+func newWrappedWasmMsgSrvr(wasmKeeper *wasmkeeper.Keeper) *wrappedWasmMsgSrvr {
+	return &wrappedWasmMsgSrvr{wasmMsgServer: wasmkeeper.NewMsgServerImpl(wasmKeeper)}
+}
+
+func (w *wrappedWasmMsgSrvr) WithStoreCodeErr(str string) *wrappedWasmMsgSrvr {
+	w.storeCodeErr = str
+	return w
+}
+
+func (w *wrappedWasmMsgSrvr) StoreCode(ctx context.Context, msg *wasmtypes.MsgStoreCode) (*wasmtypes.MsgStoreCodeResponse, error) {
+	if len(w.storeCodeErr) > 0 {
+		return nil, errors.New(w.storeCodeErr)
 	}
-	expNotInLog := []string{
-		"INF Fixing ledger class id=figure-servicing-1-0",
-		"INF Fixing registry entries",
-	}
-	s.AssertUpgradeHandlerLogs("bouvardia", expInLog, expNotInLog)
+	return w.wasmMsgServer.StoreCode(ctx, msg)
 }
 
-type MockFlatFeesKeeper struct {
-	SetParamsErrs  []string
-	SetParamsCalls []flatfeestypes.Params
-
-	SetMsgFeeErrs  []string
-	SetMsgFeeCalls []*flatfeestypes.MsgFee
-}
-
-var _ FlatFeesKeeper = (*MockFlatFeesKeeper)(nil)
-
-func NewMockFlatFeesKeeper() *MockFlatFeesKeeper {
-	return &MockFlatFeesKeeper{}
-}
-
-func (m *MockFlatFeesKeeper) WithSetParamsErrs(errs ...string) *MockFlatFeesKeeper {
-	m.SetParamsErrs = append(m.SetParamsErrs, errs...)
-	return m
-}
-
-func (m *MockFlatFeesKeeper) WithSetMsgFeeErrs(errs ...string) *MockFlatFeesKeeper {
-	m.SetMsgFeeErrs = append(m.SetMsgFeeErrs, errs...)
-	return m
-}
-
-func (m *MockFlatFeesKeeper) SetParams(_ sdk.Context, params flatfeestypes.Params) error {
-	m.SetParamsCalls = append(m.SetParamsCalls, params)
-	var rv string
-	if len(m.SetParamsErrs) > 0 {
-		rv = m.SetParamsErrs[0]
-		m.SetParamsErrs = m.SetParamsErrs[1:]
-	}
-	if len(rv) > 0 {
-		return errors.New(rv)
-	}
-	return nil
-}
-
-func (m *MockFlatFeesKeeper) SetMsgFee(_ sdk.Context, msgFee flatfeestypes.MsgFee) error {
-	msgFeeCopy := msgFee
-	m.SetMsgFeeCalls = append(m.SetMsgFeeCalls, &msgFeeCopy)
-	var rv string
-	if len(m.SetMsgFeeErrs) > 0 {
-		rv = m.SetMsgFeeErrs[0]
-		m.SetMsgFeeErrs = m.SetMsgFeeErrs[1:]
-	}
-	if len(rv) > 0 {
-		return errors.New(rv)
-	}
-	return nil
-}
-
-func TestSetupFlatFees(t *testing.T) {
-	ctx := sdk.Context{}.WithLogger(log.NewNopLogger())
-	expParams := MakeFlatFeesParams()
-	expCosts := MakeFlatFeesCosts()
+func (s *UpgradeTestSuite) TestStoreWasmCode() {
+	origUpgradeFiles := UpgradeFiles
+	defer func() {
+		UpgradeFiles = origUpgradeFiles
+	}()
 
 	tests := []struct {
-		name    string
-		ffk     *MockFlatFeesKeeper
-		expErr  string
-		expFees []*flatfeestypes.MsgFee
+		name         string
+		upgradeFiles embed.FS
+		expLogs      []string
 	}{
 		{
-			name:   "error setting params",
-			ffk:    NewMockFlatFeesKeeper().WithSetParamsErrs("notgonnadoit"),
-			expErr: "could not set x/flatfees params: notgonnadoit",
+			name:         "success",
+			upgradeFiles: UpgradeFiles,
+			expLogs: []string{
+				"INF Storing the NUVA Vault Manager Smart Contract.",
+				"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\".",
+				"INF Done storing the NUVA Vault Manager Smart Contract.",
+			},
 		},
 		{
-			name:    "error setting first cost",
-			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("one error to rule them all"),
-			expErr:  "could not set msg fee " + expCosts[0].String() + ": one error to rule them all",
-			expFees: expCosts[0:1],
-		},
-		{
-			name:    "error setting second cost",
-			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("", "oopsies"),
-			expErr:  "could not set msg fee " + expCosts[1].String() + ": oopsies",
-			expFees: expCosts[0:2],
-		},
-		{
-			name:    "error setting 10th cost",
-			ffk:     NewMockFlatFeesKeeper().WithSetMsgFeeErrs("", "", "", "", "", "", "", "", "", "sproing"),
-			expErr:  "could not set msg fee " + expCosts[9].String() + ": sproing",
-			expFees: expCosts[0:10],
-		},
-		{
-			name: "error setting 125th cost",
-			ffk: NewMockFlatFeesKeeper().
-				WithSetMsgFeeErrs(slices.Repeat([]string{""}, 124)...).
-				WithSetMsgFeeErrs("almosthadit"),
-			expErr:  "could not set msg fee " + expCosts[124].String() + ": almosthadit",
-			expFees: expCosts[0:125],
+			name:         "failed to read file",
+			upgradeFiles: embed.FS{},
+			expLogs: []string{
+				"INF Storing the NUVA Vault Manager Smart Contract.",
+				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm: file does not exist\"",
+				"INF Done storing the NUVA Vault Manager Smart Contract.",
+			},
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			if tc.ffk == nil {
-				tc.ffk = NewMockFlatFeesKeeper()
-			}
-
-			var err error
+		s.Run(tc.name, func() {
+			UpgradeFiles = tc.upgradeFiles
+			s.logBuffer.Reset()
 			testFunc := func() {
-				err = setupFlatFees(ctx, tc.ffk)
+				storeWasmCode(s.ctx, s.app)
 			}
-			require.NotPanics(t, testFunc, "setupFlatFees")
-			assertions.AssertErrorValue(t, err, tc.expErr, "setupFlatFees error")
-
-			// SetParams should always get called exactly once.
-			assert.Len(t, tc.ffk.SetParamsCalls, 1, "Calls made to SetParams(...)")
-			for _, actParams := range tc.ffk.SetParamsCalls {
-				ok := assert.Equal(t, expParams.DefaultCost.String(), actParams.DefaultCost.String(), "params.DefaultCost")
-				ok = assert.Equal(t, expParams.ConversionFactor.String(), actParams.ConversionFactor.String(), "params.ConversionFactor") && ok
-				if ok {
-					assert.Equal(t, expParams, actParams, "params")
-				}
-			}
-
-			expCalls := sliceToStrings(tc.expFees)
-			actCalls := sliceToStrings(tc.ffk.SetMsgFeeCalls)
-			if assert.Equal(t, expCalls, actCalls, "calls made to SetMsgFee (as strings)") {
-				assert.Equal(t, tc.expFees, tc.ffk.SetMsgFeeCalls, "calls made to SetMsgFee")
-			}
+			s.Require().NotPanics(testFunc, "storeWasmCode")
+			actLogs := splitLogOutput(s.GetLogOutput("executeStoreCodeMsg"))
+			s.Assert().Equal(tc.expLogs, actLogs, "log messages during executeStoreCodeMsg")
 		})
 	}
 }
 
-func sliceToStrings[S ~[]E, E fmt.Stringer](vals S) []string {
-	if vals == nil {
-		return nil
-	}
-	rv := make([]string, len(vals))
-	for i, val := range vals {
-		rv[i] = val.String()
-	}
-	return rv
-}
-
-func TestMakeFlatFeesParams(t *testing.T) {
-	var params flatfeestypes.Params
-	testFunc := func() {
-		params = MakeFlatFeesParams()
-	}
-	require.NotPanics(t, testFunc, "MakeFlatFeesParams()")
-	err := params.Validate()
-	require.NoError(t, err, "params.Validate()")
-	assert.Equal(t, "musd", params.DefaultCost.Denom, "params.DefaultCost.Denom")
-	assert.Equal(t, "musd", params.ConversionFactor.DefinitionAmount.Denom, "params.ConversionFactor.DefinitionAmount.Denom")
-	assert.Equal(t, "nhash", params.ConversionFactor.ConvertedAmount.Denom, "params.ConversionFactor.ConvertedAmount.Denom")
-}
-
-func (s *UpgradeTestSuite) TestMakeFlatFeesCosts() {
-	// First, get a list of all valid msgTypeURLs directly from the interface registry.
-	msgTypeURLsList := s.app.interfaceRegistry.ListImplementations("cosmos.base.v1beta1.Msg")
-	slices.Sort(msgTypeURLsList)
-	msgTypeURLs := make(map[string]bool)
-	for _, msgTypeURL := range msgTypeURLsList {
-		msgTypeURLs[msgTypeURL] = true
+func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm")
+	s.Require().NoError(err, "reading wasm file")
+	msg := &wasmtypes.MsgStoreCode{
+		Sender:                s.app.GovKeeper.GetAuthority(),
+		WASMByteCode:          codeBz,
+		InstantiatePermission: &wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody},
 	}
 
-	var msgFees []*flatfeestypes.MsgFee
-	testFunc := func() {
-		msgFees = MakeFlatFeesCosts()
+	tests := []struct {
+		name    string
+		errMsg  string
+		expLogs []string
+	}{
+		{
+			name:    "storage fails",
+			errMsg:  "dang no worky",
+			expLogs: []string{"ERR Could not store smart contract. error=\"dang no worky\""},
+		},
+		{
+			name:    "storage succeeds",
+			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\"."},
+		},
 	}
-	s.Require().NotPanics(testFunc, "MakeFlatFeesCosts()")
-	s.Require().NotNil(msgFees, "MakeFlatFeesCosts() result")
-	s.Require().NotEmpty(msgFees, "MakeFlatFeesCosts() result")
 
-	// Keep track of the ones that we've seen so that we can log the ones with default costs at the end.
-	seen := make(map[string]bool)
-
-	for i, msgFee := range msgFees {
-		s.Run(fmt.Sprintf("%d: %s", i, msgFee.MsgTypeUrl), func() {
-			seen[msgFee.MsgTypeUrl] = true
-
-			// Make sure the entry is valid.
-			err := msgFee.Validate()
-			s.Assert().NoError(err, "msgFee.Validate()")
-			if len(msgFee.Cost) != 0 {
-				if s.Assert().Len(msgFee.Cost, 1, "msgFee.Cost") {
-					s.Assert().Equal(flatfeestypes.DefaultFeeDefinitionDenom, msgFee.Cost[0].Denom, "msgFee.Cost[0].Denom")
-				}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := newWrappedWasmMsgSrvr(s.app.WasmKeeper).WithStoreCodeErr(tc.errMsg)
+			s.logBuffer.Reset()
+			testFunc := func() {
+				executeStoreCodeMsg(s.ctx, msgServer, msg)
 			}
-
-			// Make sure the msgTypeURL is valid.
-			isValidMsgTypeURL := msgTypeURLs[msgFee.MsgTypeUrl]
-			s.Assert().True(isValidMsgTypeURL, "%q is not a valid msgTypeURL", msgFee.MsgTypeUrl)
-
-			// Make sure the msg type doesn't appear anywhere else in the list.
-			for j, msgFee2 := range msgFees {
-				if i == j {
-					continue
-				}
-				s.Assert().NotEqual(msgFee.MsgTypeUrl, msgFee2.MsgTypeUrl,
-					"MsgTypeUrl of msgFees[%d]=%s and msgFees[%d]=%s", i, msgFee.Cost, j, msgFee2.Cost)
-			}
+			s.Require().NotPanics(testFunc, "executeStoreCodeMsg")
+			actLogs := splitLogOutput(s.GetLogOutput("executeStoreCodeMsg"))
+			s.Assert().Equal(tc.expLogs, actLogs, "log messages during executeStoreCodeMsg")
 		})
 	}
-
-	s.Run("Msgs with Default cost", func() {
-		unseen := make([]string, 0, len(msgTypeURLsList)-len(msgFees))
-		for _, msgTypeURL := range msgTypeURLsList {
-			if _, ok := seen[msgTypeURL]; !ok {
-				unseen = append(unseen, msgTypeURL)
-			}
-		}
-		s.T().Logf("MsgTypeURLs with default cost (%d):\n%s", len(unseen), strings.Join(unseen, "\n"))
-	})
-}
-
-func TestLogCostGrid(t *testing.T) {
-	// This test just outputs (to logs) a table of costs at various conversion factors.
-	// Delete this test with the other bouvardia stuff.
-	// 1 hash = $0.025, so 1000000000nhash = 25musd.
-	// Define the conversion factor musd amounts (per 1 hash).
-	cfVals := []int64{20, 25, 30, 35, 40, 50, 75, 100}
-	// Define a set of costs (in musd) that we always want in the table. All actually used amounts are automatically included.
-	standardCosts := []int64{5, 50, 100, 150, 250, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000}
-
-	// Create the conversion factors.
-	cfs := make([]flatfeestypes.ConversionFactor, len(cfVals))
-	for i, cf := range cfVals {
-		cfs[i] = flatfeestypes.ConversionFactor{
-			DefinitionAmount: sdk.NewInt64Coin("musd", cf),
-			ConvertedAmount:  sdk.NewInt64Coin("nhash", 1000000000),
-		}
-	}
-
-	// Combine the standard costs with all the actual costs without dups.
-	// Start with the standard costs that we always want in the list.
-	allCostAmounts := make(map[int64]bool)
-	for _, amt := range standardCosts {
-		allCostAmounts[amt] = true
-	}
-
-	// Add all the ones actually used, keeping track of them (for later reference).
-	var usedCostAmounts []int64
-	costUsed := make(map[int64]bool)
-	for _, msgFee := range MakeFlatFeesCosts() {
-		amt := msgFee.Cost.AmountOf("musd").Int64()
-		if !costUsed[amt] {
-			usedCostAmounts = append(usedCostAmounts, amt)
-		}
-		costUsed[amt] = true
-		allCostAmounts[amt] = true
-	}
-	// The default isn't in this list, but should still be considered in use.
-	if !costUsed[150] {
-		costUsed[150] = true
-		usedCostAmounts = append(usedCostAmounts, 150)
-	}
-
-	// Get the deduped list of cost amounts, sorted smallest to largest.
-	costAmounts := slices.Sorted(maps.Keys(allCostAmounts))
-	costs := make([]sdk.Coin, len(costAmounts))
-	for i, amt := range costAmounts {
-		costs[i] = sdk.NewInt64Coin("musd", amt)
-	}
-
-	// usdStr converts an amount of musd into a string in the format of "$1.234". The string will always
-	// start with $, then have all needed whole digits and exactly three fractional digits.
-	usdStr := func(musdAmount sdkmath.Int) string {
-		rv := musdAmount.String()
-		if len(rv) < 4 {
-			rv = strings.Repeat("0", 4-len(rv)) + rv
-		}
-		p := len(rv) - 3
-		return "$" + rv[:p] + "." + rv[p:]
-	}
-	// hashStr converts an amount of nhash into a string in the format of "1.23 hash". It will always have
-	// at least one whole digit and exactly two fractional digits, and will always end with " hash".
-	// Extra fractional decimals are simply truncated.
-	hashStr := func(nhashAmount sdkmath.Int) string {
-		rv := nhashAmount.String()
-		if len(rv) < 10 {
-			rv = strings.Repeat("0", 10-len(rv)) + rv
-		}
-		p := len(rv) - 9
-		return rv[:p] + "." + rv[p:p+2] + " hash"
-	}
-
-	// Create a line for each cost amount.
-	lines := make([]string, len(costAmounts))
-	for i, costAmt := range costAmounts {
-		cost := sdk.NewInt64Coin("musd", costAmt)
-		// Create a column for each conversion factor.
-		parts := make([]string, len(cfs))
-		for j, cf := range cfs {
-			convCost := cf.ConvertCoin(cost)
-			parts[j] = fmt.Sprintf("%11s", hashStr(convCost.Amount))
-		}
-		// Put together the whole line.
-		lines[i] = fmt.Sprintf("%8s = %s", usdStr(cost.Amount), strings.Join(parts, " | "))
-		if !costUsed[costAmt] {
-			lines[i] = "x" + strings.TrimPrefix(lines[i], " ")
-		}
-	}
-	head := make([]string, len(cfs))
-	for j, cf := range cfs {
-		head[j] = fmt.Sprintf("%9s", usdStr(cf.DefinitionAmount.Amount)) + "  "
-	}
-	head[0] = "usd/hash = " + head[0]
-	headLine := strings.Join(head, " | ")
-	hrBz := make([]rune, len(headLine))
-	for i, r := range headLine {
-		switch r {
-		case '|':
-			hrBz[i] = '+'
-		default:
-			hrBz[i] = '-'
-		}
-	}
-	t.Logf("Defined Costs at various conversion factors:\n%s\n%s\n%s", headLine, string(hrBz), strings.Join(lines, "\n"))
-}
-
-func (s *UpgradeTestSuite) TestStreamImportLedgerData() {
-	// Test that the streaming ledger data import function works correctly.
-	// This test will only work if the gzipped file exists.
-	err := streamImportLedgerData(s.ctx, s.app.LedgerKeeper)
-	s.Require().NoError(err)
-
-	s.T().Log("Successfully stream imported ledger data")
-}
-
-func (s *UpgradeTestSuite) TestLedgerGenesisStateValidation() {
-	filePaths, err := getBouvardiaLedgerDataFilePaths()
-	s.Require().NoError(err, "getBouvardiaLedgerDataFilePaths()")
-
-	for _, filePath := range filePaths {
-		s.Run(filePath, func() {
-			// Read the gzipped file data
-			data, err := upgradeDataFS.ReadFile(filePath)
-			s.Require().NoError(err, "Failed to read file %s", filePath)
-
-			// Create gzip reader for decompression.
-			reader := bytes.NewReader(data)
-			gzReader, err := gzip.NewReader(reader)
-			s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
-			defer gzReader.Close()
-
-			// Decode the entire JSON into a GenesisState.
-			var genesisState ledgerTypes.GenesisState
-			decoder := json.NewDecoder(gzReader)
-			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
-
-			// Validate GenesisState.
-			err = genesisState.Validate()
-			s.Require().NoError(err, "GenesisState validation failed")
-
-			count := 0
-			count += len(genesisState.LedgerClasses)
-			count += len(genesisState.LedgerClassEntryTypes)
-			count += len(genesisState.LedgerClassStatusTypes)
-			count += len(genesisState.LedgerClassBucketTypes)
-			count += len(genesisState.Ledgers)
-			count += len(genesisState.LedgerEntries)
-			count += len(genesisState.SettlementInstructions)
-			s.Require().NotZero(count, "Total number of records found in the file")
-		})
-	}
-}
-
-func (s *UpgradeTestSuite) TestLedgerEntryAppliedAmtValidationCounts() {
-	// numGrid returns the provided numbers as a grid of numbers, 10 per line, right-justified.
-	numGrid := func(nums []int) string {
-		strs := make([]string, len(nums))
-		maxLen := 0
-		for i, num := range nums {
-			strs[i] = strconv.Itoa(num)
-			if len(strs[i]) > maxLen {
-				maxLen = len(strs[i])
-			}
-		}
-
-		grid := make([][]string, 0, len(strs)/10+1)
-		l := -1
-		for i, str := range strs {
-			if i%10 == 0 {
-				l++
-				grid = append(grid, make([]string, 0, 10))
-			}
-			grid[l] = append(grid[l], strings.Repeat(" ", maxLen-len(str))+str)
-		}
-
-		lines := make([]string, len(grid))
-		for i, row := range grid {
-			lines[i] = strings.Join(row, "  ")
-		}
-		return strings.Join(lines, "\n")
-	}
-
-	filePaths, err := getBouvardiaLedgerDataFilePaths()
-	s.Require().NoError(err, "getBouvardiaLedgerDataFilePaths()")
-
-	count := 0
-	invalidCount := 0
-	offByZero := 0
-	offByOne := 0
-	offByMore := 0
-	offBySmall := make(map[int64]int)
-	offByLarge := make(map[string]int)
-
-	for _, filePath := range filePaths {
-		s.Run(filePath, func() {
-			// Read the gzipped file data
-			data, err := upgradeDataFS.ReadFile(filePath)
-			s.Require().NoError(err, "Failed to read file %s", filePath)
-
-			// Create gzip reader for decompression.
-			reader := bytes.NewReader(data)
-			gzReader, err := gzip.NewReader(reader)
-			s.Require().NoError(err, "Failed to create gzip reader for %s", filePath)
-			defer gzReader.Close()
-
-			// Decode the entire JSON into a GenesisState.
-			var genesisState ledgerTypes.GenesisState
-			decoder := json.NewDecoder(gzReader)
-			s.Require().NoError(decoder.Decode(&genesisState), "Failed to decode genesis state from %s", filePath)
-
-			var justOffInds []int
-			var wayOffInds []int
-			var invalids []int
-			for i, entry := range genesisState.LedgerEntries {
-				count++
-
-				if err = entry.Entry.Validate(); err != nil {
-					invalidCount++
-					invalids = append(invalids, i)
-				}
-
-				sumApplied := sdkmath.ZeroInt()
-				for _, v := range entry.Entry.AppliedAmounts {
-					sumApplied = sumApplied.Add(v.AppliedAmt)
-				}
-				sumApplied = sumApplied.Abs()
-
-				d := entry.Entry.TotalAmt.Sub(sumApplied).Abs()
-				if d.Equal(sdkmath.ZeroInt()) {
-					offByZero++
-					continue
-				}
-
-				if d.Equal(sdkmath.OneInt()) {
-					offByOne++
-					justOffInds = append(justOffInds, i)
-					continue
-				}
-
-				offByMore++
-				wayOffInds = append(wayOffInds, i)
-				if d.IsInt64() {
-					offBySmall[d.Int64()]++
-				} else {
-					offByLarge[d.String()]++
-				}
-			}
-
-			if len(invalids) > 0 {
-				s.Fail(fmt.Sprintf("Found %d invalid entries", len(invalids)), "%s", numGrid(invalids))
-			}
-			if len(justOffInds) > 0 {
-				s.Fail(fmt.Sprintf("Found %d entries that are off-by-one", len(justOffInds)), "%s", numGrid(justOffInds))
-			}
-			if len(wayOffInds) > 0 {
-				s.Fail(fmt.Sprintf("Found %d entries that are off by more than one", len(wayOffInds)), "%s", numGrid(wayOffInds))
-			}
-		})
-	}
-
-	s.Run("summary", func() {
-		s.T().Logf("count:             %7d", count)
-		s.T().Logf("sum == total:      %7d", offByZero)
-		s.T().Logf("invalid:           %7d", invalidCount)
-		if offByOne != 0 {
-			s.T().Logf("off-by-one:        %7d", offByOne)
-		}
-		if offByMore != 0 {
-			s.T().Logf("off by more:       %7d", offByMore)
-		}
-
-		for _, d := range slices.Sorted(maps.Keys(offBySmall)) {
-			s.T().Logf("off by %10d: %7d", d, offBySmall[d])
-		}
-		for _, d := range slices.Sorted(maps.Keys(offByLarge)) {
-			s.T().Logf("off by %10s: %7d", d, offByLarge[d])
-		}
-	})
-}
-
-func (s *UpgradeTestSuite) TestImportRegistryData() {
-	err := importRegistryData(s.ctx, s.app.RegistryKeeper)
-	s.Require().NoError(err, "importRegistryData")
 }

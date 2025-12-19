@@ -15,6 +15,8 @@ const TestnetEnvVar = "PIO_TESTNET"
 // This exists because t.Setenv can't be used to unset an environment variable.
 //
 // Standard usage: defer testutil.UnsetTestnetEnvVar()()
+//
+//nolint:errcheck,gosec // test-only code, no security impact
 func UnsetTestnetEnvVar() func() {
 	if origVal, ok := os.LookupEnv(TestnetEnvVar); ok {
 		os.Unsetenv(TestnetEnvVar)

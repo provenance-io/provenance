@@ -1,3 +1,4 @@
+// Package pioconfig contains configuration structures and logic specific to the Provenance blockchain.
 package pioconfig
 
 import (
@@ -19,6 +20,7 @@ const (
 
 var provConfig *ProvConfig
 
+// ProvConfig defines configuration options for initializing a Provenance-based app.
 type ProvConfig struct {
 	// FeeDenom is the denom used to pay fees.
 	FeeDenom string
