@@ -10,7 +10,7 @@ import (
 
 // QueueTrigger Creates a QueuedTrigger and Enqueues it
 func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
-	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight()))
+	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight())) //nolint:gosec // safe: block height always ≥ 0
 	k.Enqueue(ctx, item)
 }
 
@@ -92,8 +92,8 @@ func (k Keeper) removeQueueIndex(ctx sdk.Context, index uint64) bool {
 func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.QueueKeyPrefix)
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
-	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.QueuedTrigger{}
 		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {

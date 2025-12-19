@@ -1,8 +1,8 @@
+version: 2
 run:
   tests: false
 #   # timeout for analysis, e.g. 30s, 5m, default is 1m
 #   timeout: 5m
-
 linters:
   disable-all: true
   enable:
@@ -16,17 +16,12 @@ linters:
     - errcheck
     - errorlint
     - errname
-#    - forcetypeassert
-    - gci
     - goconst
     - gocritic
-    - gofmt
-    - goimports
     - goheader
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - importas
     - ineffassign
@@ -37,17 +32,92 @@ linters:
     - prealloc
     - predeclared
     - promlinter
-    - revive
     - staticcheck
-    - stylecheck
-    - tenv
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
     - whitespace
-
+    - usetesting
+  settings:
+    depguard:
+      rules:
+        main:
+          list-type: lax
+          files:
+            - $all
+            - "!$test"
+          allow:
+            # Primary
+            - $gostd
+            - github.com/provenance-io/provenance
+            - github.com/provlabs/vault
+            - github.com/CosmWasm
+            - cosmossdk.io
+            - github.com/cosmos
+            - github.com/cometbft          
+            - github.com/armon/go-metrics
+            - google.golang.org
+            - github.com/spf13
+            - github.com/golang/protobuf
+            - github.com/google/uuid
+            - github.com/gorilla/mux
+            - github.com/grpc-ecosystem/grpc-gateway
+            - github.com/hashicorp/go-metrics
+            - github.com/rs/zerolog
+            - github.com/stretchr/testify   
+            - sigs.k8s.io/yaml
+          deny:
+            - pkg: "github.com/cosmos/cosmos-sdk/x/params"
+              desc: "The params module is no more."
+        test:
+          list-type: lax
+          files:
+            - "$test"
+          allow:
+            - $gostd
+            - github.com/stretchr/testify
+    errcheck:
+      exclude-functions:
+      - (fmt.State).Write
+    govet:
+      shadow: true
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    golint:
+      min-confidence: 0
+    dogsled:
+      max-blank-identifiers: 3
+    misspell:
+      locale: US
+      mode: default
+      ignore-rules:
+      - cancelled
+    nolintlint:
+      allow-unused: true
+      require-explanation: true
+      require-specific: false
+formatters:
+  enable:
+    - gofmt
+    - goimports
+    - gci
+  settings:
+    gci:
+      custom-order: true
+      sections:
+        - standard
+        - default
+        - prefix(github.com/cometbft)
+        - prefix(cosmossdk.io)
+        - prefix(github.com/cosmos)
+        - prefix(github.com/provenance-io)
+        - blank
+        - dot
 issues:
   exclude-rules:
     - text: "Use of weak random number generator"
@@ -70,127 +140,3 @@ issues:
         - revive
   max-issues-per-linter: 10000
   max-same-issues: 10000
-
-linters-settings:
-  depguard:
-    rules:
-      main:
-        files:
-          - $all
-          - "!$test"
-        allow:
-          - $gostd
-
-          - github.com/armon/go-metrics
-
-          - cosmossdk.io/api
-          - cosmossdk.io/client/v2
-          - cosmossdk.io/collections
-          - cosmossdk.io/core
-          - cosmossdk.io/errors
-          - cosmossdk.io/log
-          - cosmossdk.io/math
-          - cosmossdk.io/store
-          - cosmossdk.io/x/circuit
-          - cosmossdk.io/x/evidence
-          - cosmossdk.io/x/feegrant
-          - cosmossdk.io/x/nft
-          - cosmossdk.io/x/tx/signing
-          - cosmossdk.io/x/upgrade
-          - github.com/cosmos/cosmos-db
-          - github.com/cosmos/cosmos-sdk
-          - github.com/cosmos/go-bip39
-          - github.com/cosmos/ibc-apps
-          - github.com/cosmos/ibc-go
-
-          - github.com/CosmWasm/wasmd
-          - github.com/CosmWasm/wasmvm/v2
-
-          - github.com/cosmos/gogoproto
-
-          - github.com/golang/protobuf/proto
-
-          - github.com/google/uuid
-
-          - github.com/gorilla/mux
-
-          - github.com/grpc-ecosystem/grpc-gateway
-
-          - github.com/hashicorp/go-metrics
-
-          - github.com/provenance-io/provenance
-
-          - github.com/provlabs/vault
-
-          - github.com/spf13/cast
-          - github.com/spf13/cobra
-          - github.com/spf13/pflag
-          - github.com/spf13/viper
-
-          - github.com/stretchr/testify/require # used by the test-utils shared toolkit
-          - github.com/stretchr/testify/assert
-          - github.com/stretchr/testify/suite
-
-          - github.com/cometbft/cometbft/abci/types
-          - github.com/cometbft/cometbft/config
-          - github.com/cometbft/cometbft/crypto
-          - github.com/cometbft/cometbft/crypto/tmhash
-          - github.com/cometbft/cometbft/libs/cli
-          - github.com/cometbft/cometbft/libs/json
-          - github.com/cometbft/cometbft/libs/os
-          - github.com/cometbft/cometbft/libs/rand
-          - github.com/cometbft/cometbft/proto/tendermint/types
-          - github.com/cometbft/cometbft/rpc/jsonrpc/types
-          - github.com/cometbft/cometbft/types
-          - github.com/cometbft/cometbft/types/time
-          - github.com/cometbft/cometbft-db
-
-          - github.com/rs/zerolog
-
-          - sigs.k8s.io/yaml
-        deny:
-          - pkg: "github.com/cosmos/cosmos-sdk/x/params"
-            desc: "The params module is no more."
-      test:
-        files:
-          - "$test"
-        allow:
-          - $gostd
-          - github.com/stretchr/testify
-  errcheck:
-    exclude-functions:
-      - (fmt.State).Write
-  gci:
-    custom-order: true
-    sections:
-      - standard
-      - default
-      - prefix(github.com/cometbft)
-      - prefix(cosmossdk.io)
-      - prefix(github.com/cosmos)
-      - prefix(github.com/provenance-io)
-      - blank
-      - dot
-  govet:
-    shadow: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-  golint:
-    min-confidence: 0
-  # gocyclo:
-  #   min-complexity: 15
-  dogsled:
-    max-blank-identifiers: 3
-  misspell:
-    locale: US
-    ignore-words:
-    - cancelled
-  nolintlint:
-    allow-unused: false
-    require-explanation: false
-    require-specific: false
