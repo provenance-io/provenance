@@ -16,7 +16,7 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -31,13 +31,14 @@ jobs:
         if: env.GIT_DIFF
         with:
           go-version-file: 'go.mod'
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v8
         if: env.GIT_DIFF
         with:
           # If you change this version, be sure to also change it in contrib/devtools/Makefile.
-          version: v1.60
-          args: --timeout 10m --out-${NO_FUTURE}format colored-line-number
+          version: v2.1.6
+          args: --timeout 10m --output.text.path=stdout --output.text.colors=true
           github-token: ${{ secrets.github_token }}
+          only-new-issues: true
           verify: false
       - name: No Now Usage
         if: env.GIT_DIFF
