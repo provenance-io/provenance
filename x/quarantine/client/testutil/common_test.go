@@ -122,6 +122,7 @@ func (s *IntegrationTestSuite) createAndFundAccounts(count int, bondCoinAmt int6
 	args = append(args, s.valAddr.String())
 	args = append(args, addrs...)
 	args = append(args, amount)
+	args = append(args, "--gas", "300000")
 	args = s.appendCommonFlagsTo(args...)
 
 	testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.network)

@@ -1908,6 +1908,58 @@ func TestLedgerAndEntries_Validate(t *testing.T) {
 	}
 }
 
+func TestLedgerAndEntries_GetKey(t *testing.T) {
+	tests := []struct {
+		name string
+		lte  *LedgerAndEntries
+		exp  *LedgerKey
+	}{
+		{
+			name: "nil",
+			lte:  nil,
+			exp:  nil,
+		},
+		{
+			name: "empty",
+			lte:  &LedgerAndEntries{},
+			exp:  nil,
+		},
+		{
+			name: "only ledger key",
+			lte: &LedgerAndEntries{
+				LedgerKey: &LedgerKey{NftId: "_______nft_id_______", AssetClassId: "___asset_class_id___"},
+			},
+			exp: &LedgerKey{NftId: "_______nft_id_______", AssetClassId: "___asset_class_id___"},
+		},
+		{
+			name: "only ledger",
+			lte: &LedgerAndEntries{
+				Ledger: &Ledger{Key: &LedgerKey{NftId: "_______NFT_ID_______", AssetClassId: "___ASSET_CLASS_ID___"}},
+			},
+			exp: &LedgerKey{NftId: "_______NFT_ID_______", AssetClassId: "___ASSET_CLASS_ID___"},
+		},
+		{
+			name: "both ledger and ledger key",
+			lte: &LedgerAndEntries{
+				LedgerKey: &LedgerKey{NftId: "key-nft-id", AssetClassId: "key-asset-class-id"},
+				Ledger:    &Ledger{Key: &LedgerKey{NftId: "_______NFT_ID_______", AssetClassId: "___ASSET_CLASS_ID___"}},
+			},
+			exp: &LedgerKey{NftId: "key-nft-id", AssetClassId: "key-asset-class-id"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var act *LedgerKey
+			testFunc := func() {
+				act = tc.lte.GetKey()
+			}
+			require.NotPanics(t, testFunc, "GetKey()")
+			assert.Equal(t, tc.exp, act, "GetKey()")
+		})
+	}
+}
+
 func TestDayCountConvention_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
 		name   string

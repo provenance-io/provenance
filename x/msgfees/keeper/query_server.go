@@ -1,3 +1,4 @@
+// Package keeper provides the implementation of the query server and state management for the msgfees module.
 package keeper
 
 import (
@@ -11,6 +12,7 @@ type queryServer struct {
 	ffq types.FlatFeesQuerier
 }
 
+// NewQueryServer returns a new instance of the msgfees query server using the provided FlatFeesQuerier.
 func NewQueryServer(ffq types.FlatFeesQuerier) types.QueryServer {
 	return &queryServer{ffq: ffq}
 }

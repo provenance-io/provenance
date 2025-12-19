@@ -32,6 +32,7 @@ func DefaultParams() Params {
 	}
 }
 
+// Validate checks that the Params fields are valid.
 func (p Params) Validate() error {
 	if err := p.DefaultCost.Validate(); err != nil {
 		return fmt.Errorf("invalid default cost %q: %w", p.DefaultCost, err)
@@ -54,6 +55,7 @@ func (p Params) DefaultCostCoins() sdk.Coins {
 	return sdk.Coins{p.DefaultCost}
 }
 
+// NewMsgFee creates a new MsgFee with the given message type and optional cost.
 func NewMsgFee(msgTypeURL string, cost ...sdk.Coin) *MsgFee {
 	rv := &MsgFee{
 		MsgTypeUrl: msgTypeURL,
@@ -80,6 +82,7 @@ func valueOr(val string, or string) string {
 	return or
 }
 
+// Validate checks that the MsgFee is properly configured.
 func (m *MsgFee) Validate() error {
 	if m == nil {
 		return errors.New("nil MsgFee not allowed")
@@ -108,6 +111,7 @@ func ValidateMsgTypeURL(msgTypeURL string) error {
 	return nil
 }
 
+// Validate checks that the ConversionFactor has valid values.
 func (c ConversionFactor) Validate() error {
 	if err := c.DefinitionAmount.Validate(); err != nil {
 		return fmt.Errorf("invalid base amount %q: %w", c.DefinitionAmount, err)

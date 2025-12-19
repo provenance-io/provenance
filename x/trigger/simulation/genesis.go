@@ -31,12 +31,12 @@ const (
 // TriggerIDStartFn randomized starting trigger id
 func TriggerIDStartFn(r *rand.Rand) uint64 {
 	// max 5 ids for the triggers max 5 ids for the queue = min of 10 here.
-	return uint64(internalrand.IntBetween(r, 10, 10000000000))
+	return uint64(internalrand.IntBetween(r, 10, 10000000000)) //nolint:gosec // safe: value always ≥ 10
 }
 
 // QueueStartFn randomized Queue Start Index
 func QueueStartFn(r *rand.Rand) uint64 {
-	return uint64(internalrand.IntBetween(r, 1, 10000000000))
+	return uint64(internalrand.IntBetween(r, 1, 10000000000)) //nolint:gosec // safe: IntBetween always ≥ 1
 }
 
 // NewRandomEvent returns a random event
@@ -47,7 +47,7 @@ func NewRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
 		randTime := now.Add(time.Duration(internalrand.IntBetween(r, minimumTime, maximumTime)))
 		return &types.BlockTimeEvent{Time: randTime.UTC()}
 	}
-	height := uint64(internalrand.IntBetween(r, 10, 150))
+	height := uint64(internalrand.IntBetween(r, 10, 150)) //nolint:gosec // safe: IntBetween returns ≥ 10
 	return &types.BlockHeightEvent{BlockHeight: height}
 }
 
@@ -130,7 +130,7 @@ func randomTriggerIDs(r *rand.Rand, count int, maxCount int) []uint64 {
 	if maxCount/3 <= count {
 		nums := r.Perm(maxCount)
 		for i := range rv {
-			rv[i] = uint64(nums[i]) + 1
+			rv[i] = uint64(nums[i]) + 1 //nolint:gosec // safe: r.Perm returns ints in [0, maxCount)
 		}
 		return rv
 	}
@@ -139,7 +139,7 @@ func randomTriggerIDs(r *rand.Rand, count int, maxCount int) []uint64 {
 	seen[0] = true
 	for i := range rv {
 		for seen[rv[i]] {
-			rv[i] = uint64(r.Intn(maxCount) + 1)
+			rv[i] = uint64(r.Intn(maxCount) + 1) //nolint:gosec // G115: Intn always returns ≥ 0
 		}
 		seen[rv[i]] = true
 	}
@@ -171,7 +171,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		NumIniTrigQueued, &numIniTrigQueued, simState.Rand,
 		func(r *rand.Rand) { numIniTrigQueued = r.Intn(6) },
 	)
-
+	//nolint:gosec // G115: Intn always returns ≥ 0
 	if triggerID < uint64(numIniTrig)+uint64(numIniTrigQueued) {
 		triggerID = uint64(numIniTrig) + uint64(numIniTrigQueued)
 	}
@@ -180,7 +180,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		// This should only ever happen if using a pre-defined value for the trigger id.
 		panic(fmt.Errorf("cannot run sims with a %s param [%d] larger than max int (%d)", TriggerID, triggerID, math.MaxInt))
 	}
-	triggerIDInt := int(triggerID) //nolint:gosec // G115: Overflow handled above.
+	triggerIDInt := int(triggerID)
 	triggerIDs, queueTriggerIDs := randomTriggerAndQueueIDs(simState.Rand, numIniTrig, numIniTrigQueued, triggerIDInt)
 	var triggers []types.Trigger
 	simState.AppParams.GetOrGenerate(
