@@ -9,10 +9,12 @@ import (
 // FlatFeeSetupDecorator is an AnteHandler that calculates costs for the msgs, and ensures a sufficient fee is provided.
 type FlatFeeSetupDecorator struct{}
 
+// NewFlatFeeSetupDecorator creates a new FlatFeeSetupDecorator instance.
 func NewFlatFeeSetupDecorator() FlatFeeSetupDecorator {
 	return FlatFeeSetupDecorator{}
 }
 
+// AnteHandle implements the ante handler logic for FlatFeeSetupDecorator.
 func (d FlatFeeSetupDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {

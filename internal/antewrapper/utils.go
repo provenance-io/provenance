@@ -37,6 +37,7 @@ const (
 	// nilStr is a string to use to indicate something is nil.
 	nilStr = "<nil>"
 
+	// SimAppChainID is the chain ID used for simapp unit testing.
 	SimAppChainID = "simapp-unit-testing"
 
 	// TxGasLimit is the maximum amount of gas we allow in a single Tx.

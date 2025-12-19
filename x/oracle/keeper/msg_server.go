@@ -25,11 +25,11 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) UpdateOracle(goCtx context.Context, msg *types.MsgUpdateOracleRequest) (*types.MsgUpdateOracleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if msg.Authority != s.Keeper.GetAuthority() {
-		return nil, sdkerrors.ErrUnauthorized.Wrapf("expected authority %s got %s", s.Keeper.GetAuthority(), msg.GetAuthority())
+	if msg.Authority != s.GetAuthority() {
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("expected authority %s got %s", s.GetAuthority(), msg.GetAuthority())
 	}
 
-	s.Keeper.SetOracle(ctx, sdk.MustAccAddressFromBech32(msg.Address))
+	s.SetOracle(ctx, sdk.MustAccAddressFromBech32(msg.Address))
 
 	return &types.MsgUpdateOracleResponse{}, nil
 }
