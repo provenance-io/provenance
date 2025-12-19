@@ -205,8 +205,12 @@ func (l *Ledger) Validate() error {
 	}
 
 	// Validate the next payment date and amount and the payment frequency.
-	if err := ValidatePmtFields(l.NextPmtDate, l.NextPmtAmt, l.PaymentFrequency); err != nil {
+	if err := ValidatePmtFields(l.NextPmtDate, l.NextPmtAmt); err != nil {
 		errs = append(errs, err)
+	}
+
+	if err := l.PaymentFrequency.ValidateSpecified(); err != nil {
+		errs = append(errs, fmt.Errorf("payment_frequency: %w", err))
 	}
 
 	// Validate interest rate if provided (reasonable bounds: 0-100,000,000 for 0-100%)
@@ -219,11 +223,11 @@ func (l *Ledger) Validate() error {
 		errs = append(errs, fmt.Errorf("maturity_date: must be after 1970-01-01"))
 	}
 
-	if err := l.InterestDayCountConvention.Validate(); err != nil {
+	if err := l.InterestDayCountConvention.ValidateSpecified(); err != nil {
 		errs = append(errs, fmt.Errorf("interest_day_count_convention: %w", err))
 	}
 
-	if err := l.InterestAccrualMethod.Validate(); err != nil {
+	if err := l.InterestAccrualMethod.ValidateSpecified(); err != nil {
 		errs = append(errs, fmt.Errorf("interest_accrual_method: %w", err))
 	}
 
@@ -231,7 +235,7 @@ func (l *Ledger) Validate() error {
 }
 
 // ValidatePmtFields returns an error if any of the provided fields have invalid values.
-func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int, paymentFrequency PaymentFrequency) error {
+func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int) error {
 	var errs []error
 	// Validate the next payment date. Allow zero to indicate "not provided."
 	if nextPmtDate < 0 {
@@ -241,10 +245,6 @@ func ValidatePmtFields(nextPmtDate int32, nextPmtAmt sdkmath.Int, paymentFrequen
 	// NextPmtAmt is allowed to be nil (not provided), zero, or positive; but not negative.
 	if !nextPmtAmt.IsNil() && nextPmtAmt.IsNegative() {
 		errs = append(errs, fmt.Errorf("next_pmt_amt: must be a non-negative integer"))
-	}
-
-	if err := paymentFrequency.Validate(); err != nil {
-		errs = append(errs, fmt.Errorf("payment_frequency: %w", err))
 	}
 
 	return errors.Join(errs...)
@@ -487,6 +487,18 @@ func (lte *LedgerAndEntries) Validate() error {
 	return errors.Join(errs...)
 }
 
+// GetKey returns the LedgerKey field if populated, or else the Ledger.Key field.
+// Returns nil if neither field is populated.
+func (lte *LedgerAndEntries) GetKey() *LedgerKey {
+	if lte == nil {
+		return nil
+	}
+	if lte.LedgerKey != nil {
+		return lte.LedgerKey
+	}
+	return lte.Ledger.GetKey()
+}
+
 // UnmarshalJSON implements json.Unmarshaler for DayCount.
 func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
 	value, err := provutils.EnumUnmarshalJSON(data, DayCountConvention_value, DayCountConvention_name)
@@ -500,6 +512,11 @@ func (d *DayCountConvention) UnmarshalJSON(data []byte) error {
 // Validate returns an error if this DayCountConvention isn't a defined enum entry.
 func (d DayCountConvention) Validate() error {
 	return provutils.EnumValidateExists(d, DayCountConvention_name)
+}
+
+// ValidateSpecified returns an error if this DayCountConvention isn't a defined enum entry or is the zero (UNSPECIFIED) value).
+func (d DayCountConvention) ValidateSpecified() error {
+	return provutils.EnumValidateSpecified(d, DayCountConvention_name)
 }
 
 // UnmarshalJSON implements json.Unmarshaler for InterestAccrual.
@@ -517,6 +534,11 @@ func (i InterestAccrualMethod) Validate() error {
 	return provutils.EnumValidateExists(i, InterestAccrualMethod_name)
 }
 
+// ValidateSpecified returns an error if this InterestAccrualMethod isn't a defined enum entry or is the zero (UNSPECIFIED) value).
+func (i InterestAccrualMethod) ValidateSpecified() error {
+	return provutils.EnumValidateSpecified(i, InterestAccrualMethod_name)
+}
+
 // UnmarshalJSON implements json.Unmarshaler for PaymentFrequency.
 func (p *PaymentFrequency) UnmarshalJSON(data []byte) error {
 	value, err := provutils.EnumUnmarshalJSON(data, PaymentFrequency_value, PaymentFrequency_name)
@@ -530,4 +552,9 @@ func (p *PaymentFrequency) UnmarshalJSON(data []byte) error {
 // Validate returns an error if this PaymentFrequency isn't a defined enum entry.
 func (p PaymentFrequency) Validate() error {
 	return provutils.EnumValidateExists(p, PaymentFrequency_name)
+}
+
+// ValidateSpecified returns an error if this PaymentFrequency isn't a defined enum entry or is the zero (UNSPECIFIED) value).
+func (p PaymentFrequency) ValidateSpecified() error {
+	return provutils.EnumValidateSpecified(p, PaymentFrequency_name)
 }

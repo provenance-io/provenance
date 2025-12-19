@@ -101,12 +101,18 @@ message MsgUpdateInterestRateRequest {
   string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The new interest rate of the ledger.
+  // This field is NOT optional. If not provided (or provided as zero),
+  // then the ledger's interest_rate field will be updated to be zero.
   int32 interest_rate = 3;
 
   // The new interest day count convention of the ledger.
+  // This field is optional. If not provided (or set to unspecified),
+  // the interest day count convention will not be updated.
   DayCountConvention interest_day_count_convention = 4;
 
   // The new interest accrual method of the ledger.
+  // This field is optional. If not provided (or set to unspecified),
+  // the interest accrual method will not be updated.
   InterestAccrualMethod interest_accrual_method = 5;
 }
 
@@ -125,6 +131,8 @@ message MsgUpdatePaymentRequest {
 
   // The new next payment amount of the ledger.
   // The units of this field are defined by the denom field in this ledger's class.
+  // This field is NOT optional. If you don't provide a value (or provide it as zero),
+  // then the ledger's next_pmt_amt field will be updated to be zero.
   string next_pmt_amt = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -133,9 +141,11 @@ message MsgUpdatePaymentRequest {
   ];
 
   // The new next payment date in days since epoch.
+  // This field is not optional and cannot be zero.
   int32 next_pmt_date = 4;
 
   // The new payment frequency of the ledger.
+  // This field is optional. If set to unspecified, it will be ignored and the payment_frequency will not be changed.
   PaymentFrequency payment_frequency = 5;
 }
 

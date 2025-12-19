@@ -2233,8 +2233,8 @@ var xxx_messageInfo_MsgUpdateSendDenyListResponse proto.InternalMessageInfo
 type MsgAddNetAssetValuesRequest struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
-	// Net asset values to set. The "usd" denomination represents whole-dollar amounts,
-	// where 1usd = $1.00.
+	// Net asset values to set.
+	// The price can use a special "usd" denom, where 1usd = $0.001 and 1000usd = $1.000.
 	NetAssetValues []NetAssetValue `protobuf:"bytes,3,rep,name=net_asset_values,json=netAssetValues,proto3" json:"net_asset_values"`
 }
 
@@ -3628,8 +3628,6 @@ type MsgClient interface {
 	// UpdateSendDenyList will only succeed if signer has admin authority
 	UpdateSendDenyList(ctx context.Context, in *MsgUpdateSendDenyListRequest, opts ...grpc.CallOption) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues sets the net asset value for a marker.
-	// Note: When setting NAVs with the "usd" denom, amounts are in whole dollars
-	// where 1 = $1.00 USD.
 	AddNetAssetValues(ctx context.Context, in *MsgAddNetAssetValuesRequest, opts ...grpc.CallOption) (*MsgAddNetAssetValuesResponse, error)
 	// SetAdministratorProposal sets administrators with specific access on the marker
 	SetAdministratorProposal(ctx context.Context, in *MsgSetAdministratorProposalRequest, opts ...grpc.CallOption) (*MsgSetAdministratorProposalResponse, error)
@@ -3963,8 +3961,6 @@ type MsgServer interface {
 	// UpdateSendDenyList will only succeed if signer has admin authority
 	UpdateSendDenyList(context.Context, *MsgUpdateSendDenyListRequest) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues sets the net asset value for a marker.
-	// Note: When setting NAVs with the "usd" denom, amounts are in whole dollars
-	// where 1 = $1.00 USD.
 	AddNetAssetValues(context.Context, *MsgAddNetAssetValuesRequest) (*MsgAddNetAssetValuesResponse, error)
 	// SetAdministratorProposal sets administrators with specific access on the marker
 	SetAdministratorProposal(context.Context, *MsgSetAdministratorProposalRequest) (*MsgSetAdministratorProposalResponse, error)

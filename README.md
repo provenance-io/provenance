@@ -28,7 +28,7 @@ For more information on the many TradFi institutions and Fintechs leveraging the
 [goreport-url]: https://goreportcard.com/report/github.com/provenance-io/provenance
 [cover-badge]: https://codecov.io/gh/provenance-io/provenance/branch/main/graph/badge.svg
 [cover-report]: https://codecov.io/gh/provenance-io/provenance
-[loc-badge]: https://tokei.rs/b1/github/provenance-io/provenance
+[loc-badge]: https://img.shields.io/badge/Provenance-Repository-blue?logo=github
 [loc-report]: https://github.com/provenance-io/provenance
 [lint-badge]: https://github.com/provenance-io/provenance/workflows/Lint/badge.svg
 [lint-url]: https://github.com/provenance-io/provenance/actions/workflows/lint.yml

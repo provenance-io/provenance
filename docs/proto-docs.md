@@ -295,11 +295,15 @@
   
 - [provenance/ledger/v1/events.proto](#provenance_ledger_v1_events-proto)
     - [EventFundTransferWithSettlement](#provenance-ledger-v1-EventFundTransferWithSettlement)
+    - [EventLedgerClassCreated](#provenance-ledger-v1-EventLedgerClassCreated)
+    - [EventLedgerClassTypeCreated](#provenance-ledger-v1-EventLedgerClassTypeCreated)
     - [EventLedgerCreated](#provenance-ledger-v1-EventLedgerCreated)
     - [EventLedgerDestroyed](#provenance-ledger-v1-EventLedgerDestroyed)
     - [EventLedgerEntryAdded](#provenance-ledger-v1-EventLedgerEntryAdded)
+    - [EventLedgerEntryUpdated](#provenance-ledger-v1-EventLedgerEntryUpdated)
     - [EventLedgerUpdated](#provenance-ledger-v1-EventLedgerUpdated)
   
+    - [ClassTypeCreated](#provenance-ledger-v1-ClassTypeCreated)
     - [UpdateType](#provenance-ledger-v1-UpdateType)
   
 - [provenance/ledger/v1/ledger.proto](#provenance_ledger_v1_ledger-proto)
@@ -509,6 +513,15 @@
     - [CalculateTxFeesResponse](#provenance-msgfees-v1-CalculateTxFeesResponse)
   
     - [Query](#provenance-msgfees-v1-Query)
+  
+- [provenance/msgfees/v1/genesis.proto](#provenance_msgfees_v1_genesis-proto)
+    - [GenesisState](#provenance-msgfees-v1-GenesisState)
+  
+- [provenance/msgfees/v1/msgfees.proto](#provenance_msgfees_v1_msgfees-proto)
+    - [EventMsgFee](#provenance-msgfees-v1-EventMsgFee)
+    - [EventMsgFees](#provenance-msgfees-v1-EventMsgFees)
+    - [MsgFee](#provenance-msgfees-v1-MsgFee)
+    - [Params](#provenance-msgfees-v1-Params)
   
 - [provenance/msgfees/v1/proposals.proto](#provenance_msgfees_v1_proposals-proto)
     - [AddMsgFeeProposal](#provenance-msgfees-v1-AddMsgFeeProposal)
@@ -4940,9 +4953,9 @@ MsgUpdateInterestRateRequest represents a request to update the interest rate co
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose interest rate is being updated. |
 | `signer` | [string](#string) |  | The signer that is updating the interest rate. |
-| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. |
-| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. |
-| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. |
+| `interest_rate` | [int32](#int32) |  | The new interest rate of the ledger. This field is NOT optional. If not provided (or provided as zero), then the ledger's interest_rate field will be updated to be zero. |
+| `interest_day_count_convention` | [DayCountConvention](#provenance-ledger-v1-DayCountConvention) |  | The new interest day count convention of the ledger. This field is optional. If not provided (or set to unspecified), the interest day count convention will not be updated. |
+| `interest_accrual_method` | [InterestAccrualMethod](#provenance-ledger-v1-InterestAccrualMethod) |  | The new interest accrual method of the ledger. This field is optional. If not provided (or set to unspecified), the interest accrual method will not be updated. |
 
 
 
@@ -4996,9 +5009,9 @@ MsgUpdatePaymentRequest represents a request to update payment configuration of 
 | ----- | ---- | ----- | ----------- |
 | `key` | [LedgerKey](#provenance-ledger-v1-LedgerKey) |  | Ledger key of the ledger whose payment is being updated. |
 | `signer` | [string](#string) |  | The signer that is updating the payment. |
-| `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. |
-| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. |
-| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. |
+| `next_pmt_amt` | [string](#string) |  | The new next payment amount of the ledger. The units of this field are defined by the denom field in this ledger's class. This field is NOT optional. If you don't provide a value (or provide it as zero), then the ledger's next_pmt_amt field will be updated to be zero. |
+| `next_pmt_date` | [int32](#int32) |  | The new next payment date in days since epoch. This field is not optional and cannot be zero. |
+| `payment_frequency` | [PaymentFrequency](#provenance-ledger-v1-PaymentFrequency) |  | The new payment frequency of the ledger. This field is optional. If set to unspecified, it will be ignored and the payment_frequency will not be changed. |
 
 
 
@@ -5101,6 +5114,45 @@ settlement instructions is successfully processed.
 
 
 
+<a name="provenance-ledger-v1-EventLedgerClassCreated"></a>
+
+### EventLedgerClassCreated
+EventLedgerClassCreated is emitted when a ledger class is created.
+This event is triggered by the MsgCreateLedgerClassRequest message handler
+when a new ledger class is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | The id of the ledger class that was created. |
+| `asset_class_id` | [string](#string) |  | The id of the asset class that the ledger class was created for. |
+| `denom` | [string](#string) |  | The denom that this ledger class uses. |
+
+
+
+
+
+
+<a name="provenance-ledger-v1-EventLedgerClassTypeCreated"></a>
+
+### EventLedgerClassTypeCreated
+EventLedgerClassTypeCreated is emitted when any type for a ledger class is created.
+This event is triggered by the MsgAddLedgerClassStatusTypeRequest, MsgAddLedgerClassEntryTypeRequest,
+and MsgAddLedgerClassBucketTypeRequest message handlers when they create their respective types.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ledger_class_id` | [string](#string) |  | The id of the ledger class that the type was created. |
+| `type_created` | [ClassTypeCreated](#provenance-ledger-v1-ClassTypeCreated) |  | The specific type of thing that was created. |
+| `id` | [string](#string) |  | The id of the created type. |
+| `code` | [string](#string) |  | The code of the created type. |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-EventLedgerCreated"></a>
 
 ### EventLedgerCreated
@@ -5156,6 +5208,25 @@ one or more ledger entries are successfully added to an existing ledger.
 
 
 
+<a name="provenance-ledger-v1-EventLedgerEntryUpdated"></a>
+
+### EventLedgerEntryUpdated
+EventLedgerEntryUpdated is emitted when an existing ledger entry is updated.
+This event is triggered by the UpdateBalances message handler when a ledger
+entry is successfully updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `asset_class_id` | [string](#string) |  | asset class of the ledger. |
+| `nft_id` | [string](#string) |  | nft id of the ledger (scope id or nft id). |
+| `correlation_id` | [string](#string) |  | correlation id of the ledger entry. |
+
+
+
+
+
+
 <a name="provenance-ledger-v1-EventLedgerUpdated"></a>
 
 ### EventLedgerUpdated
@@ -5177,6 +5248,21 @@ successfully modified.
 
 
  <!-- end messages -->
+
+
+<a name="provenance-ledger-v1-ClassTypeCreated"></a>
+
+### ClassTypeCreated
+ClassTypeCreated is the type of data that caused the EventLedgerClassTypeCreated event to be emitted.
+This is used to identify the specific type that was just created.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| `CLASS_TYPE_CREATED_UNSPECIFIED` | `0` | CLASS_TYPE_CREATED_UNSPECIFIED indicates that the class type is unspecified. |
+| `CLASS_TYPE_CREATED_STATUS` | `1` | CLASS_TYPE_CREATED_STATUS is for when a LedgerClassStatusType is created. |
+| `CLASS_TYPE_CREATED_ENTRY` | `2` | CLASS_TYPE_CREATED_ENTRY is for when a LedgerClassEntryType is created. |
+| `CLASS_TYPE_CREATED_BUCKET` | `3` | CLASS_TYPE_CREATED_BUCKET is for when a LedgerClassBucketType is created. |
+
 
 
 <a name="provenance-ledger-v1-UpdateType"></a>
@@ -5405,13 +5491,14 @@ Day Count Conventions used in interest calculations.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention. |
+| `DAY_COUNT_CONVENTION_UNSPECIFIED` | `0` | Unspecified day count convention.<br>This value is never a field's actual value, it just indicates that, for a given request, the day count convention is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that the day count convention is not being provided, and so should not be updated.<br>DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided. DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value. |
 | `DAY_COUNT_CONVENTION_ACTUAL_365` | `1` | Actual/365: Uses the actual number of days in the period with a fixed denominator of 365 (or sometimes 365.25 to adjust for leap years). |
 | `DAY_COUNT_CONVENTION_ACTUAL_360` | `2` | Actual/360: Uses the actual number of days in the period but divides by 360. |
 | `DAY_COUNT_CONVENTION_THIRTY_360` | `3` | 30/360: Assumes each month has 30 days and the year has 360 days. |
 | `DAY_COUNT_CONVENTION_ACTUAL_ACTUAL` | `4` | Actual/Actual: Uses the actual number of days in the period and the actual days in the year (365 or 366, depending on the year). |
 | `DAY_COUNT_CONVENTION_DAYS_365` | `5` | 365/365: Always uses 365 days in the denominator regardless of leap years. |
 | `DAY_COUNT_CONVENTION_DAYS_360` | `6` | 360/360: Always uses 360 days in both the numerator and denominator. |
+| `DAY_COUNT_CONVENTION_NOT_DEFINED` | `7` | Not Defined: The day count convention is not defined.<br>This value indicates that the day count convention should be on record as not having a value. It could mean that the day count convention is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have a day count convention. It could also just mean that the day count convention has not yet been defined for the entry.<br>DAY_COUNT_CONVENTION_UNSPECIFIED indicates that the day count convention is not being provided. DAY_COUNT_CONVENTION_NOT_DEFINED indicates that the day count convention of the entry does not have a value. |
 
 
 
@@ -5422,7 +5509,7 @@ Interest Accrual Methods describing how interest is calculated over time.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method. |
+| `INTEREST_ACCRUAL_METHOD_UNSPECIFIED` | `0` | Unspecified interest accrual method.<br>This value is never a field's actual value, it just indicates that, for a given request, the interest accrual method is not being provided. E.g. if this value is provided in a MsgUpdateInterestRateRequest, it indicates that the interest accrual method is not being provided, and so should not be updated.<br>INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided. INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value. |
 | `INTEREST_ACCRUAL_METHOD_SIMPLE_INTEREST` | `1` | Simple Interest: Calculated only on the principal amount. |
 | `INTEREST_ACCRUAL_METHOD_COMPOUND_INTEREST` | `2` | Compound Interest: Calculated on both the principal and on previously accumulated interest. |
 | `INTEREST_ACCRUAL_METHOD_DAILY_COMPOUNDING` | `3` | Daily Compounding: Interest is compounded on a daily basis. |
@@ -5430,6 +5517,7 @@ Interest Accrual Methods describing how interest is calculated over time.
 | `INTEREST_ACCRUAL_METHOD_QUARTERLY_COMPOUNDING` | `5` | Quarterly Compounding: Interest is compounded every quarter. |
 | `INTEREST_ACCRUAL_METHOD_ANNUAL_COMPOUNDING` | `6` | Annually Compounding: Interest is compounded once per year. |
 | `INTEREST_ACCRUAL_METHOD_CONTINUOUS_COMPOUNDING` | `7` | Continuous Compounding: The theoretical limit of compounding frequency where interest is compounded continuously. |
+| `INTEREST_ACCRUAL_METHOD_NOT_DEFINED` | `8` | Not Defined: The interest accrual method is not defined.<br>This value indicates that the interest accrual method should be on record as not having a value. It could mean that the interest accrual method is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have an interest accrual method. It could also just mean that the interest accrual method has not yet been defined for the entry.<br>INTEREST_ACCRUAL_METHOD_UNSPECIFIED indicates that the interest accrual method is not being provided. INTEREST_ACCRUAL_METHOD_NOT_DEFINED indicates that the interest accrual method of the entry does not have a value. |
 
 
 
@@ -5440,12 +5528,13 @@ Payment frequencies for loan repayments.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency. |
+| `PAYMENT_FREQUENCY_UNSPECIFIED` | `0` | Unspecified payment frequency.<br>This value is never a field's actual value, it just indicates that, for a given request, the payment frequency is not being provided. E.g. if this value is provided in a MsgUpdatePaymentRequest, it indicates that the payment frequency is not being provided, and so should not be updated.<br>PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided. PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value. |
 | `PAYMENT_FREQUENCY_DAILY` | `1` | Daily payments. |
 | `PAYMENT_FREQUENCY_WEEKLY` | `2` | Weekly or biweekly payments. |
 | `PAYMENT_FREQUENCY_MONTHLY` | `3` | Monthly payments (most common for consumer loans and mortgages). |
 | `PAYMENT_FREQUENCY_QUARTERLY` | `4` | Quarterly payments. |
 | `PAYMENT_FREQUENCY_ANNUALLY` | `5` | Annual payments. |
+| `PAYMENT_FREQUENCY_NOT_DEFINED` | `6` | Not Defined: The payment frequency is not defined.<br>This value indicates that the payment frequency should be on record as not having a value. It could mean that the payment frequency is not one of the other values in this enum, or it could mean that it doesn't make sense for the entry to have a payment frequency. It could also just mean that the payment frequency has not yet been defined for the entry.<br>PAYMENT_FREQUENCY_UNSPECIFIED indicates that the payment frequency is not being provided. PAYMENT_FREQUENCY_NOT_DEFINED indicates that the payment frequency of the entry does not have a value. |
 
 
  <!-- end enums -->
@@ -8042,6 +8131,129 @@ Query defines the gRPC querier service for msgfees module.
 
 
 
+<a name="provenance_msgfees_v1_genesis-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/genesis.proto
+
+
+
+<a name="provenance-msgfees-v1-GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of msg fees, persisted from the store
+Deprecated: The msgfees module is deprecated in favor of the flatfees module.
+The msgfees module no longer stores any data, so there's no need for a genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance-msgfees-v1-Params) |  | params defines all the parameters of the module. |
+| `msg_fees` | [MsgFee](#provenance-msgfees-v1-MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_msgfees_v1_msgfees-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/msgfees.proto
+
+
+
+<a name="provenance-msgfees-v1-EventMsgFee"></a>
+
+### EventMsgFee
+EventMsgFee final event property for msg fee on type
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type` | [string](#string) |  |  |
+| `count` | [string](#string) |  |  |
+| `total` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance-msgfees-v1-EventMsgFees"></a>
+
+### EventMsgFees
+EventMsgFees event emitted with summary of msg fees
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [EventMsgFee](#provenance-msgfees-v1-EventMsgFee) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-msgfees-v1-MsgFee"></a>
+
+### MsgFee
+MsgFee is the core of what gets stored on the blockchain to define a msg-based fee.
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message with the added fee, e.g. "/cosmos.bank.v1beta1.MsgSend". |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | additional_fee is the extra fee that is required for the given message type (can be in any denom). |
+| `recipient` | [string](#string) |  | recipient is an option address that will receive a portion of the additional fee. There can only be a recipient if the recipient_basis_points is not zero. |
+| `recipient_basis_points` | [uint32](#uint32) |  | recipient_basis_points is an optional portion of the additional fee to be sent to the recipient. Must be between 0 and 10,000 (inclusive).<br>If there is a recipient, this must not be zero. If there is not a recipient, this must be zero.<br>The recipient will receive additional_fee * recipient_basis_points / 10,000. The fee collector will receive the rest, i.e. additional_fee * (10,000 - recipient_basis_points) / 10,000. |
+
+
+
+
+
+
+<a name="provenance-msgfees-v1-Params"></a>
+
+### Params
+Params defines the set of params for the msgfees module.
+Deprecated: The msgfees module is deprecated in favor of flatfees.
+This type is no longer used.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.<br>Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil<br>Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance_msgfees_v1_proposals-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -9932,7 +10144,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated | Net asset values to set. The "usd" denomination represents whole-dollar amounts, where 1usd = $1.00. |
+| `net_asset_values` | [NetAssetValue](#provenance-marker-v1-NetAssetValue) | repeated | Net asset values to set. The price can use a special "usd" denom, where 1usd = $0.001 and 1000usd = $1.000. |
 
 
 
@@ -10635,7 +10847,7 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance-marker-v1-MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance-marker-v1-MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority |
-| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a marker. Note: When setting NAVs with the "usd" denom, amounts are in whole dollars where 1 = $1.00 USD. |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a marker. |
 | `SetAdministratorProposal` | [MsgSetAdministratorProposalRequest](#provenance-marker-v1-MsgSetAdministratorProposalRequest) | [MsgSetAdministratorProposalResponse](#provenance-marker-v1-MsgSetAdministratorProposalResponse) | SetAdministratorProposal sets administrators with specific access on the marker |
 | `RemoveAdministratorProposal` | [MsgRemoveAdministratorProposalRequest](#provenance-marker-v1-MsgRemoveAdministratorProposalRequest) | [MsgRemoveAdministratorProposalResponse](#provenance-marker-v1-MsgRemoveAdministratorProposalResponse) | RemoveAdministratorProposal removes administrators with specific access on the marker |
 | `ChangeStatusProposal` | [MsgChangeStatusProposalRequest](#provenance-marker-v1-MsgChangeStatusProposalRequest) | [MsgChangeStatusProposalResponse](#provenance-marker-v1-MsgChangeStatusProposalResponse) | ChangeStatusProposal is a governance proposal change marker status |
@@ -10993,7 +11205,7 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `access_control` | [AccessGrant](#provenance-marker-v1-AccessGrant) | repeated | Access control lists |
 | `status` | [MarkerStatus](#provenance-marker-v1-MarkerStatus) |  | Indicates the current status of this marker record. |
 | `denom` | [string](#string) |  | value denomination and total supply for the token. |
-| `supply` | [string](#string) |  | the total supply expected for a marker. This is the amount that is minted when a marker is created. |
+| `supply` | [string](#string) |  | the total supply expected for a marker. This is the amount that is minted when a marker is created. Note: This is a static configuration value, not the current circulating supply. To query the current circulating supply, use the bank module's SupplyOf query. |
 | `marker_type` | [MarkerType](#provenance-marker-v1-MarkerType) |  | Marker type information |
 | `supply_fixed` | [bool](#bool) |  | A fixed supply will mint additional coin automatically if the total supply decreases below a set value. This may occur if the coin is burned or an account holding the coin is slashed. (default: true) |
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
@@ -11374,6 +11586,7 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 ### QuerySupplyRequest
 QuerySupplyRequest is the request type for the Query/MarkerSupply method.
+Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 
 
 | Field | Type | Label | Description |
@@ -11389,6 +11602,7 @@ QuerySupplyRequest is the request type for the Query/MarkerSupply method.
 
 ### QuerySupplyResponse
 QuerySupplyResponse is the response type for the Query/MarkerSupply method.
+Deprecated: This returns initial/target supply. Use the bank module's SupplyOf query for actual circulating supply.
 
 
 | Field | Type | Label | Description |
@@ -11417,7 +11631,7 @@ Query defines the gRPC querier service for marker module.
 | `AllMarkers` | [QueryAllMarkersRequest](#provenance-marker-v1-QueryAllMarkersRequest) | [QueryAllMarkersResponse](#provenance-marker-v1-QueryAllMarkersResponse) | Returns a list of all markers on the blockchain |
 | `Marker` | [QueryMarkerRequest](#provenance-marker-v1-QueryMarkerRequest) | [QueryMarkerResponse](#provenance-marker-v1-QueryMarkerResponse) | query for a single marker by denom or address |
 | `Holding` | [QueryHoldingRequest](#provenance-marker-v1-QueryHoldingRequest) | [QueryHoldingResponse](#provenance-marker-v1-QueryHoldingResponse) | query for all accounts holding the given marker coins |
-| `Supply` | [QuerySupplyRequest](#provenance-marker-v1-QuerySupplyRequest) | [QuerySupplyResponse](#provenance-marker-v1-QuerySupplyResponse) | query for supply of coin on a marker account |
+| `Supply` | [QuerySupplyRequest](#provenance-marker-v1-QuerySupplyRequest) | [QuerySupplyResponse](#provenance-marker-v1-QuerySupplyResponse) | query for supply of coin on a marker account This endpoint returns the initial/target supply from marker account, not actual circulating supply. Deprecated: This query is deprecated in favor of the bank module's SupplyOf query. |
 | `Escrow` | [QueryEscrowRequest](#provenance-marker-v1-QueryEscrowRequest) | [QueryEscrowResponse](#provenance-marker-v1-QueryEscrowResponse) | query for coins on a marker account |
 | `Access` | [QueryAccessRequest](#provenance-marker-v1-QueryAccessRequest) | [QueryAccessResponse](#provenance-marker-v1-QueryAccessResponse) | query for access records on an account |
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance-marker-v1-QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance-marker-v1-QueryDenomMetadataResponse) | query for access records on an account |
@@ -12287,7 +12501,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  |  |
 | `signers` | [string](#string) | repeated |  |
-| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated | Net asset values to set. The "usd" denomination represents whole-dollar amounts, where 1usd = $1.00. |
+| `net_asset_values` | [NetAssetValue](#provenance-metadata-v1-NetAssetValue) | repeated | Net asset values to set. The price can use a special "usd" denom, where 1usd = $0.001 and 1000usd = $1.000. |
 
 
 
@@ -13065,7 +13279,7 @@ Msg defines the Metadata Msg service.
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance-metadata-v1-MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance-metadata-v1-MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance-metadata-v1-MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance-metadata-v1-MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-metadata-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-metadata-v1-MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. |
-| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a scope. Note: When setting NAVs amounts are in usd units where 1usd = $1.00. |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-metadata-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-metadata-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a scope. |
 
  <!-- end services -->
 

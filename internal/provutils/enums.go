@@ -9,6 +9,8 @@ import (
 // EnumUnmarshalJSON unmarshalls an enum entry from either a JSON string or number.
 // As a string, the name prefix is optional. I.e. "PAYMENT_FREQUENCY_DAILY" can be provided as just "DAILY".
 // It is not an error to get the _UNSPECIFIED value.
+//
+// Contract: names[0] must end with _UNSPECIFIED.
 func EnumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]string) (int32, error) {
 	// Try to unmarshal as string first
 	var strIn string
@@ -40,9 +42,29 @@ func EnumUnmarshalJSON(data []byte, values map[string]int32, names map[int32]str
 
 // EnumValidateExists returns an error if the provided value is not contained in the provided names map.
 // It does NOT return an error on the zero (_UNSPECIFIED) value.
+//
+// Contract: names[0] must end with _UNSPECIFIED.
+//
+// To disallow the zero (_UNSPECIFIED) value, use EnumValidateSpecified.
 func EnumValidateExists[E ~int32](value E, names map[int32]string) error {
 	if _, exists := names[int32(value)]; !exists {
 		return fmt.Errorf("unknown %s enum value: %d", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")), value)
+	}
+	return nil
+}
+
+// EnumValidateSpecified returns an error if the provided value is not contained in the provided names map
+// or if it is the zero (_UNSPECIFIED) value.
+//
+// Contract: names[0] must end with _UNSPECIFIED.
+//
+// To allow the zero (_UNSPECIFIED) value, use EnumValidateExists.
+func EnumValidateSpecified[E ~int32](value E, names map[int32]string) error {
+	if err := EnumValidateExists(value, names); err != nil {
+		return err
+	}
+	if value == 0 {
+		return fmt.Errorf("%s must be specified", strings.ToLower(strings.TrimSuffix(names[0], "_UNSPECIFIED")))
 	}
 	return nil
 }

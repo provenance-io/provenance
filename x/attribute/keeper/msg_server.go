@@ -45,7 +45,7 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 		return nil, err
 	}
 
-	err = k.Keeper.SetAttribute(ctx, attrib, ownerAddr)
+	err = k.SetAttribute(ctx, attrib, ownerAddr)
 	if err != nil {
 		return nil, err
 	}

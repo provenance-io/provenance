@@ -2259,8 +2259,8 @@ var xxx_messageInfo_MsgP8EMemorializeContractResponse proto.InternalMessageInfo
 type MsgAddNetAssetValuesRequest struct {
 	ScopeId string   `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty"`
 	Signers []string `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
-	// Net asset values to set. The "usd" denomination represents whole-dollar amounts,
-	// where 1usd = $1.00.
+	// Net asset values to set.
+	// The price can use a special "usd" denom, where 1usd = $0.001 and 1000usd = $1.000.
 	NetAssetValues []NetAssetValue `protobuf:"bytes,3,rep,name=net_asset_values,json=netAssetValues,proto3" json:"net_asset_values"`
 }
 
@@ -2590,7 +2590,6 @@ type MsgClient interface {
 	// Currently, only scope ids are supported.
 	SetAccountData(ctx context.Context, in *MsgSetAccountDataRequest, opts ...grpc.CallOption) (*MsgSetAccountDataResponse, error)
 	// AddNetAssetValues sets the net asset value for a scope.
-	// Note: When setting NAVs amounts are in usd units where 1usd = $1.00.
 	AddNetAssetValues(ctx context.Context, in *MsgAddNetAssetValuesRequest, opts ...grpc.CallOption) (*MsgAddNetAssetValuesResponse, error)
 }
 
@@ -2868,7 +2867,6 @@ type MsgServer interface {
 	// Currently, only scope ids are supported.
 	SetAccountData(context.Context, *MsgSetAccountDataRequest) (*MsgSetAccountDataResponse, error)
 	// AddNetAssetValues sets the net asset value for a scope.
-	// Note: When setting NAVs amounts are in usd units where 1usd = $1.00.
 	AddNetAssetValues(context.Context, *MsgAddNetAssetValuesRequest) (*MsgAddNetAssetValuesResponse, error)
 }
 
