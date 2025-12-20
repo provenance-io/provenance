@@ -350,6 +350,8 @@ func (s *CLITestSuite) TestNewTxCmd() {
 		{name: "update", aliases: []string{"costs"}},
 		{name: "conversion-factor"},
 		{name: "params"},
+		{name: "add-oracle"},
+		{name: "remove-oracle"},
 	}
 	s.assertBaseCmd(cli.NewTxCmd, subCmds)
 }
@@ -867,6 +869,254 @@ func (s *CLITestSuite) TestNewCmdCalculateTxFees() {
 				tc.Cmd = cli.NewCmdCalculateTxFees()
 			}
 			tc.Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *CLITestSuite) TestNewCmdAddOracleAddress() {
+	validOracle := sdk.AccAddress("oracle1_____________").String()
+
+	tests := []struct {
+		name      string
+		args      []string
+		shouldErr bool
+		errMsg    string
+	}{
+		{
+			name:      "zero args",
+			args:      []string{},
+			shouldErr: true,
+			errMsg:    "accepts 1 arg(s), received 0",
+		},
+		{
+			name:      "two args",
+			args:      []string{validOracle, "extra"},
+			shouldErr: true,
+			errMsg:    "accepts 1 arg(s), received 2",
+		},
+		{
+			name:      "invalid oracle address format",
+			args:      []string{"invalid"},
+			shouldErr: true,
+			errMsg:    "invalid oracle address",
+		},
+		{
+			name:      "empty oracle address",
+			args:      []string{""},
+			shouldErr: true,
+			errMsg:    "empty address string",
+		},
+		{
+			name:      "valid oracle address",
+			args:      []string{validOracle},
+			shouldErr: false,
+		},
+		{
+			name:      "valid different oracle address",
+			args:      []string{sdk.AccAddress("oracle2_____________").String()},
+			shouldErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdAddOracleAddress()
+
+			args := append(tc.args,
+				"--title", "Add Oracle",
+				"--summary", "Add oracle address.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5)).String()),
+			)
+
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+
+			if tc.shouldErr {
+				s.Require().Error(err, "command should error for args: %v", tc.args)
+				if tc.errMsg != "" {
+					s.Assert().Contains(err.Error(), tc.errMsg,
+						"error should contain: %s", tc.errMsg)
+				}
+			} else {
+				s.Require().NoError(err, "command should not error for args: %v", tc.args)
+				s.Assert().NotEmpty(out.String(), "output should not be empty")
+			}
+		})
+	}
+}
+
+func (s *CLITestSuite) TestNewCmdRemoveOracleAddress() {
+	validOracle := sdk.AccAddress("oracle1_____________").String()
+
+	tests := []struct {
+		name      string
+		args      []string
+		shouldErr bool
+		errMsg    string
+	}{
+		{
+			name:      "zero args",
+			args:      []string{},
+			shouldErr: true,
+			errMsg:    "accepts 1 arg(s), received 0",
+		},
+		{
+			name:      "two args",
+			args:      []string{validOracle, "extra"},
+			shouldErr: true,
+			errMsg:    "accepts 1 arg(s), received 2",
+		},
+		{
+			name:      "invalid oracle address format",
+			args:      []string{"invalid"},
+			shouldErr: true,
+			errMsg:    "invalid oracle address",
+		},
+		{
+			name:      "empty oracle address",
+			args:      []string{""},
+			shouldErr: true,
+			errMsg:    "empty address string",
+		},
+		{
+			name:      "valid oracle address",
+			args:      []string{validOracle},
+			shouldErr: false,
+		},
+		{
+			name:      "valid different oracle address",
+			args:      []string{sdk.AccAddress("oracle2_____________").String()},
+			shouldErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdRemoveOracleAddress()
+
+			args := append(tc.args,
+				"--title", "Remove Oracle",
+				"--summary", "Remove oracle address.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5)).String()),
+			)
+
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+
+			if tc.shouldErr {
+				s.Require().Error(err, "command should error for args: %v", tc.args)
+				if tc.errMsg != "" {
+					s.Assert().Contains(err.Error(), tc.errMsg,
+						"error should contain: %s", tc.errMsg)
+				}
+			} else {
+				s.Require().NoError(err, "command should not error for args: %v", tc.args)
+				s.Assert().NotEmpty(out.String(), "output should not be empty")
+			}
+		})
+	}
+}
+
+func (s *CLITestSuite) TestOracleCommands_Structure() {
+	s.Run("add-oracle command structure", func() {
+		cmd := cli.NewCmdAddOracleAddress()
+		s.Assert().NotNil(cmd, "NewCmdAddOracleAddress should return command")
+		s.Assert().Contains(cmd.Use, "add-oracle", "command Use should contain add-oracle")
+
+		s.Assert().NotNil(cmd.Flags().Lookup("title"), "should have --title flag")
+		s.Assert().NotNil(cmd.Flags().Lookup("summary"), "should have --summary flag")
+		s.Assert().NotNil(cmd.Flags().Lookup("authority"), "should have --authority flag")
+	})
+
+	s.Run("remove-oracle command structure", func() {
+		cmd := cli.NewCmdRemoveOracleAddress()
+		s.Assert().NotNil(cmd, "NewCmdRemoveOracleAddress should return command")
+		s.Assert().Contains(cmd.Use, "remove-oracle", "command Use should contain remove-oracle")
+
+		s.Assert().NotNil(cmd.Flags().Lookup("title"), "should have --title flag")
+		s.Assert().NotNil(cmd.Flags().Lookup("summary"), "should have --summary flag")
+		s.Assert().NotNil(cmd.Flags().Lookup("authority"), "should have --authority flag")
+	})
+
+	s.Run("conversion-factor accepts authority", func() {
+		cmd := cli.NewCmdUpdateConversionFactor()
+		s.Assert().NotNil(cmd, "NewCmdUpdateConversionFactor should return command")
+		s.Assert().NotNil(cmd.Flags().Lookup("authority"),
+			"conversion-factor should have --authority flag")
+	})
+}
+func (s *CLITestSuite) TestCmdRemoveOracleAddress_AddressValidation() {
+	tests := []struct {
+		name      string
+		address   string
+		shouldErr bool
+		errMsg    string
+	}{
+		{
+			name:      "valid cosmos address",
+			address:   s.accountAddresses[0].String(),
+			shouldErr: false,
+		},
+		{
+			name:      "valid different cosmos address",
+			address:   s.accountAddresses[1].String(),
+			shouldErr: false,
+		},
+		{
+			name:      "invalid - not bech32",
+			address:   "notabech32address",
+			shouldErr: true,
+			errMsg:    "invalid oracle address",
+		},
+		{
+			name:      "invalid - empty string",
+			address:   "",
+			shouldErr: true,
+			errMsg:    "empty address string",
+		},
+		{
+			name:      "invalid - wrong format",
+			address:   "xyz123",
+			shouldErr: true,
+			errMsg:    "invalid oracle address",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			args := []string{
+				tc.address,
+				"--title", "Remove Oracle",
+				"--summary", "Remove oracle address.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 5)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			}
+
+			cmd := cli.NewCmdRemoveOracleAddress()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+
+			if tc.shouldErr {
+				s.Require().Error(err, "ExecTestCLICmd should return error for address %q", tc.address)
+				if len(tc.errMsg) > 0 {
+					s.Assert().Contains(err.Error(), tc.errMsg, "error message should contain expected string")
+				}
+			} else {
+				if err != nil {
+					s.Assert().NotContains(err.Error(), "invalid oracle address",
+						"should not fail on address validation for %q", tc.address)
+				}
+				_ = out
+			}
 		})
 	}
 }

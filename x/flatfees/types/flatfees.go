@@ -29,10 +29,9 @@ func DefaultParams() Params {
 			DefinitionAmount: sdk.NewInt64Coin(DefaultFeeDefinitionDenom, 1),
 			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
 		},
+		OracleAddresses: nil,
 	}
 }
-
-// Validate checks that the Params fields are valid.
 func (p Params) Validate() error {
 	if err := p.DefaultCost.Validate(); err != nil {
 		return fmt.Errorf("invalid default cost %q: %w", p.DefaultCost, err)
@@ -44,7 +43,48 @@ func (p Params) Validate() error {
 		return fmt.Errorf("default cost denom %q does not equal conversion factor base amount denom %q",
 			p.DefaultCost.Denom, p.ConversionFactor.DefinitionAmount.Denom)
 	}
+	if err := validateOracleAddresses(p.OracleAddresses); err != nil {
+		return err
+	}
 	return nil
+}
+
+// validateOracleAddresses validates the oracle addresses list
+func validateOracleAddresses(addresses []string) error {
+	if len(addresses) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]bool)
+	for _, addr := range addresses {
+		if addr == "" {
+			return errors.New("oracle address cannot be empty")
+		}
+
+		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+			return fmt.Errorf("invalid oracle address format %q: %w", addr, err)
+		}
+
+		if seen[addr] {
+			return fmt.Errorf("duplicate oracle address: %q", addr)
+		}
+		seen[addr] = true
+	}
+
+	return nil
+}
+
+// IsOracleAddress checks if the given address is in the oracle list
+func (p Params) IsOracleAddress(address string) bool {
+	if p.OracleAddresses == nil {
+		return false
+	}
+	for _, oracle := range p.OracleAddresses {
+		if oracle == address {
+			return true
+		}
+	}
+	return false
 }
 
 // DefaultCostCoins returns the default cost wrapped in a Coins.
