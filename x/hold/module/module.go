@@ -80,7 +80,7 @@ func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // GetTxCmd returns the transaction commands for the hold module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd()
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the hold module.
