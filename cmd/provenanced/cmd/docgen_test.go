@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -181,13 +182,7 @@ func TestDocGen(t *testing.T) {
 
 				missingExt := false
 				for _, extension := range tc.extensions {
-					contains := false
-					for _, ext := range exts {
-						if ext == extension {
-							contains = true
-							break
-						}
-					}
+					contains := slices.Contains(exts, extension)
 					if !assert.True(t, contains, "should generate a file with the extension %q", extension) {
 						missingExt = true
 					}

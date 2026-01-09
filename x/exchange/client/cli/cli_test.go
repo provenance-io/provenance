@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -479,12 +480,7 @@ func (s *CmdTestSuite) makeInitialPayment(sourceI, targetI int) *exchange.Paymen
 
 // contains reports whether v is present in s.
 func contains[S ~[]E, E comparable](s S, v E) bool {
-	for i := range s {
-		if v == s[i] {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, v)
 }
 
 // getClientCtx get a client context that knows about the suite's keyring.

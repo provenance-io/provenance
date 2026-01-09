@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"net/url"
+	"slices"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -83,14 +84,7 @@ func (k Keeper) UnionDistinct(sets ...[]string) []string {
 	retval := []string{}
 	for _, s := range sets {
 		for _, v := range s {
-			f := false
-			for _, r := range retval {
-				if r == v {
-					f = true
-					break
-				}
-			}
-			if !f {
+			if !slices.Contains(retval, v) {
 				retval = append(retval, v)
 			}
 		}

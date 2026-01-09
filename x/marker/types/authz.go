@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,11 +56,8 @@ func (a MarkerTransferAuthorization) Accept(_ context.Context, msg sdk.Msg) (aut
 		isAddrExists := false
 		allowedList := a.GetAllowList()
 
-		for _, addr := range allowedList {
-			if addr == toAddress {
-				isAddrExists = true
-				break
-			}
+		if slices.Contains(allowedList, toAddress) {
+			isAddrExists = true
 		}
 
 		if len(allowedList) > 0 && !isAddrExists {
