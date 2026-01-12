@@ -4,8 +4,8 @@ ARG VERSION
 WORKDIR /go/src/github.com/provenance-io/provenance
 
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y libleveldb-dev
+	apt-get upgrade -y && \
+	apt-get install -y libleveldb-dev
 
 COPY client/ ./client/
 COPY app/ ./app/
@@ -23,33 +23,33 @@ COPY Makefile sims.mk ./
 # Build and install provenanced
 ENV VERSION=$VERSION
 RUN ARCH=$(uname -m) && \
-    if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
-    echo "Unsupported architecture (required: x86_64 or aarch64): $ARCH"; \
-    exit 1; \
-    fi && \
-    echo "Building and installing provenance for Arch: $ARCH"; \
-    make VERSION=${VERSION} install
+	if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
+        echo "Unsupported architecture (required: x86_64 or aarch64): $ARCH"; \
+        exit 1; \
+	fi && \
+	echo "Building and installing provenance for Arch: $ARCH"; \
+	make VERSION=${VERSION} install
 
 ###
 FROM debian:bookworm-slim AS run
 ENV LD_LIBRARY_PATH="/usr/local/lib"
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y curl jq libleveldb-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/
+	apt-get upgrade -y && \
+	apt-get install -y curl jq libleveldb-dev && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/
 
 
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/v2/internal/api/libwasmvm.*.so /tmp
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
 RUN ARCH=$(uname -m) && \
-    if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
-    echo "Unsupported architecture (required: x86_64 or aarch64): $ARCH"; \
-    exit 1; \
-    fi && \
-    cp "/tmp/libwasmvm.$ARCH.so" /usr/local/lib/. && \
-    rm /tmp/libwasmvm.*.so
+	if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
+        echo "Unsupported architecture (required: x86_64 or aarch64): $ARCH"; \
+        exit 1; \
+	fi && \
+	cp "/tmp/libwasmvm.$ARCH.so" /usr/local/lib/. && \
+	rm /tmp/libwasmvm.*.so
 
 ENV PIO_HOME=/home/provenance
 WORKDIR /home/provenance
