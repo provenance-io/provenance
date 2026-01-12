@@ -39,7 +39,10 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 			if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
 				return false
 			}
-			txEvent := triggerEvent.(*types.TransactionEvent)
+			txEvent, isType := triggerEvent.(*types.TransactionEvent)
+			if !isType {
+				return false
+			}
 			detected := txEvent.Matches(event)
 			detectedTriggers[trigger.Id] = detected
 			return detected
@@ -52,12 +55,18 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 // detectBlockHeightEvents Detects triggers that have been activated by block height events.
 func (k Keeper) detectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	match := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
+		blockHeightEvent, isType := triggerEvent.(*types.BlockHeightEvent)
+		if !isType {
+			return false
+		}
 		curHeight := uint64(ctx.BlockHeight())
 		return curHeight >= blockHeightEvent.GetBlockHeight()
 	}
 	terminator := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
+		blockHeightEvent, isType := triggerEvent.(*types.BlockHeightEvent)
+		if !isType {
+			return false
+		}
 		curHeight := uint64(ctx.BlockHeight())
 		return curHeight < blockHeightEvent.GetBlockHeight()
 	}
@@ -69,11 +78,17 @@ func (k Keeper) detectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigg
 // detectTimeEvents Detects triggers that have been activated by block time events.
 func (k Keeper) detectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	match := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
+		blockTimeEvent, isType := triggerEvent.(*types.BlockTimeEvent)
+		if !isType {
+			return false
+		}
 		return ctx.BlockTime().UTC().Equal(blockTimeEvent.GetTime().UTC()) || ctx.BlockTime().UTC().After(blockTimeEvent.GetTime().UTC())
 	}
 	terminator := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
+		blockTimeEvent, isType := triggerEvent.(*types.BlockTimeEvent)
+		if !isType {
+			return false
+		}
 		return ctx.BlockTime().UTC().Before(blockTimeEvent.GetTime().UTC())
 	}
 
