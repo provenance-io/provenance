@@ -52,6 +52,18 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.27.1](https://github.com/provenance-io/provenance/releases/tag/v1.27.1) 2026-01-13
+
+### Bug Fixes
+
+* Safer type conversion of triggers [PR 2584](https://github.com/provenance-io/provenance/pull/2584).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.26.0...v1.27.1
+
+---
+
 ## [v1.27.0](https://github.com/provenance-io/provenance/releases/tag/v1.27.0) 2025-12-11
 
 ### Features

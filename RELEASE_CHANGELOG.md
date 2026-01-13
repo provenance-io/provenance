@@ -1,26 +1,16 @@
-## [v1.27.0](https://github.com/provenance-io/provenance/releases/tag/v1.27.0) 2025-12-11
+## [v1.27.1](https://github.com/provenance-io/provenance/releases/tag/v1.27.1) 2026-01-13
 
-Provenance Blockchain version `v1.27.0` contains some key bug fixes.
+Provenance Blockchain version `v1.27.1` contains a key bug fix.
 
-### Features
+This is an in-place upgrade that validators should switch to as soon as possible.
 
-* Add storing of the NUVA Vault Manager Smart Contract to carnation upgrade handler [PR 2568](https://github.com/provenance-io/provenance/pull/2568).
-
-### Improvements
-
-* Add the `set-denom-metadata-proposal` command to the `tx marker` commands [PR 2557](https://github.com/provenance-io/provenance/pull/2557).
-* Add the carnation upgrades and remove bouvardia upgrades [PR 2563](https://github.com/provenance-io/provenance/pull/2563).
+## [v1.27.1](https://github.com/provenance-io/provenance/releases/tag/v1.27.1) 2026-01-13
 
 ### Bug Fixes
 
-* Allow large gov-prop Txs again [PR 2559](https://github.com/provenance-io/provenance/pull/2559).
-* Fix java/kotlin proto publishing [PR 2562](https://github.com/provenance-io/provenance/pull/2562).
-
-### Dependencies
-
-* `github.com/provlabs/vault` bumped to v1.0.13 (from v1.0.12) [PR 2567](https://github.com/provenance-io/provenance/pull/2567).
+* Safer type conversion of triggers [PR 2584](https://github.com/provenance-io/provenance/pull/2584).
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.26.0...v1.27.0
+* https://github.com/provenance-io/provenance/compare/v1.26.0...v1.27.1
 
