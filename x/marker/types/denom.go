@@ -38,25 +38,7 @@ func ValidateDenomMetadataBasic(md banktypes.Metadata) error {
 
 	rootCoinName := GetRootCoinName(md)
 	if len(rootCoinName) == 0 {
-		if len(md.DenomUnits) > 1 {
-			// Multiple units without common root = REJECT
-			return errors.New("denom metadata root coin name could not be found, invalid DenomUnit denom and alias values")
-		}
-		// Single unit is allowed.
-		seenNames := make(map[string]bool)
-		for _, du := range md.DenomUnits {
-			if seenNames[du.Denom] {
-				return fmt.Errorf("denom metadata denom or alias [%s] is not unique", du.Denom)
-			}
-			seenNames[du.Denom] = true
-			for _, a := range du.Aliases {
-				if seenNames[a] {
-					return fmt.Errorf("denom metadata denom or alias [%s] is not unique", a)
-				}
-				seenNames[a] = true
-			}
-		}
-		return nil
+		return errors.New("denom metadata root coin name could not be found, invalid DenomUnit denom and alias values")
 	}
 	if _, err := validateDenom(rootCoinName, rootCoinName); err != nil {
 		return fmt.Errorf("denom metadata root coin name %w", err)
