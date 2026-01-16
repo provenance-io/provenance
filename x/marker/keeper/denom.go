@@ -32,13 +32,13 @@ func (k Keeper) ValidateDenomMetadata(ctx sdk.Context, proposed banktypes.Metada
 		return fmt.Errorf("cannot add or update denom metadata for a marker with status [%s]", markerStatus)
 	}
 
-	// Make sure all the DenomUnit Denom and alias strings pass the extra validation regex.
+	// Use standard SDK validation instead of extra validation regex.
 	for _, du := range proposed.DenomUnits {
-		if err := k.ValidateUnrestictedDenom(ctx, du.Denom); err != nil {
+		if err := sdk.ValidateDenom(du.Denom); err != nil {
 			return fmt.Errorf("invalid denom unit denom: %w", err)
 		}
 		for _, a := range du.Aliases {
-			if err := k.ValidateUnrestictedDenom(ctx, a); err != nil {
+			if err := sdk.ValidateDenom(a); err != nil {
 				return fmt.Errorf("invalid denom unit alias: %w", err)
 			}
 		}
