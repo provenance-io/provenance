@@ -69,6 +69,8 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
+      - name: Configure Authentication
+        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - name: Build osx binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
@@ -96,6 +98,8 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
+      - name: Configure Authentication
+        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - name: Install deps
         run: |
           apt-get update

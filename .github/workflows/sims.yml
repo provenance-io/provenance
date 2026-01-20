@@ -64,6 +64,8 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
+      - name: Configure Authentication
+        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Build provenanced
@@ -93,6 +95,8 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
+      - name: Configure Authentication
+        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
@@ -145,6 +149,8 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
+      - name: Configure Authentication
+        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
@@ -182,6 +188,8 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
+      - name: Configure Authentication
+        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
