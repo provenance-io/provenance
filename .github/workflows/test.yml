@@ -105,7 +105,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - name: Configure Authentication
-        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://x-access-token:${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - uses: actions/download-artifact@v6
         if: needs.setup-tests.outputs.should-run
         with:
@@ -194,7 +194,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - name: Configure Authentication
-        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://x-access-token:${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - uses: actions/download-artifact@v6
         if: needs.setup-tests.outputs.should-run
         with:
