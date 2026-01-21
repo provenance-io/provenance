@@ -31,8 +31,6 @@ jobs:
         if: env.GIT_DIFF
         with:
           go-version-file: 'go.mod'
-      - name: Configure Authentication
-        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
       - uses: golangci/golangci-lint-action@v6
         if: env.GIT_DIFF
         with:

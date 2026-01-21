@@ -53,9 +53,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Configure Authentication
-        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
-
       # lock to "linux/amd64" only for now since cross compilation is throwing errors
       - uses: strangelove-ventures/heighliner-build-action@main
         with:
@@ -83,9 +80,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
-
-      - name: Configure Authentication
-        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
 
       - run: go mod vendor
 
@@ -129,9 +123,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
-
-      - name: Configure Authentication
-        run: git config --global url."https://${{ secrets.COMET_PAT }}@github.com".insteadOf "https://github.com"
 
       - run: go mod vendor
 
