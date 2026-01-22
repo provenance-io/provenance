@@ -1187,3 +1187,115 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 		})
 	}
 }
+func (s *UpgradeTestSuite) TestSetupCircuitBreakerPermissions() {
+
+	LogMsgCircuitSetupStart := "INF Setting up circuit breaker permissions"
+	LogMsgCircuitMainnet := "INF Detected MAINNET environment"
+	LogMsgCircuitTestnet := "INF Detected TESTNET environment"
+	LogMsgCircuitSuccess := "INF Circuit breaker setup configured successfully."
+
+	ctxWithChainID := func(chainID string) sdk.Context {
+		return s.ctx.WithChainID(chainID)
+	}
+
+	tests := []struct {
+		name          string
+		chainID       string
+		shouldError   bool
+		errorContains string
+		expLogs       []string
+		notExpLogs    []string
+	}{
+		{
+			name:        "SUCCESS: Mainnet Detection (Standard)",
+			chainID:     "pio-mainnet-1",
+			shouldError: false,
+			expLogs: []string{
+				LogMsgCircuitSetupStart,
+				LogMsgCircuitMainnet,
+				LogMsgCircuitSuccess,
+			},
+			notExpLogs: []string{LogMsgCircuitTestnet, "Skipping"},
+		},
+		{
+			name:        "SUCCESS: Mainnet Detection (Alias)",
+			chainID:     "pio-1",
+			shouldError: false,
+			expLogs: []string{
+				LogMsgCircuitSetupStart,
+				LogMsgCircuitMainnet,
+				LogMsgCircuitSuccess,
+			},
+			notExpLogs: []string{LogMsgCircuitTestnet},
+		},
+		{
+			name:        "SUCCESS: Testnet Detection",
+			chainID:     "pio-testnet-1",
+			shouldError: false,
+			expLogs: []string{
+				LogMsgCircuitSetupStart,
+				LogMsgCircuitTestnet,
+				LogMsgCircuitSuccess,
+			},
+			notExpLogs: []string{LogMsgCircuitMainnet},
+		},
+		{
+			name:        "SUCCESS: Local/Dev Skip (Safety Check)",
+			chainID:     "chain-local",
+			shouldError: false,
+			expLogs: []string{
+				LogMsgCircuitSetupStart,
+				"INF Skipping circuit breaker setup for local/dev chain: chain-local",
+			},
+			notExpLogs: []string{
+				LogMsgCircuitMainnet,
+				LogMsgCircuitTestnet,
+				LogMsgCircuitSuccess,
+			},
+		},
+		{
+			name:        "SUCCESS: Simd Testing Skip (Safety Check)",
+			chainID:     "simd-testing",
+			shouldError: false,
+			expLogs: []string{
+				LogMsgCircuitSetupStart,
+				"INF Skipping circuit breaker setup for local/dev chain: simd-testing",
+			},
+			notExpLogs: []string{LogMsgCircuitSuccess},
+		},
+		{
+			name:          "FAILURE: Unknown Chain ID (Prevent Silent Failure)",
+			chainID:       "evil-chain-1",
+			shouldError:   true,
+			errorContains: "CRITICAL: Unknown chain ID 'evil-chain-1'",
+			expLogs: []string{
+				LogMsgCircuitSetupStart,
+			},
+			notExpLogs: []string{
+				LogMsgCircuitMainnet,
+				LogMsgCircuitTestnet,
+				"Skipping",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+
+			testCtx := ctxWithChainID(tc.chainID)
+			s.logBuffer.Reset()
+
+			err := setupCircuitBreakerPermissions(testCtx, s.app)
+
+			if tc.shouldError {
+				s.Require().Error(err, "Expected an error for chainID: %s", tc.chainID)
+				s.Assert().Contains(err.Error(), tc.errorContains, "Error message should contain expected text")
+			} else {
+				s.Require().NoError(err, "Expected no error for chainID: %s", tc.chainID)
+			}
+
+			logOutput := s.GetLogOutput(fmt.Sprintf("setupCircuitBreakerPermissions(%s)", tc.chainID))
+			s.AssertLogContents(logOutput, tc.expLogs, tc.notExpLogs, true, "Log content validation")
+		})
+	}
+}
