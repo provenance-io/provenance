@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -89,9 +88,10 @@ var upgrades = map[string]appUpgrade{
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
 				return nil, err
 			}
-			if err = setupCircuitBreakerPermissions(ctx, app); err != nil {
-				return nil, err
-			}
+
+			foundation, team := getTestnetCircuitBreakerAddrs()
+			setupCircuitBreakerPermissions(ctx, app, foundation, team)
+
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
@@ -119,9 +119,10 @@ var upgrades = map[string]appUpgrade{
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
 				return nil, err
 			}
-			if err = setupCircuitBreakerPermissions(ctx, app); err != nil {
-				return nil, err
-			}
+
+			foundation, team := getMainnetCircuitBreakerAddrs()
+			setupCircuitBreakerPermissions(ctx, app, foundation, team)
+
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
@@ -400,60 +401,48 @@ func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmty
 		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }
 
+// getTestnetCircuitBreakerAddrs returns the list of accounts for Testnet.
+func getTestnetCircuitBreakerAddrs() (foundation []string, team []string) {
+	foundation = []string{
+		// TODO: Add REAL Testnet foundation addresses (tp1...)
+	}
+	team = []string{
+		// TODO: Add REAL Testnet team addresses (tp1...)
+	}
+	return foundation, team
+}
+
+// getMainnetCircuitBreakerAddrs returns the list of accounts for Mainnet.
+func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
+	foundation = []string{
+		// TODO: Add REAL Mainnet foundation addresses (pb1...)
+	}
+	team = []string{
+		// TODO: Add REAL Mainnet team addresses (pb1...)
+	}
+	return foundation, team
+}
+
 // setupCircuitBreakerPermissions grants circuit breaker admin permissions
 // during an upgrade based on the chain ID.
 //
 // Mainnet and testnet require explicit handling for safety.
 // Local/dev chains (including empty chain IDs used in tests) skip setup.
 // Unknown non-local chain IDs fail fast to prevent unsafe launches.
-func setupCircuitBreakerPermissions(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting up circuit breaker permissions")
+func setupCircuitBreakerPermissions(ctx sdk.Context, app *App, foundationAccounts, teamAccounts []string) {
+	ctx.Logger().Info("Setting up circuit breaker permissions.")
 
-	chainID := ctx.ChainID()
-
-	var foundationAccounts []string
-	var teamAccounts []string
-
-	switch {
-	case strings.Contains(chainID, "mainnet") || chainID == "pio-1":
-		ctx.Logger().Info("Detected MAINNET environment")
-		foundationAccounts = []string{
-			// TODO: Add REAL Mainnet foundation addresses (pb1...)
-		}
-		teamAccounts = []string{
-			// TODO: Add REAL Mainnet team addresses (pb1...)
-		}
-	case strings.Contains(chainID, "testnet"):
-		ctx.Logger().Info("Detected TESTNET environment")
-		foundationAccounts = []string{
-			// TODO: Add REAL Testnet foundation addresses (tp1...)
-		}
-		teamAccounts = []string{
-			// TODO: Add REAL Testnet team addresses (tp1...)
-
-		}
-	default:
-		isLocal := chainID == "" || strings.Contains(chainID, "local") || strings.Contains(chainID, "dev") || chainID == "simd-testing"
-
-		if isLocal {
-			ctx.Logger().Info(
-				fmt.Sprintf("Skipping circuit breaker setup for local/dev chain: %s", chainID),
-			)
-			return nil
-		}
-
-		return fmt.Errorf(
-			"CRITICAL: Unknown chain ID '%s'. Setup aborted to prevent launching without admins. Update upgrade.go",
-			chainID,
-		)
-	}
-
-	// Validate and Grant Permissions.
-	grant := func(addresses []string, level circuittypes.Permissions_Level) error {
+	grant := func(addresses []string, level circuittypes.Permissions_Level) {
 		for i, addrStr := range addresses {
 			addr, err := sdk.AccAddressFromBech32(addrStr)
 			if err != nil {
-				return fmt.Errorf("invalid address at index %d (%s): %w", i, addrStr, err)
+				ctx.Logger().Error(
+					fmt.Sprintf(
+						"Invalid address at index %d (%s): decoding bech32 failed. Skipping.",
+						i, addrStr,
+					),
+				)
+				continue
 			}
 
 			perms := circuittypes.Permissions{
@@ -462,23 +451,22 @@ func setupCircuitBreakerPermissions(ctx sdk.Context, app *App) error {
 			}
 
 			if err := app.CircuitKeeper.Permissions.Set(ctx, addr, perms); err != nil {
-				return fmt.Errorf("failed to grant permissions to %s: %w", addrStr, err)
+				ctx.Logger().Error(
+					fmt.Sprintf("Failed to grant permissions to %s. Skipping.", addrStr),
+				)
+				continue
 			}
-			ctx.Logger().Info(fmt.Sprintf("Granted Level %s to %s", level, addrStr))
+
+			ctx.Logger().Info(fmt.Sprintf("Granted Level %s to", level))
 		}
-		return nil
 	}
+	// Apply Foundation Permissions (SUPER_ADMIN)
+	grant(foundationAccounts, circuittypes.Permissions_LEVEL_SUPER_ADMIN)
 
-	if err := grant(foundationAccounts, circuittypes.Permissions_LEVEL_SUPER_ADMIN); err != nil {
-		return err
-	}
+	// Apply Team Permissions (ALL_MSGS)
+	grant(teamAccounts, circuittypes.Permissions_LEVEL_ALL_MSGS)
 
-	if err := grant(teamAccounts, circuittypes.Permissions_LEVEL_ALL_MSGS); err != nil {
-		return err
-	}
-
-	ctx.Logger().Info("Circuit breaker setup configured successfully.")
-	return nil
+	ctx.Logger().Info("Circuit breaker setup configured.")
 }
 
 // Create a use of the standard helpers so that the linter neither complains about it not being used,

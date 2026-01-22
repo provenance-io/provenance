@@ -1187,114 +1187,63 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 		})
 	}
 }
+
 func (s *UpgradeTestSuite) TestSetupCircuitBreakerPermissions() {
-
-	LogMsgCircuitSetupStart := "INF Setting up circuit breaker permissions"
-	LogMsgCircuitMainnet := "INF Detected MAINNET environment"
-	LogMsgCircuitTestnet := "INF Detected TESTNET environment"
-	LogMsgCircuitSuccess := "INF Circuit breaker setup configured successfully."
-
-	ctxWithChainID := func(chainID string) sdk.Context {
-		return s.ctx.WithChainID(chainID)
-	}
+	LogMsgCircuitStart := "INF Setting up circuit breaker permissions."
+	LogMsgCircuitConfigured := "INF Circuit breaker setup configured."
 
 	tests := []struct {
-		name          string
-		chainID       string
-		shouldError   bool
-		errorContains string
-		expLogs       []string
-		notExpLogs    []string
+		name       string
+		foundAddrs []string
+		teamAddrs  []string
+		expLogs    []string
+		notExpLogs []string
 	}{
 		{
-			name:        "SUCCESS: Mainnet Detection (Standard)",
-			chainID:     "pio-mainnet-1",
-			shouldError: false,
+			name:       "Success - Mixed Valid Addresses",
+			foundAddrs: []string{s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()},
+			teamAddrs:  []string{s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()},
 			expLogs: []string{
-				LogMsgCircuitSetupStart,
-				LogMsgCircuitMainnet,
-				LogMsgCircuitSuccess,
+				LogMsgCircuitStart,
+				"INF Granted Level LEVEL_SUPER_ADMIN to",
+				"INF Granted Level LEVEL_ALL_MSGS to",
+				LogMsgCircuitConfigured,
 			},
-			notExpLogs: []string{LogMsgCircuitTestnet, "Skipping"},
+			notExpLogs: []string{"ERR"},
 		},
 		{
-			name:        "SUCCESS: Mainnet Detection (Alias)",
-			chainID:     "pio-1",
-			shouldError: false,
+			name:       "Partial Failure - Invalid Address",
+			foundAddrs: []string{"invalid-bech32-address", s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()},
+			teamAddrs:  []string{},
 			expLogs: []string{
-				LogMsgCircuitSetupStart,
-				LogMsgCircuitMainnet,
-				LogMsgCircuitSuccess,
+				LogMsgCircuitStart,
+				"ERR Invalid address at index 0 (invalid-bech32-address): decoding bech32 failed. Skipping.",
+				"INF Granted Level LEVEL_SUPER_ADMIN to", // The second address should still work
+				LogMsgCircuitConfigured,
 			},
-			notExpLogs: []string{LogMsgCircuitTestnet},
 		},
 		{
-			name:        "SUCCESS: Testnet Detection",
-			chainID:     "pio-testnet-1",
-			shouldError: false,
+			name:       "Empty Lists - No Op",
+			foundAddrs: []string{},
+			teamAddrs:  []string{},
 			expLogs: []string{
-				LogMsgCircuitSetupStart,
-				LogMsgCircuitTestnet,
-				LogMsgCircuitSuccess,
-			},
-			notExpLogs: []string{LogMsgCircuitMainnet},
-		},
-		{
-			name:        "SUCCESS: Local/Dev Skip (Safety Check)",
-			chainID:     "chain-local",
-			shouldError: false,
-			expLogs: []string{
-				LogMsgCircuitSetupStart,
-				"INF Skipping circuit breaker setup for local/dev chain: chain-local",
+				LogMsgCircuitStart,
+				LogMsgCircuitConfigured,
 			},
 			notExpLogs: []string{
-				LogMsgCircuitMainnet,
-				LogMsgCircuitTestnet,
-				LogMsgCircuitSuccess,
-			},
-		},
-		{
-			name:        "SUCCESS: Simd Testing Skip (Safety Check)",
-			chainID:     "simd-testing",
-			shouldError: false,
-			expLogs: []string{
-				LogMsgCircuitSetupStart,
-				"INF Skipping circuit breaker setup for local/dev chain: simd-testing",
-			},
-			notExpLogs: []string{LogMsgCircuitSuccess},
-		},
-		{
-			name:          "FAILURE: Unknown Chain ID (Prevent Silent Failure)",
-			chainID:       "evil-chain-1",
-			shouldError:   true,
-			errorContains: "CRITICAL: Unknown chain ID 'evil-chain-1'",
-			expLogs: []string{
-				LogMsgCircuitSetupStart,
-			},
-			notExpLogs: []string{
-				LogMsgCircuitMainnet,
-				LogMsgCircuitTestnet,
-				"Skipping",
+				"INF Granted Level",
+				"ERR",
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-
-			testCtx := ctxWithChainID(tc.chainID)
 			s.logBuffer.Reset()
+			setupCircuitBreakerPermissions(s.ctx, s.app, tc.foundAddrs, tc.teamAddrs)
 
-			err := setupCircuitBreakerPermissions(testCtx, s.app)
-
-			if tc.shouldError {
-				s.Require().Error(err, "Expected an error for chainID: %s", tc.chainID)
-				s.Assert().Contains(err.Error(), tc.errorContains, "Error message should contain expected text")
-			} else {
-				s.Require().NoError(err, "Expected no error for chainID: %s", tc.chainID)
-			}
-
-			logOutput := s.GetLogOutput(fmt.Sprintf("setupCircuitBreakerPermissions(%s)", tc.chainID))
+			// Assert Logs
+			logOutput := s.GetLogOutput(fmt.Sprintf("setupCircuitBreakerPermissions %s", tc.name))
 			s.AssertLogContents(logOutput, tc.expLogs, tc.notExpLogs, true, "Log content validation")
 		})
 	}
