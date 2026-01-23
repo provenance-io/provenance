@@ -1,16 +1,14 @@
-## [v1.27.1](https://github.com/provenance-io/provenance/releases/tag/v1.27.1) 2026-01-13
+## [v1.27.2](https://github.com/provenance-io/provenance/releases/tag/v1.27.2) 2026-01-23
 
-Provenance Blockchain version `v1.27.1` contains a key bug fix.
+Provenance Blockchain version `v1.27.2` contains the fix for the CometBFT [Tachyon](https://github.com/cometbft/cometbft/security/advisories/GHSA-c32p-wcqj-j677) vulnerability.
 
-This is an in-place upgrade that validators should switch to as soon as possible.
+Validators and node operators should switch to this version as soon as possible.
 
-## [v1.27.1](https://github.com/provenance-io/provenance/releases/tag/v1.27.1) 2026-01-13
+### Dependencies
 
-### Bug Fixes
-
-* Safer type conversion of triggers [PR 2584](https://github.com/provenance-io/provenance/pull/2584).
+* `github.com/cometbft/cometbft` bumped to v0.38.21 (from v0.38.19) [PR 2600](https://github.com/provenance-io/provenance/pull/2600).
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.26.0...v1.27.1
+* https://github.com/provenance-io/provenance/compare/v1.27.1...v1.27.2
 
