@@ -52,6 +52,18 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.27.2](https://github.com/provenance-io/provenance/releases/tag/v1.27.2) 2026-01-23
+
+### Dependencies
+
+* `github.com/cometbft/cometbft` bumped to v0.38.21 (from v0.38.19) [PR 2600](https://github.com/provenance-io/provenance/pull/2600).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.27.1...v1.27.2
+
+---
+
 ## [v1.27.1](https://github.com/provenance-io/provenance/releases/tag/v1.27.1) 2026-01-13
 
 ### Bug Fixes
@@ -60,7 +72,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.26.0...v1.27.1
+* https://github.com/provenance-io/provenance/compare/v1.27.0...v1.27.1
 
 ---
 
