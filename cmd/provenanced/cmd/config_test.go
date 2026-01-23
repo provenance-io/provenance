@@ -406,6 +406,7 @@ statesync.chunk_fetchers=4
 statesync.chunk_request_timeout="10s"
 statesync.discovery_time="15s"
 statesync.enable=false
+statesync.max_snapshot_chunks=100000
 statesync.rpc_servers=[]
 statesync.temp_dir=""
 statesync.trust_hash=""
