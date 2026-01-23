@@ -401,28 +401,6 @@ func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmty
 		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }
 
-// getTestnetCircuitBreakerAddrs returns the list of accounts for Testnet.
-func getTestnetCircuitBreakerAddrs() (foundation []string, team []string) {
-	foundation = []string{
-		// TODO: Add REAL Testnet foundation addresses (tp1...)
-	}
-	team = []string{
-		// TODO: Add REAL Testnet team addresses (tp1...)
-	}
-	return foundation, team
-}
-
-// getMainnetCircuitBreakerAddrs returns the list of accounts for Mainnet.
-func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
-	foundation = []string{
-		// TODO: Add REAL Mainnet foundation addresses (pb1...)
-	}
-	team = []string{
-		// TODO: Add REAL Mainnet team addresses (pb1...)
-	}
-	return foundation, team
-}
-
 // setupCircuitBreakerPermissions grants circuit breaker admin permissions
 // during an upgrade based on the chain ID.
 //
