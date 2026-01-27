@@ -460,7 +460,9 @@ func New(
 	app.CapabilityKeeper.Seal()
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, signingOptions.AddressCodec, addrPrefix, govAuthority)
+	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount, maccPerms, signingOptions.AddressCodec, addrPrefix, govAuthority,
+		authkeeper.WithUnorderedTransactions(true))
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
