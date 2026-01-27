@@ -401,12 +401,10 @@ func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmty
 		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }
 
-// setupCircuitBreakerPermissions grants circuit breaker admin permissions
-// during an upgrade based on the chain ID.
-//
-// Mainnet and testnet require explicit handling for safety.
-// Local/dev chains (including empty chain IDs used in tests) skip setup.
-// Unknown non-local chain IDs fail fast to prevent unsafe launches.
+// setupCircuitBreakerPermissions grants circuit breaker permissions
+// during an upgrade using the caller-provided address lists.
+// The upgrade handlers are responsible for selecting the correct
+// mainnet/testnet address sets.
 func setupCircuitBreakerPermissions(ctx sdk.Context, app *App, foundationAccounts, teamAccounts []string) {
 	ctx.Logger().Info("Setting up circuit breaker permissions.")
 
@@ -435,7 +433,7 @@ func setupCircuitBreakerPermissions(ctx sdk.Context, app *App, foundationAccount
 				continue
 			}
 
-			ctx.Logger().Info(fmt.Sprintf("Granted Level %s to", level))
+			ctx.Logger().Info(fmt.Sprintf("Granted Level %s to %s.", level, addrStr))
 		}
 	}
 	// Apply Foundation Permissions (SUPER_ADMIN)
