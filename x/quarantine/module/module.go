@@ -110,7 +110,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterInvariants does nothing, there are no invariants to enforce for the quarantine module.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) { //nolint:staticcheck // We still want to use invariants.
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
