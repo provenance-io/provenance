@@ -417,8 +417,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 		expectedLogLines := []string{
 			LogMsgRemoveInactiveValidatorDelegations,
-			"INF Threshold: 21 days",
-			"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
+			"INF Threshold: 21 days module=baseapp",
+			"INF A total of 0 inactive (unbonded) validators have had all their delegators removed. module=baseapp",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -440,10 +440,10 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 		expectedLogLines := []string{
 			LogMsgRemoveInactiveValidatorDelegations,
-			"INF Threshold: 21 days",
-			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
+			"INF Threshold: 21 days module=baseapp",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed. module=baseapp", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed. module=baseapp",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -477,11 +477,11 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 		expectedLogLines := []string{
 			LogMsgRemoveInactiveValidatorDelegations,
-			"INF Threshold: 21 days",
-			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
+			"INF Threshold: 21 days module=baseapp",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed. module=baseapp", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed. module=baseapp",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
@@ -524,14 +524,14 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 		expectedLogLines := []string{
 			LogMsgRemoveInactiveValidatorDelegations,
-			"INF Threshold: 21 days",
-			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal2.OperatorAddress, 29),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
-			"INF A total of 2 inactive (unbonded) validators have had all their delegators removed.",
+			"INF Threshold: 21 days module=baseapp",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed. module=baseapp", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed. module=baseapp", unbondedVal2.OperatorAddress, 29),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr1.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr2.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
+			"INF A total of 2 inactive (unbonded) validators have had all their delegators removed. module=baseapp",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
@@ -573,11 +573,11 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 		expectedLogLines := []string{
 			LogMsgRemoveInactiveValidatorDelegations,
-			"INF Threshold: 21 days",
-			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
+			"INF Threshold: 21 days module=baseapp",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed. module=baseapp", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v). module=baseapp", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed. module=baseapp",
 		}
 		notExpectedLogLines := []string{
 			fmt.Sprintf("Validator %v has been inactive (unbonded).", unbondedVal2.OperatorAddress),
@@ -602,7 +602,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	})
 
 	s.Run("unbonded without delegators", func() {
-		// create a unbonded validator with out delegators, should not remove
+		// create a unbonded validator without delegators, should not remove
 		unbondedVal1 := s.CreateUnbondedValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
 		s.Require().NoError(err, "GetAllValidators")
@@ -610,9 +610,9 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 
 		expectedLogLines := []string{
 			LogMsgRemoveInactiveValidatorDelegations,
-			"INF Threshold: 21 days",
-			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
-			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
+			"INF Threshold: 21 days module=baseapp",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed. module=baseapp", unbondedVal1.OperatorAddress, 30),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed. module=baseapp",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -845,8 +845,8 @@ func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase() {
 
 		expInLog := []string{
 			LogMsgConvertFinishedVestingAccountsToBase,
-			"INF No completed vesting accounts found.",
-			"INF Done converting completed vesting accounts into base accounts.",
+			"INF No completed vesting accounts found. module=baseapp",
+			"INF Done converting completed vesting accounts into base accounts. module=baseapp",
 		}
 		s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "convertFinishedVestingAccountsToBase")
 		s.Require().NoError(err, "convertFinishedVestingAccountsToBase")
@@ -877,8 +877,8 @@ func (s *UpgradeTestSuite) TestConvertFinishedVestingAccountsToBase() {
 
 		expInLog := []string{
 			LogMsgConvertFinishedVestingAccountsToBase,
-			fmt.Sprintf("INF Found %d completed vesting accounts. Updating them now.", expConvCount),
-			"INF Done converting completed vesting accounts into base accounts.",
+			fmt.Sprintf("INF Found %d completed vesting accounts. Updating them now. module=baseapp", expConvCount),
+			"INF Done converting completed vesting accounts into base accounts. module=baseapp",
 		}
 		s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "convertFinishedVestingAccountsToBase")
 		s.Assert().NoError(err, "convertFinishedVestingAccountsToBase")
@@ -1032,11 +1032,10 @@ func (s *UpgradeTestSuite) TestUnlockVestingAccounts() {
 
 // Create strings with the log statements that start off the reusable upgrade functions.
 var (
-	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node."
-	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC."
-	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations."
-	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts."
-	LogMsgProvLabsWasmStoreStart               = "INF Storing the NUVA Vault Manager Smart Contract."
+	LogMsgRunModuleMigrations                  = "INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node. module=baseapp"
+	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC. module=baseapp"
+	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations. module=baseapp"
+	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts. module=baseapp"
 )
 
 func (s *UpgradeTestSuite) TestCarnationRC1() {
@@ -1045,7 +1044,7 @@ func (s *UpgradeTestSuite) TestCarnationRC1() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		LogMsgProvLabsWasmStoreStart,
+		"INF Storing the NUVA Vault Manager Smart Contract. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("carnation-rc1", expInLog, nil)
 }
@@ -1056,7 +1055,7 @@ func (s *UpgradeTestSuite) TestCarnation() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		LogMsgProvLabsWasmStoreStart,
+		"INF Storing the NUVA Vault Manager Smart Contract. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("carnation", expInLog, nil)
 }
@@ -1118,18 +1117,18 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 			name:         "success",
 			upgradeFiles: UpgradeFiles,
 			expLogs: []string{
-				"INF Storing the NUVA Vault Manager Smart Contract.",
-				"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\".",
-				"INF Done storing the NUVA Vault Manager Smart Contract.",
+				"INF Storing the NUVA Vault Manager Smart Contract. module=baseapp",
+				"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\". module=baseapp",
+				"INF Done storing the NUVA Vault Manager Smart Contract. module=baseapp",
 			},
 		},
 		{
 			name:         "failed to read file",
 			upgradeFiles: embed.FS{},
 			expLogs: []string{
-				"INF Storing the NUVA Vault Manager Smart Contract.",
-				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm: file does not exist\"",
-				"INF Done storing the NUVA Vault Manager Smart Contract.",
+				"INF Storing the NUVA Vault Manager Smart Contract. module=baseapp",
+				"ERR Could not read smart contract. error=\"open upgrade_files/carnation/nuva_vault_manager_smart_contract.wasm: file does not exist\" module=baseapp",
+				"INF Done storing the NUVA Vault Manager Smart Contract. module=baseapp",
 			},
 		},
 	}
@@ -1165,11 +1164,11 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 		{
 			name:    "storage fails",
 			errMsg:  "dang no worky",
-			expLogs: []string{"ERR Could not store smart contract. error=\"dang no worky\""},
+			expLogs: []string{"ERR Could not store smart contract. error=\"dang no worky\" module=baseapp"},
 		},
 		{
 			name:    "storage succeeds",
-			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\"."},
+			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"40f7b2a1a1222f730efdf7390b51bfb7cce3a0bc4e09e8a41161dd9c9c742722\". module=baseapp"},
 		},
 	}
 
