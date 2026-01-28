@@ -26,7 +26,7 @@
 * `github.com/cockroachdb/errors` bumped to v1.12.0 (from v1.11.3) [#2592](https://github.com/provenance-io/provenance/issues/2592).
 * `github.com/cockroachdb/logtags` bumped to v0.0.0-20241215232642-bb51bb14a506 (from v0.0.0-20230118201751-21c54148d20b) [#2592](https://github.com/provenance-io/provenance/issues/2592).
 * `github.com/cockroachdb/redact` bumped to v1.1.6 (from v1.1.5) [#2592](https://github.com/provenance-io/provenance/issues/2592).
-* `github.com/cosmos/cosmos-sdk` bumped to v0.53.5-pio-1 of `github.com/provenance-io/cosmos-sdk` (from v0.50.14-pio-2 of `github.com/provenance-io/cosmos-sdk`) [#2592](https://github.com/provenance-io/provenance/issues/2592).
+* `github.com/cosmos/cosmos-sdk` bumped to v0.53.5-pio-2 of `github.com/provenance-io/cosmos-sdk` (from v0.50.14-pio-2 of `github.com/provenance-io/cosmos-sdk`) [#2592](https://github.com/provenance-io/provenance/issues/2592).
 * `github.com/cosmos/ledger-cosmos-go` bumped to v0.16.0 (from v0.14.0) [#2592](https://github.com/provenance-io/provenance/issues/2592).
 * `github.com/DataDog/zstd` bumped to v1.5.7 (from v1.5.5) [#2592](https://github.com/provenance-io/provenance/issues/2592).
 * `github.com/dgraph-io/ristretto` bumped to v0.2.0 (from v0.1.2-0.20240116140435-c67e07994f91) [#2592](https://github.com/provenance-io/provenance/issues/2592).
