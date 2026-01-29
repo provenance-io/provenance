@@ -1189,37 +1189,39 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 }
 
 func (s *UpgradeTestSuite) TestSetupCircuitBreakerPermissions() {
-	LogMsgCircuitStart := "INF Setting up circuit breaker permissions."
-	LogMsgCircuitConfigured := "INF Circuit breaker setup configured."
-
-	tests := []struct {
+	type testCase struct {
 		name       string
 		foundAddrs []string
 		teamAddrs  []string
 		expLogs    []string
-		notExpLogs []string
-	}{
+	}
+
+	foundAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()
+	teamAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()
+
+	tests := []testCase{
 		{
 			name:       "Success - Mixed Valid Addresses",
-			foundAddrs: []string{s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()},
-			teamAddrs:  []string{s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()},
+			foundAddrs: []string{foundAddr},
+			teamAddrs:  []string{teamAddr},
 			expLogs: []string{
-				LogMsgCircuitStart,
-				"INF Granted Level LEVEL_SUPER_ADMIN to",
-				"INF Granted Level LEVEL_ALL_MSGS to",
-				LogMsgCircuitConfigured,
+				"INF Setting up circuit breaker permissions.",
+				fmt.Sprintf("INF Granted Level LEVEL_SUPER_ADMIN to %s.", foundAddr),
+				fmt.Sprintf("INF Granted Level LEVEL_ALL_MSGS to %s.", teamAddr),
+				"INF Circuit breaker setup configured.",
+				"",
 			},
-			notExpLogs: []string{"ERR"},
 		},
 		{
 			name:       "Partial Failure - Invalid Address",
-			foundAddrs: []string{"invalid-bech32-address", s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()},
+			foundAddrs: []string{"invalid-bech32-address", foundAddr},
 			teamAddrs:  []string{},
 			expLogs: []string{
-				LogMsgCircuitStart,
+				"INF Setting up circuit breaker permissions.",
 				"ERR Invalid address at index 0 (invalid-bech32-address): decoding bech32 failed. Skipping.",
-				"INF Granted Level LEVEL_SUPER_ADMIN to", // The second address should still work
-				LogMsgCircuitConfigured,
+				fmt.Sprintf("INF Granted Level LEVEL_SUPER_ADMIN to %s.", foundAddr),
+				"INF Circuit breaker setup configured.",
+				"",
 			},
 		},
 		{
@@ -1227,24 +1229,28 @@ func (s *UpgradeTestSuite) TestSetupCircuitBreakerPermissions() {
 			foundAddrs: []string{},
 			teamAddrs:  []string{},
 			expLogs: []string{
-				LogMsgCircuitStart,
-				LogMsgCircuitConfigured,
-			},
-			notExpLogs: []string{
-				"INF Granted Level",
-				"ERR",
+				"INF Setting up circuit breaker permissions.",
+				"INF Circuit breaker setup configured.",
+				"",
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.logBuffer.Reset()
-			setupCircuitBreakerPermissions(s.ctx, s.app, tc.foundAddrs, tc.teamAddrs)
+			var buffer bytes.Buffer
+			logger := internal.NewBufferedDebugLogger(&buffer)
+			ctx := s.ctx.WithLogger(logger)
 
-			// Assert Logs
-			logOutput := s.GetLogOutput(fmt.Sprintf("setupCircuitBreakerPermissions %s", tc.name))
-			s.AssertLogContents(logOutput, tc.expLogs, tc.notExpLogs, true, "Log content validation")
+			testFunc := func() {
+				setupCircuitBreakerPermissions(ctx, s.app, tc.foundAddrs, tc.teamAddrs)
+			}
+			s.Require().NotPanics(testFunc, "setupCircuitBreakerPermissions")
+
+			actLog := buffer.String()
+			actLogLines := strings.Split(actLog, "\n")
+
+			s.Assert().Equal(tc.expLogs, actLogLines, "Logged messages.")
 		})
 	}
 }

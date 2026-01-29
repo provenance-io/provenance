@@ -401,6 +401,16 @@ func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmty
 		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }
 
+// Create a use of the standard helpers so that the linter neither complains about it not being used,
+// nor complains about a nolint:unused directive that isn't needed because the function is used.
+var (
+	_ = runModuleMigrations
+	_ = removeInactiveValidatorDelegations
+	_ = pruneIBCExpiredConsensusStates
+	_ = convertFinishedVestingAccountsToBase
+	_ = unlockVestingAccounts
+)
+
 // setupCircuitBreakerPermissions grants circuit breaker permissions
 // during an upgrade using the caller-provided address lists.
 // The upgrade handlers are responsible for selecting the correct
