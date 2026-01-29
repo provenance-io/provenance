@@ -20,6 +20,8 @@ import (
 	govv1b1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
@@ -927,4 +929,229 @@ func TestIsInitGenesis(t *testing.T) {
 			assert.Equal(t, tc.exp, act, "isInitGenesis result")
 		})
 	}
+}
+
+func TestIsStoreCode(t *testing.T) {
+	tests := []struct {
+		name     string
+		msg      sdk.Msg
+		expected bool
+	}{
+		{
+			name:     "MsgStoreCode returns true",
+			msg:      &wasmtypes.MsgStoreCode{},
+			expected: true,
+		},
+		{
+			name:     "MsgSend returns false",
+			msg:      &banktypes.MsgSend{},
+			expected: false,
+		},
+		{
+			name:     "MsgSubmitProposal returns false",
+			msg:      &govtypes.MsgSubmitProposal{},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := isStoreCode(tc.msg)
+			assert.Equal(t, tc.expected, result, "isStoreCode(%T) should be %v", tc.msg, tc.expected)
+		})
+	}
+}
+
+func TestIsOnlyStoreCode(t *testing.T) {
+	tests := []struct {
+		name     string
+		msgs     []sdk.Msg
+		expected bool
+	}{
+		{
+			name:     "empty slice returns false",
+			msgs:     []sdk.Msg{},
+			expected: false,
+		},
+		{
+			name:     "single MsgStoreCode returns true",
+			msgs:     []sdk.Msg{&wasmtypes.MsgStoreCode{}},
+			expected: true,
+		},
+		{
+			name: "multiple MsgStoreCode returns true",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			expected: true,
+		},
+		{
+			name:     "single MsgSend returns false",
+			msgs:     []sdk.Msg{&banktypes.MsgSend{}},
+			expected: false,
+		},
+		{
+			name: "mixed MsgStoreCode and MsgSend returns false (SECURITY)",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&banktypes.MsgSend{},
+			},
+			expected: false,
+		},
+		{
+			name: "mixed MsgSend and MsgStoreCode returns false (SECURITY)",
+			msgs: []sdk.Msg{
+				&banktypes.MsgSend{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			expected: false,
+		},
+		{
+			name: "MsgStoreCode with gov proposal returns false",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&govtypes.MsgSubmitProposal{},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := isOnlyStoreCode(tc.msgs)
+			assert.Equal(t, tc.expected, result, "isOnlyStoreCode(%v) should be %v", len(tc.msgs), tc.expected)
+		})
+	}
+}
+
+func TestTxGasLimitShouldApply_WithStoreCode(t *testing.T) {
+	tests := []struct {
+		name        string
+		chainID     string
+		msgs        []sdk.Msg
+		shouldApply bool
+		reason      string
+	}{
+		{
+			name:        "test chain ignores limit",
+			chainID:     "testchain-1",
+			msgs:        []sdk.Msg{&banktypes.MsgSend{}},
+			shouldApply: false,
+			reason:      "test chains should not apply gas limit",
+		},
+		{
+			name:        "normal tx on mainnet applies limit",
+			chainID:     "pio-mainnet-1",
+			msgs:        []sdk.Msg{&banktypes.MsgSend{}},
+			shouldApply: true,
+			reason:      "normal transactions should be limited to 4M gas",
+		},
+		{
+			name:        "gov proposal bypasses limit",
+			chainID:     "pio-mainnet-1",
+			msgs:        []sdk.Msg{&govtypes.MsgSubmitProposal{}},
+			shouldApply: false,
+			reason:      "governance proposals should bypass the 4M limit",
+		},
+		{
+			name:        "single MsgStoreCode bypasses limit",
+			chainID:     "pio-mainnet-1",
+			msgs:        []sdk.Msg{&wasmtypes.MsgStoreCode{}},
+			shouldApply: false,
+			reason:      "MsgStoreCode should bypass the 4M limit",
+		},
+		{
+			name:    "multiple MsgStoreCode bypasses limit",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			shouldApply: false,
+			reason:      "multiple MsgStoreCode should bypass the 4M limit",
+		},
+		{
+			name:    "mixed MsgStoreCode and MsgSend applies limit (SECURITY)",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&banktypes.MsgSend{},
+			},
+			shouldApply: true,
+			reason:      "mixed transactions must be limited to prevent DoS attacks",
+		},
+		{
+			name:    "mixed MsgSend and MsgStoreCode applies limit (SECURITY)",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&banktypes.MsgSend{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			shouldApply: true,
+			reason:      "order doesn't matter - mixed = limited to prevent DoS",
+		},
+		{
+			name:    "mixed MsgStoreCode and gov proposal applies limit",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&govtypes.MsgSubmitProposal{},
+			},
+			shouldApply: true,
+			reason:      "mixed message types should be limited",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := txGasLimitShouldApply(tc.chainID, tc.msgs)
+			assert.Equal(t, tc.shouldApply, result, tc.reason)
+		})
+	}
+}
+
+func TestTxGasLimitShouldApply_SecurityScenarios(t *testing.T) {
+	mainnetChainID := "pio-mainnet-1"
+
+	t.Run("attacker cannot bypass limit with single non-StoreCode message", func(t *testing.T) {
+		msgs := []sdk.Msg{&banktypes.MsgSend{}}
+		require.True(t, txGasLimitShouldApply(mainnetChainID, msgs),
+			"single normal message should be limited")
+	})
+
+	t.Run("attacker cannot bypass limit by adding StoreCode to normal tx", func(t *testing.T) {
+		msgs := []sdk.Msg{
+			&banktypes.MsgSend{},
+			&wasmtypes.MsgStoreCode{},
+		}
+		require.True(t, txGasLimitShouldApply(mainnetChainID, msgs),
+			"mixed transaction should be limited to prevent attack")
+	})
+
+	t.Run("attacker cannot bypass limit with StoreCode + multiple normal msgs", func(t *testing.T) {
+		msgs := []sdk.Msg{
+			&wasmtypes.MsgStoreCode{},
+			&banktypes.MsgSend{},
+			&banktypes.MsgSend{},
+			&banktypes.MsgSend{},
+		}
+		require.True(t, txGasLimitShouldApply(mainnetChainID, msgs),
+			"transaction with any non-exempt message should be limited")
+	})
+
+	t.Run("legitimate use: pure StoreCode tx can use higher gas", func(t *testing.T) {
+		msgs := []sdk.Msg{&wasmtypes.MsgStoreCode{}}
+		require.False(t, txGasLimitShouldApply(mainnetChainID, msgs),
+			"pure StoreCode transaction should bypass limit")
+	})
+
+	t.Run("legitimate use: multiple StoreCode can use higher gas", func(t *testing.T) {
+		msgs := []sdk.Msg{
+			&wasmtypes.MsgStoreCode{},
+			&wasmtypes.MsgStoreCode{},
+		}
+		require.False(t, txGasLimitShouldApply(mainnetChainID, msgs),
+			"multiple StoreCode messages should bypass limit")
+	})
 }

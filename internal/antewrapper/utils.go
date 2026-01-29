@@ -7,6 +7,8 @@ import (
 	"math"
 	"strings"
 
+	wasmv1 "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	cerrs "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -157,7 +159,9 @@ func txGasLimitShouldApply(chainID string, msgs []sdk.Msg) bool {
 	// One of the primary reasons for the tx gas limit is to restrict WASM code submission.
 	// There's so much data in those that they always require more gas than the tx gas limit, but
 	// if submitted as part of a gov prop, it should be allowed.
-	return !isTestChainID(chainID) && !isOnlyGovProps(msgs)
+	// Additionally, skip the limit for MsgStoreCode to allow direct smart contract storage
+	// with a flat fee ($100), preventing spam while eliminating the need for governance proposals.
+	return !isTestChainID(chainID) && (!isOnlyGovProps(msgs) && !isOnlyStoreCode(msgs))
 }
 
 // isTestChainID returns true if the chain id is one of the special ones used for unit tests.
@@ -186,6 +190,27 @@ func isGovProp(msg sdk.Msg) bool {
 	// Since the types of messages are limited, there's only a limited set of possible msg-type URLs, so we're
 	// okay with a bit looser of a test here that allows for new versions to be added later, and still work.
 	return strings.HasPrefix(t, "/cosmos.gov.") && strings.HasSuffix(t, ".MsgSubmitProposal")
+}
+
+// isOnlyStoreCode returns true if there's at least one msg, and all msgs are MsgStoreCode.
+// This allows smart contract storage without governance proposals, with a flat fee preventing spam.
+func isOnlyStoreCode(msgs []sdk.Msg) bool {
+	// If there are no messages, there are no store code messages, so return false.
+	if len(msgs) == 0 {
+		return false
+	}
+	for _, msg := range msgs {
+		if !isStoreCode(msg) {
+			return false
+		}
+	}
+	return true
+}
+
+// isStoreCode returns true if the provided message is a wasm module MsgStoreCode.
+func isStoreCode(msg sdk.Msg) bool {
+	_, ok := msg.(*wasmv1.MsgStoreCode)
+	return ok
 }
 
 // validateFeeAmount returns an error if the required fee is more than the provided fee.

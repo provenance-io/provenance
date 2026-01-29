@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -368,6 +370,41 @@ func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmty
 		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }
 
+// setupMsgStoreCodeFee sets the flat fee for MsgStoreCode to $100 (100,000 musd).
+// This allows smart contracts to be stored directly without governance proposals while preventing spam.
+// The corresponding ante handler modification allows MsgStoreCode to use up to the block gas limit
+// instead of the standard 4M transaction gas limit.
+func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting up MsgStoreCode flat fee")
+
+	// Define the fee: $100 = 100,000 musd (milli-USD)
+	// The flatfees module will automatically convert this to nhash using the conversion factor
+	msgFee := flatfeestypes.MsgFee{
+		MsgTypeUrl: "/cosmwasm.wasm.v1.MsgStoreCode",
+		Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)),
+	}
+
+	// Validate the fee configuration before setting
+	if err := msgFee.Validate(); err != nil {
+		ctx.Logger().Error("Invalid MsgStoreCode fee configuration", "error", err)
+		return fmt.Errorf("invalid MsgStoreCode fee: %w", err)
+	}
+
+	// Set the fee in the flatfees module keeper
+	if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
+		ctx.Logger().Error("Failed to set MsgStoreCode fee", "error", err)
+		return fmt.Errorf("failed to set MsgStoreCode fee: %w", err)
+	}
+
+	ctx.Logger().Info("MsgStoreCode flat fee set successfully",
+		"msg_type", msgFee.MsgTypeUrl,
+		"fee_musd", "100000",
+		"fee_usd", "$100",
+	)
+
+	return nil
+}
+
 // Create a use of the standard helpers so that the linter neither complains about it not being used,
 // nor complains about a nolint:unused directive that isn't needed because the function is used.
 var (
@@ -376,4 +413,5 @@ var (
 	_ = pruneIBCExpiredConsensusStates
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
+	_ = setupMsgStoreCodeFee
 )
