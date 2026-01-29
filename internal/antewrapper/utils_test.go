@@ -387,7 +387,7 @@ func TestIsOnlyGovProps(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var act bool
 			testFunc := func() {
-				act = isOnlyGovProps(tc.msgs)
+				act = isOnlyGovMsgs(tc.msgs)
 			}
 			require.NotPanics(t, testFunc, "isOnlyGovProps(%#v)", tc.msgs)
 			assert.Equal(t, tc.exp, act, "isOnlyGovProps(%#v) result", tc.msgs)
@@ -402,8 +402,8 @@ func TestIsGovProp(t *testing.T) {
 	}{
 		{exp: true, msg: &govv1.MsgSubmitProposal{}},
 		{exp: true, msg: &govv1b1.MsgSubmitProposal{}},
-		{exp: false, msg: &govv1.MsgCancelProposal{}},
-		{exp: false, msg: &govv1.MsgVote{}},
+		{exp: true, msg: &govv1.MsgCancelProposal{}},
+		{exp: true, msg: &govv1.MsgVote{}},
 		{exp: false, msg: &group.MsgSubmitProposal{}},
 		{exp: false, msg: &banktypes.MsgSend{}},
 	}
@@ -412,7 +412,7 @@ func TestIsGovProp(t *testing.T) {
 		t.Run(sdk.MsgTypeURL(tc.msg), func(t *testing.T) {
 			var act bool
 			testFunc := func() {
-				act = isGovProp(tc.msg)
+				act = isGovMsg(tc.msg)
 			}
 			require.NotPanics(t, testFunc, "isGovProp(%q)", tc.msg)
 			assert.Equal(t, tc.exp, act, "isGovProp(%q) result", tc.msg)

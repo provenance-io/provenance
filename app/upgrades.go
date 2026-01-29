@@ -371,36 +371,26 @@ func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmty
 }
 
 // setupMsgStoreCodeFee sets the flat fee for MsgStoreCode to $100 (100,000 musd).
-// This allows smart contracts to be stored directly without governance proposals while preventing spam.
-// The corresponding ante handler modification allows MsgStoreCode to use up to the block gas limit
-// instead of the standard 4M transaction gas limit.
+// This allows smart contracts to be stored directly without governance proposals.
 func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Setting up MsgStoreCode flat fee")
 
-	// Define the fee: $100 = 100,000 musd (milli-USD)
-	// The flatfees module will automatically convert this to nhash using the conversion factor
 	msgFee := flatfeestypes.MsgFee{
 		MsgTypeUrl: "/cosmwasm.wasm.v1.MsgStoreCode",
 		Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)),
 	}
 
-	// Validate the fee configuration before setting
 	if err := msgFee.Validate(); err != nil {
 		ctx.Logger().Error("Invalid MsgStoreCode fee configuration", "error", err)
 		return fmt.Errorf("invalid MsgStoreCode fee: %w", err)
 	}
 
-	// Set the fee in the flatfees module keeper
 	if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
 		ctx.Logger().Error("Failed to set MsgStoreCode fee", "error", err)
 		return fmt.Errorf("failed to set MsgStoreCode fee: %w", err)
 	}
 
-	ctx.Logger().Info("MsgStoreCode flat fee set successfully",
-		"msg_type", msgFee.MsgTypeUrl,
-		"fee_musd", "100000",
-		"fee_usd", "$100",
-	)
+	ctx.Logger().Info("MsgStoreCode flat fee set successfully", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
 
 	return nil
 }

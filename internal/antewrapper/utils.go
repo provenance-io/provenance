@@ -155,13 +155,13 @@ func isOldGasPrices(nhash, gas sdkmath.Int) bool {
 func txGasLimitShouldApply(chainID string, msgs []sdk.Msg) bool {
 	// Skip the tx gas limit for unit tests and simulations; this way, we didn't have
 	// to update all the existing unit tests when we introduced this limit.
-	// Also, skip the limit for gov props so that they can be used for Txs that require a lot of gas.
+	// Also, skip the limit for gov msgs so that they can be used for Txs that require a lot of gas.
 	// One of the primary reasons for the tx gas limit is to restrict WASM code submission.
 	// There's so much data in those that they always require more gas than the tx gas limit, but
 	// if submitted as part of a gov prop, it should be allowed.
 	// Additionally, skip the limit for MsgStoreCode to allow direct smart contract storage
 	// with a flat fee ($100), preventing spam while eliminating the need for governance proposals.
-	return !isTestChainID(chainID) && (!isOnlyGovProps(msgs) && !isOnlyStoreCode(msgs))
+	return !isTestChainID(chainID) && (!isOnlyGovMsgs(msgs) && !isOnlyStoreCode(msgs))
 }
 
 // isTestChainID returns true if the chain id is one of the special ones used for unit tests.
@@ -169,27 +169,23 @@ func isTestChainID(chainID string) bool {
 	return len(chainID) == 0 || chainID == SimAppChainID || chainID == pioconfig.SimAppChainID || strings.HasPrefix(chainID, "testchain")
 }
 
-// isOnlyGovProps returns true if there's at least one msg, and all msgs are a MsgSubmitProposal.
-func isOnlyGovProps(msgs []sdk.Msg) bool {
+// isOnlyGovMsgs returns true if there's at least one msg, and all msgs are from the governance module.
+func isOnlyGovMsgs(msgs []sdk.Msg) bool {
 	// If there are no messages, there are no gov messages, so return false.
 	if len(msgs) == 0 {
 		return false
 	}
 	for _, msg := range msgs {
-		if !isGovProp(msg) {
+		if !isGovMsg(msg) {
 			return false
 		}
 	}
 	return true
 }
 
-// isGovProp returns true if the provided message is a governance module MsgSubmitProposal.
-func isGovProp(msg sdk.Msg) bool {
-	t := sdk.MsgTypeURL(msg)
-	// Needs to return true for "/cosmos.gov.v1.MsgSubmitProposal" and "/cosmos.gov.v1beta1.MsgSubmitProposal".
-	// Since the types of messages are limited, there's only a limited set of possible msg-type URLs, so we're
-	// okay with a bit looser of a test here that allows for new versions to be added later, and still work.
-	return strings.HasPrefix(t, "/cosmos.gov.") && strings.HasSuffix(t, ".MsgSubmitProposal")
+// isGovMsg returns true if the provided message is from the governance module.
+func isGovMsg(msg sdk.Msg) bool {
+	return strings.HasPrefix(sdk.MsgTypeURL(msg), "/cosmos.gov.")
 }
 
 // isOnlyStoreCode returns true if there's at least one msg, and all msgs are MsgStoreCode.
