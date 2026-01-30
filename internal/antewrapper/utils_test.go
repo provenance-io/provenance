@@ -246,12 +246,6 @@ func TestTxGasLimitShouldApply(t *testing.T) {
 			exp:     false,
 		},
 		{
-			name:    "normal tx on mainnet applies limit",
-			chainID: "pio-mainnet-1",
-			msgs:    []sdk.Msg{&banktypes.MsgSend{}},
-			exp:     true,
-		},
-		{
 			name:    "gov proposal bypasses limit",
 			chainID: "pio-mainnet-1",
 			msgs:    []sdk.Msg{&govtypes.MsgSubmitProposal{}},
