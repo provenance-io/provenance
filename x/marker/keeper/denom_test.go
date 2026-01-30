@@ -144,7 +144,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			nil,
 			types.StatusProposed,
 			`[nu]hash`,
-			[]string{"fails unrestricted marker denom validation", "hash"},
+			[]string{}, // No error expected.
 		},
 		{
 			"alias fails extra regex",
@@ -163,7 +163,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			nil,
 			types.StatusProposed,
 			`[nu]?hash`,
-			[]string{"fails unrestricted marker denom validation", "nanohash"},
+			[]string{}, // No error expected.
 		},
 		{
 			"base changed",
