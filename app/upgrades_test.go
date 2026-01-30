@@ -1060,6 +1060,26 @@ func (s *UpgradeTestSuite) TestCarnation() {
 	s.AssertUpgradeHandlerLogs("carnation", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestDaisyRC1() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("daisy-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestDaisy() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("daisy", expInLog, nil)
+}
+
 // wrappedWasmMsgSrvr is a wasmtypes.MsgServer that lets us inject an error to return from StoreCode.
 type wrappedWasmMsgSrvr struct {
 	wasmMsgServer wasmtypes.MsgServer
