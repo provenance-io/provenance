@@ -90,6 +90,9 @@ var upgrades = map[string]appUpgrade{
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
+			if err = setupMsgStoreCodeFee(ctx, app); err != nil {
+				return nil, err
+			}
 			removeInactiveValidatorDelegations(ctx, app)
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
@@ -104,6 +107,9 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+			if err = setupMsgStoreCodeFee(ctx, app); err != nil {
 				return nil, err
 			}
 			removeInactiveValidatorDelegations(ctx, app)
@@ -370,6 +376,16 @@ func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmty
 		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }
 
+// Create a use of the standard helpers so that the linter neither complains about it not being used,
+// nor complains about a nolint:unused directive that isn't needed because the function is used.
+var (
+	_ = runModuleMigrations
+	_ = removeInactiveValidatorDelegations
+	_ = pruneIBCExpiredConsensusStates
+	_ = convertFinishedVestingAccountsToBase
+	_ = unlockVestingAccounts
+)
+
 // setupMsgStoreCodeFee sets the flat fee for MsgStoreCode to $100 (100,000 musd).
 // This allows smart contracts to be stored directly without governance proposals.
 func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
@@ -381,12 +397,10 @@ func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 	}
 
 	if err := msgFee.Validate(); err != nil {
-		ctx.Logger().Error("Invalid MsgStoreCode fee configuration", "error", err)
 		return fmt.Errorf("invalid MsgStoreCode fee: %w", err)
 	}
 
 	if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
-		ctx.Logger().Error("Failed to set MsgStoreCode fee", "error", err)
 		return fmt.Errorf("failed to set MsgStoreCode fee: %w", err)
 	}
 
@@ -394,14 +408,3 @@ func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 
 	return nil
 }
-
-// Create a use of the standard helpers so that the linter neither complains about it not being used,
-// nor complains about a nolint:unused directive that isn't needed because the function is used.
-var (
-	_ = runModuleMigrations
-	_ = removeInactiveValidatorDelegations
-	_ = pruneIBCExpiredConsensusStates
-	_ = convertFinishedVestingAccountsToBase
-	_ = unlockVestingAccounts
-	_ = setupMsgStoreCodeFee
-)

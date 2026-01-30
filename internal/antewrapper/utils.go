@@ -161,7 +161,7 @@ func txGasLimitShouldApply(chainID string, msgs []sdk.Msg) bool {
 	// if submitted as part of a gov prop, it should be allowed.
 	// Additionally, skip the limit for MsgStoreCode to allow direct smart contract storage
 	// with a flat fee ($100), preventing spam while eliminating the need for governance proposals.
-	return !isTestChainID(chainID) && (!isOnlyGovMsgs(msgs) && !isOnlyStoreCode(msgs))
+	return !isTestChainID(chainID) && !isOnlyGovMsgs(msgs) && !isOnlyStoreCode(msgs)
 }
 
 // isTestChainID returns true if the chain id is one of the special ones used for unit tests.
