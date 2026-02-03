@@ -422,6 +422,9 @@ func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 
 	ctx.Logger().Info("MsgStoreCode flat fee set successfully", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
 
+	return nil
+}
+
 // updateMsgFees updates the flat fees for multiple message types.
 // Metadata operations (record/session writes): Lower fees to encourage usage
 // IBC client updates: Minimal fee for relayer operations
