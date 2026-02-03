@@ -405,7 +405,7 @@ var (
 // setupMsgStoreCodeFee sets the flat fee for MsgStoreCode to $100 (100,000 musd).
 // This allows smart contracts to be stored directly without governance proposals.
 func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting up MsgStoreCode flat fee")
+	ctx.Logger().Info("Setting up MsgStoreCode flat fee.")
 
 	msgFee := flatfeestypes.MsgFee{
 		MsgTypeUrl: "/cosmwasm.wasm.v1.MsgStoreCode",
@@ -420,7 +420,7 @@ func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 		return fmt.Errorf("failed to set MsgStoreCode fee: %w", err)
 	}
 
-	ctx.Logger().Info("MsgStoreCode flat fee set successfully", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
+	ctx.Logger().Info("MsgStoreCode flat fee set successfully.", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
 
 	return nil
 }
@@ -429,7 +429,7 @@ func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 // Metadata operations (record/session writes): Lower fees to encourage usage
 // IBC client updates: Minimal fee for relayer operations
 func updateMsgFees(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Updating message fees")
+	ctx.Logger().Info("Updating message fees.")
 
 	// Define all fee updates
 	feeUpdates := []flatfeestypes.MsgFee{
@@ -457,6 +457,6 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 		}
 	}
 
-	ctx.Logger().Info("All message fees updated successfully", "total_updated", len(feeUpdates))
+	ctx.Logger().Info("All message fees updated successfully.", "total_updated", len(feeUpdates))
 	return nil
 }

@@ -1063,9 +1063,10 @@ func (s *UpgradeTestSuite) TestDaisyRC1() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
 		LogMsgPruneIBCExpiredConsensusStates,
+		"INF Setting up MsgStoreCode flat fee. module=baseapp",
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Updating message fees",
+		"INF Updating message fees. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("daisy-rc1", expInLog, nil)
 }
@@ -1074,9 +1075,10 @@ func (s *UpgradeTestSuite) TestDaisy() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
 		LogMsgPruneIBCExpiredConsensusStates,
+		"INF Setting up MsgStoreCode flat fee. module=baseapp",
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Updating message fees",
+		"INF Updating message fees. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("daisy", expInLog, nil)
 }
