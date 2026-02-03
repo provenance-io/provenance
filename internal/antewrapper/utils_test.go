@@ -20,6 +20,8 @@ import (
 	govv1b1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
@@ -237,6 +239,60 @@ func TestTxGasLimitShouldApply(t *testing.T) {
 			msgs:    []sdk.Msg{&banktypes.MsgSend{}},
 			exp:     true,
 		},
+		{
+			name:    "test chain ignores limit",
+			chainID: "testchain-1",
+			msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+			exp:     false,
+		},
+		{
+			name:    "gov proposal bypasses limit",
+			chainID: "pio-mainnet-1",
+			msgs:    []sdk.Msg{&govtypes.MsgSubmitProposal{}},
+			exp:     false,
+		},
+		{
+			name:    "single MsgStoreCode bypasses limit",
+			chainID: "pio-mainnet-1",
+			msgs:    []sdk.Msg{&wasmtypes.MsgStoreCode{}},
+			exp:     false,
+		},
+		{
+			name:    "multiple MsgStoreCode bypasses limit",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			exp: false,
+		},
+		{
+			name:    "mixed MsgStoreCode and MsgSend applies limit (SECURITY)",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&banktypes.MsgSend{},
+			},
+			exp: true,
+		},
+		{
+			name:    "mixed MsgSend and MsgStoreCode applies limit (SECURITY)",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&banktypes.MsgSend{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			exp: true,
+		},
+		{
+			name:    "mixed MsgStoreCode and gov proposal applies limit",
+			chainID: "pio-mainnet-1",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&govtypes.MsgSubmitProposal{},
+			},
+			exp: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -286,7 +342,7 @@ func TestIsTestChainID(t *testing.T) {
 	}
 }
 
-func TestIsOnlyGovProps(t *testing.T) {
+func TestIsOnlyGovMsgs(t *testing.T) {
 	tests := []struct {
 		name string
 		msgs []sdk.Msg
@@ -385,23 +441,23 @@ func TestIsOnlyGovProps(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var act bool
 			testFunc := func() {
-				act = isOnlyGovProps(tc.msgs)
+				act = isOnlyGovMsgs(tc.msgs)
 			}
-			require.NotPanics(t, testFunc, "isOnlyGovProps(%#v)", tc.msgs)
-			assert.Equal(t, tc.exp, act, "isOnlyGovProps(%#v) result", tc.msgs)
+			require.NotPanics(t, testFunc, "isOnlyGovMsgs(%#v)", tc.msgs)
+			assert.Equal(t, tc.exp, act, "isOnlyGovMsgs(%#v) result", tc.msgs)
 		})
 	}
 }
 
-func TestIsGovProp(t *testing.T) {
+func TestIsGovMsg(t *testing.T) {
 	tests := []struct {
 		msg sdk.Msg
 		exp bool
 	}{
 		{exp: true, msg: &govv1.MsgSubmitProposal{}},
 		{exp: true, msg: &govv1b1.MsgSubmitProposal{}},
-		{exp: false, msg: &govv1.MsgCancelProposal{}},
-		{exp: false, msg: &govv1.MsgVote{}},
+		{exp: true, msg: &govv1.MsgCancelProposal{}},
+		{exp: true, msg: &govv1.MsgVote{}},
 		{exp: false, msg: &group.MsgSubmitProposal{}},
 		{exp: false, msg: &banktypes.MsgSend{}},
 	}
@@ -410,10 +466,10 @@ func TestIsGovProp(t *testing.T) {
 		t.Run(sdk.MsgTypeURL(tc.msg), func(t *testing.T) {
 			var act bool
 			testFunc := func() {
-				act = isGovProp(tc.msg)
+				act = isGovMsg(tc.msg)
 			}
-			require.NotPanics(t, testFunc, "isGovProp(%q)", tc.msg)
-			assert.Equal(t, tc.exp, act, "isGovProp(%q) result", tc.msg)
+			require.NotPanics(t, testFunc, "isGovMsg(%q)", tc.msg)
+			assert.Equal(t, tc.exp, act, "isGovMsg(%q) result", tc.msg)
 		})
 	}
 }
@@ -925,6 +981,100 @@ func TestIsInitGenesis(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "isInitGenesis")
 			assert.Equal(t, tc.exp, act, "isInitGenesis result")
+		})
+	}
+}
+
+func TestIsStoreCode(t *testing.T) {
+	tests := []struct {
+		name     string
+		msg      sdk.Msg
+		expected bool
+	}{
+		{
+			name:     "MsgStoreCode returns true",
+			msg:      &wasmtypes.MsgStoreCode{},
+			expected: true,
+		},
+		{
+			name:     "MsgSend returns false",
+			msg:      &banktypes.MsgSend{},
+			expected: false,
+		},
+		{
+			name:     "MsgSubmitProposal returns false",
+			msg:      &govtypes.MsgSubmitProposal{},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := isStoreCode(tc.msg)
+			assert.Equal(t, tc.expected, result, "isStoreCode(%T) should be %v", tc.msg, tc.expected)
+		})
+	}
+}
+
+func TestIsOnlyStoreCode(t *testing.T) {
+	tests := []struct {
+		name     string
+		msgs     []sdk.Msg
+		expected bool
+	}{
+		{
+			name:     "empty slice returns false",
+			msgs:     []sdk.Msg{},
+			expected: false,
+		},
+		{
+			name:     "single MsgStoreCode returns true",
+			msgs:     []sdk.Msg{&wasmtypes.MsgStoreCode{}},
+			expected: true,
+		},
+		{
+			name: "multiple MsgStoreCode returns true",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			expected: true,
+		},
+		{
+			name:     "single MsgSend returns false",
+			msgs:     []sdk.Msg{&banktypes.MsgSend{}},
+			expected: false,
+		},
+		{
+			name: "mixed MsgStoreCode and MsgSend returns false (SECURITY)",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&banktypes.MsgSend{},
+			},
+			expected: false,
+		},
+		{
+			name: "mixed MsgSend and MsgStoreCode returns false (SECURITY)",
+			msgs: []sdk.Msg{
+				&banktypes.MsgSend{},
+				&wasmtypes.MsgStoreCode{},
+			},
+			expected: false,
+		},
+		{
+			name: "MsgStoreCode with gov proposal returns false",
+			msgs: []sdk.Msg{
+				&wasmtypes.MsgStoreCode{},
+				&govtypes.MsgSubmitProposal{},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := isOnlyStoreCode(tc.msgs)
+			assert.Equal(t, tc.expected, result, "isOnlyStoreCode(%v) should be %v", len(tc.msgs), tc.expected)
 		})
 	}
 }
