@@ -1063,6 +1063,7 @@ func (s *UpgradeTestSuite) TestCarnation() {
 func (s *UpgradeTestSuite) TestDaisyRC1() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
+		"INF Setting up circuit breaker permissions.",
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
@@ -1074,6 +1075,7 @@ func (s *UpgradeTestSuite) TestDaisyRC1() {
 func (s *UpgradeTestSuite) TestDaisy() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
+		"INF Setting up circuit breaker permissions.",
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
@@ -1184,6 +1186,73 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 			s.Require().NotPanics(testFunc, "executeStoreCodeMsg")
 			actLogs := splitLogOutput(s.GetLogOutput("executeStoreCodeMsg"))
 			s.Assert().Equal(tc.expLogs, actLogs, "log messages during executeStoreCodeMsg")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestSetupCircuitBreakerPermissions() {
+	type testCase struct {
+		name       string
+		foundAddrs []string
+		teamAddrs  []string
+		expLogs    []string
+	}
+
+	foundAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()
+	teamAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()
+
+	tests := []testCase{
+		{
+			name:       "Success - Mixed Valid Addresses",
+			foundAddrs: []string{foundAddr},
+			teamAddrs:  []string{teamAddr},
+			expLogs: []string{
+				"INF Setting up circuit breaker permissions.",
+				fmt.Sprintf("INF Granted Level LEVEL_SUPER_ADMIN to %s.", foundAddr),
+				fmt.Sprintf("INF Granted Level LEVEL_ALL_MSGS to %s.", teamAddr),
+				"INF Circuit breaker setup configured.",
+				"",
+			},
+		},
+		{
+			name:       "Partial Failure - Invalid Address",
+			foundAddrs: []string{"invalid-bech32-address", foundAddr},
+			teamAddrs:  []string{},
+			expLogs: []string{
+				"INF Setting up circuit breaker permissions.",
+				"ERR Invalid address at index 0 (invalid-bech32-address): decoding bech32 failed. Skipping.",
+				fmt.Sprintf("INF Granted Level LEVEL_SUPER_ADMIN to %s.", foundAddr),
+				"INF Circuit breaker setup configured.",
+				"",
+			},
+		},
+		{
+			name:       "Empty Lists - No Op",
+			foundAddrs: []string{},
+			teamAddrs:  []string{},
+			expLogs: []string{
+				"INF Setting up circuit breaker permissions.",
+				"INF Circuit breaker setup configured.",
+				"",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var buffer bytes.Buffer
+			logger := internal.NewBufferedDebugLogger(&buffer)
+			ctx := s.ctx.WithLogger(logger)
+
+			testFunc := func() {
+				setupCircuitBreakerPermissions(ctx, s.app, tc.foundAddrs, tc.teamAddrs)
+			}
+			s.Require().NotPanics(testFunc, "setupCircuitBreakerPermissions")
+
+			actLog := buffer.String()
+			actLogLines := strings.Split(actLog, "\n")
+
+			s.Assert().Equal(tc.expLogs, actLogLines, "Logged messages.")
 		})
 	}
 }
