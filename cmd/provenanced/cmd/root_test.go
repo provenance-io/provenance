@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -341,14 +342,7 @@ func assertCommandsAndAliasesAreUnique(t *testing.T, knownProblems, parentAliasN
 
 func appendIfNew(slice []string, elems ...string) []string {
 	for _, elem := range elems {
-		has := false
-		for _, entry := range slice {
-			if entry == elem {
-				has = true
-				break
-			}
-		}
-		if !has {
+		if !slices.Contains(slice, elem) {
 			slice = append(slice, elem)
 		}
 	}

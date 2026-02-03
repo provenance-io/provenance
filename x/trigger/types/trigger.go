@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"slices"
 	"strings"
 	time "time"
 
@@ -41,16 +42,7 @@ func (e TransactionEvent) Matches(other abci.Event) bool {
 	}
 
 	for _, attr := range e.Attributes {
-		hasAttribute := false
-
-		for _, otherAttr := range other.Attributes {
-			if attr.Matches(otherAttr) {
-				hasAttribute = true
-				break
-			}
-		}
-
-		if !hasAttribute {
+		if !slices.ContainsFunc(other.Attributes, attr.Matches) {
 			return false
 		}
 	}

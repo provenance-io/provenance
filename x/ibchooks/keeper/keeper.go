@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -120,12 +121,7 @@ func (k Keeper) GetPacketCallback(ctx sdk.Context, channel string, packetSequenc
 
 // IsInAllowList checks the params to see if the contract is in the KeyAsyncAckAllowList param
 func (k Keeper) IsInAllowList(ctx sdk.Context, contract string) bool {
-	for _, addr := range k.GetParams(ctx).AllowedAsyncAckContracts {
-		if addr == contract {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(k.GetParams(ctx).AllowedAsyncAckContracts, contract)
 }
 
 // DeletePacketCallback deletes the callback from storage once it has been processed
