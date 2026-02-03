@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -176,12 +177,7 @@ func (s *MsgServerTestSuite) TestUnlockVestingAccounts() {
 	}
 
 	hasStr := func(vals []string, toFind string) bool {
-		for _, val := range vals {
-			if val == toFind {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(vals, toFind)
 	}
 
 	for _, tc := range tests {

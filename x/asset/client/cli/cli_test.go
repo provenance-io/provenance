@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -736,11 +737,9 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 				assert.Equal(t, expAnnotations, actAnnotations, "--%s annotations", flagName)
 				if !tc.skipFlagInUseCheck {
 					expInUse := "--" + flagName
-					for _, pageFlag := range pageFlags {
-						if flagName == pageFlag {
-							// Skip individual page flag checks
-							return
-						}
+					if slices.Contains(pageFlags, flagName) {
+						// Skip individual page flag checks
+						return
 					}
 					assert.Contains(t, cmd.Use, expInUse, "cmd.Use should have something about the %s flag", flagName)
 				}

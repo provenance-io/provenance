@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,12 +42,7 @@ func hasNameOrAlias(cmd *cobra.Command, arg string) bool {
 	if cmd.Name() == arg {
 		return true
 	}
-	for _, alias := range cmd.Aliases {
-		if alias == arg {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(cmd.Aliases, arg)
 }
 
 // getNameAndAliases gets a list of the command's name and aliases (without any duplicates).

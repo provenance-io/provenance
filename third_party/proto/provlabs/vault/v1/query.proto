@@ -147,10 +147,7 @@ message QueryEstimateSwapOutRequest {
   // vault_address is the bech32 address of the vault to query.
   string vault_address = 1;
   // shares is the amount of shares to swap out.
-  string shares = 2 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable) = false
-  ];
+  string shares = 2;
   // redeem_denom is the payout denom to estimate; if empty, the underlying asset is used.
   string redeem_denom = 3;
 }

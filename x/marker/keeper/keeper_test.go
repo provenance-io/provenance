@@ -507,14 +507,7 @@ func TestWithdrawCoins(t *testing.T) {
 				continue
 			}
 			perm := types.Access(permVal)
-			keep := true
-			for _, ignore := range perms {
-				if perm == ignore {
-					keep = false
-					break
-				}
-			}
-			if keep {
+			if !slices.Contains(perms, perm) {
 				rv.Permissions = append(rv.Permissions, perm)
 			}
 		}
@@ -1020,14 +1013,7 @@ func TestTransferCoin(t *testing.T) {
 				continue
 			}
 			perm := types.Access(permVal)
-			keep := true
-			for _, ignore := range perms {
-				if perm == ignore {
-					keep = false
-					break
-				}
-			}
-			if keep {
+			if !slices.Contains(perms, perm) {
 				rv.Permissions = append(rv.Permissions, perm)
 			}
 		}
