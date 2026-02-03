@@ -1066,6 +1066,7 @@ func (s *UpgradeTestSuite) TestDaisyRC1() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Updating message fees",
 	}
 	s.AssertUpgradeHandlerLogs("daisy-rc1", expInLog, nil)
 }
@@ -1076,6 +1077,7 @@ func (s *UpgradeTestSuite) TestDaisy() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Updating message fees",
 	}
 	s.AssertUpgradeHandlerLogs("daisy", expInLog, nil)
 }
