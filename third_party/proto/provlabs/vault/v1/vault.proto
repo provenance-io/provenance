@@ -23,46 +23,62 @@ message VaultAccount {
   // - Exactly one denom.
   // - Total Vault Value (TVV) and NAV-per-share are computed and reported in this denom.
   // - Interest accrual and internal accounting are measured in this denom.
-  // - Any other coin accepted for I/O must have a NAV record priced INTO this denom.
+  // - Any other coin accepted for I/O (i.e. a distinct payment_denom) must have a NAV record priced INTO this denom.
   string underlying_asset = 3;
-  // payment_denom is the single optional external payment coin supported for user I/O
-  // alongside the underlying_asset.
-  // - If unset, the vault operates single-denom: deposits/withdrawals only in underlying_asset.
-  // - If set, swap-in/out accept either underlying_asset OR payment_denom (one denom per call).
-  // - Must differ from share_denom and underlying_asset.
-  // - Requires an on-chain NAV record mapping payment_denom -> underlying_asset to value deposits
-  //   and redemptions.
+
+  // payment_denom is the external payment coin supported for user I/O alongside the underlying_asset.
+  // - Always populated. If not specified during creation, it defaults to underlying_asset.
+  // - If payment_denom equals underlying_asset, the vault operates as a single-denom vault.
+  // - If payment_denom differs from underlying_asset, swap-in/out accept either denom (one per call).
+  // - Default Swap-Out: If a user does not specify a redeem_denom during withdrawal,
+  //   the vault defaults to paying out in this payment_denom.
+  // - NAV Requirement: If payment_denom differs from underlying_asset, it requires an on-chain NAV record
+  //   mapping payment_denom -> underlying_asset to value deposits and redemptions.
+  //   (Note: In current versions, this NAV check is strictly enforced unless payment_denom is 'uylds.fcc').
   string payment_denom = 4;
+
   // admin is the address that has administrative privileges over the vault.
   string admin = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // current_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the actual annual interest rate currently being applied.
   // This may be adjusted programmatically (e.g., due to lack of funds).
   string current_interest_rate = 6 [(cosmos_proto.scalar) = "cosmos.DecString"];
+
   // desired_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the target annual interest rate that the vault intends to apply.
   string desired_interest_rate = 7 [(cosmos_proto.scalar) = "cosmos.DecString"];
+
   // min_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the lowest annual interest rate the admin is allowed to set.
   // If unset (empty string), there is no lower limit.
   string min_interest_rate = 8 [(cosmos_proto.scalar) = "cosmos.DecString"];
+
   // max_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the highest annual interest rate the admin is allowed to set.
   // If unset (empty string), there is no upper limit.
   string max_interest_rate = 9 [(cosmos_proto.scalar) = "cosmos.DecString"];
+
   // The start time (in Unix seconds) of the current interest accrual period.
   int64 period_start = 10;
+
   // The expire time (in Unix seconds) of the current interest accrual period.
   int64 period_timeout = 11;
+
   // swap_in_enabled indicates whether users are allowed to deposit into the vault.
   bool swap_in_enabled = 12;
+
   // swap_out_enabled indicates whether users are allowed to withdraw from the vault.
   bool swap_out_enabled = 13;
+
   // withdrawal_delay_seconds is the configured time period (in seconds) that a withdrawal
   // request must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 14;
+
   // paused indicates that all user-facing swap-in and swap-out operations are disabled.
   bool paused = 15;
+
   // paused_balance is the total vault value snapshot taken at the moment of pausing.
   // This value is used for all NAV calculations while the vault is paused to prevent
   // apparent devaluation during collateral rebalancing. It is cleared upon unpausing.
   cosmos.base.v1beta1.Coin paused_balance = 16 [(gogoproto.nullable) = false];
+
   // paused_reason is a human-readable string explaining why the vault was paused, particularly for automatic pauses.
   string paused_reason = 17;
 
@@ -100,10 +116,13 @@ message AccountBalance {
 message PendingSwapOut {
   // owner is the address initiating the swap out.
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // vault_address is the address of the vault processing the withdrawal.
   string vault_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // shares are the shares that were escrowed by the user.
   cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+
   // redeem_denom is the denomination of the asset to be redeemed.
   string redeem_denom = 4;
 }

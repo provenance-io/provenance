@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -287,10 +288,8 @@ var (
 
 // appendIfNew appends newEntry to known if the newEntry is not in known.
 func appendIfNew(known []string, newEntry string) []string {
-	for _, entry := range known {
-		if entry == newEntry {
-			return known
-		}
+	if slices.Contains(known, newEntry) {
+		return known
 	}
 	return append(known, newEntry)
 }

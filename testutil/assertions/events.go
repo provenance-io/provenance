@@ -2,6 +2,7 @@ package assertions
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/stretchr/testify/assert"
@@ -130,14 +131,7 @@ func AssertEventsContains(t TB, expected, actual sdk.Events, msgAndArgs ...inter
 	var notFound sdk.Events
 	for _, expEvent := range expected {
 		exp := EventToString(expEvent)
-		var found bool
-		for _, act := range actStrs {
-			if exp == act {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(actStrs, exp) {
 			notFound = append(notFound, expEvent)
 		}
 	}

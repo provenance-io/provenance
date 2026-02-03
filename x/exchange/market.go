@@ -507,12 +507,7 @@ func (a AccessGrant) ValidateInField(field string) error {
 
 // Contains returns true if this access grant contains the provided permission.
 func (a AccessGrant) Contains(perm Permission) bool {
-	for _, p := range a.Permissions {
-		if p == perm {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(a.Permissions, perm)
 }
 
 // SimpleString returns a lower-cased version of the permission.String() without the leading "permission_"

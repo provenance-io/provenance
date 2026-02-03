@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -194,12 +195,7 @@ func (right Access) IsOneOf(rights ...Access) bool {
 	if len(rights) == 0 {
 		return false
 	}
-	for _, r := range rights {
-		if right == r {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(rights, right)
 }
 
 // Validate checks to see that the access list only contains valid entries and no duplicates
@@ -227,12 +223,7 @@ func hasAccess(accessList AccessList, access Access) bool {
 	if len(accessList) == 0 {
 		return false
 	}
-	for _, a := range accessList {
-		if a == access {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(accessList, access)
 }
 
 // AddAccess adds the given access to the array of Access privledges if not included

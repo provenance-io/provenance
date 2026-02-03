@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -419,12 +420,7 @@ func (s *AddressTestSuite) TestVerifyMetadataAddressFormat() {
 		RecordSpecificationKeyPrefix[0],
 	}
 	isKnownTypeByte := func(b byte) bool {
-		for _, kb := range knownTypeBytes {
-			if b == kb {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(knownTypeBytes, b)
 	}
 
 	for i := 0; i < 256; i++ {

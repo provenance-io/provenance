@@ -334,3 +334,13 @@ message EventAssetManagerSet {
   // asset_manager is the new asset manager address. If empty, it indicates the asset manager was cleared.
   string asset_manager = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
+// EventWithdrawalDelayUpdated is an event emitted when a vault's withdrawal delay is updated.
+message EventWithdrawalDelayUpdated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address (admin or asset manager) that updated the withdrawal delay.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // withdrawal_delay_seconds is the newly set withdrawal delay in seconds.
+  uint64 withdrawal_delay_seconds = 3;
+}

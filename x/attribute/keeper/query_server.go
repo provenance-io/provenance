@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -149,10 +150,8 @@ func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAc
 	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		addressLength := int32(key[0])
 		address := sdk.AccAddress(key[1 : addressLength+1])
-		for _, account := range accounts {
-			if account == address.String() {
-				return false, nil
-			}
+		if slices.Contains(accounts, address.String()) {
+			return false, nil
 		}
 		if accumulate {
 			accounts = append(accounts, address.String())

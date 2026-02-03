@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -88,8 +90,19 @@ var upgrades = map[string]appUpgrade{
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
+			if err = setupMsgStoreCodeFee(ctx, app); err != nil {
+				return nil, err
+			}
 			removeInactiveValidatorDelegations(ctx, app)
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
+			if err = app.VaultKeeper.MigrateVaultAccountPaymentDenomDefaults(ctx); err != nil {
+				return nil, err
+			}
+
+			if err = updateMsgFees(ctx, app); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -104,8 +117,19 @@ var upgrades = map[string]appUpgrade{
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
+			if err = setupMsgStoreCodeFee(ctx, app); err != nil {
+				return nil, err
+			}
 			removeInactiveValidatorDelegations(ctx, app)
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
+			if err = app.VaultKeeper.MigrateVaultAccountPaymentDenomDefaults(ctx); err != nil {
+				return nil, err
+			}
+
+			if err = updateMsgFees(ctx, app); err != nil {
 				return nil, err
 			}
 			return vm, nil
@@ -377,3 +401,62 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
+
+// setupMsgStoreCodeFee sets the flat fee for MsgStoreCode to $100 (100,000 musd).
+// This allows smart contracts to be stored directly without governance proposals.
+func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting up MsgStoreCode flat fee")
+
+	msgFee := flatfeestypes.MsgFee{
+		MsgTypeUrl: "/cosmwasm.wasm.v1.MsgStoreCode",
+		Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)),
+	}
+
+	if err := msgFee.Validate(); err != nil {
+		return fmt.Errorf("invalid MsgStoreCode fee: %w", err)
+	}
+
+	if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
+		return fmt.Errorf("failed to set MsgStoreCode fee: %w", err)
+	}
+
+	ctx.Logger().Info("MsgStoreCode flat fee set successfully", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
+
+	return nil
+}
+
+// updateMsgFees updates the flat fees for multiple message types.
+// Metadata operations (record/session writes): Lower fees to encourage usage
+// IBC client updates: Minimal fee for relayer operations
+func updateMsgFees(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Updating message fees")
+
+	// Define all fee updates
+	feeUpdates := []flatfeestypes.MsgFee{
+		{
+			MsgTypeUrl: "/provenance.metadata.v1.MsgWriteRecordRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 10)), // $0.01
+		},
+		{
+			MsgTypeUrl: "/provenance.metadata.v1.MsgWriteSessionRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/ibc.core.client.v1.MsgUpdateClient",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 10)), // $0.01
+		},
+	}
+
+	for _, msgFee := range feeUpdates {
+		if err := msgFee.Validate(); err != nil {
+			return fmt.Errorf("invalid msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+		}
+
+		if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
+			return fmt.Errorf("failed to set msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+		}
+	}
+
+	ctx.Logger().Info("All message fees updated successfully", "total_updated", len(feeUpdates))
+	return nil
+}
