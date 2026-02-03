@@ -1062,7 +1062,7 @@ func (s *UpgradeTestSuite) TestCarnation() {
 func (s *UpgradeTestSuite) TestDaisyRC1() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
-		"INF Setting up circuit breaker permissions.",
+		"INF Setting up circuit breaker permissions. module=baseapp",
 		LogMsgPruneIBCExpiredConsensusStates,
 		"INF Setting up MsgStoreCode flat fee. module=baseapp",
 		LogMsgRemoveInactiveValidatorDelegations,
@@ -1075,7 +1075,7 @@ func (s *UpgradeTestSuite) TestDaisyRC1() {
 func (s *UpgradeTestSuite) TestDaisy() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
-		"INF Setting up circuit breaker permissions.",
+		"INF Setting up circuit breaker permissions. module=baseapp",
 		LogMsgPruneIBCExpiredConsensusStates,
 		"INF Setting up MsgStoreCode flat fee. module=baseapp",
 		LogMsgRemoveInactiveValidatorDelegations,
