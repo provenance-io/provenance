@@ -35,6 +35,9 @@ service Msg {
   // UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
   rpc UpdateInterestRate(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
 
+  // UpdateWithdrawalDelay allows updating the withdrawal delay for a vault.
+  rpc UpdateWithdrawalDelay(MsgUpdateWithdrawalDelayRequest) returns (MsgUpdateWithdrawalDelayResponse);
+
   // ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
   rpc ToggleSwapIn(MsgToggleSwapInRequest) returns (MsgToggleSwapInResponse);
 
@@ -95,7 +98,8 @@ message MsgCreateVaultRequest {
   string share_denom = 2;
   // underlying_asset is the denomination of the asset supported by the vault.
   string underlying_asset = 3;
-  // payment_denom is an optional secondary denomination the vault can accept.
+  // payment_denom is the secondary denomination the vault can accept.
+  // if not specified, vault payment_denom will be set to underlying_asset.
   string payment_denom = 4;
   // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
   // must wait in the pending queue before being processed.
@@ -156,7 +160,7 @@ message MsgSwapOutRequest {
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
   // redeem_denom selects the payout coin.
-  // - If empty, defaults to the vault’s underlying_asset.
+  // - If empty, defaults to the vault’s payment_denom.
   // - Must be either the vault’s underlying_asset or its payment_denom.
   string redeem_denom = 4;
 }
@@ -213,6 +217,22 @@ message MsgUpdateInterestRateRequest {
 
 // MsgUpdateInterestRateResponse is the response message for the UpdateInterestRate endpoint.
 message MsgUpdateInterestRateResponse {}
+
+// MsgUpdateWithdrawalDelayRequest is the request message for updating the withdrawal delay of a vault.
+message MsgUpdateWithdrawalDelayRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the vault admin or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
+  // must wait in the pending queue before being processed.
+  uint64 withdrawal_delay_seconds = 3;
+}
+
+// MsgUpdateWithdrawalDelayResponse is the response message for the UpdateWithdrawalDelay endpoint.
+message MsgUpdateWithdrawalDelayResponse {}
 
 // MsgToggleSwapInRequest is the request message for enabling or disabling swap-in operations for a vault.
 message MsgToggleSwapInRequest {
