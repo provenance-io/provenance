@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"unicode"
@@ -238,12 +239,7 @@ func TestNameSegmentChars(t *testing.T) {
 	}
 	// containsRune returns true if the provide rune is an entry in the provided slice.
 	containsRune := func(r rune, rz []rune) bool {
-		for _, z := range rz {
-			if r == z {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(rz, r)
 	}
 
 	tests := []struct {

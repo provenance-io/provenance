@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -73,14 +74,7 @@ func (k Keeper) ValidateDenomMetadata(ctx sdk.Context, proposed banktypes.Metada
 				}
 				// Make sure none of the aliases have been removed.
 				for _, ea := range edu.Aliases {
-					found := false
-					for _, pa := range pdu.Aliases {
-						if ea == pa {
-							found = true
-							break
-						}
-					}
-					if !found {
+					if !slices.Contains(pdu.Aliases, ea) {
 						return fmt.Errorf("cannot remove alias [%s] from denom unit [%s] for a marker with status [%s]",
 							ea, edu.Denom, markerStatus)
 					}

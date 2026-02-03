@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
@@ -460,10 +461,8 @@ func MarkerTypeFromString(str string) (MarkerType, error) {
 // AddToRequiredAttributes add new attributes to current list, errors if attribute already exists
 func AddToRequiredAttributes(currentAttrs []string, addAttrs []string) ([]string, error) {
 	for _, aa := range addAttrs {
-		for _, ca := range currentAttrs {
-			if aa == ca {
-				return nil, fmt.Errorf("attribute %q is already required", aa)
-			}
+		if slices.Contains(currentAttrs, aa) {
+			return nil, fmt.Errorf("attribute %q is already required", aa)
 		}
 		currentAttrs = append(currentAttrs, aa)
 	}
@@ -474,14 +473,7 @@ func AddToRequiredAttributes(currentAttrs []string, addAttrs []string) ([]string
 func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) ([]string, error) {
 	toRem := make(map[string]bool)
 	for _, ra := range removeAttrs {
-		found := false
-		for _, ca := range currentAttrs {
-			if ra == ca {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(currentAttrs, ra) {
 			return nil, fmt.Errorf("attribute %q is already not required", ra)
 		}
 		toRem[ra] = true

@@ -244,10 +244,8 @@ func (k Keeper) HasRole(ctx context.Context, key *types.RegistryKey, role types.
 	// Search to see if the address has the role
 	for _, roleEntry := range registryEntry.Roles {
 		if roleEntry.Role == role {
-			for _, roleAddr := range roleEntry.Addresses {
-				if roleAddr == address {
-					return true, nil
-				}
+			if slices.Contains(roleEntry.Addresses, address) {
+				return true, nil
 			}
 			// If we found the role (but not the addr), break out of the loop; nothing left to check.
 			break

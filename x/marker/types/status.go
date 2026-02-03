@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -115,10 +116,5 @@ func (rt MarkerStatus) Format(s fmt.State, verb rune) {
 
 // IsOneOf checks to see if this MarkerStatus is equal to one of the provided statuses.
 func (rt MarkerStatus) IsOneOf(statuses ...MarkerStatus) bool {
-	for _, s := range statuses {
-		if rt == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(statuses, rt)
 }

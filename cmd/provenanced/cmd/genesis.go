@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -101,14 +102,7 @@ func AddGenesisAccountCmd(txConfig client.TxConfig, defaultNodeHome string) *cob
 		cmd.Aliases = aliases
 	case strings.HasPrefix(cmd.Use, addGenAcctNameNew):
 		// It's already the new name, just make sure the old name is in the aliases.
-		hasOld := false
-		for _, alias := range cmd.Aliases {
-			if alias == addGenAcctNameOld {
-				hasOld = true
-				break
-			}
-		}
-		if !hasOld {
+		if !slices.Contains(cmd.Aliases, addGenAcctNameOld) {
 			cmd.Aliases = append(cmd.Aliases, addGenAcctNameOld)
 		}
 	default:

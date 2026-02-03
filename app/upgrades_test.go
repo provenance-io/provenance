@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -316,10 +317,8 @@ func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
 
 	// addColor adds an entry to colors if it isn't already in there.
 	addColor := func(newColor string) {
-		for _, color := range colors {
-			if newColor == color {
-				return
-			}
+		if slices.Contains(colors, newColor) {
+			return
 		}
 		colors = append(colors, newColor)
 	}

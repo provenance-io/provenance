@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,14 +82,7 @@ func (s Scope) ValidateOwnersBasic() error {
 func (s *Scope) RemoveDataAccess(addresses []string) {
 	newDataAccess := []string{}
 	for _, da := range s.DataAccess {
-		found := false
-		for _, addr := range addresses {
-			if addr == da {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(addresses, da) {
 			newDataAccess = append(newDataAccess, da)
 		}
 	}
@@ -98,14 +92,7 @@ func (s *Scope) RemoveDataAccess(addresses []string) {
 
 func (s *Scope) AddDataAccess(addresses []string) {
 	for _, addr := range addresses {
-		found := false
-		for _, da := range s.DataAccess {
-			if addr == da {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(s.DataAccess, addr) {
 			s.DataAccess = append(s.DataAccess, addr)
 		}
 	}
