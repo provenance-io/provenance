@@ -8447,7 +8447,7 @@ MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor g
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `authority` | [string](#string) |  | authority should be either the governance module account address or an oracle address. |
 | `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the new conversion factor that should be used. |
 
 

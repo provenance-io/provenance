@@ -1184,7 +1184,6 @@ func (s *KeeperTestSuite) TestKeeper_IsOracleAddress() {
 	}
 }
 
-
 func (s *KeeperTestSuite) TestKeeper_AddOracleAddress() {
 	oracle1 := sdk.AccAddress("oracle1_____________").String()
 	oracle2 := sdk.AccAddress("oracle2_____________").String()
@@ -1227,10 +1226,9 @@ func (s *KeeperTestSuite) TestKeeper_AddOracleAddress() {
 			expErr:     "invalid oracle address: invalid address format: decoding bech32 failed: invalid bech32 string length 7",
 		},
 	}
-
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			
+
 			defaultParams := types.DefaultParams()
 			err := s.kpr.SetParams(s.ctx, defaultParams)
 			s.Require().NoError(err, "SetParams(default) should not error")
@@ -1311,7 +1309,6 @@ func (s *KeeperTestSuite) TestKeeper_RemoveOracleAddress() {
 			expErr:        "oracle address not found: address: " + oracle1,
 		},
 	}
-
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			defaultParams := types.DefaultParams()
@@ -1442,8 +1439,8 @@ func (s *KeeperTestSuite) TestKeeper_SetParams_WithOracleAddresses() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.Require().NotPanics(func() {
-				_ = s.kpr.SetParams(s.ctx, tc.params)
+			assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+				return s.kpr.SetParams(s.ctx, tc.params)
 			}, "SetParams(%+v)", tc.params)
 
 			act := s.kpr.GetParams(s.ctx)

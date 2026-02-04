@@ -278,22 +278,15 @@ func (k Keeper) IsOracleAddress(ctx sdk.Context, address string) bool {
 // AddOracleAddress adds an oracle address to the params
 func (k Keeper) AddOracleAddress(ctx sdk.Context, address string) error {
 	if _, err := sdk.AccAddressFromBech32(address); err != nil {
-		return fmt.Errorf(
-			"%s: invalid address format: %w",
-			types.ErrInvalidOracleAddr.Error(),
-			err,
-		)
+		return fmt.Errorf("%w: invalid address format: %w", types.ErrInvalidOracleAddr, err)
 	}
 
 	params := k.GetParams(ctx)
 
 	if params.IsOracleAddress(address) {
-		return fmt.Errorf(
-			"%s: address: %s",
-			types.ErrOracleAlreadyExists.Error(),
-			address,
-		)
+		return fmt.Errorf("%w: address: %s", types.ErrOracleAlreadyExists, address)
 	}
+
 	if params.OracleAddresses == nil {
 		params.OracleAddresses = []string{}
 	}
@@ -307,13 +300,6 @@ func (k Keeper) AddOracleAddress(ctx sdk.Context, address string) error {
 func (k Keeper) RemoveOracleAddress(ctx sdk.Context, address string) error {
 	params := k.GetParams(ctx)
 
-	if len(params.OracleAddresses) == 0 {
-		return fmt.Errorf(
-			"%s: address: %s",
-			types.ErrOracleNotFound.Error(),
-			address,
-		)
-	}
 	newOracles := make([]string, 0, len(params.OracleAddresses))
 	found := false
 	for _, oracle := range params.OracleAddresses {
@@ -330,10 +316,6 @@ func (k Keeper) RemoveOracleAddress(ctx sdk.Context, address string) error {
 			types.ErrOracleNotFound.Error(),
 			address,
 		)
-	}
-
-	if len(newOracles) == 0 {
-		newOracles = []string{}
 	}
 
 	params.OracleAddresses = newOracles

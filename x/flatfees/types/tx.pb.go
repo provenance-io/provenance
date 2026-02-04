@@ -124,7 +124,7 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 // MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor governance endpoint.
 type MsgUpdateConversionFactorRequest struct {
-	// authority should be the governance module account address.
+	// authority should be either the governance module account address or an oracle address.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// conversion_factor is the new conversion factor that should be used.
 	ConversionFactor ConversionFactor `protobuf:"bytes,2,opt,name=conversion_factor,json=conversionFactor,proto3" json:"conversion_factor"`

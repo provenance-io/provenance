@@ -80,9 +80,6 @@ func (m MsgAddOracleAddressRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority: %w", err)
 	}
-	if m.OracleAddress == "" {
-		return fmt.Errorf("oracle address cannot be empty")
-	}
 	if _, err := sdk.AccAddressFromBech32(m.OracleAddress); err != nil {
 		return fmt.Errorf("invalid oracle address: %w", err)
 	}
@@ -93,9 +90,6 @@ func (m MsgAddOracleAddressRequest) ValidateBasic() error {
 func (m MsgRemoveOracleAddressRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority: %w", err)
-	}
-	if m.OracleAddress == "" {
-		return fmt.Errorf("oracle address cannot be empty")
 	}
 	if _, err := sdk.AccAddressFromBech32(m.OracleAddress); err != nil {
 		return fmt.Errorf("invalid oracle address: %w", err)

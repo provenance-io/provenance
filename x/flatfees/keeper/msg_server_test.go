@@ -699,11 +699,10 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 	}
 
 	tests := []struct {
-		name    string
-		kpr     *MockKeeper
-		req     *types.MsgUpdateConversionFactorRequest
-		expErr  string
-		expCall bool
+		name   string
+		kpr    *MockKeeper
+		req    *types.MsgUpdateConversionFactorRequest
+		expErr string
 	}{
 		{
 			name: "governance can update",
@@ -715,8 +714,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 				Authority:        govAddr,
 				ConversionFactor: cf1,
 			},
-			expErr:  "",
-			expCall: true,
+			expErr: "",
 		},
 		{
 			name: "oracle1 can update",
@@ -729,8 +727,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 				Authority:        oracle1,
 				ConversionFactor: cf1,
 			},
-			expErr:  "",
-			expCall: true,
+			expErr: "",
 		},
 		{
 			name: "oracle2 can also update",
@@ -743,8 +740,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 				Authority:        oracle2,
 				ConversionFactor: cf2,
 			},
-			expErr:  "",
-			expCall: true,
+			expErr: "",
 		},
 		{
 			name: "non-oracle cannot update",
@@ -756,8 +752,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 				Authority:        nonOracle,
 				ConversionFactor: cf1,
 			},
-			expErr:  "expected governance authority or an oracle address, got " + nonOracle + ": expected gov account as only signer for proposal message",
-			expCall: false,
+			expErr: "expected governance authority or an oracle address, got " + nonOracle + ": expected gov account as only signer for proposal message",
 		},
 		{
 			name: "governance with error setting conversion factor",
@@ -770,8 +765,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 				Authority:        govAddr,
 				ConversionFactor: cf1,
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = cannot set conversion factor",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = cannot set conversion factor",
 		},
 		{
 			name: "oracle with error setting conversion factor",
@@ -785,8 +779,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 				Authority:        oracle1,
 				ConversionFactor: cf1,
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = failed to set",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = failed to set",
 		},
 		{
 			name: "empty authority fails",
@@ -798,8 +791,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
 				Authority:        "",
 				ConversionFactor: cf1,
 			},
-			expErr:  "expected governance authority or an oracle address, got : expected gov account as only signer for proposal message",
-			expCall: false,
+			expErr: "expected governance authority or an oracle address, got : expected gov account as only signer for proposal message",
 		},
 	}
 
@@ -836,11 +828,10 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 	oracle2 := sdk.AccAddress("oracle2_____________").String()
 
 	tests := []struct {
-		name    string
-		kpr     *MockKeeper
-		req     *types.MsgAddOracleAddressRequest
-		expErr  string
-		expCall bool
+		name   string
+		kpr    *MockKeeper
+		req    *types.MsgAddOracleAddressRequest
+		expErr string
 	}{
 		{
 			name: "valid: governance adds oracle",
@@ -849,8 +840,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 				Authority:     authority,
 				OracleAddress: oracle1,
 			},
-			expErr:  "",
-			expCall: true,
+			expErr: "",
 		},
 		{
 			name: "valid: governance adds second oracle",
@@ -859,8 +849,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 				Authority:     authority,
 				OracleAddress: oracle2,
 			},
-			expErr:  "",
-			expCall: true,
+			expErr: "",
 		},
 		{
 			name: "invalid: non-governance cannot add oracle",
@@ -869,8 +858,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 				Authority:     oracle1,
 				OracleAddress: oracle2,
 			},
-			expErr:  "not governance",
-			expCall: false,
+			expErr: "not governance",
 		},
 		{
 			name: "error: adding duplicate oracle",
@@ -881,8 +869,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 				Authority:     authority,
 				OracleAddress: oracle1,
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = oracle address already exists",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = oracle address already exists",
 		},
 		{
 			name: "error: max oracles exceeded",
@@ -893,8 +880,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 				Authority:     authority,
 				OracleAddress: oracle1,
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = maximum oracle addresses exceeded",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = maximum oracle addresses exceeded",
 		},
 		{
 			name: "error: invalid oracle address format",
@@ -905,8 +891,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 				Authority:     authority,
 				OracleAddress: "invalid",
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = invalid oracle address",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = invalid oracle address",
 		},
 		{
 			name: "error: empty oracle address",
@@ -917,8 +902,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 				Authority:     authority,
 				OracleAddress: "",
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = oracle address cannot be empty",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = oracle address cannot be empty",
 		},
 	}
 
@@ -956,11 +940,10 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 	nonOracle := sdk.AccAddress("non_oracle__________").String()
 
 	tests := []struct {
-		name    string
-		kpr     *MockKeeper
-		req     *types.MsgRemoveOracleAddressRequest
-		expErr  string
-		expCall bool
+		name   string
+		kpr    *MockKeeper
+		req    *types.MsgRemoveOracleAddressRequest
+		expErr string
 	}{
 		{
 			name: "valid: governance removes oracle",
@@ -969,8 +952,7 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 				Authority:     authority,
 				OracleAddress: oracle1,
 			},
-			expErr:  "",
-			expCall: true,
+			expErr: "",
 		},
 		{
 			name: "valid: governance removes different oracle",
@@ -979,8 +961,7 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 				Authority:     authority,
 				OracleAddress: oracle2,
 			},
-			expErr:  "",
-			expCall: true,
+			expErr: "",
 		},
 		{
 			name: "invalid: non-governance cannot remove oracle",
@@ -989,8 +970,7 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 				Authority:     oracle1,
 				OracleAddress: oracle2,
 			},
-			expErr:  "not governance",
-			expCall: false,
+			expErr: "not governance",
 		},
 		{
 			name: "invalid: oracle cannot remove themselves",
@@ -999,8 +979,7 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 				Authority:     oracle1,
 				OracleAddress: oracle1,
 			},
-			expErr:  "not governance",
-			expCall: false,
+			expErr: "not governance",
 		},
 		{
 			name: "error: removing non-existent oracle",
@@ -1011,8 +990,7 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 				Authority:     authority,
 				OracleAddress: nonOracle,
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = oracle address not found",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = oracle address not found",
 		},
 		{
 			name: "error: empty oracle address",
@@ -1023,8 +1001,7 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 				Authority:     authority,
 				OracleAddress: "",
 			},
-			expErr:  "rpc error: code = InvalidArgument desc = oracle address cannot be empty",
-			expCall: true,
+			expErr: "rpc error: code = InvalidArgument desc = oracle address cannot be empty",
 		},
 	}
 
@@ -1073,15 +1050,18 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
 		ConvertedAmount:  sdk.NewInt64Coin("nhash", 6000),
 	}
 
+	// Named request struct for readability and expected error
+	type testReq struct {
+		authority string
+		cf        types.ConversionFactor
+		isOracle  bool
+		expErr    string
+	}
+
 	tests := []struct {
 		name     string
 		kpr      *MockKeeper
-		requests []struct {
-			authority string
-			cf        types.ConversionFactor
-			isOracle  bool
-		}
-		expErrs []string
+		requests []testReq
 	}{
 		{
 			name: "governance updates multiple times",
@@ -1089,16 +1069,11 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
 				WithIsOracleAddressResults(false, false, false).
 				WithExpIsOracleAddress(govAddr, govAddr, govAddr).
 				WithExpSetConversionFactor(cf1, cf2, cf3),
-			requests: []struct {
-				authority string
-				cf        types.ConversionFactor
-				isOracle  bool
-			}{
-				{govAddr, cf1, false},
-				{govAddr, cf2, false},
-				{govAddr, cf3, false},
+			requests: []testReq{
+				{authority: govAddr, cf: cf1, isOracle: false, expErr: ""},
+				{authority: govAddr, cf: cf2, isOracle: false, expErr: ""},
+				{authority: govAddr, cf: cf3, isOracle: false, expErr: ""},
 			},
-			expErrs: []string{"", "", ""},
 		},
 		{
 			name: "oracle updates multiple times",
@@ -1107,16 +1082,11 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
 				WithIsOracleAddressResults(true, true, true).
 				WithExpIsOracleAddress(oracle1, oracle1, oracle1).
 				WithExpSetConversionFactor(cf1, cf2, cf3),
-			requests: []struct {
-				authority string
-				cf        types.ConversionFactor
-				isOracle  bool
-			}{
-				{oracle1, cf1, true},
-				{oracle1, cf2, true},
-				{oracle1, cf3, true},
+			requests: []testReq{
+				{authority: oracle1, cf: cf1, isOracle: true, expErr: ""},
+				{authority: oracle1, cf: cf2, isOracle: true, expErr: ""},
+				{authority: oracle1, cf: cf3, isOracle: true, expErr: ""},
 			},
-			expErrs: []string{"", "", ""},
 		},
 		{
 			name: "mixed governance and oracle updates",
@@ -1125,16 +1095,26 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
 				WithIsOracleAddressResults(false, true, false).
 				WithExpIsOracleAddress(govAddr, oracle1, govAddr).
 				WithExpSetConversionFactor(cf1, cf2, cf3),
-			requests: []struct {
-				authority string
-				cf        types.ConversionFactor
-				isOracle  bool
-			}{
-				{govAddr, cf1, false},
-				{oracle1, cf2, true},
-				{govAddr, cf3, false},
+			requests: []testReq{
+				{authority: govAddr, cf: cf1, isOracle: false, expErr: ""},
+				{authority: oracle1, cf: cf2, isOracle: true, expErr: ""},
+				{authority: govAddr, cf: cf3, isOracle: false, expErr: ""},
 			},
-			expErrs: []string{"", "", ""},
+		},
+		{
+			name: "unauthorized update attempt",
+			kpr: NewMockKeeper().
+				WithValidateAuthorityErrs("not gov").
+				WithIsOracleAddressResults(false).      // still returns false
+				WithExpIsOracleAddress("unauthorized"), // add this to satisfy the mock
+			requests: []testReq{
+				{
+					authority: "unauthorized",
+					cf:        cf1,
+					isOracle:  false,
+					expErr:    "expected governance authority or an oracle address",
+				},
+			},
 		},
 	}
 
@@ -1162,14 +1142,13 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
 
 				s.Require().NotPanics(testFunc, "UpdateConversionFactor [%d] should not panic", i)
 
-				expErr := ""
-				if i < len(tc.expErrs) {
-					expErr = tc.expErrs[i]
-				}
-
-				assertions.AssertErrorValue(s.T(), err, expErr, "UpdateConversionFactor [%d] error", i)
-
-				if expErr == "" {
+				// Substring-based error assertion
+				if reqData.expErr != "" {
+					s.Require().Error(err)
+					s.Require().Contains(err.Error(), reqData.expErr,
+						"UpdateConversionFactor [%d] error", i)
+				} else {
+					s.Require().NoError(err)
 					expResp := &types.MsgUpdateConversionFactorResponse{}
 					s.Assert().Equal(expResp, actResp, "UpdateConversionFactor [%d] response", i)
 				}

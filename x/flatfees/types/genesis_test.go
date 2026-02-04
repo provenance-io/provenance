@@ -146,7 +146,9 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 				DefinitionAmount: sdk.NewInt64Coin("apple", 25),
 				ConvertedAmount:  sdk.NewInt64Coin("banana", 3),
 			},
-			OracleAddresses: []string{},
+			OracleAddresses: []string{
+				sdk.AccAddress([]byte("oracle1_______________")).String(),
+			},
 		},
 		MsgFees: []*MsgFee{
 			NewMsgFee("/msg.one", sdk.NewInt64Coin("apple", 400)),

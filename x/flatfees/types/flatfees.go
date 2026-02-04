@@ -3,6 +3,8 @@ package types
 import (
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -55,36 +57,35 @@ func validateOracleAddresses(addresses []string) error {
 		return nil
 	}
 
-	seen := make(map[string]bool)
+	var allErrors []string
+	seen := make(map[string]int)
+
 	for _, addr := range addresses {
+		seen[addr]++
 		if addr == "" {
-			return errors.New("oracle address cannot be empty")
+			allErrors = append(allErrors, "oracle address cannot be empty")
+			continue
 		}
 
 		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-			return fmt.Errorf("invalid oracle address format %q: %w", addr, err)
+			allErrors = append(allErrors, fmt.Sprintf("invalid oracle address %q: %v", addr, err))
+			continue
 		}
 
-		if seen[addr] {
-			return fmt.Errorf("duplicate oracle address: %q", addr)
+		if seen[addr] > 1 {
+			allErrors = append(allErrors, fmt.Sprintf("duplicate oracle address: %q", addr))
 		}
-		seen[addr] = true
 	}
 
+	if len(allErrors) > 0 {
+		return errors.New(strings.Join(allErrors, "; "))
+	}
 	return nil
 }
 
 // IsOracleAddress checks if the given address is in the oracle list
 func (p Params) IsOracleAddress(address string) bool {
-	if p.OracleAddresses == nil {
-		return false
-	}
-	for _, oracle := range p.OracleAddresses {
-		if oracle == address {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(p.OracleAddresses, address)
 }
 
 // DefaultCostCoins returns the default cost wrapped in a Coins.

@@ -156,7 +156,9 @@ func (s *QueryServerTestSuite) TestParams() {
 					DefinitionAmount: sdk.NewInt64Coin("apple", 44),
 					ConvertedAmount:  sdk.NewInt64Coin("orange", 78),
 				},
-				OracleAddresses: nil,
+				OracleAddresses: []string{
+					sdk.AccAddress([]byte("oracle1_______________")).String(),
+				},
 			},
 		},
 		{
@@ -167,7 +169,9 @@ func (s *QueryServerTestSuite) TestParams() {
 					DefinitionAmount: sdk.NewInt64Coin("banana", 1),
 					ConvertedAmount:  sdk.NewInt64Coin("banana", 1),
 				},
-				OracleAddresses: nil,
+				OracleAddresses: []string{
+					sdk.AccAddress([]byte("oracle1_______________")).String(),
+				},
 			},
 		},
 		{
