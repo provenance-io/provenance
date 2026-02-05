@@ -18,6 +18,7 @@ crate-type = ["cdylib", "rlib"]
 [features]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = []
+library = []
 
 [profile.release]
 codegen-units = 1
@@ -31,31 +32,34 @@ panic = 'abort'
 rpath = false
 
 [package.metadata.scripts]
-optimize = """docker run --rm -v "$(pwd)":/code \
+optimize = """docker run --rm -v "$(pwd)":/code:Z \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer:0.14.0
+  cosmwasm/rust-optimizer:0.17.0
 """
-optimize-arm = """docker run --rm -v "$(pwd)":/code \
+optimize-arm = """docker run --rm -v "$(pwd)":/code:Z \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer-arm64:0.14.0
+  cosmwasm/rust-optimizer-arm64:0.17.0
 """
 
 [dependencies]
-provwasm-std = { version = "2.2.0" }
-cosmwasm-schema = "1.5"
-cosmwasm-std = { version = "1.5", features = ["stargate", "cosmwasm_1_1"] }
-cosmwasm-storage = "1.2.0"
-cw-storage-plus = { version = "1.2.0", features = ["iterator"] }
-cw2 = "1.0.1"
-schemars = "0.8.16"
+cosmwasm-schema = { version = "2.2.0" }
+cosmwasm-std = { version = "2.2.0", features = [
+  "cosmwasm_2_1",
+  "stargate",
+  "std",
+] }
+cw-storage-plus = "2.0.0"
+cw2 = "2.0.0"
+provwasm-std = { version = "2.8.0", features = ["cosmos-base"] }
+schemars = { version = "0.8.22", features = ["derive"] }
 serde = { version = "1.0.197", default-features = false, features = ["derive"] }
-thiserror = { version = "1.0.58" }
-sha2 = "0.10.6"
-hex = "0.4.3"
+thiserror = { version = "2.0.18" }
+sha2 = { version = "0.10.6", features = ["sha2-asm"] }
+hex = { version = "0.4.3", features = ["serde"] }
 
 [dev-dependencies]
-cw-multi-test = "0.17.0"
-provwasm-mocks = { version = "2.2.0" }
+cw-multi-test = "2.5.1"
+provwasm-mocks = { version = "2.8.0" }
 serde-json-wasm = "1.0.1"

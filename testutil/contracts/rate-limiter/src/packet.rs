@@ -265,7 +265,7 @@ pub mod tests {
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            WRAPPED_ATOM_ON_OSMOSIS_HASH.clone()
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
         );
 
         // uatom on osmosis sent back to the hub
