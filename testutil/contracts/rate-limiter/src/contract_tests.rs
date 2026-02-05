@@ -2,7 +2,7 @@
 
 use crate::packet::Packet;
 use crate::{contract::*, test_msg_recv, test_msg_send, ContractError};
-use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+use cosmwasm_std::testing::{mock_dependencies, mock_env, message_info};
 use cosmwasm_std::{from_json, Addr, Attribute, Uint256};
 
 use crate::helpers::tests::verify_query_response;
@@ -22,7 +22,7 @@ fn proper_instantiation() {
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![],
     };
-    let info = mock_info(IBC_ADDR, &vec![]);
+    let info = message_info(&Addr::unchecked(IBC_ADDR), &vec![]);
 
     // we can just call .unwrap() to assert this was a success
     let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -47,7 +47,7 @@ fn consume_allowance() {
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = message_info(&Addr::unchecked(GOV_ADDR), &vec![]);
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let msg = test_msg_send!(
@@ -86,7 +86,7 @@ fn symetric_flows_dont_consume_allowance() {
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = message_info(&Addr::unchecked(GOV_ADDR), &vec![]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
     let send_msg = test_msg_send!(
@@ -148,7 +148,7 @@ fn asymetric_quotas() {
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = message_info(&Addr::unchecked(GOV_ADDR), &vec![]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
     // Sending 2%
@@ -231,7 +231,7 @@ fn query_state() {
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = message_info(&Addr::unchecked(GOV_ADDR), &vec![]);
     let env = mock_env();
     let _res = instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 
@@ -300,7 +300,7 @@ fn bad_quotas() {
             }],
         }],
     };
-    let info = mock_info(IBC_ADDR, &vec![]);
+    let info = message_info(&Addr::unchecked(IBC_ADDR), &vec![]);
 
     let env = mock_env();
     instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
@@ -337,7 +337,7 @@ fn undo_send() {
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = message_info(&Addr::unchecked(GOV_ADDR), &vec![]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
     let send_msg = test_msg_send!(

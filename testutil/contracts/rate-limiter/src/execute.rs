@@ -110,7 +110,7 @@ pub fn try_reset_path_quota(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, message_info};
     use cosmwasm_std::{from_json, Addr, StdError};
 
     use crate::contract::{execute, query};
@@ -140,7 +140,7 @@ mod tests {
                 send_recv: (3, 5),
             }],
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = message_info(&Addr::unchecked(IBC_ADDR), &vec![]);
 
         let env = mock_env();
         let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
@@ -176,7 +176,7 @@ mod tests {
                 send_recv: (3, 5),
             }],
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = message_info(&Addr::unchecked(IBC_ADDR), &vec![]);
 
         let env = mock_env();
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
@@ -187,7 +187,7 @@ mod tests {
             denom: format!("denom"),
         };
 
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = message_info(&Addr::unchecked(IBC_ADDR), &vec![]);
         let env = mock_env();
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
@@ -223,7 +223,7 @@ mod tests {
                 send_recv: (50, 30),
             }],
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = message_info(&Addr::unchecked(IBC_ADDR), &vec![]);
 
         let env = mock_env();
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();

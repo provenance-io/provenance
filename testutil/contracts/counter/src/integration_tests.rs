@@ -5,15 +5,18 @@ mod tests {
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
+    // Build the contract wrapper with all entry points used in tests.
     pub fn contract_template() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
             crate::contract::execute,
             crate::contract::instantiate,
             crate::contract::query,
-        );
+        )
+        .with_sudo(crate::contract::sudo);
         Box::new(contract)
     }
 
+    // Test addresses and denom used across integration tests.
     const USER: &str = "USER";
     const ADMIN: &str = "ADMIN";
     const NATIVE_DENOM: &str = "denom";
