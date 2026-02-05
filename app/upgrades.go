@@ -8,6 +8,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	storetypes "cosmossdk.io/store/types"
+	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -87,6 +88,10 @@ var upgrades = map[string]appUpgrade{
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
 				return nil, err
 			}
+
+			foundation, team := getTestnetCircuitBreakerAddrs()
+			setupCircuitBreakerPermissions(ctx, app, foundation, team)
+
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
@@ -114,6 +119,10 @@ var upgrades = map[string]appUpgrade{
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
 				return nil, err
 			}
+
+			foundation, team := getMainnetCircuitBreakerAddrs()
+			setupCircuitBreakerPermissions(ctx, app, foundation, team)
+
 			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
@@ -459,4 +468,72 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 
 	ctx.Logger().Info("All message fees updated successfully", "total_updated", len(feeUpdates))
 	return nil
+}
+
+// setupCircuitBreakerPermissions grants circuit breaker permissions
+// during an upgrade using the caller-provided address lists.
+// The upgrade handlers are responsible for selecting the correct
+// mainnet/testnet address sets.
+func setupCircuitBreakerPermissions(ctx sdk.Context, app *App, foundationAccounts, teamAccounts []string) {
+	ctx.Logger().Info("Setting up circuit breaker permissions.")
+
+	grant := func(addresses []string, level circuittypes.Permissions_Level) {
+		for i, addrStr := range addresses {
+			addr, err := sdk.AccAddressFromBech32(addrStr)
+			if err != nil {
+				ctx.Logger().Error(
+					fmt.Sprintf(
+						"Invalid address at index %d (%s): decoding bech32 failed. Skipping.",
+						i, addrStr,
+					),
+				)
+				continue
+			}
+
+			perms := circuittypes.Permissions{
+				Level:         level,
+				LimitTypeUrls: []string{},
+			}
+
+			if err := app.CircuitKeeper.Permissions.Set(ctx, addr, perms); err != nil {
+				ctx.Logger().Error(
+					fmt.Sprintf("Failed to grant permissions to %s. Skipping.", addrStr),
+				)
+				continue
+			}
+
+			ctx.Logger().Info(fmt.Sprintf("Granted Level %s to %s.", level, addrStr))
+		}
+	}
+	// Apply Foundation Permissions (SUPER_ADMIN)
+	grant(foundationAccounts, circuittypes.Permissions_LEVEL_SUPER_ADMIN)
+
+	// Apply Team Permissions (ALL_MSGS)
+	grant(teamAccounts, circuittypes.Permissions_LEVEL_ALL_MSGS)
+
+	ctx.Logger().Info("Circuit breaker setup configured.")
+}
+
+// getTestnetCircuitBreakerAddrs returns the list of accounts for Testnet.
+func getTestnetCircuitBreakerAddrs() (foundation []string, team []string) {
+	foundation = []string{
+		"tp1j3uudcktfm98k4f7e6d8z20laxt7zc690f950s", // Danny Wedul.
+	}
+	team = []string{
+		// TODO: Add REAL Testnet team addresses (tp1...)
+	}
+	return foundation, team
+}
+
+// getMainnetCircuitBreakerAddrs returns the list of accounts for Mainnet.
+func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
+	foundation = []string{
+		"pb1yfstpvte3a9yyq57qtw5k2vjydpn58992ydnfz9h7d23uhzej3esvnkqay", // A group account owned by the foundation.
+	}
+	team = []string{
+		"pb1yquakyj3p68ugvwmxrw53uv58rr2lv4xzt6ue2", // Danny Wedul.
+		"pb1ktgsj6ap4cfq45g5dyw5vj47zhcrd6cl9p6z43", // Jason Davidson.
+		"pb1ue08tptk5rlye5aujd2k3astacnmufqtstn82t", // Matt Conroy.
+	}
+	return foundation, team
 }
