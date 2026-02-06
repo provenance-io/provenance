@@ -311,11 +311,7 @@ func (k Keeper) RemoveOracleAddress(ctx sdk.Context, address string) error {
 	}
 
 	if !found {
-		return fmt.Errorf(
-			"%s: address: %s",
-			types.ErrOracleNotFound.Error(),
-			address,
-		)
+		return fmt.Errorf("%w: address: %s", types.ErrOracleNotFound, address)
 	}
 
 	params.OracleAddresses = newOracles
