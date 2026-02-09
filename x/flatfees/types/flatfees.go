@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"slices"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -57,28 +56,22 @@ func validateOracleAddresses(addresses []string) error {
 		return nil
 	}
 
-	var allErrors []string
+	var allErrors []error
 	seen := make(map[string]int)
 
 	for _, addr := range addresses {
-		seen[addr]++
-		if addr == "" {
-			allErrors = append(allErrors, "oracle address cannot be empty")
-			continue
+		if seen[addr] > 0 {
+			allErrors = append(allErrors, fmt.Errorf("duplicate oracle address: %q", addr))
 		}
+		seen[addr]++
 
 		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-			allErrors = append(allErrors, fmt.Sprintf("invalid oracle address %q: %v", addr, err))
-			continue
-		}
-
-		if seen[addr] > 1 {
-			allErrors = append(allErrors, fmt.Sprintf("duplicate oracle address: %q", addr))
+			allErrors = append(allErrors, fmt.Errorf("invalid oracle address %q: %w", addr, err))
 		}
 	}
 
 	if len(allErrors) > 0 {
-		return errors.New(strings.Join(allErrors, "; "))
+		return errors.Join(allErrors...)
 	}
 	return nil
 }

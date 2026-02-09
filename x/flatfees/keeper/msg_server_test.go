@@ -208,7 +208,7 @@ func shiftErr(errs []string) ([]string, error) {
 		switch {
 		case errMsg == "ErrMsgFeeDoesNotExist":
 			err = types.ErrMsgFeeDoesNotExist
-		case errMsg == "not gov":
+		case errMsg == "ErrUnauthorized":
 			err = sdkerrors.ErrUnauthorized
 		case len(errMsg) > 0:
 			err = errors.New(errMsg)

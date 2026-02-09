@@ -1226,6 +1226,7 @@ func (s *KeeperTestSuite) TestKeeper_AddOracleAddress() {
 			expErr:     "invalid oracle address: invalid address format: decoding bech32 failed: invalid bech32 string length 7",
 		},
 	}
+
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 
@@ -1309,6 +1310,7 @@ func (s *KeeperTestSuite) TestKeeper_RemoveOracleAddress() {
 			expErr:        "oracle address not found: address: " + oracle1,
 		},
 	}
+
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			defaultParams := types.DefaultParams()
@@ -1339,6 +1341,7 @@ func (s *KeeperTestSuite) TestKeeper_RemoveOracleAddress() {
 		})
 	}
 }
+
 func (s *KeeperTestSuite) TestKeeper_SetParams_WithOracleAddresses() {
 	oracle1 := sdk.AccAddress("oracle1_____________").String()
 	oracle2 := sdk.AccAddress("oracle2_____________").String()

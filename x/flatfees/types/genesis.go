@@ -67,12 +67,5 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 		}
 	}
 
-	if genesisState.Params.OracleAddresses == nil {
-		genesisState.Params.OracleAddresses = []string{}
-	}
-	if genesisState.MsgFees == nil {
-		genesisState.MsgFees = []*MsgFee{}
-	}
-
 	return &genesisState, err
 }
