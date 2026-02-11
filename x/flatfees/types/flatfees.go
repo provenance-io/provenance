@@ -62,6 +62,7 @@ func validateOracleAddresses(addresses []string) error {
 	for _, addr := range addresses {
 		if seen[addr] > 0 {
 			allErrors = append(allErrors, fmt.Errorf("duplicate oracle address: %q", addr))
+			continue
 		}
 		seen[addr]++
 
@@ -69,11 +70,7 @@ func validateOracleAddresses(addresses []string) error {
 			allErrors = append(allErrors, fmt.Errorf("invalid oracle address %q: %w", addr, err))
 		}
 	}
-
-	if len(allErrors) > 0 {
-		return errors.Join(allErrors...)
-	}
-	return nil
+	return errors.Join(allErrors...)
 }
 
 // IsOracleAddress checks if the given address is in the oracle list

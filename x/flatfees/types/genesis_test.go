@@ -131,111 +131,14 @@ func TestDefaultGenesisState(t *testing.T) {
 	assert.Empty(t, genState.MsgFees, "genState.MsgFees")
 }
 
-// func TestGetGenesisStateFromAppState(t *testing.T) {
-// 	appCdc := app.MakeTestEncodingConfig(t).Marshaler
-// 	// mocks.NewMockCodec(appCdc).WithUnmarshalJSONErrs("injected error message")
-// 	asJSON := func(msg proto.Message) json.RawMessage {
-// 		rv, err := appCdc.MarshalJSON(msg)
-// 		require.NoError(t, err, "Marshal(%T)", msg)
-// 		return rv
-// 	}
-// 	nilGenisisate := &GenesisState{}
-// 	nonDefaultGenState := &GenesisState{
-// 		Params: Params{
-// 			DefaultCost: sdk.NewInt64Coin("apple", 500),
-// 			ConversionFactor: ConversionFactor{
-// 				DefinitionAmount: sdk.NewInt64Coin("apple", 25),
-// 				ConvertedAmount:  sdk.NewInt64Coin("banana", 3),
-// 			},
-// 			OracleAddresses: []string{
-// 				sdk.AccAddress([]byte("oracle1_______________")).String(),
-// 			},
-// 		},
-// 		MsgFees: []*MsgFee{
-// 			NewMsgFee("/msg.one", sdk.NewInt64Coin("apple", 400)),
-// 			NewMsgFee("/msg.two", sdk.NewInt64Coin("apple", 600)),
-// 			// NewMsgFee returns a nil cost when there aren't any coins, but unmarshalling
-// 			// results in an empty slice. So this one needs to be made the hard way.
-// 			{MsgTypeUrl: "/msg.free", Cost: []sdk.Coin{}},
-// 			NewMsgFee("/msg.four", sdk.NewInt64Coin("apple", 1000), sdk.NewInt64Coin("plum", 3)),
-// 		},
-// 	}
-
-// 	tests := []struct {
-// 		name     string
-// 		cdc      codec.Codec
-// 		appState map[string]json.RawMessage
-// 		expState *GenesisState
-// 		expErr   string
-// 	}{
-// 		{
-// 			name:     "empty app state",
-// 			appState: make(map[string]json.RawMessage),
-// 			expState: nilGenisisate,
-// 		},
-// 		{
-// 			name: "empty flatfees state",
-// 			appState: map[string]json.RawMessage{
-// 				ModuleName: []byte(""),
-// 			},
-// 			expState: nilGenisisate,
-// 		},
-// 		{
-// 			name: "unmarshal error",
-// 			cdc:  mocks.NewMockCodec(appCdc).WithUnmarshalJSONErrs("injected 7 error message"),
-// 			appState: map[string]json.RawMessage{
-// 				ModuleName: asJSON(DefaultGenesisState()),
-// 			},
-// 			expState: nilGenisisate,
-// 			expErr:   "could not unmarshal flatfees genesis state: injected 7 error message",
-// 		},
-// 		{
-// 			name: "default",
-// 			appState: map[string]json.RawMessage{
-// 				ModuleName: asJSON(DefaultGenesisState()),
-// 			},
-// 			expState: DefaultGenesisState(),
-// 		},
-// 		{
-// 			name: "populated",
-// 			appState: map[string]json.RawMessage{
-// 				ModuleName: asJSON(nonDefaultGenState),
-// 			},
-// 			expState: nonDefaultGenState,
-// 		},
-// 	}
-
-//		for _, tc := range tests {
-//			t.Run(tc.name, func(t *testing.T) {
-//				if tc.cdc == nil {
-//					tc.cdc = appCdc
-//				}
-//				if tc.expState.Params.OracleAddresses == nil {
-//					tc.expState.Params.OracleAddresses = []string{}
-//				}
-//				if tc.expState.MsgFees == nil {
-//					tc.expState.MsgFees = []*MsgFee{}
-//				}
-//				var actState *GenesisState
-//				var err error
-//				testFunc := func() {
-//					actState, err = GetGenesisStateFromAppState(tc.cdc, tc.appState)
-//				}
-//				require.NotPanics(t, testFunc, "GetGenesisStateFromAppState")
-//				assertions.AssertErrorValue(t, err, tc.expErr, "GetGenesisStateFromAppState error")
-//				assert.Equal(t, tc.expState, actState, "GetGenesisStateFromAppState result")
-//			})
-//		}
-//	}
 func TestGetGenesisStateFromAppState(t *testing.T) {
 	appCdc := app.MakeTestEncodingConfig(t).Marshaler
-
+	// mocks.NewMockCodec(appCdc).WithUnmarshalJSONErrs("injected error message")
 	asJSON := func(msg proto.Message) json.RawMessage {
 		rv, err := appCdc.MarshalJSON(msg)
 		require.NoError(t, err, "Marshal(%T)", msg)
 		return rv
 	}
-
 	nonDefaultGenState := &GenesisState{
 		Params: Params{
 			DefaultCost: sdk.NewInt64Coin("apple", 500),
@@ -256,7 +159,6 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 			NewMsgFee("/msg.four", sdk.NewInt64Coin("apple", 1000), sdk.NewInt64Coin("plum", 3)),
 		},
 	}
-
 	defaultExpected := DefaultGenesisState()
 	defaultExpected.Params.OracleAddresses = []string{}
 
@@ -306,19 +208,20 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cdc := tc.cdc
-			if cdc == nil {
-				cdc = appCdc
+			if tc.cdc == nil {
+				tc.cdc = appCdc
 			}
-
 			var actState *GenesisState
 			var err error
 			testFunc := func() {
-				actState, err = GetGenesisStateFromAppState(cdc, tc.appState)
+				actState, err = GetGenesisStateFromAppState(tc.cdc, tc.appState)
 			}
 			require.NotPanics(t, testFunc, "GetGenesisStateFromAppState")
 			assertions.AssertErrorValue(t, err, tc.expErr, "GetGenesisStateFromAppState error")
 			assert.Equal(t, tc.expState, actState, "GetGenesisStateFromAppState result")
+			if t.Failed() && tc.appState != nil {
+				t.Logf("%s json:\n%s", ModuleName, string(tc.appState[ModuleName]))
+			}
 		})
 	}
 }

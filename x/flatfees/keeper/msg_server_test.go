@@ -254,9 +254,9 @@ func (k *MockKeeper) SetConversionFactor(_ sdk.Context, conversionFactor types.C
 
 func (k *MockKeeper) AssertCalls(t testing.TB) bool {
 	ok := assert.Equal(t, k.ValidateAuthorityExp, k.ValidateAuthorityArgs, "Calls to ValidateAuthority")
-	if assert.Equal(t, len(k.SetParamsExp), len(k.SetParamsExp), "Number of calls to SetParams") {
+	if assert.Equal(t, len(k.SetParamsExp), len(k.SetParamsArgs), "Number of calls to SetParams") {
 		for i := range k.SetParamsExp {
-			ok = assertEqualParams(t, k.SetParamsExp[i], k.SetParamsExp[i], "Call %d to SetParams", i+1) && ok
+			ok = assertEqualParams(t, k.SetParamsExp[i], k.SetParamsArgs[i], "Call %d to SetParams", i+1) && ok
 		}
 	} else {
 		ok = false
