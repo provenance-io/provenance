@@ -89,6 +89,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := k.GetParams(ctx)
 
 	appendToRecords := func(attr types.Attribute) error {
+		if attr.Value == nil {
+			attr.Value = []byte{}
+		}
 		attrs = append(attrs, attr)
 		return nil
 	}
