@@ -20,7 +20,6 @@ import (
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	types "github.com/provenance-io/provenance/x/name/types"
 )
 
 type KeeperTestSuite struct {
@@ -320,7 +319,7 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 		addr1Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user1Addr)
 		sortNameRecordsByName(expUser1Recs)
 		sortNameRecordsByName(addr1Recs)
-		
+
 		s.Require().NoError(err, "GetRecordsByAddress(user1)")
 		s.Assert().Equal(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
 
@@ -520,15 +519,16 @@ func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 	s.Require().NoError(err, "AddrIndex MatchExact failed")
 	defer iter.Close()
 
-	var recordByIndex *types.NameRecord
-	found := false
-	for ; iter.Valid(); iter.Next() {
-		recordByIndex, err = s.app.NameKeeper.GetRecordByName(s.ctx, name)
-		s.Require().NoError(err, "failed to get name record from index")
-		found = true
-		break
-	}
-	s.Require().True(found, "expected name record not found via AddrIndex")
+	s.Require().True(iter.Valid(), "expected name record not found via AddrIndex")
+
+	pk, err := iter.PrimaryKey()
+	indexedName := string(pk)
+
+	recordByIndex, err := s.app.NameKeeper.GetRecordByName(s.ctx, indexedName)
+	s.Require().NoError(err, "failed to get name record from index")
+
+	iter.Next()
+	s.Require().False(iter.Valid(), "expected only one index entry")
 
 	s.Require().Equal(recordByName, recordByIndex, "name records mismatch")
 }
