@@ -70,7 +70,7 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	// If we have a continuation key, skip forward past it (inclusive)
 	skipMode := continueAfterName != ""
