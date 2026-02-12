@@ -3,8 +3,7 @@ package keeper
 import (
 	"context"
 
-	storetypes "cosmossdk.io/store/types"
-
+	"cosmossdk.io/core/store"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -45,9 +44,9 @@ func (k Keeper) WithUnsanctionableAddrs(unsanctionableAddrs map[string]bool) Kee
 	return k
 }
 
-// StoreKey, for unit tests, exposes this keeper's storekey.
-func (k Keeper) StoreKey() storetypes.StoreKey {
-	return k.storeKey
+// KVStore, for unit tests, returns a KVStore for the given context from the keeper's StoreService.
+func (k Keeper) KVStore(ctx sdk.Context) store.KVStore {
+	return k.StoreService.OpenKVStore(ctx)
 }
 
 // MsgSanctionTypeURL, for unit tests, exposes this keeper's msgSanctionTypeURL.
@@ -71,23 +70,23 @@ func (k Keeper) GetParamAsCoinsOrDefault(ctx sdk.Context, name string, dflt sdk.
 }
 
 // GetLatestTempEntry, for unit tests, exposes this keeper's getLatestTempEntry function.
-func (k Keeper) GetLatestTempEntry(store storetypes.KVStore, addr sdk.AccAddress) []byte {
-	return k.getLatestTempEntry(store, addr)
+func (k Keeper) GetLatestTempEntry(ctx sdk.Context, addr sdk.AccAddress) []byte {
+	return k.getLatestTempEntry(ctx, addr)
 }
 
 // GetParam, for unit tests, exposes this keeper's getParam function.
-func (k Keeper) GetParam(store storetypes.KVStore, name string) (string, bool) {
-	return k.getParam(store, name)
+func (k Keeper) GetParam(ctx sdk.Context, name string) (string, bool) {
+	return k.getParam(ctx, name)
 }
 
 // SetParam, for unit tests, exposes this keeper's setParam function.
-func (k Keeper) SetParam(store storetypes.KVStore, name, value string) {
-	k.setParam(store, name, value)
+func (k Keeper) SetParam(ctx sdk.Context, name, value string) {
+	k.setParam(ctx, name, value)
 }
 
 // DeleteParam, for unit tests, exposes this keeper's deleteParam function.
-func (k Keeper) DeleteParam(store storetypes.KVStore, name string) {
-	k.deleteParam(store, name)
+func (k Keeper) DeleteParam(ctx sdk.Context, name string) {
+	k.deleteParam(ctx, name)
 }
 
 // ProposalGovHook, for unit tests, exposes this keeper's proposalGovHook function.
