@@ -128,7 +128,7 @@ func (k Keeper) paginateAllHolds(ctx sdk.Context, pageRequest *query.PageRequest
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create iterator: %v", err)
 	}
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	entryErrors = make(map[int]error)
 	entryIndex := 0
