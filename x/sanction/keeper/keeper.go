@@ -96,8 +96,7 @@ func NewKeeper(
 			collections.BytesValue,
 		),
 
-		// Proposa
-		// l index: (uint64, AccAddress) -> []byte with custom codec
+		// Proposal index: (uint64, AccAddress) -> []byte with custom codec
 		// Collections adds 0x03 prefix, codec handles [propID][len][addr]
 		ProposalIndex: collections.NewMap(
 			sb,

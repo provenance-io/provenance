@@ -44,7 +44,7 @@ func (k Keeper) WithUnsanctionableAddrs(unsanctionableAddrs map[string]bool) Kee
 	return k
 }
 
-// StoreKey, for unit tests, exposes this keeper's storekey.
+// KVStore, for unit tests, returns a KVStore for the given context from the keeper's StoreService.
 func (k Keeper) KVStore(ctx sdk.Context) store.KVStore {
 	return k.StoreService.OpenKVStore(ctx)
 }
