@@ -193,9 +193,9 @@ func getRandomValueOfType(r *rand.Rand, t types.AttributeType) []byte {
 	case types.AttributeType_Int:
 		return []byte(fmt.Sprintf("%d", r.Int31()))
 	case types.AttributeType_Bytes:
-		return []byte(simtypes.RandStringOfLength(r, int(r.Int31n(20))))
+		return []byte(simtypes.RandStringOfLength(r, int(r.Int31n(20))+1))
 	case types.AttributeType_String:
-		return []byte(simtypes.RandStringOfLength(r, int(r.Int31n(20))))
+		return []byte(simtypes.RandStringOfLength(r, int(r.Int31n(20))+1))
 	case types.AttributeType_UUID:
 		id, _ := uuid.NewRandomFromReader(r)
 		return []byte(id.String())
