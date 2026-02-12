@@ -49,7 +49,7 @@ func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger types.Trigg
 	if err != nil {
 		return err
 	}
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 	for ; iterator.Valid(); iterator.Next() {
 		kv, err := iterator.KeyValue()
 		if err != nil {
