@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/trigger/types"
@@ -8,8 +10,15 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	triggerID := k.getTriggerID(ctx)
-	queueStartIndex := k.getQueueStartIndex(ctx)
+	triggerID, err := k.getTriggerID(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	queueStartIndex, err := k.getQueueStartIndex(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	triggers, err := k.GetAllTriggers(ctx)
 	if err != nil {
@@ -21,6 +30,13 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	queueLength, err := k.GetQueueLength(ctx)
+	if err == nil && queueLength != uint64(len(queue)) {
+		ctx.Logger().Warn("Queue length mismatch during export",
+			"stored", queueLength,
+			"actual", len(queue))
+	}
+
 	return types.NewGenesisState(triggerID, queueStartIndex, triggers, queue)
 }
 
@@ -30,18 +46,33 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(err)
 	}
 
-	k.setTriggerID(ctx, data.TriggerId)
-	k.setQueueStartIndex(ctx, data.QueueStart)
-	if len(data.QueuedTriggers) == 0 {
-		k.setQueueLength(ctx, 0)
+	// Set trigger ID
+	if err := k.setTriggerID(ctx, data.TriggerId); err != nil {
+		panic(fmt.Sprintf("Failed to set trigger ID: %v", err))
+	}
+
+	// Set queue start index
+	if err := k.setQueueStartIndex(ctx, data.QueueStart); err != nil {
+		panic(fmt.Sprintf("Failed to set queue start index: %v", err))
+	}
+
+	queueLength := uint64(len(data.QueuedTriggers))
+	if err := k.setQueueLength(ctx, queueLength); err != nil {
+		panic(fmt.Sprintf("Failed to set queue length: %v", err))
 	}
 
 	for _, queuedTrigger := range data.QueuedTriggers {
-		k.Enqueue(ctx, queuedTrigger)
+		if err := k.Enqueue(ctx, queuedTrigger); err != nil {
+			panic(fmt.Sprintf("Failed to enqueue trigger: %v", err))
+		}
 	}
 
 	for _, trigger := range data.Triggers {
-		k.SetTrigger(ctx, trigger)
-		k.SetEventListener(ctx, trigger)
+		if err := k.SetTrigger(ctx, trigger); err != nil {
+			panic(fmt.Sprintf("Failed to set trigger %d: %v", trigger.Id, err))
+		}
+		if err := k.SetEventListener(ctx, trigger); err != nil {
+			panic(fmt.Sprintf("Failed to set event listener for trigger %d: %v", trigger.Id, err))
+		}
 	}
 }

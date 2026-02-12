@@ -1,7 +1,9 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	"errors"
+
+	"cosmossdk.io/collections"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,47 +12,50 @@ import (
 )
 
 // SetTrigger Sets the trigger in the store.
-func (k Keeper) SetTrigger(ctx sdk.Context, trigger types.Trigger) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&trigger)
-	store.Set(types.GetTriggerKey(trigger.GetId()), bz)
+func (k Keeper) SetTrigger(ctx sdk.Context, trigger types.Trigger) error {
+	return k.TriggersMap.Set(ctx, trigger.GetId(), trigger)
 }
 
 // RemoveTrigger Removes a trigger from the store.
 func (k Keeper) RemoveTrigger(ctx sdk.Context, id types.TriggerID) bool {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetTriggerKey(id)
-	keyExists := store.Has(key)
-	if keyExists {
-		store.Delete(key)
+	exists, err := k.TriggersMap.Has(ctx, id)
+	if err != nil {
+		return false
 	}
-	return keyExists
+	if exists {
+		if err := k.TriggersMap.Remove(ctx, id); err != nil {
+			return false
+		}
+		return true
+	}
+	return false
 }
 
 // GetTrigger Gets a trigger from the store by id.
 func (k Keeper) GetTrigger(ctx sdk.Context, id types.TriggerID) (trigger types.Trigger, err error) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetTriggerKey(id)
-	bz := store.Get(key)
-	if len(bz) == 0 {
-		return trigger, types.ErrTriggerNotFound
+	trigger, err = k.TriggersMap.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.Trigger{}, types.ErrTriggerNotFound
+		}
+		return types.Trigger{}, err
 	}
-	err = k.cdc.Unmarshal(bz, &trigger)
-	return trigger, err
+	return trigger, nil
 }
 
 // IterateTriggers Iterates through all the triggers.
 func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger types.Trigger) (stop bool, err error)) error {
-	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.TriggerKeyPrefix)
-
-	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
+	iterator, err := k.TriggersMap.Iterate(ctx, nil) // Already scoped to trigger prefix
+	if err != nil {
+		return err
+	}
+	defer iterator.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 	for ; iterator.Valid(); iterator.Next() {
-		record := types.Trigger{}
-		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+		kv, err := iterator.KeyValue()
+		if err != nil {
 			return err
 		}
-		stop, err := handle(record)
+		stop, err := handle(kv.Value)
 		if err != nil {
 			return err
 		}
@@ -70,34 +75,63 @@ func (k Keeper) GetAllTriggers(ctx sdk.Context) (triggers []types.Trigger, err e
 	return
 }
 
+// HasTrigger check trigger id exists.
+func (k Keeper) HasTrigger(ctx sdk.Context, id uint64) (bool, error) {
+	_, err := k.TriggersMap.Get(ctx, id)
+	if errors.Is(err, collections.ErrNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // NewTriggerWithID Creates a trigger with the latest ID.
-func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *codectypes.Any, actions []*codectypes.Any) types.Trigger {
-	id := k.getNextTriggerID(ctx)
-	trigger := types.NewTrigger(id, owner, event, actions)
-	return trigger
+func (k Keeper) NewTriggerWithID(
+	ctx sdk.Context,
+	owner string,
+	event *codectypes.Any,
+	actions []*codectypes.Any,
+) (types.Trigger, error) {
+	// Get the next ID (and increment the store internally)
+	currentID, err := k.getNextTriggerID(ctx)
+	if err != nil {
+		return types.Trigger{}, err
+	}
+
+	trigger := types.Trigger{
+		Id:      currentID,
+		Owner:   owner,
+		Event:   event,
+		Actions: actions,
+	}
+
+	return trigger, nil
 }
 
 // setTriggerID Sets the next trigger ID.
-func (k Keeper) setTriggerID(ctx sdk.Context, triggerID types.TriggerID) {
-	store := ctx.KVStore(k.storeKey)
-	bz := types.GetTriggerIDBytes(triggerID)
-	store.Set(types.GetNextTriggerIDKey(), bz)
+func (k Keeper) setTriggerID(ctx sdk.Context, triggerID types.TriggerID) error {
+	return k.NextTriggerID.Set(ctx, triggerID)
 }
 
 // getNextTriggerID Gets the latest trigger ID and updates the next one.
-func (k Keeper) getNextTriggerID(ctx sdk.Context) (triggerID types.TriggerID) {
-	triggerID = k.getTriggerID(ctx)
-	k.setTriggerID(ctx, triggerID+1)
-	return
+func (k Keeper) getNextTriggerID(ctx sdk.Context) (types.TriggerID, error) {
+	nextID, err := k.getTriggerID(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if err := k.setTriggerID(ctx, nextID+1); err != nil {
+		return 0, err
+	}
+	return nextID, nil
 }
 
 // getTriggerID Gets the latest trigger ID.
-func (k Keeper) getTriggerID(ctx sdk.Context) (triggerID types.TriggerID) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetNextTriggerIDKey())
-	if bz == nil {
-		return 1
+func (k Keeper) getTriggerID(ctx sdk.Context) (types.TriggerID, error) {
+	id, err := k.NextTriggerID.Get(ctx)
+	if errors.Is(err, collections.ErrNotFound) {
+		return 1, nil
 	}
-	triggerID = types.GetTriggerIDFromBytes(bz)
-	return triggerID
+	return id, err
 }
