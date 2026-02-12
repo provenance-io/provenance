@@ -148,7 +148,7 @@ func (k Keeper) temporaryEntriesForAddress(
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	items := []*sanction.TemporaryEntry{} // never nil
 	var total uint64
