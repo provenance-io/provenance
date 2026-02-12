@@ -94,7 +94,7 @@ func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle 
 	if err != nil {
 		return err
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.Key()

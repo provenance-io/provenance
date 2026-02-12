@@ -34,9 +34,12 @@ func (m Migrator) DeleteGasLimits(ctx sdk.Context, logger log.Logger) {
 		logger.Error("Failed to create iterator", "err", err)
 		return
 	}
+
 	closeIter := func() {
 		if iter != nil {
-			iter.Close()
+			if err := iter.Close(); err != nil {
+				m.keeper.Logger(ctx).Error("failed to close iterator during migration", "err", err)
+			}
 			iter = nil
 		}
 	}

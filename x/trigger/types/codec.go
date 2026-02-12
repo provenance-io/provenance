@@ -71,7 +71,7 @@ func (f FixedBytes32KeyCodec) Decode(buffer []byte) (int, []byte, error) {
 }
 
 // Size returns the buffer size need to encode key T in binary format.
-func (f FixedBytes32KeyCodec) Size(key []byte) int { //nolint:revive
+func (f FixedBytes32KeyCodec) Size(key []byte) int { //nolint:revive // key is required by interface but not used; size is constant (32 bytes)
 	return 32
 }
 

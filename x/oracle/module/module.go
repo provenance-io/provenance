@@ -74,6 +74,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodin
 }
 
 // RegisterRESTRoutes registers the REST routes for the oracle module.
+//
 // Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 

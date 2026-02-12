@@ -12,7 +12,7 @@ import (
 
 // QueueTrigger Creates a QueuedTrigger and Enqueues it
 func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
-	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight()))
+	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight())) //nolint:gosec // G115: block height guaranteed non-negative in Cosmos SDK.
 	err := k.Enqueue(ctx, item)
 	if err != nil {
 		ctx.Logger().Error("failed to queue trigger", "trigger_id", trigger.Id, "err", err)
@@ -115,7 +115,7 @@ func (k Keeper) GetAllQueueItems(ctx sdk.Context) (items []types.QueuedTrigger, 
 	if err != nil {
 		return nil, err
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		_, err := iter.Key()
@@ -174,7 +174,7 @@ func (k Keeper) IterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTr
 	if err != nil {
 		return err
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		value, err := iter.Value()
