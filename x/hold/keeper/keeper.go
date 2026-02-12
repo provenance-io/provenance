@@ -258,7 +258,7 @@ func (k Keeper) GetHoldCoins(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, e
 	if err != nil {
 		return nil, err
 	}
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; iterator.Valid(); iterator.Next() {
 		kv, err := iterator.KeyValue()
 		if err != nil {
@@ -288,7 +288,7 @@ func (k Keeper) IterateHolds(ctx sdk.Context, addr sdk.AccAddress, process func(
 		return err
 	}
 
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for ; iterator.Valid(); iterator.Next() {
 		kv, err := iterator.KeyValue()
@@ -321,7 +321,7 @@ func (k Keeper) IterateAllHolds(ctx sdk.Context, process func(sdk.AccAddress, sd
 		return err
 	}
 
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
 	for ; iterator.Valid(); iterator.Next() {
 		kv, err := iterator.KeyValue()
 		if err != nil {
