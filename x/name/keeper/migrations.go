@@ -39,7 +39,7 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create legacy iterator: %w", err)
 	}
-	defer legacyIter.Close()
+	defer legacyIter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	var recordsToMigrate []types.NameRecord
 	for ; legacyIter.Valid(); legacyIter.Next() {
