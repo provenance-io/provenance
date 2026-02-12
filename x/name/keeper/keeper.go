@@ -244,7 +244,7 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 	if err != nil {
 		return nil, err
 	}
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
 	for ; iter.Valid(); iter.Next() {
 		primaryKey, err := iter.PrimaryKey()
