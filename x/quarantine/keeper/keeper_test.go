@@ -2531,7 +2531,7 @@ func (s *TestSuite) TestAcceptQuarantinedFunds() {
 		bKeeper.QueuedSendCoinsErrors = []error{
 			nil,
 			nil,
-			fmt.Errorf(expectedErr),
+			fmt.Errorf("%s", expectedErr),
 		}
 		qKeeper := s.keeper.WithBankKeeper(bKeeper)
 
