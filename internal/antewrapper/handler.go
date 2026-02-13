@@ -1,6 +1,8 @@
 package antewrapper
 
 import (
+	"time"
+
 	storetypes "cosmossdk.io/store/types"
 	circuitante "cosmossdk.io/x/circuit/ante"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -13,27 +15,37 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
-// HandlerOptions are the options required for constructing a default SDK AnteHandler.
+// HandlerOptions are the options used to construct the AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper          cosmosante.AccountKeeper
-	BankKeeper             banktypes.Keeper
+	// Required:
+
+	AccountKeeper       cosmosante.AccountKeeper
+	BankKeeper          banktypes.Keeper
+	CircuitKeeper       circuitante.CircuitBreaker
+	FeegrantKeeper      FeegrantKeeper
+	FlatFeesKeeper      FlatFeesKeeper
+	TxSigningHandlerMap *txsigning.HandlerMap
+
+	// Optionals. Leave as nil to use the defaults.
+
 	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
-	FeegrantKeeper         FeegrantKeeper
-	FlatFeesKeeper         FlatFeesKeeper
-	CircuitKeeper          circuitante.CircuitBreaker
-	TxSigningHandlerMap    *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	SigVerifyOptions       []cosmosante.SigVerificationDecoratorOption
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("account keeper is required for ante builder")
 	}
-
 	if options.BankKeeper == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("bank keeper is required for ante builder")
 	}
-
+	if options.CircuitKeeper == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("circuit keeper is required for ante builder")
+	}
+	if options.FeegrantKeeper == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("feegrant keeper is required for ante builder")
+	}
 	if options.FlatFeesKeeper == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("flatfees keeper is required for ante builder")
 	}
@@ -44,6 +56,14 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	var sigGasConsumer = options.SigGasConsumer
 	if sigGasConsumer == nil {
 		sigGasConsumer = cosmosante.DefaultSigVerificationGasConsumer
+	}
+
+	sigVerOpts := options.SigVerifyOptions
+	if sigVerOpts == nil {
+		sigVerOpts = []cosmosante.SigVerificationDecoratorOption{
+			cosmosante.WithUnorderedTxGasCost(cosmosante.DefaultUnorderedTxGasCost), // Consume 2240 gas when using an unordered tx.
+			cosmosante.WithMaxUnorderedTxTimeoutDuration(5 * time.Minute),
+		}
 	}
 
 	decorators := []sdk.AnteDecorator{
@@ -59,7 +79,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
-		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap),
+		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap, sigVerOpts...),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 

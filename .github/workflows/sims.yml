@@ -64,8 +64,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
-      - name: Update provwasm contract
-        run: make download-smart-contracts
       - name: Build provenanced
         run: make build
       - name: Provenanced version
@@ -93,8 +91,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
-      - name: Update provwasm contract
-        run: make download-smart-contracts
       - name: Test
         run: |
           set -x
@@ -145,8 +141,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
-      - name: Update provwasm contract
-        run: make download-smart-contracts
       - name: Test
         run: |
           set -x
@@ -182,8 +176,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
-      - name: Update provwasm contract
-        run: make download-smart-contracts
       - name: Test
         run: |
           set -x

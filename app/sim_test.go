@@ -15,6 +15,7 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	vaulttypes "github.com/provlabs/vault/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -56,6 +58,7 @@ func init() {
 // provAppStateFn wraps the simtypes.AppStateFn and sets the ICA and ICQ GenesisState if isn't yet defined in the appState.
 func provAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+		pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
 		appState = appStateWithICA(appState, cdc)
 		appState = appStateWithICQ(appState, cdc)
@@ -410,6 +413,7 @@ func TestAppImportExport(t *testing.T) {
 		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 		wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix},
+		vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix},
 	}
 
 	storeKeys := app.GetStoreKeys()
@@ -572,6 +576,8 @@ func TestAppStateDeterminism(t *testing.T) {
 			seeds[i] = rand.Int63()
 		}
 	}
+
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 
 	for i, seed := range seeds {
 		config.Seed = seed

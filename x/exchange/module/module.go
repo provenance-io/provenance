@@ -98,9 +98,6 @@ func (AppModule) IsOnePerModuleType() {}
 // IsAppModule is a dummy function that satisfies the AppModule interface.
 func (AppModule) IsAppModule() {}
 
-// RegisterInvariants registers the invariants for the exchange module.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // InitGenesis performs genesis initialization for the exchange module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {

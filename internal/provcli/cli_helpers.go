@@ -60,7 +60,7 @@ func GenerateOrBroadcastTxCLIAsGovProp(clientCtx client.Context, flagSet *pflag.
 		}
 	}
 
-	prop, err := govcli.ReadGovPropFlags(clientCtx, flagSet)
+	prop, err := govcli.ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
 	if err != nil {
 		return err
 	}

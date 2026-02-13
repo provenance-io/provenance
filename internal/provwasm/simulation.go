@@ -401,7 +401,10 @@ func Dispatch(
 		spendable = spendable.Sub(fundsInMsg...)
 	}
 
-	fees, err := simtypes.RandomFees(r, ctx, spendable)
+	fees, err := getRandomBondFee(r, simState, spendable)
+	if err != nil {
+		panic(err)
+	}
 
 	if err != nil {
 		panic("no fees")
@@ -428,6 +431,21 @@ func Dispatch(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), futures, sdkResponse, nil
+}
+
+// getRandomBondFee will get a random amount of the bond denom from the provided spendable coins.
+func getRandomBondFee(r *rand.Rand, simState module.SimulationState, spendable sdk.Coins) (sdk.Coins, error) {
+	spendableBondAmt := spendable.AmountOf(simState.BondDenom)
+	if spendableBondAmt.IsZero() {
+		return nil, fmt.Errorf("no fees")
+	}
+
+	amt, err := simtypes.RandPositiveInt(r, spendableBondAmt)
+	if err != nil {
+		return nil, err
+	}
+
+	return sdk.NewCoins(sdk.NewCoin(simState.BondDenom, amt)), nil
 }
 
 // getRandomRootNameRecord finds a random root name record owned by a known account.
