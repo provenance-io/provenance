@@ -63,7 +63,7 @@ if [ ! -f "$IBC_PORT_QUERY_FILE" ]; then
 fi
 
 rm -rf 'proto/cosmos'
-curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/testutil' --exclude='*/protocolpool' --exclude='*/epochs' "$PROTO_EXPR"
+curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/testutil' --exclude='*/protocolpool' --exclude='*/epochs' --exclude='*/counter' "$PROTO_EXPR"
 
 rm -rf 'proto/tendermint'
 curl -f -sSL "$COMETBFT_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
