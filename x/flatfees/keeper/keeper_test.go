@@ -1128,3 +1128,325 @@ func (s *KeeperTestSuite) TestKeeper_SetConversionFactor() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestKeeper_IsOracleAddress() {
+	oracle1 := sdk.AccAddress("oracle1_____________").String()
+	oracle2 := sdk.AccAddress("oracle2_____________").String()
+	nonOracle := sdk.AccAddress("not_oracle__________").String()
+
+	// Set up params with oracle addresses
+	params := types.DefaultParams()
+	params.OracleAddresses = []string{oracle1, oracle2}
+	err := s.kpr.SetParams(s.ctx, params)
+	s.Require().NoError(err, "SetParams with oracle addresses should not error")
+
+	tests := []struct {
+		name    string
+		address string
+		expIs   bool
+	}{
+		{
+			name:    "oracle1 is oracle",
+			address: oracle1,
+			expIs:   true,
+		},
+		{
+			name:    "oracle2 is oracle",
+			address: oracle2,
+			expIs:   true,
+		},
+		{
+			name:    "non-oracle is not oracle",
+			address: nonOracle,
+			expIs:   false,
+		},
+		{
+			name:    "empty string is not oracle",
+			address: "",
+			expIs:   false,
+		},
+		{
+			name:    "invalid address is not oracle",
+			address: "invalid",
+			expIs:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var actIs bool
+			testFunc := func() {
+				actIs = s.kpr.IsOracleAddress(s.ctx, tc.address)
+			}
+			s.Require().NotPanics(testFunc, "IsOracleAddress(%q)", tc.address)
+			s.Assert().Equal(tc.expIs, actIs, "IsOracleAddress(%q) result", tc.address)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestKeeper_AddOracleAddress() {
+	oracle1 := sdk.AccAddress("oracle1_____________").String()
+	oracle2 := sdk.AccAddress("oracle2_____________").String()
+
+	tests := []struct {
+		name         string
+		setupOracles []string
+		addAddress   string
+		expErr       string
+		expOracles   []string
+	}{
+		{
+			name:         "add first oracle",
+			setupOracles: nil,
+			addAddress:   oracle1,
+			expErr:       "",
+			expOracles:   []string{oracle1},
+		},
+		{
+			name:         "add second oracle",
+			setupOracles: []string{oracle1},
+			addAddress:   oracle2,
+			expErr:       "",
+			expOracles:   []string{oracle1, oracle2},
+		},
+		{
+			name:         "add duplicate oracle",
+			setupOracles: []string{oracle1, oracle2},
+			addAddress:   oracle1,
+			expErr:       "oracle address already exists: address: " + oracle1,
+		},
+		{
+			name:       "add empty address",
+			addAddress: "",
+			expErr:     "invalid oracle address: invalid address format: empty address string is not allowed",
+		},
+		{
+			name:       "add invalid address format",
+			addAddress: "invalid",
+			expErr:     "invalid oracle address: invalid address format: decoding bech32 failed: invalid bech32 string length 7",
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			defaultParams := types.DefaultParams()
+			err := s.kpr.SetParams(s.ctx, defaultParams)
+			s.Require().NoError(err, "SetParams(default) should not error")
+
+			if len(tc.setupOracles) > 0 {
+				params := s.kpr.GetParams(s.ctx)
+				params.OracleAddresses = tc.setupOracles
+				err = s.kpr.SetParams(s.ctx, params)
+				s.Require().NoError(err, "SetParams with setup oracles should not error")
+			}
+
+			testFunc := func() {
+				err = s.kpr.AddOracleAddress(s.ctx, tc.addAddress)
+			}
+			s.Require().NotPanics(testFunc, "AddOracleAddress(%q)", tc.addAddress)
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "AddOracleAddress(%q) error", tc.addAddress)
+
+			if len(tc.expErr) == 0 {
+				params := s.kpr.GetParams(s.ctx)
+				s.Assert().Equal(tc.expOracles, params.OracleAddresses, "oracle addresses after add")
+				s.Assert().True(s.kpr.IsOracleAddress(s.ctx, tc.addAddress), "added address should be oracle")
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestKeeper_RemoveOracleAddress() {
+	oracle1 := sdk.AccAddress("oracle1_____________").String()
+	oracle2 := sdk.AccAddress("oracle2_____________").String()
+	oracle3 := sdk.AccAddress("oracle3_____________").String()
+	nonOracle := sdk.AccAddress("not_oracle__________").String()
+
+	tests := []struct {
+		name          string
+		setupOracles  []string
+		removeAddress string
+		expErr        string
+		expOracles    []string
+	}{
+		{
+			name:          "remove only oracle",
+			setupOracles:  []string{oracle1},
+			removeAddress: oracle1,
+			expErr:        "",
+			expOracles:    []string{},
+		},
+		{
+			name:          "remove first of two",
+			setupOracles:  []string{oracle1, oracle2},
+			removeAddress: oracle1,
+			expErr:        "",
+			expOracles:    []string{oracle2},
+		},
+		{
+			name:          "remove second of two",
+			setupOracles:  []string{oracle1, oracle2},
+			removeAddress: oracle2,
+			expErr:        "",
+			expOracles:    []string{oracle1},
+		},
+		{
+			name:          "remove middle of three",
+			setupOracles:  []string{oracle1, oracle2, oracle3},
+			removeAddress: oracle2,
+			expErr:        "",
+			expOracles:    []string{oracle1, oracle3},
+		},
+		{
+			name:          "remove non-existent oracle",
+			setupOracles:  []string{oracle1, oracle2},
+			removeAddress: nonOracle,
+			expErr:        "oracle address not found: address: " + nonOracle,
+		},
+		{
+			name:          "remove from empty list",
+			setupOracles:  nil,
+			removeAddress: oracle1,
+			expErr:        "oracle address not found: address: " + oracle1,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			defaultParams := types.DefaultParams()
+			err := s.kpr.SetParams(s.ctx, defaultParams)
+			s.Require().NoError(err, "SetParams(default) should not error")
+
+			if len(tc.setupOracles) > 0 {
+				params := s.kpr.GetParams(s.ctx)
+				params.OracleAddresses = tc.setupOracles
+				err = s.kpr.SetParams(s.ctx, params)
+				s.Require().NoError(err, "SetParams with setup oracles should not error")
+			}
+
+			testFunc := func() {
+				err = s.kpr.RemoveOracleAddress(s.ctx, tc.removeAddress)
+			}
+			s.Require().NotPanics(testFunc, "RemoveOracleAddress(%q)", tc.removeAddress)
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "RemoveOracleAddress(%q) error", tc.removeAddress)
+
+			if len(tc.expErr) == 0 {
+				params := s.kpr.GetParams(s.ctx)
+				if params.OracleAddresses == nil {
+					params.OracleAddresses = []string{}
+				}
+				s.Assert().Equal(tc.expOracles, params.OracleAddresses, "oracle addresses after remove")
+				s.Assert().False(s.kpr.IsOracleAddress(s.ctx, tc.removeAddress), "removed address should not be oracle")
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestKeeper_SetParams_WithOracleAddresses() {
+	oracle1 := sdk.AccAddress("oracle1_____________").String()
+	oracle2 := sdk.AccAddress("oracle2_____________").String()
+	defaultParams := types.DefaultParams()
+
+	tests := []struct {
+		name   string
+		params types.Params
+	}{
+		{
+			name: "valid: empty oracle list",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses:  []string{},
+			},
+		},
+		{
+			name: "valid: one oracle",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses:  []string{oracle1},
+			},
+		},
+		{
+			name: "valid: two oracles",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses:  []string{oracle1, oracle2},
+			},
+		},
+		{
+			name: "valid: max oracles",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses: []string{
+					sdk.AccAddress("oracle01____________").String(),
+					sdk.AccAddress("oracle02____________").String(),
+					sdk.AccAddress("oracle03____________").String(),
+					sdk.AccAddress("oracle04____________").String(),
+					sdk.AccAddress("oracle05____________").String(),
+					sdk.AccAddress("oracle06____________").String(),
+					sdk.AccAddress("oracle07____________").String(),
+					sdk.AccAddress("oracle08____________").String(),
+					sdk.AccAddress("oracle09____________").String(),
+					sdk.AccAddress("oracle10____________").String(),
+				},
+			},
+		},
+		{
+			name: "invalid: too many oracles (stored as-is, no validation in SetParams)",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses: []string{
+					sdk.AccAddress("oracle01____________").String(),
+					sdk.AccAddress("oracle02____________").String(),
+					sdk.AccAddress("oracle03____________").String(),
+					sdk.AccAddress("oracle04____________").String(),
+					sdk.AccAddress("oracle05____________").String(),
+					sdk.AccAddress("oracle06____________").String(),
+					sdk.AccAddress("oracle07____________").String(),
+					sdk.AccAddress("oracle08____________").String(),
+					sdk.AccAddress("oracle09____________").String(),
+					sdk.AccAddress("oracle10____________").String(),
+					sdk.AccAddress("oracle11____________").String(),
+				},
+			},
+		},
+		{
+			name: "invalid: duplicate oracle (stored as-is)",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses:  []string{oracle1, oracle2, oracle1},
+			},
+		},
+		{
+			name: "invalid: empty oracle address (stored as-is)",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses:  []string{oracle1, ""},
+			},
+		},
+		{
+			name: "invalid: malformed oracle address (stored as-is)",
+			params: types.Params{
+				DefaultCost:      defaultParams.DefaultCost,
+				ConversionFactor: defaultParams.ConversionFactor,
+				OracleAddresses:  []string{oracle1, "invalid"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+				return s.kpr.SetParams(s.ctx, tc.params)
+			}, "SetParams(%+v)", tc.params)
+
+			act := s.kpr.GetParams(s.ctx)
+			s.Assert().ElementsMatch(tc.params.OracleAddresses, act.OracleAddresses, "oracle addresses after SetParams")
+
+		})
+	}
+}

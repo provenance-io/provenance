@@ -124,7 +124,7 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 // MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor governance endpoint.
 type MsgUpdateConversionFactorRequest struct {
-	// authority should be the governance module account address.
+	// authority should be either the governance module account address or an oracle address.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// conversion_factor is the new conversion factor that should be used.
 	ConversionFactor ConversionFactor `protobuf:"bytes,2,opt,name=conversion_factor,json=conversionFactor,proto3" json:"conversion_factor"`
@@ -316,6 +316,190 @@ func (m *MsgUpdateMsgFeesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateMsgFeesResponse proto.InternalMessageInfo
 
+// MsgAddOracleAddressRequest is the request for the AddOracleAddress governance endpoint.
+type MsgAddOracleAddressRequest struct {
+	// authority should be the governance module account address.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// oracle_address is the address to be added to the oracle list.
+	OracleAddress string `protobuf:"bytes,2,opt,name=oracle_address,json=oracleAddress,proto3" json:"oracle_address,omitempty"`
+}
+
+func (m *MsgAddOracleAddressRequest) Reset()         { *m = MsgAddOracleAddressRequest{} }
+func (m *MsgAddOracleAddressRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgAddOracleAddressRequest) ProtoMessage()    {}
+func (*MsgAddOracleAddressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2275393a2cb8688a, []int{6}
+}
+func (m *MsgAddOracleAddressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddOracleAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddOracleAddressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddOracleAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddOracleAddressRequest.Merge(m, src)
+}
+func (m *MsgAddOracleAddressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddOracleAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddOracleAddressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddOracleAddressRequest proto.InternalMessageInfo
+
+func (m *MsgAddOracleAddressRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgAddOracleAddressRequest) GetOracleAddress() string {
+	if m != nil {
+		return m.OracleAddress
+	}
+	return ""
+}
+
+// MsgAddOracleAddressResponse is the response for the AddOracleAddress governance endpoint.
+type MsgAddOracleAddressResponse struct {
+}
+
+func (m *MsgAddOracleAddressResponse) Reset()         { *m = MsgAddOracleAddressResponse{} }
+func (m *MsgAddOracleAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddOracleAddressResponse) ProtoMessage()    {}
+func (*MsgAddOracleAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2275393a2cb8688a, []int{7}
+}
+func (m *MsgAddOracleAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddOracleAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddOracleAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddOracleAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddOracleAddressResponse.Merge(m, src)
+}
+func (m *MsgAddOracleAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddOracleAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddOracleAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddOracleAddressResponse proto.InternalMessageInfo
+
+// MsgRemoveOracleAddressRequest is the request for the RemoveOracleAddress governance endpoint.
+type MsgRemoveOracleAddressRequest struct {
+	// authority should be the governance module account address.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// oracle_address is the address to be removed from the oracle list.
+	OracleAddress string `protobuf:"bytes,2,opt,name=oracle_address,json=oracleAddress,proto3" json:"oracle_address,omitempty"`
+}
+
+func (m *MsgRemoveOracleAddressRequest) Reset()         { *m = MsgRemoveOracleAddressRequest{} }
+func (m *MsgRemoveOracleAddressRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveOracleAddressRequest) ProtoMessage()    {}
+func (*MsgRemoveOracleAddressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2275393a2cb8688a, []int{8}
+}
+func (m *MsgRemoveOracleAddressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveOracleAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveOracleAddressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveOracleAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveOracleAddressRequest.Merge(m, src)
+}
+func (m *MsgRemoveOracleAddressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveOracleAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveOracleAddressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveOracleAddressRequest proto.InternalMessageInfo
+
+func (m *MsgRemoveOracleAddressRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgRemoveOracleAddressRequest) GetOracleAddress() string {
+	if m != nil {
+		return m.OracleAddress
+	}
+	return ""
+}
+
+// MsgRemoveOracleAddressResponse is the response for the RemoveOracleAddress governance endpoint.
+type MsgRemoveOracleAddressResponse struct {
+}
+
+func (m *MsgRemoveOracleAddressResponse) Reset()         { *m = MsgRemoveOracleAddressResponse{} }
+func (m *MsgRemoveOracleAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveOracleAddressResponse) ProtoMessage()    {}
+func (*MsgRemoveOracleAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2275393a2cb8688a, []int{9}
+}
+func (m *MsgRemoveOracleAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveOracleAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveOracleAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveOracleAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveOracleAddressResponse.Merge(m, src)
+}
+func (m *MsgRemoveOracleAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveOracleAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveOracleAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveOracleAddressResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParamsRequest)(nil), "provenance.flatfees.v1.MsgUpdateParamsRequest")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "provenance.flatfees.v1.MsgUpdateParamsResponse")
@@ -323,44 +507,55 @@ func init() {
 	proto.RegisterType((*MsgUpdateConversionFactorResponse)(nil), "provenance.flatfees.v1.MsgUpdateConversionFactorResponse")
 	proto.RegisterType((*MsgUpdateMsgFeesRequest)(nil), "provenance.flatfees.v1.MsgUpdateMsgFeesRequest")
 	proto.RegisterType((*MsgUpdateMsgFeesResponse)(nil), "provenance.flatfees.v1.MsgUpdateMsgFeesResponse")
+	proto.RegisterType((*MsgAddOracleAddressRequest)(nil), "provenance.flatfees.v1.MsgAddOracleAddressRequest")
+	proto.RegisterType((*MsgAddOracleAddressResponse)(nil), "provenance.flatfees.v1.MsgAddOracleAddressResponse")
+	proto.RegisterType((*MsgRemoveOracleAddressRequest)(nil), "provenance.flatfees.v1.MsgRemoveOracleAddressRequest")
+	proto.RegisterType((*MsgRemoveOracleAddressResponse)(nil), "provenance.flatfees.v1.MsgRemoveOracleAddressResponse")
 }
 
 func init() { proto.RegisterFile("provenance/flatfees/v1/tx.proto", fileDescriptor_2275393a2cb8688a) }
 
 var fileDescriptor_2275393a2cb8688a = []byte{
-	// 508 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
-	0x10, 0xce, 0x36, 0x34, 0x90, 0xe5, 0x47, 0xb0, 0xaa, 0x52, 0xc7, 0x07, 0xd7, 0x04, 0x21, 0x45,
-	0x95, 0x6a, 0xd3, 0xf2, 0x23, 0x40, 0x5c, 0x08, 0x52, 0x6f, 0x91, 0x2a, 0x57, 0xbd, 0xc0, 0x21,
-	0x72, 0x9d, 0xcd, 0xd6, 0x02, 0x7b, 0xcc, 0xee, 0x24, 0x6a, 0x6f, 0xc0, 0x1d, 0x89, 0x27, 0xe0,
-	0x19, 0x2a, 0xc1, 0x3b, 0xd0, 0x63, 0xc5, 0x89, 0x13, 0x42, 0xc9, 0xa1, 0xaf, 0x81, 0xe2, 0x35,
-	0x71, 0xda, 0xfc, 0xb4, 0xa2, 0x37, 0x8f, 0xe7, 0x9b, 0xef, 0x67, 0x77, 0xb4, 0x74, 0x25, 0x91,
-	0xd0, 0xe3, 0xb1, 0x1f, 0x07, 0xdc, 0xed, 0xbc, 0xf3, 0xb1, 0xc3, 0xb9, 0x72, 0x7b, 0xeb, 0x2e,
-	0xee, 0x3b, 0x89, 0x04, 0x04, 0x56, 0xc9, 0x01, 0xce, 0x3f, 0x80, 0xd3, 0x5b, 0x37, 0x97, 0x04,
-	0x08, 0x48, 0x21, 0xee, 0xf0, 0x4b, 0xa3, 0xcd, 0x6a, 0x00, 0x2a, 0x02, 0xd5, 0xd2, 0x0d, 0x5d,
-	0x64, 0xad, 0x65, 0x5d, 0xb9, 0x91, 0x12, 0x43, 0x81, 0x48, 0x89, 0xac, 0x71, 0x7f, 0x86, 0x85,
-	0x91, 0x5a, 0x0a, 0xab, 0x7d, 0x25, 0xb4, 0xd2, 0x54, 0x62, 0x27, 0x69, 0xfb, 0xc8, 0xb7, 0x7c,
-	0xe9, 0x47, 0xca, 0xe3, 0xef, 0xbb, 0x5c, 0x21, 0x7b, 0x42, 0xcb, 0x7e, 0x17, 0xf7, 0x40, 0x86,
-	0x78, 0x60, 0x10, 0x9b, 0xd4, 0xcb, 0x0d, 0xe3, 0xe7, 0xf7, 0xb5, 0xa5, 0x4c, 0xff, 0x65, 0xbb,
-	0x2d, 0xb9, 0x52, 0xdb, 0x28, 0xc3, 0x58, 0x78, 0x39, 0x94, 0xbd, 0xa0, 0xa5, 0x24, 0x25, 0x32,
-	0x16, 0x6c, 0x52, 0xbf, 0xbe, 0x61, 0x39, 0xd3, 0xc3, 0x3a, 0x5a, 0xae, 0x71, 0xe5, 0xe8, 0xf7,
-	0x4a, 0xc1, 0xcb, 0x66, 0x9e, 0xdf, 0xfa, 0x74, 0x72, 0xb8, 0x9a, 0xb3, 0xd5, 0xaa, 0x74, 0x79,
-	0xc2, 0x9f, 0x4a, 0x20, 0x56, 0xbc, 0xf6, 0x83, 0x50, 0x7b, 0xd4, 0x7b, 0x05, 0x71, 0x8f, 0x4b,
-	0x15, 0x42, 0xbc, 0xe9, 0x07, 0x08, 0xf2, 0xb2, 0x29, 0xde, 0xd0, 0x3b, 0xc1, 0x88, 0xb2, 0xd5,
-	0x49, 0x39, 0xb3, 0x40, 0xf5, 0x59, 0x81, 0xce, 0x7a, 0xc8, 0xa2, 0xdd, 0x0e, 0xce, 0xfc, 0x9f,
-	0x08, 0x79, 0x8f, 0xde, 0x9d, 0x13, 0x24, 0x8b, 0xfb, 0x8d, 0x8c, 0x1d, 0x45, 0x53, 0x89, 0x4d,
-	0xce, 0x2f, 0x7d, 0x57, 0x8f, 0x69, 0x09, 0xa1, 0xa5, 0x38, 0x1a, 0x0b, 0x76, 0x71, 0xde, 0x5d,
-	0x69, 0x3d, 0x6f, 0x11, 0x61, 0x9b, 0x23, 0xab, 0xd2, 0x6b, 0x08, 0xad, 0x6e, 0x3c, 0x1c, 0x2c,
-	0xda, 0xc5, 0x7a, 0xd9, 0xbb, 0x8a, 0xb0, 0x33, 0x2c, 0x27, 0xa2, 0x99, 0xd4, 0x98, 0x34, 0xad,
-	0x13, 0x6d, 0x7c, 0x2c, 0xd2, 0x62, 0x53, 0x09, 0x06, 0xf4, 0xc6, 0xf8, 0x05, 0x33, 0x67, 0x8e,
-	0x8b, 0x29, 0x9b, 0x6a, 0xba, 0x17, 0xc6, 0x6b, 0x61, 0xf6, 0x99, 0xd0, 0xca, 0xf4, 0xd3, 0x66,
-	0x4f, 0xcf, 0xe5, 0x9a, 0xb1, 0x69, 0xe6, 0xb3, 0xff, 0x98, 0xcc, 0xfc, 0x48, 0x7a, 0xf3, 0xd4,
-	0x09, 0xb1, 0xf3, 0x13, 0x9d, 0x5e, 0x00, 0xf3, 0xc1, 0xc5, 0x07, 0xb4, 0xa6, 0xb9, 0xf8, 0xe1,
-	0xe4, 0x70, 0x95, 0x34, 0xde, 0x1e, 0xf5, 0x2d, 0x72, 0xdc, 0xb7, 0xc8, 0x9f, 0xbe, 0x45, 0xbe,
-	0x0c, 0xac, 0xc2, 0xf1, 0xc0, 0x2a, 0xfc, 0x1a, 0x58, 0x05, 0x5a, 0x0d, 0x61, 0x06, 0xe9, 0x16,
-	0x79, 0xfd, 0x48, 0x84, 0xb8, 0xd7, 0xdd, 0x75, 0x02, 0x88, 0xdc, 0x1c, 0xb4, 0x16, 0xc2, 0x58,
-	0xe5, 0xee, 0xe7, 0x2f, 0x0f, 0x1e, 0x24, 0x5c, 0xed, 0x96, 0xd2, 0x47, 0xe7, 0xe1, 0xdf, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x67, 0xb3, 0x3b, 0x31, 0x20, 0x05, 0x00, 0x00,
+	// 614 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0xcf, 0x6b, 0x13, 0x4f,
+	0x14, 0xcf, 0x34, 0xdf, 0xf6, 0x6b, 0x9e, 0xb6, 0xd4, 0xb5, 0xa4, 0xc9, 0x4a, 0xb7, 0x6b, 0x44,
+	0x08, 0x85, 0xee, 0xda, 0xd4, 0x16, 0x15, 0x41, 0x1a, 0xa1, 0xb7, 0x60, 0xd9, 0xd2, 0x8b, 0x1e,
+	0xc2, 0x76, 0x33, 0xd9, 0x2e, 0x76, 0xf7, 0xad, 0x3b, 0x93, 0xd0, 0xe2, 0x45, 0x44, 0x8f, 0x82,
+	0x7f, 0x81, 0x37, 0xc1, 0x63, 0x41, 0xff, 0x07, 0x7b, 0x2c, 0x9e, 0x3c, 0x89, 0x24, 0x87, 0xfe,
+	0x1b, 0x92, 0xdd, 0x31, 0x49, 0x93, 0xec, 0xb6, 0x35, 0x17, 0x6f, 0x99, 0xbc, 0xcf, 0xfb, 0xfc,
+	0xc8, 0xbc, 0x97, 0x81, 0x45, 0x3f, 0xc0, 0x26, 0xf5, 0x4c, 0xcf, 0xa2, 0x7a, 0x7d, 0xdf, 0xe4,
+	0x75, 0x4a, 0x99, 0xde, 0x5c, 0xd1, 0xf9, 0x81, 0xe6, 0x07, 0xc8, 0x51, 0xca, 0xf6, 0x00, 0xda,
+	0x1f, 0x80, 0xd6, 0x5c, 0x91, 0xe7, 0x6c, 0xb4, 0x31, 0x84, 0xe8, 0x9d, 0x4f, 0x11, 0x5a, 0xce,
+	0x5b, 0xc8, 0x5c, 0x64, 0xd5, 0xa8, 0x10, 0x1d, 0x44, 0x69, 0x3e, 0x3a, 0xe9, 0x2e, 0xb3, 0x3b,
+	0x02, 0x2e, 0xb3, 0x45, 0xe1, 0x4e, 0x8c, 0x85, 0xae, 0x5a, 0x08, 0x2b, 0x7c, 0x24, 0x90, 0xad,
+	0x30, 0x7b, 0xc7, 0xaf, 0x99, 0x9c, 0x6e, 0x99, 0x81, 0xe9, 0x32, 0x83, 0xbe, 0x6c, 0x50, 0xc6,
+	0xa5, 0x75, 0xc8, 0x98, 0x0d, 0xbe, 0x87, 0x81, 0xc3, 0x0f, 0x73, 0x44, 0x25, 0xc5, 0x4c, 0x39,
+	0xf7, 0xfd, 0xeb, 0xf2, 0x9c, 0xd0, 0xdf, 0xa8, 0xd5, 0x02, 0xca, 0xd8, 0x36, 0x0f, 0x1c, 0xcf,
+	0x36, 0x7a, 0x50, 0xe9, 0x11, 0x4c, 0xf9, 0x21, 0x51, 0x6e, 0x42, 0x25, 0xc5, 0xab, 0x25, 0x45,
+	0x1b, 0x1d, 0x56, 0x8b, 0xe4, 0xca, 0xff, 0x1d, 0xff, 0x5c, 0x4c, 0x19, 0xa2, 0xe7, 0xe1, 0xcc,
+	0x9b, 0xd3, 0xa3, 0xa5, 0x1e, 0x5b, 0x21, 0x0f, 0xf3, 0x43, 0xfe, 0x98, 0x8f, 0x1e, 0xa3, 0x85,
+	0x6f, 0x04, 0xd4, 0x6e, 0xed, 0x09, 0x7a, 0x4d, 0x1a, 0x30, 0x07, 0xbd, 0x4d, 0xd3, 0xe2, 0x18,
+	0x8c, 0x9b, 0xe2, 0x39, 0x5c, 0xb7, 0xba, 0x94, 0xd5, 0x7a, 0xc8, 0x29, 0x02, 0x15, 0xe3, 0x02,
+	0x0d, 0x7a, 0x10, 0xd1, 0x66, 0xad, 0x81, 0xef, 0x87, 0x42, 0xde, 0x86, 0x5b, 0x09, 0x41, 0x44,
+	0xdc, 0x2f, 0xa4, 0xef, 0xa7, 0xa8, 0x30, 0x7b, 0x93, 0xd2, 0xb1, 0xef, 0x6a, 0x0d, 0xa6, 0x38,
+	0x56, 0x19, 0xe5, 0xb9, 0x09, 0x35, 0x9d, 0x74, 0x57, 0x91, 0x9e, 0x31, 0xc9, 0x71, 0x9b, 0x72,
+	0x29, 0x0f, 0x57, 0x38, 0x56, 0x1b, 0x5e, 0xa7, 0x31, 0xad, 0xa6, 0x8b, 0x19, 0xe3, 0x7f, 0x8e,
+	0x3b, 0x9d, 0xe3, 0x50, 0x34, 0x19, 0x72, 0xc3, 0xa6, 0x45, 0xa2, 0x4f, 0x04, 0xe4, 0x0a, 0xb3,
+	0x37, 0x6a, 0xb5, 0xa7, 0x81, 0x69, 0xed, 0x53, 0x61, 0x73, 0xdc, 0x50, 0x8f, 0x61, 0x06, 0x43,
+	0xbe, 0xaa, 0x19, 0x41, 0xc2, 0x7b, 0x4b, 0x6a, 0x9e, 0xc6, 0x7e, 0xfd, 0xa1, 0x0c, 0x0b, 0x70,
+	0x73, 0xa4, 0x4d, 0x11, 0xe3, 0x33, 0x81, 0x85, 0x0a, 0xb3, 0x0d, 0xea, 0x62, 0x93, 0xfe, 0xdb,
+	0x49, 0x54, 0x50, 0xe2, 0x9c, 0x46, 0x61, 0x4a, 0xef, 0x26, 0x21, 0x5d, 0x61, 0xb6, 0x84, 0x70,
+	0xad, 0x7f, 0xe9, 0x24, 0x2d, 0x61, 0x32, 0x46, 0xfc, 0x7b, 0xc8, 0xfa, 0x85, 0xf1, 0x91, 0xb0,
+	0xf4, 0x9e, 0x40, 0x76, 0xf4, 0x06, 0x48, 0xf7, 0xcf, 0xe5, 0x8a, 0xd9, 0x7e, 0xf9, 0xc1, 0x5f,
+	0x74, 0x0a, 0x3f, 0x01, 0x4c, 0x9f, 0x99, 0x5a, 0xe9, 0xfc, 0x44, 0x67, 0x97, 0x52, 0xbe, 0x7b,
+	0xf1, 0x06, 0xa1, 0xf9, 0x0a, 0x66, 0x07, 0xa7, 0x4c, 0x2a, 0x25, 0xb0, 0xc4, 0x6c, 0x8e, 0xbc,
+	0x7a, 0xa9, 0x1e, 0x21, 0xfe, 0x96, 0xc0, 0x8d, 0x11, 0x93, 0x21, 0xad, 0x25, 0x90, 0xc5, 0xcf,
+	0xbc, 0xbc, 0x7e, 0xd9, 0xb6, 0xc8, 0x86, 0x3c, 0xf9, 0xfa, 0xf4, 0x68, 0x89, 0x94, 0x5f, 0x1c,
+	0xb7, 0x14, 0x72, 0xd2, 0x52, 0xc8, 0xaf, 0x96, 0x42, 0x3e, 0xb4, 0x95, 0xd4, 0x49, 0x5b, 0x49,
+	0xfd, 0x68, 0x2b, 0x29, 0xc8, 0x3b, 0x18, 0x43, 0xbd, 0x45, 0x9e, 0xdd, 0xb3, 0x1d, 0xbe, 0xd7,
+	0xd8, 0xd5, 0x2c, 0x74, 0xf5, 0x1e, 0x68, 0xd9, 0xc1, 0xbe, 0x93, 0x7e, 0xd0, 0x7b, 0x11, 0xf9,
+	0xa1, 0x4f, 0xd9, 0xee, 0x54, 0xf8, 0x18, 0xae, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x8e, 0xc2,
+	0x48, 0x0a, 0xb8, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -381,6 +576,10 @@ type MsgClient interface {
 	UpdateConversionFactor(ctx context.Context, in *MsgUpdateConversionFactorRequest, opts ...grpc.CallOption) (*MsgUpdateConversionFactorResponse, error)
 	// UpdateMsgFees is a governance endpoint for updating fees for specific msgs.
 	UpdateMsgFees(ctx context.Context, in *MsgUpdateMsgFeesRequest, opts ...grpc.CallOption) (*MsgUpdateMsgFeesResponse, error)
+	// AddOracleAddress is a governance endpoint for adding an oracle address that can update the conversion factor.
+	AddOracleAddress(ctx context.Context, in *MsgAddOracleAddressRequest, opts ...grpc.CallOption) (*MsgAddOracleAddressResponse, error)
+	// RemoveOracleAddress is a governance endpoint for removing an oracle address.
+	RemoveOracleAddress(ctx context.Context, in *MsgRemoveOracleAddressRequest, opts ...grpc.CallOption) (*MsgRemoveOracleAddressResponse, error)
 }
 
 type msgClient struct {
@@ -418,6 +617,24 @@ func (c *msgClient) UpdateMsgFees(ctx context.Context, in *MsgUpdateMsgFeesReque
 	return out, nil
 }
 
+func (c *msgClient) AddOracleAddress(ctx context.Context, in *MsgAddOracleAddressRequest, opts ...grpc.CallOption) (*MsgAddOracleAddressResponse, error) {
+	out := new(MsgAddOracleAddressResponse)
+	err := c.cc.Invoke(ctx, "/provenance.flatfees.v1.Msg/AddOracleAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RemoveOracleAddress(ctx context.Context, in *MsgRemoveOracleAddressRequest, opts ...grpc.CallOption) (*MsgRemoveOracleAddressResponse, error) {
+	out := new(MsgRemoveOracleAddressResponse)
+	err := c.cc.Invoke(ctx, "/provenance.flatfees.v1.Msg/RemoveOracleAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams is a governance endpoint for updating the x/flatfees params.
@@ -426,6 +643,10 @@ type MsgServer interface {
 	UpdateConversionFactor(context.Context, *MsgUpdateConversionFactorRequest) (*MsgUpdateConversionFactorResponse, error)
 	// UpdateMsgFees is a governance endpoint for updating fees for specific msgs.
 	UpdateMsgFees(context.Context, *MsgUpdateMsgFeesRequest) (*MsgUpdateMsgFeesResponse, error)
+	// AddOracleAddress is a governance endpoint for adding an oracle address that can update the conversion factor.
+	AddOracleAddress(context.Context, *MsgAddOracleAddressRequest) (*MsgAddOracleAddressResponse, error)
+	// RemoveOracleAddress is a governance endpoint for removing an oracle address.
+	RemoveOracleAddress(context.Context, *MsgRemoveOracleAddressRequest) (*MsgRemoveOracleAddressResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -440,6 +661,12 @@ func (*UnimplementedMsgServer) UpdateConversionFactor(ctx context.Context, req *
 }
 func (*UnimplementedMsgServer) UpdateMsgFees(ctx context.Context, req *MsgUpdateMsgFeesRequest) (*MsgUpdateMsgFeesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMsgFees not implemented")
+}
+func (*UnimplementedMsgServer) AddOracleAddress(ctx context.Context, req *MsgAddOracleAddressRequest) (*MsgAddOracleAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddOracleAddress not implemented")
+}
+func (*UnimplementedMsgServer) RemoveOracleAddress(ctx context.Context, req *MsgRemoveOracleAddressRequest) (*MsgRemoveOracleAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveOracleAddress not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -500,6 +727,42 @@ func _Msg_UpdateMsgFees_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_AddOracleAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddOracleAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AddOracleAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.flatfees.v1.Msg/AddOracleAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AddOracleAddress(ctx, req.(*MsgAddOracleAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RemoveOracleAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveOracleAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveOracleAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.flatfees.v1.Msg/RemoveOracleAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveOracleAddress(ctx, req.(*MsgRemoveOracleAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.flatfees.v1.Msg",
@@ -516,6 +779,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMsgFees",
 			Handler:    _Msg_UpdateMsgFees_Handler,
+		},
+		{
+			MethodName: "AddOracleAddress",
+			Handler:    _Msg_AddOracleAddress_Handler,
+		},
+		{
+			MethodName: "RemoveOracleAddress",
+			Handler:    _Msg_RemoveOracleAddress_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -724,6 +995,126 @@ func (m *MsgUpdateMsgFeesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgAddOracleAddressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddOracleAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddOracleAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.OracleAddress) > 0 {
+		i -= len(m.OracleAddress)
+		copy(dAtA[i:], m.OracleAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.OracleAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddOracleAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddOracleAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddOracleAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveOracleAddressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveOracleAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveOracleAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.OracleAddress) > 0 {
+		i -= len(m.OracleAddress)
+		copy(dAtA[i:], m.OracleAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.OracleAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveOracleAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveOracleAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveOracleAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -809,6 +1200,58 @@ func (m *MsgUpdateMsgFeesRequest) Size() (n int) {
 }
 
 func (m *MsgUpdateMsgFeesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgAddOracleAddressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.OracleAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgAddOracleAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveOracleAddressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.OracleAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRemoveOracleAddressResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1328,6 +1771,334 @@ func (m *MsgUpdateMsgFeesResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateMsgFeesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddOracleAddressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddOracleAddressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddOracleAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OracleAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OracleAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddOracleAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddOracleAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddOracleAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveOracleAddressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveOracleAddressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveOracleAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OracleAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OracleAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveOracleAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveOracleAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveOracleAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
