@@ -15,6 +15,7 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	vaulttypes "github.com/provlabs/vault/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -412,6 +413,7 @@ func TestAppImportExport(t *testing.T) {
 		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 		wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix},
+		vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix},
 	}
 
 	storeKeys := app.GetStoreKeys()
