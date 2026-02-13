@@ -329,9 +329,9 @@ get-valid-sections:
 
 .PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs get-valid-sections
 
-# Only support go version 1.23
+# Only support go version 1.25
 SUPPORTED_GO_MAJOR_VERSION = 1
-SUPPORTED_GO_MINOR_VERSION = 23
+SUPPORTED_GO_MINOR_VERSION = 25
 GO_MAJOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 

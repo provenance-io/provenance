@@ -1,5 +1,5 @@
 ## Build provenance for ARM
-FROM golang:1.23-bullseye AS build
+FROM golang:1.25-bookworm AS build
 WORKDIR /
 ARG VERSION
 RUN apt-get update && apt-get upgrade -y && apt-get install -y git

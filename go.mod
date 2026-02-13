@@ -1,8 +1,6 @@
 module github.com/provenance-io/provenance
 
-go 1.23.2
-
-toolchain go1.23.5
+go 1.25
 
 require (
 	cosmossdk.io/api v0.9.2
@@ -37,7 +35,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-metrics v0.5.4
-	github.com/provlabs/vault v1.0.14
+	github.com/provlabs/vault v1.0.15
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
