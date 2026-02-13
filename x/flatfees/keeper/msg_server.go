@@ -62,10 +62,7 @@ func (m msgServer) UpdateConversionFactor(goCtx context.Context, req *types.MsgU
 	isOracle := m.IsOracleAddress(ctx, req.Authority)
 
 	if !isGov && !isOracle {
-		return nil, govtypes.ErrInvalidSigner.Wrapf(
-			"expected governance authority or an oracle address, got %s",
-			req.Authority,
-		)
+		return nil, govtypes.ErrInvalidSigner.Wrapf("expected governance authority or an oracle address, got %q", req.Authority)
 	}
 
 	err := m.SetConversionFactor(ctx, req.ConversionFactor)

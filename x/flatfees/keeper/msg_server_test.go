@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -352,12 +353,27 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 }
 
 func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
+	govAddr := authority
+	oracle1 := sdk.AccAddress("oracle1_____________").String()
+	oracle2 := sdk.AccAddress("oracle2_____________").String()
+	nonOracle := sdk.AccAddress("non_oracle__________").String()
+
+	cf1 := types.ConversionFactor{
+		DefinitionAmount: sdk.NewInt64Coin("musd", 1),
+		ConvertedAmount:  sdk.NewInt64Coin("nhash", 2000),
+	}
+	cf2 := types.ConversionFactor{
+		DefinitionAmount: sdk.NewInt64Coin("musd", 2),
+		ConvertedAmount:  sdk.NewInt64Coin("nhash", 4000),
+	}
+
 	tests := []struct {
-		name    string
-		kpr     *MockKeeper
-		req     *types.MsgUpdateConversionFactorRequest
-		expErr  string
-		expCall bool // Automatically true if expErr is empty.
+		name         string
+		kpr          *MockKeeper
+		req          *types.MsgUpdateConversionFactorRequest
+		isOracleAddr bool
+		expErr       string
+		expCall      bool // Automatically true if expErr is empty.
 	}{
 		{
 			name: "incorrect authority",
@@ -369,7 +385,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 					ConvertedAmount:  sdk.NewInt64Coin("orange", 16),
 				},
 			},
-			expErr: "expected governance authority or an oracle address, got whatever: expected gov account as only signer for proposal message",
+			expErr: `expected governance authority or an oracle address, got "whatever": expected gov account as only signer for proposal message`,
 		},
 		{
 			name: "error setting conversion factor",
@@ -403,6 +419,74 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			},
 			expCall: true,
 		},
+		// Oracle dual-authorization tests.
+		{
+			name: "governance can update",
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        govAddr,
+				ConversionFactor: cf1,
+			},
+		},
+		{
+			name:         "oracle1 can update",
+			kpr:          NewMockKeeper().WithValidateAuthorityErrs("not gov"),
+			isOracleAddr: true,
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        oracle1,
+				ConversionFactor: cf1,
+			},
+		},
+		{
+			name:         "oracle2 can also update",
+			kpr:          NewMockKeeper().WithValidateAuthorityErrs("not gov"),
+			isOracleAddr: true,
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        oracle2,
+				ConversionFactor: cf2,
+			},
+		},
+		{
+			name: "non-oracle cannot update",
+			kpr:  NewMockKeeper().WithValidateAuthorityErrs("not gov"),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        nonOracle,
+				ConversionFactor: cf1,
+			},
+			expErr: fmt.Sprintf(
+				"expected governance authority or an oracle address, got %q: expected gov account as only signer for proposal message",
+				nonOracle,
+			),
+		},
+		{
+			name: "governance with error setting conversion factor",
+			kpr:  NewMockKeeper().WithSetConversionFactorErrs("cannot set conversion factor"),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        govAddr,
+				ConversionFactor: cf1,
+			},
+			expErr:  "rpc error: code = InvalidArgument desc = cannot set conversion factor",
+			expCall: true,
+		},
+		{
+			name:         "oracle with error setting conversion factor",
+			kpr:          NewMockKeeper().WithValidateAuthorityErrs("not gov").WithSetConversionFactorErrs("failed to set"),
+			isOracleAddr: true,
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        oracle1,
+				ConversionFactor: cf1,
+			},
+			expErr:  "rpc error: code = InvalidArgument desc = failed to set",
+			expCall: true,
+		},
+		{
+			name: "empty authority fails",
+			kpr:  NewMockKeeper().WithValidateAuthorityErrs("empty authority"),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority:        "",
+				ConversionFactor: cf1,
+			},
+			expErr: `expected governance authority or an oracle address, got "": expected gov account as only signer for proposal message`,
+		},
 	}
 
 	for _, tc := range tests {
@@ -411,7 +495,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 				tc.kpr = NewMockKeeper()
 			}
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
-			tc.kpr = tc.kpr.WithExpIsOracleAddress(tc.req.Authority).WithIsOracleAddressResults(false)
+			tc.kpr = tc.kpr.WithExpIsOracleAddress(tc.req.Authority).WithIsOracleAddressResults(tc.isOracleAddr)
 
 			var expResp, actResp *types.MsgUpdateConversionFactorResponse
 			if len(tc.expErr) == 0 {
@@ -432,6 +516,133 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			s.Require().NotPanics(testFunc, "UpdateConversionFactor()")
 			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UpdateConversionFactor() error")
 			s.Assert().Equal(expResp, actResp, "UpdateConversionFactor() response")
+
+			tc.kpr.AssertCalls(s.T())
+		})
+	}
+}
+
+// TestUpdateConversionFactor_MultipleUpdates tests multiple sequential updates
+func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
+	govAddr := authority
+	oracle1 := sdk.AccAddress("oracle1_____________").String()
+
+	cf1 := types.ConversionFactor{
+		DefinitionAmount: sdk.NewInt64Coin("musd", 1),
+		ConvertedAmount:  sdk.NewInt64Coin("nhash", 2000),
+	}
+	cf2 := types.ConversionFactor{
+		DefinitionAmount: sdk.NewInt64Coin("musd", 2),
+		ConvertedAmount:  sdk.NewInt64Coin("nhash", 4000),
+	}
+	cf3 := types.ConversionFactor{
+		DefinitionAmount: sdk.NewInt64Coin("musd", 3),
+		ConvertedAmount:  sdk.NewInt64Coin("nhash", 6000),
+	}
+
+	// Named request struct for readability and expected error
+	type testReq struct {
+		authority string
+		cf        types.ConversionFactor
+		isOracle  bool
+		expErr    string
+	}
+
+	tests := []struct {
+		name     string
+		kpr      *MockKeeper
+		requests []testReq
+	}{
+		{
+			name: "governance updates multiple times",
+			kpr: NewMockKeeper().
+				WithIsOracleAddressResults(false, false, false).
+				WithExpIsOracleAddress(govAddr, govAddr, govAddr).
+				WithExpSetConversionFactor(cf1, cf2, cf3),
+			requests: []testReq{
+				{authority: govAddr, cf: cf1, isOracle: false, expErr: ""},
+				{authority: govAddr, cf: cf2, isOracle: false, expErr: ""},
+				{authority: govAddr, cf: cf3, isOracle: false, expErr: ""},
+			},
+		},
+		{
+			name: "oracle updates multiple times",
+			kpr: NewMockKeeper().
+				WithValidateAuthorityErrs("not gov", "not gov", "not gov").
+				WithIsOracleAddressResults(true, true, true).
+				WithExpIsOracleAddress(oracle1, oracle1, oracle1).
+				WithExpSetConversionFactor(cf1, cf2, cf3),
+			requests: []testReq{
+				{authority: oracle1, cf: cf1, isOracle: true, expErr: ""},
+				{authority: oracle1, cf: cf2, isOracle: true, expErr: ""},
+				{authority: oracle1, cf: cf3, isOracle: true, expErr: ""},
+			},
+		},
+		{
+			name: "mixed governance and oracle updates",
+			kpr: NewMockKeeper().
+				WithValidateAuthorityErrs("", "not gov", "").
+				WithIsOracleAddressResults(false, true, false).
+				WithExpIsOracleAddress(govAddr, oracle1, govAddr).
+				WithExpSetConversionFactor(cf1, cf2, cf3),
+			requests: []testReq{
+				{authority: govAddr, cf: cf1, isOracle: false, expErr: ""},
+				{authority: oracle1, cf: cf2, isOracle: true, expErr: ""},
+				{authority: govAddr, cf: cf3, isOracle: false, expErr: ""},
+			},
+		},
+		{
+			name: "unauthorized update attempt",
+			kpr: NewMockKeeper().
+				WithValidateAuthorityErrs("not gov").
+				WithIsOracleAddressResults(false).      // still returns false
+				WithExpIsOracleAddress("unauthorized"), // add this to satisfy the mock
+			requests: []testReq{
+				{
+					authority: "unauthorized",
+					cf:        cf1,
+					isOracle:  false,
+					expErr:    "expected governance authority or an oracle address",
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.kpr == nil {
+				tc.kpr = NewMockKeeper()
+			}
+
+			msgServer := keeper.NewMsgServer(tc.kpr)
+
+			for i, reqData := range tc.requests {
+				tc.kpr = tc.kpr.WithExpValidateAuthority(reqData.authority)
+
+				req := &types.MsgUpdateConversionFactorRequest{
+					Authority:        reqData.authority,
+					ConversionFactor: reqData.cf,
+				}
+
+				var actResp *types.MsgUpdateConversionFactorResponse
+				var err error
+				testFunc := func() {
+					actResp, err = msgServer.UpdateConversionFactor(s.ctx, req)
+				}
+
+				s.Require().NotPanics(testFunc, "UpdateConversionFactor [%d] should not panic", i)
+
+				// Substring-based error assertion
+				if reqData.expErr != "" {
+					s.Require().Error(err)
+					s.Require().Contains(err.Error(), reqData.expErr,
+						"UpdateConversionFactor [%d] error", i)
+				} else {
+					s.Require().NoError(err)
+					expResp := &types.MsgUpdateConversionFactorResponse{}
+					s.Assert().Equal(expResp, actResp, "UpdateConversionFactor [%d] response", i)
+				}
+			}
 
 			tc.kpr.AssertCalls(s.T())
 		})
@@ -682,146 +893,6 @@ func (s *MsgServerTestSuite) TestUpdateMsgFees() {
 	}
 }
 
-// TestUpdateConversionFactor_WithOracles tests the dual authorization (governance OR oracle)
-func (s *MsgServerTestSuite) TestUpdateConversionFactor_WithOracles() {
-	govAddr := authority
-	oracle1 := sdk.AccAddress("oracle1_____________").String()
-	oracle2 := sdk.AccAddress("oracle2_____________").String()
-	nonOracle := sdk.AccAddress("non_oracle__________").String()
-
-	cf1 := types.ConversionFactor{
-		DefinitionAmount: sdk.NewInt64Coin("musd", 1),
-		ConvertedAmount:  sdk.NewInt64Coin("nhash", 2000),
-	}
-	cf2 := types.ConversionFactor{
-		DefinitionAmount: sdk.NewInt64Coin("musd", 2),
-		ConvertedAmount:  sdk.NewInt64Coin("nhash", 4000),
-	}
-
-	tests := []struct {
-		name   string
-		kpr    *MockKeeper
-		req    *types.MsgUpdateConversionFactorRequest
-		expErr string
-	}{
-		{
-			name: "governance can update",
-			kpr: NewMockKeeper().
-				WithIsOracleAddressResults(false).
-				WithExpIsOracleAddress(govAddr).
-				WithExpSetConversionFactor(cf1),
-			req: &types.MsgUpdateConversionFactorRequest{
-				Authority:        govAddr,
-				ConversionFactor: cf1,
-			},
-			expErr: "",
-		},
-		{
-			name: "oracle1 can update",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("not gov").
-				WithIsOracleAddressResults(true).
-				WithExpIsOracleAddress(oracle1).
-				WithExpSetConversionFactor(cf1),
-			req: &types.MsgUpdateConversionFactorRequest{
-				Authority:        oracle1,
-				ConversionFactor: cf1,
-			},
-			expErr: "",
-		},
-		{
-			name: "oracle2 can also update",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("not gov").
-				WithIsOracleAddressResults(true).
-				WithExpIsOracleAddress(oracle2).
-				WithExpSetConversionFactor(cf2),
-			req: &types.MsgUpdateConversionFactorRequest{
-				Authority:        oracle2,
-				ConversionFactor: cf2,
-			},
-			expErr: "",
-		},
-		{
-			name: "non-oracle cannot update",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("not gov").
-				WithIsOracleAddressResults(false).
-				WithExpIsOracleAddress(nonOracle),
-			req: &types.MsgUpdateConversionFactorRequest{
-				Authority:        nonOracle,
-				ConversionFactor: cf1,
-			},
-			expErr: "expected governance authority or an oracle address, got " + nonOracle + ": expected gov account as only signer for proposal message",
-		},
-		{
-			name: "governance with error setting conversion factor",
-			kpr: NewMockKeeper().
-				WithIsOracleAddressResults(false).
-				WithExpIsOracleAddress(govAddr).
-				WithSetConversionFactorErrs("cannot set conversion factor").
-				WithExpSetConversionFactor(cf1),
-			req: &types.MsgUpdateConversionFactorRequest{
-				Authority:        govAddr,
-				ConversionFactor: cf1,
-			},
-			expErr: "rpc error: code = InvalidArgument desc = cannot set conversion factor",
-		},
-		{
-			name: "oracle with error setting conversion factor",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("not gov").
-				WithIsOracleAddressResults(true).
-				WithExpIsOracleAddress(oracle1).
-				WithSetConversionFactorErrs("failed to set").
-				WithExpSetConversionFactor(cf1),
-			req: &types.MsgUpdateConversionFactorRequest{
-				Authority:        oracle1,
-				ConversionFactor: cf1,
-			},
-			expErr: "rpc error: code = InvalidArgument desc = failed to set",
-		},
-		{
-			name: "empty authority fails",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("empty authority").
-				WithIsOracleAddressResults(false).
-				WithExpIsOracleAddress(""),
-			req: &types.MsgUpdateConversionFactorRequest{
-				Authority:        "",
-				ConversionFactor: cf1,
-			},
-			expErr: "expected governance authority or an oracle address, got : expected gov account as only signer for proposal message",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			if tc.kpr == nil {
-				tc.kpr = NewMockKeeper()
-			}
-			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
-
-			var expResp, actResp *types.MsgUpdateConversionFactorResponse
-			if len(tc.expErr) == 0 {
-				expResp = &types.MsgUpdateConversionFactorResponse{}
-			}
-
-			msgServer := keeper.NewMsgServer(tc.kpr)
-
-			var err error
-			testFunc := func() {
-				actResp, err = msgServer.UpdateConversionFactor(s.ctx, tc.req)
-			}
-			s.Require().NotPanics(testFunc, "UpdateConversionFactor should not panic")
-			assertions.AssertErrorValue(s.T(), err, tc.expErr, "UpdateConversionFactor error")
-			s.Assert().Equal(expResp, actResp, "UpdateConversionFactor response")
-
-			tc.kpr.AssertCalls(s.T())
-		})
-	}
-}
-
 // TestAddOracleAddress tests the AddOracleAddress message handler
 func (s *MsgServerTestSuite) TestAddOracleAddress() {
 	oracle1 := sdk.AccAddress("oracle1_____________").String()
@@ -1026,133 +1097,6 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 			s.Require().NotPanics(testFunc, "RemoveOracleAddress should not panic")
 			assertions.AssertErrorValue(s.T(), err, tc.expErr, "RemoveOracleAddress error")
 			s.Assert().Equal(expResp, actResp, "RemoveOracleAddress response")
-
-			tc.kpr.AssertCalls(s.T())
-		})
-	}
-}
-
-// TestUpdateConversionFactor_MultipleUpdates tests multiple sequential updates
-func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
-	govAddr := authority
-	oracle1 := sdk.AccAddress("oracle1_____________").String()
-
-	cf1 := types.ConversionFactor{
-		DefinitionAmount: sdk.NewInt64Coin("musd", 1),
-		ConvertedAmount:  sdk.NewInt64Coin("nhash", 2000),
-	}
-	cf2 := types.ConversionFactor{
-		DefinitionAmount: sdk.NewInt64Coin("musd", 2),
-		ConvertedAmount:  sdk.NewInt64Coin("nhash", 4000),
-	}
-	cf3 := types.ConversionFactor{
-		DefinitionAmount: sdk.NewInt64Coin("musd", 3),
-		ConvertedAmount:  sdk.NewInt64Coin("nhash", 6000),
-	}
-
-	// Named request struct for readability and expected error
-	type testReq struct {
-		authority string
-		cf        types.ConversionFactor
-		isOracle  bool
-		expErr    string
-	}
-
-	tests := []struct {
-		name     string
-		kpr      *MockKeeper
-		requests []testReq
-	}{
-		{
-			name: "governance updates multiple times",
-			kpr: NewMockKeeper().
-				WithIsOracleAddressResults(false, false, false).
-				WithExpIsOracleAddress(govAddr, govAddr, govAddr).
-				WithExpSetConversionFactor(cf1, cf2, cf3),
-			requests: []testReq{
-				{authority: govAddr, cf: cf1, isOracle: false, expErr: ""},
-				{authority: govAddr, cf: cf2, isOracle: false, expErr: ""},
-				{authority: govAddr, cf: cf3, isOracle: false, expErr: ""},
-			},
-		},
-		{
-			name: "oracle updates multiple times",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("not gov", "not gov", "not gov").
-				WithIsOracleAddressResults(true, true, true).
-				WithExpIsOracleAddress(oracle1, oracle1, oracle1).
-				WithExpSetConversionFactor(cf1, cf2, cf3),
-			requests: []testReq{
-				{authority: oracle1, cf: cf1, isOracle: true, expErr: ""},
-				{authority: oracle1, cf: cf2, isOracle: true, expErr: ""},
-				{authority: oracle1, cf: cf3, isOracle: true, expErr: ""},
-			},
-		},
-		{
-			name: "mixed governance and oracle updates",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("", "not gov", "").
-				WithIsOracleAddressResults(false, true, false).
-				WithExpIsOracleAddress(govAddr, oracle1, govAddr).
-				WithExpSetConversionFactor(cf1, cf2, cf3),
-			requests: []testReq{
-				{authority: govAddr, cf: cf1, isOracle: false, expErr: ""},
-				{authority: oracle1, cf: cf2, isOracle: true, expErr: ""},
-				{authority: govAddr, cf: cf3, isOracle: false, expErr: ""},
-			},
-		},
-		{
-			name: "unauthorized update attempt",
-			kpr: NewMockKeeper().
-				WithValidateAuthorityErrs("not gov").
-				WithIsOracleAddressResults(false).      // still returns false
-				WithExpIsOracleAddress("unauthorized"), // add this to satisfy the mock
-			requests: []testReq{
-				{
-					authority: "unauthorized",
-					cf:        cf1,
-					isOracle:  false,
-					expErr:    "expected governance authority or an oracle address",
-				},
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			if tc.kpr == nil {
-				tc.kpr = NewMockKeeper()
-			}
-
-			msgServer := keeper.NewMsgServer(tc.kpr)
-
-			for i, reqData := range tc.requests {
-				tc.kpr = tc.kpr.WithExpValidateAuthority(reqData.authority)
-
-				req := &types.MsgUpdateConversionFactorRequest{
-					Authority:        reqData.authority,
-					ConversionFactor: reqData.cf,
-				}
-
-				var actResp *types.MsgUpdateConversionFactorResponse
-				var err error
-				testFunc := func() {
-					actResp, err = msgServer.UpdateConversionFactor(s.ctx, req)
-				}
-
-				s.Require().NotPanics(testFunc, "UpdateConversionFactor [%d] should not panic", i)
-
-				// Substring-based error assertion
-				if reqData.expErr != "" {
-					s.Require().Error(err)
-					s.Require().Contains(err.Error(), reqData.expErr,
-						"UpdateConversionFactor [%d] error", i)
-				} else {
-					s.Require().NoError(err)
-					expResp := &types.MsgUpdateConversionFactorResponse{}
-					s.Assert().Equal(expResp, actResp, "UpdateConversionFactor [%d] response", i)
-				}
-			}
 
 			tc.kpr.AssertCalls(s.T())
 		})
