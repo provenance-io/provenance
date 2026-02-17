@@ -33,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -57,6 +58,7 @@ func init() {
 // provAppStateFn wraps the simtypes.AppStateFn and sets the ICA and ICQ GenesisState if isn't yet defined in the appState.
 func provAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+		pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
 		appState = appStateWithICA(appState, cdc)
 		appState = appStateWithICQ(appState, cdc)
@@ -244,7 +246,7 @@ func TestFullAppSimulation(t *testing.T) {
 		app.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
@@ -289,7 +291,7 @@ func TestSimple(t *testing.T) {
 		app.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
@@ -347,7 +349,7 @@ func TestAppImportExport(t *testing.T) {
 		app.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
@@ -478,7 +480,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		app.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
@@ -529,7 +531,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		newApp.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.BuildSimulationOperations(newApp, newApp.AppCodec(), config, app.txConfig),
+		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
@@ -575,6 +577,8 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
+
 	for i, seed := range seeds {
 		config.Seed = seed
 		printConfig(config)
@@ -610,7 +614,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.BaseApp,
 				provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+				simtestutil.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),
 				config,
 				app.AppCodec(),

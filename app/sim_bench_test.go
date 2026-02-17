@@ -48,7 +48,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		app.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
@@ -93,7 +93,7 @@ func BenchmarkInvariants(b *testing.B) {
 		app.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
