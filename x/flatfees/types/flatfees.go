@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -29,10 +30,9 @@ func DefaultParams() Params {
 			DefinitionAmount: sdk.NewInt64Coin(DefaultFeeDefinitionDenom, 1),
 			ConvertedAmount:  sdk.NewInt64Coin(pioconfig.GetProvConfig().FeeDenom, 1),
 		},
+		OracleAddresses: nil,
 	}
 }
-
-// Validate checks that the Params fields are valid.
 func (p Params) Validate() error {
 	if err := p.DefaultCost.Validate(); err != nil {
 		return fmt.Errorf("invalid default cost %q: %w", p.DefaultCost, err)
@@ -44,7 +44,38 @@ func (p Params) Validate() error {
 		return fmt.Errorf("default cost denom %q does not equal conversion factor base amount denom %q",
 			p.DefaultCost.Denom, p.ConversionFactor.DefinitionAmount.Denom)
 	}
+	if err := validateOracleAddresses(p.OracleAddresses); err != nil {
+		return err
+	}
 	return nil
+}
+
+// validateOracleAddresses validates the oracle addresses list
+func validateOracleAddresses(addresses []string) error {
+	if len(addresses) == 0 {
+		return nil
+	}
+
+	var allErrors []error
+	seen := make(map[string]int)
+
+	for _, addr := range addresses {
+		if seen[addr] > 0 {
+			allErrors = append(allErrors, fmt.Errorf("duplicate oracle address: %q", addr))
+			continue
+		}
+		seen[addr]++
+
+		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+			allErrors = append(allErrors, fmt.Errorf("invalid oracle address %q: %w", addr, err))
+		}
+	}
+	return errors.Join(allErrors...)
+}
+
+// IsOracleAddress checks if the given address is in the oracle list
+func (p Params) IsOracleAddress(address string) bool {
+	return slices.Contains(p.OracleAddresses, address)
 }
 
 // DefaultCostCoins returns the default cost wrapped in a Coins.
