@@ -117,9 +117,6 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterInvariants does nothing, there are no invariants to enforce.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // InitGenesis performs genesis initialization for the x/flatfees module. It returns no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState

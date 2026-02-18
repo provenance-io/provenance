@@ -136,7 +136,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterInvariants ensures the total supply in bankKeeper matches amount declared as total in marker configuration
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) { //nolint:staticcheck // We still want to use invariants.
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
 }
 

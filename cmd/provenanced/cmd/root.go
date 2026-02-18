@@ -196,7 +196,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
-	crisis.AddModuleInitFlags(startCmd)
+	crisis.AddModuleInitFlags(startCmd) //nolint:staticcheck // We still want to use invariants.
 }
 
 func queryCommand() *cobra.Command {

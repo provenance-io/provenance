@@ -406,7 +406,7 @@ func (s *SimTestSuite) TestSendGovMsg() {
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    "/",
 			expOpMsgComment: "wrapping MsgSanction as Any",
-			expInErr:        []string{"Expecting non nil value to create a new Any", "failed packing protobuf message to Any"},
+			expInErr:        []string{"expecting non nil value to create a new Any", "failed packing protobuf message to Any"},
 		},
 		{
 			name: "gen and deliver returns error",
