@@ -145,6 +145,7 @@ func (k *MockKeeper) WithExpSetConversionFactor(conversionFactors ...types.Conve
 	k.SetConversionFactorExp = append(k.SetConversionFactorExp, conversionFactors...)
 	return k
 }
+
 func (k *MockKeeper) WithIsOracleAddressResults(results ...bool) *MockKeeper {
 	k.IsOracleAddressResp = append(k.IsOracleAddressResp, results...)
 	return k
