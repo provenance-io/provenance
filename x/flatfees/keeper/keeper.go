@@ -268,3 +268,53 @@ func (k Keeper) SetConversionFactor(ctx sdk.Context, conversionFactor types.Conv
 	}
 	return k.SetParams(ctx, params)
 }
+
+// IsOracleAddress checks if the given address is in the oracle list
+func (k Keeper) IsOracleAddress(ctx sdk.Context, address string) bool {
+	params := k.GetParams(ctx)
+	return params.IsOracleAddress(address)
+}
+
+// AddOracleAddress adds an oracle address to the params
+func (k Keeper) AddOracleAddress(ctx sdk.Context, address string) error {
+	if _, err := sdk.AccAddressFromBech32(address); err != nil {
+		return fmt.Errorf("%w: invalid address format: %w", types.ErrInvalidOracleAddr, err)
+	}
+
+	params := k.GetParams(ctx)
+
+	if params.IsOracleAddress(address) {
+		return fmt.Errorf("%w: address: %s", types.ErrOracleAlreadyExists, address)
+	}
+
+	if params.OracleAddresses == nil {
+		params.OracleAddresses = []string{}
+	}
+
+	params.OracleAddresses = append(params.OracleAddresses, address)
+
+	return k.SetParams(ctx, params)
+}
+
+// RemoveOracleAddress removes an oracle address from the params
+func (k Keeper) RemoveOracleAddress(ctx sdk.Context, address string) error {
+	params := k.GetParams(ctx)
+
+	newOracles := make([]string, 0, len(params.OracleAddresses))
+	found := false
+	for _, oracle := range params.OracleAddresses {
+		if oracle == address {
+			found = true
+			continue
+		}
+		newOracles = append(newOracles, oracle)
+	}
+
+	if !found {
+		return fmt.Errorf("%w: address: %s", types.ErrOracleNotFound, address)
+	}
+
+	params.OracleAddresses = newOracles
+
+	return k.SetParams(ctx, params)
+}
