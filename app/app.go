@@ -117,19 +117,19 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
-	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
-	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ica "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
+	icahost "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
+	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -229,7 +229,7 @@ var (
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/wasm expects WasmConfig
 type WasmWrapper struct {
-	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+	Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
 }
 
 // SdkCoinDenomRegex returns a new sdk base denom regex string
@@ -297,11 +297,9 @@ type App struct {
 	ContractKeeper  *wasmkeeper.PermissionedKeeper
 
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
-	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
-	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper    capabilitykeeper.ScopedKeeper
+	ScopedICQKeeper    capabilitykeeper.ScopedKeeper
+	ScopedOracleKeeper capabilitykeeper.ScopedKeeper
 
 	VaultKeeper *vaultkeeper.Keeper
 
@@ -450,9 +448,6 @@ func New(
 
 	// grant capabilities for the ibc and ibc-transfer modules
 	app.ScopedIBCKeeper = app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
-	app.ScopedICAHostKeeper = app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	app.ScopedICQKeeper = app.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	scopedOracleKeeper := app.CapabilityKeeper.ScopeToModule(oracletypes.ModuleName)
 
@@ -527,13 +522,14 @@ func New(
 		stakingtypes.NewMultiStakingHooks(restrictHooks, app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper).SetBankKeeper(app.BankKeeper)
+	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper).SetBankKeeper(app.BankKeeper)
 
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibcexported.StoreKey], nil, app.StakingKeeper, app.UpgradeKeeper, app.ScopedIBCKeeper, govAuthority,
+		appCodec, runtime.NewKVStoreService(keys[ibcexported.StoreKey]),
+		nil, app.UpgradeKeeper, govAuthority,
 	)
 
 	// Configure the hooks keeper
@@ -565,14 +561,13 @@ func New(
 	rateLimitingTransferModule := ibcratelimitmodule.NewIBCMiddleware(nil, app.HooksICS4Wrapper, app.RateLimitingKeeper)
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
-		keys[ibctransfertypes.StoreKey],
+		runtime.NewKVStoreService(keys[ibctransfertypes.StoreKey]),
 		nil,
 		&rateLimitingTransferModule,
 		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.PortKeeper,
+		app.MsgServiceRouter(),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.ScopedTransferKeeper,
 		govAuthority,
 	)
 	app.TransferKeeper = &transferKeeper
@@ -646,12 +641,11 @@ func New(
 	})
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
 	icaHostKeeper := icahostkeeper.NewKeeper(
-		appCodec, keys[icahosttypes.StoreKey], nil,
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, app.ScopedICAHostKeeper, pioMessageRouter, govAuthority,
+		appCodec, runtime.NewKVStoreService(keys[icahosttypes.StoreKey]), nil,
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper,
+		app.AccountKeeper, pioMessageRouter, app.GRPCQueryRouter(), govAuthority,
 	)
 	app.ICAHostKeeper = &icaHostKeeper
-	app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 
@@ -666,7 +660,7 @@ func New(
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
 
-	wasmWrap := WasmWrapper{Wasm: wasmtypes.DefaultWasmConfig()}
+	wasmWrap := WasmWrapper{Wasm: wasmtypes.DefaultNodeConfig()}
 	err = viper.Unmarshal(&wasmWrap)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
@@ -686,15 +680,15 @@ func New(
 		app.BankKeeper,
 		app.StakingKeeper,
 		distrkeeper.NewQuerier(app.DistrKeeper),
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.PortKeeper,
-		scopedWasmKeeper,
-		app.TransferKeeper,
+		/* ics4Wrapper */ nil,
+		app.IBCKeeper.ChannelKeeper, // ChannelKeeper
+		app.IBCKeeper.ChannelKeeper, // ChannelKeeperV2
+		app.IBCKeeper.PortKeeper,    // ICS20TransferPortSource
 		pioMessageRouter,
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
+		/* vmConfig */ nil,
 		supportedFeatures,
 		govAuthority,
 		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(*app.GRPCQueryRouter(), appCodec)),
