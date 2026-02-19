@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) TestNewTriggerWithID() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			trigger := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, tc.expected.Owner, tc.expected.Event, tc.expected.Actions)
+			trigger, _ := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, tc.expected.Owner, tc.expected.Event, tc.expected.Actions)
 			s.Equal(tc.expected, trigger, "should have correct trigger from NewTrigger")
 		})
 	}
@@ -203,4 +203,44 @@ func (s *KeeperTestSuite) TestRemoveTrigger() {
 			s.Equal(tc.expected, success, "should have the correct output for RemoveTrigger")
 		})
 	}
+}
+
+// TestTriggerCollectionsOperations tests basic trigger operations with collections
+func (s *KeeperTestSuite) TestTriggerCollectionsOperations() {
+	ctx := s.ctx
+	k := s.app.TriggerKeeper
+
+	// Test SetTrigger
+	trigger := s.CreateTrigger(1, s.accountAddr.String(), &types.BlockHeightEvent{BlockHeight: 100}, &types.MsgDestroyTriggerRequest{})
+	err := k.SetTrigger(ctx, trigger)
+	s.Require().NoError(err, "SetTrigger should not return an error")
+
+	// Test GetTrigger
+	retrieved, err := k.GetTrigger(ctx, 1)
+	s.Require().NoError(err, "GetTrigger should not return an error for existing ID")
+	s.Require().Equal(trigger.Id, retrieved.Id)
+	s.Require().Equal(trigger.Owner, retrieved.Owner)
+	s.Require().Equal(trigger.Event.TypeUrl, retrieved.Event.TypeUrl)
+	s.Require().Equal(trigger.Event.Value, retrieved.Event.Value)
+
+	s.Require().Equal(len(trigger.Actions), len(retrieved.Actions))
+	s.Require().Equal(trigger.Actions[0].TypeUrl, retrieved.Actions[0].TypeUrl)
+
+	// Test HasTrigger
+	exists, err := k.HasTrigger(ctx, 1)
+	s.Require().NoError(err, "HasTrigger should not error for existing ID")
+	s.Require().True(exists, "HasTrigger should return true for an existing ID")
+
+	exists, err = k.HasTrigger(ctx, 999)
+	s.Require().NoError(err, "HasTrigger should not error for non-existing ID")
+	s.Require().False(exists, "HasTrigger should return false for non-existing ID")
+
+	// Test RemoveTrigger
+	removed := k.RemoveTrigger(ctx, 1)
+	s.Require().True(removed, "RemoveTrigger should indicate successful removal for existing ID")
+
+	// Verify removal
+	exists, err = k.HasTrigger(ctx, 1)
+	s.Require().NoError(err, "HasTrigger after removal should not return an error")
+	s.Require().False(exists, "HasTrigger after removal should report false")
 }

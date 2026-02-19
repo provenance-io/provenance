@@ -165,8 +165,95 @@ func (s *KeeperTestSuite) TestRemoveEventListener() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			success := s.app.TriggerKeeper.RemoveEventListener(s.ctx, tc.trigger)
+			success, err := s.app.TriggerKeeper.RemoveEventListener(s.ctx, tc.trigger)
+			s.Require().NoError(err, "RemoveEventListener should not return an error")
 			s.Equal(tc.expected, success, "should return the correct result for RemoveEventListener")
 		})
 	}
+}
+func (s *KeeperTestSuite) TestCollectionsSetAndGetEventListener() {
+	ctx := s.ctx
+	k := s.app.TriggerKeeper
+
+	// Create events and triggers
+	blockHeightEvent := &types.BlockHeightEvent{BlockHeight: 100}
+	blockTimeEvent := &types.BlockTimeEvent{Time: ctx.BlockTime()}
+
+	actions, _ := sdktx.SetMsgs([]sdk.Msg{
+		&types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()},
+	})
+
+	eventAny1, _ := codectypes.NewAnyWithValue(blockHeightEvent)
+	eventAny2, _ := codectypes.NewAnyWithValue(blockTimeEvent)
+
+	trigger1 := types.NewTrigger(1, s.accountAddresses[0].String(), eventAny1, actions)
+	trigger2 := types.NewTrigger(2, s.accountAddresses[0].String(), eventAny1, actions)
+	trigger3 := types.NewTrigger(3, s.accountAddresses[0].String(), eventAny2, actions)
+
+	s.Require().NoError(k.SetTrigger(ctx, trigger1), "failed to set trigger1")
+	s.Require().NoError(k.SetTrigger(ctx, trigger2), "failed to set trigger2")
+	s.Require().NoError(k.SetTrigger(ctx, trigger3), "failed to set trigger3")
+
+	s.Require().NoError(k.SetEventListener(ctx, trigger1), "failed to set event listener for trigger1")
+	s.Require().NoError(k.SetEventListener(ctx, trigger2), "failed to set event listener for trigger2")
+	s.Require().NoError(k.SetEventListener(ctx, trigger3), "failed to set event listener for trigger3")
+
+	tests := []struct {
+		name      string
+		trigger   types.Trigger
+		expectErr bool
+	}{
+		{"valid listener 1", trigger1, false},
+		{"valid listener 2", trigger2, false},
+		{"valid listener 3", trigger3, false},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			eventI, err := tc.trigger.GetTriggerEventI()
+			s.Require().NoError(err, "failed to get TriggerEventI for %s", tc.name)
+
+			listener, err := k.GetEventListener(ctx, eventI.GetEventPrefix(), eventI.GetEventOrder(), tc.trigger.Id)
+			s.Require().NoError(err, "expected no error when fetching listener for %s", tc.name)
+			s.Require().Equal(tc.trigger.Id, listener.Id, "listener ID mismatch for %s", tc.name)
+		})
+	}
+
+	count := 0
+	err := k.IterateEventListeners(ctx, blockHeightEvent.GetEventPrefix(), func(trigger types.Trigger) (bool, error) {
+		count++
+		return false, nil
+	})
+	s.Require().NoError(err, "failed to iterate over event listeners for blockHeightEvent")
+	s.Require().Equal(2, count, "expected to iterate over 2 blockHeightEvent listeners, got %d", count)
+
+	removed, err := k.RemoveEventListener(ctx, trigger1)
+	s.Require().NoError(err, "failed to remove trigger1 listener")
+	s.Require().True(removed, "trigger1 listener should have been removed")
+
+	eventI, _ := trigger1.GetTriggerEventI()
+	_, err = k.GetEventListener(ctx, eventI.GetEventPrefix(), eventI.GetEventOrder(), trigger1.Id)
+	s.Require().ErrorIs(err, types.ErrEventNotFound, "removed listener for trigger1 should not be found")
+}
+
+func (s *KeeperTestSuite) TestCollectionsRemoveAllEventListenersForTrigger() {
+	ctx := s.ctx
+	k := s.app.TriggerKeeper
+
+	blockHeightEvent := &types.BlockHeightEvent{BlockHeight: 200}
+	actions, _ := sdktx.SetMsgs([]sdk.Msg{
+		&types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()},
+	})
+	eventAny, _ := codectypes.NewAnyWithValue(blockHeightEvent)
+	trigger := types.NewTrigger(10, s.accountAddresses[0].String(), eventAny, actions)
+
+	s.Require().NoError(k.SetTrigger(ctx, trigger), "failed to set trigger for RemoveAllEventListeners test")
+	s.Require().NoError(k.SetEventListener(ctx, trigger), "failed to set event listener for trigger")
+
+	err := k.RemoveEventListenerForTriggerID(ctx, trigger.Id)
+	s.Require().NoError(err, "failed to remove all event listeners for trigger")
+
+	eventI, _ := trigger.GetTriggerEventI()
+	_, err = k.GetEventListener(ctx, eventI.GetEventPrefix(), eventI.GetEventOrder(), trigger.Id)
+	s.Require().ErrorIs(err, types.ErrEventNotFound, "listener should have been removed after RemoveAllEventListenersForTrigger")
 }

@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
+
+	"cosmossdk.io/collections"
 )
 
 const (
@@ -54,17 +56,17 @@ const (
 //     | 1 |
 var (
 	// TriggerKeyPrefix is an initial byte to help group all trigger keys
-	TriggerKeyPrefix = []byte{0x01}
+	TriggerKeyPrefix = collections.NewPrefix(1) // was 0x01
 	// EventListenerKeyPrefix is an initial byte to help group all event listener keys
-	EventListenerKeyPrefix = []byte{0x02}
+	EventListenerKeyPrefix = collections.NewPrefix(2) // was 0x02
 	// QueueKeyPrefix is an initial byte to help group all queue entry keys
-	QueueKeyPrefix = []byte{0x03}
+	QueueKeyPrefix = collections.NewPrefix(3) // was 0x03
 	// NextTriggerIDKey is the key to obtain the next valid trigger id
-	NextTriggerIDKey = []byte{0x05}
+	NextTriggerIDKey = collections.NewPrefix(5) // was 0x05
 	// QueueStartIndexKey is the key to obtain the queue's starting index
-	QueueStartIndexKey = []byte{0x06}
-	// QueueLengthKey is the key to obtain the queue's length
-	QueueLengthKey = []byte{0x07}
+	QueueStartIndexKey = collections.NewPrefix(6) // was 0x06
+	// QueueLengthPrefix is the key to obtain the queue's length
+	QueueLengthKey = collections.NewPrefix(7) // was 0x07
 )
 
 // The following type bytes were once used, but now are not:
@@ -72,25 +74,16 @@ var (
 //  - GasLimitKeyPrefix = []byte{0x04}
 
 // GetEventListenerKey converts an event name, order, and trigger ID into an event registry key format.
-func GetEventListenerKey(eventName string, order uint64, id TriggerID) []byte {
-	triggerIDBytes := make([]byte, TriggerIDLength)
-	binary.BigEndian.PutUint64(triggerIDBytes, id)
-	orderBytes := make([]byte, EventOrderLength)
-	binary.BigEndian.PutUint64(orderBytes, order)
-
-	key := GetEventListenerPrefix(eventName)
-	key = append(key, orderBytes...)
-	key = append(key, triggerIDBytes...)
-	return key
+func GetEventListenerKey(eventHash []byte, order uint64, id TriggerID) collections.Triple[[]byte, uint64, uint64] {
+	if len(eventHash) == 0 {
+		panic("invalid event name: ")
+	}
+	return collections.Join3(eventHash, order, id)
 }
 
-// GetEventListenerPrefix converts an event name into a prefix for event registry.
-func GetEventListenerPrefix(eventName string) []byte {
-	eventNameBytes := GetEventNameBytes(eventName)
-
-	key := EventListenerKeyPrefix
-	key = append(key, eventNameBytes...)
-	return key
+func GetEventListenerPrefix(eventHash []byte) []byte {
+	prefix := EventListenerKeyPrefix.Bytes()
+	return append(prefix, eventHash...)
 }
 
 // GetTriggerKey converts a trigger into key format.
@@ -98,42 +91,45 @@ func GetTriggerKey(id TriggerID) []byte {
 	triggerIDBytes := make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBytes, id)
 
-	key := TriggerKeyPrefix
+	key := TriggerKeyPrefix.Bytes()
 	key = append(key, triggerIDBytes...)
 	return key
 }
 
 // GetNextTriggerIDKey gets the key for getting the next trigger ID.
 func GetNextTriggerIDKey() []byte {
-	return NextTriggerIDKey
+	return NextTriggerIDKey.Bytes()
 }
 
 // GetQueueKeyPrefix gets the queue's key prefix
 func GetQueueKeyPrefix() []byte {
-	return QueueKeyPrefix
+	return QueueKeyPrefix.Bytes()
 }
 
 // GetQueueKey gets the key for storing in the queue.
 func GetQueueKey(index uint64) []byte {
 	indexBytes := GetQueueIndexBytes(index)
 
-	key := QueueKeyPrefix
+	key := QueueKeyPrefix.Bytes()
 	key = append(key, indexBytes...)
 	return key
 }
 
 // GetQueueStartIndexKey gets the key for storing the start index
 func GetQueueStartIndexKey() []byte {
-	return QueueStartIndexKey
+	return QueueStartIndexKey.Bytes()
 }
 
 // GetQueueLengthKey gets the key for storing the queue length
 func GetQueueLengthKey() []byte {
-	return QueueLengthKey
+	return QueueLengthKey.Bytes()
 }
 
 // GetQueueIndexFromBytes returns the index in uint64 format from a byte array
 func GetQueueIndexFromBytes(bz []byte) uint64 {
+	if len(bz) < QueueIndexLength {
+		return 0
+	}
 	return binary.BigEndian.Uint64(bz)
 }
 
@@ -146,6 +142,9 @@ func GetQueueIndexBytes(index uint64) (queueIndexBz []byte) {
 
 // GetTriggerIDFromBytes returns triggerID in uint64 format from a byte array
 func GetTriggerIDFromBytes(bz []byte) TriggerID {
+	if len(bz) < TriggerIDLength {
+		return 0
+	}
 	return binary.BigEndian.Uint64(bz)
 }
 

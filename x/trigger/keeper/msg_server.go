@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -33,7 +36,11 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 		return nil, err
 	}
 
-	trigger := s.NewTriggerWithID(ctx, msg.GetAuthorities()[0], msg.GetEvent(), msg.GetActions())
+	trigger, err := s.NewTriggerWithID(ctx, msg.GetAuthorities()[0], msg.GetEvent(), msg.GetActions())
+	if err != nil {
+		return nil, err
+	}
+
 	s.RegisterTrigger(ctx, trigger)
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventTriggerCreated{
@@ -51,6 +58,9 @@ func (s msgServer) DestroyTrigger(goCtx context.Context, msg *types.MsgDestroyTr
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	trigger, err := s.GetTrigger(ctx, msg.GetId())
+	if errors.Is(err, collections.ErrNotFound) {
+		return nil, types.ErrTriggerNotFound
+	}
 	if err != nil {
 		return nil, err
 	}

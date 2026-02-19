@@ -1,7 +1,9 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	"errors"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -10,26 +12,60 @@ import (
 
 // QueueTrigger Creates a QueuedTrigger and Enqueues it
 func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
-	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight())) //nolint:gosec // safe: block height always ≥ 0
-	k.Enqueue(ctx, item)
+	item := types.NewQueuedTrigger(trigger, ctx.BlockTime().UTC(), uint64(ctx.BlockHeight())) //nolint:gosec // G115: block height guaranteed non-negative in Cosmos SDK.
+	err := k.Enqueue(ctx, item)
+	if err != nil {
+		ctx.Logger().Error("failed to queue trigger", "trigger_id", trigger.Id, "err", err)
+	}
 }
 
 // QueuePeek Returns the next item to be dequeued.
 func (k Keeper) QueuePeek(ctx sdk.Context) *types.QueuedTrigger {
-	if k.QueueIsEmpty(ctx) {
+	isEmpty := k.QueueIsEmpty(ctx)
+
+	if isEmpty {
 		return nil
 	}
-	index := k.getQueueStartIndex(ctx)
-	item := k.getQueueItem(ctx, index)
+	startIndex, err := k.QueueStartIndex.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		}
+		return nil
+	}
+	item, err := k.Queue.Get(ctx, startIndex)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		}
+		return nil
+	}
 	return &item
 }
 
 // Enqueue Adds an item to the end of the queue and adjusts the internal counters.
-func (k Keeper) Enqueue(ctx sdk.Context, item types.QueuedTrigger) {
-	length := k.getQueueLength(ctx)
-	index := k.getQueueStartIndex(ctx)
-	k.setQueueItem(ctx, index+length, item)
-	k.setQueueLength(ctx, length+1)
+func (k Keeper) Enqueue(ctx sdk.Context, item types.QueuedTrigger) error {
+	startIndex, err := k.QueueStartIndex.Get(ctx)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
+	if errors.Is(err, collections.ErrNotFound) {
+		startIndex = 0
+	}
+
+	length, err := k.QueueLength.Get(ctx)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
+	if errors.Is(err, collections.ErrNotFound) {
+		length = 0
+	}
+
+	position := startIndex + length
+	if err := k.Queue.Set(ctx, position, item); err != nil {
+		return err
+	}
+	return k.QueueLength.Set(ctx, length+1)
 }
 
 // Dequeue Removes the first item from the queue and updates the internal counters.
@@ -37,69 +73,116 @@ func (k Keeper) Dequeue(ctx sdk.Context) {
 	if k.QueueIsEmpty(ctx) {
 		panic("unable to dequeue from empty queue.")
 	}
-	length := k.getQueueLength(ctx)
-	index := k.getQueueStartIndex(ctx)
-	k.removeQueueIndex(ctx, index)
-	k.setQueueStartIndex(ctx, index+1)
-	k.setQueueLength(ctx, length-1)
+
+	startIndex, err := k.QueueStartIndex.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	length, err := k.QueueLength.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := k.Queue.Remove(ctx, startIndex); err != nil {
+		panic(err)
+	}
+
+	newStart := startIndex + 1
+	newLength := length - 1
+
+	if err := k.QueueStartIndex.Set(ctx, newStart); err != nil {
+		panic(err)
+	}
+
+	if err := k.QueueLength.Set(ctx, newLength); err != nil {
+		panic(err)
+	}
 }
 
 // QueueIsEmpty Checks if the queue is empty.
 func (k Keeper) QueueIsEmpty(ctx sdk.Context) bool {
-	return k.getQueueLength(ctx) == 0
+	length, err := k.QueueLength.Get(ctx)
+	if err != nil {
+		return errors.Is(err, collections.ErrNotFound)
+	}
+	return length == 0
 }
 
 // GetAllQueueItems Gets all the queue items within the store.
 func (k Keeper) GetAllQueueItems(ctx sdk.Context) (items []types.QueuedTrigger, err error) {
-	err = k.iterateQueue(ctx, func(item types.QueuedTrigger) (stop bool, err error) {
-		items = append(items, item)
-		return false, nil
-	})
-	return
+	iter, err := k.Queue.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
+	for ; iter.Valid(); iter.Next() {
+		_, err := iter.Key()
+		if err != nil {
+			return nil, err
+		}
+		value, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+
+		items = append(items, value)
+	}
+
+	return items, nil
 }
 
 // getQueueItem Gets an item from the queue's store.
-func (k Keeper) getQueueItem(ctx sdk.Context, index uint64) (trigger types.QueuedTrigger) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetQueueKey(index)
-	bz := store.Get(key)
-	if len(bz) == 0 {
-		panic("queue index not found")
+func (k Keeper) GetQueueItem(ctx sdk.Context, index uint64) (trigger types.QueuedTrigger, err error) {
+	item, err := k.Queue.Get(ctx, index)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.QueuedTrigger{}, types.ErrQueueIndexNotFound
+		}
+		return types.QueuedTrigger{}, err
 	}
-	k.cdc.MustUnmarshal(bz, &trigger)
-	return
+	return item, nil
 }
 
 // setQueueItem Sets an item in the queue's store.
-func (k Keeper) setQueueItem(ctx sdk.Context, index uint64, item types.QueuedTrigger) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&item)
-	store.Set(types.GetQueueKey(index), bz)
+func (k Keeper) SetQueueItem(ctx sdk.Context, index uint64, item types.QueuedTrigger) error {
+	return k.Queue.Set(ctx, index, item)
 }
 
-// removeQueueIndex Removes the queue's index from the store.
-func (k Keeper) removeQueueIndex(ctx sdk.Context, index uint64) bool {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetQueueKey(index)
-	keyExists := store.Has(key)
-	if keyExists {
-		store.Delete(key)
+// RemoveQueueIndex Removes the queue's index from the store.
+func (k Keeper) RemoveQueueIndex(ctx sdk.Context, index uint64) (bool, error) {
+	exists, err := k.Queue.Has(ctx, index)
+	if err != nil {
+		return false, err
 	}
-	return keyExists
+	if !exists {
+		return false, nil
+	}
+
+	err = k.Queue.Remove(ctx, index)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
-// iterateQueue Iterates through all the queue items.
-func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
-	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.QueueKeyPrefix)
-	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
+// IterateQueue Iterates through all the queue items.
+func (k Keeper) IterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
+	iter, err := k.Queue.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
 
-	for ; iterator.Valid(); iterator.Next() {
-		record := types.QueuedTrigger{}
-		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+	for ; iter.Valid(); iter.Next() {
+		value, err := iter.Value()
+		if err != nil {
 			return err
 		}
-		stop, err := handle(record)
+
+		stop, err := handle(value)
 		if err != nil {
 			return err
 		}
@@ -107,39 +190,40 @@ func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTr
 			break
 		}
 	}
+
 	return nil
 }
 
 // getQueueStartIndex Gets the starting index of the queue in the store.
-func (k Keeper) getQueueStartIndex(ctx sdk.Context) uint64 {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetQueueStartIndexKey())
-	if bz == nil {
-		return 0
+func (k Keeper) getQueueStartIndex(ctx sdk.Context) (uint64, error) {
+	startIndex, err := k.QueueStartIndex.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return 0, nil // Default to 0 if not set
+		}
+		return 0, err
 	}
-	return types.GetQueueIndexFromBytes(bz)
+	return startIndex, nil
 }
 
 // setQueueStartIndex Sets the starting index of the queue in the store.
-func (k Keeper) setQueueStartIndex(ctx sdk.Context, index uint64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := types.GetQueueIndexBytes(index)
-	store.Set(types.GetQueueStartIndexKey(), bz)
+func (k Keeper) setQueueStartIndex(ctx sdk.Context, index uint64) error {
+	return k.QueueStartIndex.Set(ctx, index)
 }
 
 // getQueueLength Gets the length of the queue in the store.
-func (k Keeper) getQueueLength(ctx sdk.Context) uint64 {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetQueueLengthKey())
-	if bz == nil {
-		return 0
+func (k Keeper) GetQueueLength(ctx sdk.Context) (uint64, error) {
+	length, err := k.QueueLength.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return 0, nil // Default to 0 if not set
+		}
+		return 0, err
 	}
-	return types.GetQueueIndexFromBytes(bz)
+	return length, nil
 }
 
 // setQueueLength Sets the length of the queue in the store.
-func (k Keeper) setQueueLength(ctx sdk.Context, length uint64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := types.GetQueueIndexBytes(length)
-	store.Set(types.GetQueueLengthKey(), bz)
+func (k Keeper) setQueueLength(ctx sdk.Context, length uint64) error {
+	return k.QueueLength.Set(ctx, length)
 }
