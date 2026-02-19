@@ -229,7 +229,7 @@ var (
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/wasm expects WasmConfig
 type WasmWrapper struct {
-	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+	Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
 }
 
 // SdkCoinDenomRegex returns a new sdk base denom regex string
@@ -666,7 +666,7 @@ func New(
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
 
-	wasmWrap := WasmWrapper{Wasm: wasmtypes.DefaultWasmConfig()}
+	wasmWrap := WasmWrapper{Wasm: wasmtypes.DefaultNodeConfig()}
 	err = viper.Unmarshal(&wasmWrap)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
@@ -695,6 +695,7 @@ func New(
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
+		wasmtypes.VMConfig{},
 		supportedFeatures,
 		govAuthority,
 		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(*app.GRPCQueryRouter(), appCodec)),
