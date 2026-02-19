@@ -17,8 +17,8 @@ require (
 	cosmossdk.io/x/nft v0.1.1
 	cosmossdk.io/x/tx v0.14.0
 	cosmossdk.io/x/upgrade v0.1.4
-	github.com/CosmWasm/wasmd v0.52.0
-	github.com/CosmWasm/wasmvm/v2 v2.2.4
+	github.com/CosmWasm/wasmd v0.54.6
+	github.com/CosmWasm/wasmvm/v2 v2.2.6
 	github.com/cometbft/cometbft v0.38.21
 	github.com/cometbft/cometbft-db v0.15.0
 	github.com/cosmos/cosmos-db v1.1.3
@@ -28,7 +28,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
-	github.com/cosmos/ibc-go/v8 v8.6.1
+	github.com/cosmos/ibc-go/v8 v8.8.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
@@ -121,7 +121,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.2.2 // indirect
+	github.com/cosmos/iavl v1.2.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.16.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
@@ -379,7 +379,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
-	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.52.0-pio-1
+	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.54.6-pio-1
 
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.53.5-pio-2
 
