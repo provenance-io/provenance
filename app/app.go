@@ -111,9 +111,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
-	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
@@ -281,7 +278,6 @@ type App struct {
 	IBCHooksKeeper     *ibchookskeeper.Keeper
 	ICAHostKeeper      *icahostkeeper.Keeper
 	TransferKeeper     *ibctransferkeeper.Keeper
-	ICQKeeper          icqkeeper.Keeper
 	RateLimitingKeeper *ibcratelimitkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
@@ -300,7 +296,6 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
-	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
 	VaultKeeper *vaultkeeper.Keeper
@@ -392,7 +387,6 @@ func New(
 		ibcexported.StoreKey,
 		ibctransfertypes.StoreKey,
 		icahosttypes.StoreKey,
-		icqtypes.StoreKey,
 		ibchookstypes.StoreKey,
 		ibcratelimit.StoreKey,
 
@@ -453,7 +447,6 @@ func New(
 	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	app.ScopedICAHostKeeper = app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	app.ScopedICQKeeper = app.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	scopedOracleKeeper := app.CapabilityKeeper.ScopeToModule(oracletypes.ModuleName)
 
 	// capability keeper must be sealed after scope to module registrations are completed.
@@ -655,14 +648,6 @@ func New(
 	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 
-	app.ICQKeeper = icqkeeper.NewKeeper(
-		appCodec, keys[icqtypes.StoreKey],
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
-		app.ScopedICQKeeper, app.GRPCQueryRouter(), govAuthority,
-	)
-	icqModule := icq.NewAppModule(app.ICQKeeper, nil)
-	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
-
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
 
@@ -751,7 +736,6 @@ func New(
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
 		AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(icqtypes.ModuleName, icqIBCModule).
 		AddRoute(oracletypes.ModuleName, oracleModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -823,7 +807,6 @@ func New(
 		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
-		icqModule,
 		icaModule,
 		ibctm.AppModule{},
 	)
@@ -930,7 +913,6 @@ func New(
 
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
-		icqtypes.ModuleName,
 		icatypes.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
@@ -973,7 +955,6 @@ func New(
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
-		icqtypes.ModuleName,
 		wasmtypes.ModuleName,
 
 		attributetypes.ModuleName,
