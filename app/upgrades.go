@@ -39,7 +39,7 @@ type appUpgrade struct {
 //
 // On the same line as the key, there should be a comment indicating the software version.
 // Entries should be in chronological/alphabetical order, earliest first.
-// I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
+// I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"daisy-rc1": {
 		Deleted: []string{"interchainquery", "oracle"},
