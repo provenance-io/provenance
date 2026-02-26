@@ -43,7 +43,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	icagenesistypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/genesis/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 
@@ -61,7 +60,6 @@ func provAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, g
 		pioconfig.SetProvConfig(sdk.DefaultBondDenom)
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
 		appState = appStateWithICA(appState, cdc)
-		appState = appStateWithICQ(appState, cdc)
 		appState = appStateWithWasmSeqs(appState, cdc)
 		return appState, simAccs, chainID, genesisTimestamp
 	}
@@ -70,11 +68,6 @@ func provAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, g
 // appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
 func appStateWithICA(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
 	return mutateAppState(appState, cdc, icatypes.ModuleName, icagenesistypes.DefaultGenesis(), nil)
-}
-
-// appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
-func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
-	return mutateAppState(appState, cdc, icqtypes.ModuleName, icqtypes.DefaultGenesis(), nil)
 }
 
 // appStateWithWasmSeqs ensures the wasm genesis state has sequence entries.
