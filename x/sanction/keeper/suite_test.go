@@ -4,12 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
+	"cosmossdk.io/core/store"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
-
-	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/suite"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,6 +61,7 @@ func (s *BaseTestSuite) BaseSetup() {
 	s.StdlibCtx = context.Context(s.SdkCtx)
 	s.GovKeeper = NewMockGovKeeper()
 	s.Keeper = s.App.SanctionKeeper.WithGovKeeper(s.GovKeeper)
+	s.Require().NotNil(s.Keeper.StoreService, "StoreService must be initialized")
 }
 
 // AssertErrorContents calls assertions.AssertErrorContents using this suite's T.
@@ -71,15 +70,16 @@ func (s *BaseTestSuite) AssertErrorContents(theError error, contains []string, m
 }
 
 // GetStore gets the sanction module's store.
-func (s *BaseTestSuite) GetStore() storetypes.KVStore {
-	return s.SdkCtx.KVStore(s.Keeper.StoreKey())
+func (s *BaseTestSuite) GetStore() store.KVStore {
+	return s.Keeper.StoreService.OpenKVStore(s.SdkCtx)
 }
 
 // ClearState deletes all entries in the sanction store.
 func (s *BaseTestSuite) ClearState() {
 	var keysToDelete [][]byte
 	store := s.GetStore()
-	iter := store.Iterator(nil, nil)
+	iter, err := store.Iterator(nil, nil)
+	s.Require().NoError(err, "store.Iterator")
 	closeIter := func() {
 		if iter != nil {
 			s.Require().NoError(iter.Close(), "iter.Close")

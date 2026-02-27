@@ -728,7 +728,7 @@ func New(
 		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
 	}
 	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
-	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
+	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[sanction.StoreKey]),
 		app.BankKeeper, &app.GovKeeper,
 		govAuthority, unsanctionableAddrs)
 
