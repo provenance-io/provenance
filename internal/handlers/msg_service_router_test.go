@@ -669,8 +669,6 @@ func TestHandlersConsumeMsgs(t *testing.T) {
 		"/provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest",
 		"/provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest",
 		"/provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest",
-		"/provenance.oracle.v1.QueryOracleRequest",
-		"/provenance.oracle.v1.QueryOracleResponse",
 	}
 	slices.Sort(expNoHandlers)
 	var actNoHandlers []string
