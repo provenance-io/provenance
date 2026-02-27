@@ -167,7 +167,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - name: Download linux zip artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: linux-zip
           path: build/
