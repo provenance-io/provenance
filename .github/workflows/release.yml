@@ -75,7 +75,7 @@ jobs:
           make build-release-zip
       - name: Provenanced version
         run: build/provenanced version --long
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: osx-zip
           path: build/*.zip
@@ -106,7 +106,7 @@ jobs:
           make build-release-zip
       - name: Provenanced version
         run: build/provenanced version --long
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-zip
           path: build/provenance*.zip
