@@ -15,7 +15,6 @@ Provenance Blockchain leverages inherited modules from Cosmos SDK, and has purpo
 * [Metadata](./metadata/spec/README.md) - Provides a system for referencing off-chain information.
 * [Msg Fees](./msgfees/spec/README.md) - **DEPRECATED** Managed additional fees that could be added to msgs.
 * [Name](./name/spec/README.md) - Provides a system for providing human-readable names as aliases for addresses.
-* [Oracle](./oracle/spec/README.md) - Provides the capability to dynamically expose query endpoints.
 * [Quarantine](./quarantine/spec/README.md) - Prevents accounts from receiving unwanted funds.
 * [Sanction](./sanction/spec/README.md) - Provides a mechanism for freezing accounts.
 * [Trigger](./trigger/spec/README.md) - Provides a system for triggering transactions based on predeterminded events.
