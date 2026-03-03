@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/collections"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,9 +31,9 @@ func (k Keeper) GetCodec() codec.BinaryCodec {
 	return k.cdc
 }
 
-// GetStoreKey exposes this keeper's storekey for unit tests.
-func (k Keeper) GetStoreKey() storetypes.StoreKey {
-	return k.storeKey
+// GetStoreKey returns the keeper's schema for use in unit tests.
+func (k Keeper) Getstorekey() collections.Schema {
+	return k.GetSchema()
 }
 
 // BzToQuarantineRecord exposes bzToQuarantineRecord for unit tests.
@@ -47,8 +47,8 @@ func (k Keeper) MustBzToQuarantineRecord(bz []byte) *quarantine.QuarantineRecord
 }
 
 // SetQuarantineRecordSuffixIndex exposes setQuarantineRecordSuffixIndex for unit tests.
-func (k Keeper) SetQuarantineRecordSuffixIndex(store storetypes.KVStore, key []byte, value *quarantine.QuarantineRecordSuffixIndex) {
-	k.setQuarantineRecordSuffixIndex(store, key, value)
+func (k Keeper) SetQuarantineRecordSuffixIndex(ctx sdk.Context, toAddr, fromAddr sdk.AccAddress, value *quarantine.QuarantineRecordSuffixIndex) {
+	k.setQuarantineRecordSuffixIndex(ctx, toAddr, fromAddr, value)
 }
 
 // BzToQuarantineRecordSuffixIndex exposes bzToQuarantineRecordSuffixIndex for unit tests.
@@ -62,21 +62,21 @@ func (k Keeper) MustBzToQuarantineRecordSuffixIndex(bz []byte) *quarantine.Quara
 }
 
 // GetQuarantineRecordSuffixIndex exposes getQuarantineRecordSuffixIndex for unit tests.
-func (k Keeper) GetQuarantineRecordSuffixIndex(store storetypes.KVStore, toAddr, fromAddr sdk.AccAddress) (*quarantine.QuarantineRecordSuffixIndex, []byte) {
-	return k.getQuarantineRecordSuffixIndex(store, toAddr, fromAddr)
+func (k Keeper) GetQuarantineRecordSuffixIndex(ctx sdk.Context, toAddr, fromAddr sdk.AccAddress) *quarantine.QuarantineRecordSuffixIndex {
+	return k.getQuarantineRecordSuffixIndex(ctx, toAddr, fromAddr)
 }
 
 // GetQuarantineRecordSuffixes exposes getQuarantineRecordSuffixes for unit tests.
-func (k Keeper) GetQuarantineRecordSuffixes(store storetypes.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress) [][]byte {
-	return k.getQuarantineRecordSuffixes(store, toAddr, fromAddrs)
+func (k Keeper) GetQuarantineRecordSuffixes(ctx sdk.Context, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress) [][]byte {
+	return k.getQuarantineRecordSuffixes(ctx, toAddr, fromAddrs)
 }
 
 // AddQuarantineRecordSuffixIndexes exposes addQuarantineRecordSuffixIndexes for unit tests.
-func (k Keeper) AddQuarantineRecordSuffixIndexes(store storetypes.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
-	k.addQuarantineRecordSuffixIndexes(store, toAddr, fromAddrs, suffix)
+func (k Keeper) AddQuarantineRecordSuffixIndexes(ctx sdk.Context, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
+	k.addQuarantineRecordSuffixIndexes(ctx, toAddr, fromAddrs, suffix)
 }
 
 // DeleteQuarantineRecordSuffixIndexes exposes deleteQuarantineRecordSuffixIndexes for unit tests.
-func (k Keeper) DeleteQuarantineRecordSuffixIndexes(store storetypes.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
-	k.deleteQuarantineRecordSuffixIndexes(store, toAddr, fromAddrs, suffix)
+func (k Keeper) DeleteQuarantineRecordSuffixIndexes(ctx sdk.Context, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
+	k.deleteQuarantineRecordSuffixIndexes(ctx, toAddr, fromAddrs, suffix)
 }
