@@ -30,8 +30,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channelutils "github.com/cosmos/ibc-go/v8/modules/core/04-channel/client/utils"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v10/modules/core/04-channel/client/utils"
 
 	"github.com/provenance-io/provenance/internal/provcli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"

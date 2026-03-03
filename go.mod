@@ -19,6 +19,7 @@ require (
 	cosmossdk.io/x/upgrade v0.2.0
 	github.com/CosmWasm/wasmd v0.61.8
 	github.com/CosmWasm/wasmvm/v2 v2.2.4
+	github.com/CosmWasm/wasmvm/v3 v3.0.3
 	github.com/cometbft/cometbft v0.38.21
 	github.com/cometbft/cometbft-db v0.15.0
 	github.com/cosmos/cosmos-db v1.1.3
@@ -27,7 +28,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
-	github.com/cosmos/ibc-go/v8 v8.6.1
+	github.com/cosmos/ibc-go/v10 v10.5.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
@@ -70,7 +71,6 @@ require (
 	github.com/Antonboom/nilnil v0.1.9 // indirect
 	github.com/Antonboom/testifylint v1.4.3 // indirect
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c // indirect
-	github.com/CosmWasm/wasmvm/v3 v3.0.3 // indirect
 	github.com/Crocmagnon/fatcontext v0.5.2 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
@@ -124,7 +124,6 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.6 // indirect
-	github.com/cosmos/ibc-go/v10 v10.5.0 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.16.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
@@ -390,9 +389,6 @@ replace (
 
 	// Replace iavl to fix the prune command. This can be removed once upstream is off v1.2.2
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
-
-	// TODO: Update or change once a tag is made containing a fix for https://github.com/cosmos/ibc-go/issues/6375
-	github.com/cosmos/ibc-go/v8 => github.com/provenance-io/ibc-go/v8 v8.6.1-pio-1
 
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
