@@ -48,6 +48,7 @@ import (
 
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 func init() {
@@ -405,8 +406,9 @@ func TestAppImportExport(t *testing.T) {
 		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
 		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
-		wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix},
+		wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix, wasmtypes.ContractCodeHistoryElementPrefix},
 		vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix},
+		attrtypes.StoreKey:     {attrtypes.AttributeAddrLookupKeyPrefix, attrtypes.AttributeExpirationKeyPrefix},
 	}
 
 	storeKeys := app.GetStoreKeys()
