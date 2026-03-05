@@ -81,7 +81,7 @@ func SimulateMsgAddAttribute(simState module.SimulationState, _ keeper.Keeper, a
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
 		}
 
-		t := types.AttributeType(r.Intn(9)) //nolint:gosec // G115: r.Intn(9) will always fit in an int32 (implicit cast here).
+		t := types.AttributeType(r.Intn(8) + 1) //nolint:gosec // G115: r.Intn(8)+1 gives range 1-8, avoiding AttributeType_Unspecified (0) which produces nil values.
 		msg := types.NewMsgAddAttributeRequest(
 			randomRecord.GetAddress(),
 			simAccount.Address,
