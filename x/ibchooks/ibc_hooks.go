@@ -44,20 +44,20 @@ func (h IbcHooks) GetSendPacketPreProcessors() []types.PreSendPacketDataProcessi
 }
 
 // OnRecvPacketOverride executes wasm or marker hooks for Ics20 packets, if not ics20 packet it will continue to process packet with no override
-func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
+func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, channelVersion string, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
 	if !h.ProperlyConfigured() {
-		return im.App.OnRecvPacket(ctx, packet, relayer)
+		return im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 
 	isIcs20, _ := isIcs20Packet(packet.GetData())
 	if !isIcs20 {
-		return im.App.OnRecvPacket(ctx, packet, relayer)
+		return im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 
 	if err := h.markerHooks.AddUpdateMarker(ctx, packet, h.ibcKeeper); err != nil {
 		return NewEmitErrorAcknowledgement(ctx, types.ErrMarkerError, err.Error())
 	}
-	return h.wasmHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
+	return h.wasmHooks.OnRecvPacketOverride(im, ctx, channelVersion, packet, relayer)
 }
 
 // SendPacketAfterHook function is executed after ibc's SendPacket
@@ -77,11 +77,11 @@ func (h IbcHooks) SendPacketAfterHook(ctx sdktypes.Context,
 }
 
 // OnTimeoutPacketOverride returns impl of wasm hook for OnTimeoutPacketOverride
-func (h IbcHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
-	return h.wasmHooks.OnTimeoutPacketOverride(im, ctx, packet, relayer)
+func (h IbcHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, channelVersion string, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
+	return h.wasmHooks.OnTimeoutPacketOverride(im, ctx, channelVersion, packet, relayer)
 }
 
 // OnAcknowledgementPacketOverride returns impl of wasm OnAcknowledgementPacketOverride
-func (h IbcHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdktypes.AccAddress) error {
-	return h.wasmHooks.OnAcknowledgementPacketOverride(im, ctx, packet, acknowledgement, relayer)
+func (h IbcHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktypes.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdktypes.AccAddress) error {
+	return h.wasmHooks.OnAcknowledgementPacketOverride(im, ctx, channelVersion, packet, acknowledgement, relayer)
 }
