@@ -609,11 +609,10 @@ func New(
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[icahosttypes.StoreKey]), nil,
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, pioMessageRouter, govAuthority,
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.AccountKeeper,
+		pioMessageRouter, app.GRPCQueryRouter(), govAuthority,
 	)
 	app.ICAHostKeeper = &icaHostKeeper
-	app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 

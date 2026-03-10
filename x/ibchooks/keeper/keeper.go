@@ -194,11 +194,6 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 
 	// Write the acknowledgement
-	_, transferCapability, err := k.channelKeeper.LookupModuleByChannel(ctx, "transfer", channel)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
-	}
-
 	// Calling the contract. This could be made generic by using an interface if we want
 	// to support other types of AckActors, but keeping it here for now for simplicity.
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
@@ -253,7 +248,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 
 	// Now we can write the acknowledgement
-	err = k.channelKeeper.WriteAcknowledgement(ctx, transferCapability, packet, newAck)
+	err = k.channelKeeper.WriteAcknowledgement(ctx, packet, newAck)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")
 	}
