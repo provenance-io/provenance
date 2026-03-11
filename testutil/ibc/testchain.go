@@ -147,10 +147,10 @@ func (chain *TestChain) commitBlock(suite *suite.Suite, res *abci.ResponseFinali
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
 		// chains.
-		Time:               chain.LatestCommittedHeader.SignedHeader.Header.Time,
+		Time:               chain.LatestCommittedHeader.Header.Time,
 		ValidatorsHash:     chain.Vals.Hash(),
 		NextValidatorsHash: chain.NextVals.Hash(),
-		ProposerAddress:    chain.LatestCommittedHeader.SignedHeader.Header.ProposerAddress,
+		ProposerAddress:    chain.LatestCommittedHeader.Header.ProposerAddress,
 	}
 }
 

@@ -26,6 +26,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
+
 	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
