@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"encoding/binary"
 	"fmt"
 	"testing"
 
@@ -18,10 +19,17 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	testAttributeRecord := types.NewAttribute("test", "", types.AttributeType_Int, []byte{1}, nil, "")
+	testParams := types.DefaultParams()
+
+	countBz := make([]byte, 8)
+	binary.BigEndian.PutUint64(countBz, 3)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.AttributeKeyPrefix, Value: cdc.MustMarshal(&testAttributeRecord)},
+			{Key: types.AttributeAddrLookupKeyPrefix, Value: countBz},
+			{Key: types.AttributeExpirationKeyPrefix, Value: []byte{}},
+			{Key: types.AttributeParamPrefix, Value: cdc.MustMarshal(&testParams)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -31,6 +39,9 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"Attribute Record", fmt.Sprintf("%v\n%v", testAttributeRecord, testAttributeRecord)},
+		{"AddrLookup Count", fmt.Sprintf("%d\n%d", uint64(3), uint64(3))},
+		{"Expiration", fmt.Sprintf("%X\n%X", []byte{}, []byte{})},
+		{"Params", fmt.Sprintf("%v\n%v", testParams, testParams)},
 		{"other", ""},
 	}
 
