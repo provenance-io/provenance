@@ -37,7 +37,7 @@ jobs:
 
       - uses: docker/setup-qemu-action@v4
 
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@v6
         id: meta
         with:
           images: ${{ env.DOCKER_IMAGE }}
@@ -88,7 +88,7 @@ jobs:
 
       - uses: docker/setup-qemu-action@v4
 
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@v6
         id: meta
         with:
           images: ${{ env.DOCKER_IMAGE }}
@@ -131,7 +131,7 @@ jobs:
 
       - uses: docker/setup-qemu-action@v4
 
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@v6
         id: meta
         with:
           images: ${{ env.GHCR_IMAGE }}
