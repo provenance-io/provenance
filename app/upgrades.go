@@ -39,9 +39,10 @@ type appUpgrade struct {
 //
 // On the same line as the key, there should be a comment indicating the software version.
 // Entries should be in chronological/alphabetical order, earliest first.
-// I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
+// I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"daisy-rc1": {
+		Deleted: []string{"interchainquery", "oracle"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -73,6 +74,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"daisy": {
+		Deleted: []string{"interchainquery", "oracle"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
