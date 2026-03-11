@@ -2,7 +2,6 @@ package ibc
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ibcclienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v10/modules/core/exported"
@@ -14,7 +13,6 @@ type ICS4WrapperMock struct{}
 
 func (m *ICS4WrapperMock) SendPacket(
 	_ sdk.Context,
-	_ *capabilitytypes.Capability,
 	_ string,
 	_ string,
 	_ ibcclienttypes.Height,
@@ -26,7 +24,6 @@ func (m *ICS4WrapperMock) SendPacket(
 
 func (m *ICS4WrapperMock) WriteAcknowledgement(
 	_ sdk.Context,
-	_ *capabilitytypes.Capability,
 	_ exported.PacketI,
 	_ exported.Acknowledgement,
 ) error {

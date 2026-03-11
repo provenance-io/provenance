@@ -96,7 +96,7 @@ func (chain *TestChain) SendMsgsNoCheck(suite *suite.Suite, msgs ...sdk.Msg) (*a
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
 		true,
-		chain.CurrentHeader.GetTime(),
+		chain.LatestCommittedHeader.GetTime(),
 		chain.NextVals.Hash(),
 		chain.SenderPrivKey,
 	)
@@ -133,7 +133,7 @@ func (chain *TestChain) commitBlock(suite *suite.Suite, res *abci.ResponseFinali
 
 	// set the last header to the current header
 	// use nil trusted fields
-	chain.LastHeader = chain.CurrentTMClientHeader()
+	chain.LatestCommittedHeader = chain.CurrentTMClientHeader()
 
 	// val set changes returned from previous block get applied to the next validators
 	// of this block. See tendermint spec for details.
@@ -141,16 +141,16 @@ func (chain *TestChain) commitBlock(suite *suite.Suite, res *abci.ResponseFinali
 	chain.NextVals = ibctesting.ApplyValSetChanges(chain, chain.Vals, res.ValidatorUpdates)
 
 	// increment the current header
-	chain.CurrentHeader = cmtproto.Header{
+	chain.ProposedHeader = cmtproto.Header{
 		ChainID: chain.ChainID,
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
 		// chains.
-		Time:               chain.CurrentHeader.Time,
+		Time:               chain.LatestCommittedHeader.SignedHeader.Header.Time,
 		ValidatorsHash:     chain.Vals.Hash(),
 		NextValidatorsHash: chain.NextVals.Hash(),
-		ProposerAddress:    chain.CurrentHeader.ProposerAddress,
+		ProposerAddress:    chain.LatestCommittedHeader.SignedHeader.Header.ProposerAddress,
 	}
 }
 
