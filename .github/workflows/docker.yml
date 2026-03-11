@@ -35,7 +35,7 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v4
 
       - uses: docker/metadata-action@v5
         id: meta
@@ -86,7 +86,7 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v4
 
       - uses: docker/metadata-action@v5
         id: meta
@@ -129,7 +129,7 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v4
 
       - uses: docker/metadata-action@v5
         id: meta
