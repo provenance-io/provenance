@@ -486,7 +486,9 @@ func IsJSONAckError(acknowledgement []byte) bool {
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
 // denom as represented in the local chain.
-// If the data cannot be unmarshalled this function will panic
+// If the data cannot be unmarshalled this function will panic.
+//
+//nolint:staticcheck // SA1019 - There's no way to get around using some deprecated functions in here.
 func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {

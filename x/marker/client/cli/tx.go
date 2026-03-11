@@ -561,7 +561,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 					// consensus state timestamp of the counter party chain, otherwise
 					// still use consensus state timestamp as reference
 					now := time.Now().UnixNano()
-					consensusStateTimestamp := consensusState.GetTimestamp()
+					consensusStateTimestamp := consensusState.GetTimestamp() //nolint:staticcheck // There's no replacement yet for GetTimeStamp().
 					if now > 0 {
 						now := uint64(now)
 						if now > consensusStateTimestamp {
