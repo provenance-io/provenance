@@ -10,7 +10,7 @@ import (
 )
 
 func (s *TestSuite) TestUpdateParams() {
-	authority := s.app.OracleKeeper.GetAuthority()
+	authority := s.app.RateLimitingKeeper.GetAuthority()
 
 	tests := []struct {
 		name  string

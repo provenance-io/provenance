@@ -1,0 +1,1 @@
+* `github.com/cosmos/ibc-apps/modules/async-icq/v8` removed at v8.0.0-prov-1 of `github.com/provenance-io/ibc-apps/modules/async-icq/v8` [#2630](https://github.com/provenance-io/provenance/issues/2630).

@@ -39,7 +39,6 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/provenance-io/provenance/x/quarantine"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
@@ -323,10 +322,6 @@ func init() {
 	setWhitelistedQuery("/provenance.name.v1.Query/Params", &nametypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/Resolve", &nametypes.QueryResolveResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/ReverseLookup", &nametypes.QueryReverseLookupResponse{})
-
-	// oracle
-	setWhitelistedQuery("/provenance.oracle.v1.Query/OracleAddress", &oracletypes.QueryOracleAddressResponse{})
-	setWhitelistedQuery("/provenance.oracle.v1.Query/Oracle", &oracletypes.QueryOracleResponse{})
 
 	// quarantine
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})

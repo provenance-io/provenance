@@ -66,7 +66,7 @@ func (s *SimTestSuite) TestProposalMsgs() {
 
 func (s *SimTestSuite) TestSimulatePropMsgUpdateOracle() {
 	expMsg := &ibcratelimit.MsgUpdateParamsRequest{
-		Authority: s.app.OracleKeeper.GetAuthority(),
+		Authority: s.app.RateLimitingKeeper.GetAuthority(),
 		Params: ibcratelimit.Params{
 			ContractAddress: "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3",
 		},
