@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,6 +23,20 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &attribB)
 
 			return fmt.Sprintf("%v\n%v", attribA, attribB)
+
+		case bytes.Equal(kvA.Key[:1], types.AttributeAddrLookupKeyPrefix):
+			countA := binary.BigEndian.Uint64(kvA.Value)
+			countB := binary.BigEndian.Uint64(kvB.Value)
+			return fmt.Sprintf("%d\n%d", countA, countB)
+
+		case bytes.Equal(kvA.Key[:1], types.AttributeExpirationKeyPrefix):
+			return fmt.Sprintf("%X\n%X", kvA.Value, kvB.Value)
+
+		case bytes.Equal(kvA.Key[:1], types.AttributeParamPrefix):
+			var paramsA, paramsB types.Params
+			cdc.MustUnmarshal(kvA.Value, &paramsA)
+			cdc.MustUnmarshal(kvB.Value, &paramsB)
+			return fmt.Sprintf("%v\n%v", paramsA, paramsB)
 		default:
 			panic(fmt.Sprintf("unexpected %s key %X (%s)", types.ModuleName, kvA.Key, kvA.Key))
 		}

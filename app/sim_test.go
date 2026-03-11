@@ -405,7 +405,7 @@ func TestAppImportExport(t *testing.T) {
 		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
 		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
-		wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix},
+		wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix, wasmtypes.ContractCodeHistoryElementPrefix},
 		vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix},
 	}
 
