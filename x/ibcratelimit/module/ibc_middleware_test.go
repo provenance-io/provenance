@@ -25,9 +25,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"

@@ -26,7 +26,7 @@ COSMOS_PROTO_URL="raw.githubusercontent.com/cosmos/cosmos-proto/$( go list -m gi
 COSMWASM_V1BETA1_TARBALL_URL='github.com/CosmWasm/wasmd/tarball/v0.17.0'  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
 COSMWASM_CUR_TARBALL_URL="$( go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::; s: :/tarball/:;' )"
 IBC_PORT_V1_QUERY_URL='https://raw.githubusercontent.com/cosmos/ibc-go/v2.3.1/proto/ibc/core/port/v1/query.proto' # Backwards compatibility.
-IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v8 | sed 's:.* => ::; s: :/tarball/:; s:/v8::;')"
+IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v10 | sed 's:.* => ::; s: :/tarball/:; s:/v10::;')"
 COSMOS_TARBALL_URL="$( go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::; s: :/tarball/:;' )"
 COMETBFT_TARBALL_URL="$( go list -m github.com/cometbft/cometbft | sed 's:.* => ::; s: :/tarball/:;' )"
 VAULT_TARBALL_URL="$( go list -m github.com/provlabs/vault | sed 's:.* => ::; s: :/tarball/:;' )"

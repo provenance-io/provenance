@@ -15,7 +15,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/testutil"
 
