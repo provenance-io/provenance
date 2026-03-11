@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,7 +18,6 @@ import (
 	cerrs "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -32,6 +32,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v10/modules/core/04-channel/client/utils"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	"github.com/provenance-io/provenance/internal/provcli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
@@ -542,7 +543,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 			// if the timeouts are not absolute, retrieve latest block height and block timestamp
 			// for the consensus state connected to the destination port/channel
 			if !absoluteTimeouts {
-				consensusState, height, _, err := channelutils.QueryLatestConsensusState(clientCtx, sourcePort, sourceChannel)
+				consensusState, height, err := QueryLatestConsensusState(clientCtx, sourcePort, sourceChannel)
 				if err != nil {
 					return err
 				}
@@ -590,6 +591,36 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// QueryLatestConsensusState gets the latest consensus state and height for a given source port and channel.
+func QueryLatestConsensusState(clientCtx client.Context, sourcePort string, sourceChannel string) (ibc.ConsensusState, clienttypes.Height, error) {
+	// Get the client state for the port/channel.
+	clientRes, err := channelutils.QueryChannelClientState(clientCtx, sourcePort, sourceChannel, false)
+	if err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+	clientID := clientRes.IdentifiedClientState.ClientId
+
+	// Query consensus state directly with LatestHeight: true.
+	queryClient := clienttypes.NewQueryClient(clientCtx)
+	res, err := queryClient.ConsensusState(context.Background(), &clienttypes.QueryConsensusStateRequest{
+		ClientId:     clientID,
+		LatestHeight: true,
+	})
+	if err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+
+	// Get the consensus state out of the response.
+	var consensusState ibc.ConsensusState
+	err = clientCtx.InterfaceRegistry.UnpackAny(res.ConsensusState, &consensusState)
+	if err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+
+	// The proof height is also the latest height.
+	return consensusState, res.ProofHeight, nil
 }
 
 func GetCmdGrantAuthorization() *cobra.Command {
