@@ -52,7 +52,7 @@ func (i ICS4Middleware) SendPacket(
 	seq, err := i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 
 	if hook, ok := i.Hooks.(SendPacketAfterHooks); ok {
-		hook.SendPacketAfterHook(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, err)
+		hook.SendPacketAfterHook(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, seq, err, processingStateData)
 	}
 
 	return seq, err

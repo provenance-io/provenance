@@ -142,7 +142,9 @@ type SendPacketAfterHooks interface {
 		timeoutHeight clienttypes.Height,
 		timeoutTimestamp uint64,
 		data []byte,
+		sequence uint64,
 		err error,
+		processData map[string]interface{},
 	)
 }
 

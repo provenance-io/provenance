@@ -3,7 +3,6 @@ package ibchooks
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
@@ -32,6 +31,13 @@ func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper
 		SendPacketPreProcessors: preSendPacketDataProcessingFns,
 	}
 }
+
+var (
+	_ OnRecvPacketOverrideHooks            = (*IbcHooks)(nil)
+	_ SendPacketAfterHooks                 = (*IbcHooks)(nil)
+	_ OnTimeoutPacketOverrideHooks         = (*IbcHooks)(nil)
+	_ OnAcknowledgementPacketOverrideHooks = (*IbcHooks)(nil)
+)
 
 // ProperlyConfigured returns false if either wasm or marker hooks are configured incorrectly
 func (h IbcHooks) ProperlyConfigured() bool {
@@ -63,7 +69,6 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, c
 // SendPacketAfterHook function is executed after ibc's SendPacket
 // Note: processData is a JSON object of state data from the PreSendPacketDataProcessingFns
 func (h IbcHooks) SendPacketAfterHook(ctx sdktypes.Context,
-	chanCap *capabilitytypes.Capability,
 	sourcePort string,
 	sourceChannel string,
 	timeoutHeight clienttypes.Height,
@@ -73,7 +78,7 @@ func (h IbcHooks) SendPacketAfterHook(ctx sdktypes.Context,
 	err error,
 	processData map[string]interface{},
 ) {
-	h.wasmHooks.SendPacketAfterHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, sequence, err, processData)
+	h.wasmHooks.SendPacketAfterHook(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, sequence, err, processData)
 }
 
 // OnTimeoutPacketOverride returns impl of wasm hook for OnTimeoutPacketOverride
