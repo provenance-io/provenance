@@ -6,7 +6,7 @@
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 
 tools: tools-stamp
-tools-stamp: golangci
+tools-stamp: golangci-lint
 	# Create dummy file to satisfy dependency and avoid
 	# rebuilding when this Makefile target is hit twice
 	# in a row.
