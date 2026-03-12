@@ -198,7 +198,6 @@ func TestNewMarkerValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.acc.Validate()
 			if err == nil {
@@ -271,7 +270,6 @@ func TestMarkerTypeStrings(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			m, err := MarkerTypeFromString(tt.typeString)
 			require.Equal(t, tt.expErr, err)
@@ -457,7 +455,6 @@ func TestNetAssetValueValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.nav.Validate()
 			if len(tt.expErr) > 0 {
