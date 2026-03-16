@@ -123,6 +123,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	solomachine "github.com/cosmos/ibc-go/v10/modules/light-clients/06-solomachine"
 	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -604,6 +605,7 @@ func New(
 	)
 
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
+
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[icahosttypes.StoreKey]), nil,
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.AccountKeeper,
@@ -703,6 +705,16 @@ func New(
 
 	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
+	// Light client modules
+	clientKeeper := app.IBCKeeper.ClientKeeper
+	storeProvider := app.IBCKeeper.ClientKeeper.GetStoreProvider()
+
+	tmLightClientModule := ibctm.NewLightClientModule(appCodec, storeProvider)
+	clientKeeper.AddRoute(ibctm.ModuleName, &tmLightClientModule)
+
+	smLightClientModule := solomachine.NewLightClientModule(appCodec, storeProvider)
+	clientKeeper.AddRoute(solomachine.ModuleName, &smLightClientModule)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -750,13 +762,15 @@ func New(
 
 		vaultmodule.NewAppModule(app.VaultKeeper, app.MarkerKeeper, app.BankKeeper, address.Bech32Codec{Bech32Prefix: addrPrefix}),
 
-		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
 		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icaModule,
-		ibctm.AppModule{},
+
+		// IBC
+		ibctm.NewAppModule(tmLightClientModule),
+		solomachine.NewAppModule(smLightClientModule),
 	)
 
 	// Set the upgrade-keeper's version map that it uses during init-genesis.
@@ -879,6 +893,7 @@ func New(
 		slashingtypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibctm.ModuleName,
+		solomachine.ModuleName,
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
