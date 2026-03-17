@@ -543,7 +543,7 @@ func New(
 		app.IbcHooks,
 	)
 
-	rateLimitingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimit.StoreKey], nil)
+	rateLimitingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[ibcratelimit.StoreKey]), nil)
 	app.RateLimitingKeeper = &rateLimitingKeeper
 
 	// Create Transfer Keepers

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -36,7 +37,9 @@ func (k MsgServer) UpdateParams(goCtx context.Context, msg *ibcratelimit.MsgUpda
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.SetParams(ctx, msg.Params)
+	if err := k.SetParams(ctx, msg.Params); err != nil {
+		return nil, fmt.Errorf("failed to set ibctatelimit params during InitGenesis: %w", err)
+	}
 	k.emitEvent(ctx, ibcratelimit.NewEventParamsUpdated())
 
 	return &ibcratelimit.MsgUpdateParamsResponse{}, nil
