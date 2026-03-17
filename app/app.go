@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -20,6 +21,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -970,8 +972,14 @@ func New(
 	app.registerUpgradeHandlers()
 
 	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
-			cmtos.Exit(err.Error())
+		if err = app.LoadLatestVersion(); err != nil {
+			cmtos.Exit(fmt.Sprintf("error loading latest version: %v", err))
+		}
+
+		// Initialize pinned codes in wasmvm as they are not persisted there.
+		ctx := app.NewUncachedContext(true, tmproto.Header{})
+		if err = app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
+			cmtos.Exit(fmt.Sprintf("failed to initialize pinned codes: %v", err))
 		}
 	}
 
