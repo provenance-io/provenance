@@ -38,7 +38,7 @@ func (k MsgServer) UpdateParams(goCtx context.Context, msg *ibcratelimit.MsgUpda
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.SetParams(ctx, msg.Params); err != nil {
-		return nil, fmt.Errorf("failed to set ibctatelimit params during InitGenesis: %w", err)
+		return nil, fmt.Errorf("failed to set ibcratelimit params during InitGenesis: %w", err)
 	}
 	k.emitEvent(ctx, ibcratelimit.NewEventParamsUpdated())
 

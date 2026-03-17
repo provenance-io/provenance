@@ -26,6 +26,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *ibcratelimit.GenesisState) {
 		panic(err)
 	}
 	if err := k.SetParams(ctx, data.Params); err != nil {
-		panic(fmt.Errorf("failed to set ibctatelimit params during InitGenesis: %w", err))
+		panic(fmt.Errorf("failed to set ibcratelimit params during InitGenesis: %w", err))
 	}
 }

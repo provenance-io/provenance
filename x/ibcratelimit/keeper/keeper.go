@@ -69,7 +69,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params ibcratelimit.Params, err erro
 	params, err = k.ParamsItem.Get(ctx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return ibcratelimit.DefaultParams(), nil
+			return ibcratelimit.Params{}, err
 		}
 		return ibcratelimit.Params{}, err
 	}
