@@ -259,7 +259,11 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 	if err != nil {
 		return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to create securitization marker: %s", err))
 	}
-
+	// Parse the signer address once before the pool loop.
+	signerAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return nil, types.NewErrCodeInvalidField("signer", "%s", err)
+	}
 	// Create the tranches and count them
 	var trancheCount uint32
 	for _, tranche := range msg.Tranches {
@@ -277,7 +281,11 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		if err != nil {
 			return nil, types.NewErrCodeNotFound(fmt.Sprintf("pool marker with denom %s", pool))
 		}
-
+		// Verify the signer holds Admin access on this pool marker before modifying
+		// any permissions.
+		if !poolMarker.AddressHasAccess(signerAddr, markertypes.Access_Admin) {
+			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("signer %q does not have Admin access on pool marker %q", msg.Signer, pool))
+		}
 		// Create a new access grant with the desired permissions
 		moduleAccessGrant := markertypes.NewAccessGrant(
 			m.GetModuleAddress(),

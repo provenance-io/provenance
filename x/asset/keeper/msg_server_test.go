@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type MsgServerTestSuite struct {
@@ -500,4 +502,154 @@ func (s *MsgServerTestSuite) TestBurnAsset_NotOwner() {
 	_, err = msgServer.BurnAsset(s.ctx, burnMsg)
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "is not the owner of asset")
+}
+
+func (s *MsgServerTestSuite) TestCreateSecuritization_RequiresAdminOnEachPool() {
+	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+
+	// Create a second address that will NOT own any pool.
+	priv2 := secp256k1.GenPrivKey()
+	otherAddr := sdk.AccAddress(priv2.PubKey().Address())
+
+	// asset class and two assets owned by user1.
+	_, err := msgServer.CreateAssetClass(s.ctx, &types.MsgCreateAssetClass{
+		AssetClass: &types.AssetClass{Id: "cls-auth", Name: "ClsAuth"},
+		Signer:     s.user1Addr.String(),
+	})
+	s.Require().NoError(err)
+
+	for i, id := range []string{"nft-auth-1", "nft-auth-2"} {
+		_, err = msgServer.CreateAsset(s.ctx, &types.MsgCreateAsset{
+			Asset:  &types.Asset{ClassId: "cls-auth", Id: id, Uri: fmt.Sprintf("https://example.com/%d", i)},
+			Owner:  s.user1Addr.String(),
+			Signer: s.user1Addr.String(),
+		})
+		s.Require().NoError(err, "create asset %s", id)
+	}
+
+	// user1 creates two pools. user1 gets Admin on both.
+	for _, tc := range []struct {
+		denom  string
+		nft    string
+		amount int64
+	}{
+		{"pool-auth-a", "nft-auth-1", 500}, {"pool-auth-b", "nft-auth-2", 750}} {
+		_, err = msgServer.CreatePool(s.ctx, &types.MsgCreatePool{
+			Pool:   sdk.Coin{Denom: tc.denom, Amount: sdkmath.NewInt(tc.amount)},
+			Assets: []*types.AssetKey{{ClassId: "cls-auth", Id: tc.nft}},
+			Signer: s.user1Addr.String(),
+		})
+		s.Require().NoError(err, "create pool %s", tc.denom)
+	}
+
+	tests := []struct {
+		name        string
+		signer      sdk.AccAddress
+		pools       []string
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name:        "pool owner (admin) can securitize own pools",
+			signer:      s.user1Addr,
+			pools:       []string{"pool-auth-a", "pool-auth-b"},
+			expectErr:   false,
+			errContains: "",
+		},
+		{
+			name:        "address with no access on pool is rejected",
+			signer:      otherAddr,
+			pools:       []string{"pool-auth-a"},
+			expectErr:   true,
+			errContains: "does not have Admin access on pool marker",
+		},
+		{
+			name:        "address with no access is rejected even with multiple pools listed",
+			signer:      otherAddr,
+			pools:       []string{"pool-auth-a", "pool-auth-b"},
+			expectErr:   true,
+			errContains: "does not have Admin access on pool marker",
+		},
+	}
+
+	// Use a counter suffix to keep securitization IDs unique across sub-tests.
+	var counter int
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			counter++
+			msg := &types.MsgCreateSecuritization{
+				Id:       fmt.Sprintf("sec-auth-%d", counter),
+				Tranches: []*sdk.Coin{{Denom: "tranche-x", Amount: sdkmath.NewInt(100)}},
+				Pools:    tc.pools,
+				Signer:   tc.signer.String(),
+			}
+
+			_, err := msgServer.CreateSecuritization(s.ctx, msg)
+
+			if tc.expectErr {
+				s.Require().Error(err, "expected an error but got none")
+				s.Require().ErrorIs(err, types.ErrUnauthorized, "expected ErrUnauthorized sentinel, got: %v", err)
+				s.Require().Contains(err.Error(), tc.errContains, "error message should identify the pool and the missing access")
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestCreateSecuritization_AdminCheckIsPerPool() {
+	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+
+	priv2 := secp256k1.GenPrivKey()
+	user2Addr := sdk.AccAddress(priv2.PubKey().Address())
+
+	// Shared asset class.
+	_, err := msgServer.CreateAssetClass(s.ctx, &types.MsgCreateAssetClass{
+		AssetClass: &types.AssetClass{Id: "cls-perpool", Name: "ClsPerPool"},
+		Signer:     s.user1Addr.String(),
+	})
+	s.Require().NoError(err)
+
+	// user1 creates asset and pool — user1 gets Admin on "pool-per-1".
+	_, err = msgServer.CreateAsset(s.ctx, &types.MsgCreateAsset{
+		Asset:  &types.Asset{ClassId: "cls-perpool", Id: "nft-per-1", Uri: "https://example.com/per1"},
+		Owner:  s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
+	})
+	s.Require().NoError(err)
+	_, err = msgServer.CreatePool(s.ctx, &types.MsgCreatePool{
+		Pool:   sdk.Coin{Denom: "pool-per-1", Amount: sdkmath.NewInt(300)},
+		Assets: []*types.AssetKey{{ClassId: "cls-perpool", Id: "nft-per-1"}},
+		Signer: s.user1Addr.String(),
+	})
+	s.Require().NoError(err)
+
+	// user2 creates asset and pool — user2 gets Admin on "pool-per-2".
+	_, err = msgServer.CreateAsset(s.ctx, &types.MsgCreateAsset{
+		Asset:  &types.Asset{ClassId: "cls-perpool", Id: "nft-per-2", Uri: "https://example.com/per2"},
+		Owner:  user2Addr.String(),
+		Signer: user2Addr.String(),
+	})
+	s.Require().NoError(err)
+	_, err = msgServer.CreatePool(s.ctx, &types.MsgCreatePool{
+		Pool:   sdk.Coin{Denom: "pool-per-2", Amount: sdkmath.NewInt(400)},
+		Assets: []*types.AssetKey{{ClassId: "cls-perpool", Id: "nft-per-2"}},
+		Signer: user2Addr.String(),
+	})
+	s.Require().NoError(err)
+
+	// user1 tries to securitize [pool-per-1 (own), pool-per-2 (user2's)].
+	_, err = msgServer.CreateSecuritization(s.ctx, &types.MsgCreateSecuritization{
+		Id:       "sec-perpool-1",
+		Tranches: []*sdk.Coin{{Denom: "tr-pp", Amount: sdkmath.NewInt(50)}},
+		Pools:    []string{"pool-per-1", "pool-per-2"},
+		Signer:   s.user1Addr.String(),
+	})
+	s.Require().Error(err)
+	s.Require().ErrorIs(err, types.ErrUnauthorized)
+	s.Require().Contains(err.Error(), "pool-per-2", "error must name the specific pool the signer lacks Admin on")
+
+	poolMarker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "pool-per-2")
+	s.Require().NoError(err)
+	s.Require().True(poolMarker.AddressHasAccess(user2Addr, markertypes.Access_Admin), "pool-per-2 owner must still have Admin — no state should have been mutated by the rejected call")
 }
