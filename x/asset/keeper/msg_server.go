@@ -284,7 +284,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		// Verify the signer holds Admin access on this pool marker before modifying
 		// any permissions.
 		if !poolMarker.AddressHasAccess(signerAddr, markertypes.Access_Admin) {
-			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("signer %q does not have Admin access on pool marker %q", msg.Signer, pool))
+			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("signer %s does not have Admin access on pool marker %s", msg.Signer, pool))
 		}
 		// Create a new access grant with the desired permissions
 		moduleAccessGrant := markertypes.NewAccessGrant(
