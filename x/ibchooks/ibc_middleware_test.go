@@ -34,8 +34,9 @@ import (
 )
 
 var (
-	_ ibchooks.Hooks = TestRecvOverrideHooks{}
-	_ ibchooks.Hooks = TestRecvBeforeAfterHooks{}
+	_ ibchooks.OnRecvPacketOverrideHooks = TestRecvOverrideHooks{}
+	_ ibchooks.OnRecvPacketBeforeHooks   = TestRecvBeforeAfterHooks{}
+	_ ibchooks.OnRecvPacketAfterHooks    = TestRecvBeforeAfterHooks{}
 )
 
 type Status struct {
@@ -47,19 +48,19 @@ type Status struct {
 // Recv
 type TestRecvOverrideHooks struct{ Status *Status }
 
-func (t TestRecvOverrideHooks) OnRecvPacketOverride(im ibchooks.IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+func (t TestRecvOverrideHooks) OnRecvPacketOverride(im ibchooks.IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	t.Status.OverrideRan = true
-	ack := im.App.OnRecvPacket(ctx, packet, relayer)
+	ack := im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	return ack
 }
 
 type TestRecvBeforeAfterHooks struct{ Status *Status }
 
-func (t TestRecvBeforeAfterHooks) OnRecvPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) {
+func (t TestRecvBeforeAfterHooks) OnRecvPacketBeforeHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) {
 	t.Status.BeforeRan = true
 }
 
-func (t TestRecvBeforeAfterHooks) OnRecvPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement) {
+func (t TestRecvBeforeAfterHooks) OnRecvPacketAfterHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement) {
 	t.Status.AfterRan = true
 }
 
@@ -114,15 +115,15 @@ func NewTransferPath(chainA, chainB *testutil.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
+	path.EndpointA.ChannelConfig.Version = transfertypes.V1
+	path.EndpointB.ChannelConfig.Version = transfertypes.V1
 
 	return path
 }
 
 func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	var (
-		trace    transfertypes.DenomTrace
+		trace    transfertypes.Denom
 		amount   sdkmath.Int
 		receiver string
 		status   Status
@@ -164,11 +165,11 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 
 			tc.malleate(&status)
 
-			data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver, "")
+			data := transfertypes.NewFungibleTokenPacketData(trace.Path(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver, "")
 			packet := channeltypes.NewPacket(data.GetBytes(), seq, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, clienttypes.NewHeight(1, 100), 0)
 
 			ack := suite.chainB.GetProvenanceApp().TransferStack.
-				OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
+				OnRecvPacket(suite.chainB.GetContext(), path.EndpointB.GetChannel().Version, packet, suite.chainA.SenderAccount.GetAddress())
 
 			if tc.expPass {
 				suite.Require().True(ack.Success())
@@ -219,15 +220,10 @@ func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 }
 
 func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
-	channelCap := suite.chainB.GetChannelCapability(
-		suite.path.EndpointB.ChannelConfig.PortID,
-		suite.path.EndpointB.ChannelID)
-
 	packet := suite.makeMockPacket(receiver, memo, prevSequence)
 
 	seq, err := suite.chainB.GetProvenanceApp().HooksICS4Wrapper.SendPacket(
 		suite.chainB.GetContext(),
-		channelCap,
 		packet.SourcePort,
 		packet.SourceChannel,
 		packet.TimeoutHeight,
