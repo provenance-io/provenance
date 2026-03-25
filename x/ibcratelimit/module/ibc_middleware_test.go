@@ -24,7 +24,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v10/testing"
@@ -241,7 +240,7 @@ func (suite *MiddlewareTestSuite) TestNonICS20() {
 	provApp := suite.chainA.GetProvenanceApp()
 
 	data := []byte("{}")
-	_, err := provApp.RateLimitMiddleware.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+	_, err := provApp.RateLimitMiddleware.SendPacket(suite.chainA.GetContext(), "wasm.cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
 
 	suite.Require().Error(err)
 	// This will error out, but not because of rate limiting
@@ -608,8 +607,8 @@ func NewTransferPath(chainA, chainB *testutil.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
+	path.EndpointA.ChannelConfig.Version = transfertypes.V1
+	path.EndpointB.ChannelConfig.Version = transfertypes.V1
 	return path
 }
 
