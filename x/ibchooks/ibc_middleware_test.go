@@ -247,7 +247,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 	suite.Require().NoError(err)
 
 	// manually send the acknowledgement to chain b
-	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
+	err = suite.path.EndpointB.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
 	return ack
 }
@@ -304,6 +304,17 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 
+	// Pre-fund the escrow address on chainB so the error ack refund can unescrow tokens.
+	// The mock packet bypasses MsgTransfer and doesn't escrow tokens, so we fund it manually.
+	escrowAddr := transfertypes.GetEscrowAddress(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID)
+	escrowCoin := sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)
+	suite.Require().NoError(suite.chainB.GetProvenanceApp().BankKeeper.SendCoins(
+		suite.chainB.GetContext(),
+		suite.chainB.SenderAccount.GetAddress(),
+		escrowAddr,
+		sdk.NewCoins(escrowCoin)))
+	suite.chainB.GetProvenanceApp().TransferKeeper.SetTotalEscrowForDenom(suite.chainB.GetContext(), escrowCoin)
+
 	// Execute the contract via IBC with a message that the contract will reject
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"not_echo":{"msg":"test"}}}}`, addr))
 	ackStr := string(ackBytes)
@@ -337,7 +348,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 		addr.String(), memo)
 
 	prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
-	senderLocalAcc, err := keeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), prefix)
+	senderLocalAcc, err := keeper.DeriveIntermediateSender(suite.path.EndpointA.ChannelID, suite.chainB.SenderAccount.GetAddress().String(), prefix)
 	suite.Require().NoError(err)
 
 	state := suite.chainA.QueryContract(
@@ -348,7 +359,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderLocalAcc)))
-	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"1"}]}`, state)
+	suite.Require().Equal(fmt.Sprintf(`{"total_funds":[{"denom":"%s","amount":"1"}]}`, localDenom), state)
 
 	suite.receivePacketWithSequence(
 		addr.String(),
@@ -362,7 +373,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderLocalAcc)))
-	suite.Require().Equal(`{"total_funds":[{"denom":"ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878","amount":"2"}]}`, state)
+	suite.Require().Equal(fmt.Sprintf(`{"total_funds":[{"denom":"%s","amount":"2"}]}`, localDenom), state)
 
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
@@ -371,11 +382,11 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 // custom MsgTransfer constructor that supports Memo
 func NewMsgTransfer(
-	token sdk.Coin, sender, receiver string, memo string,
+	token sdk.Coin, sender, receiver string, memo string, sourceChannel string,
 ) *transfertypes.MsgTransfer {
 	return &transfertypes.MsgTransfer{
 		SourcePort:       "transfer",
-		SourceChannel:    "channel-0",
+		SourceChannel:    sourceChannel,
 		Token:            token,
 		Sender:           sender,
 		Receiver:         receiver,
@@ -455,7 +466,7 @@ func (suite *HooksTestSuite) TestAcks() {
 	// Generate swap instructions for the contract
 	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg := NewMsgTransfer(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), callbackMemo)
+	transferMsg := NewMsgTransfer(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), callbackMemo, suite.path.EndpointA.ChannelID)
 	suite.FullSend(transferMsg, AtoB)
 
 	// The test contract will increment the counter for itself every time it receives an ack
@@ -478,7 +489,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	chainBSenderAddress := suite.chainB.SenderAccount.GetAddress()
 
 	// Sending a packet without memo to ensure that the ibc_callback middleware doesn't interfere with a regular send
-	transferMsg := NewMsgTransfer(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), chainASenderAddress.String(), chainBSenderAddress.String(), "")
+	transferMsg := NewMsgTransfer(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), chainASenderAddress.String(), chainBSenderAddress.String(), "", suite.path.EndpointA.ChannelID)
 	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err, "FullSend()")
 	suite.Require().Contains(ack, "result")
@@ -488,7 +499,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	suite.Require().NoError(err, "GetMarkerByDenom()")
 	suite.Require().Equal(marker.GetDenom(), denom)
 
-	transferMsg = NewMsgTransfer(sdk.NewInt64Coin(denom, 100), chainBSenderAddress.String(), chainASenderAddress.String(), "")
+	transferMsg = NewMsgTransfer(sdk.NewInt64Coin(denom, 100), chainBSenderAddress.String(), chainASenderAddress.String(), "", suite.path.EndpointB.ChannelID)
 	_, _, ack, err = suite.FullSend(transferMsg, BtoA)
 	suite.Require().NoError(err, "FullSend()")
 	suite.Require().Contains(ack, "result")
@@ -520,7 +531,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	err = chainA.MarkerKeeper.WithdrawCoins(suite.chainA.GetContext(), chainASenderAddress, chainASenderAddress, hotdogs, sdk.NewCoins(sdk.NewInt64Coin(hotdogs, 55)))
 	suite.Require().NoError(err, "chainA WithdrawCoins()")
 
-	transferMsg = NewMsgTransfer(sdk.NewInt64Coin(hotdogs, 55), chainASenderAddress.String(), chainBSenderAddress.String(), "")
+	transferMsg = NewMsgTransfer(sdk.NewInt64Coin(hotdogs, 55), chainASenderAddress.String(), chainBSenderAddress.String(), "", suite.path.EndpointA.ChannelID)
 	_, _, ack, err = suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err, "AtoB FullSend()")
 	suite.Require().Contains(ack, "result", "FullSend() ack check")
