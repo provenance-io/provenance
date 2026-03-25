@@ -79,7 +79,12 @@ func (suite *MarkerHooksTestSuite) makeMockPacket(denom, receiver, memo string, 
 }
 
 func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
-	suite.chainA.GetProvenanceApp().BankKeeper.MintCoins(suite.chainA.GetContext(), markertypes.CoinPoolName, sdk.NewCoins(sdk.NewInt64Coin("ibc/F7466BCD642C14163B3E67D5B4401FD2B77271C3225FDE0C57ADD61B8046253D", 100)))
+	// Compute IBC denoms dynamically since channel IDs vary between test runs.
+	hamburgerIBCDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivehamburgers", "", "", 0))
+	friesIBCDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivefries", "", "", 0))
+	ibcBeforeIBCDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("ibcdenombeforemiddleware", "", "", 0))
+
+	suite.chainA.GetProvenanceApp().BankKeeper.MintCoins(suite.chainA.GetContext(), markertypes.CoinPoolName, sdk.NewCoins(sdk.NewInt64Coin(ibcBeforeIBCDenom, 100)))
 	address1 := sdk.AccAddress("address1")
 	address2 := sdk.AccAddress("address2")
 	markerHooks := ibchooks.NewMarkerHooks(&suite.chainA.GetProvenanceApp().MarkerKeeper)
@@ -97,33 +102,33 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 			denom:       "fiftyfivehamburgers",
 			memo:        "",
 			expErr:      "",
-			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
-			expSupply:   sdk.NewInt64Coin("ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E", 1),
+			expIbcDenom: hamburgerIBCDenom,
+			expSupply:   sdk.NewInt64Coin(hamburgerIBCDenom, 1),
 		},
 		{
 			name:        "successfully process with non json memo",
 			denom:       "fiftyfivehamburgers",
 			memo:        "55 burger 55 fries...",
 			expErr:      "",
-			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
-			expSupply:   sdk.NewInt64Coin("ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E", 1),
+			expIbcDenom: hamburgerIBCDenom,
+			expSupply:   sdk.NewInt64Coin(hamburgerIBCDenom, 1),
 		},
 		{
 			name:        "successfully process with non json marker part memo",
 			denom:       "fiftyfivehamburgers",
 			memo:        `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
 			expErr:      "",
-			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
-			expSupply:   sdk.NewInt64Coin("ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E", 1),
+			expIbcDenom: hamburgerIBCDenom,
+			expSupply:   sdk.NewInt64Coin(hamburgerIBCDenom, 1),
 		},
 		{
 			name:          "successfully process with transfer auths",
 			denom:         "fiftyfivefries",
 			memo:          fmt.Sprintf(`{"marker":{"transfer-auths":["%s", "%s"]}}`, address1.String(), address2.String()),
 			expErr:        "",
-			expIbcDenom:   "ibc/1B3A5773661E8A6B9F6BB407979B5933C2FA792DF24ED2A40B028C90277B0C22",
+			expIbcDenom:   friesIBCDenom,
 			expTransAuths: []sdk.AccAddress{address1, address2},
-			expSupply:     sdk.NewInt64Coin("ibc/1B3A5773661E8A6B9F6BB407979B5933C2FA792DF24ED2A40B028C90277B0C22", 1),
+			expSupply:     sdk.NewInt64Coin(friesIBCDenom, 1),
 		},
 		{
 			name:   "fail invalid json",
@@ -136,8 +141,8 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 			denom:       "ibcdenombeforemiddleware",
 			memo:        "",
 			expErr:      "",
-			expIbcDenom: "ibc/F7466BCD642C14163B3E67D5B4401FD2B77271C3225FDE0C57ADD61B8046253D",
-			expSupply:   sdk.NewInt64Coin("ibc/F7466BCD642C14163B3E67D5B4401FD2B77271C3225FDE0C57ADD61B8046253D", 101),
+			expIbcDenom: ibcBeforeIBCDenom,
+			expSupply:   sdk.NewInt64Coin(ibcBeforeIBCDenom, 101),
 		},
 	}
 	for _, tc := range testCases {
