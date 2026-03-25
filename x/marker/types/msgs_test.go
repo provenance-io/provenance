@@ -234,13 +234,13 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				"transfer",
 				"channel-1",
 				sdk.NewInt64Coin("jackthecat", 1),
-				"invalid-address",
+				"", // Sender address
 				validAddress,
 				clienttypes.NewHeight(1, 1),
 				1000,
 				"",
 			),
-			"string could not be parsed as address: decoding bech32 failed: invalid separator index -1: invalid address",
+			"missing sender address: invalid address",
 		},
 		{
 			"should succeed",
