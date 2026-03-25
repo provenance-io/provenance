@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/asset/keeper"
 	"github.com/provenance-io/provenance/x/asset/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type MsgServerTestSuite struct {
@@ -500,4 +502,160 @@ func (s *MsgServerTestSuite) TestBurnAsset_NotOwner() {
 	_, err = msgServer.BurnAsset(s.ctx, burnMsg)
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "is not the owner of asset")
+}
+
+func (s *MsgServerTestSuite) TestCreateSecuritization_PoolAdminRequired() {
+	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+
+	otherPriv := secp256k1.GenPrivKey()
+	otherAddr := sdk.AccAddress(otherPriv.PubKey().Address())
+
+	_, err := msgServer.CreateAssetClass(s.ctx, &types.MsgCreateAssetClass{
+		AssetClass: &types.AssetClass{Id: "sec-auth-class", Name: "SecAuthClass"},
+		Signer:     s.user1Addr.String(),
+	})
+	s.Require().NoError(err, "setup: CreateAssetClass sec-auth-class") // ← comment 3
+
+	for i, nftID := range []string{"sec-auth-nft-1", "sec-auth-nft-2"} {
+		_, err = msgServer.CreateAsset(s.ctx, &types.MsgCreateAsset{
+			Asset:  &types.Asset{ClassId: "sec-auth-class", Id: nftID, Uri: fmt.Sprintf("https://example.com/%d", i+1)},
+			Owner:  s.user1Addr.String(),
+			Signer: s.user1Addr.String(),
+		})
+		s.Require().NoError(err, "setup: CreateAsset %s", nftID)
+	}
+
+	for _, pc := range []struct {
+		denom string
+		nft   string
+	}{
+		{"sec-auth-pool-a", "sec-auth-nft-1"},
+		{"sec-auth-pool-b", "sec-auth-nft-2"},
+	} {
+		_, err = msgServer.CreatePool(s.ctx, &types.MsgCreatePool{
+			Pool:   sdk.Coin{Denom: pc.denom, Amount: sdkmath.NewInt(100)},
+			Assets: []*types.AssetKey{{ClassId: "sec-auth-class", Id: pc.nft}},
+			Signer: s.user1Addr.String(),
+		})
+		s.Require().NoError(err, "setup: CreatePool %s", pc.denom)
+	}
+
+	type poolAdminTestCase struct {
+		name    string
+		signer  string
+		pools   []string
+		expErr  string // empty = expect success
+		expPool string // pool denom expected in error
+	}
+
+	tests := []poolAdminTestCase{
+		{
+			// pool owner must still be able to securitize own pools.
+			name:   "pool owner with Admin succeeds",
+			signer: s.user1Addr.String(),
+			pools:  []string{"sec-auth-pool-a", "sec-auth-pool-b"},
+			expErr: "",
+		},
+		{
+			// address with no access on the pool must be rejected.
+			name:    "signer with no access on pool is rejected",
+			signer:  otherAddr.String(),
+			pools:   []string{"sec-auth-pool-a"},
+			expErr:  "unauthorized",
+			expPool: "sec-auth-pool-a",
+		},
+		{
+			// Rejection must apply when multiple pools are listed; first failing
+			// pool (sec-auth-pool-a) is the one named in the error.
+			name:    "signer with no access is rejected across multiple pools",
+			signer:  otherAddr.String(),
+			pools:   []string{"sec-auth-pool-a", "sec-auth-pool-b"},
+			expErr:  "unauthorized",
+			expPool: "sec-auth-pool-a", // first pool checked
+		},
+	}
+
+	var idCounter int
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			idCounter++
+			_, err := msgServer.CreateSecuritization(s.ctx, &types.MsgCreateSecuritization{
+				Id:       fmt.Sprintf("sec-auth-id-%d", idCounter),
+				Tranches: []*sdk.Coin{{Denom: "tr-auth", Amount: sdkmath.NewInt(10)}},
+				Pools:    tc.pools,
+				Signer:   tc.signer,
+			})
+
+			if tc.expErr != "" {
+				s.Require().Error(err, "CreateSecuritization error")
+				s.Require().ErrorIs(err, types.ErrUnauthorized, "CreateSecuritization error")
+				s.Require().Contains(err.Error(), tc.signer, "error must name the unauthorized signer")
+				s.Require().Contains(err.Error(), tc.expPool, "error must name the unauthorized pool")
+			} else {
+				s.Require().NoError(err, "CreateSecuritization error")
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestCreateSecuritization_AdminCheckEnforcedPerPool() {
+	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+
+	// user2 owns a separate pool.
+	priv2 := secp256k1.GenPrivKey()
+	user2Addr := sdk.AccAddress(priv2.PubKey().Address())
+
+	_, err := msgServer.CreateAssetClass(s.ctx, &types.MsgCreateAssetClass{
+		AssetClass: &types.AssetClass{Id: "per-pool-class", Name: "PerPoolClass"},
+		Signer:     s.user1Addr.String(),
+	})
+	s.Require().NoError(err, "setup: CreateAssetClass per-pool-class")
+
+	// user1 asset → user1 pool.
+	_, err = msgServer.CreateAsset(s.ctx, &types.MsgCreateAsset{
+		Asset:  &types.Asset{ClassId: "per-pool-class", Id: "pp-nft-1", Uri: "https://example.com/pp1"},
+		Owner:  s.user1Addr.String(),
+		Signer: s.user1Addr.String(),
+	})
+	s.Require().NoError(err, "setup: CreateAsset pp-nft-1")
+
+	_, err = msgServer.CreatePool(s.ctx, &types.MsgCreatePool{
+		Pool:   sdk.Coin{Denom: "per-pool-1", Amount: sdkmath.NewInt(200)},
+		Assets: []*types.AssetKey{{ClassId: "per-pool-class", Id: "pp-nft-1"}},
+		Signer: s.user1Addr.String(),
+	})
+	s.Require().NoError(err, "setup: CreatePool per-pool-1")
+
+	// user2 asset → user2 pool.
+	_, err = msgServer.CreateAsset(s.ctx, &types.MsgCreateAsset{
+		Asset:  &types.Asset{ClassId: "per-pool-class", Id: "pp-nft-2", Uri: "https://example.com/pp2"},
+		Owner:  user2Addr.String(),
+		Signer: user2Addr.String(),
+	})
+	s.Require().NoError(err, "setup: CreateAsset pp-nft-2")
+
+	_, err = msgServer.CreatePool(s.ctx, &types.MsgCreatePool{
+		Pool:   sdk.Coin{Denom: "per-pool-2", Amount: sdkmath.NewInt(300)},
+		Assets: []*types.AssetKey{{ClassId: "per-pool-class", Id: "pp-nft-2"}},
+		Signer: user2Addr.String(),
+	})
+	s.Require().NoError(err, "setup: CreatePool per-pool-2")
+
+	_, err = msgServer.CreateSecuritization(s.ctx, &types.MsgCreateSecuritization{
+		Id:       "per-pool-sec-1",
+		Tranches: []*sdk.Coin{{Denom: "tr-pp", Amount: sdkmath.NewInt(50)}},
+		Pools:    []string{"per-pool-1", "per-pool-2"},
+		Signer:   s.user1Addr.String(),
+	})
+	s.Require().Error(err, "CreateSecuritization error")
+	s.Require().ErrorIs(err, types.ErrUnauthorized, "CreateSecuritization error")
+	s.Require().Contains(err.Error(), "per-pool-2", "error must name the unauthorized pool")
+	s.Require().Contains(err.Error(), s.user1Addr.String(), "error must name the unauthorized signer")
+
+	poolMarker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "per-pool-2")
+	s.Require().NoError(err, "per-pool-2 marker must still exist after rejected call")
+	s.Require().True(
+		poolMarker.AddressHasAccess(user2Addr, markertypes.Access_Admin),
+		"user2 must still hold Admin on per-pool-2: auth check fires before mutation on this pool",
+	)
 }

@@ -174,7 +174,6 @@ func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -439,7 +438,6 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -694,7 +692,6 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -833,7 +830,6 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
@@ -1121,7 +1117,6 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.desc.ValidateBasic("")
 			if err != nil {
