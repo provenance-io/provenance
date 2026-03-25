@@ -96,7 +96,7 @@ func (chain *TestChain) SendMsgsNoCheck(suite *suite.Suite, msgs ...sdk.Msg) (*a
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
 		true,
-		chain.LatestCommittedHeader.GetTime(),
+		chain.ProposedHeader.GetTime(),
 		chain.NextVals.Hash(),
 		chain.SenderPrivKey,
 	)

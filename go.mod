@@ -27,7 +27,6 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.6
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.2
-	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v10 v10.5.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.5.4

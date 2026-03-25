@@ -292,9 +292,9 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
-	channel := "channel-0"
+	channel := suite.path.EndpointA.ChannelID
 	if !native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID, denom))
 		fmt.Println(denomTrace)
 		denom = denomTrace.IBCDenom()
 	}
@@ -387,12 +387,12 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	// Get the denom and amount to send
 	sendDenom := sdk.DefaultBondDenom
 	localDenom := sdk.DefaultBondDenom
-	channel := "channel-0"
+	channel := suite.path.EndpointA.ChannelID
 	if native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", localDenom))
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID, localDenom))
 		localDenom = denomTrace.IBCDenom()
 	} else {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", sendDenom))
+		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID, sendDenom))
 		sendDenom = denomTrace.IBCDenom()
 	}
 
@@ -460,7 +460,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
 	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
+	quotas := suite.BuildChannelQuota("weekly", suite.path.EndpointA.ChannelID, sdk.DefaultBondDenom, 604800, 1, 1)
 	initMsg := CreateRateLimiterInitMessage(suite.chainA, quotas)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, initMsg, 1)
 	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
