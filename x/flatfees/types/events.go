@@ -8,8 +8,8 @@ func NewEventParamsUpdated() *EventParamsUpdated {
 // NewEventConversionFactorUpdated creates the event emitted when UpdateConversionFactor succeeds.
 func NewEventConversionFactorUpdated(cf ConversionFactor) *EventConversionFactorUpdated {
 	return &EventConversionFactorUpdated{
-		DefinitionAmount: cf.DefinitionAmount,
-		ConvertedAmount:  cf.ConvertedAmount,
+		DefinitionAmount: cf.DefinitionAmount.String(),
+		ConvertedAmount:  cf.ConvertedAmount.String(),
 	}
 }
 

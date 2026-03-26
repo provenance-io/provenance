@@ -73,8 +73,8 @@ func TestNewEventConversionFactorUpdated(t *testing.T) {
 				ConvertedAmount:  sdk.NewInt64Coin("nhash", 2_000),
 			},
 			exp: &EventConversionFactorUpdated{
-				DefinitionAmount: sdk.NewInt64Coin("musd", 1),
-				ConvertedAmount:  sdk.NewInt64Coin("nhash", 2_000),
+				DefinitionAmount: sdk.NewInt64Coin("musd", 1).String(),
+				ConvertedAmount:  sdk.NewInt64Coin("nhash", 2_000).String(),
 			},
 		},
 		{
@@ -84,8 +84,8 @@ func TestNewEventConversionFactorUpdated(t *testing.T) {
 				ConvertedAmount:  sdk.NewInt64Coin("nhash", 1_000_000_000),
 			},
 			exp: &EventConversionFactorUpdated{
-				DefinitionAmount: sdk.NewInt64Coin("musd", 1_000_000),
-				ConvertedAmount:  sdk.NewInt64Coin("nhash", 1_000_000_000),
+				DefinitionAmount: sdk.NewInt64Coin("musd", 1_000_000).String(),
+				ConvertedAmount:  sdk.NewInt64Coin("nhash", 1_000_000_000).String(),
 			},
 		},
 		{
@@ -95,8 +95,8 @@ func TestNewEventConversionFactorUpdated(t *testing.T) {
 				ConvertedAmount:  sdk.NewInt64Coin("nhash", 1),
 			},
 			exp: &EventConversionFactorUpdated{
-				DefinitionAmount: sdk.NewInt64Coin("nhash", 1),
-				ConvertedAmount:  sdk.NewInt64Coin("nhash", 1),
+				DefinitionAmount: sdk.NewInt64Coin("nhash", 1).String(),
+				ConvertedAmount:  sdk.NewInt64Coin("nhash", 1).String(),
 			},
 		},
 		{
@@ -106,8 +106,8 @@ func TestNewEventConversionFactorUpdated(t *testing.T) {
 				ConvertedAmount:  sdk.NewInt64Coin("nhash", 0),
 			},
 			exp: &EventConversionFactorUpdated{
-				DefinitionAmount: sdk.NewInt64Coin("musd", 1),
-				ConvertedAmount:  sdk.NewInt64Coin("nhash", 0),
+				DefinitionAmount: sdk.NewInt64Coin("musd", 1).String(),
+				ConvertedAmount:  sdk.NewInt64Coin("nhash", 0).String(),
 			},
 		},
 	}

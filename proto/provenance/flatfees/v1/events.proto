@@ -5,20 +5,17 @@ option go_package          = "github.com/provenance-io/provenance/x/flatfees/typ
 option java_package        = "io.provenance.flatfees.v1";
 option java_multiple_files = true;
 
-import "gogoproto/gogo.proto";
-import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 
 // EventParamsUpdated is emitted when UpdateParams successfully updates the flatfees params.
 message EventParamsUpdated {}
 
-// EventConversionFactorUpdated is emitted when UpdateConversionFactor successfully updates
-// the conversion factor.
+// EventConversionFactorUpdated is emitted when ConversionFactor successfully updated.
 message EventConversionFactorUpdated {
-  // definition_amount is the new definition amount of the conversion factor.
-  cosmos.base.v1beta1.Coin definition_amount = 1 [(gogoproto.nullable) = false];
-  // converted_amount is the new converted amount of the conversion factor.
-  cosmos.base.v1beta1.Coin converted_amount = 2 [(gogoproto.nullable) = false];
+  // definition_amount is the new definition_amount of the conversion factor as coin string, e.g. "1musd".
+  string definition_amount = 1;
+  // converted_amount is the new converted_amount of the conversion factor as a coin string, e.g. "2000nhash".
+  string converted_amount = 2;
 }
 
 // EventMsgFeeSet is emitted when a msg fee is created or updated (from the SetMsgFee keeper helper).

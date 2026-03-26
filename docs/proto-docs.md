@@ -8602,14 +8602,13 @@ Params defines the set of params for the flatfees module.
 <a name="provenance-flatfees-v1-EventConversionFactorUpdated"></a>
 
 ### EventConversionFactorUpdated
-EventConversionFactorUpdated is emitted when UpdateConversionFactor successfully updates
-the conversion factor.
+EventConversionFactorUpdated is emitted when ConversionFactor successfully updated.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `definition_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | definition_amount is the new definition amount of the conversion factor. |
-| `converted_amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | converted_amount is the new converted amount of the conversion factor. |
+| `definition_amount` | [string](#string) |  | definition_amount is the new definition_amount of the conversion factor as coin string, e.g. "1musd". |
+| `converted_amount` | [string](#string) |  | converted_amount is the new converted_amount of the conversion factor as a coin string, e.g. "2000nhash". |
 
 
 
