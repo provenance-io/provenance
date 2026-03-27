@@ -326,6 +326,7 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
 
 			var expResp, actResp *types.MsgUpdateParamsResponse
@@ -349,6 +350,15 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			s.Assert().Equal(expResp, actResp, "UpdateParams(...) response")
 
 			tc.kpr.AssertCalls(s.T())
+
+			if len(tc.expErr) == 0 {
+				expEvent, evErr := sdk.TypedEventToEvent(types.NewEventParamsUpdated())
+				s.Require().NoError(evErr, "TypedEventToEvent(EventParamsUpdated)")
+				s.Assert().Equal(sdk.Events{expEvent}, s.ctx.EventManager().Events(), "UpdateParams(...) events")
+			} else {
+				s.Assert().Empty(s.ctx.EventManager().Events(), "UpdateParams(...) events on error")
+			}
+
 		})
 	}
 }
@@ -495,6 +505,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
 			tc.kpr = tc.kpr.WithExpIsOracleAddress(tc.req.Authority).WithIsOracleAddressResults(tc.isOracleAddr)
 
@@ -519,6 +530,15 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			s.Assert().Equal(expResp, actResp, "UpdateConversionFactor() response")
 
 			tc.kpr.AssertCalls(s.T())
+
+			if len(tc.expErr) == 0 {
+				expEvent, evErr := sdk.TypedEventToEvent(types.NewEventConversionFactorUpdated(tc.req.ConversionFactor))
+				s.Require().NoError(evErr, "TypedEventToEvent(EventConversionFactorUpdated)")
+				s.Assert().Equal(sdk.Events{expEvent}, s.ctx.EventManager().Events(), "UpdateConversionFactor() events")
+			} else {
+				s.Assert().Empty(s.ctx.EventManager().Events(), "UpdateConversionFactor() events on error")
+			}
+
 		})
 	}
 }
@@ -983,6 +1003,7 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
+			ctx := s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
 
 			var expResp, actResp *types.MsgAddOracleAddressResponse
@@ -994,13 +1015,22 @@ func (s *MsgServerTestSuite) TestAddOracleAddress() {
 
 			var err error
 			testFunc := func() {
-				actResp, err = msgServer.AddOracleAddress(s.ctx, tc.req)
+				actResp, err = msgServer.AddOracleAddress(ctx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "AddOracleAddress should not panic")
 			assertions.AssertErrorValue(s.T(), err, tc.expErr, "AddOracleAddress error")
 			s.Assert().Equal(expResp, actResp, "AddOracleAddress response")
 
 			tc.kpr.AssertCalls(s.T())
+
+			if len(tc.expErr) == 0 {
+				expEvent, evErr := sdk.TypedEventToEvent(types.NewEventOracleAddressAdded(tc.req.OracleAddress))
+				s.Require().NoError(evErr, "TypedEventToEvent(EventOracleAddressAdded)")
+				s.Assert().Equal(sdk.Events{expEvent}, ctx.EventManager().Events(), "AddOracleAddress events")
+			} else {
+				s.Assert().Empty(ctx.EventManager().Events(), "AddOracleAddress events on error")
+			}
+
 		})
 	}
 }
@@ -1082,6 +1112,7 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
+			ctx := s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
 
 			var expResp, actResp *types.MsgRemoveOracleAddressResponse
@@ -1093,13 +1124,21 @@ func (s *MsgServerTestSuite) TestRemoveOracleAddress() {
 
 			var err error
 			testFunc := func() {
-				actResp, err = msgServer.RemoveOracleAddress(s.ctx, tc.req)
+				actResp, err = msgServer.RemoveOracleAddress(ctx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "RemoveOracleAddress should not panic")
 			assertions.AssertErrorValue(s.T(), err, tc.expErr, "RemoveOracleAddress error")
 			s.Assert().Equal(expResp, actResp, "RemoveOracleAddress response")
 
 			tc.kpr.AssertCalls(s.T())
+
+			if len(tc.expErr) == 0 {
+				expEvent, evErr := sdk.TypedEventToEvent(types.NewEventOracleAddressRemoved(tc.req.OracleAddress))
+				s.Require().NoError(evErr, "TypedEventToEvent(EventOracleAddressRemoved)")
+				s.Assert().Equal(sdk.Events{expEvent}, ctx.EventManager().Events(), "RemoveOracleAddress events")
+			} else {
+				s.Assert().Empty(ctx.EventManager().Events(), "RemoveOracleAddress events on error")
+			}
 		})
 	}
 }
