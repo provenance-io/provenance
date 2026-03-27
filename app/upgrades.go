@@ -373,6 +373,26 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 			MsgTypeUrl: "/ibc.core.client.v1.MsgUpdateClient",
 			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 10)), // $0.01
 		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgAcknowledgement",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgRecvPacket",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgSendPacket",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/provenance.flatfees.v1.MsgAddOracleAddressRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
+		},
+		{
+			MsgTypeUrl: "/provenance.flatfees.v1.MsgRemoveOracleAddressRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
+		},
 	}
 
 	for _, msgFee := range feeUpdates {
