@@ -397,11 +397,24 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 
 	for _, msgFee := range feeUpdates {
 		if err := msgFee.Validate(); err != nil {
-			return fmt.Errorf("invalid msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+			return fmt.Errorf("invalid msg fee for %q: %w", msgFee.MsgTypeUrl, err)
 		}
 
 		if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
-			return fmt.Errorf("failed to set msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+			return fmt.Errorf("failed to set msg fee for %q: %w", msgFee.MsgTypeUrl, err)
+		}
+	}
+
+	feeDeletes := []string{
+		"/ibc.core.channel.v1.MsgUpdateParams",
+		"/icq.v1.MsgUpdateParams",
+		"/provenance.oracle.v1.MsgSendQueryOracleRequest",
+		"/provenance.oracle.v1.MsgUpdateOracleRequest",
+	}
+
+	for _, msgTypeURL := range feeDeletes {
+		if err := app.FlatFeesKeeper.RemoveMsgFee(ctx, msgTypeURL); err != nil {
+			ctx.Logger().Info("Could not remove flat-fee entry.", "msg_type_url", msgTypeURL, "error", err)
 		}
 	}
 
