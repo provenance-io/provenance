@@ -549,6 +549,14 @@
     - [MsgFee](#provenance-flatfees-v1-MsgFee)
     - [Params](#provenance-flatfees-v1-Params)
   
+- [provenance/flatfees/v1/events.proto](#provenance_flatfees_v1_events-proto)
+    - [EventConversionFactorUpdated](#provenance-flatfees-v1-EventConversionFactorUpdated)
+    - [EventMsgFeeSet](#provenance-flatfees-v1-EventMsgFeeSet)
+    - [EventMsgFeeUnset](#provenance-flatfees-v1-EventMsgFeeUnset)
+    - [EventOracleAddressAdded](#provenance-flatfees-v1-EventOracleAddressAdded)
+    - [EventOracleAddressRemoved](#provenance-flatfees-v1-EventOracleAddressRemoved)
+    - [EventParamsUpdated](#provenance-flatfees-v1-EventParamsUpdated)
+  
 - [provenance/flatfees/v1/query.proto](#provenance_flatfees_v1_query-proto)
     - [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest)
     - [QueryAllMsgFeesResponse](#provenance-flatfees-v1-QueryAllMsgFeesResponse)
@@ -8569,6 +8577,108 @@ Params defines the set of params for the flatfees module.
 | `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. The denom used here should be the same as used to define the specific msg costs. The recommended denom is musd. |
 | `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. The definition_amount should have the same denom as the default cost. The denom of the converted amount should be the denom that fees are paid in, e.g. nhash. |
 | `oracle_addresses` | [string](#string) | repeated | oracle_addresses is the list of addresses allowed to update the conversion factor without governance. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/events.proto
+
+
+
+<a name="provenance-flatfees-v1-EventConversionFactorUpdated"></a>
+
+### EventConversionFactorUpdated
+EventConversionFactorUpdated is emitted when ConversionFactor successfully updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition_amount` | [string](#string) |  | definition_amount is the new definition_amount of the conversion factor as coin string, e.g. "1musd". |
+| `converted_amount` | [string](#string) |  | converted_amount is the new converted_amount of the conversion factor as a coin string, e.g. "2000nhash". |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventMsgFeeSet"></a>
+
+### EventMsgFeeSet
+EventMsgFeeSet is emitted when a msg fee is created or updated (from the SetMsgFee keeper helper).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message that had its fee set. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventMsgFeeUnset"></a>
+
+### EventMsgFeeUnset
+EventMsgFeeUnset is emitted when a msg fee is removed (from the RemoveMsgFee keeper helper).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message that had its fee removed. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventOracleAddressAdded"></a>
+
+### EventOracleAddressAdded
+EventOracleAddressAdded is emitted when AddOracleAddress successfully adds an oracle address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `oracle_address` | [string](#string) |  | oracle_address is the address that was added to the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventOracleAddressRemoved"></a>
+
+### EventOracleAddressRemoved
+EventOracleAddressRemoved is emitted when RemoveOracleAddress successfully removes an oracle address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `oracle_address` | [string](#string) |  | oracle_address is the address that was removed from the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventParamsUpdated"></a>
+
+### EventParamsUpdated
+EventParamsUpdated is emitted when UpdateParams successfully updates the flatfees params.
 
 
 
