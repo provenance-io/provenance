@@ -38,6 +38,7 @@ var _ types.MsgServer = msgServer{}
 
 // UpdateParams is a governance endpoint for updating the x/flatfees params.
 func (m msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParamsRequest) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := m.ValidateAuthority(req.Authority); err != nil {
 		return nil, err
 	}
@@ -46,7 +47,9 @@ func (m msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventParamsUpdated()); err != nil {
+		return nil, err
+	}
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
@@ -69,7 +72,9 @@ func (m msgServer) UpdateConversionFactor(goCtx context.Context, req *types.MsgU
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventConversionFactorUpdated(req.ConversionFactor)); err != nil {
+		return nil, err
+	}
 	return &types.MsgUpdateConversionFactorResponse{}, nil
 }
 
@@ -92,7 +97,6 @@ func (m msgServer) UpdateMsgFees(goCtx context.Context, req *types.MsgUpdateMsgF
 			return nil, status.Errorf(codes.InvalidArgument, "could not remove msg fee: %v", err)
 		}
 	}
-
 	return &types.MsgUpdateMsgFeesResponse{}, nil
 }
 
@@ -108,7 +112,9 @@ func (m msgServer) AddOracleAddress(goCtx context.Context, req *types.MsgAddOrac
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventOracleAddressAdded(req.OracleAddress)); err != nil {
+		return nil, err
+	}
 	return &types.MsgAddOracleAddressResponse{}, nil
 }
 
@@ -124,6 +130,8 @@ func (m msgServer) RemoveOracleAddress(goCtx context.Context, req *types.MsgRemo
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventOracleAddressRemoved(req.OracleAddress)); err != nil {
+		return nil, err
+	}
 	return &types.MsgRemoveOracleAddressResponse{}, nil
 }

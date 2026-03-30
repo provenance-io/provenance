@@ -86,6 +86,9 @@ func (k Keeper) SetMsgFee(ctx sdk.Context, msgFee types.MsgFee) error {
 	if err != nil {
 		return fmt.Errorf("could not set msg fee for %q: %w", msgFee.MsgTypeUrl, err)
 	}
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventMsgFeeSet(msgFee.MsgTypeUrl)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -115,6 +118,9 @@ func (k Keeper) RemoveMsgFee(ctx sdk.Context, msgType string) error {
 	err = k.msgFees.Remove(ctx, msgType)
 	if err != nil {
 		return fmt.Errorf("could not remove msg fee for %q: %w", msgType, err)
+	}
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventMsgFeeUnset(msgType)); err != nil {
+		return err
 	}
 	return nil
 }
