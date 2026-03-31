@@ -6,7 +6,6 @@
 ###
 ### Environment Variables:
 ###   GO:             The command to use to execute go. Default: go
-###   DB_BACKEND:     Dictates which db backend to use: goleveldb.
 ###                   The test-sim-nondeterminism is hard-coded to use memdb though.
 ###   BINDIR:         The Go bin directory, defaults to $GOPATH/bin
 ###   SIM_GENESIS:    Defines the path to the custom genesis file used by
