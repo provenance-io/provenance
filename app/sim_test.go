@@ -8,11 +8,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
+	"os"
 	"sort"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -33,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sims "github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -351,63 +349,92 @@ func TestAppStateDeterminism(t *testing.T) {
 	//simcli.FlagBlockSizeValue = 100
 	//simcli.FlagNumBlocksValue = 50
 
-	const numTimesToRunPerSeed = 3
+	config := simcli.NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+	config.ChainID = pioconfig.SimAppChainID
+	config.Commit = true
+
+	numSeeds := 3
+	numTimesToRunPerSeed := 3
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	var seeds []int64
-	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
-		for j := 0; j < numTimesToRunPerSeed; j++ {
-			seeds = append(seeds, s)
-		}
+	if config.Seed != simcli.DefaultSeedValue {
+		// If a seed was provided, just do that one.
+		numSeeds = 1
+		seeds = append(seeds, config.Seed)
 	} else {
-		for i := 0; i < 3; i++ {
-			seed := rand.Int63()
-			for j := 0; j < numTimesToRunPerSeed; j++ {
-				seeds = append(seeds, seed)
+		// Otherwise, pick random seeds to use.
+		seeds = make([]int64, numSeeds)
+		for i := range seeds {
+			seeds[i] = rand.Int63()
+		}
+	}
+
+	pioconfig.SetProvConfig(sdk.DefaultBondDenom)
+
+	for i, seed := range seeds {
+		config.Seed = seed
+
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			var logger log.Logger
+			if simcli.FlagVerboseValue {
+				logger = log.NewTestLogger(t)
+			} else {
+				logger = log.NewNopLogger()
+			}
+
+			// Reset any global state that prior tests may have set.
+			simcli.FlagGenesisTimeValue = 0
+
+			// Create a new temp dir for the app to fix wasmvm data dir lockfile contention.
+			appOpts := newSimAppOpts(t)
+			if simcli.FlagVerboseValue {
+				appOpts[flags.FlagLogLevel] = "debug"
+			}
+
+			db := dbm.NewMemDB()
+			app := New(logger, db, nil, true, appOpts, interBlockCacheOpt(), baseapp.SetChainID(config.ChainID))
+			if !simcli.FlagSigverifyTxValue {
+				app.SetNotSigverifyTx()
+			}
+
+			fmt.Printf(
+				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t,
+				os.Stdout,
+				app.BaseApp,
+				provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+				simtypes.RandomAccounts,
+				simtestutil.SimulationOperations(app, app.AppCodec(), config),
+				app.ModuleAccountAddrs(),
+				config,
+				app.AppCodec(),
+			)
+			require.NoError(t, err)
+
+			if simcli.FlagVerboseValue {
+				printStats(config, db)
+			}
+
+			appHash := app.LastCommitID().Hash
+			appHashList[j] = appHash
+
+			if j != 0 {
+				require.Equal(
+					t, string(appHashList[0]), string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
 			}
 		}
 	}
-
-	// Wrap the factory to add interBlockCacheOpt (same as SDK simapp).
-	interBlockCachingAppFactory := func(
-		logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
-		appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
-	) *App {
-		return New(logger, db, traceStore, loadLatest, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
-	}
-
-	var mx sync.Mutex
-	appHashResults := make(map[int64][][]byte)
-	appSimLogger := make(map[int64][]simulation.LogWriter)
-
-	captureAndCheckHash := func(tb testing.TB, ti sims.TestInstance[*App], _ []simtypes.Account) {
-		tb.Helper()
-		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
-
-		mx.Lock()
-		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
-		if len(otherHashes) < numTimesToRunPerSeed-1 {
-			appHashResults[seed] = append(otherHashes, appHash)
-			appSimLogger[seed] = append(execWriters, ti.ExecLogWriter)
-		} else {
-			delete(appHashResults, seed)
-			delete(appSimLogger, seed)
-		}
-		mx.Unlock()
-
-		var failNow bool
-		for i := 0; i < len(otherHashes); i++ {
-			if !assert.Equal(tb, otherHashes[i], appHash) {
-				execWriters[i].PrintLogs()
-				failNow = true
-			}
-		}
-		if failNow {
-			ti.ExecLogWriter.PrintLogs()
-			tb.Fatalf("non-determinism in seed %d", seed)
-		}
-	}
-
-	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, nil, captureAndCheckHash)
 }
 
 type ComparableStoreApp interface {

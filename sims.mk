@@ -6,7 +6,8 @@
 ###
 ### Environment Variables:
 ###   GO:             The command to use to execute go. Default: go
-###                   The test-sim-nondeterminism is hard-coded to use memdb though.
+###   SEED:           Optional random seed for simulation tests.
+###                   Usage: SEED=57 make test-sim-import-export
 ###   BINDIR:         The Go bin directory, defaults to $GOPATH/bin
 ###   SIM_GENESIS:    Defines the path to the custom genesis file used by
 ###                   test-sim-custom-genesis-multi-seed and test-sim-custom-genesis-fast
