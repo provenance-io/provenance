@@ -1682,8 +1682,8 @@ github.com/prometheus/procfs v0.19.2 h1:zUMhqEW66Ex7OXIiDkll3tl9a1ZdilUOd/F6ZXw4
 github.com/prometheus/procfs v0.19.2/go.mod h1:M0aotyiemPhBCM0z5w87kL22CxfcH05ZpYlu+b4J7mw=
 github.com/provenance-io/cosmos-sdk v0.53.5-pio-2 h1:+xC5s+abO/BR9OHiJglok3oRC5oBGVjJQ+opv5+ikgQ=
 github.com/provenance-io/cosmos-sdk v0.53.5-pio-2/go.mod h1:AQJx0jpon70WAD4oOs/y+SlST4u7VIwEPR6F8S7JMdo=
-github.com/provenance-io/wasmd v0.61.9-pio-1 h1:vC5grdvJly+LEQhUszUflh/8OW84KC5ENr+UYNUPCas=
-github.com/provenance-io/wasmd v0.61.9-pio-1/go.mod h1:GMPqtsb1T8FvaKpQGJmGuj/JMPXBauk4ZhUErgmtEus=
+github.com/provenance-io/wasmd v0.61.10-pio-1 h1:V/wUE7qCCPiaM38anjmwxaYbvrR4fmgqpH0alrOnpCA=
+github.com/provenance-io/wasmd v0.61.10-pio-1/go.mod h1:GMPqtsb1T8FvaKpQGJmGuj/JMPXBauk4ZhUErgmtEus=
 github.com/provlabs/vault v1.0.15 h1:nH8dBVwgNg3i9xoJUh3YS+44b858mA3gdyEEMb8VXag=
 github.com/provlabs/vault v1.0.15/go.mod h1:1vskm2+cCclAMVBbbjuRLHkHxlkKgOaLHGX1S82jLts=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9 h1:cu+rMHYCZIE9+StrjgwKn+cKta7wmDi9qBgVAb09e1g=
