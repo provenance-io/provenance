@@ -176,8 +176,11 @@ func (k Keeper) SetAttribute(
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 
 	store := ctx.KVStore(k.storeKey)
+	isNew := !store.Has(key)
 	store.Set(key, bz)
-	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	if isNew {
+		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	}
 	k.addAttributeExpireLookup(store, attr)
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
@@ -522,8 +525,11 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	}
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
+	isNew := !store.Has(key)
 	store.Set(key, bz)
-	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	if isNew {
+		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	}
 	k.addAttributeExpireLookup(store, attr)
 	return nil
 }

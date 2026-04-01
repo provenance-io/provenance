@@ -6,8 +6,8 @@
 ###
 ### Environment Variables:
 ###   GO:             The command to use to execute go. Default: go
-###   DB_BACKEND:     Dictates which db backend to use: goleveldb.
-###                   The test-sim-nondeterminism is hard-coded to use memdb though.
+###   SEED:           Optional random seed for simulation tests.
+###                   Usage: SEED=57 make test-sim-import-export
 ###   BINDIR:         The Go bin directory, defaults to $GOPATH/bin
 ###   SIM_GENESIS:    Defines the path to the custom genesis file used by
 ###                   test-sim-custom-genesis-multi-seed and test-sim-custom-genesis-fast
@@ -17,63 +17,70 @@
 ###   SIM_COMMIT:     Whether to commit during  test-sim-benchmark or test-sim-profile. Default is true.
 
 SIMAPP = ./app
-DB_BACKEND ?= goleveldb
-ifneq ($(DB_BACKEND),goleveldb)
-  $(error unknown DB_BACKEND value [$(DB_BACKEND)]. Must be goleveldb)
-endif
 
-# We have to use a hack to provide -tags with the runsim stuff, but it only allows us to provide one tag.
-# Runsim creates a command string, then does a split on " " to turn it into args.
-# With two tags, e.g. -tags 'foo bar', you'd end up with three args, "-tags", "'foo", and "bar'", and it'll get confused.
-# But we CAN provide a single tag in the -SimAppPkg value in order to trick it into including it in the `go test` commands.
-# We provide the -DBBackend flag to the runsim tests using this same -SimAppPkg hack.
-SIMAPP += -DBBackend=$(DB_BACKEND)
+ifdef SEED 
+	SEED_ARG = -Seed=$(SEED)
+else
+	SEED_ARG =
+endif
 
 SIM_GENESIS ?= ${HOME}/.provenanced/config/genesis.json
 
-# Runsim Usage: runsim [flags] <blocks> <period> <testname>
-# flags: [-Jobs maxprocs] [-ExitOnFail] [-Seeds comma-separated-seed-list]
-#        [-Genesis file-path] [-SimAppPkg file-path] [-Github] [-Slack] [-LogObjPrefix string]
-
-test-sim-import-export: runsim
+test-sim-import-export:
 	@echo "Running application import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 30 3 'TestAppImportExport'
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestAppImportExport \
+		-NumBlocks=30 -BlockSize=100 \
+		-Commit=true $(SEED_ARG) -Period=3 -v -timeout 1h
 
-test-sim-after-import: runsim
+test-sim-after-import:
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 30 3 'TestAppSimulationAfterImport'
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestAppSimulationAfterImport \
+		-NumBlocks=30 -BlockSize=100 \
+		-Commit=true $(SEED_ARG) -Period=3 -v -timeout 1h
 
-test-sim-custom-genesis-multi-seed: runsim
+test-sim-custom-genesis-multi-seed:
+	@test -f '$(SIM_GENESIS)' || (echo "ERROR: Genesis file not found at $(SIM_GENESIS).\nRun 'provenanced init testnode' to create one, or set SIM_GENESIS=/path/to/genesis.json" && exit 1)
 	@echo "Running multi-seed custom genesis simulation..."
-	$(BINDIR)/runsim -Genesis='$(SIM_GENESIS)' -SimAppPkg='$(SIMAPP)' -ExitOnFail 400 5 'TestFullAppSimulation'
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestFullAppSimulation \
+		-Genesis='$(SIM_GENESIS)' -NumBlocks=400 -BlockSize=100 \
+		-Commit=true $(SEED_ARG) -Period=5 -v -timeout 24h
 
-test-sim-multi-seed-long: runsim
+test-sim-multi-seed-long:
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 500 50 'TestFullAppSimulation'
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestFullAppSimulation \
+		-NumBlocks=500 -BlockSize=100 \
+		-Commit=true $(SEED_ARG) -Period=50 -v -timeout 24h
 
-test-sim-multi-seed-short: runsim
+test-sim-multi-seed-short:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 50 10 'TestFullAppSimulation'
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestFullAppSimulation \
+		-NumBlocks=50 -BlockSize=100 \
+		-Commit=true $(SEED_ARG) -Period=10 -v -timeout 1h
+
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
-	$(GO) test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestAppStateDeterminism \
 		-NumBlocks=50 -BlockSize=100 -Commit=true -Period=0 -v -timeout 24h
 
 test-sim-custom-genesis-fast:
+	@test -f '$(SIM_GENESIS)' || (echo "ERROR: Genesis file not found at $(SIM_GENESIS).\nRun 'provenanced init testnode' to create one, or set SIM_GENESIS=/path/to/genesis.json" && exit 1)
 	@echo "Running custom genesis simulation..."
-	$(GO) test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis='$(SIM_GENESIS)' \
-		-Enabled=true -NumBlocks=50 -BlockSize=100 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestFullAppSimulation -Genesis='$(SIM_GENESIS)' \
+		-NumBlocks=50 -BlockSize=100 \
+		-Commit=true $(SEED_ARG) -Period=5 -v -timeout 24h
 
 test-sim-simple:
 	@echo "Running simple module simulation..."
-	$(GO) test -mod=readonly $(SIMAPP) -run TestSimple \
-		-Enabled=true -NumBlocks=50 -BlockSize=100 -Commit=true -Seed=99 -Period=5 -v -timeout 1h
+	$(GO) test -mod=readonly -tags sims $(SIMAPP) -run TestSimple \
+		-NumBlocks=50 -BlockSize=100 \
+		-Commit=true $(SEED_ARG) -Period=5 -v -timeout 1h
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
-	$(GO) test -mod=readonly -run=^$$ $(SIMAPP) -benchmem -bench=BenchmarkInvariants \
-	-Enabled=true -NumBlocks=1000 -BlockSize=200 -Period=1 -Commit=true -Seed=57 -v -timeout 24h
+	$(GO) test -mod=readonly -tags sims -run=^$$ $(SIMAPP) -benchmem -bench=BenchmarkInvariants \
+		-NumBlocks=450 -BlockSize=200 \
+		-Period=1 -Commit=true $(SEED_ARG) -v -timeout 24h
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
@@ -81,14 +88,16 @@ SIM_COMMIT ?= true
 
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	$(GO) test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
-		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
+	$(GO) test -mod=readonly -tags sims -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) \
+		-Commit=$(SIM_COMMIT) -timeout 24h
 
 # Same as test-sim-benchmark except also creates files with cpu and memory profile info.
 test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	$(GO) test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
-		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
+	$(GO) test -mod=readonly -tags sims -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) \
+		-Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 .PHONY: \
 test-sim-nondeterminism \
