@@ -1073,6 +1073,11 @@ func (app *App) GetTxConfig() client.TxConfig {
 	return app.txConfig
 }
 
+// TxConfig implements the simsx.SimulationApp interface.
+func (app *App) TxConfig() client.TxConfig {
+	return app.txConfig
+}
+
 // Name returns the name of the App
 func (app *App) Name() string { return app.BaseApp.Name() }
 

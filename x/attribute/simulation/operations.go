@@ -81,7 +81,11 @@ func SimulateMsgAddAttribute(simState module.SimulationState, _ keeper.Keeper, a
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
 		}
 
-		t := types.AttributeType(r.Intn(9)) //nolint:gosec // G115: r.Intn(9) will always fit in an int32 (implicit cast here).
+		randType := types.AttributeType(r.Intn(9)) //nolint:gosec // G115: r.Intn(9) will always fit in an int32 (implicit cast here).
+		if randType == 0 || randType == 8 {
+			randType = types.AttributeType_JSON
+		}
+		t := randType
 		msg := types.NewMsgAddAttributeRequest(
 			randomRecord.GetAddress(),
 			simAccount.Address,
@@ -107,7 +111,11 @@ func SimulateMsgUpdateAttribute(simState module.SimulationState, k keeper.Keeper
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
-		t := types.AttributeType(r.Intn(9)) //nolint:gosec // G115: r.Intn(9) will always fit in an int32 (implicit cast here).
+		randType := types.AttributeType(r.Intn(9)) //nolint:gosec // G115: r.Intn(9) will always fit in an int32 (implicit cast here).
+		if randType == 0 || randType == 8 {
+			randType = types.AttributeType_JSON
+		}
+		t := randType
 		msg := types.NewMsgUpdateAttributeRequest(
 			randomAttribute.GetAddress(),
 			simAccount.Address,
