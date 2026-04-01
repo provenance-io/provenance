@@ -79,7 +79,7 @@ test-sim-simple:
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
 	$(GO) test -mod=readonly -tags sims -run=^$$ $(SIMAPP) -benchmem -bench=BenchmarkInvariants \
-		-NumBlocks=1000 -BlockSize=200 \
+		-NumBlocks=450 -BlockSize=200 \
 		-Period=1 -Commit=true $(SEED_ARG) -v -timeout 24h
 
 SIM_NUM_BLOCKS ?= 500

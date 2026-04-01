@@ -140,7 +140,7 @@ func mutateAppState[G proto.Message](appState json.RawMessage, cdc codec.JSONCod
 func setupSimulation(dirPrefix string, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = pioconfig.SimAppChainID
-	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, dirPrefix, dbName, simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, dirPrefix, dbName, simcli.FlagVerboseValue, true)
 	return config, db, dir, logger, skip, err
 }
 
@@ -294,47 +294,95 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	sims.Run(t, New, setupStateFactory, func(tb testing.TB, ti sims.TestInstance[*App], accs []simtypes.Account) {
-		tb.Helper()
-		app := ti.App
+	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping application simulation after import")
+	}
+	printConfig(config)
+	require.NoError(t, err, "simulation setup failed")
 
-		tb.Log("exporting genesis...\n")
-		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
-		require.NoError(tb, err)
+	defer func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	}()
 
-		tb.Log("importing genesis...\n")
-		newCfg := ti.Cfg
-		newCfg.GenesisTime = ti.EndBlockTime.Unix()
-		newTestInstance := sims.NewSimulationAppInstance(tb, newCfg, New)
-		newApp := newTestInstance.App
+	appOpts := newSimAppOpts(t)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		fauxMerkleModeOpt,
+		baseapp.SetChainID(config.ChainID),
+	}
+	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
+	if !simcli.FlagSigverifyTxValue {
+		app.SetNotSigverifyTx()
+	}
 
-		_, err = newApp.InitChain(&abci.RequestInitChain{
-			AppStateBytes: exported.AppState,
-			ChainId:       sims.SimAppChainID,
-			Time:          ti.EndBlockTime,
-		})
-		if IsEmptyValidatorSetErr(err) {
-			tb.Skip("Skipping simulation as all validators have been unbonded")
-			return
-		}
-		require.NoError(tb, err)
+	// Run randomized simulation
+	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
 
-		newStateFactory := setupStateFactory(newApp)
-		_, _, err = simulation.SimulateFromSeedX(
-			tb,
-			newTestInstance.AppLogger,
-			sims.WriteToDebugLog(newTestInstance.AppLogger),
-			newApp.BaseApp,
-			newStateFactory.AppStateFn,
-			simtypes.RandomAccounts,
-			simtestutil.BuildSimulationOperations(newApp, newApp.AppCodec(), newTestInstance.Cfg, newApp.TxConfig()),
-			newStateFactory.BlockedAddr,
-			newTestInstance.Cfg,
-			newStateFactory.Codec,
-			ti.ExecLogWriter,
-		)
-		require.NoError(tb, err)
+	// export state and simParams before the simulation error is checked
+	err = simtestutil.CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err, "CheckExportSimulation")
+	require.NoError(t, simErr, "SimulateFromSeedProv")
+
+	printStats(config, db)
+
+	if stopEarly {
+		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
+		return
+	}
+
+	fmt.Printf("exporting genesis...\n")
+
+	exported, err := app.ExportAppStateAndValidators(true, nil, nil)
+	require.NoError(t, err, "ExportAppStateAndValidators")
+
+	fmt.Printf("importing genesis...\n")
+
+	// Fix: pass true instead of simcli.FlagEnabledValue
+	newDB, newDir, newLogger, _, err := simtestutil.SetupSimulation(
+		config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, true,
+	)
+	require.NoError(t, err, "simulation setup 2 failed")
+
+	defer func() {
+		require.NoError(t, newDB.Close())
+		require.NoError(t, os.RemoveAll(newDir))
+	}()
+
+	// create a new temp dir for the app to fix wasmvm data dir lockfile contention
+	appOpts = newSimAppOpts(t)
+	newApp := New(newLogger, newDB, nil, true, appOpts, baseAppOpts...)
+
+	_, err = newApp.InitChain(&abci.RequestInitChain{
+		AppStateBytes: exported.AppState,
+		ChainId:       config.ChainID,
+		Time:          lastBlockTime,
 	})
+	require.NoError(t, err, "InitChain")
+
+	simcli.FlagGenesisTimeValue = lastBlockTime.Unix()
+	_, _, err = simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		newApp.BaseApp,
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
+	require.NoError(t, err)
 }
 
 func IsEmptyValidatorSetErr(err error) bool {
