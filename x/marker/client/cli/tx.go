@@ -33,6 +33,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v10/modules/core/04-channel/client/utils"
 	ibc "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	tendermintclient "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 
 	"github.com/provenance-io/provenance/internal/provcli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
@@ -595,32 +596,40 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 
 // QueryLatestConsensusState gets the latest consensus state and height for a given source port and channel.
 func QueryLatestConsensusState(clientCtx client.Context, sourcePort string, sourceChannel string) (ibc.ConsensusState, clienttypes.Height, error) {
-	// Get the client state for the port/channel.
+	// Query for the channel client state.
 	clientRes, err := channelutils.QueryChannelClientState(clientCtx, sourcePort, sourceChannel, false)
 	if err != nil {
 		return nil, clienttypes.Height{}, err
 	}
-	clientID := clientRes.IdentifiedClientState.ClientId
 
-	// Query consensus state directly with LatestHeight: true.
+	// Extract the latest height from it.
+	var clientState ibc.ClientState
+	if err = clientCtx.InterfaceRegistry.UnpackAny(clientRes.IdentifiedClientState.ClientState, &clientState); err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+	tmClientState, ok := clientState.(*tendermintclient.ClientState)
+	if !ok {
+		return nil, clienttypes.Height{}, fmt.Errorf("unsupported client state type for client %s", clientRes.IdentifiedClientState.ClientId)
+	}
+	latestHeight := tmClientState.LatestHeight
+
+	// Query for the consensus state at the latest height.
 	queryClient := clienttypes.NewQueryClient(clientCtx)
 	res, err := queryClient.ConsensusState(clientCtx.CmdContext, &clienttypes.QueryConsensusStateRequest{
-		ClientId:     clientID,
-		LatestHeight: true,
+		ClientId:       clientRes.IdentifiedClientState.ClientId,
+		RevisionNumber: latestHeight.RevisionNumber,
+		RevisionHeight: latestHeight.RevisionHeight,
 	})
 	if err != nil {
 		return nil, clienttypes.Height{}, err
 	}
 
-	// Get the consensus state out of the response.
 	var consensusState ibc.ConsensusState
-	err = clientCtx.InterfaceRegistry.UnpackAny(res.ConsensusState, &consensusState)
-	if err != nil {
+	if err = clientCtx.InterfaceRegistry.UnpackAny(res.ConsensusState, &consensusState); err != nil {
 		return nil, clienttypes.Height{}, err
 	}
 
-	// The proof height is also the latest height.
-	return consensusState, res.ProofHeight, nil
+	return consensusState, latestHeight, nil
 }
 
 func GetCmdGrantAuthorization() *cobra.Command {
