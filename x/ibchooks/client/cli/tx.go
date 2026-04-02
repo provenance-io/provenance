@@ -33,7 +33,7 @@ func NewTxCmd() *cobra.Command {
 // NewUpdateParamsCmd creates a command to update the ibchooks module's params via governance proposal.
 func NewUpdateParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update-params <allowed-async-ack-contracts>",
+		Use:     "update-params",
 		Short:   "Update the ibchooks module's params via governance proposal",
 		Long:    "Submit an update params via governance proposal along with an initial deposit.",
 		Args:    cobra.ExactArgs(0),
