@@ -30,7 +30,7 @@ func NewMsgUpdateParamsRequest(allowedAsyncAckContracts []string, authority stri
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgUpdateParamsRequest) ValidateBasic() error {
 	if len(msg.Params.AllowedAsyncAckContracts) != 0 {
-		return fmt.Errorf("the allowed_async_ack_contracts field is no longer used and must be empty");
+		return fmt.Errorf("the allowed_async_ack_contracts field is no longer used and must be empty")
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {

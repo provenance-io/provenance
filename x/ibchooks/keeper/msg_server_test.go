@@ -74,7 +74,7 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 	}{
 		{
 			name: "valid authority with valid params",
-			msg: types.NewMsgUpdateParamsRequest(nil, authority),
+			msg:  types.NewMsgUpdateParamsRequest(nil, authority),
 			expectedEvent: &types.EventIBCHooksParamsUpdated{
 				AllowedAsyncAckContracts: []string{},
 			},
