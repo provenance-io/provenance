@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -73,12 +74,9 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 	}{
 		{
 			name: "valid authority with valid params",
-			msg: types.NewMsgUpdateParamsRequest(
-				[]string{"cosmos1vh3htvc46rshps02w0p5hchdkrjvc4d8nxkw5t"},
-				authority,
-			),
+			msg: types.NewMsgUpdateParamsRequest(nil, authority),
 			expectedEvent: &types.EventIBCHooksParamsUpdated{
-				AllowedAsyncAckContracts: []string{"cosmos1vh3htvc46rshps02w0p5hchdkrjvc4d8nxkw5t"},
+				AllowedAsyncAckContracts: []string{},
 			},
 		},
 		{

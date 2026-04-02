@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -37,8 +36,8 @@ func NewUpdateParamsCmd() *cobra.Command {
 		Use:     "update-params <allowed-async-ack-contracts>",
 		Short:   "Update the ibchooks module's params via governance proposal",
 		Long:    "Submit an update params via governance proposal along with an initial deposit.",
-		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s tx ibchooks update-params contract1,contract2 --deposit 50000nhash`, version.AppName),
+		Args:    cobra.ExactArgs(0),
+		Example: fmt.Sprintf(`%[1]s tx ibchooks update-params --deposit 50000nhash`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -47,9 +46,8 @@ func NewUpdateParamsCmd() *cobra.Command {
 
 			flagSet := cmd.Flags()
 			authority := provcli.GetAuthority(flagSet)
-			allowedAsyncAckContracts := strings.Split(args[0], ",")
 
-			msg := types.NewMsgUpdateParamsRequest(allowedAsyncAckContracts, authority)
+			msg := types.NewMsgUpdateParamsRequest(nil, authority)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
