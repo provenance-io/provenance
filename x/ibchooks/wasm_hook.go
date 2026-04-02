@@ -269,11 +269,11 @@ func (h WasmHooks) SendPacketOverride(
 	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
 	contract, ok := callbackRaw.(string)
 	if !ok {
-		return 0, nil
+		return seq, nil
 	}
 
 	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
-		return 0, nil
+		return seq, nil
 	}
 
 	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
