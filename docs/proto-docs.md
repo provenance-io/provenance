@@ -9611,7 +9611,7 @@ Params defines the allowed async ack contracts
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `allowed_async_ack_contracts` | [string](#string) | repeated |  |
+| `allowed_async_ack_contracts` | [string](#string) | repeated | Deprecated: This field has been deprecated and is ignored. Async ack contracts are no longer possible in IBC v10. |
 
 
 
