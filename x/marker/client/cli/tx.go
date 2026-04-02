@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -605,7 +604,7 @@ func QueryLatestConsensusState(clientCtx client.Context, sourcePort string, sour
 
 	// Query consensus state directly with LatestHeight: true.
 	queryClient := clienttypes.NewQueryClient(clientCtx)
-	res, err := queryClient.ConsensusState(context.Background(), &clienttypes.QueryConsensusStateRequest{
+	res, err := queryClient.ConsensusState(clientCtx.CmdContext, &clienttypes.QueryConsensusStateRequest{
 		ClientId:     clientID,
 		LatestHeight: true,
 	})
