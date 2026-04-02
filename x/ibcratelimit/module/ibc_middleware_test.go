@@ -294,7 +294,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	denom := sdk.DefaultBondDenom
 	channel := suite.path.EndpointA.ChannelID
 	if !native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID, denom))
+		denomTrace := transfertypes.NewDenom(denom, transfertypes.NewHop(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID))
 		fmt.Println(denomTrace)
 		denom = denomTrace.IBCDenom()
 	}
@@ -389,11 +389,9 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	localDenom := sdk.DefaultBondDenom
 	channel := suite.path.EndpointA.ChannelID
 	if native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID, localDenom))
-		localDenom = denomTrace.IBCDenom()
+		localDenom = transfertypes.NewDenom(localDenom, transfertypes.NewHop(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID)).IBCDenom()
 	} else {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID, sendDenom))
-		sendDenom = denomTrace.IBCDenom()
+		sendDenom = transfertypes.NewDenom(sendDenom, transfertypes.NewHop(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID)).IBCDenom()
 	}
 
 	provenanceApp := suite.chainA.GetProvenanceApp()

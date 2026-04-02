@@ -156,7 +156,7 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 			amount = sdkmath.NewInt(100) // must be explicitly changed in malleate
 			seq := uint64(1)
 
-			trace = transfertypes.ParseDenomTrace(sdk.DefaultBondDenom)
+			trace = transfertypes.ExtractDenomFromPath(sdk.DefaultBondDenom)
 
 			// send coin from chainA to chainB
 			transferMsg := transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(trace.IBCDenom(), amount), suite.chainA.SenderAccount.GetAddress().String(), receiver, clienttypes.NewHeight(1, 110), 0, "")
@@ -493,8 +493,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err, "FullSend()")
 	suite.Require().Contains(ack, "result")
-	prefixedDenom := transfertypes.GetDenomPrefix(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID) + sdk.DefaultBondDenom
-	denom := transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	denom := transfertypes.NewDenom(sdk.DefaultBondDenom, transfertypes.NewHop(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID)).IBCDenom()
 	marker, err := suite.chainB.GetProvenanceApp().MarkerKeeper.GetMarkerByDenom(suite.chainB.GetContext(), denom)
 	suite.Require().NoError(err, "GetMarkerByDenom()")
 	suite.Require().Equal(marker.GetDenom(), denom)
@@ -535,8 +534,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	_, _, ack, err = suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err, "AtoB FullSend()")
 	suite.Require().Contains(ack, "result", "FullSend() ack check")
-	prefixedDenom = transfertypes.GetDenomPrefix(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID) + hotdogs
-	denom = transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	denom = transfertypes.NewDenom(hotdogs, transfertypes.NewHop(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID)).IBCDenom()
 	marker, err = suite.chainB.GetProvenanceApp().MarkerKeeper.GetMarkerByDenom(suite.chainB.GetContext(), denom)
 	suite.Require().NoError(err, "chainB GetMarkerByDenom()")
 	suite.Require().Equal(marker.GetDenom(), denom)

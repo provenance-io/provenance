@@ -487,32 +487,23 @@ func IsJSONAckError(acknowledgement []byte) bool {
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
 // denom as represented in the local chain.
 // If the data cannot be unmarshalled this function will panic.
-//
-//nolint:staticcheck // SA1019 - There's no way to get around using some deprecated functions in here.
 func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		panic("unable to unmarshal ICS20 packet data")
 	}
 
-	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
-		// if we receive back a token, that was originally sent from "this" chain, then we need to remove
-		// prefix added by the sender chain: port/channel/base_denom -> base_denom.
-		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-		unprefixedDenom := data.Denom[len(voucherPrefix):]
-
-		// coin denomination used in sending from the escrow address
-		denom := unprefixedDenom
-
-		// The denomination used to send the coins is either the native denom or the hash of the path
-		// if the denomination is not native.
-		denomTrace := transfertypes.ExtractDenomFromPath(unprefixedDenom)
-		if !denomTrace.IsNative() {
-			denom = denomTrace.IBCDenom()
+	denom := transfertypes.ExtractDenomFromPath(data.Denom)
+	if denom.HasPrefix(packet.GetSourcePort(), packet.GetSourceChannel()) {
+		// Token originally came from this chain; strip the source hop to recover the local denom.
+		denom.Trace = denom.Trace[1:]
+		if denom.IsNative() {
+			return denom.Base
 		}
-
-		return denom
+		return denom.IBCDenom()
 	}
-	prefixedDenom := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel()) + data.Denom
-	return transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	// Token came from the source chain; prepend the dest port/channel hop.
+	return transfertypes.NewDenom(denom.Base,
+		append([]transfertypes.Hop{transfertypes.NewHop(packet.GetDestPort(), packet.GetDestChannel())}, denom.Trace...)...,
+	).IBCDenom()
 }
