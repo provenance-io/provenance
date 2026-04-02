@@ -71,7 +71,7 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 		CodeUploadAccess:             accessConfig,
 		InstantiateDefaultPermission: accessConfig.Permission,
 	}
-	types.MaxWasmSize = 600 * 1024
+	types.MaxWasmSize = 800 * 1024 // Should match what's set in app/app.go's init() function.
 
 	wasmGenesis := types.GenesisState{
 		Params:    params,
