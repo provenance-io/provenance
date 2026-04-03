@@ -24,10 +24,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -241,7 +240,7 @@ func (suite *MiddlewareTestSuite) TestNonICS20() {
 	provApp := suite.chainA.GetProvenanceApp()
 
 	data := []byte("{}")
-	_, err := provApp.RateLimitMiddleware.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+	_, err := provApp.RateLimitMiddleware.SendPacket(suite.chainA.GetContext(), "wasm.cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
 
 	suite.Require().Error(err)
 	// This will error out, but not because of rate limiting
@@ -293,9 +292,9 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
-	channel := "channel-0"
+	channel := suite.path.EndpointA.ChannelID
 	if !native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
+		denomTrace := transfertypes.NewDenom(denom, transfertypes.NewHop(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID))
 		fmt.Println(denomTrace)
 		denom = denomTrace.IBCDenom()
 	}
@@ -388,13 +387,11 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	// Get the denom and amount to send
 	sendDenom := sdk.DefaultBondDenom
 	localDenom := sdk.DefaultBondDenom
-	channel := "channel-0"
+	channel := suite.path.EndpointA.ChannelID
 	if native {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", localDenom))
-		localDenom = denomTrace.IBCDenom()
+		localDenom = transfertypes.NewDenom(localDenom, transfertypes.NewHop(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID)).IBCDenom()
 	} else {
-		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", sendDenom))
-		sendDenom = denomTrace.IBCDenom()
+		sendDenom = transfertypes.NewDenom(sendDenom, transfertypes.NewHop(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID)).IBCDenom()
 	}
 
 	provenanceApp := suite.chainA.GetProvenanceApp()
@@ -461,7 +458,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
 	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
-	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
+	quotas := suite.BuildChannelQuota("weekly", suite.path.EndpointA.ChannelID, sdk.DefaultBondDenom, 604800, 1, 1)
 	initMsg := CreateRateLimiterInitMessage(suite.chainA, quotas)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, initMsg, 1)
 	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
@@ -608,8 +605,8 @@ func NewTransferPath(chainA, chainB *testutil.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
+	path.EndpointA.ChannelConfig.Version = transfertypes.V1
+	path.EndpointB.ChannelConfig.Version = transfertypes.V1
 	return path
 }
 

@@ -8,5 +8,7 @@ option java_multiple_files = true;
 
 // Params defines the allowed async ack contracts
 message Params {
+  // Deprecated: This field has been deprecated and is ignored.
+  // Async ack contracts are no longer possible in IBC v10.
   repeated string allowed_async_ack_contracts = 1;
 }

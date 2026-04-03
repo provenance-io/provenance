@@ -50,9 +50,7 @@ func (m msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	m.SetParams(ctx, msg.Params)
-	if err := ctx.EventManager().EmitTypedEvent(&types.EventIBCHooksParamsUpdated{
-		AllowedAsyncAckContracts: msg.Params.AllowedAsyncAckContracts,
-	}); err != nil {
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventIBCHooksParamsUpdated{}); err != nil {
 		return nil, err
 	}
 
