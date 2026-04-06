@@ -667,7 +667,7 @@ func New(
 	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
 	app.RateLimitingKeeper.PermissionedKeeper = app.ContractKeeper
 
-	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20MarkerHooks.SetupMarkerMemoFn, app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
+	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
 
 	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
 	for mName := range maccPerms {
