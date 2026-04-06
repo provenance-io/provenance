@@ -35,6 +35,33 @@ func (h MarkerHooks) ProperlyConfigured() bool {
 	return h.MarkerKeeper != nil
 }
 
+// AddMarker will add a marker and denom metadata for an ibc denom.
+func (h MarkerHooks) AddMarker(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
+	var data transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+		return err
+	}
+	ibcDenom := MustExtractDenomFromPacketOnRecv(packet)
+	if !strings.HasPrefix(ibcDenom, "ibc/") {
+		return nil
+	}
+
+	markerAddress, err := markertypes.MarkerAddress(ibcDenom)
+	if err != nil {
+		return err
+	}
+	marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddress)
+	if err != nil {
+		return err
+	}
+	// If we already have a marker, we're good here.
+	if marker != nil {
+		return nil
+	}
+
+	return h.createNewIbcMarker(ctx, data, ibcDenom, markertypes.MarkerType_Coin, nil, false, packet, ibcKeeper)
+}
+
 // AddUpdateMarker will add or update ibc Marker with transfer authorities
 func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
 	var data transfertypes.FungibleTokenPacketData
