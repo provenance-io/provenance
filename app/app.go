@@ -121,7 +121,9 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	transferv2 "github.com/cosmos/ibc-go/v10/modules/apps/transfer/v2"
 	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	ibcapi "github.com/cosmos/ibc-go/v10/modules/core/api"
 	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
@@ -155,6 +157,7 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
+	ibcratelimitv2 "github.com/provenance-io/provenance/x/ibcratelimit/module/v2"
 	ledgerkeeper "github.com/provenance-io/provenance/x/ledger/keeper"
 	ledgermodule "github.com/provenance-io/provenance/x/ledger/module"
 	ledger "github.com/provenance-io/provenance/x/ledger/types"
@@ -697,6 +700,12 @@ func New(
 		AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.TransferKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
+
+	// Create IBC v2 router and register the transfer v2 module with rate limiting middleware.
+	ibcRouterV2 := ibcapi.NewRouter()
+	rateLimitV2 := ibcratelimitv2.NewIBCMiddleware(app.RateLimitingKeeper, transferv2.NewIBCModule(*app.TransferKeeper))
+	ibcRouterV2.AddRoute(ibctransfertypes.PortID, rateLimitV2)
+	app.IBCKeeper.SetRouterV2(ibcRouterV2)
 
 	// Create evidence Keeper for to register the IBC light client misbehavior evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
