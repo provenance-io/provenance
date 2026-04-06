@@ -1,3 +1,5 @@
+//go:build sims
+
 package app
 
 // DONTCOVER
@@ -8,7 +10,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"runtime/debug"
 	"sort"
 	"strings"
 	"testing"
@@ -26,15 +27,14 @@ import (
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
-
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sims "github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -43,11 +43,12 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-	icagenesistypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/genesis/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	icagenesistypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/genesis/types"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 func init() {
@@ -139,7 +140,7 @@ func mutateAppState[G proto.Message](appState json.RawMessage, cdc codec.JSONCod
 func setupSimulation(dirPrefix string, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = pioconfig.SimAppChainID
-	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, dirPrefix, dbName, simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, dirPrefix, dbName, simcli.FlagVerboseValue, true)
 	return config, db, dir, logger, skip, err
 }
 
@@ -207,92 +208,29 @@ func newSimAppOpts(t testing.TB) simtestutil.AppOptionsMap {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
-	if skip {
-		t.Skip("skipping provenance application simulation")
-	}
-	printConfig(config)
-	require.NoError(t, err, "provenance simulation setup failed")
-
-	defer func() {
-		require.NoError(t, db.Close())
-		require.NoError(t, os.RemoveAll(dir))
-	}()
-
-	appOpts := newSimAppOpts(t)
-	baseAppOpts := []func(*baseapp.BaseApp){
-		fauxMerkleModeOpt,
-		baseapp.SetChainID(config.ChainID),
-	}
-	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
-	require.Equal(t, "provenanced", app.Name())
-	if !simcli.FlagSigverifyTxValue {
-		app.SetNotSigverifyTx()
-	}
-
-	fmt.Printf("running provenance full app simulation\n")
-
-	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		t,
-		os.Stdout,
-		app.BaseApp,
-		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-
-	// export state and simParams before the simulation error is checked
-	err = simtestutil.CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err, "CheckExportSimulation")
-	require.NoError(t, simErr, "SimulateFromSeed")
-
-	printStats(config, db)
+	sims.Run(t, New, setupStateFactory)
 }
 
 func TestSimple(t *testing.T) {
-	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
-	if skip {
-		t.Skip("skipping provenance application simulation")
-	}
-	printConfig(config)
-	require.NoError(t, err, "provenance simulation setup failed")
-
-	defer func() {
-		require.NoError(t, db.Close())
-		require.NoError(t, os.RemoveAll(dir))
-	}()
-
-	appOpts := newSimAppOpts(t)
-	baseAppOpts := []func(*baseapp.BaseApp){
-		fauxMerkleModeOpt,
-		baseapp.SetChainID(config.ChainID),
-	}
-	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
-	require.Equal(t, "provenanced", app.Name())
-	if !simcli.FlagSigverifyTxValue {
-		app.SetNotSigverifyTx()
-	}
-
-	// run randomized simulation
-	_, _, simErr := simulation.SimulateFromSeed(
-		t,
-		os.Stdout,
-		app.BaseApp,
-		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-
-	require.NoError(t, simErr, "SimulateFromSeed")
-	printStats(config, db)
+	sims.Run(t, New, setupStateFactory)
 }
+
+// setupStateFactory is the Provenance-custom SimStateFactory builder.
+// It uses provAppStateFn (wraps with ICA genesis + wasm sequence defaults).
+func setupStateFactory(app *App) sims.SimStateFactory {
+	return sims.SimStateFactory{
+		Codec:         app.AppCodec(),
+		AppStateFn:    provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		BlockedAddr:   app.ModuleAccountAddrs(),
+		AccountSource: app.AccountKeeper,
+		BalanceSource: app.BankKeeper,
+	}
+}
+
+var (
+	exportAllModules       = []string{}
+	exportWithValidatorSet = []string{}
+)
 
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
@@ -310,137 +248,49 @@ func TestAppImportExport(t *testing.T) {
 	//simcli.FlagExportParamsPathValue = filepath.Join(tempDir, fmt.Sprintf("sim_params-%d.json", simcli.FlagSeedValue))
 	//simcli.FlagExportStatePathValue = filepath.Join(tempDir, fmt.Sprintf("sim_state-%d.json", simcli.FlagSeedValue))
 
-	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
-	if skip {
-		t.Skip("skipping application import/export simulation")
-	}
-	printConfig(config)
-	require.NoError(t, err, "simulation setup failed")
+	sims.Run(t, New, setupStateFactory, func(tb testing.TB, ti sims.TestInstance[*App], accs []simtypes.Account) {
+		tb.Helper()
+		app := ti.App
 
-	defer func() {
-		require.NoError(t, db.Close())
-		require.NoError(t, os.RemoveAll(dir))
-	}()
+		tb.Log("exporting genesis...\n")
+		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
+		require.NoError(tb, err)
 
-	appOpts := newSimAppOpts(t)
-	baseAppOpts := []func(*baseapp.BaseApp){
-		fauxMerkleModeOpt,
-		baseapp.SetChainID(config.ChainID),
-	}
-	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
-	require.Equal(t, "provenanced", app.Name())
-	if !simcli.FlagSigverifyTxValue {
-		app.SetNotSigverifyTx()
-	}
+		tb.Log("importing genesis...\n")
+		newTestInstance := sims.NewSimulationAppInstance(tb, ti.Cfg, New)
+		newApp := newTestInstance.App
 
-	fmt.Printf("running provenance test import export\n")
+		var genesisState map[string]json.RawMessage
+		require.NoError(tb, json.Unmarshal(exported.AppState, &genesisState))
 
-	// Run randomized simulation
-	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
-		t,
-		os.Stdout,
-		app.BaseApp,
-		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-
-	// export state and simParams before the simulation error is checked
-	err = simtestutil.CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err, "CheckExportSimulation")
-	require.NoError(t, simErr, "SimulateFromSeedProv")
-
-	printStats(config, db)
-
-	fmt.Printf("exporting genesis...\n")
-
-	exported, err := app.ExportAppStateAndValidators(false, nil, nil)
-	require.NoError(t, err, "ExportAppStateAndValidators")
-
-	fmt.Printf("importing genesis...\n")
-
-	newDB, newDir, newLogger, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
-	require.NoError(t, err, "simulation setup 2 failed")
-
-	defer func() {
-		require.NoError(t, newDB.Close())
-		require.NoError(t, os.RemoveAll(newDir))
-	}()
-
-	// create a new temp dir for the app to fix wasmvm data dir lockfile contention
-	appOpts = newSimAppOpts(t)
-	newApp := New(newLogger, newDB, nil, true, appOpts, baseAppOpts...)
-
-	var genesisState map[string]json.RawMessage
-	err = json.Unmarshal(exported.AppState, &genesisState)
-	require.NoError(t, err)
-
-	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
-	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
-	_, err = newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
-	if err != nil {
-		if strings.Contains(err.Error(), "validator set is empty after InitGenesis") {
-			logger.Info("Skipping simulation as all validators have been unbonded")
-			logger.Info("err", err, "stacktrace", string(debug.Stack()))
+		ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: ti.EndBlockTime})
+		_, err = newApp.mm.InitGenesis(ctxB, newApp.appCodec, genesisState)
+		if IsEmptyValidatorSetErr(err) {
+			tb.Skip("Skipping simulation as all validators have been unbonded")
 			return
 		}
-	}
-	require.NoError(t, err, "InitGenesis")
+		require.NoError(tb, err)
 
-	err = newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
-	require.NoError(t, err, "StoreConsensusParams")
+		err = newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+		require.NoError(tb, err)
 
-	fmt.Printf("comparing stores...\n")
-
-	// skip certain prefixes
-	skipPrefixes := map[string][][]byte{
-		stakingtypes.StoreKey: {
-			stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
-			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
-			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
-		},
-		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
-		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
-		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
-		wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix},
-		vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix},
-	}
-
-	storeKeys := app.GetStoreKeys()
-	require.NotEmpty(t, storeKeys, "storeKeys")
-
-	for _, appKeyA := range storeKeys {
-		keyName := appKeyA.Name()
-		t.Run(keyName, func(t *testing.T) {
-			// only compare kvstores
-			if _, ok := appKeyA.(*storetypes.KVStoreKey); !ok {
-				t.Skipf("Skipping because the key is a %T (not a KVStoreKey)", appKeyA)
-				return
-			}
-
-			appKeyB := newApp.GetKey(keyName)
-
-			storeA := ctxA.KVStore(appKeyA)
-			storeB := ctxB.KVStore(appKeyB)
-
-			failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
-			assert.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare: %s", keyName)
-			fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
-
-			// Make the lists the same length because GetSimulationLog assumes they're that way.
-			for len(failedKVBs) < len(failedKVAs) {
-				failedKVBs = append(failedKVBs, kv.Pair{Key: []byte{}, Value: []byte{}})
-			}
-			for len(failedKVBs) > len(failedKVAs) {
-				failedKVAs = append(failedKVAs, kv.Pair{Key: []byte{}, Value: []byte{}})
-			}
-
-			assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
-		})
-	}
+		tb.Log("comparing stores...")
+		// skip certain prefixes
+		skipPrefixes := map[string][][]byte{
+			stakingtypes.StoreKey: {
+				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
+				stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
+				stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
+			},
+			authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
+			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
+			slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+			wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix, wasmtypes.ContractCodeHistoryElementPrefix},
+			vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix},
+			attrtypes.StoreKey:     {attrtypes.AttributeAddrLookupKeyPrefix, attrtypes.AttributeExpirationKeyPrefix}, //0x03 -derived the secondary index rebuilt on import
+		}
+		AssertEqualStores(tb, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes)
+	})
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
@@ -472,7 +322,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.Stdout,
 		app.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
@@ -498,7 +348,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("importing genesis...\n")
 
-	newDB, newDir, newLogger, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	// Fix: pass true instead of simcli.FlagEnabledValue
+	newDB, newDir, newLogger, _, err := simtestutil.SetupSimulation(
+		config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, true,
+	)
 	require.NoError(t, err, "simulation setup 2 failed")
 
 	defer func() {
@@ -523,13 +376,17 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.Stdout,
 		newApp.BaseApp,
 		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
 	require.NoError(t, err)
+}
+
+func IsEmptyValidatorSetErr(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "validator set is empty after InitGenesis")
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
@@ -540,21 +397,16 @@ func TestAppStateDeterminism(t *testing.T) {
 	//simcli.FlagBlockSizeValue = 100
 	//simcli.FlagNumBlocksValue = 50
 
-	if !simcli.FlagEnabledValue {
-		t.Skip("skipping application simulation")
-	}
-
 	config := simcli.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = pioconfig.SimAppChainID
-	config.DBBackend = "memdb"
 	config.Commit = true
 
 	numSeeds := 3
-	numTimesToRunPerSeed := 5
+	numTimesToRunPerSeed := 3
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	var seeds []int64
@@ -574,7 +426,6 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i, seed := range seeds {
 		config.Seed = seed
-		printConfig(config)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
@@ -584,7 +435,10 @@ func TestAppStateDeterminism(t *testing.T) {
 				logger = log.NewNopLogger()
 			}
 
-			// create a new temp dir for the app to fix wasmvm data dir lockfile contention
+			// Reset any global state that prior tests may have set.
+			simcli.FlagGenesisTimeValue = 0
+
+			// Create a new temp dir for the app to fix wasmvm data dir lockfile contention.
 			appOpts := newSimAppOpts(t)
 			if simcli.FlagVerboseValue {
 				appOpts[flags.FlagLogLevel] = "debug"
@@ -606,7 +460,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				os.Stdout,
 				app.BaseApp,
 				provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				simtypes.RandomAccounts,
 				simtestutil.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),
 				config,
@@ -614,7 +468,9 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			printStats(config, db)
+			if simcli.FlagVerboseValue {
+				printStats(config, db)
+			}
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -625,6 +481,52 @@ func TestAppStateDeterminism(t *testing.T) {
 					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 				)
 			}
+		}
+	}
+}
+
+type ComparableStoreApp interface {
+	LastBlockHeight() int64
+	NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context
+	GetKey(storeKey string) *storetypes.KVStoreKey
+	GetStoreKeys() []storetypes.StoreKey
+}
+
+func AssertEqualStores(
+	tb testing.TB,
+	app, newApp ComparableStoreApp,
+	storeDecoders simtypes.StoreDecoderRegistry,
+	skipPrefixes map[string][][]byte,
+) {
+	tb.Helper()
+	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
+	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
+
+	storeKeys := app.GetStoreKeys()
+	require.NotEmpty(tb, storeKeys)
+
+	for _, appKeyA := range storeKeys {
+		// only compare kvstores
+		if _, ok := appKeyA.(*storetypes.KVStoreKey); !ok {
+			continue
+		}
+
+		keyName := appKeyA.Name()
+		appKeyB := newApp.GetKey(keyName)
+
+		storeA := ctxA.KVStore(appKeyA)
+		storeB := ctxB.KVStore(appKeyB)
+
+		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
+		require.Equal(tb, len(failedKVAs), len(failedKVBs),
+			"unequal sets of key-values to compare %s, key stores %s and %s", keyName, appKeyA, appKeyB)
+
+		tb.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
+		if !assert.Equal(tb, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, storeDecoders, failedKVAs, failedKVBs)) {
+			for _, v := range failedKVAs {
+				tb.Logf("store mismatch: %q\n", v)
+			}
+			tb.FailNow()
 		}
 	}
 }

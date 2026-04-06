@@ -17,7 +17,9 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -26,6 +28,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	paramprops "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -429,9 +432,12 @@ func TestMsgServerProtoAnnotations(t *testing.T) {
 	logger := log.NewNopLogger()
 	db, err := dbm.NewDB("proto-test", dbm.MemDBBackend, "")
 	require.NoError(t, err, "dbm.NewDB")
-	appOpts := newSimAppOpts(t)
+	appOpts := simtestutil.AppOptionsMap{
+		flags.FlagHome:            t.TempDir(),
+		server.FlagInvCheckPeriod: simcli.FlagPeriodValue,
+	}
 	baseAppOpts := []func(*baseapp.BaseApp){
-		fauxMerkleModeOpt,
+		func(bapp *baseapp.BaseApp) { bapp.SetFauxMerkleMode() },
 		baseapp.SetChainID(pioconfig.SimAppChainID),
 	}
 	_ = New(logger, db, nil, true, appOpts, baseAppOpts...)

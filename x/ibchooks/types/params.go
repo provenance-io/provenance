@@ -1,12 +1,12 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"errors"
 )
 
-func NewParams(allowedAsyncAckContracts []string) Params {
+func NewParams() Params {
 	return Params{
-		AllowedAsyncAckContracts: allowedAsyncAckContracts,
+		AllowedAsyncAckContracts: []string{},
 	}
 }
 
@@ -19,10 +19,8 @@ func DefaultParams() Params {
 
 // Validate params.
 func (p Params) Validate() error {
-	for _, contract := range p.AllowedAsyncAckContracts {
-		if _, err := sdk.AccAddressFromBech32(contract); err != nil {
-			return err
-		}
+	if len(p.AllowedAsyncAckContracts) != 0 {
+		return errors.New("the allowed_async_ack_contracts field must be empty")
 	}
 	return nil
 }

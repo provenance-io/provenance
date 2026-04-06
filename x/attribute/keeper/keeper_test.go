@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 			},
 			ownerAddr:   s.user1Addr,
 			errorMsg:    "",
-			lookupCount: 2,
+			lookupCount: 1,
 		},
 		{
 			name: "should successfully add attribute with same name and type but diff value",
@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 			},
 			ownerAddr:   s.user1Addr,
 			errorMsg:    "",
-			lookupCount: 3,
+			lookupCount: 2,
 		},
 		{
 			name: "should fail due to validate basic error",

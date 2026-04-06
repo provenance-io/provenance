@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	ibctypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -866,11 +866,13 @@ func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.Marke
 // accountControlsAllSupply return true if the caller account address possess 100% of the total supply of a marker.
 // This check is used to determine if an account should be allowed to perform defacto admin operations on a marker.
 func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress, m types.MarkerAccountI) bool {
-	balance := k.bankKeeper.GetBalance(ctx, caller, m.GetDenom())
-
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
 	supply := m.GetSupply()
+	if supply.Amount.IsNil() || supply.Amount.IsZero() {
+		return false
+	}
+	balance := k.bankKeeper.GetBalance(ctx, caller, m.GetDenom())
 	return supply.Equal(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }
 
