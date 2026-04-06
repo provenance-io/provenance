@@ -13,8 +13,8 @@ import (
 	channeltypesv2 "github.com/cosmos/ibc-go/v10/modules/core/04-channel/v2/types"
 
 	provenanceapp "github.com/provenance-io/provenance/app"
-	v2 "github.com/provenance-io/provenance/x/ibcratelimit/module/v2"
 	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
+	v2 "github.com/provenance-io/provenance/x/ibcratelimit/module/v2"
 )
 
 // --- helpers ---

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
@@ -182,6 +181,6 @@ func v2ToV1Packet(payload channeltypesv2.Payload, sourceClient, destinationClien
 		DestinationChannel: destinationClient,
 		Data:               packetDataBz,
 		TimeoutHeight:      clienttypes.Height{},
-		TimeoutTimestamp:    0,
+		TimeoutTimestamp:   0,
 	}, nil
 }
