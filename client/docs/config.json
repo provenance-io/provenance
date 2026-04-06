@@ -244,22 +244,6 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/oracle/v1/query.swagger.json",
-      "tags": {
-        "add": [
-          "Oracle"
-        ]
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/provenance/oracle/v1/tx.swagger.json",
-      "tags": {
-        "add": [
-          "Oracle"
-        ]
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/cosmos/sanction/v1beta1/query.swagger.json",
       "tags": {
         "add": [

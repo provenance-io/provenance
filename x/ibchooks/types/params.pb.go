@@ -24,6 +24,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the allowed async ack contracts
 type Params struct {
+	// Deprecated: This field has been deprecated and is ignored.
+	// Async ack contracts are no longer possible in IBC v10.
 	AllowedAsyncAckContracts []string `protobuf:"bytes,1,rep,name=allowed_async_ack_contracts,json=allowedAsyncAckContracts,proto3" json:"allowed_async_ack_contracts,omitempty"`
 }
 

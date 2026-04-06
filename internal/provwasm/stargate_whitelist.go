@@ -26,7 +26,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -39,7 +38,6 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/provenance-io/provenance/x/quarantine"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
@@ -57,9 +55,6 @@ var stargateWhitelist sync.Map
 // In the future we may want to find a better way to keep these in sync
 
 func init() {
-	// ibc queries
-	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
-
 	// ==========================================================
 	// cosmos-sdk queries
 	// ==========================================================
@@ -323,10 +318,6 @@ func init() {
 	setWhitelistedQuery("/provenance.name.v1.Query/Params", &nametypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/Resolve", &nametypes.QueryResolveResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/ReverseLookup", &nametypes.QueryReverseLookupResponse{})
-
-	// oracle
-	setWhitelistedQuery("/provenance.oracle.v1.Query/OracleAddress", &oracletypes.QueryOracleAddressResponse{})
-	setWhitelistedQuery("/provenance.oracle.v1.Query/Oracle", &oracletypes.QueryOracleResponse{})
 
 	// quarantine
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})

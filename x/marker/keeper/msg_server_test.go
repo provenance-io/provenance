@@ -71,6 +71,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 	acc = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.owner2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 }
+
 func TestMsgServerTestSuite(t *testing.T) {
 	suite.Run(t, new(MsgServerTestSuite))
 }
@@ -720,7 +721,23 @@ func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
 
 	addMarkerMsg := types.NewMsgAddMarkerRequest("hotdog", sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
 	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
-	s.Assert().NoError(err, "should successfully add marker")
+	s.Assert().NoError(err, "should successfully add hotdog marker")
+
+	addMarkerMsg2 := types.NewMsgAddFinalizeActivateMarkerRequest(
+		"papaya", sdkmath.NewInt(0),
+		s.owner1Addr, s.owner1Addr,
+		types.MarkerType_Coin,
+		false, true, false,
+		[]string{},
+		[]types.AccessGrant{{
+			Address:     s.owner1,
+			Permissions: types.AccessListByNames("MINT,BURN,DEPOSIT,WITHDRAW,DELETE,ADMIN"),
+		}},
+		0, 0)
+	_, err = s.msgServer.AddFinalizeActivateMarker(s.ctx, addMarkerMsg2)
+	s.Assert().NoError(err, "should successfully add/finalize/activate papaya marker")
+
+	otherAddr := sdk.AccAddress("other_address_______")
 
 	testCases := []struct {
 		name          string
@@ -743,6 +760,14 @@ func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
 			name:     "should fail to ADD access to marker, keeper AddAccess failure",
 			msg:      types.NewMsgAddAccessRequest("hotdog", s.owner2Addr, accessMintGrant),
 			errorMsg: fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.owner1),
+		},
+		{
+			name: "should fail to ADD access to marker, not administrator",
+			msg: types.NewMsgAddAccessRequest("papaya", otherAddr, types.AccessGrant{
+				Address:     otherAddr.String(),
+				Permissions: types.AccessListByNames("MINT,WITHDRAW"),
+			}),
+			errorMsg: otherAddr.String() + " is not authorized to make access list changes against finalized/active papaya marker: unauthorized",
 		},
 	}
 
