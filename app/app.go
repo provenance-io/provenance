@@ -154,6 +154,7 @@ import (
 	"github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	ibchooksv2 "github.com/provenance-io/provenance/x/ibchooks/v2"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
@@ -701,10 +702,12 @@ func New(
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
-	// Create IBC v2 router and register the transfer v2 module with rate limiting middleware.
+	// Create IBC v2 router and register the transfer v2 module with rate limiting and hooks middleware.
+	// The middleware stack mirrors v1: transfer → ratelimit → hooks (outermost).
 	ibcRouterV2 := ibcapi.NewRouter()
 	rateLimitV2 := ibcratelimitv2.NewIBCMiddleware(app.RateLimitingKeeper, transferv2.NewIBCModule(*app.TransferKeeper))
-	ibcRouterV2.AddRoute(ibctransfertypes.PortID, rateLimitV2)
+	hooksV2 := ibchooksv2.NewIBCModule(rateLimitV2, app.IBCKeeper, app.IBCHooksKeeper, app.WasmKeeper, app.Ics20MarkerHooks, addrPrefix)
+	ibcRouterV2.AddRoute(ibctransfertypes.PortID, hooksV2)
 	app.IBCKeeper.SetRouterV2(ibcRouterV2)
 
 	// Create evidence Keeper for to register the IBC light client misbehavior evidence route

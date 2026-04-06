@@ -134,8 +134,8 @@ func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleT
 	return true, packetdata
 }
 
-// jsonStringHasKey parses the memo as a json object and checks if it contains the key.
-func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
+// JsonStringHasKey parses the memo as a json object and checks if it contains the key.
+func JsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
 	jsonObject = make(map[string]interface{})
 
 	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
@@ -161,7 +161,7 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 }
 
 func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdk.AccAddress, msgBytes []byte, err error) {
-	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
+	isWasmRouted, metadata := JsonStringHasKey(memo, "wasm")
 	if !isWasmRouted {
 		return isWasmRouted, sdk.AccAddress{}, nil, nil
 	}
@@ -233,7 +233,7 @@ func (h WasmHooks) SendPacketOverride(
 		return i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
 
-	isCallbackRouted, metadata := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
+	isCallbackRouted, metadata := JsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
 	if !isCallbackRouted {
 		return i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
@@ -290,7 +290,7 @@ func (h WasmHooks) GetWasmSendPacketPreProcessor(
 		return data, nil
 	}
 
-	isCallbackRouted, metadata := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
+	isCallbackRouted, metadata := JsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
 	if !isCallbackRouted {
 		return data, nil
 	}
