@@ -273,9 +273,19 @@ func TestOnSendPacket_CallbackMemo_InvalidBech32_Errors(t *testing.T) {
 }
 
 func TestOnSendPacket_AppError(t *testing.T) {
-	app := newMockApp()
-	app.onSendPacketErr = errors.New("app send error")
-	mw, ctx := newTestModule(t, app)
+	mockA := newMockApp()
+	mockA.onSendPacketErr = errors.New("app send error")
+	provApp := provenanceapp.Setup(t)
+	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
+
+	mw := v2.NewIBCModule(
+		mockA,
+		provApp.IBCKeeper,
+		provApp.IBCHooksKeeper,
+		provApp.WasmKeeper,
+		provApp.Ics20MarkerHooks,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	)
 
 	contractAddr := sdk.AccAddress([]byte("contract_address_____")).String()
 	data := sampleData()
@@ -284,6 +294,10 @@ func TestOnSendPacket_AppError(t *testing.T) {
 
 	err := mw.OnSendPacket(ctx, "src-client", "dst-client", 1, payload, nil)
 	assert.EqualError(t, err, "app send error")
+
+	// Callback should not be stored when the wrapped app errors.
+	stored := provApp.IBCHooksKeeper.GetPacketCallback(ctx, "src-client", 1)
+	assert.Empty(t, stored, "callback should not be stored on app send error")
 }
 
 // --- OnRecvPacket tests ---
@@ -507,6 +521,35 @@ func TestOnAcknowledgementPacket_ErrorAck_StoredCallback_InvalidBech32(t *testin
 	assert.Contains(t, err.Error(), "ack callback error")
 }
 
+func TestOnAcknowledgementPacket_StoredCallback_SudoFails_RetainsCallback(t *testing.T) {
+	mockA := newMockApp()
+	provApp := provenanceapp.Setup(t)
+	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
+
+	mw := v2.NewIBCModule(
+		mockA,
+		provApp.IBCKeeper,
+		provApp.IBCHooksKeeper,
+		provApp.WasmKeeper,
+		provApp.Ics20MarkerHooks,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	)
+
+	// Store a callback with a valid bech32 address that has no actual wasm contract.
+	contractAddr := sdk.AccAddress([]byte("contract_address_____")).String()
+	provApp.IBCHooksKeeper.StorePacketCallback(ctx, "src-client", 10, contractAddr)
+
+	successAck := channeltypes.NewResultAcknowledgement([]byte(`{"result":"ok"}`)).Acknowledgement()
+	payload := makePayload(t, sampleData(), transfertypes.EncodingJSON)
+	err := mw.OnAcknowledgementPacket(ctx, "src-client", "dst-client", 10, successAck, payload, nil)
+	assert.Error(t, err, "Sudo should fail because no contract exists")
+	assert.Contains(t, err.Error(), "ack callback error")
+
+	// Callback should still be in the store since Sudo failed (not deleted).
+	stored := provApp.IBCHooksKeeper.GetPacketCallback(ctx, "src-client", 10)
+	assert.Equal(t, contractAddr, stored, "callback should be retained when Sudo fails")
+}
+
 // --- OnTimeoutPacket tests ---
 
 func TestOnTimeoutPacket_NotConfigured_Delegates(t *testing.T) {
@@ -705,4 +748,76 @@ func TestOnRecvPacket_ProtobufEncoding_NoMemo(t *testing.T) {
 	result := mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
 	assert.Equal(t, channeltypesv2.PacketStatus_Success, result.Status)
 	assert.True(t, app.onRecvPacketCalled)
+}
+
+func TestOnSendPacket_ProtobufEncoding_Callback(t *testing.T) {
+	mockA := newMockApp()
+	provApp := provenanceapp.Setup(t)
+	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
+
+	mw := v2.NewIBCModule(
+		mockA,
+		provApp.IBCKeeper,
+		provApp.IBCHooksKeeper,
+		provApp.WasmKeeper,
+		provApp.Ics20MarkerHooks,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	)
+
+	contractAddr := sdk.AccAddress([]byte("contract_address_____")).String()
+	data := sampleData()
+	data.Memo = fmt.Sprintf(`{"%s":"%s"}`, types.IBCCallbackKey, contractAddr)
+	payload := makePayload(t, data, transfertypes.EncodingProtobuf)
+
+	err := mw.OnSendPacket(ctx, "src-client", "dst-client", 5, payload, nil)
+	assert.NoError(t, err)
+	assert.True(t, mockA.onSendPacketCalled)
+
+	// Verify callback was stored.
+	stored := provApp.IBCHooksKeeper.GetPacketCallback(ctx, "src-client", 5)
+	assert.Equal(t, contractAddr, stored, "callback should be stored for protobuf-encoded packet")
+
+	// Verify the forwarded payload has the memo stripped.
+	fwdData, err := transfertypes.UnmarshalPacketData(
+		mockA.onSendPayload.Value, mockA.onSendPayload.Version, mockA.onSendPayload.Encoding)
+	require.NoError(t, err)
+	assert.Empty(t, fwdData.Memo, "ibc_callback should be stripped from memo in protobuf encoding")
+}
+
+func TestOnRecvPacket_ProtobufEncoding_WasmRewrite(t *testing.T) {
+	mockA := newMockApp()
+	provApp := provenanceapp.Setup(t)
+	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
+	prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	mw := v2.NewIBCModule(
+		mockA,
+		provApp.IBCKeeper,
+		provApp.IBCHooksKeeper,
+		provApp.WasmKeeper,
+		provApp.Ics20MarkerHooks,
+		prefix,
+	)
+
+	contractAddr := sdk.AccAddress([]byte("contract_address_____")).String()
+	originalSender := "cosmos1sender"
+	data := sampleData()
+	data.Sender = originalSender
+	data.Receiver = contractAddr
+	data.Memo = fmt.Sprintf(`{"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, contractAddr)
+	payload := makePayload(t, data, transfertypes.EncodingProtobuf)
+
+	_ = mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
+
+	require.True(t, mockA.onRecvPacketCalled, "wrapped app should be called")
+
+	// Verify the receiver was rewritten to the derived intermediate sender.
+	modifiedData, err := transfertypes.UnmarshalPacketData(
+		mockA.onRecvPayload.Value, mockA.onRecvPayload.Version, mockA.onRecvPayload.Encoding)
+	require.NoError(t, err)
+
+	expectedSender, err := keeper.DeriveIntermediateSender("dst-client", originalSender, prefix)
+	require.NoError(t, err)
+	assert.Equal(t, expectedSender, modifiedData.Receiver,
+		"receiver should be rewritten for protobuf-encoded wasm-routed packet")
 }
