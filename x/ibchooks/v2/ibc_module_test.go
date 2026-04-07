@@ -50,6 +50,7 @@ func makePayload(t *testing.T, data transfertypes.FungibleTokenPacketData, encod
 type mockApp struct {
 	onSendPacketCalled    bool
 	onSendPacketErr       error
+	onSendPayload         channeltypesv2.Payload // captures the payload passed to OnSendPacket
 	onRecvPacketCalled    bool
 	onRecvPacketResult    channeltypesv2.RecvPacketResult
 	onRecvPayload         channeltypesv2.Payload // captures the payload passed to OnRecvPacket
@@ -59,8 +60,9 @@ type mockApp struct {
 	onTimeoutPacketErr    error
 }
 
-func (m *mockApp) OnSendPacket(_ sdk.Context, _, _ string, _ uint64, _ channeltypesv2.Payload, _ sdk.AccAddress) error {
+func (m *mockApp) OnSendPacket(_ sdk.Context, _, _ string, _ uint64, payload channeltypesv2.Payload, _ sdk.AccAddress) error {
 	m.onSendPacketCalled = true
+	m.onSendPayload = payload
 	return m.onSendPacketErr
 }
 
@@ -152,7 +154,7 @@ func TestOnSendPacket_InvalidPayload_Delegates(t *testing.T) {
 	assert.True(t, app.onSendPacketCalled)
 }
 
-func TestOnSendPacket_CallbackMemo_StoresCallback(t *testing.T) {
+func TestOnSendPacket_CallbackMemo_StoresCallback_StripsMemo(t *testing.T) {
 	mockA := newMockApp()
 	provApp := provenanceapp.Setup(t)
 	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
@@ -180,18 +182,56 @@ func TestOnSendPacket_CallbackMemo_StoresCallback(t *testing.T) {
 	// Verify the callback was stored.
 	stored := hooksKeeper.GetPacketCallback(ctx, "src-client", 5)
 	assert.Equal(t, contractAddr, stored, "callback contract should be stored")
+
+	// Verify the memo was stripped from the payload forwarded to the wrapped app.
+	// When ibc_callback is the only key, memo should be completely cleared.
+	fwdData, err := transfertypes.UnmarshalPacketData(
+		mockA.onSendPayload.Value, mockA.onSendPayload.Version, mockA.onSendPayload.Encoding)
+	require.NoError(t, err)
+	assert.Empty(t, fwdData.Memo, "memo should be empty when ibc_callback was the only key")
 }
 
-func TestOnSendPacket_CallbackMemo_NonStringValue_NoStore(t *testing.T) {
+func TestOnSendPacket_CallbackMemo_PreservesOtherMemoKeys(t *testing.T) {
 	mockA := newMockApp()
 	provApp := provenanceapp.Setup(t)
 	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
-	hooksKeeper := provApp.IBCHooksKeeper
 
 	mw := v2.NewIBCModule(
 		mockA,
 		provApp.IBCKeeper,
-		hooksKeeper,
+		provApp.IBCHooksKeeper,
+		provApp.WasmKeeper,
+		provApp.Ics20MarkerHooks,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	)
+
+	contractAddr := sdk.AccAddress([]byte("contract_address_____")).String()
+	data := sampleData()
+	data.Memo = fmt.Sprintf(`{"%s":"%s","other":"value"}`, types.IBCCallbackKey, contractAddr)
+	payload := makePayload(t, data, transfertypes.EncodingJSON)
+
+	err := mw.OnSendPacket(ctx, "src-client", "dst-client", 6, payload, nil)
+	assert.NoError(t, err)
+	assert.True(t, mockA.onSendPacketCalled)
+
+	// Verify the forwarded payload has ibc_callback stripped but other keys preserved.
+	fwdData, err := transfertypes.UnmarshalPacketData(
+		mockA.onSendPayload.Value, mockA.onSendPayload.Version, mockA.onSendPayload.Encoding)
+	require.NoError(t, err)
+	assert.NotEmpty(t, fwdData.Memo, "memo should not be empty when other keys exist")
+	assert.NotContains(t, fwdData.Memo, types.IBCCallbackKey, "ibc_callback should be stripped from memo")
+	assert.Contains(t, fwdData.Memo, "other", "other memo keys should be preserved")
+}
+
+func TestOnSendPacket_CallbackMemo_NonStringValue_Errors(t *testing.T) {
+	mockA := newMockApp()
+	provApp := provenanceapp.Setup(t)
+	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
+
+	mw := v2.NewIBCModule(
+		mockA,
+		provApp.IBCKeeper,
+		provApp.IBCHooksKeeper,
 		provApp.WasmKeeper,
 		provApp.Ics20MarkerHooks,
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
@@ -202,23 +242,20 @@ func TestOnSendPacket_CallbackMemo_NonStringValue_NoStore(t *testing.T) {
 	payload := makePayload(t, data, transfertypes.EncodingJSON)
 
 	err := mw.OnSendPacket(ctx, "src-client", "dst-client", 5, payload, nil)
-	assert.NoError(t, err)
-	assert.True(t, mockA.onSendPacketCalled)
-
-	stored := hooksKeeper.GetPacketCallback(ctx, "src-client", 5)
-	assert.Empty(t, stored, "non-string callback value should not be stored")
+	assert.Error(t, err, "non-string callback value should error")
+	assert.Contains(t, err.Error(), "unable to format callback")
+	assert.False(t, mockA.onSendPacketCalled, "should not delegate on callback validation error")
 }
 
-func TestOnSendPacket_CallbackMemo_InvalidBech32_NoStore(t *testing.T) {
+func TestOnSendPacket_CallbackMemo_InvalidBech32_Errors(t *testing.T) {
 	mockA := newMockApp()
 	provApp := provenanceapp.Setup(t)
 	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
-	hooksKeeper := provApp.IBCHooksKeeper
 
 	mw := v2.NewIBCModule(
 		mockA,
 		provApp.IBCKeeper,
-		hooksKeeper,
+		provApp.IBCHooksKeeper,
 		provApp.WasmKeeper,
 		provApp.Ics20MarkerHooks,
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
@@ -229,11 +266,9 @@ func TestOnSendPacket_CallbackMemo_InvalidBech32_NoStore(t *testing.T) {
 	payload := makePayload(t, data, transfertypes.EncodingJSON)
 
 	err := mw.OnSendPacket(ctx, "src-client", "dst-client", 5, payload, nil)
-	assert.NoError(t, err)
-	assert.True(t, mockA.onSendPacketCalled)
-
-	stored := hooksKeeper.GetPacketCallback(ctx, "src-client", 5)
-	assert.Empty(t, stored, "invalid bech32 should not be stored")
+	assert.Error(t, err, "invalid bech32 should error")
+	assert.Contains(t, err.Error(), "invalid bech32 contract address")
+	assert.False(t, mockA.onSendPacketCalled, "should not delegate on callback validation error")
 }
 
 func TestOnSendPacket_AppError(t *testing.T) {

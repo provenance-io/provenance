@@ -85,24 +85,49 @@ func (im IBCModule) OnSendPacket(
 		return im.app.OnSendPacket(ctx, sourceClient, destinationClient, sequence, payload, signer)
 	}
 
-	// Extract callback info before passing through.
+	// Validate and extract the callback contract address.
+	// This matches v1 preprocessor behavior: error on non-string or invalid bech32 values.
 	callbackRaw := metadata[types.IBCCallbackKey]
+	if callbackRaw != nil {
+		contract, ok := callbackRaw.(string)
+		if !ok {
+			return fmt.Errorf("unable to format callback %v", callbackRaw)
+		}
+		if _, err := sdk.AccAddressFromBech32(contract); err != nil {
+			return fmt.Errorf("invalid bech32 contract address %v: %w", contract, err)
+		}
+	}
 
-	// Pass to underlying app first.
-	if err := im.app.OnSendPacket(ctx, sourceClient, destinationClient, sequence, payload, signer); err != nil {
+	// Strip the ibc_callback key from the memo before forwarding to the underlying app.
+	// This matches v1 preprocessor behavior so receiver chains on older IBC versions
+	// can process the packet without choking on the callback metadata.
+	delete(metadata, types.IBCCallbackKey)
+	strippedMemo, err := json.Marshal(metadata)
+	if err != nil {
+		return fmt.Errorf("ibc_callback marshall error: %w", err)
+	}
+	if string(strippedMemo) == "{}" {
+		data.Memo = ""
+	} else {
+		data.Memo = string(strippedMemo)
+	}
+
+	modifiedPayload, err := marshalV2Payload(data, payload)
+	if err != nil {
+		return fmt.Errorf("failed to re-encode payload after stripping ibc_callback: %w", err)
+	}
+
+	// Pass the modified payload (with ibc_callback stripped) to the underlying app.
+	if err := im.app.OnSendPacket(ctx, sourceClient, destinationClient, sequence, modifiedPayload, signer); err != nil {
 		return err
 	}
 
-	// Store the callback contract if valid.
-	contract, ok := callbackRaw.(string)
-	if !ok {
-		return nil
-	}
-	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
-		return nil
+	// Store the callback contract for the after-send hook (ack/timeout processing).
+	if callbackRaw != nil {
+		contract := callbackRaw.(string) // already validated above
+		im.ibcHooksKeeper.StorePacketCallback(ctx, sourceClient, sequence, contract)
 	}
 
-	im.ibcHooksKeeper.StorePacketCallback(ctx, sourceClient, sequence, contract)
 	return nil
 }
 
