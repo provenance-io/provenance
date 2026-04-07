@@ -218,10 +218,12 @@ func TestOnSendPacket_CallbackMemo_PreservesOtherMemoKeys(t *testing.T) {
 	fwdData, err := transfertypes.UnmarshalPacketData(
 		mockA.onSendPayload.Value, mockA.onSendPayload.Version, mockA.onSendPayload.Encoding)
 	require.NoError(t, err)
-	assert.NotEmpty(t, fwdData.Memo, "memo should not be empty when other keys exist")
-	assert.NotContains(t, fwdData.Memo, types.IBCCallbackKey, "ibc_callback should be stripped from memo")
-	assert.Contains(t, fwdData.Memo, "other", "other memo keys should be preserved")
-}
+	require.NotEmpty(t, fwdData.Memo, "memo should not be empty when other keys exist")
+	var memo map[string]any
+	require.NoError(t, json.Unmarshal([]byte(fwdData.Memo), &memo))
+	_, hasCallback := memo[types.IBCCallbackKey]
+	assert.False(t, hasCallback, "ibc_callback should be stripped from memo")
+	assert.Equal(t, "value", memo["other"])}
 
 func TestOnSendPacket_CallbackMemo_NonStringValue_Errors(t *testing.T) {
 	mockA := newMockApp()
@@ -242,8 +244,7 @@ func TestOnSendPacket_CallbackMemo_NonStringValue_Errors(t *testing.T) {
 	payload := makePayload(t, data, transfertypes.EncodingJSON)
 
 	err := mw.OnSendPacket(ctx, "src-client", "dst-client", 5, payload, nil)
-	assert.Error(t, err, "non-string callback value should error")
-	assert.Contains(t, err.Error(), "unable to format callback")
+	assert.ErrorContains(t, err, "unable to format callback", "non-string callback value should error")
 	assert.False(t, mockA.onSendPacketCalled, "should not delegate on callback validation error")
 }
 
