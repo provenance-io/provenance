@@ -382,18 +382,18 @@ func TestOnRecvPacket_WasmMemo_ModifiesReceiver(t *testing.T) {
 
 	_ = mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
 
-	// The wrapped app should have been called (even though wasm execution may fail later).
-	if mockA.onRecvPacketCalled {
-		// Verify the receiver was modified to the derived intermediate sender.
-		modifiedData, err := transfertypes.UnmarshalPacketData(
-			mockA.onRecvPayload.Value, mockA.onRecvPayload.Version, mockA.onRecvPayload.Encoding)
-		require.NoError(t, err)
+	// The wrapped app must have been called with a modified payload.
+	require.True(t, mockA.onRecvPacketCalled, "wrapped app should be called")
 
-		expectedSender, err := keeper.DeriveIntermediateSender("dst-client", originalSender, prefix)
-		require.NoError(t, err)
-		assert.Equal(t, expectedSender, modifiedData.Receiver,
-			"receiver should be changed to derived intermediate sender")
-	}
+	// Verify the receiver was modified to the derived intermediate sender.
+	modifiedData, err := transfertypes.UnmarshalPacketData(
+		mockA.onRecvPayload.Value, mockA.onRecvPayload.Version, mockA.onRecvPayload.Encoding)
+	require.NoError(t, err)
+
+	expectedSender, err := keeper.DeriveIntermediateSender("dst-client", originalSender, prefix)
+	require.NoError(t, err)
+	assert.Equal(t, expectedSender, modifiedData.Receiver,
+		"receiver should be changed to derived intermediate sender")
 }
 
 func TestOnRecvPacket_ConfiguredApp_InvalidPayload_ReturnsError(t *testing.T) {
