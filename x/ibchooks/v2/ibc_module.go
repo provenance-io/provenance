@@ -3,7 +3,6 @@ package v2
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -242,6 +241,8 @@ func (im IBCModule) OnAcknowledgementPacket(
 		sourceClient, sequence, ackAsJSON, success))
 	_, err = im.contractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
+		// error processing the callback
+		// ToDo: Open Question: Should we also delete the callback here?
 		return fmt.Errorf("ack callback error: %w", err)
 	}
 	im.ibcHooksKeeper.DeletePacketCallback(ctx, sourceClient, sequence)
@@ -372,13 +373,13 @@ func (im IBCModule) addMarkerForDenom(ctx sdk.Context, data transfertypes.Fungib
 		return nil
 	}
 
-	amount, err := strconv.ParseInt(data.Amount, 10, 64)
-	if err != nil {
-		return err
+	amount, ok := sdkmath.NewIntFromString(data.Amount)
+	if !ok {
+		return fmt.Errorf("invalid amount %q", data.Amount)
 	}
 	newMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
-		sdk.NewInt64Coin(ibcDenom, amount),
+		sdk.NewCoin(ibcDenom, amount),
 		nil,
 		nil,
 		markertypes.StatusActive,
