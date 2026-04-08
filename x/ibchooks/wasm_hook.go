@@ -386,10 +386,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 
-	success := "false"
-	if !IsJSONAckError(acknowledgement) {
-		success = "true"
-	}
+	success := !IsJSONAckError(acknowledgement)
 
 	// Notify the sender that the ack has been received
 	ackAsJSON, err := json.Marshal(acknowledgement)
@@ -397,9 +394,10 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return err
 	}
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
+	sudoMsg, err := json.Marshal(types.NewIbcLifecycleCompleteAck(packet.SourceChannel, packet.Sequence, ackAsJSON, success))
+	if err != nil {
+		return err
+	}
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// No need to delete the packet callback on error because it would just get reverted.
@@ -429,9 +427,10 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, ch
 		return sdkerrors.Wrap(err, "Timeout callback error")
 	}
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
-		packet.SourceChannel, packet.Sequence))
+	sudoMsg, err := json.Marshal(types.NewIbcLifecycleCompleteTimeout(packet.SourceChannel, packet.Sequence))
+	if err != nil {
+		return err
+	}
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback. This could be because the contract doesn't implement the message type to
