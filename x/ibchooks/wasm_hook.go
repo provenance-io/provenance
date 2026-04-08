@@ -120,7 +120,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, chann
 
 func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
 	if err := execMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
+		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err)
 	}
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
 	return wasmMsgServer.ExecuteContract(ctx, execMsg)

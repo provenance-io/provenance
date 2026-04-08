@@ -153,7 +153,7 @@ func (im IBCModule) OnRecvPacket(
 	// Run marker hooks: create marker for IBC denom if needed.
 	ibcDenom := extractDenomFromV2PacketOnRecv(data, payload, sourceClient, destinationClient)
 	if err := im.addMarkerForDenom(ctx, data, ibcDenom, destinationClient); err != nil {
-		return errRecvResult(err, types.ErrMarkerError, err.Error())
+		return errRecvResult(err, types.ErrMarkerError)
 	}
 
 	// Check for wasm routing.
@@ -162,7 +162,7 @@ func (im IBCModule) OnRecvPacket(
 		return im.app.OnRecvPacket(ctx, sourceClient, destinationClient, sequence, payload, relayer)
 	}
 	if err != nil {
-		return errRecvResult(err, types.ErrMsgValidation, err.Error())
+		return errRecvResult(err, types.ErrMsgValidation)
 	}
 	if msgBytes == nil || contractAddr == nil {
 		return errRecvResult(types.ErrMsgValidation, types.ErrMsgValidation)
@@ -172,14 +172,14 @@ func (im IBCModule) OnRecvPacket(
 	sender := data.GetSender()
 	senderBech32, err := keeper.DeriveIntermediateSender(destinationClient, sender, im.bech32PrefixAccAddr)
 	if err != nil {
-		return errRecvResult(err, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", destinationClient, sender, err.Error()))
+		return errRecvResult(fmt.Errorf("cannot convert sender address %s/%s to bech32: %w", destinationClient, sender, err), types.ErrBadSender)
 	}
 
 	// Hijack the receiver to the intermediate sender so the transfer app sends funds there.
 	data.Receiver = senderBech32
 	modifiedPayload, err := marshalV2Payload(data, payload)
 	if err != nil {
-		return errRecvResult(err, types.ErrMarshaling, err.Error())
+		return errRecvResult(err, types.ErrMarshaling)
 	}
 
 	// Execute the receive with the modified payload.
@@ -190,7 +190,7 @@ func (im IBCModule) OnRecvPacket(
 
 	amount, ok := sdkmath.NewIntFromString(data.GetAmount())
 	if !ok {
-		return errRecvResult(types.ErrInvalidPacket, types.ErrInvalidPacket, "Amount is not an int")
+		return errRecvResult(fmt.Errorf("amount %q is not an int", data.GetAmount()), types.ErrInvalidPacket)
 	}
 
 	funds := sdk.NewCoins(sdk.NewCoin(ibcDenom, amount))
@@ -203,18 +203,18 @@ func (im IBCModule) OnRecvPacket(
 		Funds:    funds,
 	}
 	if err := execMsg.ValidateBasic(); err != nil {
-		return errRecvResult(err, types.ErrWasmError, fmt.Sprintf(types.ErrBadExecutionMsg, err.Error()))
+		return errRecvResult(fmt.Errorf(types.ErrBadExecutionMsg, err), types.ErrWasmError)
 	}
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(im.contractKeeper)
 	response, err := wasmMsgServer.ExecuteContract(ctx, &execMsg)
 	if err != nil {
-		return errRecvResult(err, types.ErrWasmError, err.Error())
+		return errRecvResult(err, types.ErrWasmError)
 	}
 
 	fullAck := types.ContractAck{ContractResult: response.Data, IbcAck: result.Acknowledgement}
 	bz, err := json.Marshal(fullAck)
 	if err != nil {
-		return errRecvResult(err, types.ErrBadResponse, err.Error())
+		return errRecvResult(err, types.ErrBadResponse)
 	}
 
 	return channeltypesv2.RecvPacketResult{
@@ -320,11 +320,10 @@ func (im IBCModule) OnTimeoutPacket(
 }
 
 // errRecvResult creates a failure RecvPacketResult with an error acknowledgement.
-func errRecvResult(err error, wrapErr error, errorContexts ...string) channeltypesv2.RecvPacketResult {
-	_ = errorContexts // logged by emitErrorAcknowledgement if needed
+func errRecvResult(err error, wrapErr error) channeltypesv2.RecvPacketResult {
 	return channeltypesv2.RecvPacketResult{
 		Status:          channeltypesv2.PacketStatus_Failure,
-		Acknowledgement: channeltypes.NewErrorAcknowledgement(fmt.Errorf("%s: %w", wrapErr.Error(), err)).Acknowledgement(),
+		Acknowledgement: channeltypes.NewErrorAcknowledgement(fmt.Errorf("%w: %w", wrapErr, err)).Acknowledgement(),
 	}
 }
 
