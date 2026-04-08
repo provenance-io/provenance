@@ -252,25 +252,23 @@ func (im IBCModule) OnAcknowledgementPacket(
 		return fmt.Errorf("ack callback error: %w", err)
 	}
 
-	success := "false"
-	if !ibchooks.IsJSONAckError(acknowledgement) {
-		success = "true"
-	}
+	success := !ibchooks.IsJSONAckError(acknowledgement)
 
 	ackAsJSON, err := json.Marshal(acknowledgement)
 	if err != nil {
 		return err
 	}
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		sourceClient, sequence, ackAsJSON, success))
-	_, err = im.contractKeeper.Sudo(ctx, contractAddr, sudoMsg)
-	// Delete the callback regardless of outcome.
-	im.ibcHooksKeeper.DeletePacketCallback(ctx, sourceClient, sequence)
+	sudoMsg, err := json.Marshal(types.NewIbcLifecycleCompleteAck(sourceClient, sequence, ackAsJSON, success))
 	if err != nil {
+		return err
+	}
+	_, err = im.contractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	if err != nil {
+		// No need to delete the packet callback on error because it would just get reverted.
 		return fmt.Errorf("ack callback error: %w", err)
 	}
+	im.ibcHooksKeeper.DeletePacketCallback(ctx, sourceClient, sequence)
 	return nil
 }
 
@@ -301,9 +299,10 @@ func (im IBCModule) OnTimeoutPacket(
 		return fmt.Errorf("timeout callback error: %w", err)
 	}
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
-		sourceClient, sequence))
+	sudoMsg, err := json.Marshal(types.NewIbcLifecycleCompleteTimeout(sourceClient, sequence))
+	if err != nil {
+		return err
+	}
 	_, err = im.contractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		ctx.EventManager().EmitEvents(sdk.Events{
