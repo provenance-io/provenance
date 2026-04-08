@@ -3,6 +3,7 @@ package v2
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -265,12 +266,11 @@ func (im IBCModule) OnAcknowledgementPacket(
 		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
 		sourceClient, sequence, ackAsJSON, success))
 	_, err = im.contractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	// Delete the callback regardless of outcome.
+	im.ibcHooksKeeper.DeletePacketCallback(ctx, sourceClient, sequence)
 	if err != nil {
-		// error processing the callback
-		// ToDo: Open Question: Should we also delete the callback here?
 		return fmt.Errorf("ack callback error: %w", err)
 	}
-	im.ibcHooksKeeper.DeletePacketCallback(ctx, sourceClient, sequence)
 	return nil
 }
 
@@ -383,7 +383,7 @@ func (im IBCModule) addMarkerForDenom(ctx sdk.Context, data transfertypes.Fungib
 	if !im.markerHooks.ProperlyConfigured() {
 		return nil
 	}
-	if len(ibcDenom) < 4 || ibcDenom[:4] != "ibc/" {
+	if !strings.HasPrefix(ibcDenom, "ibc/") {
 		return nil
 	}
 

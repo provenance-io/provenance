@@ -401,12 +401,11 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
 		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	// Delete the callback regardless of outcome.
+	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	if err != nil {
-		// error processing the callback
-		// ToDo: Open Question: Should we also delete the callback here?
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
-	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
 }
 
