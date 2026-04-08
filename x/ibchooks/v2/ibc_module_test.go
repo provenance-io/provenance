@@ -223,7 +223,8 @@ func TestOnSendPacket_CallbackMemo_PreservesOtherMemoKeys(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(fwdData.Memo), &memo))
 	_, hasCallback := memo[types.IBCCallbackKey]
 	assert.False(t, hasCallback, "ibc_callback should be stripped from memo")
-	assert.Equal(t, "value", memo["other"])}
+	assert.Equal(t, "value", memo["other"])
+}
 
 func TestOnSendPacket_CallbackMemo_NonStringValue_Errors(t *testing.T) {
 	mockA := newMockApp()
