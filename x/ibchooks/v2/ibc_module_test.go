@@ -393,10 +393,14 @@ func TestOnRecvPacket_WasmMemo_ModifiesReceiver(t *testing.T) {
 	data.Memo = fmt.Sprintf(`{"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, contractAddr)
 	payload := makePayload(t, data, transfertypes.EncodingJSON)
 
-	_ = mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
+	result := mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
 
 	// The wrapped app must have been called with a modified payload.
 	require.True(t, mockA.onRecvPacketCalled, "wrapped app should be called")
+
+	// Wasm execution will fail (no real contract deployed), so expect a failure result.
+	assert.Equal(t, channeltypesv2.PacketStatus_Failure, result.Status,
+		"should fail because the wasm contract does not exist")
 
 	// Verify the receiver was modified to the derived intermediate sender.
 	modifiedData, err := transfertypes.UnmarshalPacketData(
@@ -802,9 +806,13 @@ func TestOnRecvPacket_ProtobufEncoding_WasmRewrite(t *testing.T) {
 	data.Memo = fmt.Sprintf(`{"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, contractAddr)
 	payload := makePayload(t, data, transfertypes.EncodingProtobuf)
 
-	_ = mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
+	result := mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
 
 	require.True(t, mockA.onRecvPacketCalled, "wrapped app should be called")
+
+	// Wasm execution will fail (no real contract deployed), so expect a failure result.
+	assert.Equal(t, channeltypesv2.PacketStatus_Failure, result.Status,
+		"should fail because the wasm contract does not exist")
 
 	// Verify the receiver was rewritten to the derived intermediate sender.
 	modifiedData, err := transfertypes.UnmarshalPacketData(
