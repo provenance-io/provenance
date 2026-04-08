@@ -267,8 +267,7 @@ func TestOnSendPacket_CallbackMemo_InvalidBech32_Errors(t *testing.T) {
 	payload := makePayload(t, data, transfertypes.EncodingJSON)
 
 	err := mw.OnSendPacket(ctx, "src-client", "dst-client", 5, payload, nil)
-	assert.Error(t, err, "invalid bech32 should error")
-	assert.Contains(t, err.Error(), "invalid bech32 contract address")
+	assert.ErrorContains(t, err, "invalid bech32 contract address", "invalid bech32 should error")
 	assert.False(t, mockA.onSendPacketCalled, "should not delegate on callback validation error")
 }
 
@@ -494,8 +493,7 @@ func TestOnAcknowledgementPacket_StoredCallback_InvalidBech32(t *testing.T) {
 	successAck := channeltypes.NewResultAcknowledgement([]byte(`{"result":"ok"}`)).Acknowledgement()
 	payload := makePayload(t, sampleData(), transfertypes.EncodingJSON)
 	err := mw.OnAcknowledgementPacket(ctx, "src-client", "dst-client", 10, successAck, payload, nil)
-	assert.Error(t, err, "invalid bech32 callback contract should error")
-	assert.Contains(t, err.Error(), "ack callback error")
+	assert.ErrorContains(t, err, "ack callback error", "invalid bech32 callback contract should error")
 }
 
 func TestOnAcknowledgementPacket_ErrorAck_StoredCallback_InvalidBech32(t *testing.T) {
@@ -517,8 +515,7 @@ func TestOnAcknowledgementPacket_ErrorAck_StoredCallback_InvalidBech32(t *testin
 	errorAck := channeltypes.NewErrorAcknowledgement(errors.New("transfer failed")).Acknowledgement()
 	payload := makePayload(t, sampleData(), transfertypes.EncodingJSON)
 	err := mw.OnAcknowledgementPacket(ctx, "src-client", "dst-client", 10, errorAck, payload, nil)
-	assert.Error(t, err, "invalid bech32 callback contract should error")
-	assert.Contains(t, err.Error(), "ack callback error")
+	assert.ErrorContains(t, err, "ack callback error", "invalid bech32 callback contract should error")
 }
 
 func TestOnAcknowledgementPacket_StoredCallback_SudoFails_RetainsCallback(t *testing.T) {
@@ -542,8 +539,7 @@ func TestOnAcknowledgementPacket_StoredCallback_SudoFails_RetainsCallback(t *tes
 	successAck := channeltypes.NewResultAcknowledgement([]byte(`{"result":"ok"}`)).Acknowledgement()
 	payload := makePayload(t, sampleData(), transfertypes.EncodingJSON)
 	err := mw.OnAcknowledgementPacket(ctx, "src-client", "dst-client", 10, successAck, payload, nil)
-	assert.Error(t, err, "Sudo should fail because no contract exists")
-	assert.Contains(t, err.Error(), "ack callback error")
+	assert.ErrorContains(t, err, "ack callback error", "Sudo should fail because no contract exists")
 
 	// Callback should still be in the store since Sudo failed (not deleted).
 	stored := provApp.IBCHooksKeeper.GetPacketCallback(ctx, "src-client", 10)
@@ -600,8 +596,7 @@ func TestOnTimeoutPacket_StoredCallback_InvalidBech32(t *testing.T) {
 
 	payload := makePayload(t, sampleData(), transfertypes.EncodingJSON)
 	err := mw.OnTimeoutPacket(ctx, "src-client", "dst-client", 10, payload, nil)
-	assert.Error(t, err, "invalid bech32 callback contract should error")
-	assert.Contains(t, err.Error(), "timeout callback error")
+	assert.ErrorContains(t, err, "timeout callback error", "invalid bech32 callback contract should error")
 }
 
 func TestOnTimeoutPacket_StoredCallback_DeletesAfterExec(t *testing.T) {
