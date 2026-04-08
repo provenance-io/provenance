@@ -2,9 +2,10 @@ package ibchooks
 
 import (
 	"encoding/json"
-	"strconv"
+	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -61,13 +62,13 @@ func (h MarkerHooks) AddMarker(ctx sdktypes.Context, packet exported.PacketI, ib
 
 // createNewIbcMarker creates a new marker account for ibc token
 func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes.FungibleTokenPacketData, ibcDenom string, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
-	amount, err := strconv.ParseInt(data.Amount, 10, 64)
-	if err != nil {
-		return err
+	amount, ok := sdkmath.NewIntFromString(data.Amount)
+	if !ok {
+		return fmt.Errorf("invalid amount %q", data.Amount)
 	}
 	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
-		sdktypes.NewInt64Coin(ibcDenom, amount),
+		sdktypes.NewCoin(ibcDenom, amount),
 		nil,
 		nil,
 		markertypes.StatusActive,
@@ -79,7 +80,7 @@ func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes
 	)
 	existingSupply := h.getExistingSupply(ctx, marker)
 	_ = marker.SetSupply(marker.GetSupply().Add(existingSupply))
-	if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
+	if err := h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 		return err
 	}
 	return h.addDenomMetaData(ctx, packet, ibcKeeper, ibcDenom, data)
