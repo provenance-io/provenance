@@ -151,7 +151,7 @@ func (im IBCModule) OnRecvPacket(
 	}
 
 	// Run marker hooks: create marker for IBC denom if needed.
-	ibcDenom := extractDenomFromV2PacketOnRecv(data, payload, destinationClient)
+	ibcDenom := extractDenomFromV2PacketOnRecv(data, payload, sourceClient, destinationClient)
 	if err := im.addMarkerForDenom(ctx, data, ibcDenom, destinationClient); err != nil {
 		return errRecvResult(err, types.ErrMarkerError, err.Error())
 	}
@@ -361,9 +361,11 @@ func marshalV2Payload(data transfertypes.FungibleTokenPacketData, original chann
 }
 
 // extractDenomFromV2PacketOnRecv computes the local IBC denom for a received v2 packet.
-func extractDenomFromV2PacketOnRecv(data transfertypes.FungibleTokenPacketData, payload channeltypesv2.Payload, destinationClient string) string {
+// sourceClient is the client ID on the sending chain; destinationClient is the client ID on the receiving chain.
+// This mirrors the v1 logic where HasPrefix checks sourcePort/sourceChannel and the prepend uses destPort/destChannel.
+func extractDenomFromV2PacketOnRecv(data transfertypes.FungibleTokenPacketData, payload channeltypesv2.Payload, sourceClient, destinationClient string) string {
 	denom := transfertypes.ExtractDenomFromPath(data.Denom)
-	if denom.HasPrefix(payload.SourcePort, destinationClient) {
+	if denom.HasPrefix(payload.SourcePort, sourceClient) {
 		// Token originally came from this chain; strip the source hop.
 		denom.Trace = denom.Trace[1:]
 		if denom.IsNative() {
