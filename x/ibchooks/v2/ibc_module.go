@@ -58,7 +58,7 @@ func NewIBCModule(
 
 // properlyConfigured returns true if the module is ready to process hooks.
 func (im IBCModule) properlyConfigured() bool {
-	return im.contractKeeper != nil && im.ibcHooksKeeper != nil && im.markerHooks != nil && im.markerHooks.ProperlyConfigured()
+	return im.ibcKeeper != nil && im.contractKeeper != nil && im.ibcHooksKeeper != nil && im.markerHooks != nil && im.markerHooks.ProperlyConfigured()
 }
 
 // OnSendPacket implements api.IBCModule.
