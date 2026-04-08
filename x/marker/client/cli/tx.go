@@ -30,8 +30,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channelutils "github.com/cosmos/ibc-go/v8/modules/core/04-channel/client/utils"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v10/modules/core/04-channel/client/utils"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	tendermintclient "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 
 	"github.com/provenance-io/provenance/internal/provcli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
@@ -542,7 +544,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 			// if the timeouts are not absolute, retrieve latest block height and block timestamp
 			// for the consensus state connected to the destination port/channel
 			if !absoluteTimeouts {
-				consensusState, height, _, err := channelutils.QueryLatestConsensusState(clientCtx, sourcePort, sourceChannel)
+				consensusState, height, err := QueryLatestConsensusState(clientCtx, sourcePort, sourceChannel)
 				if err != nil {
 					return err
 				}
@@ -559,7 +561,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 					// consensus state timestamp of the counter party chain, otherwise
 					// still use consensus state timestamp as reference
 					now := time.Now().UnixNano()
-					consensusStateTimestamp := consensusState.GetTimestamp()
+					consensusStateTimestamp := consensusState.GetTimestamp() //nolint:staticcheck // There's no replacement yet for GetTimeStamp().
 					if now > 0 {
 						now := uint64(now)
 						if now > consensusStateTimestamp {
@@ -590,6 +592,44 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// QueryLatestConsensusState gets the latest consensus state and height for a given source port and channel.
+func QueryLatestConsensusState(clientCtx client.Context, sourcePort string, sourceChannel string) (ibc.ConsensusState, clienttypes.Height, error) {
+	// Query for the channel client state.
+	clientRes, err := channelutils.QueryChannelClientState(clientCtx, sourcePort, sourceChannel, false)
+	if err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+
+	// Extract the latest height from it.
+	var clientState ibc.ClientState
+	if err = clientCtx.InterfaceRegistry.UnpackAny(clientRes.IdentifiedClientState.ClientState, &clientState); err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+	tmClientState, ok := clientState.(*tendermintclient.ClientState)
+	if !ok {
+		return nil, clienttypes.Height{}, fmt.Errorf("unsupported client state type for client %s", clientRes.IdentifiedClientState.ClientId)
+	}
+	latestHeight := tmClientState.LatestHeight
+
+	// Query for the consensus state at the latest height.
+	queryClient := clienttypes.NewQueryClient(clientCtx)
+	res, err := queryClient.ConsensusState(clientCtx.CmdContext, &clienttypes.QueryConsensusStateRequest{
+		ClientId:       clientRes.IdentifiedClientState.ClientId,
+		RevisionNumber: latestHeight.RevisionNumber,
+		RevisionHeight: latestHeight.RevisionHeight,
+	})
+	if err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+
+	var consensusState ibc.ConsensusState
+	if err = clientCtx.InterfaceRegistry.UnpackAny(res.ConsensusState, &consensusState); err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+
+	return consensusState, latestHeight, nil
 }
 
 func GetCmdGrantAuthorization() *cobra.Command {

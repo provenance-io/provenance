@@ -10,12 +10,11 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
@@ -40,18 +39,18 @@ func (h WasmHooks) ProperlyConfigured() bool {
 	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
 }
 
-func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
+func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	if !h.ProperlyConfigured() {
-		return im.App.OnRecvPacket(ctx, packet, relayer)
+		return im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 	isIcs20, data := isIcs20Packet(packet.GetData())
 	if !isIcs20 {
-		return im.App.OnRecvPacket(ctx, packet, relayer)
+		return im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 
 	isWasmRouted, contractAddr, msgBytes, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
 	if !isWasmRouted {
-		return im.App.OnRecvPacket(ctx, packet, relayer)
+		return im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 	if err != nil {
 		return NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation, err.Error())
@@ -82,7 +81,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	packet.Data = bz
 
 	// Execute the receive
-	ack := im.App.OnRecvPacket(ctx, packet, relayer)
+	ack := im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	if !ack.Success() {
 		return ack
 	}
@@ -96,7 +95,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 
 	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
 	denom := MustExtractDenomFromPacketOnRecv(packet)
-	funds := sdktypes.NewCoins(sdktypes.NewCoin(denom, amount))
+	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
 	// Execute the contract
 	execMsg := wasmtypes.MsgExecuteContract{
@@ -110,23 +109,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 		return NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
-	// Check if the contract is requesting for the ack to be async.
-	var asyncAckRequest types.OnRecvPacketAsyncAckResponse
-	err = json.Unmarshal(response.Data, &asyncAckRequest)
-	if err == nil {
-		// If unmarshalling succeeds, the contract is requesting for the ack to be async.
-		if asyncAckRequest.IsAsyncAck { // in which case IsAsyncAck is expected to be set to true
-			if !h.ibcHooksKeeper.IsInAllowList(ctx, contractAddr.String()) {
-				// Only allowed contracts can send async acks
-				return NewEmitErrorAcknowledgement(ctx, types.ErrAsyncAckNotAllowed)
-			}
-			// Store the contract as the packet's ack actor and return nil
-			h.ibcHooksKeeper.StorePacketAckActor(ctx, packet, contractAddr.String())
-			return nil
-		}
-	}
-
-	// If the ack is not async, we continue generating the ack and return it
 	fullAck := types.ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
@@ -136,7 +118,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	return channeltypes.NewResultAcknowledgement(bz)
 }
 
-func (h WasmHooks) execWasmMsg(ctx sdktypes.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
+func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
 	if err := execMsg.ValidateBasic(); err != nil {
 		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
 	}
@@ -178,10 +160,10 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 	return true, jsonObject
 }
 
-func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdktypes.AccAddress, msgBytes []byte, err error) {
+func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdk.AccAddress, msgBytes []byte, err error) {
 	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
 	if !isWasmRouted {
-		return isWasmRouted, sdktypes.AccAddress{}, nil, nil
+		return isWasmRouted, sdk.AccAddress{}, nil, nil
 	}
 
 	wasmRaw := metadata["wasm"]
@@ -189,7 +171,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	// Make sure the wasm key is a map. If it isn't, ignore this packet
 	wasm, ok := wasmRaw.(map[string]interface{})
 	if !ok {
-		return isWasmRouted, sdktypes.AccAddress{}, nil,
+		return isWasmRouted, sdk.AccAddress{}, nil,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, "wasm metadata is not a valid JSON map object")
 	}
 
@@ -197,32 +179,32 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	contract, ok := wasm["contract"].(string)
 	if !ok {
 		// The tokens will be returned
-		return isWasmRouted, sdktypes.AccAddress{}, nil,
+		return isWasmRouted, sdk.AccAddress{}, nil,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["contract"]`)
 	}
 
-	contractAddr, err = sdktypes.AccAddressFromBech32(contract)
+	contractAddr, err = sdk.AccAddressFromBech32(contract)
 	if err != nil {
-		return isWasmRouted, sdktypes.AccAddress{}, nil,
+		return isWasmRouted, sdk.AccAddress{}, nil,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] is not a valid bech32 address`)
 	}
 
 	// The contract and the receiver should be the same for the packet to be valid
 	if contract != receiver {
-		return isWasmRouted, sdktypes.AccAddress{}, nil,
+		return isWasmRouted, sdk.AccAddress{}, nil,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["contract"] should be the same as the receiver of the packet`)
 	}
 
 	// Ensure the message key is provided
 	if wasm["msg"] == nil {
-		return isWasmRouted, sdktypes.AccAddress{}, nil,
+		return isWasmRouted, sdk.AccAddress{}, nil,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `Could not find key wasm["msg"]`)
 	}
 
 	// Make sure the msg key is a map. If it isn't, return an error
 	_, ok = wasm["msg"].(map[string]interface{})
 	if !ok {
-		return isWasmRouted, sdktypes.AccAddress{}, nil,
+		return isWasmRouted, sdk.AccAddress{}, nil,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `wasm["msg"] is not a map object`)
 	}
 
@@ -230,7 +212,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	msgBytes, err = json.Marshal(wasm["msg"])
 	if err != nil {
 		// The tokens will be returned
-		return isWasmRouted, sdktypes.AccAddress{}, nil,
+		return isWasmRouted, sdk.AccAddress{}, nil,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, err.Error())
 	}
 
@@ -239,8 +221,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 
 func (h WasmHooks) SendPacketOverride(
 	i ICS4Middleware,
-	ctx sdktypes.Context,
-	chanCap *capabilitytypes.Capability,
+	ctx sdk.Context,
 	sourcePort string,
 	sourceChannel string,
 	timeoutHeight clienttypes.Height,
@@ -249,12 +230,12 @@ func (h WasmHooks) SendPacketOverride(
 ) (uint64, error) {
 	isIcs20, ics20Packet := isIcs20Packet(data)
 	if !isIcs20 {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+		return i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
 
 	isCallbackRouted, metadata := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
 	if !isCallbackRouted {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+		return i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
 
 	// We remove the callback metadata from the memo as it has already been processed.
@@ -280,7 +261,7 @@ func (h WasmHooks) SendPacketOverride(
 		return 0, sdkerrors.Wrap(err, "ics20data marshall error")
 	}
 
-	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
+	seq, err := i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
 	if err != nil {
 		return 0, err
 	}
@@ -288,11 +269,11 @@ func (h WasmHooks) SendPacketOverride(
 	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
 	contract, ok := callbackRaw.(string)
 	if !ok {
-		return 0, nil
+		return seq, nil
 	}
 
-	if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
-		return 0, nil
+	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
+		return seq, nil
 	}
 
 	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
@@ -300,7 +281,7 @@ func (h WasmHooks) SendPacketOverride(
 }
 
 func (h WasmHooks) GetWasmSendPacketPreProcessor(
-	_ sdktypes.Context,
+	_ sdk.Context,
 	data []byte,
 	processData map[string]interface{},
 ) ([]byte, error) {
@@ -327,7 +308,7 @@ func (h WasmHooks) GetWasmSendPacketPreProcessor(
 			return nil, fmt.Errorf("unable to format callback %v", callbackRaw)
 		}
 
-		if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
+		if _, err := sdk.AccAddressFromBech32(contract); err != nil {
 			return nil, fmt.Errorf("invalid bech32 contract address %v: %w", contract, err)
 		}
 	}
@@ -353,8 +334,7 @@ func (h WasmHooks) GetWasmSendPacketPreProcessor(
 	return dataBytes, nil
 }
 
-func (h WasmHooks) SendPacketAfterHook(ctx sdktypes.Context,
-	_ *capabilitytypes.Capability,
+func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context,
 	_ string,
 	sourceChannel string,
 	_ clienttypes.Height,
@@ -377,15 +357,15 @@ func (h WasmHooks) SendPacketAfterHook(ctx sdktypes.Context,
 		return
 	}
 
-	if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
+	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
 		return
 	}
 
 	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, sequence, contract)
 }
 
-func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdktypes.AccAddress) error {
-	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
+	err := im.App.OnAcknowledgementPacket(ctx, channelVersion, packet, acknowledgement, relayer)
 	if err != nil {
 		return err
 	}
@@ -401,12 +381,15 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 		return nil
 	}
 
-	contractAddr, err := sdktypes.AccAddressFromBech32(contract)
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 
-	success := !IsJSONAckError(acknowledgement)
+	success := "false"
+	if !IsJSONAckError(acknowledgement) {
+		success = "true"
+	}
 
 	// Notify the sender that the ack has been received
 	ackAsJSON, err := json.Marshal(acknowledgement)
@@ -414,11 +397,9 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 		return err
 	}
 
-	ibcLifecycleComplete := types.NewIbcLifecycleCompleteAck(packet.SourceChannel, packet.Sequence, ackAsJSON, success)
-	sudoMsg, err := json.Marshal(ibcLifecycleComplete)
-	if err != nil {
-		return sdkerrors.Wrap(err, "Ack callback error")
-	}
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
+		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
@@ -429,8 +410,8 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	return nil
 }
 
-func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
-	err := im.App.OnTimeoutPacket(ctx, packet, relayer)
+func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+	err := im.App.OnTimeoutPacket(ctx, channelVersion, packet, relayer)
 	if err != nil {
 		return err
 	}
@@ -444,28 +425,25 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Contex
 		return nil
 	}
 
-	contractAddr, err := sdktypes.AccAddressFromBech32(contract)
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Timeout callback error")
 	}
 
-	sudoMsg := types.NewIbcLifecycleCompleteTimeout(packet.SourceChannel, packet.Sequence)
-	jsonData, err := json.Marshal(sudoMsg)
-	if err != nil {
-		return sdkerrors.Wrap(err, "Timeout callback error")
-	}
-
-	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, jsonData)
+	sudoMsg := []byte(fmt.Sprintf(
+		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
+		packet.SourceChannel, packet.Sequence))
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback. This could be because the contract doesn't implement the message type to
 		// process the callback. Retrying this will not help, so we can delete the callback from storage.
 		// Since the packet has timed out, we don't expect any other responses that may trigger the callback.
-		ctx.EventManager().EmitEvents(sdktypes.Events{
-			sdktypes.NewEvent(
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
 				"ibc-timeout-callback-error",
-				sdktypes.NewAttribute("contract", contractAddr.String()),
-				sdktypes.NewAttribute("message", string(jsonData)),
-				sdktypes.NewAttribute("error", err.Error()),
+				sdk.NewAttribute("contract", contractAddr.String()),
+				sdk.NewAttribute("message", string(sudoMsg)),
+				sdk.NewAttribute("error", err.Error()),
 			),
 		})
 	}
@@ -475,19 +453,19 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Contex
 
 // NewEmitErrorAcknowledgement creates a new error acknowledgement after having emitted an event with the
 // details of the error.
-func NewEmitErrorAcknowledgement(ctx sdktypes.Context, err error, errorContexts ...string) channeltypes.Acknowledgement {
+func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...string) channeltypes.Acknowledgement {
 	errorType := "ibc-acknowledgement-error"
 	logger := ctx.Logger().With("module", errorType)
 
-	attributes := make([]sdktypes.Attribute, len(errorContexts)+1)
-	attributes[0] = sdktypes.NewAttribute("error", err.Error())
+	attributes := make([]sdk.Attribute, len(errorContexts)+1)
+	attributes[0] = sdk.NewAttribute("error", err.Error())
 	for i, s := range errorContexts {
-		attributes[i+1] = sdktypes.NewAttribute("error-context", s)
+		attributes[i+1] = sdk.NewAttribute("error-context", s)
 		logger.Error(fmt.Sprintf("error-context: %v", s))
 	}
 
-	ctx.EventManager().EmitEvents(sdktypes.Events{
-		sdktypes.NewEvent(
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
 			errorType,
 			attributes...,
 		),
@@ -508,31 +486,24 @@ func IsJSONAckError(acknowledgement []byte) bool {
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
 // denom as represented in the local chain.
-// If the data cannot be unmarshalled this function will panic
+// If the data cannot be unmarshalled this function will panic.
 func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		panic("unable to unmarshal ICS20 packet data")
 	}
 
-	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
-		// remove prefix added by sender chain
-		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-
-		unprefixedDenom := data.Denom[len(voucherPrefix):]
-
-		// coin denomination used in sending from the escrow address
-		denom := unprefixedDenom
-
-		// The denomination used to send the coins is either the native denom or the hash of the path
-		// if the denomination is not native.
-		denomTrace := transfertypes.ParseDenomTrace(unprefixedDenom)
-		if denomTrace.Path != "" {
-			denom = denomTrace.IBCDenom()
+	denom := transfertypes.ExtractDenomFromPath(data.Denom)
+	if denom.HasPrefix(packet.GetSourcePort(), packet.GetSourceChannel()) {
+		// Token originally came from this chain; strip the source hop to recover the local denom.
+		denom.Trace = denom.Trace[1:]
+		if denom.IsNative() {
+			return denom.Base
 		}
-		return denom
+		return denom.IBCDenom()
 	}
-
-	prefixedDenom := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel()) + data.Denom
-	return transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	// Token came from the source chain; prepend the dest port/channel hop.
+	return transfertypes.NewDenom(denom.Base,
+		append([]transfertypes.Hop{transfertypes.NewHop(packet.GetDestPort(), packet.GetDestChannel())}, denom.Trace...)...,
+	).IBCDenom()
 }

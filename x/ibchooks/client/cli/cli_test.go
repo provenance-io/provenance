@@ -93,13 +93,13 @@ func (s *IntegrationTestSuite) TestUpdateParamsCmd() {
 	}{
 		{
 			name:         "success - update allowed async ack contracts",
-			args:         []string{fmt.Sprintf("%v,%v", s.accountAddr.String(), sdk.AccAddress("input111111111111111").String())},
+			args:         []string{},
 			expectedCode: 0,
 		},
 		{
 			name:         "failure - invalid args",
 			args:         []string{"contract1"},
-			expectErrMsg: `invalid contract address: "contract1": decoding bech32 failed: invalid separator index 8`,
+			expectErrMsg: "accepts 0 arg(s), received 1",
 		},
 	}
 

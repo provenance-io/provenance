@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
 
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
@@ -42,7 +42,7 @@ type appUpgrade struct {
 // I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"daisy-rc1": {
-		Deleted: []string{"interchainquery", "oracle"},
+		Deleted: []string{"interchainquery", "oracle", "capability"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -74,7 +74,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"daisy": {
-		Deleted: []string{"interchainquery", "oracle"},
+		Deleted: []string{"interchainquery", "oracle", "capability"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -373,15 +373,48 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 			MsgTypeUrl: "/ibc.core.client.v1.MsgUpdateClient",
 			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 10)), // $0.01
 		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgAcknowledgement",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgRecvPacket",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgSendPacket",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/provenance.flatfees.v1.MsgAddOracleAddressRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
+		},
+		{
+			MsgTypeUrl: "/provenance.flatfees.v1.MsgRemoveOracleAddressRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
+		},
 	}
 
 	for _, msgFee := range feeUpdates {
 		if err := msgFee.Validate(); err != nil {
-			return fmt.Errorf("invalid msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+			return fmt.Errorf("invalid msg fee for %q: %w", msgFee.MsgTypeUrl, err)
 		}
 
 		if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
-			return fmt.Errorf("failed to set msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+			return fmt.Errorf("failed to set msg fee for %q: %w", msgFee.MsgTypeUrl, err)
+		}
+	}
+
+	feeDeletes := []string{
+		"/ibc.core.channel.v1.MsgUpdateParams",
+		"/icq.v1.MsgUpdateParams",
+		"/provenance.oracle.v1.MsgSendQueryOracleRequest",
+		"/provenance.oracle.v1.MsgUpdateOracleRequest",
+	}
+
+	for _, msgTypeURL := range feeDeletes {
+		if err := app.FlatFeesKeeper.RemoveMsgFee(ctx, msgTypeURL); err != nil {
+			ctx.Logger().Info("Could not remove flat-fee entry.", "msg_type_url", msgTypeURL, "error", err)
 		}
 	}
 

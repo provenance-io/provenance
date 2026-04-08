@@ -26,7 +26,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -56,9 +55,6 @@ var stargateWhitelist sync.Map
 // In the future we may want to find a better way to keep these in sync
 
 func init() {
-	// ibc queries
-	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
-
 	// ==========================================================
 	// cosmos-sdk queries
 	// ==========================================================

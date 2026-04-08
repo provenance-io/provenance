@@ -34,18 +34,24 @@ func TestNewMsgUpdateParamsRequest(t *testing.T) {
 	}{
 		{
 			name:      "valid request",
-			contracts: []string{validContract, validContract},
+			contracts: []string{},
 			authority: authority,
+		},
+		{
+			name:      "valid contract address",
+			contracts: []string{validContract},
+			authority: authority,
+			expErr:    "the allowed_async_ack_contracts field is no longer used and must be empty",
 		},
 		{
 			name:      "invalid contract address",
-			contracts: []string{validContract, invalidContract},
+			contracts: []string{invalidContract},
 			authority: authority,
-			expErr:    `invalid contract address: "invalid_contract": decoding bech32 failed: invalid separator index -1`,
+			expErr:    "the allowed_async_ack_contracts field is no longer used and must be empty",
 		},
 		{
 			name:      "invalid authority address",
-			contracts: []string{validContract, validContract},
+			contracts: nil,
 			authority: "invalid_authority",
 			expErr:    `invalid authority address: "invalid_authority": decoding bech32 failed: invalid separator index -1`,
 		},
