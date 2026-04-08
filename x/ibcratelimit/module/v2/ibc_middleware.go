@@ -101,6 +101,10 @@ func (im IBCMiddleware) OnTimeoutPacket(
 	payload channeltypesv2.Payload,
 	relayer sdk.AccAddress,
 ) error {
+	if !im.keeper.IsContractConfigured(ctx) {
+		return im.app.OnTimeoutPacket(ctx, sourceClient, destinationClient, sequence, payload, relayer)
+	}
+
 	packet, err := v2ToV1Packet(payload, sourceClient, destinationClient, sequence)
 	if err != nil {
 		im.keeper.Logger(ctx).Error(fmt.Sprintf("rate limit OnTimeoutPacket: failed to convert v2 packet to v1: %s", err.Error()))
@@ -130,6 +134,10 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 	payload channeltypesv2.Payload,
 	relayer sdk.AccAddress,
 ) error {
+	if !im.keeper.IsContractConfigured(ctx) {
+		return im.app.OnAcknowledgementPacket(ctx, sourceClient, destinationClient, sequence, acknowledgement, payload, relayer)
+	}
+
 	if ibc.IsAckError(acknowledgement) {
 		packet, err := v2ToV1Packet(payload, sourceClient, destinationClient, sequence)
 		if err != nil {

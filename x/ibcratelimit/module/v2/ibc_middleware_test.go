@@ -176,7 +176,7 @@ func TestOnAcknowledgementPacket_ErrorAck_NoContract(t *testing.T) {
 	assert.True(t, app.onAckPacketCalled)
 }
 
-func TestOnAcknowledgementPacket_ErrorAck_BadPayload(t *testing.T) {
+func TestOnAcknowledgementPacket_ErrorAck_BadPayload_NoContract(t *testing.T) {
 	k, ctx := newTestKeeperAndCtx(t)
 	app := newMockApp()
 	mw := v2.NewIBCMiddleware(k, app)
@@ -190,8 +190,8 @@ func TestOnAcknowledgementPacket_ErrorAck_BadPayload(t *testing.T) {
 		Value:           []byte("bad data"),
 	}
 	err := mw.OnAcknowledgementPacket(ctx, "src-client", "dst-client", 1, errorAck, badPayload, nil)
-	assert.Error(t, err, "should error on bad payload with error ack")
-	assert.False(t, app.onAckPacketCalled, "should not delegate when conversion fails")
+	assert.NoError(t, err, "no contract configured, bad payload should just delegate")
+	assert.True(t, app.onAckPacketCalled, "should delegate when no contract is configured")
 }
 
 func TestOnAcknowledgementPacket_AppError(t *testing.T) {
@@ -219,7 +219,7 @@ func TestOnTimeoutPacket_NoContractConfigured(t *testing.T) {
 	assert.True(t, app.onTimeoutPacketCalled)
 }
 
-func TestOnTimeoutPacket_BadPayload(t *testing.T) {
+func TestOnTimeoutPacket_BadPayload_NoContract(t *testing.T) {
 	k, ctx := newTestKeeperAndCtx(t)
 	app := newMockApp()
 	mw := v2.NewIBCMiddleware(k, app)
@@ -232,8 +232,8 @@ func TestOnTimeoutPacket_BadPayload(t *testing.T) {
 		Value:           []byte("bad data"),
 	}
 	err := mw.OnTimeoutPacket(ctx, "src-client", "dst-client", 1, badPayload, nil)
-	assert.Error(t, err, "should error on bad payload")
-	assert.False(t, app.onTimeoutPacketCalled, "should not delegate when conversion fails")
+	assert.NoError(t, err, "no contract configured, bad payload should just delegate")
+	assert.True(t, app.onTimeoutPacketCalled, "should delegate when no contract is configured")
 }
 
 func TestOnTimeoutPacket_AppError(t *testing.T) {
