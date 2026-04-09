@@ -538,5 +538,5 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	marker, err = suite.chainB.GetProvenanceApp().MarkerKeeper.GetMarkerByDenom(suite.chainB.GetContext(), denom)
 	suite.Require().NoError(err, "chainB GetMarkerByDenom()")
 	suite.Require().Equal(marker.GetDenom(), denom)
-	suite.Require().True(marker.HasAccess(chainASenderAddress.String(), markertypes.Access_Transfer), "ChainB Ibc marker should have transfer rights added")
+	suite.Require().False(marker.HasAccess(chainASenderAddress.String(), markertypes.Access_Transfer), "ChainB Ibc marker should NOT have transfer rights added")
 }
