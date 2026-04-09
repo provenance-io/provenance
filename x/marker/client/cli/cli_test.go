@@ -44,6 +44,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -116,7 +117,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		coin := func(amount int64, denom string) sdk.Coin {
 			return sdk.NewInt64Coin(denom, amount)
 		}
-
+		// Add exchange market to genesis for withdraw+commit CLI tests
+		testutil.MutateGenesisState(s.T(), &s.cfg, exchange.ModuleName, &exchange.GenesisState{}, func(exchangeData *exchange.GenesisState) *exchange.GenesisState {
+			exchangeData.Markets = append(exchangeData.Markets, exchange.Market{
+				MarketId:                 1,
+				AcceptingCommitments:     true,
+				CommitmentSettlementBips: 50,
+				IntermediaryDenom:        s.cfg.BondDenom,
+			})
+			return exchangeData
+		})
 		bankGenState.Balances = append(bankGenState.Balances,
 			bal(s.accountAddresses[0], bondCoin, coin(100, "authzhotdog"), coin(123, s.holderDenom)),
 			bal(s.accountAddresses[1], bondCoin, coin(100, "authzhotdog"), coin(234, s.holderDenom)),
@@ -950,6 +960,81 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
+		},
+		{
+			"withdraw with market-id flag",
+			markercli.GetCmdWithdrawCoins(),
+			[]string{
+				"hotdog",
+				"10hotdog",
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%d", "market-id", 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"withdraw with market-id and event-tag flags",
+			markercli.GetCmdWithdrawCoins(),
+			[]string{
+				"hotdog",
+				"10hotdog",
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%d", "market-id", 1),
+				fmt.Sprintf("--%s=%s", "event-tag", "cli-withdraw-test"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"withdraw with event-tag but no market-id should fail",
+			markercli.GetCmdWithdrawCoins(),
+			[]string{
+				"hotdog",
+				"10hotdog",
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%s", "event-tag", "orphan-tag"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"withdraw with market-id zero - backward compat",
+			markercli.GetCmdWithdrawCoins(),
+			[]string{
+				"hotdog",
+				"10hotdog",
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%d", "market-id", 0),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"withdraw to self with market-id",
+			markercli.GetCmdWithdrawCoins(),
+			[]string{
+				"hotdog",
+				"10hotdog",
+				fmt.Sprintf("--%s=%d", "market-id", 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
 		},
 		{
 			"remove access",

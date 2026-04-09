@@ -88,6 +88,9 @@ type Keeper struct {
 
 	// groupChecker provides a way to check if an account is in a group.
 	groupChecker types.GroupChecker
+
+	// exchangeKeeper is an optional keeper for committing funds to exchange markets.
+	exchangeKeeper types.ExchangeKeeper
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -127,6 +130,14 @@ func NewKeeper(
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
+}
+
+// SetExchangeKeeper sets the exchange keeper and returns the updated Keeper.
+// This must be called after both keepers are constructed to resolve the circular dependency
+// (exchange depends on marker via MarkerKeeper interface, marker depends on exchange via ExchangeKeeper interface).
+func (k Keeper) SetExchangeKeeper(exchangeKeeper types.ExchangeKeeper) Keeper {
+	k.exchangeKeeper = exchangeKeeper
+	return k
 }
 
 // Logger returns a module-specific logger.

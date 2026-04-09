@@ -61,6 +61,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgGovCloseMarketRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgGovUpdateParamsRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgSendAndCommitRequest{Sender: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)

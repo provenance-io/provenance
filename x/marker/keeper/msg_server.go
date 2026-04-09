@@ -358,7 +358,16 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
+	// If a market_id was provided, commit the withdrawn funds to that market
+	// on behalf of the recipient.
+	if msg.MarketId != 0 {
+		if k.exchangeKeeper == nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap("exchange keeper not set: cannot commit funds to market")
+		}
+		if err := k.exchangeKeeper.AddCommitment(ctx, msg.MarketId, to, msg.Amount, msg.EventTag); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(fmt.Sprintf("failed to commit withdrawn funds to market %d", msg.MarketId))
+		}
+	}
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, types.EventTelemetryKeyWithdraw},

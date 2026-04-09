@@ -19,6 +19,7 @@ import (
 
 	"github.com/provenance-io/provenance/testutil"
 
+	"github.com/provenance-io/provenance/x/marker/types"
 	. "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -1342,6 +1343,58 @@ func TestMsgUpdateParamsRequestValidateBasic(t *testing.T) {
 			} else {
 				require.NoError(t, err, "unexpected error for case: %s", tc.name)
 			}
+		})
+	}
+}
+func TestMsgWithdrawRequest_WithMarketCommitment(t *testing.T) {
+	admin := sdk.AccAddress("admin_______________")
+	to := sdk.AccAddress("to__________________")
+	denom := "testcoin"
+	coins := sdk.NewCoins(sdk.NewInt64Coin(denom, 500))
+
+	tests := []struct {
+		name        string
+		marketID    uint32
+		eventTag    string
+		expMarketID uint32
+		expEventTag string
+	}{
+		{
+			name:        "set market id and event tag",
+			marketID:    1,
+			eventTag:    "my-tag",
+			expMarketID: 1,
+			expEventTag: "my-tag",
+		},
+		{
+			name:        "set market id with empty event tag",
+			marketID:    5,
+			eventTag:    "",
+			expMarketID: 5,
+			expEventTag: "",
+		},
+		{
+			name:        "set zero market id - no-op",
+			marketID:    0,
+			eventTag:    "",
+			expMarketID: 0,
+			expEventTag: "",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgWithdrawRequest(admin, to, denom, coins)
+			result := msg.WithMarketCommitment(tc.marketID, tc.eventTag)
+
+			require.Equal(t, tc.expMarketID, result.MarketId, "MarketId")
+			require.Equal(t, tc.expEventTag, result.EventTag, "EventTag")
+			// Verify other fields are preserved
+			require.Equal(t, msg.Denom, result.Denom, "Denom should be preserved")
+			require.Equal(t, msg.Administrator, result.Administrator, "Administrator should be preserved")
+			require.Equal(t, msg.ToAddress, result.ToAddress, "ToAddress should be preserved")
+			require.True(t, msg.Amount.Equal(result.Amount), "Amount should be preserved")
 		})
 	}
 }

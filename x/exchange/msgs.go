@@ -18,6 +18,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateAskRequest)(nil),
 	(*MsgCreateBidRequest)(nil),
 	(*MsgCommitFundsRequest)(nil),
+	(*MsgSendAndCommitRequest)(nil),
 	(*MsgCancelOrderRequest)(nil),
 	(*MsgFillBidsRequest)(nil),
 	(*MsgFillAsksRequest)(nil),
@@ -140,6 +141,31 @@ func (m MsgCommitFundsRequest) ValidateBasic() error {
 
 	if err := ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
+	}
+
+	return errors.Join(errs...)
+}
+
+func (m MsgSendAndCommitRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Sender); err != nil {
+		errs = append(errs, fmt.Errorf("invalid sender %q: %w", m.Sender, err))
+	}
+	if _, err := sdk.AccAddressFromBech32(m.ToAddress); err != nil {
+		errs = append(errs, fmt.Errorf("invalid to_address %q: %w", m.ToAddress, err))
+	}
+	if m.Sender == m.ToAddress {
+		errs = append(errs, fmt.Errorf("sender and to_address cannot be the same"))
+	}
+	if err := m.Amount.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid amount: %w", err))
+	}
+	if m.Amount.IsZero() {
+		errs = append(errs, fmt.Errorf("amount cannot be zero"))
+	}
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("market_id cannot be zero"))
 	}
 
 	return errors.Join(errs...)

@@ -599,6 +599,9 @@ func New(
 		app.MetadataKeeper,
 	)
 
+	// MarkerKeeper needs ExchangeKeeper for the MsgWithdrawRequest commitment feature.
+	app.MarkerKeeper = app.MarkerKeeper.SetExchangeKeeper(app.ExchangeKeeper)
+
 	app.VaultKeeper = vaultkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[vaulttypes.StoreKey]),

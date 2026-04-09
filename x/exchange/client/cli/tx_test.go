@@ -1856,3 +1856,29 @@ func (s *CmdTestSuite) TestCmdTxUpdateParams() {
 		})
 	}
 }
+func (s *CmdTestSuite) TestCmdTxSendAndCommit() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error: missing required flags",
+			args:     []string{"send-and-commit", "--market", "5", "--amount", "10apple"},
+			expInErr: []string{"required flag(s) \"to\" not set"},
+		},
+		{
+			name: "market does not accept commitments",
+			args: []string{
+				"sac", "--market", "421",
+				"--to", s.addr2.String(),
+				"--amount", "1000apple",
+				"--from", s.addr0.String(),
+			},
+			expInRawLog:  []string{"failed to commit funds", "market 421 is not accepting commitments"},
+			expectedCode: invReqCode,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}

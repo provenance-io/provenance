@@ -222,7 +222,15 @@ message MsgWithdrawRequest {
     (amino.dont_omitempty)   = true,
     (amino.encoding)         = "legacy_coins"
   ];
+
+  // market_id is an optional exchange market id. If non-zero, the withdrawn funds will be committed
+  // to that market on behalf of the to_address after the withdrawal completes.
+  uint32 market_id = 5;
+
+  // event_tag is a string that is included in the funds withdraw events. Max length is 100 characters.
+  string event_tag = 6;
 }
+
 // MsgWithdrawResponse defines the Msg/Withdraw response type
 message MsgWithdrawResponse {}
 

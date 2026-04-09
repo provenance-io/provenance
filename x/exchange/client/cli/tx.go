@@ -27,6 +27,7 @@ func CmdTx() *cobra.Command {
 		CmdTxCreateAsk(),
 		CmdTxCreateBid(),
 		CmdTxCommitFunds(),
+		CmdTxSendAndCommit(),
 		CmdTxCancelOrder(),
 		CmdTxFillBids(),
 		CmdTxFillAsks(),
@@ -97,6 +98,20 @@ func CmdTxCommitFunds() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxCommitFunds(cmd)
+	return cmd
+}
+
+// CmdTxSendAndCommit returns command for the SendAndCommit endpoint.
+func CmdTxSendAndCommit() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "send-and-commit",
+		Aliases: []string{"sac"},
+		Short:   "Send coins to an address and commit them to a market",
+		RunE:    genericTxRunE(MakeMsgSendAndCommit),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxSendAndCommit(cmd)
 	return cmd
 }
 

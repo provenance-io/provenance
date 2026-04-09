@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -133,6 +134,16 @@ func SetupCmdTxCommitFunds(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
+// SetupCmdTxSendAndCommit adds the flags needed for MakeMsgSendAndCommit.
+func SetupCmdTxSendAndCommit(cmd *cobra.Command) {
+	cmd.Flags().String(FlagTo, "", "The recipient address (required)")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id to commit funds to (required)")
+	cmd.Flags().String(FlagTag, "", "An optional event tag")
+	cmd.Flags().String(FlagAmount, "", "The coins to send and commit (required)")
+
+	MarkFlagsRequired(cmd, FlagTo, FlagMarket, FlagAmount)
+}
+
 // MakeMsgCommitFunds reads all the SetupCmdTxCommitFunds flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgCommitFunds(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCommitFundsRequest, error) {
@@ -144,6 +155,45 @@ func MakeMsgCommitFunds(clientCtx client.Context, flagSet *pflag.FlagSet, _ []st
 	msg.Amount, errs[2] = ReadReqCoinsFlag(flagSet, FlagAmount)
 	msg.CreationFee, errs[3] = ReadCoinFlag(flagSet, FlagCreationFee)
 	msg.EventTag, errs[4] = flagSet.GetString(FlagTag)
+
+	return msg, errors.Join(errs...)
+}
+
+// MakeMsgSendAndCommit builds a MsgSendAndCommitRequest from the provided command and flags.
+func MakeMsgSendAndCommit(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgSendAndCommitRequest, error) {
+	msg := &exchange.MsgSendAndCommitRequest{}
+
+	msg.Sender = clientCtx.GetFromAddress().String()
+
+	errs := make([]error, 0, 3)
+
+	toAddr, err := flagSet.GetString(FlagTo)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("error reading --%s flag: %w", FlagTo, err))
+	}
+	msg.ToAddress = toAddr
+
+	marketID, err := flagSet.GetUint32(FlagMarket)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("error reading --%s flag: %w", FlagMarket, err))
+	}
+	msg.MarketId = marketID
+
+	tag, err := flagSet.GetString(FlagTag)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("error reading --%s flag: %w", FlagTag, err))
+	}
+	msg.EventTag = tag
+
+	amountStr, err := flagSet.GetString(FlagAmount)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("error reading --%s flag: %w", FlagAmount, err))
+	} else {
+		msg.Amount, err = sdk.ParseCoinsNormalized(amountStr)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("error parsing --%s %q: %w", FlagAmount, amountStr, err))
+		}
+	}
 
 	return msg, errors.Join(errs...)
 }
