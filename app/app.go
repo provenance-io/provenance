@@ -318,7 +318,7 @@ func init() {
 	}
 
 	// 614,400 = 600 * 1024 = our wasm params maxWasmCodeSize value before it was removed in wasmd v0.27.
-	wasmtypes.MaxWasmSize = 614_400
+	wasmtypes.MaxWasmSize = 819_200 // = 800 * 1024.
 }
 
 // New returns a reference to an initialized Provenance Blockchain App.
