@@ -245,7 +245,7 @@ func (suite *MiddlewareTestSuite) TestNonICS20() {
 	suite.Require().Error(err)
 	// This will error out, but not because of rate limiting
 	suite.Require().NotContains(err.Error(), "rate limit")
-	suite.Require().Contains(err.Error(), "invalid denom")
+	suite.Require().Contains(err.Error(), "channel not found")
 }
 
 // Test that Sending IBC messages works when the middleware isn't configured

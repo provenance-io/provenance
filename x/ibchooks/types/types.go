@@ -116,29 +116,6 @@ type IbcLifecycleComplete struct {
 	IbcLifecycleComplete interface{} `json:"ibc_lifecycle_complete"`
 }
 
-// MarkerMemo parent marker struct for memo json
-type MarkerMemo struct {
-	Marker MarkerPayload `json:"marker"`
-}
-
-// MarkerPayload child structure for marker memo
-type MarkerPayload struct {
-	TransferAuths      []string `json:"transfer-auths"`
-	AllowForceTransfer bool     `json:"allow-force-transfer"`
-}
-
-// NewMarkerPayload returns a marker payload with transfer authorities and allow force transfer flag
-func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress, allowForceTransfer bool) MarkerPayload {
-	addresses := make([]string, len(transferAuthAddrs))
-	for i := 0; i < len(transferAuthAddrs); i++ {
-		addresses[i] = transferAuthAddrs[i].String()
-	}
-	return MarkerPayload{
-		TransferAuths:      addresses,
-		AllowForceTransfer: allowForceTransfer,
-	}
-}
-
 // NewIbcLifecycleCompleteAck returns a new ibc lifecycle complete acknowledgment object for json serialization
 func NewIbcLifecycleCompleteAck(sourceChannel string, sequence uint64, ackAsJSON []byte, success bool) IbcLifecycleComplete {
 	ibcLifecycleCompleteAck := IbcLifecycleCompleteAck{

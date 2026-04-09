@@ -120,7 +120,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, chann
 
 func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
 	if err := execMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
+		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err)
 	}
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
 	return wasmMsgServer.ExecuteContract(ctx, execMsg)
@@ -134,8 +134,8 @@ func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleT
 	return true, packetdata
 }
 
-// jsonStringHasKey parses the memo as a json object and checks if it contains the key.
-func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
+// JsonStringHasKey parses the memo as a json object and checks if it contains the key.
+func JsonStringHasKey(memo, key string) (found bool, jsonObject map[string]interface{}) {
 	jsonObject = make(map[string]interface{})
 
 	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
@@ -161,7 +161,7 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 }
 
 func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdk.AccAddress, msgBytes []byte, err error) {
-	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
+	isWasmRouted, metadata := JsonStringHasKey(memo, "wasm")
 	if !isWasmRouted {
 		return isWasmRouted, sdk.AccAddress{}, nil, nil
 	}
@@ -233,7 +233,7 @@ func (h WasmHooks) SendPacketOverride(
 		return i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
 
-	isCallbackRouted, metadata := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
+	isCallbackRouted, metadata := JsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
 	if !isCallbackRouted {
 		return i.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
@@ -290,7 +290,7 @@ func (h WasmHooks) GetWasmSendPacketPreProcessor(
 		return data, nil
 	}
 
-	isCallbackRouted, metadata := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
+	isCallbackRouted, metadata := JsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
 	if !isCallbackRouted {
 		return data, nil
 	}
@@ -386,10 +386,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 
-	success := "false"
-	if !IsJSONAckError(acknowledgement) {
-		success = "true"
-	}
+	success := !IsJSONAckError(acknowledgement)
 
 	// Notify the sender that the ack has been received
 	ackAsJSON, err := json.Marshal(acknowledgement)
@@ -397,13 +394,13 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return err
 	}
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
+	sudoMsg, err := json.Marshal(types.NewIbcLifecycleCompleteAck(packet.SourceChannel, packet.Sequence, ackAsJSON, success))
+	if err != nil {
+		return err
+	}
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
-		// error processing the callback
-		// ToDo: Open Question: Should we also delete the callback here?
+		// No need to delete the packet callback on error because it would just get reverted.
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
@@ -430,9 +427,10 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, ch
 		return sdkerrors.Wrap(err, "Timeout callback error")
 	}
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
-		packet.SourceChannel, packet.Sequence))
+	sudoMsg, err := json.Marshal(types.NewIbcLifecycleCompleteTimeout(packet.SourceChannel, packet.Sequence))
+	if err != nil {
+		return err
+	}
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback. This could be because the contract doesn't implement the message type to
