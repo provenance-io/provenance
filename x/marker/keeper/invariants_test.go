@@ -22,7 +22,7 @@ func TestMarkerInvariant(t *testing.T) {
 	user := testUserAddress("test")
 
 	// Get a reference to our invariant checks
-	invariantChecks := markerkeeper.AllInvariants(app.MarkerKeeper, app.BankKeeper)
+	invariantChecks := markerkeeper.AllInvariants(*app.MarkerKeeper, app.BankKeeper)
 	require.NotNil(t, invariantChecks)
 
 	// create account and check default values

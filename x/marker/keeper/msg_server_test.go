@@ -57,7 +57,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.blockStartTime = time.Now()
 	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.blockStartTime})
-	s.msgServer = markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
+	s.msgServer = markerkeeper.NewMsgServerImpl(*s.app.MarkerKeeper)
 
 	s.privkey1 = secp256k1.GenPrivKey()
 	s.pubkey1 = s.privkey1.PubKey()
@@ -1072,7 +1072,8 @@ func (s *MsgServerTestSuite) TestMsgWithdrawMarkerRequest() {
 		},
 	})
 
-	s.Assert().NoError(err, "should create exchange market")
+	s.Require().NoError(err, "should create exchange market")
+
 	testcases := []struct {
 		name          string
 		msg           *types.MsgWithdrawRequest

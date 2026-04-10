@@ -75,6 +75,11 @@ func (k MsgServer) SendAndCommit(goCtx context.Context, msg *exchange.MsgSendAnd
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	// Block sends to module accounts and other blocked addresses.
+	if k.bankKeeper.BlockedAddr(toAddr) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("%s is not allowed to receive funds", toAddr)
+	}
+
 	// Send the coins from sender to recipient.
 	if err = k.bankKeeper.SendCoins(ctx, sender, toAddr, msg.Amount); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("failed to send coins: %v", err)

@@ -135,9 +135,8 @@ func NewKeeper(
 // SetExchangeKeeper sets the exchange keeper and returns the updated Keeper.
 // This must be called after both keepers are constructed to resolve the circular dependency
 // (exchange depends on marker via MarkerKeeper interface, marker depends on exchange via ExchangeKeeper interface).
-func (k Keeper) SetExchangeKeeper(exchangeKeeper types.ExchangeKeeper) Keeper {
-	k.exchangeKeeper = exchangeKeeper
-	return k
+func (k *Keeper) SetExchangeKeeper(ek types.ExchangeKeeper) {
+	k.exchangeKeeper = ek
 }
 
 // Logger returns a module-specific logger.

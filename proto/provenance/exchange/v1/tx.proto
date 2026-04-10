@@ -342,7 +342,8 @@ message MsgMarketTransferCommitmentRequest {
   uint32 current_market_id = 4;
   // new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement.
   uint32 new_market_id = 5;
-  // event_tag is a string that is included in the funds-released events. Max length is 100 characters.
+  // event_tag is an optional string included in the commitment events when market_id is non-zero.
+  // Max length is 100 characters.
   string event_tag = 6;
 }
 

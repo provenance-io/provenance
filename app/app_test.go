@@ -139,7 +139,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	// Delete one of the markers.
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, managerAddr, "marker2coin"), "canceling marker2coin")
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, managerAddr, "marker2coin"), "deleting marker2coin")
-	markermodule.BeginBlocker(ctx, app.MarkerKeeper, app.BankKeeper)
+	markermodule.BeginBlocker(ctx, *app.MarkerKeeper, app.BankKeeper)
 	deletedMarkerAddr := markerToAddr["marker2coin"]
 
 	markerAddrs := []sdk.AccAddress{markerToAddr["marker1coin"], markerToAddr["marker3coin"]}

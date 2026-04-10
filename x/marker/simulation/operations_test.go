@@ -73,7 +73,7 @@ func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
 }
 
 func (s *SimTestSuite) TestWeightedOperations() {
-	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), codec.NewProtoCodec(s.app.InterfaceRegistry()), s.app.MarkerKeeper,
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), codec.NewProtoCodec(s.app.InterfaceRegistry()), *s.app.MarkerKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.GovKeeper, s.app.AttributeKeeper,
 	)
 
@@ -147,7 +147,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgAddMarker(s.app.MarkerKeeper, s.getWeightedOpsArgs())
+	op := simulation.SimulateMsgAddMarker(*s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
@@ -169,7 +169,7 @@ func (s *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgAddFinalizeActivateMarker(s.app.MarkerKeeper, s.getWeightedOpsArgs())
+	op := simulation.SimulateMsgAddFinalizeActivateMarker(*s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
@@ -387,12 +387,12 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     nil,
 	}
-	markerMsgServer := keeper.NewMsgServerImpl(s.app.MarkerKeeper)
+	markerMsgServer := keeper.NewMsgServerImpl(*s.app.MarkerKeeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
 	// execute operation
-	op := simulation.SimulateMsgSetAccountData(s.app.MarkerKeeper, s.getWeightedOpsArgs())
+	op := simulation.SimulateMsgSetAccountData(*s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgSetAccountData op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -435,12 +435,12 @@ func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     nil,
 	}
-	markerMsgServer := keeper.NewMsgServerImpl(s.app.MarkerKeeper)
+	markerMsgServer := keeper.NewMsgServerImpl(*s.app.MarkerKeeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
 	// execute operation
-	op := simulation.SimulateMsgUpdateSendDenyList(s.app.MarkerKeeper, s.getWeightedOpsArgs())
+	op := simulation.SimulateMsgUpdateSendDenyList(*s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgUpdateSendDenyList op(...) error")
 	s.LogOperationMsg(operationMsg)

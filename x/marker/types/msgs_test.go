@@ -18,8 +18,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/testutil"
-
-	"github.com/provenance-io/provenance/x/marker/types"
 	. "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -1385,16 +1383,16 @@ func TestMsgWithdrawRequest_WithMarketCommitment(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgWithdrawRequest(admin, to, denom, coins)
+			msg := NewMsgWithdrawRequest(admin, to, denom, coins)
 			result := msg.WithMarketCommitment(tc.marketID, tc.eventTag)
 
-			require.Equal(t, tc.expMarketID, result.MarketId, "MarketId")
-			require.Equal(t, tc.expEventTag, result.EventTag, "EventTag")
+			assert.Equal(t, tc.expMarketID, result.MarketId, "MarketId")
+			assert.Equal(t, tc.expEventTag, result.EventTag, "EventTag")
 			// Verify other fields are preserved
-			require.Equal(t, msg.Denom, result.Denom, "Denom should be preserved")
-			require.Equal(t, msg.Administrator, result.Administrator, "Administrator should be preserved")
-			require.Equal(t, msg.ToAddress, result.ToAddress, "ToAddress should be preserved")
-			require.True(t, msg.Amount.Equal(result.Amount), "Amount should be preserved")
+			assert.Equal(t, msg.Denom, result.Denom, "Denom should be preserved")
+			assert.Equal(t, msg.Administrator, result.Administrator, "Administrator should be preserved")
+			assert.Equal(t, msg.ToAddress, result.ToAddress, "ToAddress should be preserved")
+			assert.True(t, msg.Amount.Equal(result.Amount), "Amount should be preserved")
 		})
 	}
 }

@@ -167,6 +167,9 @@ func (m MsgSendAndCommitRequest) ValidateBasic() error {
 	if m.MarketId == 0 {
 		errs = append(errs, fmt.Errorf("market_id cannot be zero"))
 	}
+	if err := ValidateEventTag(m.EventTag); err != nil {
+		errs = append(errs, err)
+	}
 
 	return errors.Join(errs...)
 }

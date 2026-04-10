@@ -1080,7 +1080,8 @@ type MsgWithdrawRequest struct {
 	// market_id is an optional exchange market id. If non-zero, the withdrawn funds will be committed
 	// to that market on behalf of the to_address after the withdrawal completes.
 	MarketId uint32 `protobuf:"varint,5,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	// event_tag is a string that is included in the funds withdraw events. Max length is 100 characters.
+	// event_tag is an optional string included in the commitment events when market_id is non-zero.
+	// Max length is 100 characters.
 	EventTag string `protobuf:"bytes,6,opt,name=event_tag,json=eventTag,proto3" json:"event_tag,omitempty"`
 }
 

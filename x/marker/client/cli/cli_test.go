@@ -127,6 +127,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			})
 			return exchangeData
 		})
+
 		bankGenState.Balances = append(bankGenState.Balances,
 			bal(s.accountAddresses[0], bondCoin, coin(100, "authzhotdog"), coin(123, s.holderDenom)),
 			bal(s.accountAddresses[1], bondCoin, coin(100, "authzhotdog"), coin(234, s.holderDenom)),

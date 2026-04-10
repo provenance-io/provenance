@@ -227,7 +227,8 @@ message MsgWithdrawRequest {
   // to that market on behalf of the to_address after the withdrawal completes.
   uint32 market_id = 5;
 
-  // event_tag is a string that is included in the funds withdraw events. Max length is 100 characters.
+  // event_tag is an optional string included in the commitment events when market_id is non-zero.
+  // Max length is 100 characters.
   string event_tag = 6;
 }
 
