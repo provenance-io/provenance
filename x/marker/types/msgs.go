@@ -204,7 +204,7 @@ func (msg MsgWithdrawRequest) ValidateBasic() error {
 		return fmt.Errorf("event_tag cannot be set without a market_id")
 	}
 	if err := export.ValidateEventTag(msg.EventTag); err != nil {
-		return fmt.Errorf("event_tag length %d exceeds maximum of 100", len(msg.EventTag))
+		return err
 	}
 	return msg.Amount.Validate()
 }

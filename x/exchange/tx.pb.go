@@ -1094,8 +1094,7 @@ type MsgMarketTransferCommitmentRequest struct {
 	CurrentMarketId uint32 `protobuf:"varint,4,opt,name=current_market_id,json=currentMarketId,proto3" json:"current_market_id,omitempty"`
 	// new_market_id is the numerical identifier of the market that is receiving the funds as part of the settlement.
 	NewMarketId uint32 `protobuf:"varint,5,opt,name=new_market_id,json=newMarketId,proto3" json:"new_market_id,omitempty"`
-	// event_tag is an optional string included in the commitment events when market_id is non-zero.
-	// Max length is 100 characters.
+	// event_tag is a string that is included in the funds-released events. Max length is 100 characters.
 	EventTag string `protobuf:"bytes,6,opt,name=event_tag,json=eventTag,proto3" json:"event_tag,omitempty"`
 }
 
