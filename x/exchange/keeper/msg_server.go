@@ -61,6 +61,43 @@ func (k MsgServer) CommitFunds(goCtx context.Context, msg *exchange.MsgCommitFun
 	return &exchange.MsgCommitFundsResponse{}, nil
 }
 
+// SendAndCommit sends coins from the sender to the recipient, then commits them to a market.
+func (k MsgServer) SendAndCommit(goCtx context.Context, msg *exchange.MsgSendAndCommitRequest) (*exchange.MsgSendAndCommitResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	toAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	// Block sends to module accounts and other blocked addresses.
+	if k.bankKeeper.BlockedAddr(toAddr) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("%s is not allowed to receive funds", toAddr)
+	}
+
+	// Send the coins from sender to recipient.
+	if err = k.bankKeeper.SendCoins(ctx, sender, toAddr, msg.Amount); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("failed to send coins: %v", err)
+	}
+
+	// Commit the coins to the market on behalf of the recipient.
+	// Uses AddCommitment which checks:
+	//   - Market exists and is accepting commitments
+	//   - Recipient has required attributes for the market
+	//   - Places a hold on the committed coins
+	// If this fails, the entire transaction reverts.
+	if err = k.AddCommitment(ctx, msg.MarketId, toAddr, msg.Amount, msg.EventTag); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("failed to commit funds: %v", err)
+	}
+
+	return &exchange.MsgSendAndCommitResponse{}, nil
+}
+
 // CancelOrder cancels an order.
 func (k MsgServer) CancelOrder(goCtx context.Context, msg *exchange.MsgCancelOrderRequest) (*exchange.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

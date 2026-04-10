@@ -123,6 +123,9 @@ service Msg {
 
   // UpdateParams is a governance proposal endpoint for updating the exchange module's params.
   rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
+
+  // SendAndCommit sends coins from the sender to a recipient and commits them to a market.
+  rpc SendAndCommit(MsgSendAndCommitRequest) returns (MsgSendAndCommitResponse) {}
 }
 
 // MsgCreateAskRequest is a request message for the CreateAsk endpoint.
@@ -738,3 +741,32 @@ message MsgUpdateParamsRequest {
 
 // MsgUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
 message MsgUpdateParamsResponse {}
+
+// MsgSendAndCommitRequest is a request message for the SendAndCommit endpoint.
+// It sends coins from the sender to the to_address, then commits those coins to the specified market.
+message MsgSendAndCommitRequest {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the address of the account sending the coins.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // to_address is the address receiving the coins and on whose behalf they will be committed.
+  string to_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // amount is the coins being sent and then committed.
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
+
+  // market_id is the market to commit the funds to.
+  uint32 market_id = 4;
+
+  // event_tag is a string that is included in the funds-committed events. Max length is 100 characters.
+  string event_tag = 5;
+}
+
+// MsgSendAndCommitResponse is a response message for the SendAndCommit endpoint.
+message MsgSendAndCommitResponse {}

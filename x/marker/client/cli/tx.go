@@ -446,9 +446,22 @@ func GetCmdWithdrawCoins() *cobra.Command {
 				}
 			}
 			msg := types.NewMsgWithdrawRequest(callerAddr, recipientAddr, denom, coins)
+			marketID, err := cmd.Flags().GetUint32("market-id")
+			if err != nil {
+				return err
+			}
+			eventTag, err := cmd.Flags().GetString("event-tag")
+			if err != nil {
+				return err
+			}
+			if marketID != 0 {
+				msg.WithMarketCommitment(marketID, eventTag)
+			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	cmd.Flags().Uint32("market-id", 0, "Optional: commit withdrawn funds to this exchange market")
+	cmd.Flags().String("event-tag", "", "Optional: event tag for the commitment (requires --market-id)")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
