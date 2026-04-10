@@ -1,0 +1,9 @@
+* `github.com/aws/aws-sdk-go-v2` bumped to v1.41.5 (from v1.41.4) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream` bumped to v1.7.8 (from v1.7.7) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/internal/configsources` bumped to v1.4.21 (from v1.4.20) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/internal/endpoints/v2` bumped to v2.7.21 (from v2.7.20) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/internal/v4a` bumped to v1.4.22 (from v1.4.21) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/service/internal/checksum` bumped to v1.9.13 (from v1.9.12) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/service/internal/presigned-url` bumped to v1.13.21 (from v1.13.20) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/service/internal/s3shared` bumped to v1.19.21 (from v1.19.20) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
+* `github.com/aws/aws-sdk-go-v2/service/s3` bumped to v1.97.3 (from v1.97.1) [PR 2669](https://github.com/provenance-io/provenance/pull/2669).
