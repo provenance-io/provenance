@@ -11,6 +11,8 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/x/exchange/export"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -18,6 +20,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateAskRequest)(nil),
 	(*MsgCreateBidRequest)(nil),
 	(*MsgCommitFundsRequest)(nil),
+	(*MsgSendAndCommitRequest)(nil),
 	(*MsgCancelOrderRequest)(nil),
 	(*MsgFillBidsRequest)(nil),
 	(*MsgFillAsksRequest)(nil),
@@ -138,7 +141,35 @@ func (m MsgCommitFundsRequest) ValidateBasic() error {
 		}
 	}
 
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errors.Join(errs...)
+}
+
+func (m MsgSendAndCommitRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Sender); err != nil {
+		errs = append(errs, fmt.Errorf("invalid sender %q: %w", m.Sender, err))
+	}
+	if _, err := sdk.AccAddressFromBech32(m.ToAddress); err != nil {
+		errs = append(errs, fmt.Errorf("invalid to_address %q: %w", m.ToAddress, err))
+	}
+	if m.Sender == m.ToAddress {
+		errs = append(errs, fmt.Errorf("sender and to_address cannot be the same"))
+	}
+	if err := m.Amount.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid amount: %w", err))
+	}
+	if m.Amount.IsZero() {
+		errs = append(errs, fmt.Errorf("amount cannot be zero"))
+	}
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("market_id cannot be zero"))
+	}
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -325,7 +356,7 @@ func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 		}
 	}
 
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -356,7 +387,7 @@ func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
 		}
 	}
 
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -391,7 +422,7 @@ func (m MsgMarketTransferCommitmentRequest) ValidateBasic() error {
 	} else if m.Amount.IsZero() {
 		errs = append(errs, fmt.Errorf("invalid amount %q: cannot be zero", m.Amount))
 	}
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 	return errors.Join(errs...)

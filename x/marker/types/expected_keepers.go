@@ -83,3 +83,8 @@ type IbcTransferMsgServer interface {
 type GroupChecker interface {
 	IsGroupAddress(sdk.Context, sdk.AccAddress) bool
 }
+
+// ExchangeKeeper defines the exchange module functionality needed by the marker module.
+type ExchangeKeeper interface {
+	AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins, eventtag string) error
+}

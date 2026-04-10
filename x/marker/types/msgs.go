@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+
+	"github.com/provenance-io/provenance/x/exchange/export"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -176,6 +178,15 @@ func NewMsgWithdrawRequest(
 	}
 }
 
+// WithMarketCommitment sets the optional market commitment fields on a MsgWithdrawRequest.
+// If marketID is non-zero, the withdrawn funds will be committed to that market on behalf
+// of the to_address after the withdrawal completes.
+func (msg *MsgWithdrawRequest) WithMarketCommitment(marketID uint32, eventTag string) *MsgWithdrawRequest {
+	msg.MarketId = marketID
+	msg.EventTag = eventTag
+	return msg
+}
+
 func (msg MsgWithdrawRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
@@ -188,7 +199,13 @@ func (msg MsgWithdrawRequest) ValidateBasic() error {
 			return err
 		}
 	}
-
+	// Validation for optional commitment fields.
+	if msg.EventTag != "" && msg.MarketId == 0 {
+		return fmt.Errorf("event_tag cannot be set without a market_id")
+	}
+	if err := export.ValidateEventTag(msg.EventTag); err != nil {
+		return err
+	}
 	return msg.Amount.Validate()
 }
 

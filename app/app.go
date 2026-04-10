@@ -277,7 +277,7 @@ type App struct {
 	TransferKeeper     *ibctransferkeeper.Keeper
 	RateLimitingKeeper *ibcratelimitkeeper.Keeper
 
-	MarkerKeeper    markerkeeper.Keeper
+	MarkerKeeper    *markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
 	AssetKeeper     assetkeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
@@ -565,12 +565,14 @@ func New(
 		authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName), // Allow bond denom to be a restricted coin.
 	}
 
-	app.MarkerKeeper = markerkeeper.NewKeeper(
+	markerKeeper := markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.AccountKeeper,
 		app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
 		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper,
 		markerReqAttrBypassAddrs, NewGroupCheckerFunc(app.GroupKeeper),
 	)
+
+	app.MarkerKeeper = &markerKeeper
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
 		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper, app.BankKeeper,
@@ -599,6 +601,9 @@ func New(
 		app.MetadataKeeper,
 	)
 
+	// MarkerKeeper needs ExchangeKeeper for the MsgWithdrawRequest commitment feature.
+	app.MarkerKeeper.SetExchangeKeeper(app.ExchangeKeeper)
+
 	app.VaultKeeper = vaultkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[vaulttypes.StoreKey]),
@@ -606,7 +611,7 @@ func New(
 		address.Bech32Codec{Bech32Prefix: addrPrefix},
 		[]byte(govAuthority),
 		app.AccountKeeper,
-		app.MarkerKeeper,
+		*app.MarkerKeeper,
 		app.BankKeeper,
 	)
 
@@ -668,7 +673,7 @@ func New(
 	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
-	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
+	app.Ics20MarkerHooks.MarkerKeeper = app.MarkerKeeper
 	app.RateLimitingKeeper.PermissionedKeeper = app.ContractKeeper
 
 	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
@@ -765,7 +770,7 @@ func New(
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		assetmodule.NewAppModule(appCodec, app.AssetKeeper),
-		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
+		marker.NewAppModule(appCodec, *app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		flatfeesmodule.NewAppModule(appCodec, app.FlatFeesKeeper, app.interfaceRegistry),

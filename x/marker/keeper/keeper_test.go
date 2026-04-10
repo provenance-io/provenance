@@ -118,7 +118,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 func TestExistingAccounts(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -155,7 +155,7 @@ func TestExistingAccounts(t *testing.T) {
 func TestUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	user := testUserAddress("test")
 
@@ -770,7 +770,7 @@ func TestWithdrawCoins(t *testing.T) {
 				}
 			}
 
-			kpr := app.MarkerKeeper
+			kpr := *app.MarkerKeeper
 			if tc.bankKeeper != nil {
 				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
 			}
@@ -1659,7 +1659,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 func TestMarkerFeeGrant(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("admin")
@@ -1706,7 +1706,7 @@ func testUserAddress(name string) sdk.AccAddress {
 func TestAddFinalizeActivateMarker(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -1782,7 +1782,7 @@ func TestInvalidAccount(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 	user := testUserAddress("testcoin")
 	manager := testUserAddress("manager")
 
@@ -1810,7 +1810,7 @@ func TestInvalidAccount(t *testing.T) {
 func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	user := testUserAddress("test")
 
@@ -1874,7 +1874,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 func TestAddMarkerViaProposal(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	newMsg := func(denom string, amt sdkmath.Int, manager string, status types.MarkerStatus,
 		markerType types.MarkerType, access []types.AccessGrant, allowGov bool,
@@ -1953,7 +1953,7 @@ func TestAddMarkerViaProposal(t *testing.T) {
 func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	authority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	invalidAuthority := testUserAddress("test")
@@ -2093,7 +2093,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 

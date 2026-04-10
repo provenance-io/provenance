@@ -86,7 +86,7 @@ func (suite *MarkerHooksTestSuite) TestAddMarker() {
 	suite.chainA.GetProvenanceApp().BankKeeper.MintCoins(suite.chainA.GetContext(), markertypes.CoinPoolName, sdk.NewCoins(sdk.NewInt64Coin(ibcBeforeIBCDenom, 100)))
 	address1 := sdk.AccAddress("address1")
 	address2 := sdk.AccAddress("address2")
-	markerHooks := ibchooks.NewMarkerHooks(&suite.chainA.GetProvenanceApp().MarkerKeeper)
+	markerHooks := ibchooks.NewMarkerHooks(suite.chainA.GetProvenanceApp().MarkerKeeper)
 	testCases := []struct {
 		name        string
 		denom       string
