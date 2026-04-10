@@ -2903,7 +2903,7 @@ It sends coins from the sender to the to_address, then commits those coins to th
 | `to_address` | [string](#string) |  | to_address is the address receiving the coins and on whose behalf they will be committed. |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | amount is the coins being sent and then committed. |
 | `market_id` | [uint32](#uint32) |  | market_id is the market to commit the funds to. |
-| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed events. Max length is 100 characters. |
 
 
 
@@ -10711,7 +10711,7 @@ MsgWithdrawRequest defines the Msg/Withdraw request type
 | `to_address` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
 | `market_id` | [uint32](#uint32) |  | market_id is an optional exchange market id. If non-zero, the withdrawn funds will be committed to that market on behalf of the to_address after the withdrawal completes. |
-| `event_tag` | [string](#string) |  | event_tag is an optional string included in the commitment events when market_id is non-zero. Max length is 100 characters. |
+| `event_tag` | [string](#string) |  | event_tag is an optional string included in funds-withdrawn events when market_id is non-zero.Max length is 100 characters. |
 
 
 

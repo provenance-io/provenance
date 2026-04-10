@@ -11,6 +11,8 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/x/exchange/export"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -139,7 +141,7 @@ func (m MsgCommitFundsRequest) ValidateBasic() error {
 		}
 	}
 
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -167,7 +169,7 @@ func (m MsgSendAndCommitRequest) ValidateBasic() error {
 	if m.MarketId == 0 {
 		errs = append(errs, fmt.Errorf("market_id cannot be zero"))
 	}
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -354,7 +356,7 @@ func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 		}
 	}
 
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -385,7 +387,7 @@ func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
 		}
 	}
 
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -420,7 +422,7 @@ func (m MsgMarketTransferCommitmentRequest) ValidateBasic() error {
 	} else if m.Amount.IsZero() {
 		errs = append(errs, fmt.Errorf("invalid amount %q: cannot be zero", m.Amount))
 	}
-	if err := ValidateEventTag(m.EventTag); err != nil {
+	if err := export.ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}
 	return errors.Join(errs...)

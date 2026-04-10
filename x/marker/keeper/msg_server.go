@@ -365,7 +365,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 			return nil, sdkerrors.ErrInvalidRequest.Wrap("exchange keeper not set: cannot commit funds to market")
 		}
 		if err := k.exchangeKeeper.AddCommitment(ctx, msg.MarketId, to, msg.Amount, msg.EventTag); err != nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrap(fmt.Sprintf("failed to commit withdrawn funds to market %d", msg.MarketId))
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("failed to commit withdrawn funds to market %d: %v", msg.MarketId, err)
 		}
 	}
 	defer func() {

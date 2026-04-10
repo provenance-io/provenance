@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+
+	"github.com/provenance-io/provenance/x/exchange/export"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -201,7 +203,7 @@ func (msg MsgWithdrawRequest) ValidateBasic() error {
 	if msg.EventTag != "" && msg.MarketId == 0 {
 		return fmt.Errorf("event_tag cannot be set without a market_id")
 	}
-	if len(msg.EventTag) > 100 {
+	if err := export.ValidateEventTag(msg.EventTag); err != nil {
 		return fmt.Errorf("event_tag length %d exceeds maximum of 100", len(msg.EventTag))
 	}
 	return msg.Amount.Validate()

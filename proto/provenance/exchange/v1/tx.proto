@@ -755,13 +755,17 @@ message MsgSendAndCommitRequest {
   string to_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // amount is the coins being sent and then committed.
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 
   // market_id is the market to commit the funds to.
   uint32 market_id = 4;
 
-  // event_tag is a string that is included in the funds-released events. Max length is 100 characters.
+  // event_tag is a string that is included in the funds-committed events. Max length is 100 characters.
   string event_tag = 5;
 }
 
