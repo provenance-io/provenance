@@ -139,3 +139,80 @@ func TestGetAddressFromKey(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, attr2.GetAddressBytes(), shortKey.Bytes())
 }
+
+// TestAttrCodecByteIdentity verifies that the new Collections key codecs produce
+// byte-for-byte identical output to the old KV key construction functions.
+func TestAttrCodecByteIdentity(t *testing.T) {
+	cases := []struct {
+		name    string
+		addr    string
+		attrVal []byte
+		attrTyp AttributeType
+		expTime *time.Time
+	}{
+		{
+			name:    "cosmos acc address, no expiration",
+			addr:    "cosmos1qyjgkz7c8mh8hfmqszpwchmlkfxe4cwzv7k85s",
+			attrVal: []byte("verified"),
+			attrTyp: AttributeType_String,
+		},
+		{
+			name:    "cosmos acc address, with expiration",
+			addr:    "cosmos1qyjgkz7c8mh8hfmqszpwchmlkfxe4cwzv7k85s",
+			attrVal: []byte("kyc-approved"),
+			attrTyp: AttributeType_String,
+			expTime: tp(time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)),
+		},
+		{
+			name:    "large value",
+			addr:    "cosmos1qyjgkz7c8mh8hfmqszpwchmlkfxe4cwzv7k85s",
+			attrVal: make([]byte, 1024), // all zeros
+			attrTyp: AttributeType_Bytes,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			attr := Attribute{
+				Name:           "kyc.provenance.io",
+				Value:          tc.attrVal,
+				AttributeType:  tc.attrTyp,
+				Address:        tc.addr,
+				ExpirationDate: tc.expTime,
+			}
+			addrBz := attr.GetAddressBytes()
+
+			// AttrTriple attributes map, prefix 0x02.
+			oldAttrKey := AddrAttributeKey(addrBz, attr)
+			triple := BuildAttrTriple(attr)
+			buf := make([]byte, AttrTripleKey.Size(triple))
+			n, err := AttrTripleKey.Encode(buf, triple)
+			require.NoError(t, err, "AttrTripleKey.Encode")
+			newAttrKey := append(append([]byte{}, AttributeKeyPrefix...), buf[:n]...)
+			require.Equal(t, oldAttrKey, newAttrKey, "AttrTriple byte layout must match old KV key")
+
+			// NameAddrPair nameAddrCounts map, prefix 0x03.
+			oldNap := AttributeNameAddrKeyPrefix(attr.Name, addrBz)
+			nap := BuildNameAddrPair(attr.Name, addrBz)
+			napBuf := make([]byte, NameAddrPairKey.Size(nap))
+			nn, err := NameAddrPairKey.Encode(napBuf, nap)
+			require.NoError(t, err, "NameAddrPairKey.Encode")
+			newNap := append(append([]byte{}, AttributeAddrLookupKeyPrefix...), napBuf[:nn]...)
+			require.Equal(t, oldNap, newNap, "NameAddrPair byte layout must match old KV key")
+
+			// ExpireTriple expirationIndex map, prefix 0x04, only when expiration set.
+			if tc.expTime != nil {
+				oldExp := AttributeExpireKey(attr)
+				et, ok := BuildExpireTriple(attr)
+				require.True(t, ok, "BuildExpireTriple should return ok when ExpirationDate is set")
+				etBuf := make([]byte, ExpireTripleKey.Size(et))
+				ne, err := ExpireTripleKey.Encode(etBuf, et)
+				require.NoError(t, err, "ExpireTripleKey.Encode")
+				newExp := append(append([]byte{}, AttributeExpirationKeyPrefix...), etBuf[:ne]...)
+				require.Equal(t, oldExp, newExp, "ExpireTriple byte layout must match old KV key")
+			}
+		})
+	}
+}
+
+func tp(t time.Time) *time.Time { return &t }
