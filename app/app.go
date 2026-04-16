@@ -553,7 +553,7 @@ func New(
 	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey])
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
-		appCodec, keys[attributetypes.StoreKey], app.AccountKeeper, &app.NameKeeper,
+		appCodec, runtime.NewKVStoreService(keys[attributetypes.StoreKey]), app.AccountKeeper, &app.NameKeeper,
 	)
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
