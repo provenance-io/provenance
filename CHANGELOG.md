@@ -52,6 +52,19 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.28.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.28.0-rc2) 2026-04-16
+
+### Bug Fixes
+
+* When transferring commitments, properly update the commitment to the old market [PR 2676](https://github.com/provenance-io/provenance/pull/2676).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.28.0-rc1...v1.28.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.27.2...v1.28.0-rc2
+
+---
+
 ## [v1.28.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.28.0-rc1) 2026-04-13
 
 ### Features
