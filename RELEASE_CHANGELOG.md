@@ -1,3 +1,27 @@
+## [v1.28.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.28.0-rc2) 2026-04-16
+
+Provenance Blockchain version `v1.28.0` contains some exciting new features, improvements, and bug fixes.
+
+Key new features and improvements:
+
+* Compiling Provenance Blockchain version `v1.28.0` requires [Go 1.25](https://golang.org/dl/) (specifically).
+* The `CosmWasm` library was bumped, so there is a new `libwasmvm` shared library file (e.g. `libwasmvm.x86_64.so`).
+* Smart contracts can now be stored without using a governance proposal.
+* Now based on Cosmos-SDK v0.53.5.
+* IBC libraries bumped to v10 and IBC v2 is now available.
+* Enable unordered transactions.
+
+### Bug Fixes
+
+* When transferring commitments, properly update the commitment to the old market [PR 2676](https://github.com/provenance-io/provenance/pull/2676).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.28.0-rc1...v1.28.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.27.2...v1.28.0-rc2
+
+---
+
 ## [v1.28.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.28.0-rc1) 2026-04-13
 
 Provenance Blockchain version `v1.28.0` contains some exciting new features, improvements, and bug fixes.
