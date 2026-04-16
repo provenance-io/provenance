@@ -1,1 +1,0 @@
-* Update costs of msgs `MsgWriteRecordRequest`, `MsgWriteSessionRequest` & `MsgUpdateClient` [#2604](https://github.com/provenance-io/provenance/issues/2604).
