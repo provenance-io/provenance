@@ -2,13 +2,13 @@ package keeper
 
 import (
 	"context"
-	"slices"
+	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -35,30 +35,23 @@ func (k Keeper) Attribute(c context.Context, req *types.QueryAttributeRequest) (
 	if err := types.ValidateAttributeAddress(req.Account); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid account address: %v", err)
 	}
+
 	ctx := sdk.UnwrapSDKContext(c)
-	attributes := make([]types.Attribute, 0)
-	store := ctx.KVStore(k.storeKey)
-	attributeStore := prefix.NewStore(store, types.AddrStrAttributesNameKeyPrefix(req.Account, req.Name))
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.Attribute
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
-			return false, err
-		}
+	addrBz := types.GetAttributeAddressBytes(req.Account)
+	var nameHash [32]byte
+	copy(nameHash[:], types.GetNameKeyBytes(req.Name))
+	blockTime := ctx.BlockTime().UTC()
 
-		if result.ExpirationDate != nil && ctx.BlockTime().UTC().After(result.ExpirationDate.UTC()) {
-			return false, nil
-		}
-
-		if accumulate {
-			attributes = append(attributes, result)
-		}
-		return true, nil
-	})
+	rng, endBound := attrAddrNameRange(addrBz, nameHash)
+	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rng, endBound, req.Pagination,
+		func(attr types.Attribute) bool {
+			return attr.ExpirationDate == nil || !blockTime.After(attr.ExpirationDate.UTC())
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryAttributeResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
+	return &types.QueryAttributeResponse{Account: req.Account, Attributes: attrs, Pagination: pageRes}, nil
 }
 
 // Attributes queries for all attributes on a specified account
@@ -70,32 +63,19 @@ func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest)
 		return nil, status.Errorf(codes.InvalidArgument, "invalid account address: %v", err)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	attributes := make([]types.Attribute, 0)
-	store := ctx.KVStore(k.storeKey)
-	attributeStore := prefix.NewStore(store, types.AddrStrAttributesKeyPrefix(req.Account))
+	addrBz := types.GetAttributeAddressBytes(req.Account)
+	blockTime := ctx.BlockTime().UTC()
 
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.Attribute
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
-			return false, err
-		}
-
-		if result.ExpirationDate != nil && ctx.BlockTime().UTC().After(result.ExpirationDate.UTC()) {
-			return false, nil
-		}
-
-		if accumulate {
-			attributes = append(attributes, result)
-		}
-		return true, nil
-	})
-
+	rng, endBound := attrAddrRange(addrBz)
+	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rng, endBound, req.Pagination,
+		func(attr types.Attribute) bool {
+			return attr.ExpirationDate == nil || !blockTime.After(attr.ExpirationDate.UTC())
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	return &types.QueryAttributesResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
+	return &types.QueryAttributesResponse{Account: req.Account, Attributes: attrs, Pagination: pageRes}, nil
 }
 
 // Scan queries all attributes associated with a specified account that contain a particular suffix in their name.
@@ -110,59 +90,33 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 		return nil, status.Errorf(codes.InvalidArgument, "invalid account address: %v", err)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	attributes := make([]types.Attribute, 0)
-	store := ctx.KVStore(k.storeKey)
-	attributeStore := prefix.NewStore(store, types.AddrStrAttributesKeyPrefix(req.Account))
+	addrBz := types.GetAttributeAddressBytes(req.Account)
+	blockTime := ctx.BlockTime().UTC()
 
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.Attribute
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
-			return false, err
-		}
-		if !strings.HasSuffix(result.Name, req.Suffix) || (result.ExpirationDate != nil && ctx.BlockTime().UTC().After(result.ExpirationDate.UTC())) {
-			return false, nil
-		}
-		if accumulate {
-			attributes = append(attributes, result)
-		}
-		return true, nil
-	})
-
+	rng, endBound := attrAddrRange(addrBz)
+	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rng, endBound, req.Pagination,
+		func(attr types.Attribute) bool {
+			return strings.HasSuffix(attr.Name, req.Suffix) &&
+				(attr.ExpirationDate == nil || !blockTime.After(attr.ExpirationDate.UTC()))
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	return &types.QueryScanResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
+	return &types.QueryScanResponse{Account: req.Account, Attributes: attrs, Pagination: pageRes}, nil
 }
 
 // AttributeAccounts queries for all accounts that have a specific attribute
 func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAccountsRequest) (*types.QueryAttributeAccountsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
 	ctx := sdk.UnwrapSDKContext(c)
-	accounts := make([]string, 0)
-	store := ctx.KVStore(k.storeKey)
-	keyPrefix := types.AttributeNameKeyPrefix(req.AttributeName)
-	attributeStore := prefix.NewStore(store, keyPrefix)
+	var nameHash [32]byte
+	copy(nameHash[:], types.GetNameKeyBytes(req.AttributeName))
 
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
-		addressLength := int32(key[0])
-		address := sdk.AccAddress(key[1 : addressLength+1])
-		if slices.Contains(accounts, address.String()) {
-			return false, nil
-		}
-		if accumulate {
-			accounts = append(accounts, address.String())
-		}
-		return true, nil
-	})
-
+	rng, endBound := nameHashRange(nameHash)
+	accounts, pageRes, err := nameAddrPageWalk(ctx, k.nameAddrCounts, rng, endBound, req.Pagination)
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.QueryAttributeAccountsResponse{Accounts: accounts, Pagination: pageRes}, nil
 }
 
@@ -182,4 +136,163 @@ func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataReques
 		Value: value,
 	}
 	return resp, nil
+}
+
+// attrPageWalk walks col over rng with full pagination:
+func attrPageWalk(
+	ctx sdk.Context,
+	col collections.Map[types.AttrTriple, types.Attribute],
+	rng *collections.Range[types.AttrTriple],
+	endBound *types.AttrTriple,
+	pageReq *query.PageRequest,
+	accept func(types.Attribute) bool,
+) ([]types.Attribute, *query.PageResponse, error) {
+	limit := uint64(query.DefaultLimit)
+	offset := uint64(0)
+	countTotal := false
+
+	if pageReq == nil {
+		pageReq = &query.PageRequest{CountTotal: true}
+	}
+
+	if pageReq != nil {
+		if pageReq.Limit > 0 {
+			limit = pageReq.Limit
+		}
+		offset = pageReq.Offset
+		countTotal = pageReq.CountTotal
+
+		// Cursor resume: start from the key returned as NextKey by the previous page.
+		if len(pageReq.Key) > 0 {
+			_, startKey, err := types.AttrTripleKey.Decode(pageReq.Key)
+			if err != nil {
+				return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
+			}
+			newRng := new(collections.Range[types.AttrTriple]).StartInclusive(startKey)
+			if endBound != nil {
+				newRng = newRng.EndExclusive(*endBound)
+			}
+			rng = newRng
+			offset = 0
+		}
+	}
+
+	var (
+		attrs   []types.Attribute
+		total   uint64
+		skipped uint64
+		nextKey []byte
+	)
+
+	if err := col.Walk(ctx, rng, func(key types.AttrTriple, attr types.Attribute) (bool, error) {
+		if !accept(attr) {
+			return false, nil
+		}
+		total++
+		if skipped < offset {
+			skipped++
+			return false, nil
+		}
+		if uint64(len(attrs)) < limit {
+			attrs = append(attrs, attr)
+			return false, nil
+		}
+		if nextKey == nil {
+			buf := make([]byte, types.AttrTripleKey.Size(key))
+			if n, encErr := types.AttrTripleKey.Encode(buf, key); encErr == nil {
+				nextKey = buf[:n]
+			} else {
+				ctx.Logger().Error("attribute: failed to encode next page key", "error", encErr)
+			}
+		}
+		if !countTotal {
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		return nil, nil, err
+	}
+
+	pageRes := &query.PageResponse{NextKey: nextKey}
+	if countTotal {
+		pageRes.Total = total
+	}
+	return attrs, pageRes, nil
+}
+
+// nameAddrPageWalk is the equivalent helper for the nameAddrCounts map.
+func nameAddrPageWalk(
+	ctx sdk.Context,
+	col collections.Map[types.NameAddrPair, uint64],
+	rng *collections.Range[types.NameAddrPair],
+	endBound *types.NameAddrPair,
+	pageReq *query.PageRequest,
+) ([]string, *query.PageResponse, error) {
+	limit := uint64(query.DefaultLimit)
+	offset := uint64(0)
+	countTotal := false
+
+	if pageReq == nil {
+		pageReq = &query.PageRequest{CountTotal: true}
+	}
+
+	if pageReq != nil {
+		if pageReq.Limit > 0 {
+			limit = pageReq.Limit
+		}
+		offset = pageReq.Offset
+		countTotal = pageReq.CountTotal
+
+		if len(pageReq.Key) > 0 {
+			_, startKey, err := types.NameAddrPairKey.Decode(pageReq.Key)
+			if err != nil {
+				return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
+			}
+			newRng := new(collections.Range[types.NameAddrPair]).StartInclusive(startKey)
+			if endBound != nil {
+				newRng = newRng.EndExclusive(*endBound)
+			}
+			rng = newRng
+			offset = 0
+		}
+	}
+
+	var (
+		accounts []string
+		total    uint64
+		skipped  uint64
+		nextKey  []byte
+	)
+
+	if err := col.Walk(ctx, rng, func(key types.NameAddrPair, _ uint64) (bool, error) {
+		total++
+		if skipped < offset {
+			skipped++
+			return false, nil
+		}
+		if uint64(len(accounts)) < limit {
+			accounts = append(accounts, sdk.AccAddress(key.AddrBytes).String())
+			return false, nil
+		}
+		if nextKey == nil {
+			buf := make([]byte, types.NameAddrPairKey.Size(key))
+			if n, encErr := types.NameAddrPairKey.Encode(buf, key); encErr == nil {
+				nextKey = buf[:n]
+			} else {
+				ctx.Logger().Error("attribute: failed to encode next page key", "error", encErr)
+			}
+		}
+		if !countTotal {
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		return nil, nil, err
+	}
+
+	pageRes := &query.PageResponse{NextKey: nextKey}
+	if countTotal {
+		pageRes.Total = total
+	}
+	return accounts, pageRes, nil
 }
