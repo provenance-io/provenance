@@ -3291,64 +3291,51 @@ func (s *TestSuite) TestSuffixIndexGetSet() {
 	suffix5 := []byte(testutil.MakeTestAddr("sfxsigs", 5))
 
 	s.Run("1 getQuarantineRecordSuffix on unset entry", func() {
-		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 		expectedIndex := &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil}
-		expectedKey := quarantine.CreateRecordIndexKey(toAddr, fromAddr)
 
 		var actualIndex *quarantine.QuarantineRecordSuffixIndex
-		var actualKey []byte
 		testFunc := func() {
-			actualIndex, actualKey = s.keeper.GetQuarantineRecordSuffixIndex(store, toAddr, fromAddr)
+			actualIndex = s.keeper.GetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr)
 		}
 		s.Require().NotPanics(testFunc, "getQuarantineRecordSuffixIndex")
 		s.Assert().Equal(expectedIndex, actualIndex, "returned index")
-		s.Assert().Equal(expectedKey, actualKey, "returned key")
 	})
 
 	s.Run("2 setQuarantineRecordSuffixIndex on unset entry", func() {
-		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 		index := &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffix0, suffix1}}
-		key := quarantine.CreateRecordIndexKey(toAddr, fromAddr)
 
 		testFunc := func() {
-			s.keeper.SetQuarantineRecordSuffixIndex(store, key, index)
+			s.keeper.SetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr, index)
 		}
 		s.Require().NotPanics(testFunc, "setQuarantineRecordSuffixIndex")
 	})
 
 	s.Run("3 getQuarantineRecordSuffix on previously set entry", func() {
-		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 		expectedIndex := &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffix0, suffix1}}
-		expectedKey := quarantine.CreateRecordIndexKey(toAddr, fromAddr)
 
 		var actualIndex *quarantine.QuarantineRecordSuffixIndex
-		var actualKey []byte
+
 		testFunc := func() {
-			actualIndex, actualKey = s.keeper.GetQuarantineRecordSuffixIndex(store, toAddr, fromAddr)
+			actualIndex = s.keeper.GetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr)
 		}
 		s.Require().NotPanics(testFunc, "getQuarantineRecordSuffixIndex")
 		s.Assert().Equal(expectedIndex, actualIndex, "returned index")
-		s.Assert().Equal(expectedKey, actualKey, "returned key")
 	})
 
 	s.Run("4 set get unordered on previously set entry", func() {
-		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 		expectedIndex := &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffix2, suffix3, suffix1, suffix4, suffix5}}
-		expectedKey := quarantine.CreateRecordIndexKey(toAddr, fromAddr)
 
 		testFuncSet := func() {
-			s.keeper.SetQuarantineRecordSuffixIndex(store, expectedKey, expectedIndex)
+			s.keeper.SetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr, expectedIndex)
 		}
 		s.Require().NotPanics(testFuncSet, "setQuarantineRecordSuffixIndex")
 
 		var actualIndex *quarantine.QuarantineRecordSuffixIndex
-		var actualKey []byte
 		testFuncGet := func() {
-			actualIndex, actualKey = s.keeper.GetQuarantineRecordSuffixIndex(store, toAddr, fromAddr)
+			actualIndex = s.keeper.GetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr)
 		}
 		s.Require().NotPanics(testFuncGet, "getQuarantineRecordSuffixIndex")
 		s.Assert().Equal(expectedIndex, actualIndex, "returned index")
-		s.Assert().Equal(expectedKey, actualKey, "returned key")
 	})
 }
 
@@ -3408,13 +3395,12 @@ func (s *TestSuite) TestAddQuarantineRecordSuffixIndexes() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 			toAddrOrig := testutil.MakeCopyOfAccAddress(tc.toAddr)
 			fromAddrsOrig := testutil.MakeCopyOfAccAddresses(tc.fromAddrs)
 			suffixOrig := testutil.MakeCopyOfByteSlice(tc.suffix)
 
 			testFuncAdd := func() {
-				s.keeper.AddQuarantineRecordSuffixIndexes(store, tc.toAddr, tc.fromAddrs, tc.suffix)
+				s.keeper.AddQuarantineRecordSuffixIndexes(s.sdkCtx, tc.toAddr, tc.fromAddrs, tc.suffix)
 			}
 			s.Require().NotPanics(testFuncAdd, "addQuarantineRecordSuffixIndexes")
 			s.Assert().Equal(toAddrOrig, tc.toAddr, "toAddr before and after")
@@ -3425,7 +3411,7 @@ func (s *TestSuite) TestAddQuarantineRecordSuffixIndexes() {
 				expected := testutil.MakeCopyOfQuarantineRecordSuffixIndex(tc.expected)
 				var actual *quarantine.QuarantineRecordSuffixIndex
 				testFuncGet := func() {
-					actual, _ = s.keeper.GetQuarantineRecordSuffixIndex(store, toAddrOrig, fromAddr)
+					actual = s.keeper.GetQuarantineRecordSuffixIndex(s.sdkCtx, toAddrOrig, fromAddr)
 				}
 				if s.Assert().NotPanics(testFuncGet, "GetQuarantineRecordSuffixIndex[%d]", i) {
 					s.Assert().Equal(expected, actual, "result of GetQuarantineRecordSuffixIndex[%d]", i)
@@ -3446,27 +3432,8 @@ func (s *TestSuite) TestDeleteQuarantineRecordSuffixIndexes() {
 	suffix3 := []byte(testutil.MakeTestAddr("sfxsad", 3))
 
 	// Create some existing entries that can then be altered.
-	existing := []struct {
-		key   []byte
-		value *quarantine.QuarantineRecordSuffixIndex
-	}{
-		{
-			key:   quarantine.CreateRecordIndexKey(toAddr, fromAddr1),
-			value: qrsi(suffix0, suffix1, suffix2),
-		},
-		{
-			key:   quarantine.CreateRecordIndexKey(toAddr, fromAddr2),
-			value: qrsi(suffix2, suffix3),
-		},
-	}
-
-	for i, e := range existing {
-		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-		testFuncSet := func() {
-			s.keeper.SetQuarantineRecordSuffixIndex(store, e.key, e.value)
-		}
-		s.Require().NotPanics(testFuncSet, "setQuarantineRecordSuffixIndex[%d] for setup", i)
-	}
+	s.keeper.SetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr1, qrsi(suffix0, suffix1, suffix2))
+	s.keeper.SetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr2, qrsi(suffix2, suffix3))
 
 	// Setup:
 	// All will have the same toAddr.
@@ -3508,13 +3475,12 @@ func (s *TestSuite) TestDeleteQuarantineRecordSuffixIndexes() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 			toAddrOrig := testutil.MakeCopyOfAccAddress(toAddr)
 			fromAddrsOrig := testutil.MakeCopyOfAccAddresses(tc.fromAddrs)
 			suffixOrig := testutil.MakeCopyOfByteSlice(tc.suffix)
 
 			testFuncDelete := func() {
-				s.keeper.DeleteQuarantineRecordSuffixIndexes(store, toAddr, tc.fromAddrs, tc.suffix)
+				s.keeper.DeleteQuarantineRecordSuffixIndexes(s.sdkCtx, toAddr, tc.fromAddrs, tc.suffix)
 			}
 			s.Require().NotPanics(testFuncDelete, "deleteQuarantineRecordSuffixIndexes")
 			s.Assert().Equal(toAddrOrig, toAddr, "toAddr before and after")
@@ -3524,7 +3490,7 @@ func (s *TestSuite) TestDeleteQuarantineRecordSuffixIndexes() {
 			for i, expected := range tc.expected {
 				var actual *quarantine.QuarantineRecordSuffixIndex
 				testFuncGet := func() {
-					actual, _ = s.keeper.GetQuarantineRecordSuffixIndex(store, toAddrOrig, fromAddrsOrig[i])
+					actual = s.keeper.GetQuarantineRecordSuffixIndex(s.sdkCtx, toAddrOrig, fromAddrsOrig[i])
 				}
 				if s.Assert().NotPanics(testFuncGet, "GetQuarantineRecordSuffixIndex[%d]", i) {
 					s.Assert().Equal(expected, actual, "result of GetQuarantineRecordSuffixIndex[%d]", i)
@@ -3534,26 +3500,12 @@ func (s *TestSuite) TestDeleteQuarantineRecordSuffixIndexes() {
 	}
 
 	s.Run("deleting last entry removes it from the store", func() {
-		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-		key := quarantine.CreateRecordIndexKey(toAddr, fromAddr1)
-		s.Require().True(store.Has(key), "store.Has(key) before the test starts")
-
 		testFuncDelete := func() {
-			s.keeper.DeleteQuarantineRecordSuffixIndexes(store, toAddr, accs(fromAddr1), suffix0)
+			s.keeper.DeleteQuarantineRecordSuffixIndexes(s.sdkCtx, toAddr, accs(fromAddr1), suffix0)
 		}
 		s.Require().NotPanics(testFuncDelete, "deleteQuarantineRecordSuffixIndexes")
-		if !s.Assert().False(store.Has(key), "store.Has(key) after last record should have been removed") {
-			var actual *quarantine.QuarantineRecordSuffixIndex
-			testFuncGet := func() {
-				actual, _ = s.keeper.GetQuarantineRecordSuffixIndex(store, toAddr, fromAddr1)
-			}
-			if s.Assert().NotPanics(testFuncGet, "getQuarantineRecordSuffixIndex") {
-				// This should always fail because getQuarantineRecordSuffixIndex never returns nil.
-				// This is being called only when toe store still has the entry.
-				// So this is just here so that the value in the store is included in the failure messages.
-				s.Assert().Nil(actual)
-			}
-		}
+		actual := s.keeper.GetQuarantineRecordSuffixIndex(s.sdkCtx, toAddr, fromAddr1)
+		s.Assert().Empty(actual.RecordSuffixes, "RecordSuffixes should be empty after removing last suffix")
 	})
 }
 
@@ -3597,9 +3549,8 @@ func (s *TestSuite) TestGetQuarantineRecordSuffixes() {
 	}
 
 	for i, e := range existing {
-		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 		testFuncAdd := func() {
-			s.keeper.AddQuarantineRecordSuffixIndexes(store, toAddr, accs(e.from), e.suffix)
+			s.keeper.AddQuarantineRecordSuffixIndexes(s.sdkCtx, toAddr, accs(e.from), e.suffix)
 		}
 		s.Require().NotPanics(testFuncAdd, "addQuarantineRecordSuffixIndexes[%d] for setup", i)
 	}
@@ -3631,13 +3582,12 @@ func (s *TestSuite) TestGetQuarantineRecordSuffixes() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 			toAddrOrig := testutil.MakeCopyOfAccAddress(toAddr)
 			fromAddrsOrig := testutil.MakeCopyOfAccAddresses(tc.fromAddrs)
 
 			var actual [][]byte
 			testFuncGet := func() {
-				actual = s.keeper.GetQuarantineRecordSuffixes(store, toAddr, tc.fromAddrs)
+				actual = s.keeper.GetQuarantineRecordSuffixes(s.sdkCtx, toAddr, tc.fromAddrs)
 			}
 			s.Require().NotPanics(testFuncGet, "getQuarantineRecordSuffixes")
 			s.Assert().Equal(toAddrOrig, toAddr, "toAddr before and after")
