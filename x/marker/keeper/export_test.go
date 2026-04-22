@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
-
+	"cosmossdk.io/core/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -11,8 +10,8 @@ import (
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
 
-func (k Keeper) GetStore(ctx sdk.Context) storetypes.KVStore {
-	return ctx.KVStore(k.storeKey)
+func (k Keeper) GetStore(ctx sdk.Context) store.KVStore {
+	return k.storeService.OpenKVStore(ctx)
 }
 
 // GetMarkerModuleAddr is a TEST ONLY exposure of the markerModuleAddr value.

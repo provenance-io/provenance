@@ -566,7 +566,7 @@ func New(
 	}
 
 	markerKeeper := markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.AccountKeeper,
+		appCodec, runtime.NewKVStoreService(keys[markertypes.StoreKey]), app.AccountKeeper,
 		app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
 		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper,
 		markerReqAttrBypassAddrs, NewGroupCheckerFunc(app.GroupKeeper),

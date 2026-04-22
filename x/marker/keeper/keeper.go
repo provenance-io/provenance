@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,10 +63,26 @@ type Keeper struct {
 	nameKeeper types.NameKeeper
 
 	// Key to access the key-value store from sdk.Context.
-	storeKey storetypes.StoreKey
-
+	storeService store.KVStoreService
+	schema       collections.Schema
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
+
+	// markers stores marker address index: key = AccAddress, value = raw address bytes.
+	// Key layout: [0x02][len(addr)][addr] → [addr_bytes]
+	markers collections.Map[sdk.AccAddress, []byte]
+
+	// denySend stores the send deny list: key = (markerAddr, denyAddr), value = sentinel.
+	// Key layout: [0x03][len(marker)][marker][len(deny)][deny] → []byte{}
+	denySend collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], bool]
+
+	// navs stores net asset values: key = (markerAddr, priceDenom), value = NetAssetValue.
+	// Key layout: [0x04][len(marker)][marker][denom] → proto(NetAssetValue)
+	navs collections.Map[collections.Pair[sdk.AccAddress, string], types.NetAssetValue]
+
+	// params stores module parameters as a singleton.
+	// Key layout: [0x05] → proto(Params)
+	params collections.Item[types.Params]
 
 	// the signing authority for the gov proposals
 	authority string
@@ -100,7 +117,7 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key storetypes.StoreKey,
+	storeService store.KVStoreService,
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	authzKeeper types.AuthzKeeper,
@@ -111,6 +128,11 @@ func NewKeeper(
 	reqAttrBypassAddrs []sdk.AccAddress,
 	checker types.GroupChecker,
 ) Keeper {
+	addrCodec := types.MarkerAddrKeyCodec
+	pairAddrCodec := collections.PairKeyCodec(addrCodec, addrCodec)
+	navPairCodec := collections.PairKeyCodec(addrCodec, types.DenomStringKeyCodec)
+
+	sb := collections.NewSchemaBuilder(storeService)
 	rv := Keeper{
 		authKeeper:            authKeeper,
 		authzKeeper:           authzKeeper,
@@ -118,7 +140,7 @@ func NewKeeper(
 		feegrantKeeper:        feegrantKeeper,
 		attrKeeper:            attrKeeper,
 		nameKeeper:            nameKeeper,
-		storeKey:              key,
+		storeService:          storeService,
 		cdc:                   cdc,
 		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
@@ -127,7 +149,40 @@ func NewKeeper(
 		ibcTransferServer:     ibcTransferServer,
 		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
 		groupChecker:          checker,
+
+		markers: collections.NewMap(
+			sb,
+			collections.NewPrefix(types.MarkerStoreKeyPrefix), // [0x02]
+			"markers",
+			addrCodec,
+			types.RawBytesValue,
+		),
+		denySend: collections.NewMap(
+			sb,
+			collections.NewPrefix(types.DenySendKeyPrefix), // [0x03]
+			"deny_send",
+			pairAddrCodec,
+			types.SentinelValue,
+		),
+		navs: collections.NewMap(
+			sb,
+			collections.NewPrefix(types.NetAssetValuePrefix), // [0x04]
+			"net_asset_values",
+			navPairCodec,
+			codec.CollValue[types.NetAssetValue](cdc),
+		),
+		params: collections.NewItem(
+			sb,
+			collections.NewPrefix(types.MarkerParamStoreKey), // [0x05]
+			"params",
+			codec.CollValue[types.Params](cdc),
+		),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(fmt.Errorf("marker: failed to build collections schema: %w", err))
+	}
+	rv.schema = schema
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
 }
@@ -167,41 +222,38 @@ func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.Marker
 // SetMarker sets a marker in the auth account store will panic if the marker account is not valid or
 // if the auth module account keeper fails to marshall the account.
 func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
-	store := ctx.KVStore(k.storeKey)
-
 	if err := marker.Validate(); err != nil {
 		panic(err)
 	}
 	k.authKeeper.SetAccount(ctx, marker)
-	store.Set(types.MarkerStoreKey(marker.GetAddress()), marker.GetAddress())
+	if err := k.markers.Set(ctx, marker.GetAddress(), marker.GetAddress()); err != nil {
+		panic(fmt.Errorf("failed to set marker index: %w", err))
+	}
 }
 
 // RemoveMarker removes a marker from the auth account store. Note: if the account holds coins this will
 // likely cause an invariant constraint violation for the coin supply
 func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
-	store := ctx.KVStore(k.storeKey)
 	k.authKeeper.RemoveAccount(ctx, marker)
-
 	k.RemoveNetAssetValues(ctx, marker.GetAddress())
 	k.ClearSendDeny(ctx, marker.GetAddress())
-	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
+	if err := k.markers.Remove(ctx, marker.GetAddress()); err != nil {
+		panic(fmt.Errorf("failed to remove marker index: %w", err))
+	}
 }
 
 // IterateMarkers iterates all markers with the given handler function.
 func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccountI) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.MarkerStoreKeyPrefix)
-
-	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; iterator.Valid(); iterator.Next() {
-		account := k.authKeeper.GetAccount(ctx, iterator.Value())
+	err := k.markers.Walk(ctx, nil, func(key sdk.AccAddress, value []byte) (bool, error) {
+		account := k.authKeeper.GetAccount(ctx, sdk.AccAddress(value))
 		ma, ok := account.(types.MarkerAccountI)
 		if !ok {
-			panic(fmt.Errorf("invalid account type in marker account registry"))
+			return true, fmt.Errorf("invalid account type in marker account registry")
 		}
-		if cb(ma) {
-			break
-		}
+		return cb(ma), nil
+	})
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -230,20 +282,25 @@ func (k Keeper) ValidateAuthority(addr string) error {
 
 // IsSendDeny returns true if sender address is denied for marker
 func (k Keeper) IsSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) bool {
-	store := ctx.KVStore(k.storeKey)
-	return store.Has(types.DenySendKey(markerAddr, senderAddr))
+	has, err := k.denySend.Has(ctx, collections.Join(markerAddr, senderAddr))
+	if err != nil {
+		return false
+	}
+	return has
 }
 
 // AddSendDeny set sender address to denied for marker
 func (k Keeper) AddSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.DenySendKey(markerAddr, senderAddr), []byte{})
+	if err := k.denySend.Set(ctx, collections.Join(markerAddr, senderAddr), true); err != nil {
+		panic(fmt.Errorf("failed to add send deny: %w", err))
+	}
 }
 
 // RemoveSendDeny removes sender address from marker deny list
 func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.DenySendKey(markerAddr, senderAddr))
+	if err := k.denySend.Remove(ctx, collections.Join(markerAddr, senderAddr)); err != nil {
+		panic(fmt.Errorf("failed to remove send deny: %w", err))
+	}
 }
 
 // ClearSendDeny removes all entries of a marker from a send deny list
@@ -256,29 +313,26 @@ func (k Keeper) ClearSendDeny(ctx sdk.Context, markerAddr sdk.AccAddress) {
 
 // IterateMarkers  iterates all markers with the given handler function.
 func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendKeyPrefix)
-
-	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; iterator.Valid(); iterator.Next() {
-		if handler(iterator.Key()) {
-			break
-		}
+	err := k.denySend.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], _ bool) (bool, error) {
+		fullKey := types.DenySendKey(key.K1(), key.K2())
+		return handler(fullKey), nil
+	})
+	if err != nil {
+		panic(err)
 	}
 }
 
 // GetSendDenyList gets the list of sender addresses from the marker's deny list
 func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) []sdk.AccAddress {
-	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendMarkerPrefix(markerAddr))
 	list := []sdk.AccAddress{}
-
-	defer iterator.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; iterator.Valid(); iterator.Next() {
-		_, denied := types.GetDenySendAddresses(iterator.Key())
-		list = append(list, denied)
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.AccAddress](markerAddr)
+	err := k.denySend.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], _ bool) (bool, error) {
+		list = append(list, key.K2())
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
 	}
-
 	return list
 }
 
@@ -322,15 +376,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 		return err
 	}
 
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
-	bz, err := k.cdc.Marshal(&netAssetValue)
-	if err != nil {
-		return err
-	}
-	store := ctx.KVStore(k.storeKey)
-	store.Set(key, bz)
-
-	return nil
+	return k.navs.Set(ctx, collections.Join(marker.GetAddress(), netAssetValue.Price.Denom), netAssetValue)
 }
 
 // SetNetAssetValueWithBlockHeight adds/updates a net asset value to marker with a specific block height
@@ -345,34 +391,21 @@ func (k Keeper) SetNetAssetValueWithBlockHeight(ctx sdk.Context, marker types.Ma
 		return err
 	}
 
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
-	bz, err := k.cdc.Marshal(&netAssetValue)
-	if err != nil {
-		return err
-	}
-	store := ctx.KVStore(k.storeKey)
-	store.Set(key, bz)
-
-	return nil
+	return k.navs.Set(ctx, collections.Join(marker.GetAddress(), netAssetValue.Price.Denom), netAssetValue)
 }
 
 // GetNetAssetValue gets the NetAssetValue for a marker denom with a specific price denom.
 func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
-	store := ctx.KVStore(k.storeKey)
 	markerAddr, err := types.MarkerAddress(markerDenom)
 	if err != nil {
 		return nil, fmt.Errorf("could not get marker %q address: %w", markerDenom, err)
 	}
 
-	key := types.NetAssetValueKey(markerAddr, priceDenom)
-	value := store.Get(key)
-	if len(value) == 0 {
-		return nil, nil
-	}
-
-	var markerNav types.NetAssetValue
-	err = k.cdc.Unmarshal(value, &markerNav)
+	markerNav, err := k.navs.Get(ctx, collections.Join(markerAddr, priceDenom))
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("could not read nav for marker %q with price denom %q: %w", markerDenom, priceDenom, err)
 	}
 
@@ -381,51 +414,34 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 
 // IterateNetAssetValues iterates net asset values for marker
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
-	store := ctx.KVStore(k.storeKey)
-	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; it.Valid(); it.Next() {
-		var markerNav types.NetAssetValue
-		err := k.cdc.Unmarshal(it.Value(), &markerNav)
-		if err != nil {
-			return err
-		} else if handler(markerNav) {
-			break
-		}
-	}
-	return nil
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](markerAddr)
+	return k.navs.Walk(ctx, rng, func(_ collections.Pair[sdk.AccAddress, string], nav types.NetAssetValue) (bool, error) {
+		return handler(nav), nil
+	})
 }
 
 // IterateAllNetAssetValues iterates all net asset values
 func (k Keeper) IterateAllNetAssetValues(ctx sdk.Context, handler func(sdk.AccAddress, types.NetAssetValue) (stop bool)) error {
-	store := ctx.KVStore(k.storeKey)
-	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValuePrefix)
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; it.Valid(); it.Next() {
-		markerAddr := types.GetMarkerFromNetAssetValueKey(it.Key())
-		var markerNav types.NetAssetValue
-		err := k.cdc.Unmarshal(it.Value(), &markerNav)
-		if err != nil {
-			return err
-		} else if handler(markerAddr, markerNav) {
-			break
-		}
-	}
-	return nil
+	return k.navs.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], nav types.NetAssetValue) (bool, error) {
+		return handler(key.K1(), nav), nil
+	})
 }
 
 // RemoveNetAssetValues removes all net asset values for a marker
 func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress) {
-	store := ctx.KVStore(k.storeKey)
-	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
-	var keys [][]byte
-	for ; it.Valid(); it.Next() {
-		keys = append(keys, it.Key())
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](markerAddr)
+	var keys []collections.Pair[sdk.AccAddress, string]
+	err := k.navs.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, string], _ types.NetAssetValue) (bool, error) {
+		keys = append(keys, key)
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
 	}
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-
 	for _, key := range keys {
-		store.Delete(key)
+		if err := k.navs.Remove(ctx, key); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -444,6 +460,9 @@ func (k Keeper) IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	if len(addr) == 0 {
 		return false
 	}
-	store := ctx.KVStore(k.storeKey)
-	return store.Has(types.MarkerStoreKey(addr))
+	has, err := k.markers.Has(ctx, addr)
+	if err != nil {
+		return false
+	}
+	return has
 }
