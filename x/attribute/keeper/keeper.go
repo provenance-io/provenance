@@ -466,7 +466,10 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 	}
 	store := ctx.KVStore(k.storeKey)
 	for _, acct := range accts {
-		attrToDelete := k.getAddrAttributesByName(store, acct, name)
+		attrToDelete, err := k.getAddrAttributesByName(store, acct, name)
+		if err != nil {
+			return err
+		}
 		for _, attr := range attrToDelete {
 			addrBz := attr.GetAddressBytes()
 			store.Delete(types.AddrAttributeKey(addrBz, attr))
@@ -648,15 +651,16 @@ func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error
 }
 
 // getAddrAttributesByName returns a list of attributes for an account and attribute name.
-func (k Keeper) getAddrAttributesByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attrs []types.Attribute) {
+func (k Keeper) getAddrAttributesByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attrs []types.Attribute, err error) {
 	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
 	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
+	var attributes []types.Attribute
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
 		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
-			continue
+			return nil, err
 		}
-		attrs = append(attrs, attr)
+		attributes = append(attributes, attr)
 	}
-	return
+	return attributes, nil
 }
