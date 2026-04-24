@@ -277,7 +277,11 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			store.Delete(attrKey)
 			k.DecAttrNameAddressLookup(ctx, attr.Name, addrBz)
 			k.deleteAttributeExpireLookup(store, attr)
-
+			// Preserve the existing expiration date if the update doesn't specify one.
+			// MsgUpdateAttributeRequest has no expiration_date field, so updateAttribute.ExpirationDate
+			if updateAttribute.ExpirationDate == nil {
+				updateAttribute.ExpirationDate = attr.ExpirationDate
+			}
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
 				return err
