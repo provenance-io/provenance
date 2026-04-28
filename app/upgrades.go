@@ -393,6 +393,10 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 			MsgTypeUrl: "/provenance.flatfees.v1.MsgRemoveOracleAddressRequest",
 			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
 		},
+		{
+			MsgTypeUrl: "/provenance.exchange.v1.MsgMarketCommitmentSettleRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
 	}
 
 	for _, msgFee := range feeUpdates {
