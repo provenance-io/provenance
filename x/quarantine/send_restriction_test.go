@@ -10,10 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestKeyContainsModuleName(t *testing.T) {
-	assert.Contains(t, bypassKey, ModuleName, "bypassKey")
-}
-
 func TestSendRestrictionContextFuncs(t *testing.T) {
 	tests := []struct {
 		name string

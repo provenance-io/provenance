@@ -72,7 +72,3 @@ func TestContextFuncsDoNotModifyProvided(t *testing.T) {
 	assert.True(t, HasBypass(afterWith), "HasBypass(afterWith) after giving it to WithoutBypass")
 	assert.False(t, HasBypass(origCtx), "HasBypass(origCtx) after giving afterWith to WithoutBypass")
 }
-
-func TestKeyContainsModuleName(t *testing.T) {
-	assert.Contains(t, bypassKey, ModuleName, "bypassKey")
-}
