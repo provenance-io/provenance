@@ -1459,3 +1459,70 @@ func (s *KeeperTestSuite) TestValidateAttributeConcreteType() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestUpdateAttributePreservesExpiration() {
+	now := s.ctx.BlockTime()
+	future := now.Add(time.Hour * 24 * 365)
+
+	// Create an attribute WITH an expiration date.
+	attr := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("original"), &future, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save attribute with expiration")
+
+	// Verify the expiration queue entry exists.
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	expireKey := types.AttributeExpireKey(attr)
+	s.Require().NotNil(expireKey, "expire key should not be nil")
+	s.Require().True(store.Has(expireKey), "expiration entry should exist before update")
+
+	origAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("original"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	updateAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("updated"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+		// ExpirationDate intentionally nil — this is what msg_server sends.
+	}
+	err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, origAttr, updateAttr, s.user1Addr)
+	s.Require().NoError(err, "UpdateAttribute should not error")
+
+	attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr.String(), "example.attribute")
+	s.Require().NoError(err, "GetAttributes should not error")
+	s.Require().Len(attrs, 1, "should have exactly one attribute")
+	s.Require().NotNil(attrs[0].ExpirationDate, "expiration date should be preserved after update")
+	s.Assert().Equal(future.Unix(), attrs[0].ExpirationDate.Unix(), "expiration date should match original")
+
+	updatedExpireKey := types.AttributeExpireKey(attrs[0])
+	s.Require().NotNil(updatedExpireKey, "updated expire key should not be nil")
+	s.Assert().True(store.Has(updatedExpireKey), "expiration entry should exist after update")
+}
+
+func (s *KeeperTestSuite) TestUpdateAttributeNoExpirationStaysNil() {
+
+	attr := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("original"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save attribute without expiration")
+
+	origAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("original"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	updateAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("updated"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, origAttr, updateAttr, s.user1Addr)
+	s.Require().NoError(err, "UpdateAttribute should not error")
+
+	attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr.String(), "example.attribute")
+	s.Require().NoError(err, "GetAttributes should not error")
+	s.Require().Len(attrs, 1, "should have exactly one attribute")
+	s.Assert().Nil(attrs[0].ExpirationDate, "expiration should remain nil for attribute that never had one")
+}
