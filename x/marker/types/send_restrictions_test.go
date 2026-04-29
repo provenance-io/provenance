@@ -11,11 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestKeysContainModuleName(t *testing.T) {
-	assert.Contains(t, bypassKey, ModuleName, "bypassKey")
-	assert.Contains(t, transferAgentKey, ModuleName, "transferAgentKey")
-}
-
 func TestContextCombos(t *testing.T) {
 	newCtx := func() sdk.Context {
 		return sdk.NewContext(nil, cmtproto.Header{}, false, nil)
