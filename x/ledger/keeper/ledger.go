@@ -408,6 +408,23 @@ func (k Keeper) DestroyLedger(ctx context.Context, lk *types.LedgerKey) error {
 		}
 	}
 
+	// Collect all settlement instructions for this ledger using the keyStr prefix.
+	settlementKeysToRemove := make([]collections.Pair[string, string], 0)
+	if err := k.FundTransfersWithSettlement.Walk(ctx, prefix,
+		func(key collections.Pair[string, string], _ types.StoredSettlementInstructions) (stop bool, err error) {
+			settlementKeysToRemove = append(settlementKeysToRemove, key)
+			return false, nil
+		}); err != nil {
+		return err
+	}
+
+	// Remove all settlement instructions associated with this ledger.
+	for _, key := range settlementKeysToRemove {
+		if err := k.FundTransfersWithSettlement.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+
 	// Emit the ledger destroyed event to notify other modules.
 	if err := sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(types.NewEventLedgerDestroyed(lk)); err != nil {
 		return err
