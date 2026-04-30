@@ -466,23 +466,23 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 	}
 	store := ctx.KVStore(k.storeKey)
 	for _, acct := range accts {
-		attrToDelete := k.getAddrAttributesKeysByName(store, acct, name)
-		for _, key := range attrToDelete {
-			store.Delete(key)
-			k.DecAttrNameAddressLookup(ctx, name, acct)
+		attrToDelete, err := k.getAddrAttributesByName(store, acct, name)
+		if err != nil {
+			return err
+		}
+		for _, attr := range attrToDelete {
+			addrBz := attr.GetAddressBytes()
+			store.Delete(types.AddrAttributeKey(addrBz, attr))
+			k.DecAttrNameAddressLookup(ctx, name, addrBz)
+			k.deleteAttributeExpireLookup(store, attr)
+
+			deleteEvent := types.NewEventAttributeDelete(name, attr.Address, owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
-}
-
-// getAddrAttributesKeysByName returns an list of attribute keys for the an account and attribute name
-func (k Keeper) getAddrAttributesKeysByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attributeKeys [][]byte) {
-	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; it.Valid(); it.Next() {
-		attributeKeys = append(attributeKeys, it.Key())
-	}
-	return
 }
 
 // A predicate function for matching names
@@ -648,4 +648,19 @@ func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error
 	}
 
 	return ctx.EventManager().EmitTypedEvent(&types.EventAccountDataUpdated{Account: addr})
+}
+
+// getAddrAttributesByName returns a list of attributes for an account and attribute name.
+func (k Keeper) getAddrAttributesByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attrs []types.Attribute, err error) {
+	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
+	var attributes []types.Attribute
+	for ; it.Valid(); it.Next() {
+		attr := types.Attribute{}
+		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+			return nil, err
+		}
+		attributes = append(attributes, attr)
+	}
+	return attributes, nil
 }

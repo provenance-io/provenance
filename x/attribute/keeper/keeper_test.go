@@ -1526,3 +1526,51 @@ func (s *KeeperTestSuite) TestUpdateAttributeNoExpirationStaysNil() {
 	s.Require().Len(attrs, 1, "should have exactly one attribute")
 	s.Assert().Nil(attrs[0].ExpirationDate, "expiration should remain nil for attribute that never had one")
 }
+
+func (s *KeeperTestSuite) TestPurgeAttributeExpirationCleanup() {
+	now := s.ctx.BlockTime()
+	future := now.Add(time.Hour * 24 * 365) // 1 year from now
+
+	attrWithExpiry := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("exp1"), &future, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExpiry, s.user1Addr), "should save attribute with expiration")
+
+	attrNoExpiry := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("noexp"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExpiry, s.user1Addr), "should save attribute without expiration")
+
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	expireKey := types.AttributeExpireKey(attrWithExpiry)
+	s.Require().NotNil(expireKey, "expiration key should not be nil for attribute with expiration")
+	s.Assert().True(store.Has(expireKey), "expiration entry should exist before purge")
+
+	err := s.app.AttributeKeeper.PurgeAttribute(s.ctx, "example.attribute", s.user1Addr)
+	s.Require().NoError(err, "PurgeAttribute should not error")
+
+	s.Assert().False(store.Has(expireKey), "expiration entry should be removed after purge")
+
+	attrs, err := s.app.AttributeKeeper.GetAllAttributesAddr(s.ctx, s.user1Addr)
+	s.Require().NoError(err, "GetAllAttributesAddr should not error")
+	for _, attr := range attrs {
+		s.Assert().NotEqual("example.attribute", attr.Name, "no attributes with purged name should remain")
+	}
+}
+
+func (s *KeeperTestSuite) TestPurgeAttributeEmitsEvents() {
+	attr1 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("val1"), nil, "")
+	attr2 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("val2"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr1, s.user1Addr), "should save attr1")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr2, s.user1Addr), "should save attr2")
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+	err := s.app.AttributeKeeper.PurgeAttribute(s.ctx, "example.attribute", s.user1Addr)
+	s.Require().NoError(err, "PurgeAttribute should not error")
+
+	events := s.ctx.EventManager().Events()
+	deleteEventCount := 0
+	for _, event := range events {
+		if event.Type == "provenance.attribute.v1.EventAttributeDelete" {
+			deleteEventCount++
+		}
+	}
+	s.Assert().Equal(2, deleteEventCount, "should emit one EventAttributeDelete per purged attribute")
+}
