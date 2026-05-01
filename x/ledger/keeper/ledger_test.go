@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/nft"
 
@@ -9,6 +10,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/ledger/keeper"
 	"github.com/provenance-io/provenance/x/ledger/types"
+	ledger "github.com/provenance-io/provenance/x/ledger/types"
 )
 
 func (s *TestSuite) TestNonExistentDenom() {
@@ -1020,4 +1022,47 @@ func (s *TestSuite) TestLedgersQueryServer() {
 			}
 		})
 	}
+}
+
+func (s *MsgServerTestSuite) TestDestroyAlsoRemovesStoredSettlementInstructions() {
+	keyStr := s.existingLedger.Key.String()
+
+	// Seed two settlement rows different correlation IDs against the existing ledger.
+	seed := func(correlationID string) {
+		s.Require().NoError(
+			s.keeper.FundTransfersWithSettlement.Set(
+				s.ctx,
+				collections.Join(keyStr, correlationID),
+				ledger.StoredSettlementInstructions{},
+			),
+			"seeding settlement %q", correlationID,
+		)
+	}
+	seed("corr-1")
+	seed("corr-2")
+
+	for _, corr := range []string{"corr-1", "corr-2"} {
+		has, err := s.keeper.FundTransfersWithSettlement.Has(s.ctx, collections.Join(keyStr, corr))
+		s.Require().NoError(err, "Has(%q) before destroy", corr)
+		s.Require().True(has, "expected settlement %q to be seeded before destroy", corr)
+	}
+
+	msgServer := keeper.NewMsgServer(s.keeper)
+	resp, err := msgServer.Destroy(s.ctx, &ledger.MsgDestroyRequest{
+		Key:    s.existingLedger.Key,
+		Signer: s.validAddress1.String(),
+	})
+	s.Require().NoError(err, "Destroy should succeed")
+	s.Require().Equal(&ledger.MsgDestroyResponse{}, resp)
+
+	for _, corr := range []string{"corr-1", "corr-2"} {
+		has, err := s.keeper.FundTransfersWithSettlement.Has(s.ctx, collections.Join(keyStr, corr))
+		s.Require().NoError(err, "Has(%q) after destroy", corr)
+		s.Require().False(has, "expected settlement %q to be removed by Destroy", corr)
+	}
+
+	// No settlement row anywhere should still reference this ledger.
+	all, err := s.keeper.GetAllSettlements(s.ctx, &keyStr)
+	s.Require().NoError(err, "GetAllSettlements after destroy")
+	s.Require().Empty(all, "no settlements should remain for the destroyed ledger")
 }
