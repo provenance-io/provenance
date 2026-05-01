@@ -485,7 +485,7 @@ func IsJSONAckError(acknowledgement []byte) bool {
 	return false
 }
 
-// MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
+// ExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
 // denom as represented in the local chain.
 // If the data cannot be unmarshalled this function will panic.
 func ExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) (string, error) {
