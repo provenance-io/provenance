@@ -274,7 +274,8 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeID)
 
 	// Check that the contract has no funds
-	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom, err := ibchooks.ExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	suite.Require().NoError(err, "ExtractDenomFromPacketOnRecv")
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 
@@ -283,7 +284,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-	err := json.Unmarshal(ackBytes, &ack)
+	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 	suite.Require().Equal(ack["result"], "eyJjb250cmFjdF9yZXN1bHQiOiJkR2hwY3lCemFHOTFiR1FnWldOb2J3PT0iLCJpYmNfYWNrIjoiZXlKeVpYTjFiSFFpT2lKQlVUMDlJbjA9In0=")
@@ -300,7 +301,8 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeID)
 
 	// Check that the contract has no funds
-	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom, err := ibchooks.ExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	suite.Require().NoError(err, "ExtractDenomFromPacketOnRecv")
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 
@@ -320,7 +322,7 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-	err := json.Unmarshal(ackBytes, &ack)
+	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().Contains(ack, "error")
 
@@ -337,7 +339,8 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, codeID)
 
 	// Check that the contract has no funds
-	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom, err := ibchooks.ExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	suite.Require().NoError(err, "ExtractDenomFromPacketOnRecv")
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 
