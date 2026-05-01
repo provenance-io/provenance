@@ -2,6 +2,7 @@ package provwasm
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -358,7 +359,17 @@ func GetWhitelistedQuery(queryPath string) (proto.Message, error) {
 	if !ok {
 		return nil, wasmvmtypes.Unknown{}
 	}
-	return protoResponseType, nil
+	// Build a fresh zero-value instance of the same concrete type.
+	rt := reflect.TypeOf(protoResponseType)
+	if rt.Kind() != reflect.Ptr {
+		return nil, wasmvmtypes.Unknown{}
+	}
+	freshAny := reflect.New(rt.Elem()).Interface()
+	fresh, ok := freshAny.(proto.Message)
+	if !ok {
+		return nil, wasmvmtypes.Unknown{}
+	}
+	return fresh, nil
 }
 
 func setWhitelistedQuery(queryPath string, protoType proto.Message) {
