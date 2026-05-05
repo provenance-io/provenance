@@ -2281,6 +2281,77 @@ func (s *QueryServerTestSuite) TestScopeNetAssetValuesQuery() {
 	}
 }
 
+func (s *QueryServerTestSuite) TestAccountDataQuery() {
+
+	scopeWithData := types.ScopeMetadataAddress(uuid.New())
+	scopeNoData := types.ScopeMetadataAddress(uuid.New())
+
+	scope := types.Scope{
+		ScopeId:           scopeWithData,
+		SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners:            []types.Party{{Address: s.app.AccountKeeper.GetModuleAddress("metadata").String(), Role: types.PartyType_PARTY_TYPE_OWNER}},
+		DataAccess:        nil,
+		ValueOwnerAddress: "",
+	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scope)
+
+	wantValue := "some test account data"
+	err := s.app.AttributeKeeper.SetAccountData(s.ctx, scopeWithData.String(), wantValue)
+	s.Require().NoError(err, "SetAccountData")
+
+	tests := []struct {
+		name     string
+		req      *types.AccountDataRequest
+		expErr   string
+		expValue string
+	}{
+		{
+			name:   "nil request",
+			req:    nil,
+			expErr: "invalid metadata address",
+		},
+		{
+			name:   "empty metadata_addr",
+			req:    &types.AccountDataRequest{MetadataAddr: ""},
+			expErr: "invalid metadata address",
+		},
+		{
+			name:   "not a bech32 address",
+			req:    &types.AccountDataRequest{MetadataAddr: "notanaddr"},
+			expErr: "invalid metadata address",
+		},
+		{
+			name:   "not a scope id - session address given",
+			req:    &types.AccountDataRequest{MetadataAddr: types.SessionMetadataAddress(uuid.New(), uuid.New()).String()},
+			expErr: "metadata address is not a scope id",
+		},
+		{
+			name:     "scope with no data",
+			req:      &types.AccountDataRequest{MetadataAddr: scopeNoData.String()},
+			expValue: "",
+		},
+		{
+			name:     "scope with data",
+			req:      &types.AccountDataRequest{MetadataAddr: scopeWithData.String()},
+			expValue: wantValue,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			resp, err := s.queryClient.AccountData(gocontext.Background(), tc.req)
+			if tc.expErr != "" {
+				s.Require().Error(err, "AccountData error")
+				s.Require().Contains(err.Error(), tc.expErr, "AccountData error message")
+			} else {
+				s.Require().NoError(err, "AccountData no error")
+				s.Require().NotNil(resp, "AccountData response")
+				s.Assert().Equal(tc.expValue, resp.Value, "AccountData response value")
+			}
+		})
+	}
+}
+
 // TODO: OSLocatorParams tests
 // TODO: OSLocator tests
 // TODO: OSLocatorsByURI tests

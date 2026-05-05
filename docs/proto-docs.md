@@ -13959,7 +13959,7 @@ AccountDataRequest is the request type for the Query/AccountData RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `metadata_addr` | [bytes](#bytes) |  | The metadata address to look up. Currently, only scope ids are supported. |
+| `metadata_addr` | [string](#string) |  | The metadata address to look up. Currently, only scope ids are supported. This must be a bech32 scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. |
 
 
 

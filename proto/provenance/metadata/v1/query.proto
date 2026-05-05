@@ -861,7 +861,8 @@ message OSAllLocatorsResponse {
 message AccountDataRequest {
   // The metadata address to look up.
   // Currently, only scope ids are supported.
-  bytes metadata_addr = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
+  // This must be a bech32 scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  string metadata_addr = 1;
 }
 
 // AccountDataResponse is the response type for the Query/AccountData RPC method.

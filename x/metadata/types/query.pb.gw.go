@@ -2403,7 +2403,7 @@ func request_Query_AccountData_0(ctx context.Context, marshaler runtime.Marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "metadata_addr")
 	}
 
-	protoReq.MetadataAddr, err = runtime.Bytes(val)
+	protoReq.MetadataAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "metadata_addr", err)
@@ -2430,7 +2430,7 @@ func local_request_Query_AccountData_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "metadata_addr")
 	}
 
-	protoReq.MetadataAddr, err = runtime.Bytes(val)
+	protoReq.MetadataAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "metadata_addr", err)
