@@ -55,5 +55,7 @@ func (k Keeper) WithAttrKeeper(attrKeeper types.AttrKeeper) Keeper {
 
 // SetNewMarker is a TEST ONLY function that calls NewMarker, then SetMarker.
 func (k Keeper) SetNewMarker(ctx sdk.Context, marker types.MarkerAccountI) {
-	k.SetMarker(ctx, k.NewMarker(ctx, marker))
+	if err := k.SetMarker(ctx, k.NewMarker(ctx, marker)); err != nil {
+		panic(err)
+	}
 }

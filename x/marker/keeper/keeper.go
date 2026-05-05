@@ -29,7 +29,7 @@ type MarkerKeeperI interface {
 	// GetMarker looks up a marker by a given address
 	GetMarker(sdk.Context, sdk.AccAddress) (types.MarkerAccountI, error)
 	// Set a marker in the auth account store
-	SetMarker(sdk.Context, types.MarkerAccountI)
+	SetMarker(sdk.Context, types.MarkerAccountI) error
 	// Remove a marker from the auth account store
 	RemoveMarker(sdk.Context, types.MarkerAccountI)
 
@@ -166,14 +166,14 @@ func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.Marker
 
 // SetMarker sets a marker in the auth account store will panic if the marker account is not valid or
 // if the auth module account keeper fails to marshall the account.
-func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
+func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 	store := ctx.KVStore(k.storeKey)
-
 	if err := marker.Validate(); err != nil {
-		panic(err)
+		return err
 	}
 	k.authKeeper.SetAccount(ctx, marker)
 	store.Set(types.MarkerStoreKey(marker.GetAddress()), marker.GetAddress())
+	return nil
 }
 
 // RemoveMarker removes a marker from the auth account store. Note: if the account holds coins this will
