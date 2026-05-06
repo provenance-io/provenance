@@ -319,7 +319,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 
 		// Save the updated marker
 		if err = m.markerKeeper.SetMarker(ctx, poolMarker); err != nil {
-			return nil, err
+			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to set pool marker : %s", err))
 		}
 		poolCount++
 	}
