@@ -857,24 +857,144 @@ func (s *AddressTestSuite) TestMetadataAddressWithInvalidData() {
 }
 
 func (s *AddressTestSuite) TestMetadataAddressMarshal() {
-	t := s.T()
+	scopeID := ScopeMetadataAddress(s.scopeUUID)
+	sessionID := SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
+	recordID := RecordMetadataAddress(s.scopeUUID, "myrecord")
+	scopeSpecID := ScopeSpecMetadataAddress(s.scopeUUID)
+	contractSpecID := ContractSpecMetadataAddress(s.scopeUUID)
+	recSpecID := RecordSpecMetadataAddress(s.scopeUUID, "myrecordspec")
 
-	var scopeID, newInstance MetadataAddress
-	require.True(t, scopeID.Equals(newInstance), "two empty instances are equal")
+	s.T().Run("marshal", func(t *testing.T) {
+		tests := []struct {
+			name   string
+			addr   MetadataAddress
+			expLen int
+		}{
+			{"scope", scopeID, 17},
+			{"session", sessionID, 33},
+			{"record", recordID, 33},
+			{"scopespec", scopeSpecID, 17},
+			{"contractspec", contractSpecID, 17},
+			{"recspec", recSpecID, 33},
+		}
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				bz, err := tc.addr.Marshal()
+				require.NoError(t, err, "Marshal error")
+				assert.Equal(t, tc.expLen, len(bz), "Marshal length")
+				assert.EqualValues(t, bz, tc.addr.Bytes(), "Marshal bytes match Bytes()")
+			})
+		}
+	})
 
-	scopeID = ScopeMetadataAddress(s.scopeUUID)
+	s.T().Run("unmarshal", func(t *testing.T) {
+		tests := []struct {
+			name           string
+			data           []byte
+			expAddr        MetadataAddress
+			expErrContains string
+		}{
+			{
+				name:    "scope binary",
+				data:    scopeID.Bytes(),
+				expAddr: scopeID,
+			},
+			{
+				name:    "session binary",
+				data:    sessionID.Bytes(),
+				expAddr: sessionID,
+			},
+			{
+				name:    "record binary",
+				data:    recordID.Bytes(),
+				expAddr: recordID,
+			},
+			{
+				name:    "scopespec binary",
+				data:    scopeSpecID.Bytes(),
+				expAddr: scopeSpecID,
+			},
+			{
+				name:    "contractspec binary",
+				data:    contractSpecID.Bytes(),
+				expAddr: contractSpecID,
+			},
+			{
+				name:    "recspec binary",
+				data:    recSpecID.Bytes(),
+				expAddr: recSpecID,
+			},
+			{
+				name:    "scope bech32",
+				data:    []byte(scopeID.String()),
+				expAddr: scopeID,
+			},
+			{
+				name:    "session bech32",
+				data:    []byte(sessionID.String()),
+				expAddr: sessionID,
+			},
+			{
+				name:    "record bech32",
+				data:    []byte(recordID.String()),
+				expAddr: recordID,
+			},
+			{
+				name:    "scopespec bech32",
+				data:    []byte(scopeSpecID.String()),
+				expAddr: scopeSpecID,
+			},
+			{
+				name:    "contractspec bech32",
+				data:    []byte(contractSpecID.String()),
+				expAddr: contractSpecID,
+			},
+			{
+				name:    "recspec bech32",
+				data:    []byte(recSpecID.String()),
+				expAddr: recSpecID,
+			},
+			{
+				name:    "empty",
+				data:    []byte{},
+				expAddr: MetadataAddress{},
+			},
+			{
+				name:           "invalid type byte",
+				data:           []byte{0xFF, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
+				expErrContains: "invalid metadata address type: 255",
+			},
+			{
+				name:           "valid prefix wrong length",
+				data:           []byte{ScopeKeyPrefix[0], 1, 2, 3},
+				expErrContains: "incorrect address length",
+			},
+			{
+				name:           "invalid bech32 characters",
+				data:           []byte("not_a_valid_bech32!!!"),
+				expErrContains: "invalid metadata address type",
+			},
+			{
+				name:           "wrong bech32 hrp",
+				data:           []byte("cosmos1qpexg5jcczy5g354dews3nlruxjsahhnsp"),
+				expErrContains: "invalid metadata address type",
+			},
+		}
 
-	bz, err := scopeID.Marshal()
-	require.NoError(t, err)
-	require.Equal(t, 17, len(bz))
-	require.EqualValues(t, bz, scopeID.Bytes())
-
-	require.False(t, newInstance.IsScopeAddress())
-	err = newInstance.Unmarshal(bz)
-	require.NoError(t, err)
-	require.True(t, newInstance.IsScopeAddress())
-
-	require.EqualValues(t, scopeID, newInstance)
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				var actual MetadataAddress
+				err := actual.Unmarshal(tc.data)
+				if tc.expErrContains != "" {
+					require.Error(t, err, "Unmarshal should have returned an error")
+					assert.ErrorContains(t, err, tc.expErrContains, "Unmarshal error message")
+					return
+				}
+				require.NoError(t, err, "Unmarshal error")
+				assert.Equal(t, tc.expAddr, actual, "Unmarshal result")
+			})
+		}
+	})
 }
 
 func (s *AddressTestSuite) TestCompare() {

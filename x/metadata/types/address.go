@@ -319,14 +319,26 @@ func (ma MetadataAddress) Marshal() ([]byte, error) {
 	return ma, nil
 }
 
-// Unmarshal initializes a MetadataAddress instance using the given bytes.  An error will be returned if the
-// given bytes do not form a valid Address
+// Unmarshal initializes a MetadataAddress instance using the given bytes.
+// If the bytes are a valid binary MetadataAddress, they are used directly.
+// If not, the bytes are interpreted as a bech32-encoded string and decoded.
+// An error will be returned only if both interpretations fail.
 func (ma *MetadataAddress) Unmarshal(data []byte) error {
 	*ma = data
 	if len(data) == 0 {
 		return nil
 	}
 	_, err := VerifyMetadataAddressFormat(data)
+	if err == nil {
+		return nil
+	}
+	// data is not valid binary MetadataAddress bytes; try interpreting as bech32.
+	addr, bech32Err := MetadataAddressFromBech32(string(data))
+	if bech32Err == nil {
+		*ma = addr
+		return nil
+	}
+	// Neither format worked; return the original binary format error.
 	return err
 }
 

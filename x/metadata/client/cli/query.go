@@ -584,10 +584,10 @@ func GetAccountDataCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 			req := &types.AccountDataRequest{}
 
-			if _, err = types.MetadataAddressFromBech32(args[0]); err != nil {
+			req.MetadataAddr, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
 				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
 			}
-			req.MetadataAddr = args[0]
 
 			resp, err := queryClient.AccountData(cmd.Context(), req)
 			if err != nil {

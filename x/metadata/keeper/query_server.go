@@ -1170,16 +1170,11 @@ func (k Keeper) AccountData(c context.Context, req *types.AccountDataRequest) (*
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	metadataAddr, err := types.MetadataAddressFromBech32(req.MetadataAddr)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid metadata address %q: %v", req.MetadataAddr, err)
-	}
-
-	if !metadataAddr.IsScopeAddress() {
+	if !req.MetadataAddr.IsScopeAddress() {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("metadata address is not a scope id")
 	}
 
-	value, err := k.attrKeeper.GetAccountData(ctx, metadataAddr.String())
+	value, err := k.attrKeeper.GetAccountData(ctx, req.MetadataAddr.String())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
