@@ -164,8 +164,7 @@ func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.Marker
 	return nil, nil
 }
 
-// SetMarker sets a marker in the auth account store will panic if the marker account is not valid or
-// if the auth module account keeper fails to marshall the account.
+// SetMarker sets a marker in the auth account store. Returns an error if the marker account is not valid.
 func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 	store := ctx.KVStore(k.storeKey)
 	if err := marker.Validate(); err != nil {
