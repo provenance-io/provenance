@@ -3124,3 +3124,25 @@ func TestBypassAddrsLocked(t *testing.T) {
 	act00 := kAddrs[0][0]
 	assert.Equal(t, orig00, act00, "first byte of first address returned by GetReqAttrBypassAddrs")
 }
+
+func TestSetMarker(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+	user := testUserAddress("test")
+
+	t.Run("valid marker returns no error", func(t *testing.T) {
+		mac := types.NewEmptyMarkerAccount("testcoin", user.String(), nil)
+		err := app.MarkerKeeper.SetMarker(ctx, mac)
+		require.NoError(t, err, "SetMarker with a valid marker")
+	})
+
+	t.Run("invalid marker returns error instead of panicking", func(t *testing.T) {
+		mac := types.NewEmptyMarkerAccount("testcoin2", user.String(), nil)
+		// AllowForcedTransfer is only valid on restricted coin markers, so setting
+		// it on a plain coin marker should cause Validate() to fail.
+		mac.SetAllowForcedTransfer(true)
+		err := app.MarkerKeeper.SetMarker(ctx, mac)
+		require.Error(t, err, "SetMarker with an invalid marker")
+		require.ErrorContains(t, err, "forced transfers can only be allowed on restricted markers")
+	})
+}
