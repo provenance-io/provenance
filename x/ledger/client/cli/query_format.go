@@ -11,6 +11,8 @@ import (
 type LedgerPlainText struct {
 	// Ledger key
 	Key *ledger.LedgerKey `json:"key,omitempty"`
+	// Ledger Class Id
+	LedgerClassId string `json:"ledger_class_id,omitempty"`
 	// Status of the ledger
 	Status string `json:"status,omitempty"`
 	// Next payment date
