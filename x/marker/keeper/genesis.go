@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -16,12 +18,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	}
 
 	// ensure our store contains references to any marker accounts in auth genesis
-	store := ctx.KVStore(k.storeKey)
 	acc := k.authKeeper.GetAllAccounts(ctx)
 	for i := range acc {
 		if m, ok := acc[i].(types.MarkerAccountI); ok {
 			if err := m.Validate(); err == nil {
-				store.Set(types.MarkerStoreKey(m.GetAddress()), m.GetAddress())
+				if err := k.markers.Set(ctx, m.GetAddress(), m.GetAddress()); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
@@ -50,14 +53,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		k.AddSendDeny(ctx, markerAddr, denyAddress)
 	}
 	for _, mNavs := range data.NetAssetValues {
+		address := sdk.MustAccAddressFromBech32(mNavs.Address)
 		for _, nav := range mNavs.NetAssetValues {
 			navCopy := nav
-			bz, err := k.cdc.Marshal(&navCopy)
-			if err != nil {
+			if err := k.navs.Set(ctx, collections.Join(address, navCopy.Price.Denom), navCopy); err != nil {
 				panic(err)
 			}
-			address := sdk.MustAccAddressFromBech32(mNavs.Address)
-			store.Set(types.NetAssetValueKey(address, navCopy.Price.Denom), bz)
 		}
 	}
 }
@@ -91,12 +92,13 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	k.IterateMarkers(ctx, appendToMarkers)
 
 	var denyAddresses []types.DenySendAddress
-	handleDenyList := func(key []byte) bool {
-		markerAddr, denyAddr := types.GetDenySendAddresses(key)
-		denyAddresses = append(denyAddresses, types.DenySendAddress{MarkerAddress: markerAddr.String(), DenyAddress: denyAddr.String()})
-		return false
-	}
-	k.IterateSendDeny(ctx, handleDenyList)
+	_ = k.denySend.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], _ bool) (bool, error) {
+		denyAddresses = append(denyAddresses, types.DenySendAddress{
+			MarkerAddress: key.K1().String(),
+			DenyAddress:   key.K2().String(),
+		})
+		return false, nil
+	})
 
 	markerNetAssetValues := make([]types.MarkerNetAssetValues, len(markers))
 	for i := range markers {

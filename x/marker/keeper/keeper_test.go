@@ -11,13 +11,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/feegrant"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/feegrant"
-
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -2756,7 +2758,7 @@ func TestGetNetAssetValue(t *testing.T) {
 			markerDenom: "cherry",
 			priceDenom:  "durian",
 			expNav:      nil,
-			expErr:      "could not read nav for marker \"cherry\" with price denom \"durian\": unexpected EOF",
+			expErr:      "could not read nav for marker \"cherry\" with price denom \"durian\": collections: encoding error: value decode: unexpected EOF",
 		},
 		{
 			name:        "good entry: apple usd",
@@ -3113,7 +3115,9 @@ func TestBypassAddrsLocked(t *testing.T) {
 		sdk.AccAddress("addrs[4]____________"),
 	}
 	var feegrantKeeper = feegrantkeeper.Keeper{}
-	mk := markerkeeper.NewKeeper(nil, nil, nil, &dummyBankKeeper{}, nil, feegrantKeeper, nil, nil, nil, addrs, nil)
+	storeService := runtime.NewKVStoreService(storetypes.NewKVStoreKey("marker"))
+	cdc := simapp.MakeTestEncodingConfig(t).Marshaler
+	mk := markerkeeper.NewKeeper(cdc, storeService, nil, &dummyBankKeeper{}, nil, feegrantKeeper, nil, nil, nil, addrs, nil)
 
 	// Now that the keeper has been created using the provided addresses, change the first byte of
 	// the first address to something else. Then, get the addresses back from the keeper and make
@@ -3123,4 +3127,197 @@ func TestBypassAddrsLocked(t *testing.T) {
 	kAddrs := mk.GetReqAttrBypassAddrs()
 	act00 := kAddrs[0][0]
 	assert.Equal(t, orig00, act00, "first byte of first address returned by GetReqAttrBypassAddrs")
+}
+
+func TestMarkerCodecByteIdentity(t *testing.T) {
+	addrCodec := types.MarkerAddrKeyCodec
+	denomCodec := types.DenomStringKeyCodec
+	pairAddrCodec := collections.PairKeyCodec(addrCodec, addrCodec)
+	navPairCodec := collections.PairKeyCodec(addrCodec, denomCodec)
+
+	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	addr2 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	oldMarkerKey := types.MarkerStoreKey(addr)
+
+	buf := make([]byte, addrCodec.Size(addr))
+	n, err := addrCodec.Encode(buf, addr)
+	require.NoError(t, err, "MarkerAddrKeyCodec.Encode")
+	newMarkerKey := append(types.MarkerStoreKeyPrefix, buf[:n]...)
+	assert.Equal(t, oldMarkerKey, newMarkerKey, "MarkerStoreKey byte identity")
+
+	oldDenyKey := types.DenySendKey(addr, addr2)
+
+	pair := collections.Join(addr, addr2)
+	buf2 := make([]byte, pairAddrCodec.Size(pair))
+	n2, err := pairAddrCodec.Encode(buf2, pair)
+	require.NoError(t, err, "PairAddrCodec.Encode")
+	newDenyKey := append(types.DenySendKeyPrefix, buf2[:n2]...)
+	assert.Equal(t, oldDenyKey, newDenyKey, "DenySendKey byte identity")
+
+	oldDenyPrefix := types.DenySendMarkerPrefix(addr)
+
+	buf3 := make([]byte, addrCodec.SizeNonTerminal(addr))
+	n3, err := addrCodec.EncodeNonTerminal(buf3, addr)
+	require.NoError(t, err, "MarkerAddrKeyCodec.EncodeNonTerminal")
+	newDenyPrefix := append(types.DenySendKeyPrefix, buf3[:n3]...)
+	assert.Equal(t, oldDenyPrefix, newDenyPrefix, "DenySendMarkerPrefix byte identity")
+
+	denom := "usd"
+	oldNavKey := types.NetAssetValueKey(addr, denom)
+
+	navPair := collections.Join(addr, denom)
+	buf4 := make([]byte, navPairCodec.Size(navPair))
+	n4, err := navPairCodec.Encode(buf4, navPair)
+	require.NoError(t, err, "NavPairCodec.Encode")
+	newNavKey := append(types.NetAssetValuePrefix, buf4[:n4]...)
+	assert.Equal(t, oldNavKey, newNavKey, "NetAssetValueKey byte identity")
+
+	oldNavPrefix := types.NetAssetValueKeyPrefix(addr)
+
+	buf5 := make([]byte, addrCodec.SizeNonTerminal(addr))
+	n5, err := addrCodec.EncodeNonTerminal(buf5, addr)
+	require.NoError(t, err, "MarkerAddrKeyCodec.EncodeNonTerminal for NAV prefix")
+	newNavPrefix := append(types.NetAssetValuePrefix, buf5[:n5]...)
+	assert.Equal(t, oldNavPrefix, newNavPrefix, "NetAssetValueKeyPrefix byte identity")
+}
+
+func TestMarkerCollectionsRoundTrip(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	user := testUserAddress("test")
+
+	mac := types.NewEmptyMarkerAccount("testround", user.String(), []types.AccessGrant{
+		*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin}),
+	})
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin("testround", 1000)))
+	require.NoError(t, mac.SetManager(user))
+
+	setNewAccount(app, ctx, mac)
+	app.MarkerKeeper.SetMarker(ctx, mac)
+
+	assert.True(t, app.MarkerKeeper.IsMarkerAccount(ctx, mac.GetAddress()), "marker should exist after SetMarker")
+
+	retrieved, err := app.MarkerKeeper.GetMarker(ctx, mac.GetAddress())
+	require.NoError(t, err, "GetMarker after SetMarker")
+	require.NotNil(t, retrieved, "GetMarker should return non-nil")
+	assert.Equal(t, "testround", retrieved.GetDenom(), "marker denom should match")
+
+	sender := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	app.MarkerKeeper.AddSendDeny(ctx, mac.GetAddress(), sender)
+	assert.True(t, app.MarkerKeeper.IsSendDeny(ctx, mac.GetAddress(), sender), "sender should be on deny list")
+
+	denyList := app.MarkerKeeper.GetSendDenyList(ctx, mac.GetAddress())
+	assert.Len(t, denyList, 1, "deny list should have one entry")
+	assert.Equal(t, sender, denyList[0], "deny list entry should match sender")
+
+	app.MarkerKeeper.RemoveSendDeny(ctx, mac.GetAddress(), sender)
+	assert.False(t, app.MarkerKeeper.IsSendDeny(ctx, mac.GetAddress(), sender), "sender should not be on deny list after removal")
+
+	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 100), 1)
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, nav, "test"), "SetNetAssetValue")
+
+	gotNav, err := app.MarkerKeeper.GetNetAssetValue(ctx, "testround", types.UsdDenom)
+	require.NoError(t, err, "GetNetAssetValue")
+	require.NotNil(t, gotNav, "GetNetAssetValue should return non-nil")
+	assert.Equal(t, nav.Price, gotNav.Price, "NAV price should match")
+	assert.Equal(t, nav.Volume, gotNav.Volume, "NAV volume should match")
+
+	gotNone, err := app.MarkerKeeper.GetNetAssetValue(ctx, "testround", "nonexistent")
+	require.NoError(t, err, "GetNetAssetValue for non-existent denom")
+	assert.Nil(t, gotNone, "GetNetAssetValue should return nil for non-existent denom")
+
+	var navs []types.NetAssetValue
+	err = app.MarkerKeeper.IterateNetAssetValues(ctx, mac.GetAddress(), func(n types.NetAssetValue) bool {
+		navs = append(navs, n)
+		return false
+	})
+	require.NoError(t, err, "IterateNetAssetValues")
+	assert.Len(t, navs, 1, "should have one NAV entry")
+
+	app.MarkerKeeper.RemoveNetAssetValues(ctx, mac.GetAddress())
+	var navsAfter []types.NetAssetValue
+	err = app.MarkerKeeper.IterateNetAssetValues(ctx, mac.GetAddress(), func(n types.NetAssetValue) bool {
+		navsAfter = append(navsAfter, n)
+		return false
+	})
+	require.NoError(t, err, "IterateNetAssetValues after removal")
+	assert.Len(t, navsAfter, 0, "should have no NAV entries after removal")
+
+	params := app.MarkerKeeper.GetParams(ctx)
+	assert.Equal(t, types.DefaultEnableGovernance, params.EnableGovernance, "default EnableGovernance")
+
+	newParams := types.Params{
+		EnableGovernance:       false,
+		UnrestrictedDenomRegex: "xyz.*",
+		MaxSupply:              types.StringToBigInt("5000000"),
+	}
+	app.MarkerKeeper.SetParams(ctx, newParams)
+	got := app.MarkerKeeper.GetParams(ctx)
+	assert.Equal(t, false, got.EnableGovernance, "updated EnableGovernance")
+	assert.Equal(t, "xyz.*", got.UnrestrictedDenomRegex, "updated regex")
+
+	nav2 := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 50), 1)
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, nav2, "test"), "SetNetAssetValue before remove")
+	app.MarkerKeeper.AddSendDeny(ctx, mac.GetAddress(), sender)
+
+	app.MarkerKeeper.RemoveMarker(ctx, mac)
+	assert.False(t, app.MarkerKeeper.IsMarkerAccount(ctx, mac.GetAddress()), "marker should not exist after RemoveMarker")
+	assert.False(t, app.MarkerKeeper.IsSendDeny(ctx, mac.GetAddress(), sender), "deny list should be cleared after RemoveMarker")
+
+	var navsAfterRemove []types.NetAssetValue
+	_ = app.MarkerKeeper.IterateNetAssetValues(ctx, mac.GetAddress(), func(n types.NetAssetValue) bool {
+		navsAfterRemove = append(navsAfterRemove, n)
+		return false
+	})
+	assert.Len(t, navsAfterRemove, 0, "NAVs should be cleared after RemoveMarker")
+}
+
+func TestIterateMarkersCollections(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	user := testUserAddress("test")
+	denoms := []string{"alpha", "bravo", "charlie"}
+	for _, denom := range denoms {
+		mac := types.NewEmptyMarkerAccount(denom, user.String(), []types.AccessGrant{
+			*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin}),
+		})
+		require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(denom, 1000)))
+		setNewAccount(app, ctx, mac)
+		app.MarkerKeeper.SetMarker(ctx, mac)
+	}
+
+	var found []string
+	app.MarkerKeeper.IterateMarkers(ctx, func(m types.MarkerAccountI) bool {
+		found = append(found, m.GetDenom())
+		return false
+	})
+
+	// nhash marker exists from genesis, so we expect at least our 3 + nhash
+	for _, denom := range denoms {
+		assert.True(t, slices.Contains(found, denom), "should find marker %s in iteration", denom)
+	}
+}
+
+func TestClearSendDenyCollections(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	markerAddr := types.MustGetMarkerAddress("restricted")
+	sender1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	sender2 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	app.MarkerKeeper.AddSendDeny(ctx, markerAddr, sender1)
+	app.MarkerKeeper.AddSendDeny(ctx, markerAddr, sender2)
+
+	list := app.MarkerKeeper.GetSendDenyList(ctx, markerAddr)
+	assert.Len(t, list, 2, "should have two deny entries")
+
+	app.MarkerKeeper.ClearSendDeny(ctx, markerAddr)
+	list = app.MarkerKeeper.GetSendDenyList(ctx, markerAddr)
+	assert.Len(t, list, 0, "deny list should be empty after clear")
+	assert.False(t, app.MarkerKeeper.IsSendDeny(ctx, markerAddr, sender1), "sender1 should not be denied after clear")
+	assert.False(t, app.MarkerKeeper.IsSendDeny(ctx, markerAddr, sender2), "sender2 should not be denied after clear")
 }
