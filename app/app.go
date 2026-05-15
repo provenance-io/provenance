@@ -988,6 +988,13 @@ func New(
 	app.setPostHandler()
 	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
 
+	if manager := app.SnapshotManager(); manager != nil {
+		err = manager.RegisterExtensions(wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), app.WasmKeeper))
+		if err != nil {
+			panic(fmt.Errorf("failed to register wasm snapshot extension: %w", err))
+		}
+	}
+
 	// Register upgrade handlers and set the store loader.
 	// This must be done after the module manager, configurator, and pre-blocker are set,
 	// but before the baseapp is sealed via LoadLatestVersion() below.
