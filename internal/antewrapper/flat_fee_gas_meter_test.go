@@ -1984,7 +1984,7 @@ func TestConsumeMsg(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			ctx := sdk.Context{}.WithContext(context.Background()).WithGasMeter(tc.ctxGM)
 			testFunc := func() {
 				ConsumeMsg(ctx, tc.msgs...)
 			}
@@ -2048,7 +2048,7 @@ func TestConsumeAdditionalFee(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			ctx := sdk.Context{}.WithContext(context.Background()).WithGasMeter(tc.ctxGM)
 			testFunc := func() {
 				ConsumeAdditionalFee(ctx, tc.fee)
 			}
@@ -2142,7 +2142,7 @@ func TestConsumeAdditionalFlatFee(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			ctx := sdk.Context{}.WithContext(context.Background()).WithGasMeter(tc.ctxGM)
 			testFunc := func() {
 				ConsumeAdditionalFlatFee(ctx, tc.amt)
 			}
