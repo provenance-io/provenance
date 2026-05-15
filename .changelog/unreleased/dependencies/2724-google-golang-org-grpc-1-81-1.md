@@ -1,0 +1,11 @@
+* `github.com/cncf/xds/go` bumped to v0.0.0-20260202195803-dba9d589def2 (from v0.0.0-20251210132809-ee656c7534f5) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `github.com/envoyproxy/go-control-plane/envoy` bumped to v1.37.0 (from v1.36.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `github.com/envoyproxy/protoc-gen-validate` bumped to v1.3.3 (from v1.3.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `go.opentelemetry.io/contrib/detectors/gcp` bumped to v1.42.0 (from v1.39.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `go.opentelemetry.io/otel` bumped to v1.43.0 (from v1.42.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `go.opentelemetry.io/otel/metric` bumped to v1.43.0 (from v1.42.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `go.opentelemetry.io/otel/sdk` bumped to v1.43.0 (from v1.42.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `go.opentelemetry.io/otel/sdk/metric` bumped to v1.43.0 (from v1.42.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `go.opentelemetry.io/otel/trace` bumped to v1.43.0 (from v1.42.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `google.golang.org/genproto/googleapis/api` bumped to v0.0.0-20260226221140-a57be14db171 (from v0.0.0-20260203192932-546029d2fa20) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
+* `google.golang.org/grpc` bumped to v1.81.1 (from v1.80.0) [PR 2724](https://github.com/provenance-io/provenance/pull/2724).
