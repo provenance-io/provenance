@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/nft v0.2.0
 	cosmossdk.io/x/tx v0.14.0
 	cosmossdk.io/x/upgrade v0.2.0
-	github.com/CosmWasm/wasmd v0.61.8
+	github.com/CosmWasm/wasmd v0.61.10
 	github.com/CosmWasm/wasmvm/v2 v2.3.2
 	github.com/CosmWasm/wasmvm/v3 v3.0.3
 	github.com/cometbft/cometbft v0.38.21
@@ -398,7 +398,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
-	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.61.10-pio-1
+	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.61.10-pio-2
 
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.53.5-pio-2
 
