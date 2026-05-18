@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				ExpirationDate: &past,
 			},
 			ownerAddr: s.user1Addr,
-			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is not after block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
 		},
 		{
 			name: "should fail due to attribute length too long",
@@ -486,7 +486,7 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 				AttributeType:  types.AttributeType_String,
 				ExpirationDate: &past,
 			},
-			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is not after block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
 			ownerAddr: s.user1Addr,
 		},
 		{
@@ -1042,10 +1042,11 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	past := s.startBlockTime.Add(-2 * time.Hour)
 	future := s.startBlockTime.Add(time.Hour)
 
-	s.ctx = s.ctx.WithBlockTime(past)
+	s.ctx = s.ctx.WithBlockTime(past.Add(-1 * time.Second))
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "one.expire.testing", s.user1Addr, false), "SetNameRecord one.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "two.expire.testing", s.user1Addr, false), "SetNameRecord two.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "three.expire.testing", s.user1Addr, false), "SetNameRecord three.expire.testing")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "threev2.expire.testing", s.user1Addr, false), "SetNameRecord threev2.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "four.expire.testing", s.user1Addr, false), "SetNameRecord four.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "five.expire.testing", s.user1Addr, false), "SetNameRecord five.expire.testing")
 
@@ -1066,6 +1067,13 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr3, s.user1Addr), "SetAttribute attr3")
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+
+	attr3v2 := types.NewAttribute("threev2.expire.testing", s.user1, types.AttributeType_String, []byte("test3v2"), nil, "")
+	startBlockTimeP1 := s.startBlockTime.Add(time.Second)
+	attr3v2.ExpirationDate = &startBlockTimeP1
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr3v2, s.user1Addr), "SetAttribute attr3v2")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr3v2)), "store.Get attr3v2 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3v2.Name, attr3v2.GetAddressBytes())), "store.Get attr3v2 AttributeNameAddrKeyPrefix")
 
 	attr4 := types.NewAttribute("four.expire.testing", s.user1, types.AttributeType_String, []byte("test4"), nil, "")
 	attr4.ExpirationDate = &future
@@ -1092,8 +1100,11 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr2)), "store.Get attr2 AttributeExpireKey")
 	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes())), "store.Get attr2 AttributeNameAddrKeyPrefix")
 
-	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
-	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
+	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr3v2)), "store.Get attr3v2 AttributeExpireKey")
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3v2.Name, attr3v2.GetAddressBytes())), "store.Get attr3v2 AttributeNameAddrKeyPrefix")
 
 	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr4)), "store.Get attr4 AttributeExpireKey")
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
