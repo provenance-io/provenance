@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
+	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -544,7 +545,10 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	expirationKeys := [][]byte{}
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(ctx.BlockTime()))
+	// The ending for iterators is exclusive. So we need to add a second to the blocktime to include entries that
+	// expire exactly on the block time.
+	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
 	for ; iterator.Valid(); iterator.Next() {
 		expirationKeys = append(expirationKeys, iterator.Key())
 	}
@@ -599,8 +603,8 @@ func (k Keeper) deleteAttributeExpireLookup(store storetypes.KVStore, attr types
 
 // ValidateExpirationDate returns error if attribute has an expiration date that is in the past of current block time
 func (k Keeper) ValidateExpirationDate(ctx sdk.Context, attr types.Attribute) error {
-	if attr.ExpirationDate != nil && attr.ExpirationDate.Unix() < ctx.BlockTime().Unix() {
-		return fmt.Errorf("attribute expiration date %v is before block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	if attr.ExpirationDate != nil && !attr.ExpirationDate.After(ctx.BlockTime()) {
+		return fmt.Errorf("attribute expiration date %v is not after block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
 	}
 	return nil
 }

@@ -52,7 +52,7 @@ func QueryPlugins(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) *wasmkee
 
 	return &wasmkeeper.QueryPlugins{
 		Stargate: StargateQuerier(queryRouter, stargateCdc),
-		Grpc:     GrpcQuerier(queryRouter),
+		Grpc:     GrpcQuerier(queryRouter, stargateCdc),
 	}
 }
 
@@ -87,9 +87,9 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 }
 
 // GrpcQuerier dispatches whitelisted queries and returns protobuf encoded responses
-func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
+func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
-		_, err := GetWhitelistedQuery(request.Path)
+		protoRespType, err := GetWhitelistedQuery(request.Path)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +107,14 @@ func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, requ
 			return nil, err
 		}
 
-		return res, nil
+		if err = cdc.Unmarshal(res.Value, protoRespType); err != nil {
+			return nil, wasmvmtypes.InvalidResponse{
+				Err:      fmt.Sprintf("error unmarshalling response into %T: %v", protoRespType, err),
+				Response: res.Value,
+			}
+		}
+
+		return protoRespType, nil
 	}
 }
 
