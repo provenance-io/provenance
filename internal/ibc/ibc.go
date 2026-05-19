@@ -1,11 +1,13 @@
 package ibc
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	channeltypesv2 "github.com/cosmos/ibc-go/v10/modules/core/04-channel/v2/types"
 )
 
 const IbcAcknowledgementErrorType = "ibc-acknowledgement-error"
@@ -44,6 +46,9 @@ func EmitIBCErrorEvents(ctx sdk.Context, err error, errorContexts []string) {
 // IsAckError checks an IBC acknowledgement to see if it's an error.
 // This is a replacement for ack.Success() which is currently not working on some circumstances
 func IsAckError(acknowledgement []byte) bool {
+	if bytes.Equal(acknowledgement, channeltypesv2.ErrorAcknowledgement[:]) {
+		return true
+	}
 	var ackErr channeltypes.Acknowledgement_Error
 	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
 		return true
