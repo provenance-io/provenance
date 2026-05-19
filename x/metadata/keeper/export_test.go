@@ -39,7 +39,7 @@ func (k *Keeper) SetBankKeeper(bankKeeper BankKeeper) BankKeeper {
 	return rv
 }
 
-// SetBankKeeper is a TEST ONLY setter for the keeper's marker keeper.
+// SetMarkerKeeper is a TEST ONLY setter for the keeper's marker keeper.
 // It returns the previously defined MarkerKeeper
 func (k *Keeper) SetMarkerKeeper(markerKeeper MarkerKeeper) MarkerKeeper {
 	rv := k.markerKeeper
