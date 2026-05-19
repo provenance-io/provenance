@@ -25,6 +25,10 @@ func NewAttribute(name string, address string, attrType AttributeType, value []b
 		trimmed := strings.TrimSpace(string(value))
 		value = []byte(trimmed)
 	}
+	if expirationDate != nil {
+		ed := expirationDate.Truncate(time.Second)
+		expirationDate = &ed
+	}
 	return Attribute{
 		Name:           name,
 		Address:        address,

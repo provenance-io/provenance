@@ -111,9 +111,14 @@ func (msg MsgCreateSecuritization) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("pools", "cannot be empty"))
 	}
 
+	seenPools := make(map[string]int)
 	for i, pool := range msg.Pools {
 		if len(pool) == 0 {
 			errs = append(errs, NewErrCodeInvalidField(fmt.Sprintf("pools[%d]", i), "cannot be empty"))
+		} else if j, found := seenPools[pool]; found {
+			errs = append(errs, NewErrCodeInvalidField("pools", "duplicate pool at index %d and %d", j, i))
+		} else {
+			seenPools[pool] = i
 		}
 	}
 
@@ -121,12 +126,17 @@ func (msg MsgCreateSecuritization) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("tranches", "cannot be empty"))
 	}
 
+	seenDenoms := make(map[string]int)
 	for i, tranche := range msg.Tranches {
 		if tranche == nil {
 			errs = append(errs, NewErrCodeInvalidField(fmt.Sprintf("tranches[%d]", i), "cannot be nil"))
 		} else {
 			if err := tranche.Validate(); err != nil {
 				errs = append(errs, NewErrCodeInvalidField(fmt.Sprintf("tranches[%d]", i), "%s", err))
+			} else if j, found := seenDenoms[tranche.Denom]; found {
+				errs = append(errs, NewErrCodeInvalidField("tranches", "duplicate denom %q at index %d and %d", tranche.Denom, j, i))
+			} else {
+				seenDenoms[tranche.Denom] = i
 			}
 		}
 	}

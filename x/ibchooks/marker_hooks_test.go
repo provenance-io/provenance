@@ -78,10 +78,14 @@ func (suite *MarkerHooksTestSuite) makeMockPacket(denom, receiver, memo string, 
 
 func (suite *MarkerHooksTestSuite) TestAddMarker() {
 	// Compute IBC denoms dynamically since channel IDs vary between test runs.
-	hamburgerIBCDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivehamburgers", "", "", 0))
-	friesIBCDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivefries", "", "", 0))
-	tacosIBCDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivetacos", "", "", 0))
-	ibcBeforeIBCDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("ibcdenombeforemiddleware", "", "", 0))
+	hamburgerIBCDenom, err := ibchooks.ExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivehamburgers", "", "", 0))
+	suite.Require().NoError(err, "ExtractDenomFromPacketOnRecv hamburgerIBCDenom")
+	friesIBCDenom, err := ibchooks.ExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivefries", "", "", 0))
+	suite.Require().NoError(err, "ExtractDenomFromPacketOnRecv friesIBCDenom")
+	tacosIBCDenom, err := ibchooks.ExtractDenomFromPacketOnRecv(suite.makeMockPacket("fiftyfivetacos", "", "", 0))
+	suite.Require().NoError(err, "ExtractDenomFromPacketOnRecv tacosIBCDenom")
+	ibcBeforeIBCDenom, err := ibchooks.ExtractDenomFromPacketOnRecv(suite.makeMockPacket("ibcdenombeforemiddleware", "", "", 0))
+	suite.Require().NoError(err, "ExtractDenomFromPacketOnRecv ibcBeforeIBCDenom")
 
 	suite.chainA.GetProvenanceApp().BankKeeper.MintCoins(suite.chainA.GetContext(), markertypes.CoinPoolName, sdk.NewCoins(sdk.NewInt64Coin(ibcBeforeIBCDenom, 100)))
 	address1 := sdk.AccAddress("address1")

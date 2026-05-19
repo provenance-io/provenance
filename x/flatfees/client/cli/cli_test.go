@@ -206,7 +206,7 @@ func (s *CLITestSuite) convertMsgFee(msgFee *types.MsgFee) *types.MsgFee {
 	return s.genState.Params.ConversionFactor.ConvertMsgFee(msgFee)
 }
 
-// convertMsgFee converts a slice of msg fees using genState.Params.
+// convertMsgFees converts a slice of msg fees using genState.Params.
 func (s *CLITestSuite) convertMsgFees(msgFees []*types.MsgFee) []*types.MsgFee {
 	rv := make([]*types.MsgFee, len(msgFees))
 	for i, msgFee := range msgFees {
