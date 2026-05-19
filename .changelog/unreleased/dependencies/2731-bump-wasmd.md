@@ -1,0 +1,1 @@
+* `github.com/CosmWasm/wasmd` bumped to v0.61.10-pio-2 of `github.com/provenance-io/wasmd` (from v0.61.10-pio-1 of `github.com/provenance-io/wasmd`) [PR 2731](https://github.com/provenance-io/provenance/pull/2731).
