@@ -20,7 +20,8 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	tendermintclient "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 
-	ibchooks "github.com/provenance-io/provenance/x/ibchooks"
+	"github.com/provenance-io/provenance/internal/ibc"
+	"github.com/provenance-io/provenance/x/ibchooks"
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -252,7 +253,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		return fmt.Errorf("ack callback error: %w", err)
 	}
 
-	success := !ibchooks.IsJSONAckError(acknowledgement)
+	success := !ibc.IsAckError(acknowledgement)
 
 	ackAsJSON, err := json.Marshal(acknowledgement)
 	if err != nil {
