@@ -1,2 +1,2 @@
-* Fix ordering issue where earlier non-matching events of the same type prevented later matching events from triggering.
+* Fix scanning of events for event triggers.
 * Ensure correct queuing of matching events for trigger execution.
