@@ -2,10 +2,11 @@ package provwasm
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	vaulttypes "github.com/provlabs/vault/types"
 
 	circuittypes "cosmossdk.io/x/circuit/types"
@@ -197,7 +198,7 @@ func init() {
 	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/Authority", &upgradetypes.QueryAuthorityResponse{})
 
 	// wasm
-	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractHistory", &wasmtypes.QueryContractInfoResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractHistory", &wasmtypes.QueryContractHistoryResponse{})
 	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractsByCode", &wasmtypes.QueryContractsByCodeResponse{})
 	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/SmartContractState", &wasmtypes.QuerySmartContractStateResponse{})
 	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Code", &wasmtypes.QueryCodeResponse{})
@@ -358,7 +359,17 @@ func GetWhitelistedQuery(queryPath string) (proto.Message, error) {
 	if !ok {
 		return nil, wasmvmtypes.Unknown{}
 	}
-	return protoResponseType, nil
+	// Build a fresh zero-value instance of the same concrete type.
+	rt := reflect.TypeOf(protoResponseType)
+	if rt.Kind() != reflect.Ptr {
+		return nil, wasmvmtypes.Unknown{}
+	}
+	freshAny := reflect.New(rt.Elem()).Interface()
+	fresh, ok := freshAny.(proto.Message)
+	if !ok {
+		return nil, wasmvmtypes.Unknown{}
+	}
+	return fresh, nil
 }
 
 func setWhitelistedQuery(queryPath string, protoType proto.Message) {

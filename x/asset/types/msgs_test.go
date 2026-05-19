@@ -755,6 +755,50 @@ func TestMsgCreateSecuritization_ValidateBasic(t *testing.T) {
 			},
 			expErr: "invalid signer: decoding bech32 failed: invalid separator index -1: invalid field",
 		},
+		{
+			name: "duplicate pool",
+			msg: MsgCreateSecuritization{
+				Id: "test-sec",
+				Pools: []string{
+					"pool1",
+					"pool2",
+					"pool1",
+				},
+				Tranches: []*sdk.Coin{
+					{
+						Denom:  "tranche1",
+						Amount: sdkmath.NewInt(1000),
+					},
+				},
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			expErr: "invalid pools: duplicate pool at index 0 and 2: invalid field",
+		},
+		{
+			name: "duplicate tranche denom",
+			msg: MsgCreateSecuritization{
+				Id: "test-sec",
+				Pools: []string{
+					"pool1",
+				},
+				Tranches: []*sdk.Coin{
+					{
+						Denom:  "tranche1",
+						Amount: sdkmath.NewInt(1000),
+					},
+					{
+						Denom:  "tranche2",
+						Amount: sdkmath.NewInt(2000),
+					},
+					{
+						Denom:  "tranche1",
+						Amount: sdkmath.NewInt(3000),
+					},
+				},
+				Signer: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			},
+			expErr: `invalid tranches: duplicate denom "tranche1" at index 0 and 2: invalid field`,
+		},
 	}
 
 	for _, tt := range tests {

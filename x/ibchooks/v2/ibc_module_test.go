@@ -523,6 +523,28 @@ func TestOnAcknowledgementPacket_ErrorAck_StoredCallback_InvalidBech32(t *testin
 	assert.ErrorContains(t, err, "ack callback error", "invalid bech32 callback contract should error")
 }
 
+func TestOnAcknowledgementPacket_v2_ErrorAck_StoredCallback(t *testing.T) {
+	mockA := newMockApp()
+	provApp := provenanceapp.Setup(t)
+	ctx := provApp.BaseApp.NewContext(false).WithEventManager(sdk.NewEventManager())
+
+	mw := v2.NewIBCModule(
+		mockA,
+		provApp.IBCKeeper,
+		provApp.IBCHooksKeeper,
+		provApp.WasmKeeper,
+		provApp.Ics20MarkerHooks,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	)
+
+	provApp.IBCHooksKeeper.StorePacketCallback(ctx, "src-client", 10, "not-a-bech32")
+
+	errorAck := channeltypesv2.ErrorAcknowledgement[:]
+	payload := makePayload(t, sampleData(), transfertypes.EncodingJSON)
+	err := mw.OnAcknowledgementPacket(ctx, "src-client", "dst-client", 10, errorAck, payload, nil)
+	assert.ErrorContains(t, err, "ack callback error", "invalid bech32 callback contract should error")
+}
+
 func TestOnAcknowledgementPacket_StoredCallback_SudoFails_RetainsCallback(t *testing.T) {
 	mockA := newMockApp()
 	provApp := provenanceapp.Setup(t)
