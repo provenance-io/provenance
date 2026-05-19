@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	"math"
+	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -298,4 +300,90 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestDetectBlockTimeOverflowPoisonRejected() {
+	now := time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC)
+	s.ctx = s.ctx.WithBlockTime(now)
+	owner := s.accountAddresses[0].String()
+	action := &types.MsgDestroyTriggerRequest{Id: 999, Authority: owner}
+
+	// maxTime is 2^64 nanoseconds after the Unix epoch (~year 2554).
+	maxTime := time.Unix(18446744073, 709551616).UTC()
+
+	s.Run("overflow timestamp is rejected by ValidateContext", func() {
+		poisonEvent := &types.BlockTimeEvent{Time: maxTime}
+		err := poisonEvent.ValidateContext(s.ctx)
+		s.Require().Error(err, "far-future overflow timestamp must not pass ValidateContext")
+		s.Require().ErrorIs(err, types.ErrInvalidBlockTime,
+			"the returned error must be ErrInvalidBlockTime")
+	})
+
+	s.Run("overflow timestamp would have sorted before due trigger without the fix", func() {
+		dueEvent := &types.BlockTimeEvent{Time: now}
+		poisonEvent := &types.BlockTimeEvent{Time: maxTime}
+		s.Require().Less(
+			poisonEvent.GetEventOrder(),
+			dueEvent.GetEventOrder(),
+			"poison trigger's overflowed order must be less than the due trigger's order — "+
+				"proving why ValidateContext must reject it",
+		)
+	})
+
+	s.Run("time at the exact int64 ceiling is accepted", func() {
+		ceilingTime := time.Unix(0, math.MaxInt64).UTC()
+		ceilingEvent := &types.BlockTimeEvent{Time: ceilingTime}
+		err := ceilingEvent.ValidateContext(s.ctx)
+		s.Require().NoError(err, "time at the exact int64 ceiling must be accepted")
+	})
+
+	s.Run("due trigger is queued when no poison listener exists", func() {
+		dueEvent := &types.BlockTimeEvent{Time: now}
+		dueTrigger := s.CreateTrigger(1, owner, dueEvent, action)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, dueTrigger)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(nil))
+
+		s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
+
+		items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
+		s.Require().NoError(err, "GetAllQueueItems")
+		s.Require().Len(items, 1, "due block-time trigger must be queued")
+		s.Equal(dueTrigger.Id, items[0].GetTrigger().Id, "queued trigger ID must match")
+		for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
+			s.app.TriggerKeeper.Dequeue(s.ctx)
+		}
+	})
+
+	s.Run("future non-overflow trigger does not suppress a due trigger", func() {
+		safeFutureTime := time.Date(2200, 1, 1, 0, 0, 0, 0, time.UTC)
+		safeFutureEvent := &types.BlockTimeEvent{Time: safeFutureTime}
+
+		dueEvent := &types.BlockTimeEvent{Time: now}
+		s.Require().Greater(
+			safeFutureEvent.GetEventOrder(),
+			dueEvent.GetEventOrder(),
+			"safe far-future trigger must sort AFTER the due trigger",
+		)
+
+		err := safeFutureEvent.ValidateContext(s.ctx)
+		s.Require().NoError(err, "safe far-future time must pass ValidateContext")
+
+		dueTrigger := s.CreateTrigger(2, owner, dueEvent, action)
+		futureTrigger := s.CreateTrigger(3, owner, safeFutureEvent, action)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, dueTrigger)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, futureTrigger)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(nil))
+
+		s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
+
+		items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
+		s.Require().NoError(err, "GetAllQueueItems")
+		s.Require().Len(items, 1, "only the due trigger must be queued; future trigger must not fire")
+		s.Equal(dueTrigger.Id, items[0].GetTrigger().Id, "queued trigger must be the due one")
+
+		for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
+			s.app.TriggerKeeper.Dequeue(s.ctx)
+		}
+		s.app.TriggerKeeper.UnregisterTrigger(s.ctx, futureTrigger)
+	})
 }
