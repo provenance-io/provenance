@@ -67,7 +67,10 @@ func (d ProvSetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	// Note that SetGasMeter uses an infinite gas meter if simulating or at height 0 (init genesis).
 	newCtx = ante.SetGasMeter(simulate, ctx, gasLimit)
 	// Now wrap that gas meter in our flat-fee gas meter.
-	newCtx = ctx.WithGasMeter(NewFlatFeeGasMeter(newCtx.GasMeter(), newCtx.Logger(), d.ffk))
+	ffgm := NewFlatFeeGasMeter(newCtx.GasMeter(), newCtx.Logger(), d.ffk)
+	newCtx = ctx.WithGasMeter(ffgm)
+	// Add a second copy to the context as a backup in case the main gas meter is overwritten.
+	newCtx = SetFlatFeeGasMeterBackup(newCtx, ffgm)
 	// Note: We don't set the costs yet because we want to check a few more things before doing that work.
 
 	// Ensure that the requested gas does not exceed either the configured block maximum, or the tx maximum.
