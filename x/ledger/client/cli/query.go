@@ -89,6 +89,7 @@ func GetCmd() *cobra.Command {
 			// Convert to PlainText
 			plainText := LedgerPlainText{
 				Key:                        req.Key,
+				LedgerClassId:              l.Ledger.LedgerClassId,
 				Status:                     strconv.Itoa(int(l.Ledger.StatusTypeId)),
 				NextPmtDate:                helper.EpochDaysToYMD(l.Ledger.NextPmtDate),
 				NextPmtAmt:                 nextPmtAmt,

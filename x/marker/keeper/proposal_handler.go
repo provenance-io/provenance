@@ -35,7 +35,9 @@ func (k Keeper) HandleSupplyIncreaseProposal(ctx sdk.Context, amount sdk.Coin, t
 		if err := m.Validate(); err != nil {
 			return err
 		}
-		k.SetMarker(ctx, m)
+		if err := k.SetMarker(ctx, m); err != nil {
+			return err
+		}
 		logger.Info("marker configured supply increased", "marker", amount.Denom, "amount", amount.Amount.String())
 		return nil
 	} else if m.GetStatus() != types.StatusActive {
@@ -119,7 +121,9 @@ func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, ac
 		return err
 	}
 
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -153,7 +157,9 @@ func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string,
 		return err
 	}
 
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return err
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info("marker access revoked", "marker", denom, "administrator", removedAddress)
@@ -209,7 +215,9 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 		return err
 	}
 
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return err
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info("changed marker status", "marker", denom, "stats", status.String())

@@ -41,7 +41,10 @@ func (h MarkerHooks) AddMarker(ctx sdktypes.Context, packet exported.PacketI, ib
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return err
 	}
-	ibcDenom := MustExtractDenomFromPacketOnRecv(packet)
+	ibcDenom, err := ExtractDenomFromPacketOnRecv(packet)
+	if err != nil {
+		return err
+	}
 	if !strings.HasPrefix(ibcDenom, "ibc/") {
 		return nil
 	}
