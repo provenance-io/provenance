@@ -333,6 +333,7 @@ priv_validator_state_file="data/priv_validator_state.json"
 proxy_app="tcp://127.0.0.1:26658"`,
 			fmt.Sprintf("version=%q", version),
 			`blocksync.version="v0"
+consensus.block_time_tolerance="1m0s"
 consensus.create_empty_blocks=true
 consensus.create_empty_blocks_interval="0s"
 consensus.double_sign_check_height=0
