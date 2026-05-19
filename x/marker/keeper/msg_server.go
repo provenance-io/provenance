@@ -640,7 +640,9 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 	}
 
 	m.SetRequiredAttributes(reqAttrs)
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUpdateRequiredAttributesResponse{}, nil
 }
@@ -670,7 +672,9 @@ func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpd
 	}
 
 	marker.SetAllowForcedTransfer(msg.AllowForcedTransfer)
-	k.SetMarker(ctx, marker)
+	if err := k.SetMarker(ctx, marker); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUpdateForcedTransferResponse{}, nil
 }
