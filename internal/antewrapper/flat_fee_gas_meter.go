@@ -352,13 +352,38 @@ func (g *FlatFeeGasMeter) getDefinitionDenom(ctx sdk.Context) string {
 	return g.feeConverter.GetDefinitionAmount().Denom
 }
 
+// flatFeeGasMeterContextKey is a private struct used as a context key to hold a FlatFeeGasMeter.
+type flatFeeGasMeterContextKey struct{}
+
+// SetFlatFeeGasMeterBackup stores the provided FlatFeeGasMeter in the context in a backup location.
+func SetFlatFeeGasMeterBackup(ctx sdk.Context, gm *FlatFeeGasMeter) sdk.Context {
+	return ctx.WithValue(flatFeeGasMeterContextKey{}, gm)
+}
+
+// getFlatFeeGasMeterBackup gets the backup FlatFeeGasMeter from the context.
+func getFlatFeeGasMeterBackup(ctx sdk.Context) *FlatFeeGasMeter {
+	rawValue := ctx.Value(flatFeeGasMeterContextKey{})
+	if rawValue == nil {
+		return nil
+	}
+	rv, ok := rawValue.(*FlatFeeGasMeter)
+	if !ok {
+		return nil
+	}
+	return rv
+}
+
 // GetFlatFeeGasMeter will extract the flat fee gas meter from the ctx.
 func GetFlatFeeGasMeter(ctx sdk.Context) (*FlatFeeGasMeter, error) {
-	rv, ok := ctx.GasMeter().(*FlatFeeGasMeter)
-	if !ok {
-		return nil, sdkerrors.ErrLogic.Wrapf("gas meter is not a FlatFeeGasMeter: %T", ctx.GasMeter())
+	if rv, ok := ctx.GasMeter().(*FlatFeeGasMeter); ok {
+		return rv, nil
 	}
-	return rv, nil
+	// In some cases, the SDK auto-replaces the gas meter in the context.
+	// For those situations, we grab the backup flatfees gas meter and return that.
+	if rv := getFlatFeeGasMeterBackup(ctx); rv != nil {
+		return rv, nil
+	}
+	return nil, sdkerrors.ErrLogic.Wrapf("gas meter is not a FlatFeeGasMeter: %T", ctx.GasMeter())
 }
 
 // ConsumeMsg will get the FlatFeeGasMeter from the context and call ConsumeMsg with the provided msg.

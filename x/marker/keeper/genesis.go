@@ -39,8 +39,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 					panic(err)
 				}
 			}
-
-			k.SetMarker(ctx, &data.Markers[i])
+			if err := k.SetMarker(ctx, &data.Markers[i]); err != nil {
+				panic(err)
+			}
 		}
 	}
 

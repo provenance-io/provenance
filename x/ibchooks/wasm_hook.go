@@ -16,6 +16,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
+	"github.com/provenance-io/provenance/internal/ibc"
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
@@ -389,7 +390,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 
-	success := !IsJSONAckError(acknowledgement)
+	success := !ibc.IsAckError(acknowledgement)
 
 	// Notify the sender that the ack has been received
 	ackAsJSON, err := json.Marshal(acknowledgement)
@@ -473,16 +474,6 @@ func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...st
 	})
 
 	return channeltypes.NewErrorAcknowledgement(err)
-}
-
-// IsJSONAckError checks an IBC acknowledgement to see if it's an error.
-// This is a replacement for ack.Success() which is currently not working on some circumstances
-func IsJSONAckError(acknowledgement []byte) bool {
-	var ackErr channeltypes.Acknowledgement_Error
-	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
-		return true
-	}
-	return false
 }
 
 // ExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the

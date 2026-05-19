@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	vaulttypes "github.com/provlabs/vault/types"
 
 	circuittypes "cosmossdk.io/x/circuit/types"
