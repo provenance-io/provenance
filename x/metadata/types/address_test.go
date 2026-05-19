@@ -1104,7 +1104,7 @@ func (s *AddressTestSuite) TestScopeMetadataAddress() {
 	require.Equal(t, "8d80b25a-c089-4446-956e-5d08cfe3e1a5", scopeAddrUUID.String())
 
 	_, err = scopeID.SessionUUID()
-	require.Error(t, fmt.Errorf("this metadata addresss does not contain a session uuid"), err)
+	require.EqualError(t, err, fmt.Sprintf("this metadata address (%s) does not contain a session uuid", scopeID))
 
 	// Check the string formatter for the scopeID
 	require.Equal(t, s.scopeBech32, fmt.Sprintf("%s", scopeID))
