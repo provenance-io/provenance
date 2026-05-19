@@ -7918,11 +7918,10 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 				admin, err := sdk.AccAddressFromBech32(tc.withdrawnBy)
 				s.Require().NoError(err, "AccAddressFromBech32(%q)", tc.withdrawnBy)
 				expCalls.SendCoins = []*SendCoinsArgs{{
-					ctxHasQuarantineBypass: tc.expQBypass,
-					ctxTransferAgent:       admin,
-					fromAddr:               exchange.GetMarketAddress(tc.marketID),
-					toAddr:                 tc.toAddr,
-					amt:                    tc.amount,
+					ctxTransferAgent: admin,
+					fromAddr:         exchange.GetMarketAddress(tc.marketID),
+					toAddr:           tc.toAddr,
+					amt:              tc.amount,
 				}}
 			}
 

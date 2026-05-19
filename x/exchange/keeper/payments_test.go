@@ -653,10 +653,6 @@ func (s *TestSuite) TestKeeper_AcceptPayment() {
 				}}
 			}
 
-			for i := range tc.expBankCalls.SendCoins {
-				tc.expBankCalls.SendCoins[i].ctxHasQuarantineBypass = true
-			}
-
 			var expEvents sdk.Events
 			if tc.expEvent {
 				s.Require().NotNil(tc.payment, "tc.payment cannot be nil when tc.expEvent = true")
