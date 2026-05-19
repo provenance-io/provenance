@@ -33,7 +33,6 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // setNewAccount updates the account's number, then stores the account.
@@ -2895,7 +2894,6 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 	// Tests both GetReqAttrBypassAddrs and IsReqAttrBypassAddr.
 	expectedNames := []string{
 		authtypes.FeeCollectorName,
-		quarantine.ModuleName,
 		govtypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.BondedPoolName,

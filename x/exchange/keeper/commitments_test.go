@@ -2448,11 +2448,9 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 			admin, aErr := sdk.AccAddressFromBech32(tc.req.Admin)
 			s.Require().NoError(aErr, "AccAddressFromBech32(tc.req.Admin)")
 			for _, exp := range tc.expBankCalls.SendCoins {
-				exp.ctxHasQuarantineBypass = true
 				exp.ctxTransferAgent = admin
 			}
 			for _, exp := range tc.expBankCalls.InputOutputCoins {
-				exp.ctxHasQuarantineBypass = true
 				exp.ctxTransferAgent = admin
 			}
 

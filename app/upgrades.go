@@ -6,6 +6,7 @@ import (
 
 	vaulttypes "github.com/provlabs/vault/types"
 
+	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -13,10 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
 
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -591,4 +594,44 @@ func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
 		"pb1ue08tptk5rlye5aujd2k3astacnmufqtstn82t", // Matt Conroy.
 	}
 	return foundation, team
+}
+
+func migrateQuarantineRecords(ctx sdk.Context, app *App) error {
+	storeKey := app.GetKey("quarantine")
+	if storeKey == nil {
+		return nil
+	}
+
+	// address+suffix portion only.
+	recordPrefixStore := prefix.NewStore(ctx.KVStore(storeKey), quarantine.RecordPrefix)
+	iter := recordPrefixStore.Iterator(nil, nil)
+	defer iter.Close() //nolint:errcheck
+
+	fundsHolder := authtypes.NewModuleAddress(quarantine.ModuleName)
+
+	for ; iter.Valid(); iter.Next() {
+		fullKey := quarantine.MakeKey(quarantine.RecordPrefix, iter.Key())
+		toAddr, _ := quarantine.ParseRecordKey(fullKey)
+
+		var record quarantine.QuarantineRecord
+		if err := app.appCodec.Unmarshal(iter.Value(), &record); err != nil {
+			ctx.Logger().Error("migrateQuarantineRecords: unmarshal failed",
+				"key", fullKey, "error", err)
+			continue
+		}
+
+		if len(record.UnacceptedFromAddresses) == 0 || record.Coins.IsZero() {
+			continue
+		}
+
+		if err := app.BankKeeper.SendCoins(ctx, fundsHolder, toAddr, record.Coins); err != nil {
+			return fmt.Errorf("migrateQuarantineRecords: send to %s failed: %w",
+				toAddr.String(), err)
+		}
+
+		ctx.Logger().Info("migrateQuarantineRecords: returned quarantined funds",
+			"to", toAddr.String(), "coins", record.Coins.String())
+	}
+
+	return nil
 }

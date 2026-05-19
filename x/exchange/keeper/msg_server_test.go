@@ -240,12 +240,6 @@ func (s *TestSuite) requireSetAttr(addr sdk.AccAddress, name string, owner sdk.A
 	s.Require().NoError(err, "SetAttribute(%s, %s)", name, s.getAddrName(owner))
 }
 
-// requireQuarantineOptIn opts an address into quarantine, requiring it to not error.
-func (s *TestSuite) requireQuarantineOptIn(addr sdk.AccAddress) {
-	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
-	s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
-}
-
 // requireSanctionAddress sanctions an address, requiring it to not error.
 func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
 	err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
@@ -1246,8 +1240,6 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				}))
 				s.requireAddHold(s.addr1, "50pear", 54)
 
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillBidsRequest{
 				Seller:      s.addr2.String(),
@@ -1304,8 +1296,6 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				}))
 				s.requireAddHold(s.addr1, "50pear", 54)
 
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillBidsRequest{
 				Seller:      s.addr2.String(),
@@ -1736,8 +1726,6 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				}))
 				s.requireAddHold(s.addr2, "10apple", 54)
 
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillAsksRequest{
 				Buyer:       s.addr1.String(),
@@ -1794,8 +1782,6 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				}))
 				s.requireAddHold(s.addr2, "10apple", 54)
 
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillAsksRequest{
 				Buyer:       s.addr1.String(),
@@ -2636,11 +2622,6 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}))
 				s.requireAddHold(s.addr4, "85pear", 4444)
 
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
-				s.requireQuarantineOptIn(s.addr3)
-				s.requireQuarantineOptIn(s.addr4)
-				s.requireQuarantineOptIn(s.addr5)
 			},
 			msg: exchange.MsgMarketSettleRequest{
 				Admin:       s.addr5.String(),
