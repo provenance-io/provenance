@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"bytes"
+	"context"
 	"strconv"
 	"strings"
 	"testing"
@@ -1796,25 +1797,32 @@ func TestGetFlatFeeGasMeter(t *testing.T) {
 		require.NoError(t, err, "ParseCoinNormalized(%q)", coins)
 		return rv
 	}
+	newCtx := func() sdk.Context {
+		return sdk.Context{}.WithContext(context.Background())
+	}
 
 	tests := []struct {
 		name   string
+		ctx    sdk.Context
 		ctxGM  storetypes.GasMeter
 		expGM  *FlatFeeGasMeter
 		expErr string
 	}{
 		{
 			name:   "nil gas meter",
+			ctx:    newCtx(),
 			ctxGM:  nil,
 			expErr: "gas meter is not a FlatFeeGasMeter: <nil>: internal logic error",
 		},
 		{
 			name:   "not a flat-fee gas meter",
+			ctx:    newCtx(),
 			ctxGM:  NewMockGasMeter(),
 			expErr: "gas meter is not a FlatFeeGasMeter: *antewrapper.MockGasMeter: internal logic error",
 		},
 		{
 			name: "flat-fee gas meter",
+			ctx:  newCtx(),
 			ctxGM: &FlatFeeGasMeter{
 				upFrontCost:   cz("12nhash"),
 				onSuccessCost: cz("48nhash"),
@@ -1828,11 +1836,29 @@ func TestGetFlatFeeGasMeter(t *testing.T) {
 				msgTypeURLs:   []string{"abc", "xyz"},
 			},
 		},
+		{
+			name: "not a flat-fee gas meter, but backup is set",
+			ctx: SetFlatFeeGasMeterBackup(newCtx(),
+				&FlatFeeGasMeter{
+					upFrontCost:   cz("13nhash"),
+					onSuccessCost: cz("49nhash"),
+					addedFees:     cz("13usdc"),
+					msgTypeURLs:   []string{"def", "uvw"},
+				},
+			),
+			ctxGM: NewMockGasMeter(),
+			expGM: &FlatFeeGasMeter{
+				upFrontCost:   cz("13nhash"),
+				onSuccessCost: cz("49nhash"),
+				addedFees:     cz("13usdc"),
+				msgTypeURLs:   []string{"def", "uvw"},
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			ctx := tc.ctx.WithGasMeter(tc.ctxGM)
 
 			var actGM *FlatFeeGasMeter
 			var err error
@@ -1958,7 +1984,7 @@ func TestConsumeMsg(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			ctx := sdk.Context{}.WithContext(context.Background()).WithGasMeter(tc.ctxGM)
 			testFunc := func() {
 				ConsumeMsg(ctx, tc.msgs...)
 			}
@@ -2022,7 +2048,7 @@ func TestConsumeAdditionalFee(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			ctx := sdk.Context{}.WithContext(context.Background()).WithGasMeter(tc.ctxGM)
 			testFunc := func() {
 				ConsumeAdditionalFee(ctx, tc.fee)
 			}
@@ -2116,7 +2142,7 @@ func TestConsumeAdditionalFlatFee(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.Context{}.WithGasMeter(tc.ctxGM)
+			ctx := sdk.Context{}.WithContext(context.Background()).WithGasMeter(tc.ctxGM)
 			testFunc := func() {
 				ConsumeAdditionalFlatFee(ctx, tc.amt)
 			}

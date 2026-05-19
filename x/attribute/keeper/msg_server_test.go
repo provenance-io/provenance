@@ -6,9 +6,10 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -114,7 +115,7 @@ func (s *MsgServerTestSuite) TestUpdateAttributeExpiration() {
 		{
 			name:     "Should fail, block time is ahead of expiration time",
 			msg:      *types.NewMsgUpdateAttributeExpirationRequest("", "", "", &twoHoursInPast, s.owner1Addr),
-			errorMsg: fmt.Sprintf("attribute expiration date %v is before block time of %v", twoHoursInPast.UTC(), s.ctx.BlockTime().UTC()),
+			errorMsg: fmt.Sprintf("attribute expiration date %v is not after block time of %v", twoHoursInPast.UTC(), s.ctx.BlockTime().UTC()),
 		},
 		{
 			name: "Should succeed",
