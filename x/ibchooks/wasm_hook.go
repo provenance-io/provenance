@@ -16,6 +16,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
+	"github.com/provenance-io/provenance/internal/ibc"
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
@@ -94,7 +95,10 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, chann
 	}
 
 	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
-	denom := MustExtractDenomFromPacketOnRecv(packet)
+	denom, err := ExtractDenomFromPacketOnRecv(packet)
+	if err != nil {
+		return NewEmitErrorAcknowledgement(ctx, types.ErrInvalidPacket, err.Error())
+	}
 	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
 
 	// Execute the contract
@@ -386,7 +390,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 
-	success := !IsJSONAckError(acknowledgement)
+	success := !ibc.IsAckError(acknowledgement)
 
 	// Notify the sender that the ack has been received
 	ackAsJSON, err := json.Marshal(acknowledgement)
@@ -472,23 +476,13 @@ func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...st
 	return channeltypes.NewErrorAcknowledgement(err)
 }
 
-// IsJSONAckError checks an IBC acknowledgement to see if it's an error.
-// This is a replacement for ack.Success() which is currently not working on some circumstances
-func IsJSONAckError(acknowledgement []byte) bool {
-	var ackErr channeltypes.Acknowledgement_Error
-	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
-		return true
-	}
-	return false
-}
-
-// MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
+// ExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
 // denom as represented in the local chain.
 // If the data cannot be unmarshalled this function will panic.
-func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
+func ExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) (string, error) {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-		panic("unable to unmarshal ICS20 packet data")
+		return "", fmt.Errorf("unable to unmarshal ICS20 packet data: %w", err)
 	}
 
 	denom := transfertypes.ExtractDenomFromPath(data.Denom)
@@ -496,12 +490,12 @@ func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 		// Token originally came from this chain; strip the source hop to recover the local denom.
 		denom.Trace = denom.Trace[1:]
 		if denom.IsNative() {
-			return denom.Base
+			return denom.Base, nil
 		}
-		return denom.IBCDenom()
+		return denom.IBCDenom(), nil
 	}
 	// Token came from the source chain; prepend the dest port/channel hop.
 	return transfertypes.NewDenom(denom.Base,
 		append([]transfertypes.Hop{transfertypes.NewHop(packet.GetDestPort(), packet.GetDestChannel())}, denom.Trace...)...,
-	).IBCDenom()
+	).IBCDenom(), nil
 }

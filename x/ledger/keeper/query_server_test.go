@@ -54,6 +54,7 @@ func (s *TestSuite) TestLedgerQueryServer_LedgerAndEntries() {
 	s.Require().NoError(err)
 	s.Require().NotNil(lresp)
 	s.Require().NotNil(lresp.Ledger)
+	s.Require().Equal(s.validLedgerClass.LedgerClassId, lresp.Ledger.LedgerClassId, "Ledger.LedgerClassId")
 
 	// Query Ledgers
 	lsresp, err := qs.Ledgers(s.ctx, &ledger.QueryLedgersRequest{Pagination: &query.PageRequest{CountTotal: true}})
