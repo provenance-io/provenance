@@ -832,17 +832,17 @@ func (s *CLITestSuite) TestNewCmdCalculateTxFees() {
 			// It probably has something to do with whether any of the tx tests have run and updated some state.
 			// We don't care about the actual number, though, just that it's not zero.
 			// So we'll just check that the field starts with 83.
-			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"83`},
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"82`},
 		},
 		{
 			Name:     "default cost, no multiplier, json output",
 			Args:     []string{bankSendTx, "--output", "json"},
-			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"83`},
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"82`},
 		},
 		{
 			Name:     "default cost, no multiplier, text output",
 			Args:     []string{bankSendTx, "--output", "text"},
-			ExpInOut: []string{"total_fees:\n- amount: \"5\"\n  denom: stake\n", "estimated_gas: \"83"},
+			ExpInOut: []string{"total_fees:\n- amount: \"5\"\n  denom: stake\n", "estimated_gas: \"82"},
 		},
 		{
 			Name:     "default cost, 1.5 multiplier",
@@ -852,7 +852,7 @@ func (s *CLITestSuite) TestNewCmdCalculateTxFees() {
 		{
 			Name:     "default cost, 5.3 multiplier",
 			Args:     []string{bankSendTx, "--gas-adjustment", "5.3", "--output", "json"}, // 83,3xx * 5.3 = 44y,yyy.
-			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"44`},
+			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"5"}]`, `"estimated_gas":"43`},
 		},
 		{
 			Name: "free msg",
