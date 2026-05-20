@@ -36,7 +36,10 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 
 	for _, event := range abciEventHistory.GetABCIEventHistory() {
 		matched := k.getMatchingTriggersUntil(ctx, event.GetType(), func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
-			if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
+			// Only suppress triggers that were already matched.
+			// In map[uint64]bool, missing keys default to false, so a trigger is
+			// considered detected only after we explicitly set it to true.
+			if detectedTriggers[trigger.Id] {
 				return false
 			}
 			txEvent, isType := triggerEvent.(*types.TransactionEvent)
@@ -44,12 +47,15 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 				return false
 			}
 			detected := txEvent.Matches(event)
-			detectedTriggers[trigger.Id] = detected
+			//  only write true into the map on a successful match.
+			if detected {
+				detectedTriggers[trigger.Id] = true
+			}
 			return detected
 		}, terminator)
 		triggers = append(triggers, matched...)
 	}
-	return
+	return triggers
 }
 
 // detectBlockHeightEvents Detects triggers that have been activated by block height events.
