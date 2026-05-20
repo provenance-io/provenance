@@ -891,9 +891,10 @@ func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.Marke
 // accountControlsAllSupply return true if the caller account address possess 100% of the total supply of a marker.
 // This check is used to determine if an account should be allowed to perform defacto admin operations on a marker.
 func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress, m types.MarkerAccountI) bool {
-	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
-	// the operations as an admin on the marker.
-	supply := m.GetSupply()
+	// Use the live circulating supply from the bank keeper instead of m.GetSupply().
+	// m.GetSupply() can become outdated after minting, which could incorrectly allow
+	// someone with only part of the supply to be treated as the full owner.
+	supply := k.bankKeeper.GetSupply(ctx, m.GetDenom())
 	if supply.Amount.IsNil() || supply.Amount.IsZero() {
 		return false
 	}
