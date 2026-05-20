@@ -3181,12 +3181,6 @@ func TestAccountControlsAllSupplyUsesLiveBankSupply(t *testing.T) {
 	))
 	require.NoError(t, err, "withdraw 100 testcoin1 to partialHolder")
 
-	// Manager mints 100 more testcoin1 to another holder.
-	// After this:
-	//   live bank supply          = 200 testcoin1  (correctly updated)
-	//   marker stored supply      = 100 testcoin1  (NOT updated for non-fixed markers)
-	//   partialHolder's balance   = 100 testcoin1  (100/200 = 50% of live supply)
-	//   otherHolder's balance     = 100 testcoin1
 	_, err = server.Mint(ctx, types.NewMsgMintRequest(manager, sdk.NewInt64Coin(denom, 100), otherHolder))
 	require.NoError(t, err, "manager mints 100 more testcoin1")
 
