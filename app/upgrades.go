@@ -538,6 +538,7 @@ func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
 	return foundation, team
 }
 
+// migrateQuarantineRecords returns quarantined funds from the module account back to recipient addresses during migration.
 func migrateQuarantineRecords(ctx sdk.Context, app *App) error {
 	storeKey := app.GetKey("quarantine")
 	if storeKey == nil {
