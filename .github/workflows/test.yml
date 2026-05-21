@@ -48,16 +48,12 @@ jobs:
         # So we'll split everything else 3 ways, and make those part 03 and 04
         run: |
           grep -vF \
-            -e 'github.com/provenance-io/provenance/x/quarantine/simulation' \
             -e 'github.com/provenance-io/provenance/x/sanction/simulation' \
             pkgs.txt > pkgs.txt.tmp
           split -d -n l/3 pkgs.txt.tmp pkgs.txt.part.
           printf '%s\n' \
-            'github.com/provenance-io/provenance/x/quarantine/simulation' \
-            >> pkgs.txt.part.03
-          printf '%s\n' \
             'github.com/provenance-io/provenance/x/sanction/simulation' \
-            >> pkgs.txt.part.04
+            >> pkgs.txt.part.03
       - uses: actions/upload-artifact@v7
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
@@ -74,10 +70,6 @@ jobs:
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.03"
           path: ./pkgs.txt.part.03
-      - uses: actions/upload-artifact@v7
-        with:
-          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.04"
-          path: ./pkgs.txt.part.04
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
@@ -91,7 +83,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ["00", "01", "02", "03", "04"]
+        part: ["00", "01", "02", "03"]
     runs-on: ubuntu-latest
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
@@ -182,7 +174,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ["00", "01", "02", "03", "04"]
+        part: ["00", "01", "02", "03"]
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
