@@ -539,6 +539,8 @@ func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
 }
 
 // migrateQuarantineRecords returns quarantined funds from the module account back to recipient addresses during migration.
+//
+//nolint:unused // reserved for future migration
 func migrateQuarantineRecords(ctx sdk.Context, app *App) error {
 	storeKey := app.GetKey("quarantine")
 	if storeKey == nil {
@@ -548,7 +550,7 @@ func migrateQuarantineRecords(ctx sdk.Context, app *App) error {
 	// address+suffix portion only.
 	recordPrefixStore := prefix.NewStore(ctx.KVStore(storeKey), quarantine.RecordPrefix)
 	iter := recordPrefixStore.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck
+	defer iter.Close() //nolint:errcheck // iterator close error is not actionable
 
 	fundsHolder := authtypes.NewModuleAddress(quarantine.ModuleName)
 

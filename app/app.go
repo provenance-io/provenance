@@ -677,7 +677,6 @@ func New(
 	for mName := range maccPerms {
 		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
 	}
-	unsanctionableAddrs = append(unsanctionableAddrs)
 	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
 		app.BankKeeper, &app.GovKeeper,
 		govAuthority, unsanctionableAddrs)
