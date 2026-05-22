@@ -600,41 +600,59 @@ func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
 //
 //nolint:unused // reserved for future migration
 func migrateQuarantineRecords(ctx sdk.Context, app *App) error {
-	storeKey := app.GetKey("quarantine")
+	ctx.Logger().Info("Migrating quarantine records: returning quarantined funds to recipients.")
+
+	storeKey := app.GetKey(quarantine.StoreKey)
 	if storeKey == nil {
+		ctx.Logger().Info("Quarantine store key not found; skipping migration.")
 		return nil
 	}
 
-	// address+suffix portion only.
+	fundsHolder := authtypes.NewModuleAddress(quarantine.ModuleName)
 	recordPrefixStore := prefix.NewStore(ctx.KVStore(storeKey), quarantine.RecordPrefix)
 	iter := recordPrefixStore.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck // iterator close error is not actionable
+	defer iter.Close() //nolint:errcheck // iterator close error is not actionable.
 
-	fundsHolder := authtypes.NewModuleAddress(quarantine.ModuleName)
+	var successCount, skipCount, failCount int
 
 	for ; iter.Valid(); iter.Next() {
 		fullKey := quarantine.MakeKey(quarantine.RecordPrefix, iter.Key())
-		toAddr, _ := quarantine.ParseRecordKey(fullKey)
+		toAddr, err := quarantine.ParseRecordKey(fullKey)
+		if err != nil {
+			ctx.Logger().Error("migrateQuarantineRecords: failed to parse record key",
+				"key", fmt.Sprintf("%X", fullKey), "error", err)
+			skipCount++
+			continue
+		}
 
 		var record quarantine.QuarantineRecord
 		if err := app.appCodec.Unmarshal(iter.Value(), &record); err != nil {
-			ctx.Logger().Error("migrateQuarantineRecords: unmarshal failed",
-				"key", fullKey, "error", err)
+			ctx.Logger().Error("migrateQuarantineRecords: failed to unmarshal record",
+				"key", fmt.Sprintf("%X", fullKey), "error", err)
+			skipCount++
 			continue
 		}
 
 		if len(record.UnacceptedFromAddresses) == 0 || record.Coins.IsZero() {
+			skipCount++
 			continue
 		}
 
 		if err := app.BankKeeper.SendCoins(ctx, fundsHolder, toAddr, record.Coins); err != nil {
-			return fmt.Errorf("migrateQuarantineRecords: send to %s failed: %w",
-				toAddr.String(), err)
+			// Log and continue so remaining recipients still get their funds.
+			// A single failed send must not block all subsequent refunds.
+			ctx.Logger().Error("migrateQuarantineRecords: failed to send quarantined funds",
+				"to", toAddr.String(), "coins", record.Coins.String(), "error", err)
+			failCount++
+			continue
 		}
 
 		ctx.Logger().Info("migrateQuarantineRecords: returned quarantined funds",
 			"to", toAddr.String(), "coins", record.Coins.String())
+		successCount++
 	}
 
+	ctx.Logger().Info("Quarantine records migration complete.",
+		"records_migrated", successCount, "records_skipped", skipCount, "records_failed", failCount)
 	return nil
 }
