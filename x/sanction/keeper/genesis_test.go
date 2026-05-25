@@ -532,7 +532,7 @@ func (s *GenesisTestSuite) TestKeeper_ExportGenesis() {
 
 		store := s.GetStore()
 		s.Require().NotPanics(func() {
-			s.Keeper.DeleteParam(store, keeper.ParamNameImmediateUnsanctionMinDeposit)
+			s.Keeper.DeleteParam(s.SdkCtx, keeper.ParamNameImmediateUnsanctionMinDeposit)
 		}, "deleting the ParamNameImmediateUnsanctionMinDeposit param entry")
 		// Note: Not using UnsanctionAddresses here since I want to keep the temp entries for these addrs.
 		s.Require().NotPanics(func() {
