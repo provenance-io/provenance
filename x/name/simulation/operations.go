@@ -177,7 +177,7 @@ func Dispatch(
 // An error is only returned if there was a problem iterating records.
 func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account, segmentsMin, segmentsMax int) (types.NameRecord, simtypes.Account, bool, error) {
 	var records []types.NameRecord
-	err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
+	err := k.IterateRecords(ctx, func(record types.NameRecord) error {
 		segments := strings.Count(record.Name, ".") + 1
 		if segmentsMin <= segments && segments <= segmentsMax {
 			records = append(records, record)
