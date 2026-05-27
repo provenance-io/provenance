@@ -1,3 +1,18 @@
+## [v1.29.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.29.0-rc2) 2026-05-27
+
+Provenance Blockchain version `v1.29.0` contains some exciting new features, improvements, and bug fixes.
+
+### Bug Fixes
+
+* Revert PR 2728 and make the wasm grpc querier return a ResponseQuery again [PR 2741](https://github.com/provenance-io/provenance/pull/2741).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.29.0-rc1...v1.29.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.28.0...v1.29.0-rc2
+
+---
+
 ## [v1.29.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.29.0-rc1) 2026-05-21
 
 Provenance Blockchain version `v1.29.0` contains some exciting new features, improvements, and bug fixes.
@@ -25,7 +40,7 @@ Provenance Blockchain version `v1.29.0` contains some exciting new features, imp
 * Fix the wasm snapshotter so that statesync works again [PR 2725](https://github.com/provenance-io/provenance/pull/2725).
 * Properly handle an IBC v2 error acknowledgment [PR 2726](https://github.com/provenance-io/provenance/pull/2726).
 * Store a backup flatfees gas meter in the context [PR 2727](https://github.com/provenance-io/provenance/pull/2727).
-* Make the Wasm GRPC Querier return the correct response types [PR 2728](https://github.com/provenance-io/provenance/pull/2728).
+* ~~Make the Wasm GRPC Querier return the correct response types [PR 2728](https://github.com/provenance-io/provenance/pull/2728).~~
 * Attributes: Truncate the expiration date to the second [PR 2729](https://github.com/provenance-io/provenance/pull/2729).
 * Attributes: Include the current block second when finding expired attributes to delete [PR 2729](https://github.com/provenance-io/provenance/pull/2729).
 * Fix event trigger processing by correcting event scanning and ensuring proper queuing of matching events for trigger execution [PR 2733](https://github.com/provenance-io/provenance/pull/2733).
