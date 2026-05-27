@@ -105,7 +105,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"edelweiss-rc1": {
+	"edelweiss-rc1": { // v1.29.0-rc1
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -125,7 +125,8 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"edelweiss": {
+	"edelweiss-rc2": {}, // Empty upgrade for v1.29.0-rc2
+	"edelweiss": { // v1.29.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
