@@ -1,3 +1,4 @@
+//nolint:staticcheck // SA1019: quarantine query API is deprecated; CLI commands retained for compatibility.
 package cli
 
 import (

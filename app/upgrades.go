@@ -594,6 +594,8 @@ func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
 }
 
 // migrateQuarantineRecords releases pending quarantined funds to recipients during upgrade.
+//
+//nolint:unused // reserved for future migration
 func migrateQuarantineRecords(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Migrating quarantine records: returning quarantined funds to recipients.")
 	return app.QuarantineKeeper.ReleaseAllQuarantinedFunds(ctx, app.BankKeeper)

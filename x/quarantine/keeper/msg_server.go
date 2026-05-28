@@ -8,7 +8,7 @@ import (
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
-var _ quarantine.MsgServer = Keeper{}
+var _ quarantine.MsgServer = Keeper{} //nolint:staticcheck // SA1019: quarantine query API is deprecated; msg_server retained for compatibility.
 
 // errQuarantineRemoved is returned by all msg and query handlers.
 // The quarantine module has been deactivated and its endpoints are no longer available.
