@@ -14,6 +14,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // getLastAutoMarketID gets the last auto-selected market id.
@@ -1554,7 +1555,9 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 	}
 	marketAddr := exchange.GetMarketAddress(marketID)
 	xferCtx := markertypes.WithTransferAgents(ctx, admin)
-
+	if toAddr.Equals(admin) {
+		xferCtx = quarantine.WithBypass(xferCtx)
+	}
 	err = k.bankKeeper.SendCoins(xferCtx, marketAddr, toAddr, amount)
 	if err != nil {
 		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)

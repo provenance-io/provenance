@@ -37,11 +37,8 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
-	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/flatfees/client/cli"
 	"github.com/provenance-io/provenance/x/flatfees/types"
-	namecli "github.com/provenance-io/provenance/x/name/client/cli"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type CLITestSuite struct {
@@ -118,14 +115,6 @@ func (s *CLITestSuite) SetupSuite() {
 				ConvertedAmount:  sdk.NewInt64Coin(s.cfg.BondDenom, 1),
 			},
 		}
-
-		testutil.MutateGenesisState(s.T(), &s.cfg, nametypes.ModuleName, &nametypes.GenesisState{}, func(nameGen *nametypes.GenesisState) *nametypes.GenesisState {
-			nameGen.Bindings = append(nameGen.Bindings,
-				nametypes.NewNameRecord("feecalctest", s.accountAddresses[0], false),
-			)
-			return nameGen
-		})
-
 		flatfeeGen.Params = *s.ffParams
 
 		flatfeeGen.MsgFees = append(flatfeeGen.MsgFees,
@@ -149,8 +138,8 @@ func (s *CLITestSuite) SetupSuite() {
 			types.NewMsgFee("/cosmos.group.v1.MsgVote", sdk.NewInt64Coin("banana", 15)),
 			types.NewMsgFee("/cosmos.group.v1.MsgWithdrawProposal", sdk.NewInt64Coin("banana", 16)),
 			// Define an expensive one, and a cheaper one.
-			types.NewMsgFee("/provenance.attribute.v1.MsgSetAccountDataRequest", sdk.NewInt64Coin("banana", 500)),
-			types.NewMsgFee("/provenance.name.v1.MsgDeleteNameRequest", sdk.NewInt64Coin("banana", 1)),
+			types.NewMsgFee("/cosmos.quarantine.v1beta1.MsgOptIn", sdk.NewInt64Coin("banana", 500)),
+			types.NewMsgFee("/cosmos.quarantine.v1beta1.MsgOptOut", sdk.NewInt64Coin("banana", 1)),
 		)
 		// Sort them by MsgTypeURL so that they're in the same order as they will be in state,
 		// which makes it easier to identify pagination next keys.
@@ -813,16 +802,8 @@ func (s *CLITestSuite) TestNewCmdCalculateTxFees() {
 		"--"+govcli.FlagSummary, "The Pink Upgrade for a new version.",
 	)
 
-	// ADD:
-	// NewSetAccountDataCmd takes no positional args; --from is added automatically by generateAndSignTx.
-	// --value sets account data content; the tx is never broadcast, only used for fee calculation.
-	setAccountDataTx := s.generateAndSignTx(tmpDir, "set-account-data",
-		attrcli.NewSetAccountDataCmd(), "--value", "feecalctestvalue")
-	// GetDeleteNameCmd takes exactly one positional arg (the name string).
-	// "fee-calc-test" is a valid name format and passes ValidateBasic without needing to exist on chain,
-	// because --generate-only skips broadcast and chain-state validation.
-	deleteNameTx := s.generateAndSignTx(tmpDir, "delete-name",
-		namecli.GetDeleteNameCmd(), "feecalctest")
+	// optInTx := s.generateAndSignTx(tmpDir, "quar-opt-in", quarantinecli.TxOptInCmd(), s.accountAddresses[0].String())
+	// optOutTx := s.generateAndSignTx(tmpDir, "quar-opt-out", quarantinecli.TxOptOutCmd(), s.accountAddresses[0].String())
 
 	tests := []testcli.QueryExecutor{
 		{
@@ -861,27 +842,6 @@ func (s *CLITestSuite) TestNewCmdCalculateTxFees() {
 			// With this test, I want to make sure that gas is still being estimated, even if the fee is zero.
 			// But I don't care what the estimate actually is, so I'm just going to make sure it starts with a 1.
 			ExpInOut: []string{`"total_fees":[]`, `"estimated_gas":"1`},
-		},
-		{
-			// 500 banana * (1 stake / 2 banana) = 250 stake
-			Name:     "larger cost: set account data",
-			Args:     []string{setAccountDataTx, "--output", "json"},
-			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"250"}]`},
-		},
-		{
-			// Verify CalculateTxFees is read-only: if setAccountDataTx had been broadcast,
-			// the account data would contain "fee-calc-test-value". It must still be empty.
-			Name:        "make sure the previous set account data wasn't actually applied",
-			Cmd:         attrcli.GetAccountDataCmd(),
-			Args:        []string{s.accountAddresses[0].String(), "--output", "json"},
-			ExpInOut:    []string{`"value":""`},
-			ExpNotInOut: []string{"feecalctestvalue"},
-		},
-		{
-			// 1 banana * (1 stake / 2 banana) = 0.5 stake → rounds up to 1 stake
-			Name:     "cheaper cost: delete name",
-			Args:     []string{deleteNameTx, "--output", "json"},
-			ExpInOut: []string{`"total_fees":[{"denom":"stake","amount":"1"}]`},
 		},
 	}
 

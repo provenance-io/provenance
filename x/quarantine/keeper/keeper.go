@@ -23,18 +23,15 @@ type Keeper struct {
 	fundsHolder sdk.AccAddress
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper quarantine.BankKeeper, fundsHolder sdk.AccAddress) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, fundsHolder sdk.AccAddress) Keeper {
 	if len(fundsHolder) == 0 {
 		fundsHolder = authtypes.NewModuleAddress(quarantine.ModuleName)
 	}
-	rv := Keeper{
+	return Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
-		bankKeeper:  bankKeeper,
 		fundsHolder: fundsHolder,
 	}
-	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
-	return rv
 }
 
 // GetFundsHolder returns the account address that holds quarantined funds.
@@ -421,4 +418,49 @@ func (k Keeper) deleteQuarantineRecordSuffixIndexes(store storetypes.KVStore, to
 		ind.Simplify(fromAddr, suffix)
 		k.setQuarantineRecordSuffixIndex(store, key, ind)
 	}
+}
+
+// ReleaseAllQuarantinedFunds releases all quarantined funds to their intended recipients.
+// It iterates every quarantined account, collects the pending (unaccepted) coins across
+// all their records, and sends them directly to the recipient via the provided bankKeeper.
+// This is called during the upgrade migration when the quarantine module is being deactivated.
+func (k Keeper) ReleaseAllQuarantinedFunds(ctx sdk.Context, bankKeeper quarantine.BankKeeper) error {
+	ctx.Logger().Info("Releasing all quarantined funds.")
+	var successCount, skipCount, failCount int
+
+	k.IterateQuarantinedAccounts(ctx, func(toAddr sdk.AccAddress) bool {
+		// Collect all pending (unaccepted) coins for this recipient across all records.
+		var pendingCoins sdk.Coins
+		k.IterateQuarantineRecords(ctx, toAddr, func(_, _ sdk.AccAddress, record *quarantine.QuarantineRecord) bool {
+			if len(record.UnacceptedFromAddresses) > 0 && !record.Coins.IsZero() {
+				pendingCoins = pendingCoins.Add(record.Coins...)
+			}
+			return false
+		})
+
+		if pendingCoins.IsZero() {
+			skipCount++
+			return false
+		}
+
+		if err := bankKeeper.SendCoins(quarantine.WithBypass(ctx), k.fundsHolder, toAddr, pendingCoins); err != nil {
+			ctx.Logger().Error("ReleaseAllQuarantinedFunds: failed to send funds",
+				"to", toAddr.String(), "coins", pendingCoins.String(), "error", err)
+			failCount++
+			return false
+		}
+
+		ctx.Logger().Info("ReleaseAllQuarantinedFunds: released funds",
+			"to", toAddr.String(), "coins", pendingCoins.String())
+		successCount++
+		return false
+	})
+
+	ctx.Logger().Info("Quarantine funds release complete.",
+		"accounts_released", successCount, "accounts_skipped", skipCount, "accounts_failed", failCount)
+
+	if failCount > 0 {
+		return fmt.Errorf("ReleaseAllQuarantinedFunds: failed to release quarantined funds for %d account(s)", failCount)
+	}
+	return nil
 }
