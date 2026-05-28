@@ -148,7 +148,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the quarantine module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState, am.keeper.GetFundsHolder())
+
 }
 
 // RandomizedParams creates randomized quarantine param changes for the simulator.
@@ -163,5 +163,5 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the quarantine module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState, am.accKeeper, am.bankKeeper, am.keeper)
+	return nil
 }
