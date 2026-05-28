@@ -1,3 +1,4 @@
+//nolint:staticcheck // SA1019: quarantine grpc API is deprecated; retained for compatibility.
 package keeper
 
 import (

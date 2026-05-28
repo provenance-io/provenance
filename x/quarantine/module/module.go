@@ -66,6 +66,8 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the quarantine module.
+//
+//nolint:staticcheck // SA1019: module API is deprecated.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
 	if err := quarantine.RegisterQueryHandlerClient(context.Background(), mux, quarantine.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
@@ -130,6 +132,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // RegisterServices registers a gRPC query service to respond to the quarantine-specific gRPC queries.
+//
+//nolint:staticcheck // SA1019: quarantine API is deprecated.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	quarantine.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	quarantine.RegisterQueryServer(cfg.QueryServer(), am.keeper)
