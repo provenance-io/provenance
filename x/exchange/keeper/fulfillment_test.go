@@ -361,8 +361,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -387,8 +387,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -418,11 +418,12 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
+						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("2fig")},
 							{Address: s.addr4.String(), Coins: s.coins("1plum")},
@@ -459,9 +460,9 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
-					{fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: false, fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -499,8 +500,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -537,8 +538,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -568,8 +569,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -600,8 +601,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("184467440737095516150apple")},
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("184467440737095516150apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expLog: []string{
@@ -633,8 +634,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -682,9 +683,9 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
-					{fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: false, fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
@@ -751,15 +752,15 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr3, s.addr1},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-
-						inputs: []banktypes.Input{{Address: s.addr1.String(), Coins: s.coins("5acorn,18apple")}},
+						ctxHasQuarantineBypass: true,
+						inputs:                 []banktypes.Input{{Address: s.addr1.String(), Coins: s.coins("5acorn,18apple")}},
 						outputs: []banktypes.Output{
 							{Address: s.addr2.String(), Coins: s.coins("5acorn,12apple")},
 							{Address: s.addr3.String(), Coins: s.coins("6apple")},
 						},
 					},
 					{
-
+						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("60plum,50prune")},
 							{Address: s.addr3.String(), Coins: s.coins("33prune")},
@@ -767,7 +768,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 						outputs: []banktypes.Output{{Address: s.addr1.String(), Coins: s.coins("60plum,83prune")}},
 					},
 					{
-
+						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("22fig")},
 							{Address: s.addr1.String(), Coins: s.coins("2plum,5prune")},
@@ -1222,8 +1223,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -1248,8 +1249,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -1280,11 +1281,12 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
+						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("2fig,1plum")},
 							{Address: s.addr4.String(), Coins: s.coins("2fig")},
@@ -1321,9 +1323,9 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
-					{fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{ctxHasQuarantineBypass: false, fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1361,8 +1363,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1399,8 +1401,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1430,8 +1432,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1461,8 +1463,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("184467440737095516150apple")},
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("184467440737095516150apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expLog: []string{
@@ -1494,8 +1496,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1543,9 +1545,9 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
-					{fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{ctxHasQuarantineBypass: false, fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
@@ -1612,7 +1614,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr2, s.addr3},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-
+						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("5acorn,12apple")},
 							{Address: s.addr3.String(), Coins: s.coins("6apple")},
@@ -1620,7 +1622,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 						outputs: []banktypes.Output{{Address: s.addr1.String(), Coins: s.coins("5acorn,18apple")}},
 					},
 					{
-
+						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("143prune")},
 						},
@@ -1630,7 +1632,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 						},
 					},
 					{
-
+						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("22fig,5prune")},
 							{Address: s.addr3.String(), Coins: s.coins("2prune")},
@@ -1925,12 +1927,12 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr1, toAddr: s.addr2, amt: s.coins("4apple")},
-					{fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("16peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr2, amt: s.coins("4apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("16peach")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-
+						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("100fig")},
 							{Address: s.addr2.String(), Coins: s.coins("50grape")},
@@ -1983,8 +1985,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr5, amt: s.coins("5peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr5, amt: s.coins("5peach")},
 				},
 			},
 		},
@@ -2020,8 +2022,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2064,8 +2066,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr3, toAddr: s.addr4, amt: scopeID1.Coins()},
-					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: scopeID1.Coins()},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMDCalls: MetadataCalls{
@@ -2109,8 +2111,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2148,8 +2150,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2188,8 +2190,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("184467440737095516150apple")},
-					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("184467440737095516150apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expLog: []string{"ERR could not record net-asset-value of \"184467440737095516150apple\" at a price of \"5peach\": asset volume greater than max uint64 module=x/exchange"},
@@ -2226,8 +2228,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2278,8 +2280,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("10apple")},
-					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("50peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("10apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("50peach")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
@@ -2352,8 +2354,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr3, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
-					{fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("40peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("40peach")},
 					{fromAddr: s.addr5, toAddr: s.marketAddr1, amt: s.coins("14fig")},
 				},
 			},
@@ -2415,8 +2417,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr3, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
-					{fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("35peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("35peach")},
 					{fromAddr: s.addr3, toAddr: s.marketAddr1, amt: s.coins("14fig")},
 				},
 			},
@@ -2477,13 +2479,13 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr3, s.addr2, s.addr5, s.addr5, s.addr4, s.addr1, s.addr1, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{fromAddr: s.addr1, toAddr: s.addr5, amt: s.coins("25apple")},
-					{fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("40peach")},
-					{fromAddr: s.addr5, toAddr: s.addr1, amt: s.coins("50peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr5, amt: s.coins("25apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("40peach")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr1, amt: s.coins("50peach")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-
+						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr4.String(), Coins: s.coins("75apple")},
 						},
@@ -2494,7 +2496,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 						},
 					},
 					{
-
+						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr3.String(), Coins: s.coins("60peach")},
 						},

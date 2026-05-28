@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 var (
@@ -200,7 +201,7 @@ func (k Keeper) iterate(ctx sdk.Context, keyPrefix []byte, cb func(keySuffix, va
 func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
 	// We bypass the quarantine module here under the assumption that someone creating
 	// an order counts as acceptance of the stuff to receive (that they defined when creating the order).
-	ctx := ctxIn
+	ctx := quarantine.WithBypass(ctxIn)
 	if len(inputs) == 1 && len(outputs) == 1 {
 		// If there's only one of each, we use SendCoins for the nicer events.
 		if !inputs[0].Coins.Equal(outputs[0].Coins) {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -12,12 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
 
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
-	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -538,63 +535,8 @@ func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
 	return foundation, team
 }
 
-// migrateQuarantineRecords returns quarantined funds from the module account back to recipient addresses during migration.
-//
-//nolint:unused // reserved for future migration
+// migrateQuarantineRecords releases pending quarantined funds to recipients during upgrade.
 func migrateQuarantineRecords(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Migrating quarantine records: returning quarantined funds to recipients.")
-
-	storeKey := app.GetKey(quarantine.StoreKey)
-	if storeKey == nil {
-		ctx.Logger().Info("Quarantine store key not found; skipping migration.")
-		return nil
-	}
-
-	fundsHolder := authtypes.NewModuleAddress(quarantine.ModuleName)
-	recordPrefixStore := prefix.NewStore(ctx.KVStore(storeKey), quarantine.RecordPrefix)
-	iter := recordPrefixStore.Iterator(nil, nil)
-	defer iter.Close() //nolint:errcheck // iterator close error is not actionable.
-
-	var successCount, skipCount, failCount int
-
-	for ; iter.Valid(); iter.Next() {
-		fullKey := quarantine.MakeKey(quarantine.RecordPrefix, iter.Key())
-		toAddr, err := quarantine.ParseRecordKey(fullKey)
-		if err != nil {
-			ctx.Logger().Error("migrateQuarantineRecords: failed to parse record key",
-				"key", fmt.Sprintf("%X", fullKey), "error", err)
-			skipCount++
-			continue
-		}
-
-		var record quarantine.QuarantineRecord
-		if err := app.appCodec.Unmarshal(iter.Value(), &record); err != nil {
-			ctx.Logger().Error("migrateQuarantineRecords: failed to unmarshal record",
-				"key", fmt.Sprintf("%X", fullKey), "error", err)
-			skipCount++
-			continue
-		}
-
-		if len(record.UnacceptedFromAddresses) == 0 || record.Coins.IsZero() {
-			skipCount++
-			continue
-		}
-
-		if err := app.BankKeeper.SendCoins(ctx, fundsHolder, toAddr, record.Coins); err != nil {
-			// Log and continue so remaining recipients still get their funds.
-			// A single failed send must not block all subsequent refunds.
-			ctx.Logger().Error("migrateQuarantineRecords: failed to send quarantined funds",
-				"to", toAddr.String(), "coins", record.Coins.String(), "error", err)
-			failCount++
-			continue
-		}
-
-		ctx.Logger().Info("migrateQuarantineRecords: returned quarantined funds",
-			"to", toAddr.String(), "coins", record.Coins.String())
-		successCount++
-	}
-
-	ctx.Logger().Info("Quarantine records migration complete.",
-		"records_migrated", successCount, "records_skipped", skipCount, "records_failed", failCount)
-	return nil
+	return app.QuarantineKeeper.ReleaseAllQuarantinedFunds(ctx, app.BankKeeper)
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // #############################################################################
@@ -267,25 +268,28 @@ type BankCalls struct {
 
 // SendCoinsArgs is a record of a call that is made to SendCoins.
 type SendCoinsArgs struct {
-	ctxTransferAgent sdk.AccAddress
-	fromAddr         sdk.AccAddress
-	toAddr           sdk.AccAddress
-	amt              sdk.Coins
+	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
+	fromAddr               sdk.AccAddress
+	toAddr                 sdk.AccAddress
+	amt                    sdk.Coins
 }
 
 // SendCoinsFromAccountToModuleArgs is a record of a call that is made to SendCoinsFromAccountToModule.
 type SendCoinsFromAccountToModuleArgs struct {
-	ctxTransferAgent sdk.AccAddress
-	senderAddr       sdk.AccAddress
-	recipientModule  string
-	amt              sdk.Coins
+	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
+	senderAddr             sdk.AccAddress
+	recipientModule        string
+	amt                    sdk.Coins
 }
 
 // InputOutputCoinsArgs is a record of a call that is made to InputOutputCoins.
 type InputOutputCoinsArgs struct {
-	ctxTransferAgent sdk.AccAddress
-	inputs           []banktypes.Input
-	outputs          []banktypes.Output
+	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
+	inputs                 []banktypes.Input
+	outputs                []banktypes.Output
 }
 
 // NewMockBankKeeper creates a new empty MockBankKeeper.
@@ -415,9 +419,10 @@ func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
 func NewSendCoinsArgs(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
 	rv := &SendCoinsArgs{
-		fromAddr: fromAddr,
-		toAddr:   toAddr,
-		amt:      amt,
+		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		fromAddr:               fromAddr,
+		toAddr:                 toAddr,
+		amt:                    amt,
 	}
 	xferAgents := markertypes.GetTransferAgents(ctx)
 	if len(xferAgents) > 0 {
@@ -429,16 +434,17 @@ func NewSendCoinsArgs(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt 
 // sendCoinsArgsString creates a string of a SendCoinsArgs
 // substituting the address names as possible.
 func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
-	return fmt.Sprintf("xfer-agent:%q, from:%s, to:%s, amt:%s}",
-		s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.fromAddr), s.getAddrName(a.toAddr), a.amt)
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, from:%s, to:%s, amt:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.fromAddr), s.getAddrName(a.toAddr), a.amt)
 }
 
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
 func NewSendCoinsFromAccountToModuleArgs(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
 	rv := &SendCoinsFromAccountToModuleArgs{
-		senderAddr:      senderAddr,
-		recipientModule: recipientModule,
-		amt:             amt,
+		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		senderAddr:             senderAddr,
+		recipientModule:        recipientModule,
+		amt:                    amt,
 	}
 	xferAgents := markertypes.GetTransferAgents(ctx)
 	if len(xferAgents) > 0 {
@@ -450,15 +456,16 @@ func NewSendCoinsFromAccountToModuleArgs(ctx context.Context, senderAddr sdk.Acc
 // sendCoinsFromAccountToModuleArgsString creates a string of a SendCoinsFromAccountToModuleArgs
 // substituting the address names as possible.
 func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccountToModuleArgs) string {
-	return fmt.Sprintf("xfer-agent:%q, from:%s, to:%s, amt:%s}",
-		s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.senderAddr), a.recipientModule, a.amt)
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, from:%s, to:%s, amt:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.senderAddr), a.recipientModule, a.amt)
 }
 
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
 func NewInputOutputCoinsArgs(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
 	rv := &InputOutputCoinsArgs{
-		inputs:  inputs,
-		outputs: outputs,
+		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		inputs:                 inputs,
+		outputs:                outputs,
 	}
 	xferAgents := markertypes.GetTransferAgents(ctx)
 	if len(xferAgents) > 0 {
@@ -469,8 +476,8 @@ func NewInputOutputCoinsArgs(ctx context.Context, inputs []banktypes.Input, outp
 
 // inputOutputCoinsArgsString creates a string of a InputOutputCoinsArgs substituting the address names as possible.
 func (s *TestSuite) inputOutputCoinsArgsString(a *InputOutputCoinsArgs) string {
-	return fmt.Sprintf("xfer-agent:%q, inputs:%s, outputs:%s}",
-		s.getAddrName(a.ctxTransferAgent), s.inputsString(a.inputs), s.outputsString(a.outputs))
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, inputs:%s, outputs:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.inputsString(a.inputs), s.outputsString(a.outputs))
 }
 
 // inputString creates a string of a banktypes.Input substituting the address names as possible.
