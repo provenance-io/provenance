@@ -13,12 +13,14 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	sdksim "github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/client/cli"
@@ -66,6 +68,8 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the quarantine module.
+//
+//nolint:staticcheck // SA1019: module API is deprecated.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
 	if err := quarantine.RegisterQueryHandlerClient(context.Background(), mux, quarantine.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
@@ -130,6 +134,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // RegisterServices registers a gRPC query service to respond to the quarantine-specific gRPC queries.
+//
+//nolint:staticcheck // SA1019: quarantine API is deprecated.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	quarantine.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	quarantine.RegisterQueryServer(cfg.QueryServer(), am.keeper)
@@ -144,7 +150,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the quarantine module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState, am.keeper.GetFundsHolder())
+
 }
 
 // RandomizedParams creates randomized quarantine param changes for the simulator.
@@ -158,6 +164,39 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the quarantine module operations with their respective weights.
+// WeightedOperations returns no-op weighted operations for the quarantine module.
+// The quarantine module has been deactivated, but we preserve the operation weights
+// to maintain the same random operation distribution as before deactivation.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState, am.accKeeper, am.bankKeeper, am.keeper)
+	var (
+		wMsgOptIn               int
+		wMsgOptOut              int
+		wMsgAccept              int
+		wMsgDecline             int
+		wMsgUpdateAutoResponses int
+	)
+	simState.AppParams.GetOrGenerate(simulation.OpMsgOptIn, &wMsgOptIn, nil,
+		func(_ *rand.Rand) { wMsgOptIn = simulation.WeightMsgOptIn })
+	simState.AppParams.GetOrGenerate(simulation.OpMsgOptOut, &wMsgOptOut, nil,
+		func(_ *rand.Rand) { wMsgOptOut = simulation.WeightMsgOptOut })
+	simState.AppParams.GetOrGenerate(simulation.OpMsgAccept, &wMsgAccept, nil,
+		func(_ *rand.Rand) { wMsgAccept = simulation.WeightMsgAccept })
+	simState.AppParams.GetOrGenerate(simulation.OpMsgDecline, &wMsgDecline, nil,
+		func(_ *rand.Rand) { wMsgDecline = simulation.WeightMsgDecline })
+	simState.AppParams.GetOrGenerate(simulation.OpMsgUpdateAutoResponses, &wMsgUpdateAutoResponses, nil,
+		func(_ *rand.Rand) { wMsgUpdateAutoResponses = simulation.WeightMsgUpdateAutoResponses })
+
+	noOp := func(name string) simtypes.Operation {
+		return func(_ *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simtypes.Account, _ string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+			return simtypes.NoOpMsg(quarantine.ModuleName, name, "quarantine module has been deactivated"), nil, nil
+		}
+	}
+
+	return []simtypes.WeightedOperation{
+		sdksim.NewWeightedOperation(wMsgOptIn, noOp(simulation.TypeMsgOptIn)),
+		sdksim.NewWeightedOperation(wMsgOptOut, noOp(simulation.TypeMsgOptOut)),
+		sdksim.NewWeightedOperation(wMsgAccept, noOp(simulation.TypeMsgAccept)),
+		sdksim.NewWeightedOperation(wMsgDecline, noOp(simulation.TypeMsgDecline)),
+		sdksim.NewWeightedOperation(wMsgUpdateAutoResponses, noOp(simulation.TypeMsgUpdateAutoResponses)),
+	}
 }
