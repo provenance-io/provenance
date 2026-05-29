@@ -109,10 +109,6 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
-      - uses: actions/setup-go@v6
-        if: needs.setup-tests.outputs.should-run
-        with:
-          go-version-file: 'go.mod'
       - uses: actions/download-artifact@v8
         if: needs.setup-tests.outputs.should-run
         with:
