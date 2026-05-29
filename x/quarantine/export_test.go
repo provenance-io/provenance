@@ -5,8 +5,7 @@ package quarantine
 
 // Expose some private functions so that they can be unit tested.
 var (
-	ContainsAddress    = containsAddress
-	FindAddresses      = findAddresses
-	ContainsSuffix     = containsSuffix
-	CreateRecordSuffix = createRecordSuffix
+	ContainsAddress = containsAddress
+	FindAddresses   = findAddresses
+	ContainsSuffix  = containsSuffix
 )
