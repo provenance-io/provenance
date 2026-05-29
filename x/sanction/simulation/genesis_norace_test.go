@@ -45,36 +45,46 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 			}
 			copy(simState.Accounts, accounts)
 
+			// Generate the random genesis state.
 			testRandGen := func() {
 				simulation.RandomizedGenState(&simState)
 			}
 			require.NotPanics(t, testRandGen, "RandomizedGenState")
 
+			// Extract the randomly generated genesis state from the simState.
 			var randomGenState sanction.GenesisState
 			err := simState.Cdc.UnmarshalJSON(simState.GenState[sanction.ModuleName], &randomGenState)
 			require.NoError(t, err, "UnmarshalJSON to sanction.GenesisState")
 
+			// Set the Coins in Params to nil if they're zero/empty.
+			// That's how they'll come back from the export.
 			if randomGenState.Params.ImmediateSanctionMinDeposit.IsZero() {
 				randomGenState.Params.ImmediateSanctionMinDeposit = nil
 			}
 			if randomGenState.Params.ImmediateUnsanctionMinDeposit.IsZero() {
 				randomGenState.Params.ImmediateUnsanctionMinDeposit = nil
 			}
-
+			// Create a new app, so we can init + export.
 			provApp := app.Setup(t)
 			ctx := provApp.BaseApp.NewContext(false)
 
+			// Do the init on the random genesis state.
 			testInit := func() {
 				provApp.SanctionKeeper.InitGenesis(ctx, &randomGenState)
 			}
 			require.NotPanics(t, testInit, "sanction InitGenesis")
 
+			// Export the app's sanction genesis state.
 			var actualGenState *sanction.GenesisState
 			testExport := func() {
 				actualGenState = provApp.SanctionKeeper.ExportGenesis(ctx)
 			}
 			require.NotPanics(t, testExport, "ExportGenesis")
 
+			// Note: The contents of the genesis states is not expected to be in the same order after the init/export.
+			// I could probably go through the trouble of sorting things, but it would either be horribly inefficient or annoyingly complex (probably both).
+			// Primarily, the genesis state uses bech32 encoding for the addresses, but when exported, the entries are sorted based on their byte values.
+			// And sorting by bech32 does not equal sorting by byte values.
 			assert.ElementsMatch(t, randomGenState.SanctionedAddresses, actualGenState.SanctionedAddresses, "SanctionedAddresses, A = expected, B = actual")
 			assert.ElementsMatch(t, randomGenState.TemporaryEntries, actualGenState.TemporaryEntries, "TemporaryEntries, A = expected, B = actual")
 			if !assert.Equal(t, randomGenState.Params, actualGenState.Params, "Params") && randomGenState.Params != nil && actualGenState.Params != nil {
