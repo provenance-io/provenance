@@ -14,7 +14,7 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
-// NewTxCmd is the top-level command for oracle CLI transactions.
+// NewTxCmd is the top-level command for ibcratelimit CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        ibcratelimit.ModuleName,

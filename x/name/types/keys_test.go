@@ -76,7 +76,6 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 		},
 	}
 	for n, tc := range cases {
-		tc := tc
 
 		s.Run(n, func() {
 			key, err := GetNameKeyPrefix(tc.name)

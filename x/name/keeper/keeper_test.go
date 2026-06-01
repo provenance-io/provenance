@@ -212,7 +212,6 @@ func (s *KeeperTestSuite) TestSetName() {
 		},
 	}
 	for n, tc := range cases {
-		tc := tc
 
 		s.Run(n, func() {
 			err := s.app.NameKeeper.SetNameRecord(s.ctx, tc.recordName, tc.accAddr, tc.recordRestrict)
@@ -643,7 +642,6 @@ func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Run(tc.testName, func() {
 			err := s.app.NameKeeper.CreateRootName(s.ctx, tc.name, tc.owner.String(), tc.restricted)

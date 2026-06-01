@@ -10,10 +10,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// MaxEventTagLength is the maximum length that an event tag can have.
-// 100 was chosen because that's what we used for the external ids.
-const MaxEventTagLength = 100
-
 // Validate returns an error if this Commitment is invalid.
 func (c Commitment) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(c.Account); err != nil {
@@ -135,15 +131,6 @@ func (n NetAssetPrice) Validate() error {
 		return fmt.Errorf("invalid price %q: cannot be zero", n.Price)
 	}
 
-	return nil
-}
-
-// ValidateEventTag makes sure an event tag is okay.
-func ValidateEventTag(eventTag string) error {
-	if len(eventTag) > MaxEventTagLength {
-		return fmt.Errorf("invalid event tag %q (length %d): exceeds max length %d",
-			eventTag[:5]+"..."+eventTag[len(eventTag)-5:], len(eventTag), MaxEventTagLength)
-	}
 	return nil
 }
 

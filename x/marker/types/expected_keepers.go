@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
@@ -82,4 +82,9 @@ type IbcTransferMsgServer interface {
 // GroupChecker defines the functionality for checking if an account is part of a group.
 type GroupChecker interface {
 	IsGroupAddress(sdk.Context, sdk.AccAddress) bool
+}
+
+// ExchangeKeeper defines the exchange module functionality needed by the marker module.
+type ExchangeKeeper interface {
+	AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins, eventtag string) error
 }

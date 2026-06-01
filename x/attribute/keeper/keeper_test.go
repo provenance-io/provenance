@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 			},
 			ownerAddr:   s.user1Addr,
 			errorMsg:    "",
-			lookupCount: 2,
+			lookupCount: 1,
 		},
 		{
 			name: "should successfully add attribute with same name and type but diff value",
@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 			},
 			ownerAddr:   s.user1Addr,
 			errorMsg:    "",
-			lookupCount: 3,
+			lookupCount: 2,
 		},
 		{
 			name: "should fail due to validate basic error",
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				ExpirationDate: &past,
 			},
 			ownerAddr: s.user1Addr,
-			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is not after block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
 		},
 		{
 			name: "should fail due to attribute length too long",
@@ -486,7 +486,7 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 				AttributeType:  types.AttributeType_String,
 				ExpirationDate: &past,
 			},
-			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is not after block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
 			ownerAddr: s.user1Addr,
 		},
 		{
@@ -1042,10 +1042,11 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	past := s.startBlockTime.Add(-2 * time.Hour)
 	future := s.startBlockTime.Add(time.Hour)
 
-	s.ctx = s.ctx.WithBlockTime(past)
+	s.ctx = s.ctx.WithBlockTime(past.Add(-1 * time.Second))
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "one.expire.testing", s.user1Addr, false), "SetNameRecord one.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "two.expire.testing", s.user1Addr, false), "SetNameRecord two.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "three.expire.testing", s.user1Addr, false), "SetNameRecord three.expire.testing")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "threev2.expire.testing", s.user1Addr, false), "SetNameRecord threev2.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "four.expire.testing", s.user1Addr, false), "SetNameRecord four.expire.testing")
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "five.expire.testing", s.user1Addr, false), "SetNameRecord five.expire.testing")
 
@@ -1066,6 +1067,13 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr3, s.user1Addr), "SetAttribute attr3")
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+
+	attr3v2 := types.NewAttribute("threev2.expire.testing", s.user1, types.AttributeType_String, []byte("test3v2"), nil, "")
+	startBlockTimeP1 := s.startBlockTime.Add(time.Second)
+	attr3v2.ExpirationDate = &startBlockTimeP1
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr3v2, s.user1Addr), "SetAttribute attr3v2")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr3v2)), "store.Get attr3v2 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3v2.Name, attr3v2.GetAddressBytes())), "store.Get attr3v2 AttributeNameAddrKeyPrefix")
 
 	attr4 := types.NewAttribute("four.expire.testing", s.user1, types.AttributeType_String, []byte("test4"), nil, "")
 	attr4.ExpirationDate = &future
@@ -1092,8 +1100,11 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr2)), "store.Get attr2 AttributeExpireKey")
 	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes())), "store.Get attr2 AttributeNameAddrKeyPrefix")
 
-	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
-	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
+	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr3v2)), "store.Get attr3v2 AttributeExpireKey")
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3v2.Name, attr3v2.GetAddressBytes())), "store.Get attr3v2 AttributeNameAddrKeyPrefix")
 
 	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr4)), "store.Get attr4 AttributeExpireKey")
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
@@ -1458,4 +1469,119 @@ func (s *KeeperTestSuite) TestValidateAttributeConcreteType() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUpdateAttributePreservesExpiration() {
+	now := s.ctx.BlockTime()
+	future := now.Add(time.Hour * 24 * 365)
+
+	// Create an attribute WITH an expiration date.
+	attr := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("original"), &future, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save attribute with expiration")
+
+	// Verify the expiration queue entry exists.
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	expireKey := types.AttributeExpireKey(attr)
+	s.Require().NotNil(expireKey, "expire key should not be nil")
+	s.Require().True(store.Has(expireKey), "expiration entry should exist before update")
+
+	origAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("original"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	updateAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("updated"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+		// ExpirationDate intentionally nil — this is what msg_server sends.
+	}
+	err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, origAttr, updateAttr, s.user1Addr)
+	s.Require().NoError(err, "UpdateAttribute should not error")
+
+	attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr.String(), "example.attribute")
+	s.Require().NoError(err, "GetAttributes should not error")
+	s.Require().Len(attrs, 1, "should have exactly one attribute")
+	s.Require().NotNil(attrs[0].ExpirationDate, "expiration date should be preserved after update")
+	s.Assert().Equal(future.Unix(), attrs[0].ExpirationDate.Unix(), "expiration date should match original")
+
+	updatedExpireKey := types.AttributeExpireKey(attrs[0])
+	s.Require().NotNil(updatedExpireKey, "updated expire key should not be nil")
+	s.Assert().True(store.Has(updatedExpireKey), "expiration entry should exist after update")
+}
+
+func (s *KeeperTestSuite) TestUpdateAttributeNoExpirationStaysNil() {
+
+	attr := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("original"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save attribute without expiration")
+
+	origAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("original"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	updateAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("updated"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, origAttr, updateAttr, s.user1Addr)
+	s.Require().NoError(err, "UpdateAttribute should not error")
+
+	attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr.String(), "example.attribute")
+	s.Require().NoError(err, "GetAttributes should not error")
+	s.Require().Len(attrs, 1, "should have exactly one attribute")
+	s.Assert().Nil(attrs[0].ExpirationDate, "expiration should remain nil for attribute that never had one")
+}
+
+func (s *KeeperTestSuite) TestPurgeAttributeExpirationCleanup() {
+	now := s.ctx.BlockTime()
+	future := now.Add(time.Hour * 24 * 365) // 1 year from now
+
+	attrWithExpiry := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("exp1"), &future, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExpiry, s.user1Addr), "should save attribute with expiration")
+
+	attrNoExpiry := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("noexp"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExpiry, s.user1Addr), "should save attribute without expiration")
+
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	expireKey := types.AttributeExpireKey(attrWithExpiry)
+	s.Require().NotNil(expireKey, "expiration key should not be nil for attribute with expiration")
+	s.Assert().True(store.Has(expireKey), "expiration entry should exist before purge")
+
+	err := s.app.AttributeKeeper.PurgeAttribute(s.ctx, "example.attribute", s.user1Addr)
+	s.Require().NoError(err, "PurgeAttribute should not error")
+
+	s.Assert().False(store.Has(expireKey), "expiration entry should be removed after purge")
+
+	attrs, err := s.app.AttributeKeeper.GetAllAttributesAddr(s.ctx, s.user1Addr)
+	s.Require().NoError(err, "GetAllAttributesAddr should not error")
+	for _, attr := range attrs {
+		s.Assert().NotEqual("example.attribute", attr.Name, "no attributes with purged name should remain")
+	}
+}
+
+func (s *KeeperTestSuite) TestPurgeAttributeEmitsEvents() {
+	attr1 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("val1"), nil, "")
+	attr2 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("val2"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr1, s.user1Addr), "should save attr1")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr2, s.user1Addr), "should save attr2")
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+	err := s.app.AttributeKeeper.PurgeAttribute(s.ctx, "example.attribute", s.user1Addr)
+	s.Require().NoError(err, "PurgeAttribute should not error")
+
+	events := s.ctx.EventManager().Events()
+	deleteEventCount := 0
+	for _, event := range events {
+		if event.Type == "provenance.attribute.v1.EventAttributeDelete" {
+			deleteEventCount++
+		}
+	}
+	s.Assert().Equal(2, deleteEventCount, "should emit one EventAttributeDelete per purged attribute")
 }

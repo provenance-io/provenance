@@ -118,7 +118,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 func TestExistingAccounts(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -155,7 +155,7 @@ func TestExistingAccounts(t *testing.T) {
 func TestUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	user := testUserAddress("test")
 
@@ -770,7 +770,7 @@ func TestWithdrawCoins(t *testing.T) {
 				}
 			}
 
-			kpr := app.MarkerKeeper
+			kpr := *app.MarkerKeeper
 			if tc.bankKeeper != nil {
 				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
 			}
@@ -1659,7 +1659,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 func TestMarkerFeeGrant(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("admin")
@@ -1706,7 +1706,7 @@ func testUserAddress(name string) sdk.AccAddress {
 func TestAddFinalizeActivateMarker(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -1782,7 +1782,7 @@ func TestInvalidAccount(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
 	pubkey := secp256k1.GenPrivKey().PubKey()
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 	user := testUserAddress("testcoin")
 	manager := testUserAddress("manager")
 
@@ -1810,7 +1810,7 @@ func TestInvalidAccount(t *testing.T) {
 func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	user := testUserAddress("test")
 
@@ -1874,7 +1874,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 func TestAddMarkerViaProposal(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	newMsg := func(denom string, amt sdkmath.Int, manager string, status types.MarkerStatus,
 		markerType types.MarkerType, access []types.AccessGrant, allowGov bool,
@@ -1953,7 +1953,7 @@ func TestAddMarkerViaProposal(t *testing.T) {
 func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	authority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	invalidAuthority := testUserAddress("test")
@@ -2093,7 +2093,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 
@@ -3123,4 +3123,215 @@ func TestBypassAddrsLocked(t *testing.T) {
 	kAddrs := mk.GetReqAttrBypassAddrs()
 	act00 := kAddrs[0][0]
 	assert.Equal(t, orig00, act00, "first byte of first address returned by GetReqAttrBypassAddrs")
+}
+
+func TestAccountControlsAllSupplyUsesLiveBankSupply(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
+
+	denom := "testcoin1"
+	manager := testUserAddress("testcoin1manager")
+	partialHolder := testUserAddress("testcoin1partialholder")
+	otherHolder := testUserAddress("testcoin1other")
+
+	// Create a non-fixed supply testcoin1 marker with 100 initial supply.
+	_, err := server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
+		denom,
+		sdkmath.NewInt(100),
+		manager,
+		manager,
+		types.MarkerType_Coin,
+		false, // ← non-fixed supply
+		false,
+		false,
+		nil,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{
+			types.Access_Admin,
+			types.Access_Mint,
+			types.Access_Withdraw,
+		})},
+		0,
+		0,
+	))
+	require.NoError(t, err, "create testcoin1 marker")
+
+	marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
+	require.NoError(t, err)
+	require.False(t, marker.HasFixedSupply(), "must be non-fixed for this test to be meaningful")
+	require.Equal(t, sdkmath.NewInt(100), marker.GetSupply().Amount, "initial configured supply")
+	require.Error(t, marker.ValidateAddressHasAccess(partialHolder, types.Access_Admin), "partialHolder must not have admin")
+	require.Error(t, marker.ValidateAddressHasAccess(partialHolder, types.Access_Mint), "partialHolder must not have mint")
+
+	t.Run("partialHolder cannot self-grant before holding any tokens", func(t *testing.T) {
+		_, err = server.AddAccess(ctx, types.NewMsgAddAccessRequest(
+			denom,
+			partialHolder,
+			*types.NewAccessGrant(partialHolder, []types.Access{types.Access_Admin}),
+		))
+		require.Error(t, err, "partialHolder with zero balance must be denied")
+	})
+
+	// Manager withdraws all 100 testcoin1 to partialHolder.
+	_, err = server.Withdraw(ctx, types.NewMsgWithdrawRequest(
+		manager,
+		partialHolder,
+		denom,
+		sdk.NewCoins(sdk.NewInt64Coin(denom, 100)),
+	))
+	require.NoError(t, err, "withdraw 100 testcoin1 to partialHolder")
+
+	_, err = server.Mint(ctx, types.NewMsgMintRequest(manager, sdk.NewInt64Coin(denom, 100), otherHolder))
+	require.NoError(t, err, "manager mints 100 more testcoin1")
+
+	require.Equal(t, sdkmath.NewInt(200), app.BankKeeper.GetSupply(ctx, denom).Amount,
+		"live bank supply must be 200")
+	marker, err = app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(100), marker.GetSupply().Amount,
+		"non-fixed marker stored supply remains stale at 100")
+	require.Equal(t, sdkmath.NewInt(100), app.BankKeeper.GetBalance(ctx, partialHolder, denom).Amount,
+		"partialHolder holds 100 testcoin1")
+	require.Equal(t, sdkmath.NewInt(100), app.BankKeeper.GetBalance(ctx, otherHolder, denom).Amount,
+		"otherHolder holds 100 testcoin1")
+
+	t.Run("core regression: partialHolder holding stale supply amount but only 50pct live supply is denied", func(t *testing.T) {
+		_, err = server.AddAccess(ctx, types.NewMsgAddAccessRequest(
+			denom,
+			partialHolder,
+			*types.NewAccessGrant(partialHolder, []types.Access{
+				types.Access_Admin,
+				types.Access_Mint,
+				types.Access_Withdraw,
+			}),
+		))
+		require.Error(t, err, "partialHolder holds only 100/200 live testcoin1 supply and must be denied")
+		require.ErrorContains(t, err, "not authorized")
+
+		marker, err = app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
+		require.NoError(t, err)
+		require.Error(t, marker.ValidateAddressHasAccess(partialHolder, types.Access_Admin),
+			"partialHolder must not have admin after failed attempt")
+		require.Error(t, marker.ValidateAddressHasAccess(partialHolder, types.Access_Mint),
+			"partialHolder must not have mint after failed attempt")
+	})
+
+	t.Run("partialHolder cannot mint without mint permission", func(t *testing.T) {
+		_, err = server.Mint(ctx, types.NewMsgMintRequest(partialHolder, sdk.NewInt64Coin(denom, 1), partialHolder))
+		require.Error(t, err, "partialHolder without mint permission must not be able to mint")
+		require.Equal(t, sdkmath.NewInt(200), app.BankKeeper.GetSupply(ctx, denom).Amount,
+			"live supply must remain 200 after blocked mint attempt")
+	})
+
+	t.Run("legitimate admin can still add access", func(t *testing.T) {
+		_, err = server.AddAccess(ctx, types.NewMsgAddAccessRequest(
+			denom,
+			manager, // ← manager is the signer/caller with Access_Admin
+			*types.NewAccessGrant(partialHolder, []types.Access{types.Access_Deposit}),
+		))
+		require.NoError(t, err, "manager with Access_Admin must still be able to grant access")
+	})
+}
+
+func TestAccountControlsAllSupplyNonFixedFullHolderGetsAccess(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
+
+	denom := "testcoin2"
+	manager := testUserAddress("testcoin2manager")
+	fullHolder := testUserAddress("testcoin2holder")
+
+	// Create a non-fixed testcoin2 marker with 100 supply.
+	_, err := server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
+		denom,
+		sdkmath.NewInt(100),
+		manager,
+		manager,
+		types.MarkerType_Coin,
+		false, // non-fixed
+		false,
+		false,
+		nil,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{
+			types.Access_Admin,
+			types.Access_Withdraw,
+		})},
+		0,
+		0,
+	))
+	require.NoError(t, err, "create testcoin2 marker")
+
+	_, err = server.Withdraw(ctx, types.NewMsgWithdrawRequest(
+		manager,
+		fullHolder,
+		denom,
+		sdk.NewCoins(sdk.NewInt64Coin(denom, 100)),
+	))
+	require.NoError(t, err, "withdraw all testcoin2 to fullHolder")
+
+	require.Equal(t, sdkmath.NewInt(100), app.BankKeeper.GetSupply(ctx, denom).Amount,
+		"live supply must be 100")
+	require.Equal(t, sdkmath.NewInt(100), app.BankKeeper.GetBalance(ctx, fullHolder, denom).Amount,
+		"fullHolder must hold all 100 testcoin2")
+
+	_, err = server.AddAccess(ctx, types.NewMsgAddAccessRequest(
+		denom,
+		fullHolder,
+		*types.NewAccessGrant(fullHolder, []types.Access{types.Access_Admin}),
+	))
+	require.NoError(t, err, "holder of 100pct live testcoin2 supply must receive de facto admin access")
+}
+
+func TestAccountControlsAllSupplyFixedMarkerBehaviorUnchanged(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
+
+	denom := "testcoin3"
+	manager := testUserAddress("testcoin3manager")
+	fullHolder := testUserAddress("testcoin3holder")
+	partialHolder := testUserAddress("testcoin3partialholder")
+
+	// Create a fixed-supply testcoin3 marker with 50 tokens.
+	_, err := server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
+		denom,
+		sdkmath.NewInt(50),
+		manager,
+		manager,
+		types.MarkerType_Coin,
+		true, // ← fixed supply
+		false,
+		false,
+		nil,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{
+			types.Access_Admin,
+			types.Access_Withdraw,
+		})},
+		0,
+		0,
+	))
+	require.NoError(t, err, "create testcoin3 marker")
+
+	_, err = server.Withdraw(ctx, types.NewMsgWithdrawRequest(
+		manager,
+		fullHolder,
+		denom,
+		sdk.NewCoins(sdk.NewInt64Coin(denom, 50)),
+	))
+	require.NoError(t, err, "withdraw all testcoin3 to fullHolder")
+
+	_, err = server.AddAccess(ctx, types.NewMsgAddAccessRequest(
+		denom,
+		fullHolder,
+		*types.NewAccessGrant(fullHolder, []types.Access{types.Access_Admin}),
+	))
+	require.NoError(t, err, "fullHolder of 100pct testcoin3 must get de facto admin")
+
+	_, err = server.AddAccess(ctx, types.NewMsgAddAccessRequest(
+		denom,
+		partialHolder,
+		*types.NewAccessGrant(partialHolder, []types.Access{types.Access_Admin}),
+	))
+	require.Error(t, err, "partialHolder with zero testcoin3 balance must be denied")
 }

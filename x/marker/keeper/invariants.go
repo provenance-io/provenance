@@ -13,19 +13,19 @@ import (
 const invariantName = "required-marker-supply"
 
 // RegisterInvariants registers module invariants
-func RegisterInvariants(ir sdk.InvariantRegistry, mk Keeper, bk bankkeeper.Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, mk Keeper, bk bankkeeper.Keeper) { //nolint:staticcheck // We still want to use invariants.
 	ir.RegisterRoute(types.ModuleName, invariantName, supplyInvariant(mk, bk))
 }
 
 // AllInvariants runs all invariants of the marker module.
-func AllInvariants(k Keeper, bk bankkeeper.Keeper) sdk.Invariant {
+func AllInvariants(k Keeper, bk bankkeeper.Keeper) sdk.Invariant { //nolint:staticcheck // We still want to use invariants.
 	return func(ctx sdk.Context) (string, bool) {
 		return supplyInvariant(k, bk)(ctx)
 	}
 }
 
 // Checks that all of the marker supply values match the expected system totals.
-func supplyInvariant(mk Keeper, bk bankkeeper.Keeper) sdk.Invariant {
+func supplyInvariant(mk Keeper, bk bankkeeper.Keeper) sdk.Invariant { //nolint:staticcheck // We still want to use invariants.
 	return func(ctx sdk.Context) (string, bool) {
 		statusMessage := ""
 		isBroken := false
@@ -47,7 +47,7 @@ func supplyInvariant(mk Keeper, bk bankkeeper.Keeper) sdk.Invariant {
 				}
 				msg := fmt.Sprintf("invalid %s supply: required (%+v) current (%+v)\n",
 					requiredSupply.Denom, requiredSupply.Amount, currentSupply)
-				statusMessage += sdk.FormatInvariant(types.ModuleName, invariantName, msg)
+				statusMessage += sdk.FormatInvariant(types.ModuleName, invariantName, msg) //nolint:staticcheck // We still want to use invariants.
 			}
 			return false
 		})

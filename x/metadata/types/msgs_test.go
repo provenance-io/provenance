@@ -211,7 +211,6 @@ func TestAddScopeDataAccessValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
 
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -262,7 +261,6 @@ func TestDeleteScopeDataAccessValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
 
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -389,7 +387,6 @@ func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
 
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -683,7 +680,6 @@ func TestMsgAddContractSpecToScopeSpecRequestValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
 
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -729,7 +725,6 @@ func TestMsgDeleteContractSpecFromScopeSpecRequestValidateBasic(t *testing.T) {
 	}
 
 	for n, tc := range cases {
-		tc := tc
 
 		t.Run(n, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()

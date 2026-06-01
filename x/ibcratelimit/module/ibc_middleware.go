@@ -7,12 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	"github.com/cosmos/ibc-go/v8/modules/core/exported"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	"github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	"github.com/provenance-io/provenance/internal/ibc"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
@@ -53,7 +52,6 @@ func (im *IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 	connectionHops []string,
 	portID string,
 	channelID string,
-	channelCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
@@ -63,7 +61,6 @@ func (im *IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 		connectionHops,
 		portID,
 		channelID,
-		channelCap,
 		counterparty,
 		version,
 	)
@@ -76,11 +73,10 @@ func (im *IBCMiddleware) OnChanOpenTry(
 	connectionHops []string,
 	portID,
 	channelID string,
-	channelCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
+	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, counterparty, counterpartyVersion)
 }
 
 // OnChanOpenAck implements the IBCModule interface
@@ -128,6 +124,7 @@ func (im *IBCMiddleware) OnChanCloseConfirm(
 // OnRecvPacket implements the IBCModule interface
 func (im *IBCMiddleware) OnRecvPacket(
 	ctx sdk.Context,
+	channelVersion string,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
@@ -137,7 +134,7 @@ func (im *IBCMiddleware) OnRecvPacket(
 
 	if !im.keeper.IsContractConfigured(ctx) {
 		// The contract has not been configured. Continue as usual
-		return im.app.OnRecvPacket(ctx, packet, relayer)
+		return im.app.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 
 	err := im.keeper.CheckAndUpdateRateLimits(ctx, "recv_packet", packet)
@@ -146,12 +143,13 @@ func (im *IBCMiddleware) OnRecvPacket(
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
-	return im.app.OnRecvPacket(ctx, packet, relayer)
+	return im.app.OnRecvPacket(ctx, channelVersion, packet, relayer)
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface
 func (im *IBCMiddleware) OnAcknowledgementPacket(
 	ctx sdk.Context,
+	channelVersion string,
 	packet channeltypes.Packet,
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
@@ -175,12 +173,13 @@ func (im *IBCMiddleware) OnAcknowledgementPacket(
 		}
 	}
 
-	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	return im.app.OnAcknowledgementPacket(ctx, channelVersion, packet, acknowledgement, relayer)
 }
 
 // OnTimeoutPacket implements the IBCModule interface
 func (im *IBCMiddleware) OnTimeoutPacket(
 	ctx sdk.Context,
+	channelVersion string,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
@@ -194,7 +193,7 @@ func (im *IBCMiddleware) OnTimeoutPacket(
 			ctx.Logger().Error("unable to emit TimeoutRevertFailure event", "err", eventError)
 		}
 	}
-	return im.app.OnTimeoutPacket(ctx, packet, relayer)
+	return im.app.OnTimeoutPacket(ctx, channelVersion, packet, relayer)
 }
 
 // SendPacket implements the ICS4 interface and is called when sending packets.
@@ -204,7 +203,6 @@ func (im *IBCMiddleware) OnTimeoutPacket(
 // used, transfers are not prevented and handled by the wrapped IBC app
 func (im *IBCMiddleware) SendPacket(
 	ctx sdk.Context,
-	chanCap *capabilitytypes.Capability,
 	sourcePort string,
 	sourceChannel string,
 	timeoutHeight clienttypes.Height,
@@ -213,15 +211,15 @@ func (im *IBCMiddleware) SendPacket(
 ) (sequence uint64, err error) {
 	var packetdata transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(data, &packetdata); err != nil {
-		return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+		return im.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 	if packetdata.Denom == "" || packetdata.Amount == "" {
-		return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+		return im.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
 	if !im.keeper.IsContractConfigured(ctx) {
 		// The contract has not been configured. Continue as usual
-		return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+		return im.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
 	// We need the full packet so the contract can process it. If it can't be cast to a channeltypes.Packet, this
@@ -243,17 +241,16 @@ func (im *IBCMiddleware) SendPacket(
 		return 0, errorsmod.Wrap(err, "rate limit SendPacket failed to authorize transfer")
 	}
 
-	return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	return im.channel.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 }
 
 // WriteAcknowledgement implements the ICS4 Wrapper interface
 func (im *IBCMiddleware) WriteAcknowledgement(
 	ctx sdk.Context,
-	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 	ack exported.Acknowledgement,
 ) error {
-	return im.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
+	return im.channel.WriteAcknowledgement(ctx, packet, ack)
 }
 
 // GetAppVersion Obtains the version of the ICS4 Wrapper.

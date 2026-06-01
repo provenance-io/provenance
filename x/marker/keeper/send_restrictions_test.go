@@ -768,7 +768,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			if tc.ctx != nil {
 				tCtx = *tc.ctx
 			}
-			kpr := app.MarkerKeeper
+			kpr := *app.MarkerKeeper
 			if tc.attrKeeper != nil {
 				kpr = kpr.WithAttrKeeper(tc.attrKeeper.WithParent(app.AttributeKeeper))
 			}
@@ -800,7 +800,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	msgServer := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	msgServer := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrNameOwner.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrNameOwner))
 	err := app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", addrNameOwner, false)
@@ -894,7 +894,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
-	msgServer := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	msgServer := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
 	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrManager.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
 	err := app.NameKeeper.SetNameRecord(ctx, "rando.io", addrManager, false)

@@ -17,7 +17,9 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -26,10 +28,16 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	paramprops "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	"github.com/cosmos/gogoproto/proto"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/ibchooks"
+	ibchooksv2 "github.com/provenance-io/provenance/x/ibchooks/v2"
+	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
+	ibcratelimitv2 "github.com/provenance-io/provenance/x/ibcratelimit/module/v2"
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	pwasm "github.com/provenance-io/provenance/x/wasm/types"
@@ -131,7 +139,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	// Delete one of the markers.
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, managerAddr, "marker2coin"), "canceling marker2coin")
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, managerAddr, "marker2coin"), "deleting marker2coin")
-	markermodule.BeginBlocker(ctx, app.MarkerKeeper, app.BankKeeper)
+	markermodule.BeginBlocker(ctx, *app.MarkerKeeper, app.BankKeeper)
 	deletedMarkerAddr := markerToAddr["marker2coin"]
 
 	markerAddrs := []sdk.AccAddress{markerToAddr["marker1coin"], markerToAddr["marker3coin"]}
@@ -423,16 +431,18 @@ func TestFilterBeginBlockerEvents(t *testing.T) {
 }
 
 func TestMsgServerProtoAnnotations(t *testing.T) {
-	// If this test fails after bumping the async-icq library, change expErr to an empty string and delete this comment.
-	expErr := "service icq.v1.Msg does not have cosmos.msg.v1.service proto annotation"
+	expErr := ""
 
 	// Create an app so that we know everything's been registered.
 	logger := log.NewNopLogger()
 	db, err := dbm.NewDB("proto-test", dbm.MemDBBackend, "")
 	require.NoError(t, err, "dbm.NewDB")
-	appOpts := newSimAppOpts(t)
+	appOpts := simtestutil.AppOptionsMap{
+		flags.FlagHome:            t.TempDir(),
+		server.FlagInvCheckPeriod: simcli.FlagPeriodValue,
+	}
 	baseAppOpts := []func(*baseapp.BaseApp){
-		fauxMerkleModeOpt,
+		func(bapp *baseapp.BaseApp) { bapp.SetFauxMerkleMode() },
 		baseapp.SetChainID(pioconfig.SimAppChainID),
 	}
 	_ = New(logger, db, nil, true, appOpts, baseAppOpts...)
@@ -583,4 +593,59 @@ func Test_v1beta1_MsgExecuteContract_DecodeFromGovProposal(t *testing.T) {
 		_, ok := unpacked.(*pwasm.MsgExecuteContract)
 		require.True(t, ok, "expected v1beta1.MsgExecuteContract")
 	}
+}
+
+func TestIBCV1RouterWiring(t *testing.T) {
+	app := Setup(t)
+
+	// The v1 router should have a transfer route.
+	router := app.IBCKeeper.PortKeeper.Router
+	require.NotNil(t, router, "v1 router should be set")
+	require.True(t, router.HasRoute(ibctransfertypes.ModuleName), "v1 router should have a transfer route")
+
+	// The transfer route should be the ibchooks middleware.
+	route, ok := router.Route(ibctransfertypes.ModuleName)
+	require.True(t, ok, "v1 transfer route should exist")
+	hooksMiddleware, ok := route.(*ibchooks.IBCMiddleware)
+	require.True(t, ok, "v1 transfer route should be *ibchooks.IBCMiddleware, got %T", route)
+
+	// The ibchooks middleware should wrap the rate-limit middleware.
+	_, ok = hooksMiddleware.App.(*ibcratelimitmodule.IBCMiddleware)
+	assert.True(t, ok, "ibchooks should wrap ibcratelimit middleware, got %T", hooksMiddleware.App)
+}
+
+func TestIBCV2RouterWiring(t *testing.T) {
+	app := Setup(t)
+
+	// The v2 router should have a transfer route.
+	routerV2 := app.IBCKeeper.ChannelKeeperV2.Router
+	require.NotNil(t, routerV2, "v2 router should be set")
+	require.True(t, routerV2.HasRoute(ibctransfertypes.PortID), "v2 router should have a transfer route")
+
+	// The transfer route should be the ibchooks v2 module.
+	route := routerV2.Route(ibctransfertypes.PortID)
+	_, ok := route.(ibchooksv2.IBCModule)
+	assert.True(t, ok, "v2 transfer route should be ibchooksv2.IBCModule, got %T", route)
+}
+
+func TestIBCV2MiddlewareStackTypes(t *testing.T) {
+	// Verify the individual v2 middleware types can be constructed from the app's keepers.
+	// This ensures the keepers are properly initialized and compatible.
+	app := Setup(t)
+
+	assert.NotNil(t, app.RateLimitingKeeper, "RateLimitingKeeper should be set")
+	assert.NotNil(t, app.IBCKeeper, "IBCKeeper should be set")
+	assert.NotNil(t, app.IBCHooksKeeper, "IBCHooksKeeper should be set")
+	assert.NotNil(t, app.WasmKeeper, "WasmKeeper should be set")
+	assert.NotNil(t, app.Ics20MarkerHooks, "Ics20MarkerHooks should be set")
+
+	// Verify the v2 rate-limit middleware can wrap a transfer module.
+	assert.NotPanics(t, func() {
+		_ = ibcratelimitv2.NewIBCMiddleware(app.RateLimitingKeeper, nil)
+	}, "creating ibcratelimit v2 middleware should not panic")
+
+	// Verify the v2 hooks module can be created with the app's keepers.
+	assert.NotPanics(t, func() {
+		_ = ibchooksv2.NewIBCModule(nil, app.IBCKeeper, app.IBCHooksKeeper, app.WasmKeeper, app.Ics20MarkerHooks, "cosmos")
+	}, "creating ibchooks v2 module should not panic")
 }

@@ -23,6 +23,8 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/exchange"
+	exchangekeeper "github.com/provenance-io/provenance/x/exchange/keeper"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -55,7 +57,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.blockStartTime = time.Now()
 	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.blockStartTime})
-	s.msgServer = markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
+	s.msgServer = markerkeeper.NewMsgServerImpl(*s.app.MarkerKeeper)
 
 	s.privkey1 = secp256k1.GenPrivKey()
 	s.pubkey1 = s.privkey1.PubKey()
@@ -71,6 +73,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 	acc = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.owner2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 }
+
 func TestMsgServerTestSuite(t *testing.T) {
 	suite.Run(t, new(MsgServerTestSuite))
 }
@@ -720,7 +723,23 @@ func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
 
 	addMarkerMsg := types.NewMsgAddMarkerRequest("hotdog", sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
 	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
-	s.Assert().NoError(err, "should successfully add marker")
+	s.Assert().NoError(err, "should successfully add hotdog marker")
+
+	addMarkerMsg2 := types.NewMsgAddFinalizeActivateMarkerRequest(
+		"papaya", sdkmath.NewInt(0),
+		s.owner1Addr, s.owner1Addr,
+		types.MarkerType_Coin,
+		false, true, false,
+		[]string{},
+		[]types.AccessGrant{{
+			Address:     s.owner1,
+			Permissions: types.AccessListByNames("MINT,BURN,DEPOSIT,WITHDRAW,DELETE,ADMIN"),
+		}},
+		0, 0)
+	_, err = s.msgServer.AddFinalizeActivateMarker(s.ctx, addMarkerMsg2)
+	s.Assert().NoError(err, "should successfully add/finalize/activate papaya marker")
+
+	otherAddr := sdk.AccAddress("other_address_______")
 
 	testCases := []struct {
 		name          string
@@ -743,6 +762,14 @@ func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
 			name:     "should fail to ADD access to marker, keeper AddAccess failure",
 			msg:      types.NewMsgAddAccessRequest("hotdog", s.owner2Addr, accessMintGrant),
 			errorMsg: fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.owner1),
+		},
+		{
+			name: "should fail to ADD access to marker, not administrator",
+			msg: types.NewMsgAddAccessRequest("papaya", otherAddr, types.AccessGrant{
+				Address:     otherAddr.String(),
+				Permissions: types.AccessListByNames("MINT,WITHDRAW"),
+			}),
+			errorMsg: otherAddr.String() + " is not authorized to make access list changes against finalized/active papaya marker: unauthorized",
 		},
 	}
 
@@ -1018,7 +1045,7 @@ func (s *MsgServerTestSuite) TestMsgWithdrawMarkerRequest() {
 		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW"),
 	}
 
-	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0)
+	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(500), s.owner1Addr, s.owner1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0)
 	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
 	s.Assert().NoError(err, "should successfully add marker")
 
@@ -1034,14 +1061,46 @@ func (s *MsgServerTestSuite) TestMsgWithdrawMarkerRequest() {
 	_, err = s.msgServer.Activate(s.ctx, activateMsg)
 	s.Assert().NoError(err, "should not throw error when activating marker message")
 
+	exchangeMsgServer := exchangekeeper.NewMsgServer(s.app.ExchangeKeeper)
+	_, err = exchangeMsgServer.GovCreateMarket(s.ctx, &exchange.MsgGovCreateMarketRequest{
+		Authority: authtypes.NewModuleAddress("gov").String(),
+		Market: exchange.Market{
+			MarketId:                 1,
+			AcceptingCommitments:     true,
+			CommitmentSettlementBips: 50,
+			IntermediaryDenom:        "nhash",
+		},
+	})
+
+	s.Require().NoError(err, "should create exchange market")
+
 	testcases := []struct {
 		name          string
 		msg           *types.MsgWithdrawRequest
 		expectedEvent proto.Message
+		expErr        bool
+		expErrMsg     string
 	}{
 		{
 			name:          "should successfully withdraw marker",
 			msg:           types.NewMsgWithdrawRequest(s.owner1Addr, s.owner1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 100))),
+			expectedEvent: types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.owner1, s.owner1),
+		},
+		{
+			name: "withdraw with market_id zero - no commitment (backward compat)",
+			msg: func() *types.MsgWithdrawRequest {
+				m := types.NewMsgWithdrawRequest(s.owner1Addr, s.owner1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 50)))
+				return m
+			}(),
+			expectedEvent: types.NewEventMarkerWithdraw("50hotdog", hotdogDenom, s.owner1, s.owner1),
+		},
+		{
+			name: "withdraw and commit to exchange market",
+			msg: func() *types.MsgWithdrawRequest {
+				m := types.NewMsgWithdrawRequest(s.owner1Addr, s.owner1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 100)))
+				m = m.WithMarketCommitment(1, "test-withdraw-commit")
+				return m
+			}(),
 			expectedEvent: types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.owner1, s.owner1),
 		},
 	}

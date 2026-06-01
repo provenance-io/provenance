@@ -1,6 +1,7 @@
 package types
 
 import (
+	math "math"
 	"testing"
 	time "time"
 
@@ -282,6 +283,21 @@ func TestBlockTimeEventValidateContext(t *testing.T) {
 			name:  "invalid - block height event should be invalid for past height",
 			event: BlockTimeEvent{now.Add(-time.Hour)},
 			err:   ErrInvalidBlockTime.Error(),
+		},
+		{
+			name:  "invalid - far-future time that overflows int64 UnixNano is rejected",
+			event: BlockTimeEvent{Time: time.Unix(18446744073, 709551616).UTC()},
+			err:   ErrInvalidBlockTime.Error(),
+		},
+		{
+			name:  "invalid - one nanosecond past the int64 ceiling is rejected",
+			event: BlockTimeEvent{Time: time.Unix(0, math.MaxInt64).UTC().Add(time.Nanosecond)},
+			err:   ErrInvalidBlockTime.Error(),
+		},
+		{
+			name:  "valid - time exactly at the int64 nanosecond ceiling is accepted",
+			event: BlockTimeEvent{Time: time.Unix(0, math.MaxInt64).UTC()},
+			err:   "",
 		},
 	}
 

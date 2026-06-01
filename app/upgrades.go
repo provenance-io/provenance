@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
 
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
@@ -39,9 +39,10 @@ type appUpgrade struct {
 //
 // On the same line as the key, there should be a comment indicating the software version.
 // Entries should be in chronological/alphabetical order, earliest first.
-// I.e. Brand-new colors should be added to the bottom with the rcs first, then the non-rc.
+// I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"daisy-rc1": {
+		Deleted: []string{"interchainquery", "oracle", "capability"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -73,6 +74,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"daisy": {
+		Deleted: []string{"interchainquery", "oracle", "capability"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -100,6 +102,47 @@ var upgrades = map[string]appUpgrade{
 			if err = updateMsgFees(ctx, app); err != nil {
 				return nil, err
 			}
+			return vm, nil
+		},
+	},
+	"edelweiss-rc1": { // v1.29.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
+			return vm, nil
+		},
+	},
+	"edelweiss-rc2": {}, // Empty upgrade for v1.29.0-rc2
+	"edelweiss": { // v1.29.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
 			return vm, nil
 		},
 	},
@@ -331,7 +374,7 @@ var (
 // setupMsgStoreCodeFee sets the flat fee for MsgStoreCode to $100 (100,000 musd).
 // This allows smart contracts to be stored directly without governance proposals.
 func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting up MsgStoreCode flat fee")
+	ctx.Logger().Info("Setting up MsgStoreCode flat fee.")
 
 	msgFee := flatfeestypes.MsgFee{
 		MsgTypeUrl: "/cosmwasm.wasm.v1.MsgStoreCode",
@@ -346,7 +389,7 @@ func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 		return fmt.Errorf("failed to set MsgStoreCode fee: %w", err)
 	}
 
-	ctx.Logger().Info("MsgStoreCode flat fee set successfully", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
+	ctx.Logger().Info("MsgStoreCode flat fee set successfully.", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
 
 	return nil
 }
@@ -355,7 +398,7 @@ func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
 // Metadata operations (record/session writes): Lower fees to encourage usage
 // IBC client updates: Minimal fee for relayer operations
 func updateMsgFees(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Updating message fees")
+	ctx.Logger().Info("Updating message fees.")
 
 	// Define all fee updates
 	feeUpdates := []flatfeestypes.MsgFee{
@@ -371,19 +414,56 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 			MsgTypeUrl: "/ibc.core.client.v1.MsgUpdateClient",
 			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 10)), // $0.01
 		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgAcknowledgement",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgRecvPacket",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/ibc.core.channel.v2.MsgSendPacket",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
+		{
+			MsgTypeUrl: "/provenance.flatfees.v1.MsgAddOracleAddressRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
+		},
+		{
+			MsgTypeUrl: "/provenance.flatfees.v1.MsgRemoveOracleAddressRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
+		},
+		{
+			MsgTypeUrl: "/provenance.exchange.v1.MsgMarketCommitmentSettleRequest",
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
+		},
 	}
 
 	for _, msgFee := range feeUpdates {
 		if err := msgFee.Validate(); err != nil {
-			return fmt.Errorf("invalid msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+			return fmt.Errorf("invalid msg fee for %q: %w", msgFee.MsgTypeUrl, err)
 		}
 
 		if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
-			return fmt.Errorf("failed to set msg fee for %s: %w", msgFee.MsgTypeUrl, err)
+			return fmt.Errorf("failed to set msg fee for %q: %w", msgFee.MsgTypeUrl, err)
 		}
 	}
 
-	ctx.Logger().Info("All message fees updated successfully", "total_updated", len(feeUpdates))
+	feeDeletes := []string{
+		"/ibc.core.channel.v1.MsgUpdateParams",
+		"/icq.v1.MsgUpdateParams",
+		"/provenance.oracle.v1.MsgSendQueryOracleRequest",
+		"/provenance.oracle.v1.MsgUpdateOracleRequest",
+	}
+
+	for _, msgTypeURL := range feeDeletes {
+		if err := app.FlatFeesKeeper.RemoveMsgFee(ctx, msgTypeURL); err != nil {
+			ctx.Logger().Info("Could not remove flat-fee entry.", "msg_type_url", msgTypeURL, "error", err)
+		}
+	}
+
+	ctx.Logger().Info("All message fees updated successfully.", "total_updated", len(feeUpdates))
 	return nil
 }
 

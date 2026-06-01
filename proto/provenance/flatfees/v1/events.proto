@@ -1,0 +1,43 @@
+syntax = "proto3";
+package provenance.flatfees.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/flatfees/types";
+option java_package        = "io.provenance.flatfees.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+
+// EventParamsUpdated is emitted when UpdateParams successfully updates the flatfees params.
+message EventParamsUpdated {}
+
+// EventConversionFactorUpdated is emitted when ConversionFactor successfully updated.
+message EventConversionFactorUpdated {
+  // definition_amount is the new definition_amount of the conversion factor as coin string, e.g. "1musd".
+  string definition_amount = 1;
+  // converted_amount is the new converted_amount of the conversion factor as a coin string, e.g. "2000nhash".
+  string converted_amount = 2;
+}
+
+// EventMsgFeeSet is emitted when a msg fee is created or updated (from the SetMsgFee keeper helper).
+message EventMsgFeeSet {
+  // msg_type_url is the type-url of the message that had its fee set.
+  string msg_type_url = 1;
+}
+
+// EventMsgFeeUnset is emitted when a msg fee is removed (from the RemoveMsgFee keeper helper).
+message EventMsgFeeUnset {
+  // msg_type_url is the type-url of the message that had its fee removed.
+  string msg_type_url = 1;
+}
+
+// EventOracleAddressAdded is emitted when AddOracleAddress successfully adds an oracle address.
+message EventOracleAddressAdded {
+  // oracle_address is the address that was added to the oracle list.
+  string oracle_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventOracleAddressRemoved is emitted when RemoveOracleAddress successfully removes an oracle address.
+message EventOracleAddressRemoved {
+  // oracle_address is the address that was removed from the oracle list.
+  string oracle_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

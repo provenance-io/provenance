@@ -93,6 +93,7 @@ const (
 	FlagSellerRatios         = "seller-ratios"
 	FlagSellerRatiosAdd      = "seller-ratios-add"
 	FlagSellerRatiosRemove   = "seller-ratios-remove"
+	FlagSender               = "sender"
 	FlagSettlementFee        = "settlement-fee"
 	FlagSettlementFees       = "settlement-fees"
 	FlagSigner               = "signer"

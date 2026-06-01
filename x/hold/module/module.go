@@ -99,7 +99,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInvariants registers the invariants for the hold module.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) { //nolint:staticcheck // We still want to use invariants.
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 

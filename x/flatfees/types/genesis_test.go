@@ -146,6 +146,9 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 				DefinitionAmount: sdk.NewInt64Coin("apple", 25),
 				ConvertedAmount:  sdk.NewInt64Coin("banana", 3),
 			},
+			OracleAddresses: []string{
+				sdk.AccAddress([]byte("oracle1_______________")).String(),
+			},
 		},
 		MsgFees: []*MsgFee{
 			NewMsgFee("/msg.one", sdk.NewInt64Coin("apple", 400)),
@@ -156,6 +159,8 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 			NewMsgFee("/msg.four", sdk.NewInt64Coin("apple", 1000), sdk.NewInt64Coin("plum", 3)),
 		},
 	}
+	defaultExpected := DefaultGenesisState()
+	defaultExpected.Params.OracleAddresses = []string{}
 
 	tests := []struct {
 		name     string
@@ -190,7 +195,7 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 			appState: map[string]json.RawMessage{
 				ModuleName: asJSON(DefaultGenesisState()),
 			},
-			expState: DefaultGenesisState(),
+			expState: defaultExpected,
 		},
 		{
 			name: "populated",
@@ -206,7 +211,6 @@ func TestGetGenesisStateFromAppState(t *testing.T) {
 			if tc.cdc == nil {
 				tc.cdc = appCdc
 			}
-
 			var actState *GenesisState
 			var err error
 			testFunc := func() {

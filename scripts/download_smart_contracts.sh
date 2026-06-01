@@ -8,7 +8,7 @@
 ##                                      ##
 ##########################################
 
-export Provwasm_version="v1.1.0"
+export Provwasm_version="v2.8.0"
 
 
 wget "https://github.com/provenance-io/provwasm/releases/download/$Provwasm_version/tutorial_contract.zip"

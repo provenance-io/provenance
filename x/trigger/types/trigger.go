@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	math "math"
 	"slices"
 	"strings"
 	time "time"
@@ -132,6 +133,12 @@ func (e BlockTimeEvent) Validate() error {
 // Validate checks if this event is valid with the current context.
 func (e BlockTimeEvent) ValidateContext(ctx sdk.Context) error {
 	if e.Time.UTC().Equal(ctx.BlockTime().UTC()) || e.Time.Before(ctx.BlockTime().UTC()) {
+		return ErrInvalidBlockTime
+	}
+	// Reject times outside int64 UnixNano range (~1678–2262).
+	// Otherwise GetEventOrder() may overflow to a small value,
+	// causing the event to sort before valid triggers and block execution.
+	if e.Time.After(time.Unix(0, math.MaxInt64).UTC()) {
 		return ErrInvalidBlockTime
 	}
 	return nil

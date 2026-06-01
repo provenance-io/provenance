@@ -59,7 +59,7 @@ func WrapRecord(record *Record, includeIDInfo bool) *RecordWrapper {
 	return &wrapper
 }
 
-// WrapSessionNotFound creates a RecordWrapper with the _addr and _uuid fields set as possible using the provided MetadataAddress.
+// WrapRecordNotFound creates a RecordWrapper with the _addr and _uuid fields set as possible using the provided MetadataAddress.
 func WrapRecordNotFound(recordAddr MetadataAddress) *RecordWrapper {
 	return &RecordWrapper{
 		RecordIdInfo: GetRecordIDInfo(recordAddr),

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
+	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -176,8 +177,11 @@ func (k Keeper) SetAttribute(
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 
 	store := ctx.KVStore(k.storeKey)
+	isNew := !store.Has(key)
 	store.Set(key, bz)
-	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	if isNew {
+		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	}
 	k.addAttributeExpireLookup(store, attr)
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
@@ -274,7 +278,11 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			store.Delete(attrKey)
 			k.DecAttrNameAddressLookup(ctx, attr.Name, addrBz)
 			k.deleteAttributeExpireLookup(store, attr)
-
+			// Preserve the existing expiration date if the update doesn't specify one.
+			// MsgUpdateAttributeRequest has no expiration_date field, so updateAttribute.ExpirationDate
+			if updateAttribute.ExpirationDate == nil {
+				updateAttribute.ExpirationDate = attr.ExpirationDate
+			}
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
 				return err
@@ -459,23 +467,23 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 	}
 	store := ctx.KVStore(k.storeKey)
 	for _, acct := range accts {
-		attrToDelete := k.getAddrAttributesKeysByName(store, acct, name)
-		for _, key := range attrToDelete {
-			store.Delete(key)
-			k.DecAttrNameAddressLookup(ctx, name, acct)
+		attrToDelete, err := k.getAddrAttributesByName(store, acct, name)
+		if err != nil {
+			return err
+		}
+		for _, attr := range attrToDelete {
+			addrBz := attr.GetAddressBytes()
+			store.Delete(types.AddrAttributeKey(addrBz, attr))
+			k.DecAttrNameAddressLookup(ctx, name, addrBz)
+			k.deleteAttributeExpireLookup(store, attr)
+
+			deleteEvent := types.NewEventAttributeDelete(name, attr.Address, owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
-}
-
-// getAddrAttributesKeysByName returns an list of attribute keys for the an account and attribute name
-func (k Keeper) getAddrAttributesKeysByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attributeKeys [][]byte) {
-	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; it.Valid(); it.Next() {
-		attributeKeys = append(attributeKeys, it.Key())
-	}
-	return
 }
 
 // A predicate function for matching names
@@ -522,8 +530,11 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	}
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
+	isNew := !store.Has(key)
 	store.Set(key, bz)
-	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	if isNew {
+		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	}
 	k.addAttributeExpireLookup(store, attr)
 	return nil
 }
@@ -534,7 +545,10 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	expirationKeys := [][]byte{}
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(ctx.BlockTime()))
+	// The ending for iterators is exclusive. So we need to add a second to the blocktime to include entries that
+	// expire exactly on the block time.
+	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
 	for ; iterator.Valid(); iterator.Next() {
 		expirationKeys = append(expirationKeys, iterator.Key())
 	}
@@ -589,8 +603,8 @@ func (k Keeper) deleteAttributeExpireLookup(store storetypes.KVStore, attr types
 
 // ValidateExpirationDate returns error if attribute has an expiration date that is in the past of current block time
 func (k Keeper) ValidateExpirationDate(ctx sdk.Context, attr types.Attribute) error {
-	if attr.ExpirationDate != nil && attr.ExpirationDate.Unix() < ctx.BlockTime().Unix() {
-		return fmt.Errorf("attribute expiration date %v is before block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	if attr.ExpirationDate != nil && !attr.ExpirationDate.After(ctx.BlockTime()) {
+		return fmt.Errorf("attribute expiration date %v is not after block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
 	}
 	return nil
 }
@@ -638,4 +652,19 @@ func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error
 	}
 
 	return ctx.EventManager().EmitTypedEvent(&types.EventAccountDataUpdated{Account: addr})
+}
+
+// getAddrAttributesByName returns a list of attributes for an account and attribute name.
+func (k Keeper) getAddrAttributesByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attrs []types.Attribute, err error) {
+	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
+	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
+	var attributes []types.Attribute
+	for ; it.Valid(); it.Next() {
+		attr := types.Attribute{}
+		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+			return nil, err
+		}
+		attributes = append(attributes, attr)
+	}
+	return attributes, nil
 }

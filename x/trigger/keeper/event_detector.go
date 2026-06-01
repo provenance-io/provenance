@@ -36,28 +36,43 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 
 	for _, event := range abciEventHistory.GetABCIEventHistory() {
 		matched := k.getMatchingTriggersUntil(ctx, event.GetType(), func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
-			if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
+			// Only suppress triggers that were already matched.
+			// In map[uint64]bool, missing keys default to false, so a trigger is
+			// considered detected only after we explicitly set it to true.
+			if detectedTriggers[trigger.Id] {
 				return false
 			}
-			txEvent := triggerEvent.(*types.TransactionEvent)
+			txEvent, isType := triggerEvent.(*types.TransactionEvent)
+			if !isType {
+				return false
+			}
 			detected := txEvent.Matches(event)
-			detectedTriggers[trigger.Id] = detected
+			//  only write true into the map on a successful match.
+			if detected {
+				detectedTriggers[trigger.Id] = true
+			}
 			return detected
 		}, terminator)
 		triggers = append(triggers, matched...)
 	}
-	return
+	return triggers
 }
 
 // detectBlockHeightEvents Detects triggers that have been activated by block height events.
 func (k Keeper) detectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	match := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
+		blockHeightEvent, isType := triggerEvent.(*types.BlockHeightEvent)
+		if !isType {
+			return false
+		}
 		curHeight := uint64(ctx.BlockHeight()) //nolint:gosec // safe: block height is always ≥ 0 in context
 		return curHeight >= blockHeightEvent.GetBlockHeight()
 	}
 	terminator := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
+		blockHeightEvent, isType := triggerEvent.(*types.BlockHeightEvent)
+		if !isType {
+			return false
+		}
 		curHeight := uint64(ctx.BlockHeight()) //nolint:gosec // safe: block height is always ≥ 0 in context
 		return curHeight < blockHeightEvent.GetBlockHeight()
 	}
@@ -69,11 +84,17 @@ func (k Keeper) detectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigg
 // detectTimeEvents Detects triggers that have been activated by block time events.
 func (k Keeper) detectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	match := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
+		blockTimeEvent, isType := triggerEvent.(*types.BlockTimeEvent)
+		if !isType {
+			return false
+		}
 		return ctx.BlockTime().UTC().Equal(blockTimeEvent.GetTime().UTC()) || ctx.BlockTime().UTC().After(blockTimeEvent.GetTime().UTC())
 	}
 	terminator := func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
-		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
+		blockTimeEvent, isType := triggerEvent.(*types.BlockTimeEvent)
+		if !isType {
+			return false
+		}
 		return ctx.BlockTime().UTC().Before(blockTimeEvent.GetTime().UTC())
 	}
 

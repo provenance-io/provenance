@@ -109,8 +109,8 @@ func (AppModule) Name() string {
 	return quarantine.ModuleName
 }
 
-// RegisterInvariants does nothing, there are no invariants to enforce for the quarantine module.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+// RegisterInvariants registers an invariant ensuring the funds-holder account has enough funds in it.
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) { //nolint:staticcheck // We still want to use invariants.
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -33,43 +32,4 @@ func (s *IbcHooksTypesTestSuite) TestIbcLifecycleCompleteTimeoutJsonSerializatio
 	actualAck, err := json.Marshal(ibcLifecycleCompleteAck)
 	s.Require().NoError(err, "Marshal() error")
 	s.Require().Equal(`{"ibc_lifecycle_complete":{"ibc_timeout":{"channel":"channel-1","sequence":100}}}`, string(actualAck), "Serialized json doesn't match")
-}
-
-func (s *IbcHooksTypesTestSuite) TestNewMarkerPayloadSerialization() {
-	testCases := []struct {
-		name          string
-		addrs         []sdk.AccAddress
-		forceTransfer bool
-		expJson       string
-	}{
-		{
-			name:    "empty address array",
-			addrs:   []sdk.AccAddress{},
-			expJson: `{"transfer-auths":[],"allow-force-transfer":false}`,
-		},
-		{
-			name:    "single address array",
-			addrs:   []sdk.AccAddress{sdk.AccAddress("address1")},
-			expJson: `{"transfer-auths":["cosmos1v9jxgun9wdenzc33zgq"],"allow-force-transfer":false}`,
-		},
-		{
-			name:    "multiple address array",
-			addrs:   []sdk.AccAddress{sdk.AccAddress("address1"), sdk.AccAddress("address2")},
-			expJson: `{"transfer-auths":["cosmos1v9jxgun9wdenzc33zgq","cosmos1v9jxgun9wdenyy7j85h"],"allow-force-transfer":false}`,
-		},
-		{
-			name:          "multiple address array with allow force transfer true",
-			addrs:         []sdk.AccAddress{sdk.AccAddress("address1"), sdk.AccAddress("address2")},
-			forceTransfer: true,
-			expJson:       `{"transfer-auths":["cosmos1v9jxgun9wdenzc33zgq","cosmos1v9jxgun9wdenyy7j85h"],"allow-force-transfer":true}`,
-		},
-	}
-	for _, tc := range testCases {
-		markerPayload := NewMarkerPayload(tc.addrs, tc.forceTransfer)
-		s.T().Run(tc.name, func(t *testing.T) {
-			actualJson, err := json.Marshal(markerPayload)
-			s.Assert().NoError(err, "Marshal() error")
-			s.Assert().Equal(tc.expJson, string(actualJson), "Serialized json doesn't match")
-		})
-	}
 }

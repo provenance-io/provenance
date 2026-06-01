@@ -3,7 +3,7 @@
 # start the test network and `make localnet-stop` to stop it.
 
 ## Build provenance for x86_64
-FROM golang:1.23-bullseye AS build-x86_64
+FROM golang:1.25-bookworm AS build-x86_64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y
@@ -20,7 +20,7 @@ COPY vendor/ ./vendor/
 RUN go build -mod vendor -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
 ## Run provenance for x86_64
-FROM debian:bullseye-slim AS provenance-x86_64
+FROM debian:bookworm-slim AS provenance-x86_64
 ENV LOCALNET=1
 ENV LD_LIBRARY_PATH="/usr/local/lib"
 
@@ -36,7 +36,7 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/v2/internal/api/libwasmvm.x86_64.so /usr/local/lib/
+COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/v3/internal/api/libwasmvm.x86_64.so /usr/local/lib/
 COPY --from=build-x86_64 /go/bin/provenanced /usr/bin/provenanced
 
 COPY networks/ibc/blockchain-ibc/entrypoint.sh /usr/bin/entrypoint.sh
@@ -52,7 +52,7 @@ CMD ["start"]
 
 
 ## Build provenance for ARM
-FROM golang:1.23-bullseye AS build-arm64
+FROM golang:1.25-bookworm AS build-arm64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y
@@ -69,7 +69,7 @@ COPY vendor/ ./vendor/
 RUN go build -mod vendor -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
 ## Run provenance for ARM
-FROM debian:bullseye-slim AS provenance-arm64
+FROM debian:bookworm-slim AS provenance-arm64
 ENV LOCALNET=1
 ENV LD_LIBRARY_PATH="/usr/local/lib"
 
@@ -85,7 +85,7 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build-arm64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/v2/internal/api/libwasmvm.aarch64.so /usr/local/lib/
+COPY --from=build-arm64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/v3/internal/api/libwasmvm.aarch64.so /usr/local/lib/
 
 COPY --from=build-arm64 /go/bin/provenanced /usr/bin/provenanced
 

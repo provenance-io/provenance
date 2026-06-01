@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -52,7 +52,7 @@ func QueryPlugins(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) *wasmkee
 
 	return &wasmkeeper.QueryPlugins{
 		Stargate: StargateQuerier(queryRouter, stargateCdc),
-		Grpc:     GrpcQuerier(queryRouter),
+		Grpc:     GrpcQuerier(queryRouter, stargateCdc),
 	}
 }
 
@@ -87,8 +87,9 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 }
 
 // GrpcQuerier dispatches whitelisted queries and returns protobuf encoded responses
-func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
+func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
+		// Make sure the request is white-listed.
 		_, err := GetWhitelistedQuery(request.Path)
 		if err != nil {
 			return nil, err
@@ -107,6 +108,8 @@ func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, requ
 			return nil, err
 		}
 
+		// We're returning an *abci.ResponseQuery here instead of the actual query result type because
+		// we started out doing it this way, and now all the smart contracts expect it this way.
 		return res, nil
 	}
 }

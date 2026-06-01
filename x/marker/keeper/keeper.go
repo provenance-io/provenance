@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibctypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -29,7 +29,7 @@ type MarkerKeeperI interface {
 	// GetMarker looks up a marker by a given address
 	GetMarker(sdk.Context, sdk.AccAddress) (types.MarkerAccountI, error)
 	// Set a marker in the auth account store
-	SetMarker(sdk.Context, types.MarkerAccountI)
+	SetMarker(sdk.Context, types.MarkerAccountI) error
 	// Remove a marker from the auth account store
 	RemoveMarker(sdk.Context, types.MarkerAccountI)
 
@@ -88,6 +88,9 @@ type Keeper struct {
 
 	// groupChecker provides a way to check if an account is in a group.
 	groupChecker types.GroupChecker
+
+	// exchangeKeeper is an optional keeper for committing funds to exchange markets.
+	exchangeKeeper types.ExchangeKeeper
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -129,6 +132,13 @@ func NewKeeper(
 	return rv
 }
 
+// SetExchangeKeeper sets the exchange keeper and returns the updated Keeper.
+// This must be called after both keepers are constructed to resolve the circular dependency
+// (exchange depends on marker via MarkerKeeper interface, marker depends on exchange via ExchangeKeeper interface).
+func (k *Keeper) SetExchangeKeeper(ek types.ExchangeKeeper) {
+	k.exchangeKeeper = ek
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
@@ -154,16 +164,15 @@ func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.Marker
 	return nil, nil
 }
 
-// SetMarker sets a marker in the auth account store will panic if the marker account is not valid or
-// if the auth module account keeper fails to marshall the account.
-func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
+// SetMarker sets a marker in the auth account store. Returns an error if the marker account is not valid.
+func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 	store := ctx.KVStore(k.storeKey)
-
 	if err := marker.Validate(); err != nil {
-		panic(err)
+		return err
 	}
 	k.authKeeper.SetAccount(ctx, marker)
 	store.Set(types.MarkerStoreKey(marker.GetAddress()), marker.GetAddress())
+	return nil
 }
 
 // RemoveMarker removes a marker from the auth account store. Note: if the account holds coins this will

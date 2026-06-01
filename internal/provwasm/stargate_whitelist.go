@@ -2,10 +2,11 @@ package provwasm
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	vaulttypes "github.com/provlabs/vault/types"
 
 	circuittypes "cosmossdk.io/x/circuit/types"
@@ -26,7 +27,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	assettypes "github.com/provenance-io/provenance/x/asset/types"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -39,7 +39,6 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/provenance-io/provenance/x/quarantine"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
@@ -57,9 +56,6 @@ var stargateWhitelist sync.Map
 // In the future we may want to find a better way to keep these in sync
 
 func init() {
-	// ibc queries
-	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
-
 	// ==========================================================
 	// cosmos-sdk queries
 	// ==========================================================
@@ -202,7 +198,7 @@ func init() {
 	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/Authority", &upgradetypes.QueryAuthorityResponse{})
 
 	// wasm
-	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractHistory", &wasmtypes.QueryContractInfoResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractHistory", &wasmtypes.QueryContractHistoryResponse{})
 	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractsByCode", &wasmtypes.QueryContractsByCodeResponse{})
 	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/SmartContractState", &wasmtypes.QuerySmartContractStateResponse{})
 	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Code", &wasmtypes.QueryCodeResponse{})
@@ -324,10 +320,6 @@ func init() {
 	setWhitelistedQuery("/provenance.name.v1.Query/Resolve", &nametypes.QueryResolveResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/ReverseLookup", &nametypes.QueryReverseLookupResponse{})
 
-	// oracle
-	setWhitelistedQuery("/provenance.oracle.v1.Query/OracleAddress", &oracletypes.QueryOracleAddressResponse{})
-	setWhitelistedQuery("/provenance.oracle.v1.Query/Oracle", &oracletypes.QueryOracleResponse{})
-
 	// quarantine
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})
 	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/QuarantinedFunds", &quarantine.QueryQuarantinedFundsResponse{})
@@ -367,7 +359,17 @@ func GetWhitelistedQuery(queryPath string) (proto.Message, error) {
 	if !ok {
 		return nil, wasmvmtypes.Unknown{}
 	}
-	return protoResponseType, nil
+	// Build a fresh zero-value instance of the same concrete type.
+	rt := reflect.TypeOf(protoResponseType)
+	if rt.Kind() != reflect.Ptr {
+		return nil, wasmvmtypes.Unknown{}
+	}
+	freshAny := reflect.New(rt.Elem()).Interface()
+	fresh, ok := freshAny.(proto.Message)
+	if !ok {
+		return nil, wasmvmtypes.Unknown{}
+	}
+	return fresh, nil
 }
 
 func setWhitelistedQuery(queryPath string, protoType proto.Message) {

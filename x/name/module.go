@@ -118,9 +118,6 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterInvariants registers the distribution module invariants.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))

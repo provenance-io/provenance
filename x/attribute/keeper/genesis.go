@@ -89,6 +89,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := k.GetParams(ctx)
 
 	appendToRecords := func(attr types.Attribute) error {
+		if err := k.ValidateExpirationDate(ctx, attr); err != nil {
+			return nil
+		}
 		attrs = append(attrs, attr)
 		return nil
 	}

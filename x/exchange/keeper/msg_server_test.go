@@ -5908,3 +5908,241 @@ func (s *TestSuite) TestMsgServer_UpdateParams() {
 		})
 	}
 }
+func (s *TestSuite) TestMsgServer_SendAndCommit() {
+	testDef := msgServerTestDef[exchange.MsgSendAndCommitRequest, exchange.MsgSendAndCommitResponse, expBalances]{
+		endpointName: "SendAndCommit",
+		endpoint:     keeper.NewMsgServer(s.k).SendAndCommit,
+		expResp:      &exchange.MsgSendAndCommitResponse{},
+		followup: func(_ *exchange.MsgSendAndCommitRequest, expBal expBalances) {
+			s.checkBalances(expBal)
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgSendAndCommitRequest, expBalances]{
+		{
+			name: "market does not exist",
+			setup: func() {
+				s.requireFundAccount(s.addr1, "100apple")
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("50apple"),
+				MarketId:  999,
+			},
+			expInErr: []string{invReqErr, "failed to commit funds"},
+			fArgs: expBalances{
+				// addr1 still has all coins (send was reverted)
+				addr:     s.addr1,
+				expBal:   s.coins("100apple"),
+				expSpend: s.coins("100apple"),
+			},
+		},
+		{
+			name: "market not accepting commitments",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             3,
+					AcceptingCommitments: false,
+				})
+				s.requireFundAccount(s.addr1, "100apple")
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("50apple"),
+				MarketId:  3,
+			},
+			expInErr: []string{invReqErr, "failed to commit funds", "market 3 is not accepting commitments"},
+			fArgs: expBalances{
+				addr:     s.addr1,
+				expBal:   s.coins("100apple"),
+				expSpend: s.coins("100apple"),
+			},
+		},
+		{
+			name: "sender has insufficient funds",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             3,
+					AcceptingCommitments: true,
+				})
+				s.requireFundAccount(s.addr1, "10apple")
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("50apple"),
+				MarketId:  3,
+			},
+			expInErr: []string{invReqErr, "failed to send coins"},
+			fArgs: expBalances{
+				addr:     s.addr1,
+				expBal:   s.coins("10apple"),
+				expSpend: s.coins("10apple"),
+			},
+		},
+		{
+			name: "recipient missing required attributes",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                3,
+					AcceptingCommitments:    true,
+					ReqAttrCreateCommitment: []string{"kyc.approved"},
+				})
+				s.requireFundAccount(s.addr1, "100apple")
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("50apple"),
+				MarketId:  3,
+			},
+			expInErr: []string{invReqErr, "failed to commit funds"},
+			fArgs: expBalances{
+				// send was reverted — addr1 still has all coins
+				addr:     s.addr1,
+				expBal:   s.coins("100apple"),
+				expSpend: s.coins("100apple"),
+			},
+		},
+		{
+			name: "success: send and commit without required attributes",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             3,
+					AcceptingCommitments: true,
+				})
+				s.requireFundAccount(s.addr1, "100apple,100cherry")
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("50apple"),
+				MarketId:  3,
+				EventTag:  "test-send-commit",
+			},
+			fArgs: expBalances{
+				// addr2 received 50apple, which is now on hold (committed)
+				addr:     s.addr2,
+				expBal:   s.coins("50apple"),
+				expHold:  s.coins("50apple"),
+				expSpend: []sdk.Coin{s.zeroCoin("apple")},
+			},
+			expEvents: sdk.Events{
+				// bank send events: addr1 -> addr2
+				s.eventCoinSpent(s.addr1, "50apple"),
+				s.eventCoinReceived(s.addr2, "50apple"),
+				s.eventTransfer(s.addr2, s.addr1, "50apple"),
+				s.eventMessageSender(s.addr1),
+				// hold added event
+				s.untypeEvent(hold.NewEventHoldAdded(s.addr2, s.coins("50apple"), "x/exchange: commitment to 3")),
+				// commitment event
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 3, s.coins("50apple"), "test-send-commit")),
+			},
+		},
+		{
+			name: "success: send and commit with required attributes",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                3,
+					AcceptingCommitments:    true,
+					ReqAttrCreateCommitment: []string{"kyc.approved"},
+				})
+				s.requireFundAccount(s.addr1, "100apple")
+				// Give addr2 the required attribute
+				s.requireSetNameRecord("kyc.approved", s.addr5)
+				s.requireSetAttr(s.addr2, "kyc.approved", s.addr5)
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("50apple"),
+				MarketId:  3,
+				EventTag:  "with-attrs",
+			},
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expBal:   s.coins("50apple"),
+				expHold:  s.coins("50apple"),
+				expSpend: []sdk.Coin{s.zeroCoin("apple")},
+			},
+			expEvents: sdk.Events{
+				s.eventCoinSpent(s.addr1, "50apple"),
+				s.eventCoinReceived(s.addr2, "50apple"),
+				s.eventTransfer(s.addr2, s.addr1, "50apple"),
+				s.eventMessageSender(s.addr1),
+				s.untypeEvent(hold.NewEventHoldAdded(s.addr2, s.coins("50apple"), "x/exchange: commitment to 3")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 3, s.coins("50apple"), "with-attrs")),
+			},
+		},
+		{
+			name: "success: send and commit without event tag",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             3,
+					AcceptingCommitments: true,
+				})
+				s.requireFundAccount(s.addr1, "100apple")
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("50apple"),
+				MarketId:  3,
+				EventTag:  "", // empty is valid
+			},
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expBal:   s.coins("50apple"),
+				expHold:  s.coins("50apple"),
+				expSpend: []sdk.Coin{s.zeroCoin("apple")},
+			},
+			expEvents: sdk.Events{
+				s.eventCoinSpent(s.addr1, "50apple"),
+				s.eventCoinReceived(s.addr2, "50apple"),
+				s.eventTransfer(s.addr2, s.addr1, "50apple"),
+				s.eventMessageSender(s.addr1),
+				s.untypeEvent(hold.NewEventHoldAdded(s.addr2, s.coins("50apple"), "x/exchange: commitment to 3")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 3, s.coins("50apple"), "")),
+			},
+		},
+		{
+			name: "success: send and commit multiple coins",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             3,
+					AcceptingCommitments: true,
+				})
+				s.requireFundAccount(s.addr1, "100apple,100cherry")
+			},
+			msg: exchange.MsgSendAndCommitRequest{
+				Sender:    s.addr1.String(),
+				ToAddress: s.addr2.String(),
+				Amount:    s.coins("30apple,40cherry"),
+				MarketId:  3,
+				EventTag:  "multi-coin",
+			},
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expBal:   s.coins("30apple,40cherry"),
+				expHold:  s.coins("30apple,40cherry"),
+				expSpend: []sdk.Coin{s.zeroCoin("apple"), s.zeroCoin("cherry")},
+			},
+			expEvents: sdk.Events{
+				s.eventCoinSpent(s.addr1, "30apple,40cherry"),
+				s.eventCoinReceived(s.addr2, "30apple,40cherry"),
+				s.eventTransfer(s.addr2, s.addr1, "30apple,40cherry"),
+				s.eventMessageSender(s.addr1),
+				s.untypeEvent(hold.NewEventHoldAdded(s.addr2, s.coins("30apple,40cherry"), "x/exchange: commitment to 3")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 3, s.coins("30apple,40cherry"), "multi-coin")),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}

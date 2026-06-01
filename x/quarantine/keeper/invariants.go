@@ -12,15 +12,15 @@ import (
 const balanceInvariant = "Funds-Holder-Balance"
 
 // RegisterInvariants registers all quarantine invariants.
-func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) { //nolint:staticcheck // We still want to use invariants.
 	ir.RegisterRoute(quarantine.ModuleName, balanceInvariant, FundsHolderBalanceInvariant(keeper))
 }
 
 // FundsHolderBalanceInvariant checks that the funds-holder account has enough funds to cover all quarantined funds.
-func FundsHolderBalanceInvariant(keeper Keeper) sdk.Invariant {
+func FundsHolderBalanceInvariant(keeper Keeper) sdk.Invariant { //nolint:staticcheck // We still want to use invariants.
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := fundsHolderBalanceInvariantHelper(ctx, keeper)
-		return sdk.FormatInvariant(quarantine.ModuleName, balanceInvariant, msg), broken
+		return sdk.FormatInvariant(quarantine.ModuleName, balanceInvariant, msg), broken //nolint:staticcheck // We still want to use invariants.
 	}
 }
 

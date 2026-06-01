@@ -15,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/exchange/export"
 )
 
 func TestCommitment_Validate(t *testing.T) {
@@ -750,20 +751,20 @@ func TestValidateEventTag(t *testing.T) {
 		},
 		{
 			name:     "max length",
-			eventTag: strings.Repeat("p", MaxEventTagLength),
+			eventTag: strings.Repeat("p", export.MaxEventTagLength),
 			exp:      "",
 		},
 		{
 			name:     "max length plus one",
-			eventTag: strings.Repeat("p", MaxEventTagLength) + "R",
+			eventTag: strings.Repeat("p", export.MaxEventTagLength) + "R",
 			exp: fmt.Sprintf("invalid event tag %q (length %d): exceeds max length %d",
-				"ppppp...ppppR", MaxEventTagLength+1, MaxEventTagLength),
+				"ppppp...ppppR", export.MaxEventTagLength+1, export.MaxEventTagLength),
 		},
 		{
 			name:     "really long",
 			eventTag: "a" + strings.Repeat("pP", 4_999) + "z",
 			exp: fmt.Sprintf("invalid event tag %q (length %d): exceeds max length %d",
-				"apPpP...pPpPz", 10_000, MaxEventTagLength),
+				"apPpP...pPpPz", 10_000, export.MaxEventTagLength),
 		},
 	}
 
@@ -771,7 +772,7 @@ func TestValidateEventTag(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
 			testFunc := func() {
-				err = ValidateEventTag(tc.eventTag)
+				err = export.ValidateEventTag(tc.eventTag)
 			}
 			require.NotPanics(t, testFunc, "ValidateEventTag(%q)", tc.eventTag)
 			assertions.AssertErrorValue(t, err, tc.exp, "ValidateEventTag(%q) result")

@@ -139,9 +139,6 @@ func (AppModule) Name() string {
 	return ibcratelimit.ModuleName
 }
 
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // InitGenesis performs the txfees module's genesis initialization It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {

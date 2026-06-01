@@ -22,6 +22,12 @@ service Msg {
 
   // UpdateMsgFees is a governance endpoint for updating fees for specific msgs.
   rpc UpdateMsgFees(MsgUpdateMsgFeesRequest) returns (MsgUpdateMsgFeesResponse);
+
+  // AddOracleAddress is a governance endpoint for adding an oracle address that can update the conversion factor.
+  rpc AddOracleAddress(MsgAddOracleAddressRequest) returns (MsgAddOracleAddressResponse);
+
+  // RemoveOracleAddress is a governance endpoint for removing an oracle address.
+  rpc RemoveOracleAddress(MsgRemoveOracleAddressRequest) returns (MsgRemoveOracleAddressResponse);
 }
 
 // MsgUpdateParamsRequest is the request for the UpdateParams governance endpoint.
@@ -42,7 +48,7 @@ message MsgUpdateParamsResponse {}
 message MsgUpdateConversionFactorRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority should be the governance module account address.
+  // authority should be either the governance module account address or an oracle address.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // conversion_factor is the new conversion factor that should be used.
@@ -68,3 +74,31 @@ message MsgUpdateMsgFeesRequest {
 
 // MsgUpdateMsgFeesResponse is the response for the UpdateMsgFees governance endpoint.
 message MsgUpdateMsgFeesResponse {}
+
+// MsgAddOracleAddressRequest is the request for the AddOracleAddress governance endpoint.
+message MsgAddOracleAddressRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // oracle_address is the address to be added to the oracle list.
+  string oracle_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgAddOracleAddressResponse is the response for the AddOracleAddress governance endpoint.
+message MsgAddOracleAddressResponse {}
+
+// MsgRemoveOracleAddressRequest is the request for the RemoveOracleAddress governance endpoint.
+message MsgRemoveOracleAddressRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // oracle_address is the address to be removed from the oracle list.
+  string oracle_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRemoveOracleAddressResponse is the response for the RemoveOracleAddress governance endpoint.
+message MsgRemoveOracleAddressResponse {}

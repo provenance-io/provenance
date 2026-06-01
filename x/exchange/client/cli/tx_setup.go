@@ -148,6 +148,44 @@ func MakeMsgCommitFunds(clientCtx client.Context, flagSet *pflag.FlagSet, _ []st
 	return msg, errors.Join(errs...)
 }
 
+// SetupCmdTxSendAndCommit adds the flags needed for MakeMsgSendAndCommit.
+func SetupCmdTxSendAndCommit(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSender, "", "The account sending the funds (defaults to --from account)")
+	cmd.Flags().String(FlagTo, "", "The recipient address (required)")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id to commit funds to (required)")
+	cmd.Flags().String(FlagAmount, "", "The coins to send and commit (required)")
+	cmd.Flags().String(FlagTag, "", "An optional event tag")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSender)
+	MarkFlagsRequired(cmd, FlagTo, FlagMarket, FlagAmount)
+
+	AddUseArgs(cmd,
+		ReqSignerUse(FlagSender),
+		ReqFlagUse(FlagTo, "recipient address"),
+		ReqFlagUse(FlagMarket, "market id"),
+		ReqFlagUse(FlagAmount, "amount"),
+		UseFlagsBreak,
+		OptFlagUse(FlagTag, "event tag"),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagSender))
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgSendAndCommit builds a MsgSendAndCommitRequest from the provided command and flags.
+func MakeMsgSendAndCommit(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgSendAndCommitRequest, error) {
+	msg := &exchange.MsgSendAndCommitRequest{}
+
+	errs := make([]error, 5)
+	msg.Sender, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSender)
+	msg.ToAddress, errs[1] = flagSet.GetString(FlagTo)
+	msg.MarketId, errs[2] = flagSet.GetUint32(FlagMarket)
+	msg.Amount, errs[3] = ReadReqCoinsFlag(flagSet, FlagAmount)
+	msg.EventTag, errs[4] = flagSet.GetString(FlagTag)
+
+	return msg, errors.Join(errs...)
+}
+
 // SetupCmdTxCancelOrder adds all the flags needed for the MakeMsgCancelOrder.
 func SetupCmdTxCancelOrder(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSigner, "", "The signer (defaults to --from account)")

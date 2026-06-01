@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 )
 
 // Async: The following types represent the response sent by a contract on OnRecvPacket when it wants the ack to be async
@@ -114,29 +114,6 @@ type IbcLifecycleCompleteTimeout struct {
 // IbcLifecycleComplete ibc lifecycle complete struct with json fields defined
 type IbcLifecycleComplete struct {
 	IbcLifecycleComplete interface{} `json:"ibc_lifecycle_complete"`
-}
-
-// MarkerMemo parent marker struct for memo json
-type MarkerMemo struct {
-	Marker MarkerPayload `json:"marker"`
-}
-
-// MarkerPayload child structure for marker memo
-type MarkerPayload struct {
-	TransferAuths      []string `json:"transfer-auths"`
-	AllowForceTransfer bool     `json:"allow-force-transfer"`
-}
-
-// NewMarkerPayload returns a marker payload with transfer authorities and allow force transfer flag
-func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress, allowForceTransfer bool) MarkerPayload {
-	addresses := make([]string, len(transferAuthAddrs))
-	for i := 0; i < len(transferAuthAddrs); i++ {
-		addresses[i] = transferAuthAddrs[i].String()
-	}
-	return MarkerPayload{
-		TransferAuths:      addresses,
-		AllowForceTransfer: allowForceTransfer,
-	}
 }
 
 // NewIbcLifecycleCompleteAck returns a new ibc lifecycle complete acknowledgment object for json serialization

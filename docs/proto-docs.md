@@ -145,6 +145,8 @@
     - [MsgRejectPaymentResponse](#provenance-exchange-v1-MsgRejectPaymentResponse)
     - [MsgRejectPaymentsRequest](#provenance-exchange-v1-MsgRejectPaymentsRequest)
     - [MsgRejectPaymentsResponse](#provenance-exchange-v1-MsgRejectPaymentsResponse)
+    - [MsgSendAndCommitRequest](#provenance-exchange-v1-MsgSendAndCommitRequest)
+    - [MsgSendAndCommitResponse](#provenance-exchange-v1-MsgSendAndCommitResponse)
     - [MsgUpdateParamsRequest](#provenance-exchange-v1-MsgUpdateParamsRequest)
     - [MsgUpdateParamsResponse](#provenance-exchange-v1-MsgUpdateParamsResponse)
   
@@ -531,6 +533,10 @@
     - [UpdateNhashPerUsdMilProposal](#provenance-msgfees-v1-UpdateNhashPerUsdMilProposal)
   
 - [provenance/flatfees/v1/tx.proto](#provenance_flatfees_v1_tx-proto)
+    - [MsgAddOracleAddressRequest](#provenance-flatfees-v1-MsgAddOracleAddressRequest)
+    - [MsgAddOracleAddressResponse](#provenance-flatfees-v1-MsgAddOracleAddressResponse)
+    - [MsgRemoveOracleAddressRequest](#provenance-flatfees-v1-MsgRemoveOracleAddressRequest)
+    - [MsgRemoveOracleAddressResponse](#provenance-flatfees-v1-MsgRemoveOracleAddressResponse)
     - [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest)
     - [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse)
     - [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest)
@@ -544,6 +550,14 @@
     - [ConversionFactor](#provenance-flatfees-v1-ConversionFactor)
     - [MsgFee](#provenance-flatfees-v1-MsgFee)
     - [Params](#provenance-flatfees-v1-Params)
+  
+- [provenance/flatfees/v1/events.proto](#provenance_flatfees_v1_events-proto)
+    - [EventConversionFactorUpdated](#provenance-flatfees-v1-EventConversionFactorUpdated)
+    - [EventMsgFeeSet](#provenance-flatfees-v1-EventMsgFeeSet)
+    - [EventMsgFeeUnset](#provenance-flatfees-v1-EventMsgFeeUnset)
+    - [EventOracleAddressAdded](#provenance-flatfees-v1-EventOracleAddressAdded)
+    - [EventOracleAddressRemoved](#provenance-flatfees-v1-EventOracleAddressRemoved)
+    - [EventParamsUpdated](#provenance-flatfees-v1-EventParamsUpdated)
   
 - [provenance/flatfees/v1/query.proto](#provenance_flatfees_v1_query-proto)
     - [QueryAllMsgFeesRequest](#provenance-flatfees-v1-QueryAllMsgFeesRequest)
@@ -559,30 +573,6 @@
   
 - [provenance/flatfees/v1/genesis.proto](#provenance_flatfees_v1_genesis-proto)
     - [GenesisState](#provenance-flatfees-v1-GenesisState)
-  
-- [provenance/oracle/v1/tx.proto](#provenance_oracle_v1_tx-proto)
-    - [MsgSendQueryOracleRequest](#provenance-oracle-v1-MsgSendQueryOracleRequest)
-    - [MsgSendQueryOracleResponse](#provenance-oracle-v1-MsgSendQueryOracleResponse)
-    - [MsgUpdateOracleRequest](#provenance-oracle-v1-MsgUpdateOracleRequest)
-    - [MsgUpdateOracleResponse](#provenance-oracle-v1-MsgUpdateOracleResponse)
-  
-    - [Msg](#provenance-oracle-v1-Msg)
-  
-- [provenance/oracle/v1/query.proto](#provenance_oracle_v1_query-proto)
-    - [QueryOracleAddressRequest](#provenance-oracle-v1-QueryOracleAddressRequest)
-    - [QueryOracleAddressResponse](#provenance-oracle-v1-QueryOracleAddressResponse)
-    - [QueryOracleRequest](#provenance-oracle-v1-QueryOracleRequest)
-    - [QueryOracleResponse](#provenance-oracle-v1-QueryOracleResponse)
-  
-    - [Query](#provenance-oracle-v1-Query)
-  
-- [provenance/oracle/v1/event.proto](#provenance_oracle_v1_event-proto)
-    - [EventOracleQueryError](#provenance-oracle-v1-EventOracleQueryError)
-    - [EventOracleQuerySuccess](#provenance-oracle-v1-EventOracleQuerySuccess)
-    - [EventOracleQueryTimeout](#provenance-oracle-v1-EventOracleQueryTimeout)
-  
-- [provenance/oracle/v1/genesis.proto](#provenance_oracle_v1_genesis-proto)
-    - [GenesisState](#provenance-oracle-v1-GenesisState)
   
 - [provenance/registry/v1/tx.proto](#provenance_registry_v1_tx-proto)
     - [MsgGrantRole](#provenance-registry-v1-MsgGrantRole)
@@ -2900,6 +2890,36 @@ MsgRejectPaymentsResponse is a response message for the RejectPayments endpoint.
 
 
 
+<a name="provenance-exchange-v1-MsgSendAndCommitRequest"></a>
+
+### MsgSendAndCommitRequest
+MsgSendAndCommitRequest is a request message for the SendAndCommit endpoint.
+It sends coins from the sender to the to_address, then commits those coins to the specified market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is the address of the account sending the coins. |
+| `to_address` | [string](#string) |  | to_address is the address receiving the coins and on whose behalf they will be committed. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated | amount is the coins being sent and then committed. |
+| `market_id` | [uint32](#uint32) |  | market_id is the market to commit the funds to. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed events. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance-exchange-v1-MsgSendAndCommitResponse"></a>
+
+### MsgSendAndCommitResponse
+MsgSendAndCommitResponse is a response message for the SendAndCommit endpoint.
+
+
+
+
+
+
 <a name="provenance-exchange-v1-MsgUpdateParamsRequest"></a>
 
 ### MsgUpdateParamsRequest
@@ -2970,6 +2990,7 @@ Msg is the service for exchange module's tx endpoints.
 | `GovCloseMarket` | [MsgGovCloseMarketRequest](#provenance-exchange-v1-MsgGovCloseMarketRequest) | [MsgGovCloseMarketResponse](#provenance-exchange-v1-MsgGovCloseMarketResponse) | GovCloseMarket is a governance proposal endpoint that will disable order and commitment creation, cancel all orders, and release all commitments. |
 | `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance-exchange-v1-MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance-exchange-v1-MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. Deprecated: Use UpdateParams instead. |
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-exchange-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-exchange-v1-MsgUpdateParamsResponse) | UpdateParams is a governance proposal endpoint for updating the exchange module's params. |
+| `SendAndCommit` | [MsgSendAndCommitRequest](#provenance-exchange-v1-MsgSendAndCommitRequest) | [MsgSendAndCommitResponse](#provenance-exchange-v1-MsgSendAndCommitResponse) | SendAndCommit sends coins from the sender to a recipient and commits them to a market. |
 
  <!-- end services -->
 
@@ -8383,6 +8404,58 @@ It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a govern
 
 
 
+<a name="provenance-flatfees-v1-MsgAddOracleAddressRequest"></a>
+
+### MsgAddOracleAddressRequest
+MsgAddOracleAddressRequest is the request for the AddOracleAddress governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `oracle_address` | [string](#string) |  | oracle_address is the address to be added to the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgAddOracleAddressResponse"></a>
+
+### MsgAddOracleAddressResponse
+MsgAddOracleAddressResponse is the response for the AddOracleAddress governance endpoint.
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgRemoveOracleAddressRequest"></a>
+
+### MsgRemoveOracleAddressRequest
+MsgRemoveOracleAddressRequest is the request for the RemoveOracleAddress governance endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `oracle_address` | [string](#string) |  | oracle_address is the address to be removed from the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-MsgRemoveOracleAddressResponse"></a>
+
+### MsgRemoveOracleAddressResponse
+MsgRemoveOracleAddressResponse is the response for the RemoveOracleAddress governance endpoint.
+
+
+
+
+
+
 <a name="provenance-flatfees-v1-MsgUpdateConversionFactorRequest"></a>
 
 ### MsgUpdateConversionFactorRequest
@@ -8391,7 +8464,7 @@ MsgUpdateConversionFactorRequest is the request for the UpdateConversionFactor g
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `authority` | [string](#string) |  | authority should be either the governance module account address or an oracle address. |
 | `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the new conversion factor that should be used. |
 
 
@@ -8478,6 +8551,8 @@ Msg defines the flatfees Msg service.
 | `UpdateParams` | [MsgUpdateParamsRequest](#provenance-flatfees-v1-MsgUpdateParamsRequest) | [MsgUpdateParamsResponse](#provenance-flatfees-v1-MsgUpdateParamsResponse) | UpdateParams is a governance endpoint for updating the x/flatfees params. |
 | `UpdateConversionFactor` | [MsgUpdateConversionFactorRequest](#provenance-flatfees-v1-MsgUpdateConversionFactorRequest) | [MsgUpdateConversionFactorResponse](#provenance-flatfees-v1-MsgUpdateConversionFactorResponse) | UpdateConversionFactor is a governance endpoint for updating just the conversion factor in the x/flatfees params. |
 | `UpdateMsgFees` | [MsgUpdateMsgFeesRequest](#provenance-flatfees-v1-MsgUpdateMsgFeesRequest) | [MsgUpdateMsgFeesResponse](#provenance-flatfees-v1-MsgUpdateMsgFeesResponse) | UpdateMsgFees is a governance endpoint for updating fees for specific msgs. |
+| `AddOracleAddress` | [MsgAddOracleAddressRequest](#provenance-flatfees-v1-MsgAddOracleAddressRequest) | [MsgAddOracleAddressResponse](#provenance-flatfees-v1-MsgAddOracleAddressResponse) | AddOracleAddress is a governance endpoint for adding an oracle address that can update the conversion factor. |
+| `RemoveOracleAddress` | [MsgRemoveOracleAddressRequest](#provenance-flatfees-v1-MsgRemoveOracleAddressRequest) | [MsgRemoveOracleAddressResponse](#provenance-flatfees-v1-MsgRemoveOracleAddressResponse) | RemoveOracleAddress is a governance endpoint for removing an oracle address. |
 
  <!-- end services -->
 
@@ -8534,6 +8609,109 @@ Params defines the set of params for the flatfees module.
 | ----- | ---- | ----- | ----------- |
 | `default_cost` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) |  | default_cost is the amount a msg costs when there is no specific msg-fee defined for it. The denom used here should be the same as used to define the specific msg costs. The recommended denom is musd. |
 | `conversion_factor` | [ConversionFactor](#provenance-flatfees-v1-ConversionFactor) |  | conversion_factor is the ratio used to convert the msg-fees from their defined amounts into the fee denomination. The definition_amount should have the same denom as the default cost. The denom of the converted amount should be the denom that fees are paid in, e.g. nhash. |
+| `oracle_addresses` | [string](#string) | repeated | oracle_addresses is the list of addresses allowed to update the conversion factor without governance. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance_flatfees_v1_events-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/flatfees/v1/events.proto
+
+
+
+<a name="provenance-flatfees-v1-EventConversionFactorUpdated"></a>
+
+### EventConversionFactorUpdated
+EventConversionFactorUpdated is emitted when ConversionFactor successfully updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition_amount` | [string](#string) |  | definition_amount is the new definition_amount of the conversion factor as coin string, e.g. "1musd". |
+| `converted_amount` | [string](#string) |  | converted_amount is the new converted_amount of the conversion factor as a coin string, e.g. "2000nhash". |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventMsgFeeSet"></a>
+
+### EventMsgFeeSet
+EventMsgFeeSet is emitted when a msg fee is created or updated (from the SetMsgFee keeper helper).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message that had its fee set. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventMsgFeeUnset"></a>
+
+### EventMsgFeeUnset
+EventMsgFeeUnset is emitted when a msg fee is removed (from the RemoveMsgFee keeper helper).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | msg_type_url is the type-url of the message that had its fee removed. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventOracleAddressAdded"></a>
+
+### EventOracleAddressAdded
+EventOracleAddressAdded is emitted when AddOracleAddress successfully adds an oracle address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `oracle_address` | [string](#string) |  | oracle_address is the address that was added to the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventOracleAddressRemoved"></a>
+
+### EventOracleAddressRemoved
+EventOracleAddressRemoved is emitted when RemoveOracleAddress successfully removes an oracle address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `oracle_address` | [string](#string) |  | oracle_address is the address that was removed from the oracle list. |
+
+
+
+
+
+
+<a name="provenance-flatfees-v1-EventParamsUpdated"></a>
+
+### EventParamsUpdated
+EventParamsUpdated is emitted when UpdateParams successfully updates the flatfees params.
 
 
 
@@ -8716,271 +8894,6 @@ GenesisState contains a set of the flat fees module data, persisted from the sto
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance-flatfees-v1-Params) |  | params defines all the parameters of the module. |
 | `msg_fees` | [MsgFee](#provenance-flatfees-v1-MsgFee) | repeated | msg_fees are the fees defined for specific msg types. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_oracle_v1_tx-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/oracle/v1/tx.proto
-
-
-
-<a name="provenance-oracle-v1-MsgSendQueryOracleRequest"></a>
-
-### MsgSendQueryOracleRequest
-MsgSendQueryOracleRequest queries an oracle on another chain
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
-| `channel` | [string](#string) |  | Channel is the channel to the oracle. |
-| `authority` | [string](#string) |  | The signing authority for the request |
-
-
-
-
-
-
-<a name="provenance-oracle-v1-MsgSendQueryOracleResponse"></a>
-
-### MsgSendQueryOracleResponse
-MsgSendQueryOracleResponse contains the id of the oracle query.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sequence` | [uint64](#uint64) |  | The sequence number that uniquely identifies the query. |
-
-
-
-
-
-
-<a name="provenance-oracle-v1-MsgUpdateOracleRequest"></a>
-
-### MsgUpdateOracleRequest
-MsgUpdateOracleRequest is the request type for updating an oracle's contract address
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | The address of the oracle's contract |
-| `authority` | [string](#string) |  | The signing authorities for the request |
-
-
-
-
-
-
-<a name="provenance-oracle-v1-MsgUpdateOracleResponse"></a>
-
-### MsgUpdateOracleResponse
-MsgUpdateOracleResponse is the response type for updating the oracle.
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="provenance-oracle-v1-Msg"></a>
-
-### Msg
-Msg
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `UpdateOracle` | [MsgUpdateOracleRequest](#provenance-oracle-v1-MsgUpdateOracleRequest) | [MsgUpdateOracleResponse](#provenance-oracle-v1-MsgUpdateOracleResponse) | UpdateOracle is the RPC endpoint for updating the oracle |
-| `SendQueryOracle` | [MsgSendQueryOracleRequest](#provenance-oracle-v1-MsgSendQueryOracleRequest) | [MsgSendQueryOracleResponse](#provenance-oracle-v1-MsgSendQueryOracleResponse) | SendQueryOracle sends a query to an oracle on another chain |
-
- <!-- end services -->
-
-
-
-<a name="provenance_oracle_v1_query-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/oracle/v1/query.proto
-
-
-
-<a name="provenance-oracle-v1-QueryOracleAddressRequest"></a>
-
-### QueryOracleAddressRequest
-QueryOracleAddressRequest queries for the address of the oracle.
-
-
-
-
-
-
-<a name="provenance-oracle-v1-QueryOracleAddressResponse"></a>
-
-### QueryOracleAddressResponse
-QueryOracleAddressResponse contains the address of the oracle.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | The address of the oracle |
-
-
-
-
-
-
-<a name="provenance-oracle-v1-QueryOracleRequest"></a>
-
-### QueryOracleRequest
-QueryOracleRequest queries the module's oracle.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
-
-
-
-
-
-
-<a name="provenance-oracle-v1-QueryOracleResponse"></a>
-
-### QueryOracleResponse
-QueryOracleResponse contains the result of the query sent to the oracle.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [bytes](#bytes) |  | Data contains the json data returned from the oracle. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="provenance-oracle-v1-Query"></a>
-
-### Query
-Query defines the gRPC querier service for oracle module.
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| `OracleAddress` | [QueryOracleAddressRequest](#provenance-oracle-v1-QueryOracleAddressRequest) | [QueryOracleAddressResponse](#provenance-oracle-v1-QueryOracleAddressResponse) | OracleAddress returns the address of the oracle |
-| `Oracle` | [QueryOracleRequest](#provenance-oracle-v1-QueryOracleRequest) | [QueryOracleResponse](#provenance-oracle-v1-QueryOracleResponse) | Oracle forwards a query to the module's oracle |
-
- <!-- end services -->
-
-
-
-<a name="provenance_oracle_v1_event-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/oracle/v1/event.proto
-
-
-
-<a name="provenance-oracle-v1-EventOracleQueryError"></a>
-
-### EventOracleQueryError
-EventOracleQueryError is an event for when the chain receives an error response from an oracle query
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
-| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
-| `error` | [string](#string) |  | error is the error message received from the query |
-
-
-
-
-
-
-<a name="provenance-oracle-v1-EventOracleQuerySuccess"></a>
-
-### EventOracleQuerySuccess
-EventOracleQuerySuccess is an event for when the chain receives a successful response from an oracle query
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
-| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
-| `result` | [string](#string) |  | result is the data received from the query |
-
-
-
-
-
-
-<a name="provenance-oracle-v1-EventOracleQueryTimeout"></a>
-
-### EventOracleQueryTimeout
-EventOracleQueryTimeout is an event for when the chain receives a timeout from an oracle query
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `channel` | [string](#string) |  | channel is the local channel that the oracle timeout was received from |
-| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance_oracle_v1_genesis-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/oracle/v1/genesis.proto
-
-
-
-<a name="provenance-oracle-v1-GenesisState"></a>
-
-### GenesisState
-GenesisState defines the oracle module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `port_id` | [string](#string) |  | The port to assign to the module |
-| `oracle` | [string](#string) |  | The address of the oracle |
 
 
 
@@ -9731,7 +9644,7 @@ Params defines the allowed async ack contracts
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `allowed_async_ack_contracts` | [string](#string) | repeated |  |
+| `allowed_async_ack_contracts` | [string](#string) | repeated | Deprecated: This field has been deprecated and is ignored. Async ack contracts are no longer possible in IBC v10. |
 
 
 
@@ -10797,6 +10710,8 @@ MsgWithdrawRequest defines the Msg/Withdraw request type
 | `administrator` | [string](#string) |  |  |
 | `to_address` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos-base-v1beta1-Coin) | repeated |  |
+| `market_id` | [uint32](#uint32) |  | market_id is an optional exchange market id. If non-zero, the withdrawn funds will be committed to that market on behalf of the to_address after the withdrawal completes. |
+| `event_tag` | [string](#string) |  | event_tag is an optional string included in commitment events when market_id is non-zero. Max length is 100 characters. |
 
 
 

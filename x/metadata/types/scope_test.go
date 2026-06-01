@@ -193,7 +193,6 @@ func (s *ScopeTestSuite) TestScopeAddAccess() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 
 			tt.scope.AddDataAccess(tt.dataAccess)
@@ -247,7 +246,6 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 
 			tt.scope.RemoveDataAccess(tt.dataAccess)
@@ -685,7 +683,6 @@ func (s *ScopeTestSuite) TestRecordValidateBasic() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.record.ValidateBasic()
 			if (err != nil) != tt.wantErr {
@@ -813,7 +810,6 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.session.ValidateBasic()
 			if len(tc.errMsg) > 0 {
@@ -2067,7 +2063,6 @@ func TestNetAssetValueValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.nav.Validate()
 			if len(tt.expErr) > 0 {

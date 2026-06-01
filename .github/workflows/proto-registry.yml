@@ -38,7 +38,7 @@ jobs:
           buf_token: ${{ secrets.BUF_TOKEN }}
       - name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@v7
         with:
           # Use a key associated with the provenanceio-bot github account.
           gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
@@ -54,7 +54,7 @@ jobs:
           git commit -S -m "Update buf.lock to latest commit hash"
       - name: Create Pull Request
         id: cpr
-        uses: peter-evans/create-pull-request@v8.1.0
+        uses: peter-evans/create-pull-request@v8.1.1
         with:
           base: main
           branch: provenanceio-bot/patch-buf-lock

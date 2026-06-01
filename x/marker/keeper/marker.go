@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	ibctypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -64,7 +64,10 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 	if err := marker.Validate(); err != nil {
 		return err
 	}
-	k.SetMarker(ctx, marker)
+
+	if err := k.SetMarker(ctx, marker); err != nil {
+		return err
+	}
 
 	markerAddEvent := types.NewEventMarkerAdd(
 		marker.GetSupply().Denom,
@@ -111,7 +114,9 @@ func (k Keeper) AddAccess(
 		if err := m.Validate(); err != nil {
 			return err
 		}
-		k.SetMarker(ctx, m)
+		if err := k.SetMarker(ctx, m); err != nil {
+			return err
+		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
 	default:
 		return fmt.Errorf("marker in %s state can not be modified", m.GetStatus())
@@ -153,7 +158,9 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		if err := m.Validate(); err != nil {
 			return err
 		}
-		k.SetMarker(ctx, m)
+		if err := k.SetMarker(ctx, m); err != nil {
+			return err
+		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
 	default:
 		return fmt.Errorf("marker in %s state can not be modified", m.GetStatus())
@@ -234,7 +241,9 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		if err = m.Validate(); err != nil {
 			return err
 		}
-		k.SetMarker(ctx, m)
+		if err := k.SetMarker(ctx, m); err != nil {
+			return err
+		}
 	case m.GetStatus() != types.StatusActive:
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
 	default:
@@ -274,7 +283,9 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		if err = m.Validate(); err != nil {
 			return err
 		}
-		k.SetMarker(ctx, m)
+		if err := k.SetMarker(ctx, m); err != nil {
+			return err
+		}
 	case m.GetStatus() != types.StatusActive:
 		return fmt.Errorf("cannot burn coin for a marker that is not in Active status")
 	default:
@@ -359,7 +370,9 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 		if err := marker.Validate(); err != nil {
 			return err
 		}
-		k.SetMarker(ctx, marker)
+		if err := k.SetMarker(ctx, marker); err != nil {
+			return err
+		}
 	}
 
 	return k.AdjustCirculation(ctx, marker, total)
@@ -390,7 +403,9 @@ func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 			return err
 		}
 		// Finalize supply update in marker record
-		k.SetMarker(ctx, marker)
+		if err := k.SetMarker(ctx, marker); err != nil {
+			return err
+		}
 	}
 
 	// Adjust circulation to match configured supply.
@@ -454,7 +469,9 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if err := m.Validate(); err != nil {
 		return err
 	}
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return err
+	}
 
 	// record status as finalized.
 	markerFinalizeEvent := types.NewEventMarkerFinalize(denom, caller.String())
@@ -507,7 +524,9 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 		return err
 	}
 	// record status as active
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return err
+	}
 
 	markerActivateEvent := types.NewEventMarkerActivate(denom, caller.String())
 
@@ -554,7 +573,9 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	if err := m.Validate(); err != nil {
 		return err
 	}
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return err
+	}
 
 	markerCancelEvent := types.NewEventMarkerCancel(denom, caller.String())
 
@@ -612,7 +633,9 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	if err := m.Validate(); err != nil {
 		return err
 	}
-	k.SetMarker(ctx, m)
+	if err := k.SetMarker(ctx, m); err != nil {
+		return err
+	}
 
 	markerDeleteEvent := types.NewEventMarkerDelete(denom, caller.String())
 
@@ -763,7 +786,9 @@ func (k Keeper) IbcTransferCoin(
 		if err != nil {
 			return err
 		}
-		k.SetMarker(ctx, m)
+		if err := k.SetMarker(ctx, m); err != nil {
+			return err
+		}
 	}
 
 	msg := ibctypes.NewMsgTransfer(
@@ -866,11 +891,15 @@ func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.Marke
 // accountControlsAllSupply return true if the caller account address possess 100% of the total supply of a marker.
 // This check is used to determine if an account should be allowed to perform defacto admin operations on a marker.
 func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress, m types.MarkerAccountI) bool {
-	balance := k.bankKeeper.GetBalance(ctx, caller, m.GetDenom())
-
-	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
+	// If the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
-	supply := m.GetSupply()
+	// Use the live circulating supply from the bank keeper instead of m.GetSupply().
+	// m.GetSupply() can become outdated after minting.
+	supply := k.bankKeeper.GetSupply(ctx, m.GetDenom())
+	if supply.Amount.IsNil() || supply.Amount.IsZero() {
+		return false
+	}
+	balance := k.bankKeeper.GetBalance(ctx, caller, m.GetDenom())
 	return supply.Equal(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }
 

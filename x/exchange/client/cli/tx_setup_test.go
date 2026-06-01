@@ -296,6 +296,85 @@ func TestMakeMsgCommitFunds(t *testing.T) {
 	}
 }
 
+func TestSetupCmdTxSendAndCommit(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxSendAndCommit",
+		setup: cli.SetupCmdTxSendAndCommit,
+		expFlags: []string{
+			cli.FlagSender, cli.FlagTo, cli.FlagMarket, cli.FlagAmount, cli.FlagTag,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagSender}},
+			cli.FlagSender: {oneReq: {flags.FlagFrom + " " + cli.FlagSender}},
+			cli.FlagTo:     {required: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagAmount: {required: {"true"}},
+		},
+		expInUse: []string{
+			"--sender", "--to <recipient address>", "--market <market id>", "--amount <amount>",
+			"[--tag <event tag>]",
+			cli.ReqSignerDesc(cli.FlagSender),
+		},
+	})
+}
+
+func TestMakeMsgSendAndCommit(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgSendAndCommitRequest]{
+		makerName: "MakeMsgSendAndCommit",
+		maker:     cli.MakeMsgSendAndCommit,
+		setup:     cli.SetupCmdTxSendAndCommit,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgSendAndCommitRequest]{
+		{
+			name:      "a couple errors",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--amount", "nope"},
+			expMsg: &exchange.MsgSendAndCommitRequest{
+				Sender: sdk.AccAddress("FromAddress_________").String(),
+			},
+			expErr: joinErrs(
+				"error parsing --amount as coins: invalid coin expression: \"nope\"",
+			),
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--sender", "senderaddr",
+				"--to", "recipientaddr",
+				"--market", "4",
+				"--amount", "10apple",
+				"--tag", "atagofsomesort",
+			},
+			expMsg: &exchange.MsgSendAndCommitRequest{
+				Sender:    "senderaddr",
+				ToAddress: "recipientaddr",
+				MarketId:  4,
+				Amount:    sdk.NewCoins(sdk.NewInt64Coin("apple", 10)),
+				EventTag:  "atagofsomesort",
+			},
+		},
+		{
+			name:      "sender defaults to --from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--to", "recipientaddr", "--market", "7", "--amount", "5peach"},
+			expMsg: &exchange.MsgSendAndCommitRequest{
+				Sender:    sdk.AccAddress("FromAddress_________").String(),
+				ToAddress: "recipientaddr",
+				MarketId:  7,
+				Amount:    sdk.NewCoins(sdk.NewInt64Coin("peach", 5)),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
 func TestSetupCmdTxCancelOrder(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxCancelOrder",

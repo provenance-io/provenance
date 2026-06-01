@@ -8,6 +8,7 @@ option java_multiple_files = true;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 // Params defines the set of params for the flatfees module.
 message Params {
@@ -21,6 +22,9 @@ message Params {
   // The definition_amount should have the same denom as the default cost.
   // The denom of the converted amount should be the denom that fees are paid in, e.g. nhash.
   ConversionFactor conversion_factor = 3 [(gogoproto.nullable) = false];
+
+  // oracle_addresses is the list of addresses allowed to update the conversion factor without governance.
+  repeated string oracle_addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // ConversionFactor equates the values of two coins in different denominations.

@@ -49,7 +49,7 @@ func NewErrCodeInvalidField(field, format string, args ...interface{}) error {
 }
 
 func NewErrCodeUnauthorized(why string) error {
-	return cerrs.Wrapf(ErrUnauthorized, "unauthorized access: %q", why)
+	return cerrs.Wrapf(ErrUnauthorized, "unauthorized access: %s", why)
 }
 
 func NewErrCodeAlreadyExists(field string) error {

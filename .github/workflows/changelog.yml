@@ -47,7 +47,7 @@ jobs:
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@v7
         with:
           # Use a key associated with the provenanceio-bot github account.
           gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}

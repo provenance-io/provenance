@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	"math"
+	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -298,4 +300,246 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestDetectBlockTimeOverflowPoisonRejected() {
+	now := time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC)
+	s.ctx = s.ctx.WithBlockTime(now)
+	owner := s.accountAddresses[0].String()
+	action := &types.MsgDestroyTriggerRequest{Id: 999, Authority: owner}
+
+	// maxTime is 2^64 nanoseconds after the Unix epoch (~year 2554).
+	maxTime := time.Unix(18446744073, 709551616).UTC()
+
+	s.Run("overflow timestamp is rejected by ValidateContext", func() {
+		poisonEvent := &types.BlockTimeEvent{Time: maxTime}
+		err := poisonEvent.ValidateContext(s.ctx)
+		s.Require().Error(err, "far-future overflow timestamp must not pass ValidateContext")
+		s.Require().ErrorIs(err, types.ErrInvalidBlockTime,
+			"the returned error must be ErrInvalidBlockTime")
+	})
+
+	s.Run("overflow timestamp would have sorted before due trigger without the fix", func() {
+		dueEvent := &types.BlockTimeEvent{Time: now}
+		poisonEvent := &types.BlockTimeEvent{Time: maxTime}
+		s.Require().Less(
+			poisonEvent.GetEventOrder(),
+			dueEvent.GetEventOrder(),
+			"poison trigger's overflowed order must be less than the due trigger's order — "+
+				"proving why ValidateContext must reject it",
+		)
+	})
+
+	s.Run("time at the exact int64 ceiling is accepted", func() {
+		ceilingTime := time.Unix(0, math.MaxInt64).UTC()
+		ceilingEvent := &types.BlockTimeEvent{Time: ceilingTime}
+		err := ceilingEvent.ValidateContext(s.ctx)
+		s.Require().NoError(err, "time at the exact int64 ceiling must be accepted")
+	})
+
+	s.Run("due trigger is queued when no poison listener exists", func() {
+		dueEvent := &types.BlockTimeEvent{Time: now}
+		dueTrigger := s.CreateTrigger(1, owner, dueEvent, action)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, dueTrigger)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(nil))
+
+		s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
+
+		items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
+		s.Require().NoError(err, "GetAllQueueItems")
+		s.Require().Len(items, 1, "due block-time trigger must be queued")
+		s.Equal(dueTrigger.Id, items[0].GetTrigger().Id, "queued trigger ID must match")
+		for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
+			s.app.TriggerKeeper.Dequeue(s.ctx)
+		}
+	})
+
+	s.Run("future non-overflow trigger does not suppress a due trigger", func() {
+		safeFutureTime := time.Date(2200, 1, 1, 0, 0, 0, 0, time.UTC)
+		safeFutureEvent := &types.BlockTimeEvent{Time: safeFutureTime}
+
+		dueEvent := &types.BlockTimeEvent{Time: now}
+		s.Require().Greater(
+			safeFutureEvent.GetEventOrder(),
+			dueEvent.GetEventOrder(),
+			"safe far-future trigger must sort AFTER the due trigger",
+		)
+
+		err := safeFutureEvent.ValidateContext(s.ctx)
+		s.Require().NoError(err, "safe far-future time must pass ValidateContext")
+
+		dueTrigger := s.CreateTrigger(2, owner, dueEvent, action)
+		futureTrigger := s.CreateTrigger(3, owner, safeFutureEvent, action)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, dueTrigger)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, futureTrigger)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(nil))
+
+		s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
+
+		items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
+		s.Require().NoError(err, "GetAllQueueItems")
+		s.Require().Len(items, 1, "only the due trigger must be queued; future trigger must not fire")
+		s.Equal(dueTrigger.Id, items[0].GetTrigger().Id, "queued trigger must be the due one")
+
+		for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
+			s.app.TriggerKeeper.Dequeue(s.ctx)
+		}
+		s.app.TriggerKeeper.UnregisterTrigger(s.ctx, futureTrigger)
+	})
+}
+
+func (s *KeeperTestSuite) TestDetectTransactionEventAttributeSuppression() {
+	owner := s.accountAddresses[0].String()
+	action := &types.MsgDestroyTriggerRequest{Id: 999, Authority: owner}
+
+	setHistory := func(events sdk.Events) {
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(events.ToABCIEvents()))
+	}
+
+	registerAndDetect := func(triggerID uint64, eventName string, attrs []types.Attribute, history sdk.Events) []types.QueuedTrigger {
+		trigger := s.CreateTrigger(triggerID, owner,
+			&types.TransactionEvent{Name: eventName, Attributes: attrs},
+			action,
+		)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, trigger)
+		setHistory(history)
+
+		s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
+
+		items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
+		s.Require().NoError(err, "GetAllQueueItems")
+
+		for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
+			s.app.TriggerKeeper.Dequeue(s.ctx)
+		}
+		s.app.TriggerKeeper.UnregisterTrigger(s.ctx, trigger)
+		return items
+	}
+
+	s.Run("non-matching earlier event must not suppress later matching event", func() {
+		history := sdk.Events{
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "decoy")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "target")),
+		}
+		items := registerAndDetect(1, "settle", []types.Attribute{{Name: "id", Value: "target"}}, history)
+		s.Require().Len(items, 1, "trigger must be queued by the later matching event")
+		s.Equal(uint64(1), items[0].GetTrigger().Id, "queued trigger ID")
+	})
+
+	s.Run("trigger not queued when no event matches", func() {
+		history := sdk.Events{
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "decoy1")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "decoy2")),
+		}
+		items := registerAndDetect(2, "settle", []types.Attribute{{Name: "id", Value: "target"}}, history)
+		s.Require().Len(items, 0, "trigger must not be queued when no event matches")
+	})
+
+	s.Run("trigger queued exactly once even when multiple events match", func() {
+		// Both events match — trigger must be queued only once (no double-queue).
+		history := sdk.Events{
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "target")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "target")),
+		}
+		items := registerAndDetect(3, "settle", []types.Attribute{{Name: "id", Value: "target"}}, history)
+		s.Require().Len(items, 1, "trigger must be queued exactly once even when two events match")
+	})
+
+	s.Run("many non-matching events then one matching event", func() {
+		// Three decoy events before the target — trigger must still fire.
+		history := sdk.Events{
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "decoy1")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "decoy2")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "decoy3")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "target")),
+		}
+		items := registerAndDetect(4, "settle", []types.Attribute{{Name: "id", Value: "target"}}, history)
+		s.Require().Len(items, 1, "trigger must be queued by the matching event after multiple decoys")
+	})
+
+	s.Run("different event type is irrelevant to suppression", func() {
+
+		history := sdk.Events{
+			sdk.NewEvent("coin_received", sdk.NewAttribute("amount", "100stake")),
+			sdk.NewEvent("wasm", sdk.NewAttribute("echo", "target")),
+		}
+		items := registerAndDetect(5, "wasm", []types.Attribute{{Name: "echo", Value: "target"}}, history)
+		s.Require().Len(items, 1, "trigger must fire when a different-type event precedes the matching event")
+	})
+
+	s.Run("two triggers same event type — each evaluated independently", func() {
+		triggerA := s.CreateTrigger(6, owner,
+			&types.TransactionEvent{Name: "settle", Attributes: []types.Attribute{{Name: "id", Value: "alpha"}}},
+			action,
+		)
+		triggerB := s.CreateTrigger(7, owner,
+			&types.TransactionEvent{Name: "settle", Attributes: []types.Attribute{{Name: "id", Value: "beta"}}},
+			action,
+		)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, triggerA)
+		s.app.TriggerKeeper.RegisterTrigger(s.ctx, triggerB)
+		setHistory(sdk.Events{
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "beta")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "alpha")),
+		})
+
+		s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
+
+		items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
+		s.Require().NoError(err, "GetAllQueueItems")
+		s.Require().Len(items, 2, "both triggers must be queued")
+		queuedIDs := []uint64{items[0].GetTrigger().Id, items[1].GetTrigger().Id}
+		s.ElementsMatch([]uint64{6, 7}, queuedIDs, "trigger IDs in queue")
+		for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
+			s.app.TriggerKeeper.Dequeue(s.ctx)
+		}
+		s.app.TriggerKeeper.UnregisterTrigger(s.ctx, triggerA)
+		s.app.TriggerKeeper.UnregisterTrigger(s.ctx, triggerB)
+	})
+
+	s.Run("empty event history — trigger never queued", func() {
+
+		items := registerAndDetect(8, "settle", []types.Attribute{{Name: "id", Value: "target"}}, sdk.Events{})
+		s.Require().Len(items, 0, "trigger must not be queued when there are no events")
+	})
+
+	s.Run("trigger with no attributes matches any event of that type", func() {
+		history := sdk.Events{
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "anything")),
+			sdk.NewEvent("settle", sdk.NewAttribute("id", "anything-else")),
+		}
+		items := registerAndDetect(9, "settle", nil, history)
+		s.Require().Len(items, 1, "wildcard trigger must fire exactly once on the first matching-type event")
+	})
+
+	s.Run("trigger with multiple required attributes: partial match must not fire", func() {
+		history := sdk.Events{
+			sdk.NewEvent("settle",
+				sdk.NewAttribute("id", "target"),
+				sdk.NewAttribute("status", "fail"),
+			),
+			sdk.NewEvent("settle",
+				sdk.NewAttribute("id", "target"),
+				sdk.NewAttribute("status", "ok"),
+			),
+		}
+		attrs := []types.Attribute{
+			{Name: "id", Value: "target"},
+			{Name: "status", Value: "ok"},
+		}
+		items := registerAndDetect(10, "settle", attrs, history)
+		s.Require().Len(items, 1, "trigger must fire only on the event that satisfies all required attributes")
+	})
+
+	s.Run("event with extra attributes still satisfies trigger", func() {
+		history := sdk.Events{
+			sdk.NewEvent("settle",
+				sdk.NewAttribute("id", "target"),
+				sdk.NewAttribute("extra", "noise"),
+				sdk.NewAttribute("more", "noise"),
+			),
+		}
+		items := registerAndDetect(11, "settle", []types.Attribute{{Name: "id", Value: "target"}}, history)
+		s.Require().Len(items, 1, "trigger must fire when the event contains all required attributes plus extras")
+	})
 }

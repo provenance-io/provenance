@@ -15,10 +15,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/testutil"
-
 	. "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -234,13 +233,13 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				"transfer",
 				"channel-1",
 				sdk.NewInt64Coin("jackthecat", 1),
-				"invalid-address",
+				"", // Sender address
 				validAddress,
 				clienttypes.NewHeight(1, 1),
 				1000,
 				"",
 			),
-			"string could not be parsed as address: decoding bech32 failed: invalid separator index -1: invalid address",
+			"missing sender address: invalid address",
 		},
 		{
 			"should succeed",
@@ -260,7 +259,6 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -370,7 +368,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -514,7 +511,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
@@ -942,7 +938,6 @@ func TestMsgSupplyDecreaseProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgSupplyDecreaseProposalRequest{
 				Authority: tc.authority,
@@ -1007,7 +1002,6 @@ func TestMsgSetAdministratorProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := NewMsgSetAdministratorProposalRequest(tc.denom, tc.accessGrant, tc.authority)
 
@@ -1066,7 +1060,6 @@ func TestMsgRemoveAdministratorProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgRemoveAdministratorProposalRequest{
 				Authority:      tc.authority,
@@ -1127,7 +1120,6 @@ func TestMsgChangeStatusProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgChangeStatusProposalRequest{
 				Denom:     tc.denom,
@@ -1201,7 +1193,6 @@ func TestMsgWithdrawEscrowProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgWithdrawEscrowProposalRequest{
 				Denom:         tc.denom,
@@ -1274,7 +1265,6 @@ func TestMsgSetDenomMetadataProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := MsgSetDenomMetadataProposalRequest{
 				Metadata:  tc.metadata,
@@ -1343,7 +1333,6 @@ func TestMsgUpdateParamsRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectError {
@@ -1352,6 +1341,58 @@ func TestMsgUpdateParamsRequestValidateBasic(t *testing.T) {
 			} else {
 				require.NoError(t, err, "unexpected error for case: %s", tc.name)
 			}
+		})
+	}
+}
+func TestMsgWithdrawRequest_WithMarketCommitment(t *testing.T) {
+	admin := sdk.AccAddress("admin_______________")
+	to := sdk.AccAddress("to__________________")
+	denom := "testcoin"
+	coins := sdk.NewCoins(sdk.NewInt64Coin(denom, 500))
+
+	tests := []struct {
+		name        string
+		marketID    uint32
+		eventTag    string
+		expMarketID uint32
+		expEventTag string
+	}{
+		{
+			name:        "set market id and event tag",
+			marketID:    1,
+			eventTag:    "my-tag",
+			expMarketID: 1,
+			expEventTag: "my-tag",
+		},
+		{
+			name:        "set market id with empty event tag",
+			marketID:    5,
+			eventTag:    "",
+			expMarketID: 5,
+			expEventTag: "",
+		},
+		{
+			name:        "set zero market id - no-op",
+			marketID:    0,
+			eventTag:    "",
+			expMarketID: 0,
+			expEventTag: "",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := NewMsgWithdrawRequest(admin, to, denom, coins)
+			result := msg.WithMarketCommitment(tc.marketID, tc.eventTag)
+
+			assert.Equal(t, tc.expMarketID, result.MarketId, "MarketId")
+			assert.Equal(t, tc.expEventTag, result.EventTag, "EventTag")
+			// Verify other fields are preserved
+			assert.Equal(t, msg.Denom, result.Denom, "Denom should be preserved")
+			assert.Equal(t, msg.Administrator, result.Administrator, "Administrator should be preserved")
+			assert.Equal(t, msg.ToAddress, result.ToAddress, "ToAddress should be preserved")
+			assert.True(t, msg.Amount.Equal(result.Amount), "Amount should be preserved")
 		})
 	}
 }
