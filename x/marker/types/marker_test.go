@@ -167,6 +167,11 @@ func TestNewMarkerValidate(t *testing.T) {
 			fmt.Errorf("invalid ibc denom configuration: ACCESS_BURN is not supported for ibc marker"),
 		},
 		{
+			"reserved metadata namespace denom is invalid",
+			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("nft/test", 1), manager, nil, StatusProposed, MarkerType_Coin, true, false, false, []string{}),
+			fmt.Errorf("denom \"nft/test\" uses the reserved \"nft/\" namespace and cannot be a marker"),
+		},
+		{
 			"valid marker account",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, nil, StatusProposed, MarkerType_Coin, true, false, false, []string{}),
 			nil,
@@ -206,6 +211,30 @@ func TestNewMarkerValidate(t *testing.T) {
 				errStr := fmt.Sprintf("%v", err)
 				chkStr := fmt.Sprintf("%v", tt.expErr)
 				require.Equal(t, chkStr, errStr)
+			}
+		})
+	}
+}
+
+func TestValidateNotReservedDenom(t *testing.T) {
+	tests := []struct {
+		name   string
+		denom  string
+		expErr string
+	}{
+		{name: "plain denom is allowed", denom: "test", expErr: ""},
+		{name: "ibc denom is allowed", denom: "ibc/ABC123", expErr: ""},
+		{name: "nft prefix without slash is allowed", denom: "nftthing", expErr: ""},
+		{name: "metadata scope denom is reserved", denom: "nft/scope1qzge0zaztu65tx5x5llv5xc9zts96lrcj7", expErr: "denom \"nft/scope1qzge0zaztu65tx5x5llv5xc9zts96lrcj7\" uses the reserved \"nft/\" namespace and cannot be a marker"},
+		{name: "any nft-prefixed denom is reserved", denom: "nft/test", expErr: "denom \"nft/test\" uses the reserved \"nft/\" namespace and cannot be a marker"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateNotReservedDenom(tt.denom)
+			if len(tt.expErr) > 0 {
+				require.EqualError(t, err, tt.expErr)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

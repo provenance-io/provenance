@@ -222,6 +222,9 @@ func (ma MarkerAccount) Validate() error {
 	if err != nil {
 		return fmt.Errorf("marker denom is invalid: %w", err)
 	}
+	if err := ValidateNotReservedDenom(ma.Denom); err != nil {
+		return err
+	}
 	if err := ValidateIbcDenom(ma); err != nil {
 		return fmt.Errorf("invalid ibc denom configuration: %w", err)
 	}
@@ -242,6 +245,22 @@ func (ma MarkerAccount) Validate() error {
 		return fmt.Errorf("forced transfers can only be allowed on restricted markers")
 	}
 	return ma.BaseAccount.Validate()
+}
+
+// metadataDenomPrefix is the denom prefix owned by the metadata module (scope value-owner coins).
+// It is duplicated here rather than imported from x/metadata/types to avoid a module dependency,
+// the same way ValidateIbcDenom hard-codes the "ibc/" prefix.
+const metadataDenomPrefix = "nft/"
+
+// ValidateNotReservedDenom returns an error if the denom belongs to another module's reserved
+// namespace and therefore must never back a marker. A marker over a metadata scope denom would
+// let marker-level minting/withdrawal clobber metadata-owned coins and can drive the marker
+// BeginBlocker into an uncorrectable supply mismatch (chain halt).
+func ValidateNotReservedDenom(denom string) error {
+	if strings.HasPrefix(denom, metadataDenomPrefix) {
+		return fmt.Errorf("denom %q uses the reserved %q namespace and cannot be a marker", denom, metadataDenomPrefix)
+	}
+	return nil
 }
 
 // ValidateIbcDenom if denom is ibc it that validates supply is not fixed and Mint/Burn is not allowed
