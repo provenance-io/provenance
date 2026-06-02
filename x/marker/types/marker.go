@@ -257,7 +257,7 @@ const metadataDenomPrefix = "nft/"
 // let marker-level minting/withdrawal clobber metadata-owned coins and can drive the marker
 // BeginBlocker into an uncorrectable supply mismatch (chain halt).
 func ValidateNotReservedDenom(denom string) error {
-	if strings.HasPrefix(strings.ToLower(denom), metadataDenomPrefix) {
+	if strings.HasPrefix(denom, metadataDenomPrefix) {
 		return fmt.Errorf("denom %q uses the reserved %q namespace and cannot be a marker", denom, metadataDenomPrefix)
 	}
 	return nil
