@@ -126,6 +126,26 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"edelweiss-rc2": {}, // Empty upgrade for v1.29.0-rc2
+	"edelweiss-rc3": { // Upgrade for v1.29.0-rc3
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+				return nil, err
+			}
+
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
+			return vm, nil
+		},
+	},
 	"edelweiss": { // v1.29.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
