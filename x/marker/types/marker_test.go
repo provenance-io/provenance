@@ -226,8 +226,11 @@ func TestValidateNotReservedDenom(t *testing.T) {
 		{name: "ibc denom is allowed", denom: "ibc/ABC123", expErr: ""},
 		{name: "nft prefix without slash is allowed", denom: "nftthing", expErr: ""},
 		{name: "metadata scope denom is reserved", denom: "nft/scope1qzge0zaztu65tx5x5llv5xc9zts96lrcj7", expErr: "denom \"nft/scope1qzge0zaztu65tx5x5llv5xc9zts96lrcj7\" uses the reserved \"nft/\" namespace and cannot be a marker"},
-		{name: "any nft-prefixed denom is reserved", denom: "nft/test", expErr: "denom \"nft/test\" uses the reserved \"nft/\" namespace and cannot be a marker"},
+		{name: "any lower-case nft-prefixed denom is reserved", denom: "nft/test", expErr: "denom \"nft/test\" uses the reserved \"nft/\" namespace and cannot be a marker"},
+		{name: "any upper-case nft-prefixed denom is reserved", denom: "NFT/test", expErr: "denom \"NFT/test\" uses the reserved \"nft/\" namespace and cannot be a marker"},
+		{name: "any mixed-case nft-prefixed denom is reserved", denom: "NfT/test", expErr: "denom \"NfT/test\" uses the reserved \"nft/\" namespace and cannot be a marker"},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateNotReservedDenom(tt.denom)
