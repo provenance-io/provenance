@@ -218,12 +218,12 @@ func (ma MarkerAccount) Validate() error {
 	if strings.TrimSpace(ma.Denom) == "" {
 		return fmt.Errorf("marker denom cannot be empty")
 	}
+	if err := ValidateNotReservedDenom(ma.Denom); err != nil {
+		return err
+	}
 	markerAddress, err := MarkerAddress(ma.Denom)
 	if err != nil {
 		return fmt.Errorf("marker denom is invalid: %w", err)
-	}
-	if err := ValidateNotReservedDenom(ma.Denom); err != nil {
-		return err
 	}
 	if err := ValidateIbcDenom(ma); err != nil {
 		return fmt.Errorf("invalid ibc denom configuration: %w", err)
