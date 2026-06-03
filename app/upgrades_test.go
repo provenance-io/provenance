@@ -1072,12 +1072,24 @@ func (s *UpgradeTestSuite) TestEdelweissRC1() {
 	s.AssertUpgradeHandlerLogs("edelweiss-rc1", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestEdelweissRC3() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Setting up vault module params. module=baseapp",
+	}
+	s.AssertUpgradeHandlerLogs("edelweiss-rc3", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestEdelweiss() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Setting up vault module params. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("edelweiss", expInLog, nil)
 }
