@@ -320,8 +320,8 @@ github.com/cosmos/ibc-go/modules/capability v1.0.1 h1:ibwhrpJ3SftEEZRxCRkH0fQZ9s
 github.com/cosmos/ibc-go/modules/capability v1.0.1/go.mod h1:rquyOV262nGJplkumH+/LeYs04P3eV8oB7ZM4Ygqk4E=
 github.com/cosmos/ibc-go/v10 v10.7.0 h1:lE1nsilDP4SUiD7mhgdF9X3f1T4sa7Lt8CiH8Qy1jzg=
 github.com/cosmos/ibc-go/v10 v10.7.0/go.mod h1:a74pAPUSJ7NewvmvELU74hUClJhwnmm5MGbEaiTw/kE=
-github.com/cosmos/ibc-go/v8 v8.6.1 h1:35JQ9HttSDNLjy4J/ZxmmFbzw0cRVjoCRKkc3ngDZms=
-github.com/cosmos/ibc-go/v8 v8.6.1/go.mod h1:Hd3kDFNOhQ/EnYt8qb84/r78tA/lOYC3IkLMbpurs3I=
+github.com/cosmos/ibc-go/v8 v8.8.0 h1:Xn4/Xzt7JZihKRRSe8xJ65zG7PwrSnIWYRoQDK9hhME=
+github.com/cosmos/ibc-go/v8 v8.8.0/go.mod h1:G2z+Q6ZQSMcyHI2+BVcJdvfOupb09M2h/tgpXOEdY6k=
 github.com/cosmos/ics23/go v0.11.0 h1:jk5skjT0TqX5e5QJbEnwXIS2yI2vnmLOgpQPeM5RtnU=
 github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
@@ -976,8 +976,6 @@ github.com/provenance-io/cosmos-sdk v0.53.5-pio-2 h1:+xC5s+abO/BR9OHiJglok3oRC5o
 github.com/provenance-io/cosmos-sdk v0.53.5-pio-2/go.mod h1:AQJx0jpon70WAD4oOs/y+SlST4u7VIwEPR6F8S7JMdo=
 github.com/provenance-io/wasmd v0.61.10-pio-2 h1:uc0gDj31d2S4010dIy+rtI6RawUzsZ60i0BXcUT2gEk=
 github.com/provenance-io/wasmd v0.61.10-pio-2/go.mod h1:GMPqtsb1T8FvaKpQGJmGuj/JMPXBauk4ZhUErgmtEus=
-github.com/provlabs/vault v1.0.15 h1:nH8dBVwgNg3i9xoJUh3YS+44b858mA3gdyEEMb8VXag=
-github.com/provlabs/vault v1.0.15/go.mod h1:1vskm2+cCclAMVBbbjuRLHkHxlkKgOaLHGX1S82jLts=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9 h1:cu+rMHYCZIE9+StrjgwKn+cKta7wmDi9qBgVAb09e1g=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9/go.mod h1:Ha7fmwkYtr49a2VtWplC/lP/LKqJf3uLBH1CLIP5DFg=
 github.com/quasilyte/go-ruleguard v0.4.3-0.20240823090925-0fe6f58b47b1 h1:+Wl/0aFp0hpuHM3H//KMft64WQ1yX9LdJY64Qm/gFCo=

@@ -613,6 +613,8 @@ func New(
 		app.AccountKeeper,
 		*app.MarkerKeeper,
 		app.BankKeeper,
+		app.NameKeeper,
+		app.AttributeKeeper,
 	)
 
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
@@ -784,7 +786,7 @@ func New(
 		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
-		vaultmodule.NewAppModule(app.VaultKeeper, app.MarkerKeeper, app.BankKeeper, address.Bech32Codec{Bech32Prefix: addrPrefix}),
+		vaultmodule.NewAppModule(app.VaultKeeper, app.MarkerKeeper, app.BankKeeper, app.NameKeeper, app.AttributeKeeper, address.Bech32Codec{Bech32Prefix: addrPrefix}),
 
 		ibc.NewAppModule(app.IBCKeeper),
 		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper),
