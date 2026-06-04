@@ -451,7 +451,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		banktypes.Balance{Address: addr2.String(), Coins: initBalance},
 	)
 	encCfg := app.GetEncodingConfig()
-	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "flatfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "flatfee-testing", Time: time.Now().UTC()})
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeCollectorAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 	feeCollectorAddr := feeCollectorAccount.GetAddress().String()
