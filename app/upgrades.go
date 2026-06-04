@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	vaulttypes "github.com/provlabs/vault/types"
+
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -15,7 +17,6 @@ import (
 	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
 
 	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
-	vaulttypes "github.com/provlabs/vault/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
