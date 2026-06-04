@@ -1,0 +1,1 @@
+* Wire the vault module params and initialize them (`tech_fee_address`, `default_aum_fee_bips`) during the `edelweiss-rc3` and `edelweiss` upgrades [PR 2750](https://github.com/provenance-io/provenance/pull/2749).
