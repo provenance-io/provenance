@@ -301,6 +301,7 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *cmttypes.Valid
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
+		Time:               time.Now().UTC(),
 	})
 	require.NoError(t, err, "FinalizeBlock")
 

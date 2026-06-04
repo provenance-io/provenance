@@ -62,6 +62,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	// finalize block so we have CheckTx state set
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
+		Time:   time.Now().UTC(),
 	})
 	require.NoError(t, err)
 
@@ -156,6 +157,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	// finalize block so we have CheckTx state set
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
+		Time:   time.Now().UTC(),
 	})
 	require.NoError(t, err)
 
