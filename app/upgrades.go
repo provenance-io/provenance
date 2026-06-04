@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	vaulttypes "github.com/provlabs/vault/types"
+
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -143,6 +145,10 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			if err = setupVaultParams(ctx, app); err != nil {
+				return nil, err
+			}
+
 			return vm, nil
 		},
 	},
@@ -160,6 +166,10 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
+			if err = setupVaultParams(ctx, app); err != nil {
 				return nil, err
 			}
 
@@ -484,6 +494,34 @@ func updateMsgFees(ctx sdk.Context, app *App) error {
 	}
 
 	ctx.Logger().Info("All message fees updated successfully.", "total_updated", len(feeUpdates))
+	return nil
+}
+
+// setupVaultParams initializes the vault module parameters with chain-appropriate
+// default values. The vault Params (tech_fee_address and default_aum_fee_bips) were
+// added after the module was first wired into the chain, so existing chains won't
+// have them set. This establishes the defaults during the upgrade. It is idempotent:
+// re-running it simply re-writes the same default values.
+func setupVaultParams(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting up vault module params.")
+
+	params := vaulttypes.Params{
+		TechFeeAddress:    vaulttypes.GetDefaultTechFeeAddress(ctx.ChainID()).String(),
+		DefaultAumFeeBips: vaulttypes.DefaultAumFeeBips,
+	}
+
+	if err := params.Validate(); err != nil {
+		return fmt.Errorf("invalid vault params: %w", err)
+	}
+
+	if err := app.VaultKeeper.Params.Set(ctx, params); err != nil {
+		return fmt.Errorf("failed to set vault params: %w", err)
+	}
+
+	ctx.Logger().Info("Vault module params set successfully.",
+		"tech_fee_address", params.TechFeeAddress,
+		"default_aum_fee_bips", params.DefaultAumFeeBips,
+	)
 	return nil
 }
 
