@@ -1,6 +1,7 @@
 syntax = "proto3";
 package provlabs.vault.v1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
 import "provlabs/vault/v1/vault.proto";
