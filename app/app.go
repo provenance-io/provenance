@@ -609,7 +609,7 @@ func New(
 		runtime.NewKVStoreService(keys[vaulttypes.StoreKey]),
 		runtime.EventService{},
 		address.Bech32Codec{Bech32Prefix: addrPrefix},
-		[]byte(govAuthority),
+		sdk.MustAccAddressFromBech32(govAuthority),
 		app.AccountKeeper,
 		*app.MarkerKeeper,
 		app.BankKeeper,
