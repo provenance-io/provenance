@@ -6,6 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "provlabs/vault/v1/params.proto";
 import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
@@ -40,6 +41,11 @@ service Query {
   // VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
   rpc VaultPendingSwapOuts(QueryVaultPendingSwapOutsRequest) returns (QueryVaultPendingSwapOutsResponse) {
     option (google.api.http).get = "/vault/v1/vaults/{id}/pending_swap_outs";
+  }
+
+  // Params returns the current module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/vault/v1/params";
   }
 }
 
@@ -163,4 +169,13 @@ message QueryEstimateSwapOutResponse {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false
   ];
+}
+
+// QueryParamsRequest is the request message for the Query/Params endpoint.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response message for the Query/Params endpoint.
+message QueryParamsResponse {
+  // params defines the vault module parameters.
+  Params params = 1 [(gogoproto.nullable) = false];
 }
