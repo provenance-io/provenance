@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -69,6 +70,10 @@ func (k Keeper) runActions(ctx sdk.Context, actions []*codectypes.Any) error {
 // handleMsgs Handles each message and verifies gas limit has not been exceeded.
 func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error) {
 	results := make([]sdk.Result, len(msgs))
+	// Each set of Msgs gets the same amount of gas as if they were supplied in a tx.
+	// Because we're in a BeginBlock, the existing gas meter is either a no-op or infinite, and doesn't matter.
+	// We don't use a flat-fee gas meter here because the fees were already paid, and we don't need to track them again.
+	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(antewrapper.TxGasLimit))
 
 	for i, msg := range msgs {
 		handler := k.router.Handler(msg)
