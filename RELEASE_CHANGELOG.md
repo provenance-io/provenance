@@ -1,3 +1,30 @@
+## [v1.29.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.29.0-rc3) 2026-06-05
+
+Provenance Blockchain version `v1.29.0` contains some exciting new features, improvements, and bug fixes.
+
+### Features
+
+* Wire the vault module params and initialize them (`tech_fee_address`, `default_aum_fee_bips`) during the `edelweiss-rc3` and `edelweiss` upgrades [PR 2749](https://github.com/provenance-io/provenance/pull/2749).
+
+### Improvements
+
+* Limit a trigger's total gas to the same 4,000,000 gas that a tx gets [PR 2572](https://github.com/provenance-io/provenance/pull/2572).
+
+### Bug Fixes
+
+* Prevent markers from using the nft/ prefix [PR 2747](https://github.com/provenance-io/provenance/pull/2747).
+
+### Dependencies
+
+* `github.com/provlabs/vault` bumped to v1.1.0 (from v1.0.15) [PR 2749](https://github.com/provenance-io/provenance/pull/2749).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.29.0-rc2...v1.29.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.28.0...v1.29.0-rc3
+
+---
+
 ## [v1.29.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.29.0-rc2) 2026-05-27
 
 Provenance Blockchain version `v1.29.0` contains some exciting new features, improvements, and bug fixes.
