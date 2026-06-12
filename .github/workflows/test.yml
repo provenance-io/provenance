@@ -31,6 +31,10 @@ jobs:
             go.mod
             go.sum
             .github/workflows/test.yml
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
       - name: Define Variables
         id: def-vars
         run: |
@@ -104,6 +108,7 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         with:
           go-version-file: 'go.mod'
+          cache: true
       - uses: actions/download-artifact@v8
         if: needs.setup-tests.outputs.should-run
         with:
@@ -191,6 +196,7 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         with:
           go-version-file: 'go.mod'
+          cache: true
       - uses: actions/download-artifact@v8
         if: needs.setup-tests.outputs.should-run
         with:
