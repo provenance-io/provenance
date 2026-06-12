@@ -89,7 +89,8 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 // GrpcQuerier dispatches whitelisted queries and returns protobuf encoded responses
 func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
-		protoRespType, err := GetWhitelistedQuery(request.Path)
+		// Make sure the request is white-listed.
+		_, err := GetWhitelistedQuery(request.Path)
 		if err != nil {
 			return nil, err
 		}
@@ -107,14 +108,9 @@ func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(ctx 
 			return nil, err
 		}
 
-		if err = cdc.Unmarshal(res.Value, protoRespType); err != nil {
-			return nil, wasmvmtypes.InvalidResponse{
-				Err:      fmt.Sprintf("error unmarshalling response into %T: %v", protoRespType, err),
-				Response: res.Value,
-			}
-		}
-
-		return protoRespType, nil
+		// We're returning an *abci.ResponseQuery here instead of the actual query result type because
+		// we started out doing it this way, and now all the smart contracts expect it this way.
+		return res, nil
 	}
 }
 
