@@ -1,12 +1,15 @@
 syntax = "proto3";
 package provlabs.vault.v1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "provlabs/vault/v1/params.proto";
 import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
-// QueueEntry is a (time, addr) pair used by the vault payout deferral queue.
+// QueueEntry is a (time, addr) pair used by various vault timeout queues
+// (e.g., payout deferral and fee collection).
 message QueueEntry {
   // time is the UNIX timestamp (in seconds) when the entry becomes eligible.
   uint64 time = 1;
@@ -45,4 +48,12 @@ message GenesisState {
 
   // pending_swap_out_queue contains entries for pending swap outs.
   PendingSwapOutQueue pending_swap_out_queue = 3 [(gogoproto.nullable) = false];
+
+  // fee_timeout_queue contains (time, addr) entries for vaults that are
+  // temporarily deferred from automatic AUM fee collection until the
+  // given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
+  repeated QueueEntry fee_timeout_queue = 4 [(gogoproto.nullable) = false];
+
+  // params defines the module parameters.
+  Params params = 5 [(gogoproto.nullable) = false];
 }

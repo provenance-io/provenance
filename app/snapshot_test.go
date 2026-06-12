@@ -128,6 +128,7 @@ func newSnapshotApp(t *testing.T, initChain bool) (*App, sdk.AccAddress) {
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
+		Time:               time.Now().UTC(),
 	})
 	require.NoError(t, err, "app.FinalizeBlock")
 	_, err = app.Commit()

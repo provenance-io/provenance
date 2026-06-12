@@ -1,0 +1,18 @@
+syntax = "proto3";
+package provlabs.vault.v1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// Params defines the set of module parameters.
+message Params {
+  option (gogoproto.equal) = true;
+
+  // tech_fee_address is the address where all AUM fees are collected and which holds
+  // the authority to update per-vault bips.
+  string tech_fee_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // default_aum_fee_bips is the default fee rate (in basis points) applied to new vaults upon creation.
+  uint32 default_aum_fee_bips = 2;
+}
