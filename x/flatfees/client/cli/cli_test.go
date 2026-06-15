@@ -802,9 +802,6 @@ func (s *CLITestSuite) TestNewCmdCalculateTxFees() {
 		"--"+govcli.FlagSummary, "The Pink Upgrade for a new version.",
 	)
 
-	// optInTx := s.generateAndSignTx(tmpDir, "quar-opt-in", quarantinecli.TxOptInCmd(), s.accountAddresses[0].String())
-	// optOutTx := s.generateAndSignTx(tmpDir, "quar-opt-out", quarantinecli.TxOptOutCmd(), s.accountAddresses[0].String())
-
 	tests := []testcli.QueryExecutor{
 		{
 			Name: "default cost, no multiplier, default output",
