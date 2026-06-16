@@ -426,41 +426,52 @@ func (k Keeper) deleteQuarantineRecordSuffixIndexes(store storetypes.KVStore, to
 // This is called during the upgrade migration when the quarantine module is being deactivated.
 func (k Keeper) ReleaseAllQuarantinedFunds(ctx sdk.Context, bankKeeper quarantine.BankKeeper) error {
 	ctx.Logger().Info("Releasing all quarantined funds.")
-	var successCount, skipCount, failCount int
 
-	k.IterateQuarantinedAccounts(ctx, func(toAddr sdk.AccAddress) bool {
-		// Collect all pending (unaccepted) coins for this recipient across all records.
-		var pendingCoins sdk.Coins
-		k.IterateQuarantineRecords(ctx, toAddr, func(_, _ sdk.AccAddress, record *quarantine.QuarantineRecord) bool {
-			if len(record.UnacceptedFromAddresses) > 0 && !record.Coins.IsZero() {
-				pendingCoins = pendingCoins.Add(record.Coins...)
-			}
-			return false
-		})
-
-		if pendingCoins.IsZero() {
-			skipCount++
-			return false
-		}
-
-		if err := bankKeeper.SendCoins(quarantine.WithBypass(ctx), k.fundsHolder, toAddr, pendingCoins); err != nil {
-			ctx.Logger().Error("ReleaseAllQuarantinedFunds: failed to send funds",
-				"to", toAddr.String(), "coins", pendingCoins.String(), "error", err)
-			failCount++
-			return false
-		}
-
-		ctx.Logger().Info("ReleaseAllQuarantinedFunds: released funds",
-			"to", toAddr.String(), "coins", pendingCoins.String())
-		successCount++
+	type heldRecord struct {
+		toAddr sdk.AccAddress
+		record *quarantine.QuarantineRecord
+	}
+	var held []heldRecord
+	k.IterateQuarantineRecords(ctx, nil, func(toAddr, _ sdk.AccAddress, record *quarantine.QuarantineRecord) bool {
+		held = append(held, heldRecord{toAddr: toAddr, record: record})
 		return false
 	})
 
-	ctx.Logger().Info("Quarantine funds release complete.",
-		"accounts_released", successCount, "accounts_skipped", skipCount, "accounts_failed", failCount)
+	var released, failed int
+	for _, h := range held {
+		coins := h.record.Coins
+		if !coins.IsZero() {
+			if err := bankKeeper.SendCoins(quarantine.WithBypass(ctx), k.fundsHolder, h.toAddr, coins); err != nil {
+				ctx.Logger().Error("ReleaseAllQuarantinedFunds: failed to send funds", "to", h.toAddr.String(), "coins", coins.String(), "error", err)
+				failed++
+				continue
+			}
+			ctx.Logger().Info("ReleaseAllQuarantinedFunds: released funds", "to", h.toAddr.String(), "coins", coins.String())
+		}
 
-	if failCount > 0 {
-		return fmt.Errorf("ReleaseAllQuarantinedFunds: failed to release quarantined funds for %d account(s)", failCount)
+		// Delete the record by marking it fully accepted and re-setting it.
+		h.record.AcceptedFromAddresses = append(h.record.AcceptedFromAddresses, h.record.UnacceptedFromAddresses...)
+		h.record.UnacceptedFromAddresses = nil
+		k.SetQuarantineRecord(ctx, h.toAddr, h.record)
+		released++
+	}
+
+	// Opt out everyone who opted in (collect first, then mutate).
+	var optedIn []sdk.AccAddress
+	k.IterateQuarantinedAccounts(ctx, func(toAddr sdk.AccAddress) bool {
+		optedIn = append(optedIn, toAddr)
+		return false
+	})
+	for _, addr := range optedIn {
+		if err := k.SetOptOut(ctx, addr); err != nil {
+			return err
+		}
+	}
+
+	ctx.Logger().Info("Quarantine funds release complete.", "records_released", released, "records_failed", failed, "accounts_opted_out", len(optedIn))
+
+	if failed > 0 {
+		return fmt.Errorf("ReleaseAllQuarantinedFunds: failed to release funds for %d record(s)", failed)
 	}
 	return nil
 }
