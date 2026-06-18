@@ -113,6 +113,20 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) approve(changeID, signer str
 	return resp.Applied
 }
 
+// proposeRevokeController opens a pending REVOKE of the CONTROLLER role from addr, signed by
+// proposer, and returns the change id and whether it applied immediately.
+func (s *RoleChangeAccumulationAcceptanceTestSuite) proposeRevokeController(key *types.RegistryKey, addr, proposer string) (string, bool) {
+	resp, err := s.msgServer.ProposeRoleChange(s.ctx, &types.MsgProposeRoleChange{
+		Signer:    proposer,
+		Key:       key,
+		Role:      types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
+		Operation: types.RoleChangeOperation_ROLE_CHANGE_OPERATION_REVOKE,
+		Addresses: []string{addr},
+	})
+	s.Require().NoError(err)
+	return resp.ChangeId, resp.Applied
+}
+
 func (s *RoleChangeAccumulationAcceptanceTestSuite) roleAddresses(key *types.RegistryKey, role types.RegistryRole) []string {
 	entry, err := s.registryKeeper.GetRegistry(s.ctx, key)
 	s.Require().NoError(err)
@@ -297,4 +311,133 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_Accumul
 	pending, err := s.registryKeeper.GetPendingRoleChange(s.ctx, changeID)
 	s.Require().NoError(err)
 	s.Require().Nil(pending, "pending change should be removed after it applies")
+}
+
+// --- Scenario C: Controller revoke accumulation ---------------------------------------
+
+func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerRevoke_Accumulation() {
+	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
+	securedPartyRole := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE
+
+	s.Run("single controller, no secured party: applies on proposer approval", func() {
+		key := s.mintNFT("acc-c-single")
+		s.setupRegistry(key, []types.RolesEntry{
+			{Role: controllerRole, Addresses: []string{s.currentController}},
+		})
+
+		_, applied := s.proposeRevokeController(key, s.currentController, s.currentController)
+		s.Require().True(applied, "the sole current controller's approval satisfies a revoke")
+		s.Require().NotContains(s.roleAddresses(key, controllerRole), s.currentController)
+	})
+
+	s.Run("secured party set: requires current controller and secured party", func() {
+		key := s.mintNFT("acc-c-with-sp")
+		s.setupRegistry(key, []types.RolesEntry{
+			{Role: controllerRole, Addresses: []string{s.currentController}},
+			{Role: securedPartyRole, Addresses: []string{s.securedParty}},
+		})
+
+		changeID, applied := s.proposeRevokeController(key, s.currentController, s.currentController)
+		s.Require().False(applied, "secured party approval still required for a revoke")
+		s.Require().Contains(s.roleAddresses(key, controllerRole), s.currentController)
+
+		applied = s.approve(changeID, s.securedParty)
+		s.Require().True(applied, "current controller + secured party satisfy the revoke")
+		s.Require().NotContains(s.roleAddresses(key, controllerRole), s.currentController)
+	})
+}
+
+// --- Invalidation: stale approvals are voided when role holders change underneath ------
+//
+// The accumulation engine re-resolves roles against live registry state on every approval, so an
+// approval recorded by a party that is no longer the current role holder cannot satisfy the policy.
+// This is the ticket's invalidation guarantee without a separate expiry mechanism.
+
+func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_InvalidationOnRoleChange() {
+	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
+	rotatedController := genAddr()
+
+	key := s.mintNFT("acc-invalidation")
+	s.setupRegistry(key, []types.RolesEntry{
+		{Role: controllerRole, Addresses: []string{s.currentController}},
+	})
+
+	// Current controller proposes; only their approval is recorded so far.
+	changeID, applied := s.proposeNewController(key, s.currentController)
+	s.Require().False(applied)
+
+	// The controller is rotated out from under the pending change (e.g. via a separate completed
+	// flow). The pending change still carries the now-stale currentController approval.
+	s.Require().NoError(s.registryKeeper.RevokeRole(s.ctx, key, controllerRole, []string{s.currentController}))
+	s.Require().NoError(s.registryKeeper.GrantRole(s.ctx, key, controllerRole, []string{rotatedController}))
+
+	// The new controller approving is no longer enough: the stale approval no longer counts as the
+	// current controller, so the policy is not satisfied.
+	applied = s.approve(changeID, s.newController)
+	s.Require().False(applied, "stale current-controller approval is voided after the role holder changed")
+	s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController)
+
+	// Once the live current controller approves, the policy is satisfied and the change applies.
+	applied = s.approve(changeID, rotatedController)
+	s.Require().True(applied, "the live current controller's approval re-satisfies the policy")
+	s.Require().Contains(s.roleAddresses(key, controllerRole), s.newController)
+}
+
+// --- Edge cases -----------------------------------------------------------------------
+
+func (s *RoleChangeAccumulationAcceptanceTestSuite) TestPendingChange_EdgeCases() {
+	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
+	securedPartyRole := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE
+
+	s.Run("duplicate approval is idempotent", func() {
+		key := s.mintNFT("acc-edge-dup")
+		s.setupRegistry(key, []types.RolesEntry{
+			{Role: controllerRole, Addresses: []string{s.currentController}},
+			{Role: securedPartyRole, Addresses: []string{s.securedParty}},
+		})
+
+		changeID, applied := s.proposeNewController(key, s.currentController)
+		s.Require().False(applied)
+
+		// The current controller approving again must not double-count or apply the change.
+		applied = s.approve(changeID, s.currentController)
+		s.Require().False(applied)
+
+		pending, err := s.registryKeeper.GetPendingRoleChange(s.ctx, changeID)
+		s.Require().NoError(err)
+		s.Require().NotNil(pending)
+		s.Require().Equal([]string{s.currentController}, pending.Approvals, "approver recorded exactly once")
+	})
+
+	s.Run("approving a non-existent change errors", func() {
+		_, err := s.msgServer.ApproveRoleChange(s.ctx, &types.MsgApproveRoleChange{
+			Signer:   s.currentController,
+			ChangeId: "does-not-exist",
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "pending role change")
+	})
+
+	s.Run("registry removed underneath cleans up the pending change", func() {
+		key := s.mintNFT("acc-edge-removed")
+		s.setupRegistry(key, []types.RolesEntry{
+			{Role: controllerRole, Addresses: []string{s.currentController}},
+			{Role: securedPartyRole, Addresses: []string{s.securedParty}},
+		})
+
+		changeID, applied := s.proposeNewController(key, s.currentController)
+		s.Require().False(applied)
+
+		s.Require().NoError(s.registryKeeper.DeleteRegistry(s.ctx, key))
+
+		_, err := s.msgServer.ApproveRoleChange(s.ctx, &types.MsgApproveRoleChange{
+			Signer:   s.securedParty,
+			ChangeId: changeID,
+		})
+		s.Require().Error(err)
+
+		pending, err := s.registryKeeper.GetPendingRoleChange(s.ctx, changeID)
+		s.Require().NoError(err)
+		s.Require().Nil(pending, "the orphaned pending change is removed")
+	})
 }
