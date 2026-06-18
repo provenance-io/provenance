@@ -21,12 +21,13 @@ func RoleAuthorizationMap() map[RegistryRole]RoleAuthorization {
 
 // controllerRoleAuthorization defines the CONTROLLER role authorization policy.
 //
-// Path 1 – Standard transfer: The current controller (or NFT owner if no controller is set) must
-// sign. Additionally, the current Secured Party for eNote and the incoming new controller must
-// each sign if they are set.
+// A Controller update requires all of the following to sign:
+//   - the current controller (or the NFT owner if no controller is set);
+//   - the current Secured Party for eNote, if one is set;
+//   - the incoming new controller.
 //
-// Path 2 – Foreclosure: The current Secured Party for eNote and the new controller both sign,
-// allowing the secured party to unilaterally assume control in case of default.
+// The current controller's signature is always required: there is no path that lets any other
+// party assume control unilaterally.
 func controllerRoleAuthorization() RoleAuthorization {
 	return RoleAuthorization{
 		Role: RegistryRole_REGISTRY_ROLE_CONTROLLER,
@@ -55,25 +56,6 @@ func controllerRoleAuthorization() RoleAuthorization {
 						// The current Secured Party for eNote must sign (if set).
 						// The new/incoming controller must sign (if being assigned).
 						Type: SignatureType_SIGNATURE_TYPE_REQUIRED_ALL_IF_SET,
-						Roles: []*RoleAssignment{
-							{
-								RoleSelector: &RoleAssignment_RegistryRole{RegistryRole: RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE},
-								Assignment:   Assignment_ASSIGNMENT_CURRENT,
-							},
-							{
-								RoleSelector: &RoleAssignment_RegistryRole{RegistryRole: RegistryRole_REGISTRY_ROLE_CONTROLLER},
-								Assignment:   Assignment_ASSIGNMENT_NEW,
-							},
-						},
-					},
-				},
-			},
-			{
-				Description: "Foreclosure: Secured Party for eNote can unilaterally become Controller in case of default",
-				Signatures: []*SignatureRequirement{
-					{
-						// The Secured Party for eNote and the incoming new controller must both sign.
-						Type: SignatureType_SIGNATURE_TYPE_REQUIRED_ALL,
 						Roles: []*RoleAssignment{
 							{
 								RoleSelector: &RoleAssignment_RegistryRole{RegistryRole: RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE},

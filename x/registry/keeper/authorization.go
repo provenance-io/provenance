@@ -98,7 +98,10 @@ func (k Keeper) evaluateSignatureRequirement(ctx context.Context, entry *types.R
 	switch req.Type {
 	case types.SignatureType_SIGNATURE_TYPE_REQUIRED_ALL:
 		for _, ra := range req.Roles {
-			addrs, _ := k.resolveRoleAssignmentAddresses(ctx, entry, ra, newAddrs)
+			addrs, exists := k.resolveRoleAssignmentAddresses(ctx, entry, ra, newAddrs)
+			if !exists || len(addrs) == 0 {
+				return types.NewErrCodeUnauthorized("required role resolved to no addresses")
+			}
 			for _, addr := range addrs {
 				if !signerSet[addr] {
 					return types.NewErrCodeUnauthorized(fmt.Sprintf("missing required signature for %q", addr))
