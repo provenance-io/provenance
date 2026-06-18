@@ -138,10 +138,12 @@ var xxx_messageInfo_MsgRegisterNFTResponse proto.InternalMessageInfo
 
 // MsgGrantRole represents a message to grant a role to one or more addresses.
 // This message adds the specified addresses to an existing role for the given registry key.
+// Multiple signers enable multi-party authorization workflows.
 type MsgGrantRole struct {
-	// signer is the address that is authorized to grant the role.
-	// This address must have the appropriate permissions to modify role assignments.
-	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// signers are the addresses authorizing the role grant.
+	// When a RegistryClass authorization policy is defined for the target role, all required
+	// role holders must be included here. Without a policy, a single NFT owner address is required.
+	Signers []string `protobuf:"bytes,1,rep,name=signers,proto3" json:"signers,omitempty"`
 	// key is the registry key to grant the role to.
 	// This identifies the specific registry entry to modify.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -186,11 +188,11 @@ func (m *MsgGrantRole) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGrantRole proto.InternalMessageInfo
 
-func (m *MsgGrantRole) GetSigner() string {
+func (m *MsgGrantRole) GetSigners() []string {
 	if m != nil {
-		return m.Signer
+		return m.Signers
 	}
-	return ""
+	return nil
 }
 
 func (m *MsgGrantRole) GetKey() *RegistryKey {
@@ -254,10 +256,12 @@ var xxx_messageInfo_MsgGrantRoleResponse proto.InternalMessageInfo
 
 // MsgRevokeRole represents a message to revoke a role from one or more addresses.
 // This message removes the specified addresses from an existing role for the given registry key.
+// Multiple signers enable multi-party authorization workflows.
 type MsgRevokeRole struct {
-	// signer is the address that is authorized to revoke the role.
-	// This address must have the appropriate permissions to modify role assignments.
-	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// signers are the addresses authorizing the role revocation.
+	// When a RegistryClass authorization policy is defined for the target role, all required
+	// role holders must be included here. Without a policy, a single NFT owner address is required.
+	Signers []string `protobuf:"bytes,1,rep,name=signers,proto3" json:"signers,omitempty"`
 	// key is the registry key to revoke the role from.
 	// This identifies the specific registry entry to modify.
 	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -302,11 +306,11 @@ func (m *MsgRevokeRole) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRevokeRole proto.InternalMessageInfo
 
-func (m *MsgRevokeRole) GetSigner() string {
+func (m *MsgRevokeRole) GetSigners() []string {
 	if m != nil {
-		return m.Signer
+		return m.Signers
 	}
-	return ""
+	return nil
 }
 
 func (m *MsgRevokeRole) GetKey() *RegistryKey {
@@ -560,6 +564,168 @@ func (m *MsgRegistryBulkUpdateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegistryBulkUpdateResponse proto.InternalMessageInfo
 
+// MsgSetRoles atomically sets the desired state for one or more roles on a registry entry.
+// For each role in role_updates, the keeper computes the diff between current and desired
+// addresses and applies grants and revokes to reach the desired state.
+// All updates succeed or all fail (atomic).
+type MsgSetRoles struct {
+	// signers are the addresses authorizing the role updates.
+	// All required role holders per the RegistryClass authorization policy must be present.
+	Signers []string `protobuf:"bytes,1,rep,name=signers,proto3" json:"signers,omitempty"`
+	// key identifies the registry entry to update.
+	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// role_updates contains the desired state for each role to update.
+	// At least one entry is required. Roles not listed here are unchanged.
+	RoleUpdates []RoleUpdate `protobuf:"bytes,3,rep,name=role_updates,json=roleUpdates,proto3" json:"role_updates"`
+}
+
+func (m *MsgSetRoles) Reset()         { *m = MsgSetRoles{} }
+func (m *MsgSetRoles) String() string { return proto.CompactTextString(m) }
+func (*MsgSetRoles) ProtoMessage()    {}
+func (*MsgSetRoles) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{10}
+}
+func (m *MsgSetRoles) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetRoles) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetRoles.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetRoles) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetRoles.Merge(m, src)
+}
+func (m *MsgSetRoles) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetRoles) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetRoles.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetRoles proto.InternalMessageInfo
+
+func (m *MsgSetRoles) GetSigners() []string {
+	if m != nil {
+		return m.Signers
+	}
+	return nil
+}
+
+func (m *MsgSetRoles) GetKey() *RegistryKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *MsgSetRoles) GetRoleUpdates() []RoleUpdate {
+	if m != nil {
+		return m.RoleUpdates
+	}
+	return nil
+}
+
+// RoleUpdate specifies the desired set of addresses for a single role.
+type RoleUpdate struct {
+	// role is the role to update.
+	Role RegistryRole `protobuf:"varint,1,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
+	// addresses is the desired set of addresses for this role.
+	// An empty list means the role should be cleared entirely.
+	Addresses []string `protobuf:"bytes,2,rep,name=addresses,proto3" json:"addresses,omitempty"`
+}
+
+func (m *RoleUpdate) Reset()         { *m = RoleUpdate{} }
+func (m *RoleUpdate) String() string { return proto.CompactTextString(m) }
+func (*RoleUpdate) ProtoMessage()    {}
+func (*RoleUpdate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{11}
+}
+func (m *RoleUpdate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RoleUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RoleUpdate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RoleUpdate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RoleUpdate.Merge(m, src)
+}
+func (m *RoleUpdate) XXX_Size() int {
+	return m.Size()
+}
+func (m *RoleUpdate) XXX_DiscardUnknown() {
+	xxx_messageInfo_RoleUpdate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RoleUpdate proto.InternalMessageInfo
+
+func (m *RoleUpdate) GetRole() RegistryRole {
+	if m != nil {
+		return m.Role
+	}
+	return RegistryRole_REGISTRY_ROLE_UNSPECIFIED
+}
+
+func (m *RoleUpdate) GetAddresses() []string {
+	if m != nil {
+		return m.Addresses
+	}
+	return nil
+}
+
+// MsgSetRolesResponse defines the response for SetRoles.
+type MsgSetRolesResponse struct {
+}
+
+func (m *MsgSetRolesResponse) Reset()         { *m = MsgSetRolesResponse{} }
+func (m *MsgSetRolesResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetRolesResponse) ProtoMessage()    {}
+func (*MsgSetRolesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{12}
+}
+func (m *MsgSetRolesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetRolesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetRolesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetRolesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetRolesResponse.Merge(m, src)
+}
+func (m *MsgSetRolesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetRolesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetRolesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetRolesResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRegisterNFT)(nil), "provenance.registry.v1.MsgRegisterNFT")
 	proto.RegisterType((*MsgRegisterNFTResponse)(nil), "provenance.registry.v1.MsgRegisterNFTResponse")
@@ -571,49 +737,59 @@ func init() {
 	proto.RegisterType((*MsgUnregisterNFTResponse)(nil), "provenance.registry.v1.MsgUnregisterNFTResponse")
 	proto.RegisterType((*MsgRegistryBulkUpdate)(nil), "provenance.registry.v1.MsgRegistryBulkUpdate")
 	proto.RegisterType((*MsgRegistryBulkUpdateResponse)(nil), "provenance.registry.v1.MsgRegistryBulkUpdateResponse")
+	proto.RegisterType((*MsgSetRoles)(nil), "provenance.registry.v1.MsgSetRoles")
+	proto.RegisterType((*RoleUpdate)(nil), "provenance.registry.v1.RoleUpdate")
+	proto.RegisterType((*MsgSetRolesResponse)(nil), "provenance.registry.v1.MsgSetRolesResponse")
 }
 
 func init() { proto.RegisterFile("provenance/registry/v1/tx.proto", fileDescriptor_afab3f18b6d8353c) }
 
 var fileDescriptor_afab3f18b6d8353c = []byte{
-	// 587 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x95, 0x3d, 0x6f, 0xd3, 0x40,
-	0x18, 0xc7, 0x73, 0x75, 0x5a, 0xd4, 0x27, 0xb4, 0x42, 0x56, 0x48, 0x5d, 0x4b, 0x38, 0x51, 0x68,
-	0x50, 0x54, 0x11, 0xbb, 0x0d, 0x14, 0x21, 0x06, 0x24, 0x22, 0x15, 0x06, 0x14, 0x84, 0x0c, 0x5d,
-	0x58, 0xaa, 0xbc, 0x9c, 0x0e, 0x2b, 0x8d, 0x2f, 0xba, 0xbb, 0x46, 0x35, 0x13, 0x62, 0x62, 0xe4,
-	0x0b, 0x30, 0xf0, 0x0d, 0x3a, 0xf0, 0x19, 0x50, 0xc7, 0x8a, 0x89, 0x09, 0xa1, 0x64, 0xe8, 0x37,
-	0x80, 0x15, 0xf9, 0xdd, 0x46, 0x79, 0x83, 0x01, 0x06, 0x36, 0x5f, 0xee, 0xf7, 0xdc, 0xff, 0xff,
-	0x7f, 0xe2, 0xc7, 0x07, 0xc5, 0x01, 0xa3, 0x43, 0x6c, 0xb7, 0xec, 0x0e, 0x36, 0x18, 0x26, 0x16,
-	0x17, 0xcc, 0x31, 0x86, 0xbb, 0x86, 0x38, 0xd1, 0x07, 0x8c, 0x0a, 0x2a, 0x17, 0x62, 0x40, 0x0f,
-	0x01, 0x7d, 0xb8, 0xab, 0xe6, 0x09, 0x25, 0xd4, 0x43, 0x0c, 0xf7, 0xc9, 0xa7, 0xd5, 0xcd, 0x0e,
-	0xe5, 0x7d, 0xca, 0x0f, 0xfd, 0x0d, 0x7f, 0x11, 0x6c, 0x6d, 0xf8, 0x2b, 0xa3, 0xcf, 0x89, 0x2b,
-	0xd0, 0xe7, 0x24, 0xd8, 0xa8, 0x4c, 0xb1, 0x10, 0xa9, 0x79, 0x58, 0xf9, 0x13, 0x82, 0xf5, 0x26,
-	0x27, 0xa6, 0xf7, 0x2b, 0x66, 0x4f, 0x1e, 0x3e, 0x97, 0x77, 0x60, 0x85, 0x5b, 0xc4, 0xc6, 0x4c,
-	0x41, 0x25, 0x54, 0x5d, 0x6d, 0x28, 0x9f, 0x3f, 0xd6, 0xf2, 0x81, 0xe8, 0x83, 0x6e, 0x97, 0x61,
-	0xce, 0x9f, 0x09, 0x66, 0xd9, 0xc4, 0x0c, 0x38, 0x79, 0x0f, 0xa4, 0x1e, 0x76, 0x94, 0xa5, 0x12,
-	0xaa, 0xe6, 0xea, 0xd7, 0xf5, 0xc9, 0xd9, 0x74, 0x33, 0x78, 0x7e, 0x8c, 0x1d, 0xd3, 0xe5, 0xe5,
-	0xfb, 0xb0, 0xcc, 0xe8, 0x11, 0xe6, 0x8a, 0x54, 0x92, 0xaa, 0xb9, 0x7a, 0x79, 0x6a, 0xa1, 0x0b,
-	0xed, 0xdb, 0x82, 0x39, 0x8d, 0xec, 0xd9, 0xd7, 0x62, 0xc6, 0xf4, 0xcb, 0xee, 0xe5, 0xde, 0x5c,
-	0x9c, 0x6e, 0x07, 0x1e, 0xca, 0x0a, 0x14, 0xd2, 0x39, 0x4c, 0xcc, 0x07, 0xd4, 0xe6, 0xb8, 0xfc,
-	0x1d, 0xc1, 0xe5, 0x26, 0x27, 0x8f, 0x58, 0xcb, 0x16, 0xee, 0x51, 0x7f, 0x2f, 0xe0, 0x5d, 0xc8,
-	0xba, 0x4e, 0x15, 0xa9, 0x84, 0xaa, 0xeb, 0xf5, 0xad, 0x79, 0x75, 0xae, 0x39, 0xd3, 0xab, 0x90,
-	0xef, 0xc0, 0x6a, 0xcb, 0x77, 0x82, 0xb9, 0x92, 0x2d, 0x49, 0x33, 0x5d, 0xc6, 0x68, 0xba, 0x25,
-	0x05, 0xc8, 0x27, 0x73, 0x47, 0x0d, 0xf9, 0x81, 0x60, 0xcd, 0xeb, 0xd5, 0x90, 0xf6, 0xf0, 0x7f,
-	0xd5, 0x91, 0x0d, 0xb8, 0x9a, 0x0a, 0x1e, 0xb5, 0xe4, 0x2d, 0x82, 0x2b, 0x4d, 0x4e, 0x0e, 0x6c,
-	0xf6, 0x0f, 0x06, 0x21, 0xed, 0x51, 0x05, 0xe5, 0x57, 0x27, 0x91, 0xcd, 0xf7, 0x28, 0x08, 0xe0,
-	0x1f, 0xd0, 0x38, 0x3e, 0xea, 0x1d, 0x0c, 0xba, 0x2d, 0xf1, 0x27, 0xff, 0xe0, 0x3e, 0x5c, 0xc2,
-	0xb6, 0x60, 0x16, 0xe6, 0xca, 0x92, 0x37, 0x7f, 0x95, 0x79, 0x7e, 0x93, 0x23, 0x18, 0xd6, 0xa6,
-	0xbd, 0x17, 0xe1, 0xda, 0x44, 0x7b, 0x61, 0x80, 0xfa, 0x87, 0x2c, 0x48, 0x4d, 0x4e, 0x64, 0x0c,
-	0xb9, 0xe4, 0x27, 0xe7, 0xc6, 0x34, 0xe9, 0xf4, 0x48, 0xab, 0xfa, 0x62, 0x5c, 0x28, 0x27, 0x1f,
-	0xc2, 0x6a, 0x3c, 0xf6, 0x5b, 0x33, 0x8a, 0x23, 0x4a, 0xbd, 0xb9, 0x08, 0x15, 0x09, 0xb4, 0x01,
-	0x12, 0x63, 0x54, 0x99, 0x69, 0x2f, 0xc4, 0xd4, 0xda, 0x42, 0x58, 0xa4, 0xd1, 0x83, 0xb5, 0xf4,
-	0x7b, 0x59, 0x9d, 0x51, 0x9f, 0x22, 0xd5, 0x9d, 0x45, 0xc9, 0x48, 0xec, 0x15, 0xc8, 0x13, 0xde,
-	0xae, 0xda, 0xdc, 0xbe, 0x27, 0x71, 0x75, 0xef, 0xb7, 0xf0, 0x50, 0x5b, 0x5d, 0x7e, 0x7d, 0x71,
-	0xba, 0x8d, 0x1a, 0xbd, 0xb3, 0x91, 0x86, 0xce, 0x47, 0x1a, 0xfa, 0x36, 0xd2, 0xd0, 0xbb, 0xb1,
-	0x96, 0x39, 0x1f, 0x6b, 0x99, 0x2f, 0x63, 0x2d, 0x03, 0x9b, 0x16, 0x9d, 0x72, 0xf2, 0x53, 0xf4,
-	0xe2, 0x36, 0xb1, 0xc4, 0xcb, 0xe3, 0xb6, 0xde, 0xa1, 0x7d, 0x23, 0x86, 0x6a, 0x16, 0x4d, 0xac,
-	0x8c, 0x93, 0xf8, 0x2e, 0x14, 0xce, 0x00, 0xf3, 0xf6, 0x8a, 0x77, 0x0d, 0xde, 0xfa, 0x19, 0x00,
-	0x00, 0xff, 0xff, 0x14, 0x84, 0xbd, 0x73, 0xb2, 0x07, 0x00, 0x00,
+	// 694 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x96, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xc7, 0x3b, 0xb4, 0x80, 0xbc, 0x02, 0x31, 0x2b, 0x3f, 0x96, 0x4d, 0x2c, 0x4d, 0x01, 0xd3,
+	0xa0, 0xdd, 0x85, 0x2a, 0xc6, 0x70, 0x30, 0xb1, 0x09, 0x7a, 0x20, 0x35, 0x66, 0x91, 0x8b, 0x31,
+	0x21, 0x05, 0x26, 0xc3, 0xa6, 0x74, 0xa7, 0x99, 0x99, 0x36, 0x94, 0x83, 0x31, 0x9e, 0x3c, 0xfa,
+	0x0f, 0xf8, 0x3f, 0x70, 0xf0, 0x6f, 0x30, 0x1c, 0x89, 0x5e, 0x3c, 0x19, 0x03, 0x07, 0xfe, 0x06,
+	0xbd, 0x68, 0xf6, 0xd7, 0xec, 0x2e, 0xa1, 0xed, 0x8a, 0x89, 0x1e, 0xbc, 0xed, 0xec, 0x7c, 0xde,
+	0x7b, 0xdf, 0xf7, 0xf2, 0xde, 0xcb, 0xc0, 0x6c, 0x93, 0xd1, 0x36, 0xb6, 0x6b, 0xf6, 0x0e, 0x36,
+	0x18, 0x26, 0x16, 0x17, 0xac, 0x63, 0xb4, 0x97, 0x0d, 0x71, 0xa0, 0x37, 0x19, 0x15, 0x54, 0x99,
+	0x0a, 0x01, 0x3d, 0x00, 0xf4, 0xf6, 0xb2, 0x36, 0x41, 0x28, 0xa1, 0x2e, 0x62, 0x38, 0x5f, 0x1e,
+	0xad, 0xcd, 0xec, 0x50, 0xde, 0xa0, 0x7c, 0xcb, 0xbb, 0xf0, 0x0e, 0xfe, 0xd5, 0xb4, 0x77, 0x32,
+	0x1a, 0x9c, 0x38, 0x01, 0x1a, 0x9c, 0xf8, 0x17, 0x0b, 0x5d, 0x24, 0xc8, 0x68, 0x1e, 0xb6, 0xd8,
+	0x05, 0xab, 0xb5, 0xc4, 0x1e, 0x65, 0xd6, 0x61, 0x4d, 0x58, 0xd4, 0xf6, 0xd8, 0xc2, 0x47, 0x04,
+	0xe3, 0x55, 0x4e, 0x4c, 0x17, 0xc3, 0xec, 0xe9, 0xe3, 0xe7, 0xca, 0x12, 0x0c, 0x71, 0x8b, 0xd8,
+	0x98, 0xa9, 0x28, 0x8f, 0x8a, 0x23, 0x15, 0xf5, 0xd3, 0x87, 0xd2, 0x84, 0x2f, 0xf0, 0xd1, 0xee,
+	0x2e, 0xc3, 0x9c, 0x6f, 0x08, 0x66, 0xd9, 0xc4, 0xf4, 0x39, 0x65, 0x05, 0xd2, 0x75, 0xdc, 0x51,
+	0x07, 0xf2, 0xa8, 0x98, 0x2d, 0xcf, 0xe9, 0x97, 0xd7, 0x41, 0x37, 0xfd, 0xef, 0x75, 0xdc, 0x31,
+	0x1d, 0x5e, 0x79, 0x08, 0x83, 0x8c, 0xee, 0x63, 0xae, 0xa6, 0xf3, 0xe9, 0x62, 0xb6, 0x5c, 0xe8,
+	0x6a, 0xe8, 0x40, 0x6b, 0xb6, 0x60, 0x9d, 0x4a, 0xe6, 0xf8, 0xeb, 0x6c, 0xca, 0xf4, 0xcc, 0x56,
+	0xb3, 0x6f, 0xce, 0x8f, 0x16, 0x7d, 0x0d, 0x05, 0x15, 0xa6, 0xe2, 0x79, 0x98, 0x98, 0x37, 0xa9,
+	0xcd, 0x71, 0xe1, 0x3b, 0x82, 0xd1, 0x2a, 0x27, 0x4f, 0x58, 0xcd, 0x16, 0x8e, 0x2b, 0xa5, 0x0c,
+	0xc3, 0x9e, 0x11, 0x57, 0x51, 0x3e, 0xdd, 0x33, 0xc3, 0x00, 0xbc, 0x6a, 0x8a, 0x0f, 0x20, 0xe3,
+	0x68, 0x55, 0xd3, 0x79, 0x54, 0x1c, 0x2f, 0xcf, 0xf7, 0xb3, 0x73, 0xe4, 0x99, 0xae, 0x85, 0x72,
+	0x1f, 0x46, 0x6a, 0x9e, 0x14, 0xcc, 0xd5, 0x4c, 0x1f, 0x99, 0x21, 0xba, 0x3a, 0xea, 0x14, 0x25,
+	0x90, 0x5d, 0x98, 0x82, 0x89, 0x68, 0xea, 0xb2, 0x26, 0x3f, 0x10, 0x8c, 0xb9, 0xe5, 0x6a, 0xd3,
+	0x3a, 0xfe, 0xdf, 0x8a, 0x32, 0x0d, 0x93, 0xb1, 0xdc, 0x65, 0x55, 0xde, 0x22, 0xb8, 0x5e, 0xe5,
+	0x64, 0xd3, 0x66, 0xff, 0x60, 0x1c, 0xe2, 0xed, 0xac, 0x81, 0x7a, 0x51, 0x89, 0x94, 0xf9, 0x1e,
+	0xf9, 0x09, 0x78, 0x0e, 0x2a, 0xad, 0xfd, 0xfa, 0x66, 0x73, 0xb7, 0x26, 0xf0, 0x15, 0xb4, 0xae,
+	0xc1, 0x30, 0xb6, 0x05, 0xb3, 0x30, 0x57, 0x07, 0xdc, 0x29, 0x5c, 0xe8, 0xa7, 0x37, 0x3a, 0x88,
+	0x81, 0x6d, 0x5c, 0xfb, 0x2c, 0xdc, 0xbc, 0x54, 0x9e, 0x4c, 0xe0, 0x33, 0x82, 0x6c, 0x95, 0x93,
+	0x0d, 0xec, 0x36, 0x25, 0xff, 0x9b, 0xbd, 0xb7, 0x0e, 0xa3, 0x4e, 0x27, 0x6d, 0xb5, 0x5c, 0x45,
+	0x89, 0x56, 0x8f, 0x27, 0xde, 0xcf, 0x38, 0xcb, 0xe4, 0x9f, 0x8b, 0x6d, 0xf5, 0x0a, 0x20, 0xc4,
+	0x65, 0x93, 0xa3, 0x3f, 0x6b, 0xf2, 0x81, 0xc4, 0x4d, 0x5e, 0x98, 0x84, 0x1b, 0x91, 0xa2, 0x06,
+	0xc5, 0x2e, 0xff, 0xcc, 0x40, 0xba, 0xca, 0x89, 0x82, 0x21, 0x1b, 0xdd, 0xf2, 0xb7, 0xba, 0x29,
+	0x8a, 0x6f, 0x51, 0x4d, 0x4f, 0xc6, 0x05, 0xe1, 0x94, 0x2d, 0x18, 0x09, 0x37, 0xed, 0x7c, 0x0f,
+	0x63, 0x49, 0x69, 0x77, 0x92, 0x50, 0x32, 0xc0, 0x36, 0x40, 0x64, 0x6d, 0x2d, 0xf4, 0x94, 0x17,
+	0x60, 0x5a, 0x29, 0x11, 0x26, 0x63, 0xd4, 0x61, 0x2c, 0xbe, 0x04, 0x8a, 0x3d, 0xec, 0x63, 0xa4,
+	0xb6, 0x94, 0x94, 0x94, 0xc1, 0x0e, 0x41, 0xb9, 0x64, 0x94, 0x4b, 0x7d, 0xeb, 0x1e, 0xc5, 0xb5,
+	0x95, 0xdf, 0xc2, 0x65, 0xec, 0x97, 0x70, 0x4d, 0x4e, 0xe1, 0x5c, 0x0f, 0x17, 0x01, 0xa4, 0xdd,
+	0x4e, 0x00, 0x05, 0xde, 0xb5, 0xc1, 0xd7, 0xe7, 0x47, 0x8b, 0xa8, 0x52, 0x3f, 0x3e, 0xcd, 0xa1,
+	0x93, 0xd3, 0x1c, 0xfa, 0x76, 0x9a, 0x43, 0xef, 0xce, 0x72, 0xa9, 0x93, 0xb3, 0x5c, 0xea, 0xcb,
+	0x59, 0x2e, 0x05, 0x33, 0x16, 0xed, 0xe2, 0xef, 0x19, 0x7a, 0x71, 0x8f, 0x58, 0x62, 0xaf, 0xb5,
+	0xad, 0xef, 0xd0, 0x86, 0x11, 0x42, 0x25, 0x8b, 0x46, 0x4e, 0xc6, 0x41, 0xf8, 0xc2, 0x11, 0x9d,
+	0x26, 0xe6, 0xdb, 0x43, 0xee, 0xbb, 0xe6, 0xee, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x99, 0xf7,
+	0x2e, 0x80, 0xaf, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -633,9 +809,11 @@ type MsgClient interface {
 	RegisterNFT(ctx context.Context, in *MsgRegisterNFT, opts ...grpc.CallOption) (*MsgRegisterNFTResponse, error)
 	// GrantRole grants a role to one or more addresses.
 	// This adds the specified addresses to the role for the given registry key.
+	// Multiple signers are supported for multi-party authorization workflows.
 	GrantRole(ctx context.Context, in *MsgGrantRole, opts ...grpc.CallOption) (*MsgGrantRoleResponse, error)
 	// RevokeRole revokes a role from one or more addresses.
 	// This removes the specified addresses from the role for the given registry key.
+	// Multiple signers are supported for multi-party authorization workflows.
 	RevokeRole(ctx context.Context, in *MsgRevokeRole, opts ...grpc.CallOption) (*MsgRevokeRoleResponse, error)
 	// UnregisterNFT unregisters an NFT from the registry.
 	// This removes the entire registry entry for the specified key.
@@ -644,6 +822,9 @@ type MsgClient interface {
 	// This creates multiple registry entries, or updates if one exists.
 	// Each registry in this will cost one MsgRegisterNFT.
 	RegistryBulkUpdate(ctx context.Context, in *MsgRegistryBulkUpdate, opts ...grpc.CallOption) (*MsgRegistryBulkUpdateResponse, error)
+	// SetRoles atomically sets the desired state for one or more roles on a registry entry.
+	// Multiple signers are supported for multi-party authorization workflows.
+	SetRoles(ctx context.Context, in *MsgSetRoles, opts ...grpc.CallOption) (*MsgSetRolesResponse, error)
 }
 
 type msgClient struct {
@@ -699,6 +880,15 @@ func (c *msgClient) RegistryBulkUpdate(ctx context.Context, in *MsgRegistryBulkU
 	return out, nil
 }
 
+func (c *msgClient) SetRoles(ctx context.Context, in *MsgSetRoles, opts ...grpc.CallOption) (*MsgSetRolesResponse, error) {
+	out := new(MsgSetRolesResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Msg/SetRoles", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// RegisterNFT registers a new NFT in the registry.
@@ -706,9 +896,11 @@ type MsgServer interface {
 	RegisterNFT(context.Context, *MsgRegisterNFT) (*MsgRegisterNFTResponse, error)
 	// GrantRole grants a role to one or more addresses.
 	// This adds the specified addresses to the role for the given registry key.
+	// Multiple signers are supported for multi-party authorization workflows.
 	GrantRole(context.Context, *MsgGrantRole) (*MsgGrantRoleResponse, error)
 	// RevokeRole revokes a role from one or more addresses.
 	// This removes the specified addresses from the role for the given registry key.
+	// Multiple signers are supported for multi-party authorization workflows.
 	RevokeRole(context.Context, *MsgRevokeRole) (*MsgRevokeRoleResponse, error)
 	// UnregisterNFT unregisters an NFT from the registry.
 	// This removes the entire registry entry for the specified key.
@@ -717,6 +909,9 @@ type MsgServer interface {
 	// This creates multiple registry entries, or updates if one exists.
 	// Each registry in this will cost one MsgRegisterNFT.
 	RegistryBulkUpdate(context.Context, *MsgRegistryBulkUpdate) (*MsgRegistryBulkUpdateResponse, error)
+	// SetRoles atomically sets the desired state for one or more roles on a registry entry.
+	// Multiple signers are supported for multi-party authorization workflows.
+	SetRoles(context.Context, *MsgSetRoles) (*MsgSetRolesResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -737,6 +932,9 @@ func (*UnimplementedMsgServer) UnregisterNFT(ctx context.Context, req *MsgUnregi
 }
 func (*UnimplementedMsgServer) RegistryBulkUpdate(ctx context.Context, req *MsgRegistryBulkUpdate) (*MsgRegistryBulkUpdateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegistryBulkUpdate not implemented")
+}
+func (*UnimplementedMsgServer) SetRoles(ctx context.Context, req *MsgSetRoles) (*MsgSetRolesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetRoles not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -833,6 +1031,24 @@ func _Msg_RegistryBulkUpdate_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetRoles)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetRoles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Msg/SetRoles",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetRoles(ctx, req.(*MsgSetRoles))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.registry.v1.Msg",
@@ -857,6 +1073,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegistryBulkUpdate",
 			Handler:    _Msg_RegistryBulkUpdate_Handler,
+		},
+		{
+			MethodName: "SetRoles",
+			Handler:    _Msg_SetRoles_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -988,12 +1208,14 @@ func (m *MsgGrantRole) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Signer) > 0 {
-		i -= len(m.Signer)
-		copy(dAtA[i:], m.Signer)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
-		i--
-		dAtA[i] = 0xa
+	if len(m.Signers) > 0 {
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Signers[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -1067,12 +1289,14 @@ func (m *MsgRevokeRole) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Signer) > 0 {
-		i -= len(m.Signer)
-		copy(dAtA[i:], m.Signer)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
-		i--
-		dAtA[i] = 0xa
+	if len(m.Signers) > 0 {
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Signers[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -1232,6 +1456,124 @@ func (m *MsgRegistryBulkUpdateResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSetRoles) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetRoles) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetRoles) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RoleUpdates) > 0 {
+		for iNdEx := len(m.RoleUpdates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RoleUpdates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Signers) > 0 {
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Signers[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RoleUpdate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RoleUpdate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RoleUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Addresses[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.Role != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Role))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetRolesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetRolesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetRolesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1281,9 +1623,11 @@ func (m *MsgGrantRole) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Signer)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	if m.Key != nil {
 		l = m.Key.Size()
@@ -1316,9 +1660,11 @@ func (m *MsgRevokeRole) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Signer)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	if m.Key != nil {
 		l = m.Key.Size()
@@ -1391,6 +1737,58 @@ func (m *MsgRegistryBulkUpdate) Size() (n int) {
 }
 
 func (m *MsgRegistryBulkUpdateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetRoles) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.RoleUpdates) > 0 {
+		for _, e := range m.RoleUpdates {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RoleUpdate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Role != 0 {
+		n += 1 + sovTx(uint64(m.Role))
+	}
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgSetRolesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1638,7 +2036,7 @@ func (m *MsgGrantRole) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1666,7 +2064,7 @@ func (m *MsgGrantRole) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = string(dAtA[iNdEx:postIndex])
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1857,7 +2255,7 @@ func (m *MsgRevokeRole) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1885,7 +2283,7 @@ func (m *MsgRevokeRole) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = string(dAtA[iNdEx:postIndex])
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2356,6 +2754,309 @@ func (m *MsgRegistryBulkUpdateResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgRegistryBulkUpdateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetRoles) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetRoles: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetRoles: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &RegistryKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RoleUpdates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RoleUpdates = append(m.RoleUpdates, RoleUpdate{})
+			if err := m.RoleUpdates[len(m.RoleUpdates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RoleUpdate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RoleUpdate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RoleUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Role", wireType)
+			}
+			m.Role = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Role |= RegistryRole(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetRolesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetRolesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetRolesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

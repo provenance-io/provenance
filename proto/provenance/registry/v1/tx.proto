@@ -9,6 +9,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "provenance/registry/v1/registry.proto";
+import "provenance/registry/v1/authorization.proto";
 
 // Msg defines the registry Msg service.
 // This service provides transaction functionality for managing registry entries and roles.
@@ -21,10 +22,12 @@ service Msg {
 
   // GrantRole grants a role to one or more addresses.
   // This adds the specified addresses to the role for the given registry key.
+  // Multiple signers are supported for multi-party authorization workflows.
   rpc GrantRole(MsgGrantRole) returns (MsgGrantRoleResponse);
 
   // RevokeRole revokes a role from one or more addresses.
   // This removes the specified addresses from the role for the given registry key.
+  // Multiple signers are supported for multi-party authorization workflows.
   rpc RevokeRole(MsgRevokeRole) returns (MsgRevokeRoleResponse);
 
   // UnregisterNFT unregisters an NFT from the registry.
@@ -35,6 +38,10 @@ service Msg {
   // This creates multiple registry entries, or updates if one exists.
   // Each registry in this will cost one MsgRegisterNFT.
   rpc RegistryBulkUpdate(MsgRegistryBulkUpdate) returns (MsgRegistryBulkUpdateResponse);
+
+  // SetRoles atomically sets the desired state for one or more roles on a registry entry.
+  // Multiple signers are supported for multi-party authorization workflows.
+  rpc SetRoles(MsgSetRoles) returns (MsgSetRolesResponse);
 }
 
 // MsgRegisterNFT represents a message to register a new NFT in the registry.
@@ -61,12 +68,14 @@ message MsgRegisterNFTResponse {}
 
 // MsgGrantRole represents a message to grant a role to one or more addresses.
 // This message adds the specified addresses to an existing role for the given registry key.
+// Multiple signers enable multi-party authorization workflows.
 message MsgGrantRole {
-  option (cosmos.msg.v1.signer) = "signer";
+  option (cosmos.msg.v1.signer) = "signers";
 
-  // signer is the address that is authorized to grant the role.
-  // This address must have the appropriate permissions to modify role assignments.
-  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // signers are the addresses authorizing the role grant.
+  // When a RegistryClass authorization policy is defined for the target role, all required
+  // role holders must be included here. Without a policy, a single NFT owner address is required.
+  repeated string signers = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // key is the registry key to grant the role to.
   // This identifies the specific registry entry to modify.
@@ -87,12 +96,14 @@ message MsgGrantRoleResponse {}
 
 // MsgRevokeRole represents a message to revoke a role from one or more addresses.
 // This message removes the specified addresses from an existing role for the given registry key.
+// Multiple signers enable multi-party authorization workflows.
 message MsgRevokeRole {
-  option (cosmos.msg.v1.signer) = "signer";
+  option (cosmos.msg.v1.signer) = "signers";
 
-  // signer is the address that is authorized to revoke the role.
-  // This address must have the appropriate permissions to modify role assignments.
-  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // signers are the addresses authorizing the role revocation.
+  // When a RegistryClass authorization policy is defined for the target role, all required
+  // role holders must be included here. Without a policy, a single NFT owner address is required.
+  repeated string signers = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // key is the registry key to revoke the role from.
   // This identifies the specific registry entry to modify.
@@ -146,3 +157,35 @@ message MsgRegistryBulkUpdate {
 // MsgRegistryBulkUpdateResponse defines the response for RegistryBulkUpdate.
 // This is an empty response indicating successful bulk update.
 message MsgRegistryBulkUpdateResponse {}
+
+// MsgSetRoles atomically sets the desired state for one or more roles on a registry entry.
+// For each role in role_updates, the keeper computes the diff between current and desired
+// addresses and applies grants and revokes to reach the desired state.
+// All updates succeed or all fail (atomic).
+message MsgSetRoles {
+  option (cosmos.msg.v1.signer) = "signers";
+
+  // signers are the addresses authorizing the role updates.
+  // All required role holders per the RegistryClass authorization policy must be present.
+  repeated string signers = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // key identifies the registry entry to update.
+  RegistryKey key = 2;
+
+  // role_updates contains the desired state for each role to update.
+  // At least one entry is required. Roles not listed here are unchanged.
+  repeated RoleUpdate role_updates = 3 [(gogoproto.nullable) = false];
+}
+
+// RoleUpdate specifies the desired set of addresses for a single role.
+message RoleUpdate {
+  // role is the role to update.
+  RegistryRole role = 1;
+
+  // addresses is the desired set of addresses for this role.
+  // An empty list means the role should be cleared entirely.
+  repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgSetRolesResponse defines the response for SetRoles.
+message MsgSetRolesResponse {}

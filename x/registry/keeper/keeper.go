@@ -286,6 +286,56 @@ func (k Keeper) SetRegistry(ctx context.Context, entry types.RegistryEntry) erro
 	return k.Registry.Set(ctx, entry.Key.CollKey(), entry)
 }
 
+// SetRoles atomically sets the desired state for one or more roles on a registry entry.
+// Each RoleUpdate specifies a role and the complete desired set of addresses; an empty
+// address list clears the role entirely.
+func (k Keeper) SetRoles(ctx context.Context, key *types.RegistryKey, roleUpdates []types.RoleUpdate) error {
+	entry, err := k.Registry.Get(ctx, key.CollKey())
+	if err != nil {
+		return types.NewErrCodeRegistryNotFound(key.String())
+	}
+
+	// Snapshot the original entry to compute diff events.
+	origCopy := entry
+
+	for _, update := range roleUpdates {
+		roleI := -1
+		for i, re := range entry.Roles {
+			if re.Role == update.Role {
+				roleI = i
+				break
+			}
+		}
+
+		if len(update.Addresses) == 0 {
+			// Clear the role if present.
+			if roleI >= 0 {
+				entry.Roles = append(entry.Roles[:roleI], entry.Roles[roleI+1:]...)
+			}
+		} else {
+			// Set the complete desired address list for the role.
+			if roleI >= 0 {
+				entry.Roles[roleI].Addresses = update.Addresses
+			} else {
+				entry.Roles = append(entry.Roles, types.RolesEntry{Role: update.Role, Addresses: update.Addresses})
+			}
+		}
+	}
+
+	if err = k.Registry.Set(ctx, key.CollKey(), entry); err != nil {
+		return fmt.Errorf("failed to set registry entry: %w", err)
+	}
+
+	grantEvents, revokeEvents := types.GetChangeEvents(&origCopy, &entry)
+	for _, tev := range grantEvents {
+		k.EmitEvent(ctx, tev)
+	}
+	for _, tev := range revokeEvents {
+		k.EmitEvent(ctx, tev)
+	}
+	return nil
+}
+
 // GetRegistries returns the registries paginated
 func (k Keeper) GetRegistries(ctx context.Context, pagination *query.PageRequest, assetClassID string) ([]types.RegistryEntry, *query.PageResponse, error) {
 	var opts []func(opt *query.CollectionsPaginateOptions[collections.Pair[string, string]])

@@ -14,6 +14,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgRevokeRole)(nil),
 	(*MsgUnregisterNFT)(nil),
 	(*MsgRegistryBulkUpdate)(nil),
+	(*MsgSetRoles)(nil),
 }
 
 // ValidateBasic validates the MsgRegisterNFT message
@@ -41,8 +42,14 @@ func (m MsgRegisterNFT) ValidateBasic() error {
 // ValidateBasic validates the MsgGrantRole message
 func (m MsgGrantRole) ValidateBasic() error {
 	var errs []error
-	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	if len(m.Signers) == 0 {
+		errs = append(errs, NewErrCodeInvalidField("signers", "at least one signer is required"))
+	} else {
+		for _, signer := range m.Signers {
+			if _, err := sdk.AccAddressFromBech32(signer); err != nil {
+				errs = append(errs, NewErrCodeInvalidField("signers", "%s", err))
+			}
+		}
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -63,8 +70,14 @@ func (m MsgGrantRole) ValidateBasic() error {
 // ValidateBasic validates the MsgRevokeRole message
 func (m MsgRevokeRole) ValidateBasic() error {
 	var errs []error
-	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	if len(m.Signers) == 0 {
+		errs = append(errs, NewErrCodeInvalidField("signers", "at least one signer is required"))
+	} else {
+		for _, signer := range m.Signers {
+			if _, err := sdk.AccAddressFromBech32(signer); err != nil {
+				errs = append(errs, NewErrCodeInvalidField("signers", "%s", err))
+			}
+		}
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -77,6 +90,41 @@ func (m MsgRevokeRole) ValidateBasic() error {
 
 	if err := validateAddresses(m.Addresses); err != nil {
 		errs = append(errs, NewErrCodeInvalidField("addresses", "%s", err))
+	}
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic validates the MsgSetRoles message
+func (m MsgSetRoles) ValidateBasic() error {
+	var errs []error
+	if len(m.Signers) == 0 {
+		errs = append(errs, NewErrCodeInvalidField("signers", "at least one signer is required"))
+	} else {
+		for _, signer := range m.Signers {
+			if _, err := sdk.AccAddressFromBech32(signer); err != nil {
+				errs = append(errs, NewErrCodeInvalidField("signers", "%s", err))
+			}
+		}
+	}
+
+	if err := m.Key.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
+	}
+
+	if len(m.RoleUpdates) == 0 {
+		errs = append(errs, NewErrCodeInvalidField("role_updates", "at least one role update is required"))
+	} else {
+		for i, update := range m.RoleUpdates {
+			if update.Role == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+				errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: role cannot be unspecified", i))
+			}
+			for _, addr := range update.Addresses {
+				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+					errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: invalid address: %s", i, err))
+				}
+			}
+		}
 	}
 
 	return errors.Join(errs...)

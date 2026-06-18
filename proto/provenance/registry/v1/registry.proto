@@ -32,6 +32,17 @@ enum RegistryRole {
   // REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges.
   // Originators are responsible for creating and originating the underlying assets.
   REGISTRY_ROLE_ORIGINATOR = 6;
+  // REGISTRY_ROLE_LIEN_OWNER indicates the entity on whose behalf the registry acts as a nominal lien holder.
+  REGISTRY_ROLE_LIEN_OWNER = 7;
+  // REGISTRY_ROLE_SECURED_PARTY_FOR_LIEN indicates an organization with a security interest in the lien.
+  // This party can foreclose into the Lien Owner role or direct a transfer in case of default.
+  REGISTRY_ROLE_SECURED_PARTY_FOR_LIEN = 8;
+  // REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE indicates an organization with a financial interest in the eNote.
+  // This party can foreclose into the Controller role or direct a transfer in case of default.
+  REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE = 9;
+  // REGISTRY_ROLE_PLEDGEE indicates a lender or creditor that holds a security interest in pledged loans
+  // as collateral securing an obligation of the Pledgor.
+  REGISTRY_ROLE_PLEDGEE = 10;
 }
 
 // RegistryKey represents a unique identifier for registry entries.
