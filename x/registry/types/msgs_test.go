@@ -15,6 +15,8 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgRegisterNFT{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgUnregisterNFT{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgRegistryBulkUpdate{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgProposeRoleChange{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgApproveRoleChange{Signer: signer} },
 	}
 	msgMakersMulti := []testutil.MsgMakerMulti{
 		func(signers []string) sdk.Msg { return &MsgGrantRole{Signers: signers} },
@@ -138,6 +140,65 @@ func TestMsgSetRoles_ValidateBasic(t *testing.T) {
 		{name: "no role_updates", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{}}, exp: "invalid role_updates: at least one role update is required"},
 		{name: "unspecified role", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED}}}, exp: "invalid role_updates: 0: role cannot be unspecified"},
 		{name: "bad address in update", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{"bad"}}}}, exp: "invalid role_updates: 0: invalid address"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.exp == "" {
+				assertions.RequireErrorContents(t, err, nil)
+			} else {
+				assertions.RequireErrorContents(t, err, []string{tc.exp})
+			}
+		})
+	}
+}
+
+func TestMsgProposeRoleChange_ValidateBasic(t *testing.T) {
+	validAddr := sdk.AccAddress("propose_signer_________").String()
+	otherAddr := sdk.AccAddress("propose_target_________").String()
+	validKey := &RegistryKey{AssetClassId: "aclass", NftId: "nft1"}
+	grant := RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT
+
+	tests := []struct {
+		name string
+		msg  MsgProposeRoleChange
+		exp  string
+	}{
+		{name: "valid", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}},
+		{name: "empty signer", msg: MsgProposeRoleChange{Signer: "", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid signer: empty address"},
+		{name: "bad signer", msg: MsgProposeRoleChange{Signer: "bad", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid signer: decoding bech32"},
+		{name: "nil key", msg: MsgProposeRoleChange{Signer: validAddr, Key: nil, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid key: registry key cannot be nil"},
+		{name: "invalid role", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid role: cannot be unspecified"},
+		{name: "unspecified operation", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: RoleChangeOperation_ROLE_CHANGE_OPERATION_UNSPECIFIED, Addresses: []string{otherAddr}}, exp: "invalid operation: operation cannot be unspecified"},
+		{name: "no addresses", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{}}, exp: "invalid addresses: addresses cannot be empty"},
+		{name: "bad address", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{"bad"}}, exp: "invalid addresses: decoding bech32"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.exp == "" {
+				assertions.RequireErrorContents(t, err, nil)
+			} else {
+				assertions.RequireErrorContents(t, err, []string{tc.exp})
+			}
+		})
+	}
+}
+
+func TestMsgApproveRoleChange_ValidateBasic(t *testing.T) {
+	validAddr := sdk.AccAddress("approve_signer_________").String()
+
+	tests := []struct {
+		name string
+		msg  MsgApproveRoleChange
+		exp  string
+	}{
+		{name: "valid", msg: MsgApproveRoleChange{Signer: validAddr, ChangeId: "abc123"}},
+		{name: "empty signer", msg: MsgApproveRoleChange{Signer: "", ChangeId: "abc123"}, exp: "invalid signer: empty address"},
+		{name: "bad signer", msg: MsgApproveRoleChange{Signer: "bad", ChangeId: "abc123"}, exp: "invalid signer: decoding bech32"},
+		{name: "empty change_id", msg: MsgApproveRoleChange{Signer: validAddr, ChangeId: ""}, exp: "invalid change_id: change_id is required"},
 	}
 
 	for _, tc := range tests {

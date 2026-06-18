@@ -19,9 +19,10 @@ import (
 
 // Keeper defines the registry keeper.
 type Keeper struct {
-	cdc      codec.BinaryCodec
-	schema   collections.Schema
-	Registry collections.Map[collections.Pair[string, string], types.RegistryEntry]
+	cdc                codec.BinaryCodec
+	schema             collections.Schema
+	Registry           collections.Map[collections.Pair[string, string], types.RegistryEntry]
+	PendingRoleChanges collections.Map[string, types.PendingRoleChange]
 
 	NFTKeeper      NFTKeeper
 	MetadataKeeper MetadataKeeper
@@ -40,6 +41,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 			"registry",
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[types.RegistryEntry](cdc),
+		),
+
+		PendingRoleChanges: collections.NewMap(
+			sb,
+			collections.NewPrefix(pendingRoleChangePrefix),
+			"pending_role_changes",
+			collections.StringKey,
+			codec.CollValue[types.PendingRoleChange](cdc),
 		),
 
 		NFTKeeper:      nftKeeper,

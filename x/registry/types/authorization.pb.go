@@ -324,7 +324,6 @@ type RoleAssignment struct {
 	// role_selector identifies the role to resolve, either a single role or a priority list.
 	//
 	// Types that are valid to be assigned to RoleSelector:
-	//
 	//	*RoleAssignment_RegistryRole
 	//	*RoleAssignment_NftRole
 	//	*RoleAssignment_RolePriority

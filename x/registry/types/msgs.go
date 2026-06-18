@@ -15,6 +15,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUnregisterNFT)(nil),
 	(*MsgRegistryBulkUpdate)(nil),
 	(*MsgSetRoles)(nil),
+	(*MsgProposeRoleChange)(nil),
+	(*MsgApproveRoleChange)(nil),
 }
 
 // ValidateBasic validates the MsgRegisterNFT message
@@ -125,6 +127,46 @@ func (m MsgSetRoles) ValidateBasic() error {
 				}
 			}
 		}
+	}
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic validates the MsgProposeRoleChange message
+func (m MsgProposeRoleChange) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	}
+
+	if err := m.Key.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
+	}
+
+	if err := m.Role.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("role", "%s", err))
+	}
+
+	if m.Operation == RoleChangeOperation_ROLE_CHANGE_OPERATION_UNSPECIFIED {
+		errs = append(errs, NewErrCodeInvalidField("operation", "operation cannot be unspecified"))
+	}
+
+	if err := validateAddresses(m.Addresses); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("addresses", "%s", err))
+	}
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic validates the MsgApproveRoleChange message
+func (m MsgApproveRoleChange) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	}
+
+	if len(m.ChangeId) == 0 {
+		errs = append(errs, NewErrCodeInvalidField("change_id", "change_id is required"))
 	}
 
 	return errors.Join(errs...)

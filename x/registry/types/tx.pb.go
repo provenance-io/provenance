@@ -726,6 +726,248 @@ func (m *MsgSetRolesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetRolesResponse proto.InternalMessageInfo
 
+// MsgProposeRoleChange opens a pending role change that collects single-signer approvals until
+// the role's authorization policy is satisfied. Using single-signer messages (rather than one
+// multi-signer message) keeps every step compatible with authz delegation.
+type MsgProposeRoleChange struct {
+	// signer is the address proposing the change. It is recorded as the first approval; it only
+	// counts toward the policy if the signer is itself a required party.
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// key identifies the registry entry to change.
+	Key *RegistryKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// role is the role being changed.
+	Role RegistryRole `protobuf:"varint,3,opt,name=role,proto3,enum=provenance.registry.v1.RegistryRole" json:"role,omitempty"`
+	// operation is the kind of change to apply once approved (grant or revoke).
+	Operation RoleChangeOperation `protobuf:"varint,4,opt,name=operation,proto3,enum=provenance.registry.v1.RoleChangeOperation" json:"operation,omitempty"`
+	// addresses is the set of addresses the operation applies to.
+	Addresses []string `protobuf:"bytes,5,rep,name=addresses,proto3" json:"addresses,omitempty"`
+}
+
+func (m *MsgProposeRoleChange) Reset()         { *m = MsgProposeRoleChange{} }
+func (m *MsgProposeRoleChange) String() string { return proto.CompactTextString(m) }
+func (*MsgProposeRoleChange) ProtoMessage()    {}
+func (*MsgProposeRoleChange) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{13}
+}
+func (m *MsgProposeRoleChange) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgProposeRoleChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgProposeRoleChange.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgProposeRoleChange) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgProposeRoleChange.Merge(m, src)
+}
+func (m *MsgProposeRoleChange) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgProposeRoleChange) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgProposeRoleChange.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgProposeRoleChange proto.InternalMessageInfo
+
+func (m *MsgProposeRoleChange) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+func (m *MsgProposeRoleChange) GetKey() *RegistryKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *MsgProposeRoleChange) GetRole() RegistryRole {
+	if m != nil {
+		return m.Role
+	}
+	return RegistryRole_REGISTRY_ROLE_UNSPECIFIED
+}
+
+func (m *MsgProposeRoleChange) GetOperation() RoleChangeOperation {
+	if m != nil {
+		return m.Operation
+	}
+	return RoleChangeOperation_ROLE_CHANGE_OPERATION_UNSPECIFIED
+}
+
+func (m *MsgProposeRoleChange) GetAddresses() []string {
+	if m != nil {
+		return m.Addresses
+	}
+	return nil
+}
+
+// MsgProposeRoleChangeResponse defines the response for ProposeRoleChange.
+type MsgProposeRoleChangeResponse struct {
+	// change_id is the deterministic identifier of the pending change. It is also returned when the
+	// change auto-applied immediately (e.g. a single-party policy satisfied by the proposer).
+	ChangeId string `protobuf:"bytes,1,opt,name=change_id,json=changeId,proto3" json:"change_id,omitempty"`
+	// applied is true if the proposal alone satisfied the policy and the change was applied.
+	Applied bool `protobuf:"varint,2,opt,name=applied,proto3" json:"applied,omitempty"`
+}
+
+func (m *MsgProposeRoleChangeResponse) Reset()         { *m = MsgProposeRoleChangeResponse{} }
+func (m *MsgProposeRoleChangeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgProposeRoleChangeResponse) ProtoMessage()    {}
+func (*MsgProposeRoleChangeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{14}
+}
+func (m *MsgProposeRoleChangeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgProposeRoleChangeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgProposeRoleChangeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgProposeRoleChangeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgProposeRoleChangeResponse.Merge(m, src)
+}
+func (m *MsgProposeRoleChangeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgProposeRoleChangeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgProposeRoleChangeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgProposeRoleChangeResponse proto.InternalMessageInfo
+
+func (m *MsgProposeRoleChangeResponse) GetChangeId() string {
+	if m != nil {
+		return m.ChangeId
+	}
+	return ""
+}
+
+func (m *MsgProposeRoleChangeResponse) GetApplied() bool {
+	if m != nil {
+		return m.Applied
+	}
+	return false
+}
+
+// MsgApproveRoleChange records a single-signer approval for an open pending role change.
+type MsgApproveRoleChange struct {
+	// signer is the approving party. Single-signer, so it can be delegated via authz.
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// change_id is the identifier of the pending change to approve.
+	ChangeId string `protobuf:"bytes,2,opt,name=change_id,json=changeId,proto3" json:"change_id,omitempty"`
+}
+
+func (m *MsgApproveRoleChange) Reset()         { *m = MsgApproveRoleChange{} }
+func (m *MsgApproveRoleChange) String() string { return proto.CompactTextString(m) }
+func (*MsgApproveRoleChange) ProtoMessage()    {}
+func (*MsgApproveRoleChange) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{15}
+}
+func (m *MsgApproveRoleChange) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgApproveRoleChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgApproveRoleChange.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgApproveRoleChange) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgApproveRoleChange.Merge(m, src)
+}
+func (m *MsgApproveRoleChange) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgApproveRoleChange) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgApproveRoleChange.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgApproveRoleChange proto.InternalMessageInfo
+
+func (m *MsgApproveRoleChange) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+func (m *MsgApproveRoleChange) GetChangeId() string {
+	if m != nil {
+		return m.ChangeId
+	}
+	return ""
+}
+
+// MsgApproveRoleChangeResponse defines the response for ApproveRoleChange.
+type MsgApproveRoleChangeResponse struct {
+	// applied is true if this approval satisfied the policy and the change was applied.
+	Applied bool `protobuf:"varint,1,opt,name=applied,proto3" json:"applied,omitempty"`
+}
+
+func (m *MsgApproveRoleChangeResponse) Reset()         { *m = MsgApproveRoleChangeResponse{} }
+func (m *MsgApproveRoleChangeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgApproveRoleChangeResponse) ProtoMessage()    {}
+func (*MsgApproveRoleChangeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_afab3f18b6d8353c, []int{16}
+}
+func (m *MsgApproveRoleChangeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgApproveRoleChangeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgApproveRoleChangeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgApproveRoleChangeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgApproveRoleChangeResponse.Merge(m, src)
+}
+func (m *MsgApproveRoleChangeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgApproveRoleChangeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgApproveRoleChangeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgApproveRoleChangeResponse proto.InternalMessageInfo
+
+func (m *MsgApproveRoleChangeResponse) GetApplied() bool {
+	if m != nil {
+		return m.Applied
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*MsgRegisterNFT)(nil), "provenance.registry.v1.MsgRegisterNFT")
 	proto.RegisterType((*MsgRegisterNFTResponse)(nil), "provenance.registry.v1.MsgRegisterNFTResponse")
@@ -740,56 +982,70 @@ func init() {
 	proto.RegisterType((*MsgSetRoles)(nil), "provenance.registry.v1.MsgSetRoles")
 	proto.RegisterType((*RoleUpdate)(nil), "provenance.registry.v1.RoleUpdate")
 	proto.RegisterType((*MsgSetRolesResponse)(nil), "provenance.registry.v1.MsgSetRolesResponse")
+	proto.RegisterType((*MsgProposeRoleChange)(nil), "provenance.registry.v1.MsgProposeRoleChange")
+	proto.RegisterType((*MsgProposeRoleChangeResponse)(nil), "provenance.registry.v1.MsgProposeRoleChangeResponse")
+	proto.RegisterType((*MsgApproveRoleChange)(nil), "provenance.registry.v1.MsgApproveRoleChange")
+	proto.RegisterType((*MsgApproveRoleChangeResponse)(nil), "provenance.registry.v1.MsgApproveRoleChangeResponse")
 }
 
 func init() { proto.RegisterFile("provenance/registry/v1/tx.proto", fileDescriptor_afab3f18b6d8353c) }
 
 var fileDescriptor_afab3f18b6d8353c = []byte{
-	// 694 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x96, 0xcf, 0x4f, 0x13, 0x41,
-	0x14, 0xc7, 0x3b, 0xb4, 0x80, 0xbc, 0x02, 0x31, 0x2b, 0x3f, 0x96, 0x4d, 0x2c, 0x4d, 0x01, 0xd3,
-	0xa0, 0xdd, 0x85, 0x2a, 0xc6, 0x70, 0x30, 0xb1, 0x09, 0x7a, 0x20, 0x35, 0x66, 0x91, 0x8b, 0x31,
-	0x21, 0x05, 0x26, 0xc3, 0xa6, 0x74, 0xa7, 0x99, 0x99, 0x36, 0x94, 0x83, 0x31, 0x9e, 0x3c, 0xfa,
-	0x0f, 0xf8, 0x3f, 0x70, 0xf0, 0x6f, 0x30, 0x1c, 0x89, 0x5e, 0x3c, 0x19, 0x03, 0x07, 0xfe, 0x06,
-	0xbd, 0x68, 0xf6, 0xd7, 0xec, 0x2e, 0xa1, 0xed, 0x8a, 0x89, 0x1e, 0xbc, 0xed, 0xec, 0x7c, 0xde,
-	0x7b, 0xdf, 0xf7, 0xf2, 0xde, 0xcb, 0xc0, 0x6c, 0x93, 0xd1, 0x36, 0xb6, 0x6b, 0xf6, 0x0e, 0x36,
-	0x18, 0x26, 0x16, 0x17, 0xac, 0x63, 0xb4, 0x97, 0x0d, 0x71, 0xa0, 0x37, 0x19, 0x15, 0x54, 0x99,
-	0x0a, 0x01, 0x3d, 0x00, 0xf4, 0xf6, 0xb2, 0x36, 0x41, 0x28, 0xa1, 0x2e, 0x62, 0x38, 0x5f, 0x1e,
-	0xad, 0xcd, 0xec, 0x50, 0xde, 0xa0, 0x7c, 0xcb, 0xbb, 0xf0, 0x0e, 0xfe, 0xd5, 0xb4, 0x77, 0x32,
-	0x1a, 0x9c, 0x38, 0x01, 0x1a, 0x9c, 0xf8, 0x17, 0x0b, 0x5d, 0x24, 0xc8, 0x68, 0x1e, 0xb6, 0xd8,
-	0x05, 0xab, 0xb5, 0xc4, 0x1e, 0x65, 0xd6, 0x61, 0x4d, 0x58, 0xd4, 0xf6, 0xd8, 0xc2, 0x47, 0x04,
-	0xe3, 0x55, 0x4e, 0x4c, 0x17, 0xc3, 0xec, 0xe9, 0xe3, 0xe7, 0xca, 0x12, 0x0c, 0x71, 0x8b, 0xd8,
-	0x98, 0xa9, 0x28, 0x8f, 0x8a, 0x23, 0x15, 0xf5, 0xd3, 0x87, 0xd2, 0x84, 0x2f, 0xf0, 0xd1, 0xee,
-	0x2e, 0xc3, 0x9c, 0x6f, 0x08, 0x66, 0xd9, 0xc4, 0xf4, 0x39, 0x65, 0x05, 0xd2, 0x75, 0xdc, 0x51,
-	0x07, 0xf2, 0xa8, 0x98, 0x2d, 0xcf, 0xe9, 0x97, 0xd7, 0x41, 0x37, 0xfd, 0xef, 0x75, 0xdc, 0x31,
-	0x1d, 0x5e, 0x79, 0x08, 0x83, 0x8c, 0xee, 0x63, 0xae, 0xa6, 0xf3, 0xe9, 0x62, 0xb6, 0x5c, 0xe8,
-	0x6a, 0xe8, 0x40, 0x6b, 0xb6, 0x60, 0x9d, 0x4a, 0xe6, 0xf8, 0xeb, 0x6c, 0xca, 0xf4, 0xcc, 0x56,
-	0xb3, 0x6f, 0xce, 0x8f, 0x16, 0x7d, 0x0d, 0x05, 0x15, 0xa6, 0xe2, 0x79, 0x98, 0x98, 0x37, 0xa9,
-	0xcd, 0x71, 0xe1, 0x3b, 0x82, 0xd1, 0x2a, 0x27, 0x4f, 0x58, 0xcd, 0x16, 0x8e, 0x2b, 0xa5, 0x0c,
-	0xc3, 0x9e, 0x11, 0x57, 0x51, 0x3e, 0xdd, 0x33, 0xc3, 0x00, 0xbc, 0x6a, 0x8a, 0x0f, 0x20, 0xe3,
-	0x68, 0x55, 0xd3, 0x79, 0x54, 0x1c, 0x2f, 0xcf, 0xf7, 0xb3, 0x73, 0xe4, 0x99, 0xae, 0x85, 0x72,
-	0x1f, 0x46, 0x6a, 0x9e, 0x14, 0xcc, 0xd5, 0x4c, 0x1f, 0x99, 0x21, 0xba, 0x3a, 0xea, 0x14, 0x25,
-	0x90, 0x5d, 0x98, 0x82, 0x89, 0x68, 0xea, 0xb2, 0x26, 0x3f, 0x10, 0x8c, 0xb9, 0xe5, 0x6a, 0xd3,
-	0x3a, 0xfe, 0xdf, 0x8a, 0x32, 0x0d, 0x93, 0xb1, 0xdc, 0x65, 0x55, 0xde, 0x22, 0xb8, 0x5e, 0xe5,
-	0x64, 0xd3, 0x66, 0xff, 0x60, 0x1c, 0xe2, 0xed, 0xac, 0x81, 0x7a, 0x51, 0x89, 0x94, 0xf9, 0x1e,
-	0xf9, 0x09, 0x78, 0x0e, 0x2a, 0xad, 0xfd, 0xfa, 0x66, 0x73, 0xb7, 0x26, 0xf0, 0x15, 0xb4, 0xae,
-	0xc1, 0x30, 0xb6, 0x05, 0xb3, 0x30, 0x57, 0x07, 0xdc, 0x29, 0x5c, 0xe8, 0xa7, 0x37, 0x3a, 0x88,
-	0x81, 0x6d, 0x5c, 0xfb, 0x2c, 0xdc, 0xbc, 0x54, 0x9e, 0x4c, 0xe0, 0x33, 0x82, 0x6c, 0x95, 0x93,
-	0x0d, 0xec, 0x36, 0x25, 0xff, 0x9b, 0xbd, 0xb7, 0x0e, 0xa3, 0x4e, 0x27, 0x6d, 0xb5, 0x5c, 0x45,
-	0x89, 0x56, 0x8f, 0x27, 0xde, 0xcf, 0x38, 0xcb, 0xe4, 0x9f, 0x8b, 0x6d, 0xf5, 0x0a, 0x20, 0xc4,
-	0x65, 0x93, 0xa3, 0x3f, 0x6b, 0xf2, 0x81, 0xc4, 0x4d, 0x5e, 0x98, 0x84, 0x1b, 0x91, 0xa2, 0x06,
-	0xc5, 0x2e, 0xff, 0xcc, 0x40, 0xba, 0xca, 0x89, 0x82, 0x21, 0x1b, 0xdd, 0xf2, 0xb7, 0xba, 0x29,
-	0x8a, 0x6f, 0x51, 0x4d, 0x4f, 0xc6, 0x05, 0xe1, 0x94, 0x2d, 0x18, 0x09, 0x37, 0xed, 0x7c, 0x0f,
-	0x63, 0x49, 0x69, 0x77, 0x92, 0x50, 0x32, 0xc0, 0x36, 0x40, 0x64, 0x6d, 0x2d, 0xf4, 0x94, 0x17,
-	0x60, 0x5a, 0x29, 0x11, 0x26, 0x63, 0xd4, 0x61, 0x2c, 0xbe, 0x04, 0x8a, 0x3d, 0xec, 0x63, 0xa4,
-	0xb6, 0x94, 0x94, 0x94, 0xc1, 0x0e, 0x41, 0xb9, 0x64, 0x94, 0x4b, 0x7d, 0xeb, 0x1e, 0xc5, 0xb5,
-	0x95, 0xdf, 0xc2, 0x65, 0xec, 0x97, 0x70, 0x4d, 0x4e, 0xe1, 0x5c, 0x0f, 0x17, 0x01, 0xa4, 0xdd,
-	0x4e, 0x00, 0x05, 0xde, 0xb5, 0xc1, 0xd7, 0xe7, 0x47, 0x8b, 0xa8, 0x52, 0x3f, 0x3e, 0xcd, 0xa1,
-	0x93, 0xd3, 0x1c, 0xfa, 0x76, 0x9a, 0x43, 0xef, 0xce, 0x72, 0xa9, 0x93, 0xb3, 0x5c, 0xea, 0xcb,
-	0x59, 0x2e, 0x05, 0x33, 0x16, 0xed, 0xe2, 0xef, 0x19, 0x7a, 0x71, 0x8f, 0x58, 0x62, 0xaf, 0xb5,
-	0xad, 0xef, 0xd0, 0x86, 0x11, 0x42, 0x25, 0x8b, 0x46, 0x4e, 0xc6, 0x41, 0xf8, 0xc2, 0x11, 0x9d,
-	0x26, 0xe6, 0xdb, 0x43, 0xee, 0xbb, 0xe6, 0xee, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x99, 0xf7,
-	0x2e, 0x80, 0xaf, 0x09, 0x00, 0x00,
+	// 850 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x97, 0xcf, 0x6e, 0xeb, 0x44,
+	0x14, 0xc6, 0x33, 0x49, 0xfa, 0x27, 0x27, 0xbd, 0x57, 0x60, 0x7a, 0x7b, 0x7d, 0x0d, 0xa4, 0x51,
+	0x6e, 0x8b, 0xa2, 0x96, 0x24, 0x6d, 0x68, 0x51, 0xd5, 0x05, 0x52, 0x83, 0x0a, 0xaa, 0xaa, 0x40,
+	0xe5, 0xd2, 0x0d, 0x42, 0x8a, 0xdc, 0x64, 0xe4, 0x5a, 0x69, 0x3c, 0xd6, 0x8c, 0x13, 0x9a, 0x2e,
+	0x10, 0x62, 0xc5, 0x92, 0x17, 0xe0, 0x1d, 0xba, 0xe0, 0x19, 0x50, 0xd9, 0x55, 0xb0, 0x61, 0x85,
+	0x50, 0xbb, 0xe8, 0x9a, 0x25, 0xac, 0x90, 0xc7, 0xf6, 0xc4, 0x6e, 0x12, 0xc7, 0x6d, 0xa5, 0xb2,
+	0x60, 0x97, 0xb1, 0x7f, 0x67, 0xce, 0x77, 0xbe, 0x39, 0x33, 0x13, 0xc3, 0xa2, 0x45, 0x49, 0x0f,
+	0x9b, 0x9a, 0xd9, 0xc4, 0x15, 0x8a, 0x75, 0x83, 0xd9, 0xb4, 0x5f, 0xe9, 0xad, 0x57, 0xec, 0xb3,
+	0xb2, 0x45, 0x89, 0x4d, 0xa4, 0x85, 0x01, 0x50, 0xf6, 0x81, 0x72, 0x6f, 0x5d, 0x99, 0xd7, 0x89,
+	0x4e, 0x38, 0x52, 0x71, 0x7e, 0xb9, 0xb4, 0xf2, 0xaa, 0x49, 0x58, 0x87, 0xb0, 0x86, 0xfb, 0xc2,
+	0x1d, 0x78, 0xaf, 0x5e, 0xba, 0xa3, 0x4a, 0x87, 0xe9, 0x4e, 0x82, 0x0e, 0xd3, 0xbd, 0x17, 0xcb,
+	0x63, 0x24, 0x88, 0x6c, 0x2e, 0xb6, 0x32, 0x06, 0xd3, 0xba, 0xf6, 0x09, 0xa1, 0xc6, 0xb9, 0x66,
+	0x1b, 0xc4, 0x74, 0xd9, 0xc2, 0xcf, 0x08, 0x9e, 0xd7, 0x99, 0xae, 0x72, 0x0c, 0xd3, 0xcf, 0x3e,
+	0xf9, 0x42, 0x5a, 0x83, 0x69, 0x66, 0xe8, 0x26, 0xa6, 0x32, 0xca, 0xa3, 0x62, 0xa6, 0x26, 0xff,
+	0xfa, 0x53, 0x69, 0xde, 0x13, 0xb8, 0xd3, 0x6a, 0x51, 0xcc, 0xd8, 0xa1, 0x4d, 0x0d, 0x53, 0x57,
+	0x3d, 0x4e, 0xda, 0x84, 0x54, 0x1b, 0xf7, 0xe5, 0x64, 0x1e, 0x15, 0xb3, 0xd5, 0xd7, 0xe5, 0xd1,
+	0x3e, 0x94, 0x55, 0xef, 0xf7, 0x3e, 0xee, 0xab, 0x0e, 0x2f, 0x7d, 0x04, 0x53, 0x94, 0x9c, 0x62,
+	0x26, 0xa7, 0xf2, 0xa9, 0x62, 0xb6, 0x5a, 0x18, 0x1b, 0xe8, 0x40, 0xbb, 0xa6, 0x4d, 0xfb, 0xb5,
+	0xf4, 0xe5, 0x1f, 0x8b, 0x09, 0xd5, 0x0d, 0xdb, 0xce, 0x7e, 0x77, 0x7b, 0xb1, 0xe2, 0x69, 0x28,
+	0xc8, 0xb0, 0x10, 0xae, 0x43, 0xc5, 0xcc, 0x22, 0x26, 0xc3, 0x85, 0xbf, 0x11, 0xcc, 0xd5, 0x99,
+	0xfe, 0x29, 0xd5, 0x4c, 0xdb, 0x99, 0x4a, 0xaa, 0xc2, 0x8c, 0x1b, 0xc4, 0x64, 0x94, 0x4f, 0x45,
+	0x56, 0xe8, 0x83, 0x0f, 0x2d, 0x71, 0x0b, 0xd2, 0x8e, 0x56, 0x39, 0x95, 0x47, 0xc5, 0xe7, 0xd5,
+	0xa5, 0x49, 0x71, 0x8e, 0x3c, 0x95, 0x47, 0x48, 0x1f, 0x42, 0x46, 0x73, 0xa5, 0x60, 0x26, 0xa7,
+	0x27, 0xc8, 0x1c, 0xa0, 0xdb, 0x73, 0x8e, 0x29, 0xbe, 0xec, 0xc2, 0x02, 0xcc, 0x07, 0x4b, 0x17,
+	0x9e, 0xfc, 0x83, 0xe0, 0x19, 0xb7, 0xab, 0x47, 0xda, 0xf8, 0xff, 0x66, 0xca, 0x4b, 0x78, 0x11,
+	0xaa, 0x5d, 0xb8, 0xf2, 0x3d, 0x82, 0x37, 0xea, 0x4c, 0x3f, 0x32, 0xe9, 0x7f, 0xb0, 0x1d, 0xc2,
+	0xed, 0xac, 0x80, 0x7c, 0x57, 0x89, 0x90, 0xf9, 0x23, 0xf2, 0x0a, 0x70, 0x27, 0xa8, 0x75, 0x4f,
+	0xdb, 0x47, 0x56, 0x4b, 0xb3, 0xf1, 0x03, 0xb4, 0xee, 0xc2, 0x0c, 0x36, 0x6d, 0x6a, 0x60, 0x26,
+	0x27, 0xf9, 0x2e, 0x5c, 0x9e, 0xa4, 0x37, 0xb8, 0x11, 0xfd, 0xd8, 0xb0, 0xf6, 0x45, 0x78, 0x77,
+	0xa4, 0x3c, 0x51, 0xc0, 0x6f, 0x08, 0xb2, 0x75, 0xa6, 0x1f, 0x62, 0xde, 0x94, 0xec, 0x29, 0x7b,
+	0x6f, 0x1f, 0xe6, 0x9c, 0x4e, 0x6a, 0x74, 0xb9, 0xa2, 0x58, 0x47, 0x8f, 0x2b, 0xde, 0xab, 0x38,
+	0x4b, 0xc5, 0x93, 0xbb, 0x6d, 0xf5, 0x0d, 0xc0, 0x00, 0x17, 0x4d, 0x8e, 0x1e, 0xd7, 0xe4, 0xc9,
+	0xd8, 0x4d, 0x5e, 0x78, 0x01, 0x6f, 0x05, 0x4c, 0x15, 0x66, 0xff, 0x92, 0xe4, 0x67, 0xc0, 0x01,
+	0x25, 0x16, 0x61, 0xbc, 0xdf, 0x3f, 0x3e, 0xd1, 0x4c, 0x1d, 0x3f, 0xdd, 0x39, 0xff, 0xf0, 0xfd,
+	0xbe, 0x07, 0x19, 0x62, 0x61, 0xca, 0x2f, 0x2c, 0x39, 0xcd, 0xc3, 0x57, 0xa3, 0x96, 0xca, 0xad,
+	0xec, 0x73, 0x3f, 0x44, 0x1d, 0x44, 0x87, 0x5d, 0x9d, 0x8a, 0x7f, 0x74, 0x84, 0x3a, 0xfb, 0x08,
+	0xde, 0x19, 0x65, 0xa5, 0xef, 0xb5, 0xf4, 0x36, 0x64, 0x9a, 0xfc, 0x49, 0xc3, 0x68, 0xb9, 0xae,
+	0xaa, 0xb3, 0xee, 0x83, 0xbd, 0x96, 0x24, 0xc3, 0x8c, 0x66, 0x59, 0xa7, 0x06, 0x6e, 0x71, 0x07,
+	0x67, 0x55, 0x7f, 0x58, 0xa0, 0x7c, 0x85, 0x76, 0x2c, 0x5e, 0xd9, 0xa3, 0x56, 0x28, 0x24, 0x20,
+	0x19, 0x16, 0x10, 0x2e, 0x65, 0x8b, 0x97, 0x32, 0x94, 0x53, 0x94, 0x12, 0x50, 0x8b, 0x42, 0x6a,
+	0xab, 0x7f, 0x4d, 0x43, 0xaa, 0xce, 0x74, 0x09, 0x43, 0x36, 0xf8, 0xb7, 0xe1, 0xbd, 0x71, 0x0b,
+	0x13, 0xbe, 0x96, 0x95, 0x72, 0x3c, 0x4e, 0x08, 0x69, 0x40, 0x66, 0x70, 0x75, 0x2f, 0x45, 0x04,
+	0x0b, 0x4a, 0x79, 0x3f, 0x0e, 0x25, 0x12, 0x1c, 0x03, 0x04, 0xee, 0xc1, 0xe5, 0x48, 0x79, 0x3e,
+	0xa6, 0x94, 0x62, 0x61, 0x22, 0x47, 0x1b, 0x9e, 0x85, 0x6f, 0x95, 0x62, 0x44, 0x7c, 0x88, 0x54,
+	0xd6, 0xe2, 0x92, 0x22, 0xd9, 0x39, 0x48, 0x23, 0xee, 0x86, 0xd2, 0x44, 0xdf, 0x83, 0xb8, 0xb2,
+	0x79, 0x2f, 0x5c, 0xe4, 0xfe, 0x0a, 0x66, 0xc5, 0xb1, 0xfe, 0x3a, 0x62, 0x0a, 0x1f, 0x52, 0x56,
+	0x63, 0x40, 0x62, 0xf6, 0xaf, 0xe1, 0xcd, 0xe1, 0x73, 0x2c, 0x6a, 0xb5, 0x87, 0x68, 0x65, 0xe3,
+	0x3e, 0x74, 0x30, 0xf1, 0xf0, 0xf6, 0x8c, 0x4a, 0x3c, 0x44, 0x47, 0x26, 0x1e, 0xbb, 0x0d, 0x95,
+	0xa9, 0x6f, 0x6f, 0x2f, 0x56, 0x50, 0xad, 0x7d, 0x79, 0x9d, 0x43, 0x57, 0xd7, 0x39, 0xf4, 0xe7,
+	0x75, 0x0e, 0xfd, 0x70, 0x93, 0x4b, 0x5c, 0xdd, 0xe4, 0x12, 0xbf, 0xdf, 0xe4, 0x12, 0xf0, 0xca,
+	0x20, 0x63, 0x26, 0x3e, 0x40, 0x5f, 0x6e, 0xe8, 0x86, 0x7d, 0xd2, 0x3d, 0x2e, 0x37, 0x49, 0xa7,
+	0x32, 0x80, 0x4a, 0x06, 0x09, 0x8c, 0x2a, 0x67, 0x83, 0x8f, 0x04, 0xbb, 0x6f, 0x61, 0x76, 0x3c,
+	0xcd, 0x3f, 0x0d, 0x3e, 0xf8, 0x37, 0x00, 0x00, 0xff, 0xff, 0x36, 0x32, 0x5f, 0x21, 0xf2, 0x0c,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -825,6 +1081,12 @@ type MsgClient interface {
 	// SetRoles atomically sets the desired state for one or more roles on a registry entry.
 	// Multiple signers are supported for multi-party authorization workflows.
 	SetRoles(ctx context.Context, in *MsgSetRoles, opts ...grpc.CallOption) (*MsgSetRolesResponse, error)
+	// ProposeRoleChange opens a pending role change that accumulates single-signer approvals.
+	// The change auto-applies once the role's authorization policy is satisfied.
+	ProposeRoleChange(ctx context.Context, in *MsgProposeRoleChange, opts ...grpc.CallOption) (*MsgProposeRoleChangeResponse, error)
+	// ApproveRoleChange records a single-signer approval for an open pending role change.
+	// When the accumulated approvals satisfy the role's policy, the change is applied automatically.
+	ApproveRoleChange(ctx context.Context, in *MsgApproveRoleChange, opts ...grpc.CallOption) (*MsgApproveRoleChangeResponse, error)
 }
 
 type msgClient struct {
@@ -889,6 +1151,24 @@ func (c *msgClient) SetRoles(ctx context.Context, in *MsgSetRoles, opts ...grpc.
 	return out, nil
 }
 
+func (c *msgClient) ProposeRoleChange(ctx context.Context, in *MsgProposeRoleChange, opts ...grpc.CallOption) (*MsgProposeRoleChangeResponse, error) {
+	out := new(MsgProposeRoleChangeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Msg/ProposeRoleChange", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ApproveRoleChange(ctx context.Context, in *MsgApproveRoleChange, opts ...grpc.CallOption) (*MsgApproveRoleChangeResponse, error) {
+	out := new(MsgApproveRoleChangeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Msg/ApproveRoleChange", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// RegisterNFT registers a new NFT in the registry.
@@ -912,6 +1192,12 @@ type MsgServer interface {
 	// SetRoles atomically sets the desired state for one or more roles on a registry entry.
 	// Multiple signers are supported for multi-party authorization workflows.
 	SetRoles(context.Context, *MsgSetRoles) (*MsgSetRolesResponse, error)
+	// ProposeRoleChange opens a pending role change that accumulates single-signer approvals.
+	// The change auto-applies once the role's authorization policy is satisfied.
+	ProposeRoleChange(context.Context, *MsgProposeRoleChange) (*MsgProposeRoleChangeResponse, error)
+	// ApproveRoleChange records a single-signer approval for an open pending role change.
+	// When the accumulated approvals satisfy the role's policy, the change is applied automatically.
+	ApproveRoleChange(context.Context, *MsgApproveRoleChange) (*MsgApproveRoleChangeResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -935,6 +1221,12 @@ func (*UnimplementedMsgServer) RegistryBulkUpdate(ctx context.Context, req *MsgR
 }
 func (*UnimplementedMsgServer) SetRoles(ctx context.Context, req *MsgSetRoles) (*MsgSetRolesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetRoles not implemented")
+}
+func (*UnimplementedMsgServer) ProposeRoleChange(ctx context.Context, req *MsgProposeRoleChange) (*MsgProposeRoleChangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProposeRoleChange not implemented")
+}
+func (*UnimplementedMsgServer) ApproveRoleChange(ctx context.Context, req *MsgApproveRoleChange) (*MsgApproveRoleChangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ApproveRoleChange not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1049,6 +1341,42 @@ func _Msg_SetRoles_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ProposeRoleChange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgProposeRoleChange)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ProposeRoleChange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Msg/ProposeRoleChange",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ProposeRoleChange(ctx, req.(*MsgProposeRoleChange))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ApproveRoleChange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgApproveRoleChange)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ApproveRoleChange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Msg/ApproveRoleChange",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ApproveRoleChange(ctx, req.(*MsgApproveRoleChange))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.registry.v1.Msg",
@@ -1077,6 +1405,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetRoles",
 			Handler:    _Msg_SetRoles_Handler,
+		},
+		{
+			MethodName: "ProposeRoleChange",
+			Handler:    _Msg_ProposeRoleChange_Handler,
+		},
+		{
+			MethodName: "ApproveRoleChange",
+			Handler:    _Msg_ApproveRoleChange_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1574,6 +1910,177 @@ func (m *MsgSetRolesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgProposeRoleChange) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgProposeRoleChange) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgProposeRoleChange) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Addresses[iNdEx])))
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if m.Operation != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Operation))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Role != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Role))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgProposeRoleChangeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgProposeRoleChangeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgProposeRoleChangeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Applied {
+		i--
+		if m.Applied {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ChangeId) > 0 {
+		i -= len(m.ChangeId)
+		copy(dAtA[i:], m.ChangeId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ChangeId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgApproveRoleChange) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgApproveRoleChange) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgApproveRoleChange) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ChangeId) > 0 {
+		i -= len(m.ChangeId)
+		copy(dAtA[i:], m.ChangeId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ChangeId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgApproveRoleChangeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgApproveRoleChangeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgApproveRoleChangeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Applied {
+		i--
+		if m.Applied {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1794,6 +2301,80 @@ func (m *MsgSetRolesResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgProposeRoleChange) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Role != 0 {
+		n += 1 + sovTx(uint64(m.Role))
+	}
+	if m.Operation != 0 {
+		n += 1 + sovTx(uint64(m.Operation))
+	}
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgProposeRoleChangeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ChangeId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Applied {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgApproveRoleChange) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ChangeId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgApproveRoleChangeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Applied {
+		n += 2
+	}
 	return n
 }
 
@@ -3059,6 +3640,480 @@ func (m *MsgSetRolesResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgSetRolesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgProposeRoleChange) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgProposeRoleChange: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgProposeRoleChange: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &RegistryKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Role", wireType)
+			}
+			m.Role = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Role |= RegistryRole(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Operation", wireType)
+			}
+			m.Operation = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Operation |= RoleChangeOperation(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgProposeRoleChangeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgProposeRoleChangeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgProposeRoleChangeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChangeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChangeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Applied", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Applied = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgApproveRoleChange) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgApproveRoleChange: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgApproveRoleChange: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChangeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChangeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgApproveRoleChangeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgApproveRoleChangeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgApproveRoleChangeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Applied", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Applied = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

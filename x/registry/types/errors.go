@@ -38,6 +38,7 @@ const (
 	ErrCodeInvalidKey             ErrCode = "INVALID_KEY"
 	ErrCodeAddressDoesNotHaveRole ErrCode = "ADDRESS_DOES_NOT_HAVE_ROLE"
 	ErrCodeInvalidField           ErrCode = "INVALID_FIELD"
+	ErrCodePendingChangeNotFound  ErrCode = "PENDING_CHANGE_NOT_FOUND"
 )
 
 var (
@@ -50,6 +51,7 @@ var (
 	ErrInvalidKey             = cerrs.Register(ModuleName, 7, "invalid key")
 	ErrAddressDoesNotHaveRole = cerrs.Register(ModuleName, 8, "address does not have role")
 	ErrInvalidField           = cerrs.Register(ModuleName, 9, "invalid field")
+	ErrPendingChangeNotFound  = cerrs.Register(ModuleName, 10, "pending role change not found")
 )
 
 func NewErrCodeRegistryAlreadyExists(key string) error {
@@ -82,4 +84,8 @@ func NewErrCodeAddressDoesNotHaveRole(address, role string) error {
 
 func NewErrCodeInvalidField(field, format string, args ...interface{}) error {
 	return cerrs.Wrapf(ErrInvalidField, "invalid %s: %s", field, fmt.Sprintf(format, args...))
+}
+
+func NewErrCodePendingChangeNotFound(changeID string) error {
+	return cerrs.Wrapf(ErrPendingChangeNotFound, "pending role change not found: %q", changeID)
 }

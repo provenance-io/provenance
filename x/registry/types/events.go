@@ -49,6 +49,37 @@ func NewEventRegistryBulkUpdated(key *RegistryKey) *EventRegistryBulkUpdated {
 	}
 }
 
+// NewEventRoleChangeProposed returns a new EventRoleChangeProposed.
+func NewEventRoleChangeProposed(change *PendingRoleChange) *EventRoleChangeProposed {
+	return &EventRoleChangeProposed{
+		NftId:        change.Key.NftId,
+		AssetClassId: change.Key.AssetClassId,
+		ChangeId:     change.Id,
+		Role:         change.Role.ShortString(),
+		Operation:    change.Operation.ShortString(),
+		Proposer:     change.Proposer,
+	}
+}
+
+// NewEventRoleChangeApproved returns a new EventRoleChangeApproved.
+func NewEventRoleChangeApproved(changeID, approver string) *EventRoleChangeApproved {
+	return &EventRoleChangeApproved{
+		ChangeId: changeID,
+		Approver: approver,
+	}
+}
+
+// NewEventRoleChangeApplied returns a new EventRoleChangeApplied.
+func NewEventRoleChangeApplied(change *PendingRoleChange) *EventRoleChangeApplied {
+	return &EventRoleChangeApplied{
+		NftId:        change.Key.NftId,
+		AssetClassId: change.Key.AssetClassId,
+		ChangeId:     change.Id,
+		Role:         change.Role.ShortString(),
+		Operation:    change.Operation.ShortString(),
+	}
+}
+
 // GetChangeEvents gets all the events that represent the changes from oldReg to newReg.
 // Panics if they have different keys (unless oldReg or newReg is nil).
 func GetChangeEvents(oldReg, newReg *RegistryEntry) ([]*EventRoleGranted, []*EventRoleRevoked) {

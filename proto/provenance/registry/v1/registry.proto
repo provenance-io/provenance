@@ -84,3 +84,40 @@ message RolesEntry {
   // These addresses have the permissions associated with the specified role.
   repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
+// RoleChangeOperation identifies the kind of role change a pending change applies.
+enum RoleChangeOperation {
+  // ROLE_CHANGE_OPERATION_UNSPECIFIED is the default, invalid operation.
+  ROLE_CHANGE_OPERATION_UNSPECIFIED = 0;
+  // ROLE_CHANGE_OPERATION_GRANT adds the target addresses to the role when applied.
+  ROLE_CHANGE_OPERATION_GRANT = 1;
+  // ROLE_CHANGE_OPERATION_REVOKE removes the target addresses from the role when applied.
+  ROLE_CHANGE_OPERATION_REVOKE = 2;
+}
+
+// PendingRoleChange is a role change awaiting the approvals required by the role's authorization
+// policy. Each required party submits a single-signer approval; once the accumulated approvers
+// satisfy the policy, the change is applied and this record is removed.
+message PendingRoleChange {
+  // id is the deterministic identifier of this pending change
+  // (a hash of key + role + operation + sorted addresses).
+  string id = 1;
+
+  // key identifies the registry entry the change applies to.
+  RegistryKey key = 2;
+
+  // role is the role being changed.
+  RegistryRole role = 3;
+
+  // operation is the kind of change to apply (grant or revoke) once approved.
+  RoleChangeOperation operation = 4;
+
+  // addresses is the set of addresses the operation applies to.
+  repeated string addresses = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // proposer is the address that opened the pending change.
+  string proposer = 6 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // approvals is the accumulated set of addresses that have approved this change.
+  repeated string approvals = 7 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

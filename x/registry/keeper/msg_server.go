@@ -155,6 +155,26 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 	return &types.MsgSetRolesResponse{}, nil
 }
 
+// ProposeRoleChange opens a pending role change that accumulates single-signer approvals and
+// auto-applies once the role's authorization policy is satisfied.
+func (k msgServer) ProposeRoleChange(ctx context.Context, msg *types.MsgProposeRoleChange) (*types.MsgProposeRoleChangeResponse, error) {
+	id, applied, err := k.Keeper.ProposeRoleChange(ctx, msg.Signer, msg.Key, msg.Role, msg.Operation, msg.Addresses)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgProposeRoleChangeResponse{ChangeId: id, Applied: applied}, nil
+}
+
+// ApproveRoleChange records a single-signer approval for a pending role change and auto-applies
+// it once the role's authorization policy is satisfied.
+func (k msgServer) ApproveRoleChange(ctx context.Context, msg *types.MsgApproveRoleChange) (*types.MsgApproveRoleChangeResponse, error) {
+	applied, err := k.Keeper.ApproveRoleChange(ctx, msg.Signer, msg.ChangeId)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgApproveRoleChangeResponse{Applied: applied}, nil
+}
+
 // UnregisterNFT unregisters an NFT from the registry.
 // This removes the entire registry entry and associated data for the specified key.
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {

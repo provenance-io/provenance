@@ -38,3 +38,28 @@ message EventRegistryBulkUpdated {
   string nft_id         = 1;
   string asset_class_id = 2;
 }
+
+// EventRoleChangeProposed is emitted when a pending role change is opened.
+message EventRoleChangeProposed {
+  string nft_id         = 1;
+  string asset_class_id = 2;
+  string change_id      = 3;
+  string role           = 4;
+  string operation      = 5;
+  string proposer       = 6;
+}
+
+// EventRoleChangeApproved is emitted when a party records an approval for a pending role change.
+message EventRoleChangeApproved {
+  string change_id = 1;
+  string approver  = 2;
+}
+
+// EventRoleChangeApplied is emitted when a pending role change accumulates enough approvals and is applied.
+message EventRoleChangeApplied {
+  string nft_id         = 1;
+  string asset_class_id = 2;
+  string change_id      = 3;
+  string role           = 4;
+  string operation      = 5;
+}
