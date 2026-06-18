@@ -57,16 +57,14 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 
 	roleAuths := types.RoleAuthorizationMap()
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
-		// Policy-based multi-signer path: the incoming addresses are the "new" assignment.
-		if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, msg.Addresses, msg.Signers); err != nil {
+		// Policy-based path: the incoming addresses are the "new" assignment. A single signer must
+		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
+		if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, msg.Addresses, []string{msg.Signer}); err != nil {
 			return nil, err
 		}
 	} else {
-		// Legacy fallback: first signer must own the NFT.
-		if len(msg.Signers) == 0 {
-			return nil, types.NewErrCodeUnauthorized("no signers provided")
-		}
-		if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signers[0]); err != nil {
+		// Legacy fallback: the signer must own the NFT.
+		if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
 			return nil, err
 		}
 	}
@@ -94,16 +92,14 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 
 	roleAuths := types.RoleAuthorizationMap()
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
-		// Policy-based multi-signer path. For revoke, no new addresses are being assigned.
-		if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, nil, msg.Signers); err != nil {
+		// Policy-based path. For revoke, no new addresses are being assigned. A single signer must
+		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
+		if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, nil, []string{msg.Signer}); err != nil {
 			return nil, err
 		}
 	} else {
-		// Legacy fallback: first signer must own the NFT.
-		if len(msg.Signers) == 0 {
-			return nil, types.NewErrCodeUnauthorized("no signers provided")
-		}
-		if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signers[0]); err != nil {
+		// Legacy fallback: the signer must own the NFT.
+		if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
 			return nil, err
 		}
 	}
@@ -133,16 +129,14 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 	roleAuths := types.RoleAuthorizationMap()
 	for _, update := range msg.RoleUpdates {
 		if roleAuth, ok := roleAuths[update.Role]; ok {
-			// The new addresses for this role are the desired state from the update.
-			if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, update.Addresses, msg.Signers); err != nil {
+			// The new addresses for this role are the desired state from the update. A single signer
+			// must satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
+			if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, update.Addresses, []string{msg.Signer}); err != nil {
 				return nil, err
 			}
 		} else {
-			// Legacy fallback: first signer must own the NFT.
-			if len(msg.Signers) == 0 {
-				return nil, types.NewErrCodeUnauthorized("no signers provided")
-			}
-			if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signers[0]); err != nil {
+			// Legacy fallback: the signer must own the NFT.
+			if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
 				return nil, err
 			}
 		}

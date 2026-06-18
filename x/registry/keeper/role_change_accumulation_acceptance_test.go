@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
@@ -51,6 +52,11 @@ type RoleChangeAccumulationAcceptanceTestSuite struct {
 
 func TestRoleChangeAccumulationAcceptanceTestSuite(t *testing.T) {
 	suite.Run(t, new(RoleChangeAccumulationAcceptanceTestSuite))
+}
+
+// genAddr generates a fresh bech32 account address.
+func genAddr() string {
+	return sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 }
 
 func (s *RoleChangeAccumulationAcceptanceTestSuite) SetupTest() {

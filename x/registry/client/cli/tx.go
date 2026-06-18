@@ -83,7 +83,7 @@ func CmdGrantRole() *cobra.Command {
 			}
 
 			msg := types.MsgGrantRole{
-				Signers: []string{clientCtx.GetFromAddress().String()},
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],
@@ -120,7 +120,7 @@ func CmdRevokeRole() *cobra.Command {
 			}
 
 			msg := types.MsgRevokeRole{
-				Signers: []string{clientCtx.GetFromAddress().String()},
+				Signer: clientCtx.GetFromAddress().String(),
 				Key: &types.RegistryKey{
 					AssetClassId: args[0],
 					NftId:        args[1],

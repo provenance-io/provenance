@@ -17,12 +17,11 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgRegistryBulkUpdate{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgProposeRoleChange{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgApproveRoleChange{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgGrantRole{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgRevokeRole{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgSetRoles{Signer: signer} },
 	}
-	msgMakersMulti := []testutil.MsgMakerMulti{
-		func(signers []string) sdk.Msg { return &MsgGrantRole{Signers: signers} },
-		func(signers []string) sdk.Msg { return &MsgRevokeRole{Signers: signers} },
-		func(signers []string) sdk.Msg { return &MsgSetRoles{Signers: signers} },
-	}
+	msgMakersMulti := []testutil.MsgMakerMulti{}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, msgMakersMulti)
 }
@@ -69,13 +68,13 @@ func TestMsgGrantRole_ValidateBasic(t *testing.T) {
 		msg  MsgGrantRole
 		exp  string
 	}{
-		{name: "valid", msg: MsgGrantRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}},
-		{name: "no signers", msg: MsgGrantRole{Signers: []string{}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}, exp: "invalid signers: at least one signer is required"},
-		{name: "bad signer", msg: MsgGrantRole{Signers: []string{"bad"}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}, exp: "invalid signers: decoding bech32"},
-		{name: "nil key", msg: MsgGrantRole{Signers: []string{validAddr}, Key: nil, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}, exp: "invalid key: registry key cannot be nil"},
-		{name: "invalid role", msg: MsgGrantRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Addresses: []string{otherAddr}}, exp: "invalid role: cannot be unspecified"},
-		{name: "no addresses", msg: MsgGrantRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{}}, exp: "invalid addresses: addresses cannot be empty"},
-		{name: "bad address", msg: MsgGrantRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{"bad"}}, exp: "invalid addresses: decoding bech32"},
+		{name: "valid", msg: MsgGrantRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}},
+		{name: "empty signer", msg: MsgGrantRole{Signer: "", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}, exp: "invalid signer: empty address"},
+		{name: "bad signer", msg: MsgGrantRole{Signer: "bad", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}, exp: "invalid signer: decoding bech32"},
+		{name: "nil key", msg: MsgGrantRole{Signer: validAddr, Key: nil, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{otherAddr}}, exp: "invalid key: registry key cannot be nil"},
+		{name: "invalid role", msg: MsgGrantRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Addresses: []string{otherAddr}}, exp: "invalid role: cannot be unspecified"},
+		{name: "no addresses", msg: MsgGrantRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{}}, exp: "invalid addresses: addresses cannot be empty"},
+		{name: "bad address", msg: MsgGrantRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{"bad"}}, exp: "invalid addresses: decoding bech32"},
 	}
 
 	for _, tc := range tests {
@@ -100,13 +99,13 @@ func TestMsgRevokeRole_ValidateBasic(t *testing.T) {
 		msg  MsgRevokeRole
 		exp  string
 	}{
-		{name: "valid", msg: MsgRevokeRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}},
-		{name: "no signers", msg: MsgRevokeRole{Signers: []string{}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}, exp: "invalid signers: at least one signer is required"},
-		{name: "bad signer", msg: MsgRevokeRole{Signers: []string{"bad"}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}, exp: "invalid signers: decoding bech32"},
-		{name: "nil key", msg: MsgRevokeRole{Signers: []string{validAddr}, Key: nil, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}, exp: "invalid key: registry key cannot be nil"},
-		{name: "invalid role", msg: MsgRevokeRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Addresses: []string{otherAddr}}, exp: "invalid role: cannot be unspecified"},
-		{name: "no addresses", msg: MsgRevokeRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{}}, exp: "invalid addresses: addresses cannot be empty"},
-		{name: "bad address", msg: MsgRevokeRole{Signers: []string{validAddr}, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{"bad"}}, exp: "invalid addresses: decoding bech32"},
+		{name: "valid", msg: MsgRevokeRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}},
+		{name: "empty signer", msg: MsgRevokeRole{Signer: "", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}, exp: "invalid signer: empty address"},
+		{name: "bad signer", msg: MsgRevokeRole{Signer: "bad", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}, exp: "invalid signer: decoding bech32"},
+		{name: "nil key", msg: MsgRevokeRole{Signer: validAddr, Key: nil, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{otherAddr}}, exp: "invalid key: registry key cannot be nil"},
+		{name: "invalid role", msg: MsgRevokeRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Addresses: []string{otherAddr}}, exp: "invalid role: cannot be unspecified"},
+		{name: "no addresses", msg: MsgRevokeRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{}}, exp: "invalid addresses: addresses cannot be empty"},
+		{name: "bad address", msg: MsgRevokeRole{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_ORIGINATOR, Addresses: []string{"bad"}}, exp: "invalid addresses: decoding bech32"},
 	}
 
 	for _, tc := range tests {
@@ -132,14 +131,14 @@ func TestMsgSetRoles_ValidateBasic(t *testing.T) {
 		msg  MsgSetRoles
 		exp  string
 	}{
-		{name: "valid", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}},
-		{name: "valid clear role", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER}}}},
-		{name: "no signers", msg: MsgSetRoles{Signers: []string{}, Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid signers: at least one signer is required"},
-		{name: "bad signer", msg: MsgSetRoles{Signers: []string{"bad"}, Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid signers: decoding bech32"},
-		{name: "nil key", msg: MsgSetRoles{Signers: []string{validAddr}, Key: nil, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid key: registry key cannot be nil"},
-		{name: "no role_updates", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{}}, exp: "invalid role_updates: at least one role update is required"},
-		{name: "unspecified role", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED}}}, exp: "invalid role_updates: 0: role cannot be unspecified"},
-		{name: "bad address in update", msg: MsgSetRoles{Signers: []string{validAddr}, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{"bad"}}}}, exp: "invalid role_updates: 0: invalid address"},
+		{name: "valid", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}},
+		{name: "valid clear role", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER}}}},
+		{name: "empty signer", msg: MsgSetRoles{Signer: "", Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid signer: empty address"},
+		{name: "bad signer", msg: MsgSetRoles{Signer: "bad", Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid signer: decoding bech32"},
+		{name: "nil key", msg: MsgSetRoles{Signer: validAddr, Key: nil, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid key: registry key cannot be nil"},
+		{name: "no role_updates", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{}}, exp: "invalid role_updates: at least one role update is required"},
+		{name: "unspecified role", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED}}}, exp: "invalid role_updates: 0: role cannot be unspecified"},
+		{name: "bad address in update", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{"bad"}}}}, exp: "invalid role_updates: 0: invalid address"},
 	}
 
 	for _, tc := range tests {

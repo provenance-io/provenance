@@ -44,14 +44,8 @@ func (m MsgRegisterNFT) ValidateBasic() error {
 // ValidateBasic validates the MsgGrantRole message
 func (m MsgGrantRole) ValidateBasic() error {
 	var errs []error
-	if len(m.Signers) == 0 {
-		errs = append(errs, NewErrCodeInvalidField("signers", "at least one signer is required"))
-	} else {
-		for _, signer := range m.Signers {
-			if _, err := sdk.AccAddressFromBech32(signer); err != nil {
-				errs = append(errs, NewErrCodeInvalidField("signers", "%s", err))
-			}
-		}
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -72,14 +66,8 @@ func (m MsgGrantRole) ValidateBasic() error {
 // ValidateBasic validates the MsgRevokeRole message
 func (m MsgRevokeRole) ValidateBasic() error {
 	var errs []error
-	if len(m.Signers) == 0 {
-		errs = append(errs, NewErrCodeInvalidField("signers", "at least one signer is required"))
-	} else {
-		for _, signer := range m.Signers {
-			if _, err := sdk.AccAddressFromBech32(signer); err != nil {
-				errs = append(errs, NewErrCodeInvalidField("signers", "%s", err))
-			}
-		}
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
 	}
 
 	if err := m.Key.Validate(); err != nil {
@@ -100,14 +88,8 @@ func (m MsgRevokeRole) ValidateBasic() error {
 // ValidateBasic validates the MsgSetRoles message
 func (m MsgSetRoles) ValidateBasic() error {
 	var errs []error
-	if len(m.Signers) == 0 {
-		errs = append(errs, NewErrCodeInvalidField("signers", "at least one signer is required"))
-	} else {
-		for _, signer := range m.Signers {
-			if _, err := sdk.AccAddressFromBech32(signer); err != nil {
-				errs = append(errs, NewErrCodeInvalidField("signers", "%s", err))
-			}
-		}
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
 	}
 
 	if err := m.Key.Validate(); err != nil {
