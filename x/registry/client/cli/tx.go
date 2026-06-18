@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -30,6 +31,8 @@ func CmdTx() *cobra.Command {
 		CmdRevokeRole(),
 		CmdUnregisterNFT(),
 		CmdRegistryBulkUpdate(),
+		CmdProposeRoleChange(),
+		CmdApproveRoleChange(),
 	)
 
 	return cmd
@@ -220,4 +223,83 @@ func CmdRegistryBulkUpdate() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+// CmdProposeRoleChange returns the command to propose a multi-party role change
+func CmdProposeRoleChange() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "propose-role-change <asset_class_id> <nft_id> <role> <grant|revoke> <address> [address...]",
+		Short: "Propose a role change that accumulates approvals until the role's policy is satisfied",
+		Args:  cobra.MinimumNArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			role, err := types.ParseRegistryRole(args[2])
+			if err != nil {
+				return err
+			}
+
+			op, err := parseRoleChangeOperation(args[3])
+			if err != nil {
+				return err
+			}
+
+			msg := types.MsgProposeRoleChange{
+				Signer: clientCtx.GetFromAddress().String(),
+				Key: &types.RegistryKey{
+					AssetClassId: args[0],
+					NftId:        args[1],
+				},
+				Role:      role,
+				Operation: op,
+				Addresses: args[4:],
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdApproveRoleChange returns the command to approve a pending role change
+func CmdApproveRoleChange() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "approve-role-change <change_id>",
+		Short: "Approve a pending role change by its id",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.MsgApproveRoleChange{
+				Signer:   clientCtx.GetFromAddress().String(),
+				ChangeId: args[0],
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// parseRoleChangeOperation converts a grant/revoke string into a RoleChangeOperation.
+func parseRoleChangeOperation(s string) (types.RoleChangeOperation, error) {
+	switch strings.ToLower(s) {
+	case "grant":
+		return types.RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT, nil
+	case "revoke":
+		return types.RoleChangeOperation_ROLE_CHANGE_OPERATION_REVOKE, nil
+	default:
+		return types.RoleChangeOperation_ROLE_CHANGE_OPERATION_UNSPECIFIED,
+			fmt.Errorf("invalid operation %q: must be \"grant\" or \"revoke\"", s)
+	}
 }

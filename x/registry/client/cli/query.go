@@ -25,6 +25,8 @@ func CmdQuery() *cobra.Command {
 		GetCmdQueryRegistry(),
 		GetCmdQueryRegistries(),
 		GetCmdQueryHasRole(),
+		GetCmdQueryPendingRoleChange(),
+		GetCmdQueryPendingRoleChanges(),
 	)
 
 	return cmd
@@ -139,5 +141,77 @@ func GetCmdQueryHasRole() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryPendingRoleChange returns the command for querying a single pending role change by id
+func GetCmdQueryPendingRoleChange() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-role-change <id>",
+		Short: "Query a pending role change by its id",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.PendingRoleChange(context.Background(), &types.QueryPendingRoleChangeRequest{
+				Id: args[0],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryPendingRoleChanges returns the command for querying pending role changes
+func GetCmdQueryPendingRoleChanges() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-role-changes [asset_class_id] [nft_id]",
+		Short: "Query pending role changes, optionally filtered by registry key",
+		Args:  cobra.RangeArgs(0, 2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var key *types.RegistryKey
+			if len(args) == 2 {
+				key = &types.RegistryKey{
+					AssetClassId: args[0],
+					NftId:        args[1],
+				}
+			}
+
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.PendingRoleChanges(context.Background(), &types.QueryPendingRoleChangesRequest{
+				Key:        key,
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "pending-role-changes")
 	return cmd
 }

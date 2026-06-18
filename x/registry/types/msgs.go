@@ -238,6 +238,23 @@ func (m QueryHasRoleRequest) Validate() error {
 	return errors.Join(errs...)
 }
 
+// Validate validates the QueryPendingRoleChangeRequest
+func (m QueryPendingRoleChangeRequest) Validate() error {
+	if len(m.Id) == 0 {
+		return NewErrCodeInvalidField("id", "id cannot be empty")
+	}
+	return nil
+}
+
+// Validate validates the QueryPendingRoleChangesRequest
+func (m QueryPendingRoleChangesRequest) Validate() error {
+	// The key is optional; validate it only when provided.
+	if m.Key != nil {
+		return m.Key.Validate()
+	}
+	return nil
+}
+
 // ValidateStringLength checks several conditions in order:
 //  1. length is not between the minimum and maximum length returns an ErrCodeInvalidField error.
 //  2. contains whitespace returns an ErrCodeInvalidField error.

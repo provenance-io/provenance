@@ -91,3 +91,44 @@ func (qs QueryServer) HasRole(ctx context.Context, req *types.QueryHasRoleReques
 
 	return &types.QueryHasRoleResponse{HasRole: hasRole}, nil
 }
+
+// PendingRoleChange returns a single pending role change by its id.
+func (qs QueryServer) PendingRoleChange(ctx context.Context, req *types.QueryPendingRoleChangeRequest) (*types.QueryPendingRoleChangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	change, err := qs.keeper.GetPendingRoleChange(sdkCtx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	if change == nil {
+		return nil, types.NewErrCodePendingChangeNotFound(req.Id)
+	}
+
+	return &types.QueryPendingRoleChangeResponse{PendingRoleChange: *change}, nil
+}
+
+// PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
+func (qs QueryServer) PendingRoleChanges(ctx context.Context, req *types.QueryPendingRoleChangesRequest) (*types.QueryPendingRoleChangesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	changes, pageRes, err := qs.keeper.GetPendingRoleChanges(sdkCtx, req.Pagination, req.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryPendingRoleChangesResponse{PendingRoleChanges: changes, Pagination: pageRes}, nil
+}

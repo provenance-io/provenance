@@ -8,6 +8,8 @@ import (
 
 	"cosmossdk.io/collections"
 
+	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -31,6 +33,33 @@ func (k Keeper) SetPendingRoleChange(ctx context.Context, change types.PendingRo
 // RemovePendingRoleChange deletes a pending role change by id.
 func (k Keeper) RemovePendingRoleChange(ctx context.Context, id string) error {
 	return k.PendingRoleChanges.Remove(ctx, id)
+}
+
+// GetPendingRoleChanges returns the pending role changes, optionally filtered to a single registry
+// key. Results are paginated over the deterministic change-id keyspace.
+func (k Keeper) GetPendingRoleChanges(ctx context.Context, pagination *query.PageRequest, key *types.RegistryKey) ([]types.PendingRoleChange, *query.PageResponse, error) {
+	ptrs, pageRes, err := query.CollectionFilteredPaginate(ctx, k.PendingRoleChanges, pagination,
+		func(_ string, change types.PendingRoleChange) (bool, error) {
+			if key == nil {
+				return true, nil
+			}
+			return change.Key != nil &&
+				change.Key.AssetClassId == key.AssetClassId &&
+				change.Key.NftId == key.NftId, nil
+		},
+		func(_ string, change types.PendingRoleChange) (*types.PendingRoleChange, error) {
+			return &change, nil
+		},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	changes := make([]types.PendingRoleChange, len(ptrs))
+	for i, p := range ptrs {
+		changes[i] = *p
+	}
+	return changes, pageRes, nil
 }
 
 // ProposeRoleChange opens (or re-uses) a pending role change and records the proposer's approval.

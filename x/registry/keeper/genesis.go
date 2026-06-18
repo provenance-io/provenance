@@ -14,6 +14,11 @@ func (k Keeper) InitGenesis(ctx context.Context, state *types.GenesisState) {
 			panic(err) // Genesis should not fail
 		}
 	}
+	for _, change := range state.PendingRoleChanges {
+		if err := k.PendingRoleChanges.Set(ctx, change.Id, change); err != nil {
+			panic(err) // Genesis should not fail
+		}
+	}
 }
 
 func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
@@ -21,6 +26,14 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 
 	err := k.Registry.Walk(ctx, nil, func(_ collections.Pair[string, string], value types.RegistryEntry) (stop bool, err error) {
 		genesis.Entries = append(genesis.Entries, value)
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	err = k.PendingRoleChanges.Walk(ctx, nil, func(_ string, value types.PendingRoleChange) (stop bool, err error) {
+		genesis.PendingRoleChanges = append(genesis.PendingRoleChanges, value)
 		return false, nil
 	})
 	if err != nil {
