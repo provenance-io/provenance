@@ -9,7 +9,6 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "provenance/registry/v1/registry.proto";
-import "provenance/registry/v1/authorization.proto";
 
 // Msg defines the registry Msg service.
 // This service provides transaction functionality for managing registry entries and roles.
