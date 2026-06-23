@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -259,6 +260,37 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerSet_WithSecure
 		s.Require().False(applied, "an unrelated approval does not satisfy the policy")
 		s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController)
 	})
+
+	s.Run("incomplete: only current controller approves", func() {
+		key := s.mintNFT("acc-b-cc-only")
+		s.setupRegistry(key, baseRoles())
+
+		_, applied := s.proposeNewController(key, s.currentController)
+		s.Require().False(applied, "missing secured party and new controller approvals")
+		s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController)
+	})
+
+	s.Run("incomplete: only new controller approves", func() {
+		key := s.mintNFT("acc-b-nc-only")
+		s.setupRegistry(key, baseRoles())
+
+		_, applied := s.proposeNewController(key, s.newController)
+		s.Require().False(applied, "missing current controller and secured party approvals")
+		s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController)
+	})
+
+	s.Run("incomplete: only secured party approves", func() {
+		key := s.mintNFT("acc-b-sp-only")
+		s.setupRegistry(key, baseRoles())
+
+		changeID, applied := s.proposeNewController(key, s.securedParty)
+		s.Require().False(applied, "proposing as the secured party records only its own approval")
+
+		// Re-stating the secured party's approval must remain insufficient.
+		applied = s.approve(changeID, s.securedParty)
+		s.Require().False(applied, "missing current controller and new controller approvals")
+		s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController)
+	})
 }
 
 // --- AuthZ delegation -----------------------------------------------------------------
@@ -288,6 +320,29 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) execApproveViaAuthz(executor
 	msgExec := authz.NewMsgExec(s.mustAddr(executor), []sdk.Msg{inner})
 	_, err := s.app.AuthzKeeper.Exec(s.ctx, &msgExec)
 	s.Require().NoError(err, "authz must dispatch a single-signer approval")
+}
+
+// grantProposeAuthz grants executor authority to submit MsgProposeRoleChange on behalf of granter.
+func (s *RoleChangeAccumulationAcceptanceTestSuite) grantProposeAuthz(executor, granter string) {
+	auth := authz.NewGenericAuthorization(sdk.MsgTypeURL(&types.MsgProposeRoleChange{}))
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, s.mustAddr(executor), s.mustAddr(granter), auth, nil))
+}
+
+// execProposeNewControllerViaAuthz submits MsgProposeRoleChange (signed by granter) to grant the
+// CONTROLLER role to newController, wrapped in a MsgExec run by executor. Returns the change id.
+func (s *RoleChangeAccumulationAcceptanceTestSuite) execProposeNewControllerViaAuthz(executor, granter string, key *types.RegistryKey) string {
+	inner := &types.MsgProposeRoleChange{
+		Signer: granter,
+		Key:    key,
+		RoleUpdates: []types.RoleUpdate{{
+			Role:      types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
+			Addresses: []string{s.newController},
+		}},
+	}
+	msgExec := authz.NewMsgExec(s.mustAddr(executor), []sdk.Msg{inner})
+	_, err := s.app.AuthzKeeper.Exec(s.ctx, &msgExec)
+	s.Require().NoError(err, "authz must dispatch a single-signer proposal")
+	return types.NewPendingRoleChangeID(key, inner.RoleUpdates)
 }
 
 func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_Accumulation_ViaAuthz() {
@@ -321,6 +376,88 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_Accumul
 	pending, err := s.registryKeeper.GetPendingRoleChange(s.ctx, changeID)
 	s.Require().NoError(err)
 	s.Require().Nil(pending, "pending change should be removed after it applies")
+}
+
+// TestControllerUpdate_NoSecuredParty_HappyPath_ViaAuthz proves the Scenario 1 happy path (no
+// Secured Party set) also completes when both required approvals are delegated through authz.
+func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_NoSecuredParty_HappyPath_ViaAuthz() {
+	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
+	executor := genAddr()
+
+	key := s.mintNFT("acc-authz-no-sp")
+	s.setupRegistry(key, []types.RolesEntry{
+		{Role: controllerRole, Addresses: []string{s.currentController}},
+	})
+
+	// Both the current controller (proposer) and the new controller delegate via authz.
+	s.grantProposeAuthz(executor, s.currentController)
+	s.grantApproveAuthz(executor, s.newController)
+
+	changeID := s.execProposeNewControllerViaAuthz(executor, s.currentController, key)
+	s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController,
+		"not yet applied after only the current controller's delegated proposal")
+
+	s.execApproveViaAuthz(executor, s.newController, changeID)
+	s.Require().Contains(s.roleAddresses(key, controllerRole), s.newController,
+		"current + new controller approvals (both authz-delegated) satisfy the policy")
+
+	pending, err := s.registryKeeper.GetPendingRoleChange(s.ctx, changeID)
+	s.Require().NoError(err)
+	s.Require().Nil(pending, "pending change should be removed after it applies")
+}
+
+// TestControllerUpdate_RejectMatrix_ViaAuthz re-runs the ticket's reject scenarios with every
+// approval (and the proposal) delegated through authz MsgExec, proving that an incomplete set of
+// authz-delegated approvals never satisfies the policy. A neutral executor carries each party's
+// delegated authority, so no required party ever signs a transaction directly.
+func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_RejectMatrix_ViaAuthz() {
+	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
+	securedPartyRole := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE
+
+	// authzApprovers opens the pending change as the first party (via authz) and submits the rest of
+	// the partial approver set (via authz), then asserts the change never applied.
+	authzApprovers := func(name string, withSecuredParty bool, approvers []string) {
+		s.Run(name, func() {
+			executor := genAddr()
+			key := s.mintNFT("acc-authz-reject-" + strings.ReplaceAll(name, "_", "-"))
+
+			roles := []types.RolesEntry{{Role: controllerRole, Addresses: []string{s.currentController}}}
+			if withSecuredParty {
+				roles = append(roles, types.RolesEntry{Role: securedPartyRole, Addresses: []string{s.securedParty}})
+			}
+			s.setupRegistry(key, roles)
+
+			// Delegate every party's authority to the executor so nothing is signed directly.
+			for _, p := range approvers {
+				s.grantProposeAuthz(executor, p)
+				s.grantApproveAuthz(executor, p)
+			}
+
+			// The first party opens the change via authz; the rest approve via authz.
+			changeID := s.execProposeNewControllerViaAuthz(executor, approvers[0], key)
+			for _, p := range approvers[1:] {
+				s.execApproveViaAuthz(executor, p, changeID)
+			}
+
+			s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController,
+				"incomplete authz-delegated approval set must not satisfy the policy")
+			pending, err := s.registryKeeper.GetPendingRoleChange(s.ctx, changeID)
+			s.Require().NoError(err)
+			s.Require().NotNil(pending, "the pending change should remain open while approvals are incomplete")
+		})
+	}
+
+	// Scenario 1: Controller set, no Secured Party for eNote.
+	authzApprovers("no_sp_only_current_controller", false, []string{s.currentController})
+	authzApprovers("no_sp_only_new_controller", false, []string{s.newController})
+
+	// Scenario 2: Controller and Secured Party for eNote set.
+	authzApprovers("sp_only_current_controller", true, []string{s.currentController})
+	authzApprovers("sp_only_new_controller", true, []string{s.newController})
+	authzApprovers("sp_only_secured_party", true, []string{s.securedParty})
+	authzApprovers("sp_current_controller_and_secured_party", true, []string{s.currentController, s.securedParty})
+	authzApprovers("sp_current_controller_and_new_controller", true, []string{s.currentController, s.newController})
+	authzApprovers("sp_secured_party_and_new_controller", true, []string{s.securedParty, s.newController})
 }
 
 // --- Scenario C: Controller revoke accumulation ---------------------------------------
