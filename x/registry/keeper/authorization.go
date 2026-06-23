@@ -74,7 +74,11 @@ func (k Keeper) resolveNFTRoleAddresses(ctx context.Context, entry *types.Regist
 		}
 		return []string{owner.String()}, true, nil
 	default:
-		return nil, false, nil
+		// Fail closed: an unspecified/unknown NftRole is a policy misconfiguration and must not
+		// silently skip a required signature check.
+		return nil, false, types.NewErrCodeUnauthorized(
+			fmt.Sprintf("unsupported NftRole %s", nftRole.String()),
+		)
 	}
 }
 

@@ -573,6 +573,33 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestPendingChange_EdgeCases(
 		s.Require().Contains(err.Error(), "pending role change")
 	})
 
+	s.Run("ineligible proposer cannot open a pending change", func() {
+		key := s.mintNFT("acc-edge-ineligible-proposer")
+		s.setupRegistry(key, []types.RolesEntry{
+			{Role: controllerRole, Addresses: []string{s.currentController}},
+			{Role: securedPartyRole, Addresses: []string{s.securedParty}},
+		})
+
+		// The stranger is not a required party for the controller policy, so it must not be able
+		// to open (and persist) a new pending change.
+		resp, err := s.msgServer.ProposeRoleChange(s.ctx, &types.MsgProposeRoleChange{
+			Signer: s.stranger,
+			Key:    key,
+			RoleUpdates: []types.RoleUpdate{{
+				Role:      controllerRole,
+				Addresses: []string{s.newController},
+			}},
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "not eligible")
+		s.Require().Nil(resp)
+
+		// No pending change should have been persisted for this key.
+		changes, _, err := s.registryKeeper.GetPendingRoleChanges(s.ctx, nil, key)
+		s.Require().NoError(err)
+		s.Require().Empty(changes, "no pending change is created for an ineligible proposer")
+	})
+
 	s.Run("registry removed underneath cleans up the pending change", func() {
 		key := s.mintNFT("acc-edge-removed")
 		s.setupRegistry(key, []types.RolesEntry{

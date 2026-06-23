@@ -81,12 +81,21 @@ func (k Keeper) ProposeRoleChange(ctx context.Context, proposer string, key *typ
 		return "", false, err
 	}
 	if change == nil {
-		change = &types.PendingRoleChange{
+		newChange := &types.PendingRoleChange{
 			Id:          id,
 			Key:         key,
 			RoleUpdates: roleUpdates,
 			Proposer:    proposer,
 		}
+		// Only open a new pending change when the proposer could actually contribute a valid
+		// approval to at least one affected role. This keeps state from growing via proposals
+		// opened by accounts that are not a required party for the change.
+		if !k.approverEligible(ctx, entry, newChange, proposer) {
+			return "", false, types.NewErrCodeUnauthorized(
+				"proposer " + proposer + " is not eligible to approve any affected role",
+			)
+		}
+		change = newChange
 		k.EmitEvent(ctx, types.NewEventRoleChangeProposed(change))
 	}
 
