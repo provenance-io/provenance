@@ -125,16 +125,19 @@ func (m MsgProposeRoleChange) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
 	}
 
-	if err := m.Role.Validate(); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("role", "%s", err))
-	}
-
-	if m.Operation == RoleChangeOperation_ROLE_CHANGE_OPERATION_UNSPECIFIED {
-		errs = append(errs, NewErrCodeInvalidField("operation", "operation cannot be unspecified"))
-	}
-
-	if err := validateAddresses(m.Addresses); err != nil {
-		errs = append(errs, NewErrCodeInvalidField("addresses", "%s", err))
+	if len(m.RoleUpdates) == 0 {
+		errs = append(errs, NewErrCodeInvalidField("role_updates", "at least one role update is required"))
+	} else {
+		for i, update := range m.RoleUpdates {
+			if update.Role == RegistryRole_REGISTRY_ROLE_UNSPECIFIED {
+				errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: role cannot be unspecified", i))
+			}
+			for _, addr := range update.Addresses {
+				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+					errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: invalid address: %s", i, err))
+				}
+			}
+		}
 	}
 
 	return errors.Join(errs...)

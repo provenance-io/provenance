@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"slices"
 
 	"cosmossdk.io/collections"
@@ -62,10 +61,11 @@ func (k Keeper) GetPendingRoleChanges(ctx context.Context, pagination *query.Pag
 	return changes, pageRes, nil
 }
 
-// ProposeRoleChange opens (or re-uses) a pending role change and records the proposer's approval.
-// If the accumulated approvals already satisfy the role's policy, the change is applied
-// immediately. Returns the change id and whether it was applied.
-func (k Keeper) ProposeRoleChange(ctx context.Context, proposer string, key *types.RegistryKey, role types.RegistryRole, op types.RoleChangeOperation, addresses []string) (string, bool, error) {
+// ProposeRoleChange opens (or re-uses) a pending role change for a batch of desired-state role
+// updates and records the proposer's approval. If the accumulated approvals already satisfy every
+// affected role's policy, the change is applied immediately. Returns the change id and whether it
+// was applied.
+func (k Keeper) ProposeRoleChange(ctx context.Context, proposer string, key *types.RegistryKey, roleUpdates []types.RoleUpdate) (string, bool, error) {
 	entry, err := k.GetRegistry(ctx, key)
 	if err != nil {
 		return "", false, err
@@ -74,13 +74,7 @@ func (k Keeper) ProposeRoleChange(ctx context.Context, proposer string, key *typ
 		return "", false, types.NewErrCodeRegistryNotFound(key.String())
 	}
 
-	if _, ok := types.RoleAuthorizationMap()[role]; !ok {
-		return "", false, types.NewErrCodeUnauthorized(
-			fmt.Sprintf("role %s has no authorization policy; propose/approve flow requires a policy-governed role", role.ShortString()),
-		)
-	}
-
-	id := types.NewPendingRoleChangeID(key, role, op, addresses)
+	id := types.NewPendingRoleChangeID(key, roleUpdates)
 
 	change, err := k.GetPendingRoleChange(ctx, id)
 	if err != nil {
@@ -88,12 +82,10 @@ func (k Keeper) ProposeRoleChange(ctx context.Context, proposer string, key *typ
 	}
 	if change == nil {
 		change = &types.PendingRoleChange{
-			Id:        id,
-			Key:       key,
-			Role:      role,
-			Operation: op,
-			Addresses: addresses,
-			Proposer:  proposer,
+			Id:          id,
+			Key:         key,
+			RoleUpdates: roleUpdates,
+			Proposer:    proposer,
 		}
 		k.EmitEvent(ctx, types.NewEventRoleChangeProposed(change))
 	}
@@ -157,30 +149,59 @@ func (k Keeper) recordApprovalAndMaybeApply(ctx context.Context, entry *types.Re
 	return true, nil
 }
 
-// pendingChangeSatisfied reports whether the accumulated approvals satisfy the role's policy.
+// pendingChangeSatisfied reports whether the accumulated approvals satisfy every affected role's
+// authorization policy. A role with no policy falls back to NFT ownership: at least one approver
+// must own the NFT. The change applies only when all role updates are satisfied (atomic gate).
 func (k Keeper) pendingChangeSatisfied(ctx context.Context, entry *types.RegistryEntry, change *types.PendingRoleChange) bool {
-	roleAuth, ok := types.RoleAuthorizationMap()[change.Role]
-	if !ok {
-		return false
-	}
+	roleAuths := types.RoleAuthorizationMap()
+	for _, update := range change.RoleUpdates {
+		roleAuth, ok := roleAuths[update.Role]
+		if !ok {
+			// Legacy fallback: at least one approver must own the NFT.
+			if !k.anyApproverOwnsNFT(ctx, change) {
+				return false
+			}
+			continue
+		}
 
-	// New addresses are only meaningful for grant operations (ASSIGNMENT_NEW checks).
-	var newAddrs []string
-	if change.Operation == types.RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT {
-		newAddrs = change.Addresses
+		// Only addresses being newly added to the role are relevant for ASSIGNMENT_NEW checks.
+		newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
+		if k.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, newAddrs, change.Approvals) != nil {
+			return false
+		}
 	}
-
-	return k.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, newAddrs, change.Approvals) == nil
+	return true
 }
 
-// applyPendingChange performs the role grant or revoke described by the change.
-func (k Keeper) applyPendingChange(ctx context.Context, change *types.PendingRoleChange) error {
-	switch change.Operation {
-	case types.RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT:
-		return k.GrantRole(ctx, change.Key, change.Role, change.Addresses)
-	case types.RoleChangeOperation_ROLE_CHANGE_OPERATION_REVOKE:
-		return k.RevokeRole(ctx, change.Key, change.Role, change.Addresses)
-	default:
-		return types.NewErrCodeInvalidField("operation", "unsupported operation %s", change.Operation.ShortString())
+// anyApproverOwnsNFT reports whether any accumulated approver owns the change's NFT.
+func (k Keeper) anyApproverOwnsNFT(ctx context.Context, change *types.PendingRoleChange) bool {
+	for _, approver := range change.Approvals {
+		if k.ValidateNFTOwner(ctx, &change.Key.AssetClassId, &change.Key.NftId, approver) == nil {
+			return true
+		}
 	}
+	return false
+}
+
+// additions returns the addresses in desired that are not already present in current.
+func additions(current, desired []string) []string {
+	if len(current) == 0 {
+		return desired
+	}
+	have := make(map[string]bool, len(current))
+	for _, a := range current {
+		have[a] = true
+	}
+	var added []string
+	for _, a := range desired {
+		if !have[a] {
+			added = append(added, a)
+		}
+	}
+	return added
+}
+
+// applyPendingChange applies the batch of role updates as a single atomic desired-state set.
+func (k Keeper) applyPendingChange(ctx context.Context, change *types.PendingRoleChange) error {
+	return k.SetRoles(ctx, change.Key, change.RoleUpdates)
 }

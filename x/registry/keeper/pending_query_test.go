@@ -10,16 +10,16 @@ import (
 
 // newPendingChange builds and stores a pending role change for the given key and addresses.
 func (s *KeeperTestSuite) newPendingChange(key *types.RegistryKey, addresses []string) types.PendingRoleChange {
-	op := types.RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT
-	role := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
-	change := types.PendingRoleChange{
-		Id:        types.NewPendingRoleChangeID(key, role, op, addresses),
-		Key:       key,
-		Role:      role,
-		Operation: op,
+	roleUpdates := []types.RoleUpdate{{
+		Role:      types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
 		Addresses: addresses,
-		Proposer:  s.user1,
-		Approvals: []string{s.user1},
+	}}
+	change := types.PendingRoleChange{
+		Id:          types.NewPendingRoleChangeID(key, roleUpdates),
+		Key:         key,
+		RoleUpdates: roleUpdates,
+		Proposer:    s.user1,
+		Approvals:   []string{s.user1},
 	}
 	s.Require().NoError(s.app.RegistryKeeper.SetPendingRoleChange(s.ctx, change))
 	return change
@@ -142,5 +142,5 @@ func (s *KeeperTestSuite) TestPendingRoleChangeGenesisRoundTrip() {
 	s.Require().NoError(err)
 	s.Require().NotNil(got)
 	s.Require().Equal(change.Approvals, got.Approvals)
-	s.Require().Equal(change.Addresses, got.Addresses)
+	s.Require().Equal(change.RoleUpdates, got.RoleUpdates)
 }

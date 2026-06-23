@@ -44,9 +44,7 @@ message EventRoleChangeProposed {
   string nft_id         = 1;
   string asset_class_id = 2;
   string change_id      = 3;
-  string role           = 4;
-  string operation      = 5;
-  string proposer       = 6;
+  string proposer       = 4;
 }
 
 // EventRoleChangeApproved is emitted when a party records an approval for a pending role change.
@@ -60,6 +58,4 @@ message EventRoleChangeApplied {
   string nft_id         = 1;
   string asset_class_id = 2;
   string change_id      = 3;
-  string role           = 4;
-  string operation      = 5;
 }

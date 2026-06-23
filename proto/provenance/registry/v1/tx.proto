@@ -187,40 +187,26 @@ message MsgSetRoles {
   repeated RoleUpdate role_updates = 3 [(gogoproto.nullable) = false];
 }
 
-// RoleUpdate specifies the desired set of addresses for a single role.
-message RoleUpdate {
-  // role is the role to update.
-  RegistryRole role = 1;
-
-  // addresses is the desired set of addresses for this role.
-  // An empty list means the role should be cleared entirely.
-  repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-
 // MsgSetRolesResponse defines the response for SetRoles.
 message MsgSetRolesResponse {}
 
 // MsgProposeRoleChange opens a pending role change that collects single-signer approvals until
-// the role's authorization policy is satisfied. Using single-signer messages (rather than one
-// multi-signer message) keeps every step compatible with authz delegation.
+// every affected role's authorization policy is satisfied, then applies the whole batch
+// atomically. Its payload mirrors MsgSetRoles (desired-state, multi-role), but using single-signer
+// messages (rather than one multi-signer message) keeps every step compatible with authz delegation.
 message MsgProposeRoleChange {
   option (cosmos.msg.v1.signer) = "signer";
 
   // signer is the address proposing the change. It is recorded as the first approval; it only
-  // counts toward the policy if the signer is itself a required party.
+  // counts toward a policy if the signer is itself a required party.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // key identifies the registry entry to change.
   RegistryKey key = 2;
 
-  // role is the role being changed.
-  RegistryRole role = 3;
-
-  // operation is the kind of change to apply once approved (grant or revoke).
-  RoleChangeOperation operation = 4;
-
-  // addresses is the set of addresses the operation applies to.
-  repeated string addresses = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // role_updates contains the desired state for each role to set when the change is applied.
+  // At least one entry is required. Roles not listed here are unchanged.
+  repeated RoleUpdate role_updates = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgProposeRoleChangeResponse defines the response for ProposeRoleChange.

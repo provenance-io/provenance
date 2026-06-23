@@ -228,21 +228,23 @@ func CmdRegistryBulkUpdate() *cobra.Command {
 // CmdProposeRoleChange returns the command to propose a multi-party role change
 func CmdProposeRoleChange() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "propose-role-change <asset_class_id> <nft_id> <role> <grant|revoke> <address> [address...]",
-		Short: "Propose a role change that accumulates approvals until the role's policy is satisfied",
-		Args:  cobra.MinimumNArgs(5),
+		Use:   "propose-role-change <asset_class_id> <nft_id> <role=address[,address...]> [role=address[,address...]...]",
+		Short: "Propose a desired-state role change that accumulates approvals until every affected role's policy is satisfied",
+		Long: `Propose a batch of desired-state role updates that accumulates single-signer approvals until
+every affected role's authorization policy is satisfied, then applies atomically.
+
+Each role update is "role=address[,address...]". An empty address list clears the role.
+
+Example:
+  propose-role-change myclass nft1 controller=cosmos1new secured_party_enote=`,
+		Args: cobra.MinimumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			role, err := types.ParseRegistryRole(args[2])
-			if err != nil {
-				return err
-			}
-
-			op, err := parseRoleChangeOperation(args[3])
+			roleUpdates, err := parseRoleUpdates(args[2:])
 			if err != nil {
 				return err
 			}
@@ -253,9 +255,7 @@ func CmdProposeRoleChange() *cobra.Command {
 					AssetClassId: args[0],
 					NftId:        args[1],
 				},
-				Role:      role,
-				Operation: op,
-				Addresses: args[4:],
+				RoleUpdates: roleUpdates,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
@@ -291,15 +291,32 @@ func CmdApproveRoleChange() *cobra.Command {
 	return cmd
 }
 
-// parseRoleChangeOperation converts a grant/revoke string into a RoleChangeOperation.
-func parseRoleChangeOperation(s string) (types.RoleChangeOperation, error) {
-	switch strings.ToLower(s) {
-	case "grant":
-		return types.RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT, nil
-	case "revoke":
-		return types.RoleChangeOperation_ROLE_CHANGE_OPERATION_REVOKE, nil
-	default:
-		return types.RoleChangeOperation_ROLE_CHANGE_OPERATION_UNSPECIFIED,
-			fmt.Errorf("invalid operation %q: must be \"grant\" or \"revoke\"", s)
+// parseRoleUpdates converts "role=address[,address...]" arguments into RoleUpdate values.
+// An empty address list (e.g. "role=") clears the role.
+func parseRoleUpdates(args []string) ([]types.RoleUpdate, error) {
+	updates := make([]types.RoleUpdate, 0, len(args))
+	for _, arg := range args {
+		name, addrCSV, ok := strings.Cut(arg, "=")
+		if !ok {
+			return nil, fmt.Errorf("invalid role update %q: expected format \"role=address[,address...]\"", arg)
+		}
+
+		role, err := types.ParseRegistryRole(name)
+		if err != nil {
+			return nil, err
+		}
+
+		var addresses []string
+		if trimmed := strings.TrimSpace(addrCSV); trimmed != "" {
+			for _, addr := range strings.Split(trimmed, ",") {
+				addr = strings.TrimSpace(addr)
+				if addr != "" {
+					addresses = append(addresses, addr)
+				}
+			}
+		}
+
+		updates = append(updates, types.RoleUpdate{Role: role, Addresses: addresses})
 	}
+	return updates, nil
 }

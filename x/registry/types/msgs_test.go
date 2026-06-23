@@ -157,21 +157,21 @@ func TestMsgProposeRoleChange_ValidateBasic(t *testing.T) {
 	validAddr := sdk.AccAddress("propose_signer_________").String()
 	otherAddr := sdk.AccAddress("propose_target_________").String()
 	validKey := &RegistryKey{AssetClassId: "aclass", NftId: "nft1"}
-	grant := RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT
+	validUpdate := RoleUpdate{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{otherAddr}}
 
 	tests := []struct {
 		name string
 		msg  MsgProposeRoleChange
 		exp  string
 	}{
-		{name: "valid", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}},
-		{name: "empty signer", msg: MsgProposeRoleChange{Signer: "", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid signer: empty address"},
-		{name: "bad signer", msg: MsgProposeRoleChange{Signer: "bad", Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid signer: decoding bech32"},
-		{name: "nil key", msg: MsgProposeRoleChange{Signer: validAddr, Key: nil, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid key: registry key cannot be nil"},
-		{name: "invalid role", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED, Operation: grant, Addresses: []string{otherAddr}}, exp: "invalid role: cannot be unspecified"},
-		{name: "unspecified operation", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: RoleChangeOperation_ROLE_CHANGE_OPERATION_UNSPECIFIED, Addresses: []string{otherAddr}}, exp: "invalid operation: operation cannot be unspecified"},
-		{name: "no addresses", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{}}, exp: "invalid addresses: addresses cannot be empty"},
-		{name: "bad address", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Operation: grant, Addresses: []string{"bad"}}, exp: "invalid addresses: decoding bech32"},
+		{name: "valid", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}},
+		{name: "valid clear role", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER}}}},
+		{name: "empty signer", msg: MsgProposeRoleChange{Signer: "", Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid signer: empty address"},
+		{name: "bad signer", msg: MsgProposeRoleChange{Signer: "bad", Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid signer: decoding bech32"},
+		{name: "nil key", msg: MsgProposeRoleChange{Signer: validAddr, Key: nil, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid key: registry key cannot be nil"},
+		{name: "no role_updates", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{}}, exp: "invalid role_updates: at least one role update is required"},
+		{name: "unspecified role", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED}}}, exp: "invalid role_updates: 0: role cannot be unspecified"},
+		{name: "bad address in update", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{"bad"}}}}, exp: "invalid role_updates: 0: invalid address"},
 	}
 
 	for _, tc := range tests {

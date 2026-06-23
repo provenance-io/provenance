@@ -55,8 +55,6 @@ func NewEventRoleChangeProposed(change *PendingRoleChange) *EventRoleChangePropo
 		NftId:        change.Key.NftId,
 		AssetClassId: change.Key.AssetClassId,
 		ChangeId:     change.Id,
-		Role:         change.Role.ShortString(),
-		Operation:    change.Operation.ShortString(),
 		Proposer:     change.Proposer,
 	}
 }
@@ -75,8 +73,6 @@ func NewEventRoleChangeApplied(change *PendingRoleChange) *EventRoleChangeApplie
 		NftId:        change.Key.NftId,
 		AssetClassId: change.Key.AssetClassId,
 		ChangeId:     change.Id,
-		Role:         change.Role.ShortString(),
-		Operation:    change.Operation.ShortString(),
 	}
 }
 

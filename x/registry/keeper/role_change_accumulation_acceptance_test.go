@@ -93,11 +93,12 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) setupRegistry(key *types.Reg
 // proposer, and returns the change id.
 func (s *RoleChangeAccumulationAcceptanceTestSuite) proposeNewController(key *types.RegistryKey, proposer string) (string, bool) {
 	resp, err := s.msgServer.ProposeRoleChange(s.ctx, &types.MsgProposeRoleChange{
-		Signer:    proposer,
-		Key:       key,
-		Role:      types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
-		Operation: types.RoleChangeOperation_ROLE_CHANGE_OPERATION_GRANT,
-		Addresses: []string{s.newController},
+		Signer: proposer,
+		Key:    key,
+		RoleUpdates: []types.RoleUpdate{{
+			Role:      types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
+			Addresses: []string{s.newController},
+		}},
 	})
 	s.Require().NoError(err)
 	return resp.ChangeId, resp.Applied
@@ -113,15 +114,24 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) approve(changeID, signer str
 	return resp.Applied
 }
 
-// proposeRevokeController opens a pending REVOKE of the CONTROLLER role from addr, signed by
-// proposer, and returns the change id and whether it applied immediately.
+// proposeRevokeController opens a pending REVOKE of the CONTROLLER role from addr by proposing an
+// empty desired-state for the role, signed by proposer, and returns the change id and whether it
+// applied immediately.
 func (s *RoleChangeAccumulationAcceptanceTestSuite) proposeRevokeController(key *types.RegistryKey, addr, proposer string) (string, bool) {
+	current := s.roleAddresses(key, types.RegistryRole_REGISTRY_ROLE_CONTROLLER)
+	desired := make([]string, 0, len(current))
+	for _, a := range current {
+		if a != addr {
+			desired = append(desired, a)
+		}
+	}
 	resp, err := s.msgServer.ProposeRoleChange(s.ctx, &types.MsgProposeRoleChange{
-		Signer:    proposer,
-		Key:       key,
-		Role:      types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
-		Operation: types.RoleChangeOperation_ROLE_CHANGE_OPERATION_REVOKE,
-		Addresses: []string{addr},
+		Signer: proposer,
+		Key:    key,
+		RoleUpdates: []types.RoleUpdate{{
+			Role:      types.RegistryRole_REGISTRY_ROLE_CONTROLLER,
+			Addresses: desired,
+		}},
 	})
 	s.Require().NoError(err)
 	return resp.ChangeId, resp.Applied
@@ -440,4 +450,95 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestPendingChange_EdgeCases(
 		s.Require().NoError(err)
 		s.Require().Nil(pending, "the orphaned pending change is removed")
 	})
+}
+
+// proposeBatch opens a pending change for an arbitrary batch of desired-state role updates, signed
+// by proposer, and returns the change id and whether it applied immediately.
+func (s *RoleChangeAccumulationAcceptanceTestSuite) proposeBatch(key *types.RegistryKey, proposer string, updates []types.RoleUpdate) (string, bool) {
+	resp, err := s.msgServer.ProposeRoleChange(s.ctx, &types.MsgProposeRoleChange{
+		Signer:      proposer,
+		Key:         key,
+		RoleUpdates: updates,
+	})
+	s.Require().NoError(err)
+	return resp.ChangeId, resp.Applied
+}
+
+// --- Atomic grant+revoke: controller rotation in a single pending change ---------------
+//
+// A controller rotation (remove the old controller, add the new one) is expressed as a single
+// desired-state role update. The grant and revoke are inseparable: the whole change applies
+// atomically once the role's policy is satisfied, never leaving the role half-updated.
+
+func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerRotation_AtomicGrantRevoke() {
+	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
+	securedPartyRole := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE
+
+	key := s.mintNFT("acc-rotation")
+	s.setupRegistry(key, []types.RolesEntry{
+		{Role: controllerRole, Addresses: []string{s.currentController}},
+		{Role: securedPartyRole, Addresses: []string{s.securedParty}},
+	})
+
+	// Desired state replaces the controller entirely: drops currentController, adds newController.
+	rotation := []types.RoleUpdate{{Role: controllerRole, Addresses: []string{s.newController}}}
+
+	changeID, applied := s.proposeBatch(key, s.currentController, rotation)
+	s.Require().False(applied)
+
+	applied = s.approve(changeID, s.securedParty)
+	s.Require().False(applied, "still missing the new controller's approval")
+
+	// Nothing is half-applied while pending: the old controller is still present.
+	s.Require().Contains(s.roleAddresses(key, controllerRole), s.currentController)
+	s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController)
+
+	applied = s.approve(changeID, s.newController)
+	s.Require().True(applied, "current controller + secured party + new controller satisfy the rotation")
+
+	// The grant and revoke applied together: role is now exactly the new controller.
+	s.Require().Equal([]string{s.newController}, s.roleAddresses(key, controllerRole))
+}
+
+// --- Atomic batch across roles: policy role + NFT-owner-fallback role ------------------
+//
+// A single pending change can carry updates to several roles. It applies only when every affected
+// role's gate is satisfied (policy for governed roles, NFT ownership for the rest), and all updates
+// apply together.
+
+func (s *RoleChangeAccumulationAcceptanceTestSuite) TestBatchRoleUpdate_AcrossRoles_AtomicApply() {
+	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
+	servicerRole := types.RegistryRole_REGISTRY_ROLE_SERVICER
+	oldServicer := genAddr()
+	newServicer := genAddr()
+
+	key := s.mintNFT("acc-batch-roles")
+	s.setupRegistry(key, []types.RolesEntry{
+		{Role: controllerRole, Addresses: []string{s.currentController}},
+		{Role: servicerRole, Addresses: []string{oldServicer}},
+	})
+
+	// One batch: rotate the controller (policy-governed) and replace the servicer (no policy, so it
+	// falls back to NFT ownership).
+	batch := []types.RoleUpdate{
+		{Role: controllerRole, Addresses: []string{s.newController}},
+		{Role: servicerRole, Addresses: []string{newServicer}},
+	}
+
+	changeID, applied := s.proposeBatch(key, s.currentController, batch)
+	s.Require().False(applied)
+
+	// Both controller approvals are present (no secured party set), but the servicer update still
+	// needs the NFT owner's approval, so the atomic batch must NOT apply.
+	applied = s.approve(changeID, s.newController)
+	s.Require().False(applied, "servicer update still requires the NFT owner's approval")
+	s.Require().Equal([]string{s.currentController}, s.roleAddresses(key, controllerRole))
+	s.Require().Equal([]string{oldServicer}, s.roleAddresses(key, servicerRole))
+
+	// The NFT owner approves, satisfying the servicer (owner-fallback) gate. Now every gate is met
+	// and the whole batch applies atomically.
+	applied = s.approve(changeID, s.nftOwner)
+	s.Require().True(applied, "all gates satisfied: controller policy and servicer owner-fallback")
+	s.Require().Equal([]string{s.newController}, s.roleAddresses(key, controllerRole))
+	s.Require().Equal([]string{newServicer}, s.roleAddresses(key, servicerRole))
 }

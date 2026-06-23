@@ -152,7 +152,7 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 // ProposeRoleChange opens a pending role change that accumulates single-signer approvals and
 // auto-applies once the role's authorization policy is satisfied.
 func (k msgServer) ProposeRoleChange(ctx context.Context, msg *types.MsgProposeRoleChange) (*types.MsgProposeRoleChangeResponse, error) {
-	id, applied, err := k.Keeper.ProposeRoleChange(ctx, msg.Signer, msg.Key, msg.Role, msg.Operation, msg.Addresses)
+	id, applied, err := k.Keeper.ProposeRoleChange(ctx, msg.Signer, msg.Key, msg.RoleUpdates)
 	if err != nil {
 		return nil, err
 	}
