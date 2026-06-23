@@ -138,6 +138,7 @@ func TestMsgSetRoles_ValidateBasic(t *testing.T) {
 		{name: "nil key", msg: MsgSetRoles{Signer: validAddr, Key: nil, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid key: registry key cannot be nil"},
 		{name: "no role_updates", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{}}, exp: "invalid role_updates: at least one role update is required"},
 		{name: "unspecified role", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED}}}, exp: "invalid role_updates: 0: role cannot be unspecified"},
+		{name: "unknown role enum", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole(999), Addresses: []string{otherAddr}}}}, exp: "invalid role_updates: 0: role unknown registry_role enum value: 999"},
 		{name: "bad address in update", msg: MsgSetRoles{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{"bad"}}}}, exp: "invalid role_updates: 0: invalid address"},
 	}
 
@@ -171,6 +172,7 @@ func TestMsgProposeRoleChange_ValidateBasic(t *testing.T) {
 		{name: "nil key", msg: MsgProposeRoleChange{Signer: validAddr, Key: nil, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid key: registry key cannot be nil"},
 		{name: "no role_updates", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{}}, exp: "invalid role_updates: at least one role update is required"},
 		{name: "unspecified role", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED}}}, exp: "invalid role_updates: 0: role cannot be unspecified"},
+		{name: "unknown role enum", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole(999), Addresses: []string{otherAddr}}}}, exp: "invalid role_updates: 0: role unknown registry_role enum value: 999"},
 		{name: "bad address in update", msg: MsgProposeRoleChange{Signer: validAddr, Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{"bad"}}}}, exp: "invalid role_updates: 0: invalid address"},
 	}
 

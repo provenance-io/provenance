@@ -301,11 +301,20 @@ func (k Keeper) SetRegistry(ctx context.Context, entry types.RegistryEntry) erro
 func (k Keeper) SetRoles(ctx context.Context, key *types.RegistryKey, roleUpdates []types.RoleUpdate) error {
 	entry, err := k.Registry.Get(ctx, key.CollKey())
 	if err != nil {
-		return types.NewErrCodeRegistryNotFound(key.String())
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.NewErrCodeRegistryNotFound(key.String())
+		}
+		return fmt.Errorf("failed to get registry entry: %w", err)
 	}
 
-	// Snapshot the original entry to compute diff events.
+	// Snapshot the original entry to compute diff events. The loop below mutates entry.Roles
+	// (and individual Addresses slices) in place, so a shallow copy would corrupt the snapshot
+	// and produce incorrect diffs. Deep-copy the Roles slice and each Addresses slice.
 	origCopy := entry
+	origCopy.Roles = make([]types.RolesEntry, len(entry.Roles))
+	for i, re := range entry.Roles {
+		origCopy.Roles[i] = types.RolesEntry{Role: re.Role, Addresses: slices.Clone(re.Addresses)}
+	}
 
 	for _, update := range roleUpdates {
 		roleI := -1

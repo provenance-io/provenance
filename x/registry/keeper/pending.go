@@ -126,11 +126,15 @@ func (k Keeper) ApproveRoleChange(ctx context.Context, approver string, changeID
 // recordApprovalAndMaybeApply adds approver to the change's approval set, evaluates the role's
 // authorization policy against the accumulated approvals, and either applies and removes the
 // change (returns true) or persists the updated change (returns false).
+//
+// Approvals from addresses that are not eligible under any affected role's policy are silently
+// ignored: they can never contribute to satisfying the change, so recording them would only let a
+// third party grow the approval set without bound (state bloat / DoS).
 func (k Keeper) recordApprovalAndMaybeApply(ctx context.Context, entry *types.RegistryEntry, change *types.PendingRoleChange, approver string) (bool, error) {
-	if !slices.Contains(change.Approvals, approver) {
+	if k.approverEligible(ctx, entry, change, approver) && !slices.Contains(change.Approvals, approver) {
 		change.Approvals = append(change.Approvals, approver)
+		k.EmitEvent(ctx, types.NewEventRoleChangeApproved(change.Id, approver))
 	}
-	k.EmitEvent(ctx, types.NewEventRoleChangeApproved(change.Id, approver))
 
 	if !k.pendingChangeSatisfied(ctx, entry, change) {
 		if err := k.SetPendingRoleChange(ctx, *change); err != nil {
@@ -147,6 +151,29 @@ func (k Keeper) recordApprovalAndMaybeApply(ctx context.Context, entry *types.Re
 	}
 	k.EmitEvent(ctx, types.NewEventRoleChangeApplied(change))
 	return true, nil
+}
+
+// approverEligible reports whether approver could contribute to satisfying any of the change's
+// role-update gates: for a policy-governed role they must be one of the policy's referenced
+// addresses, and for a non-policy role they must own the NFT (the legacy fallback).
+func (k Keeper) approverEligible(ctx context.Context, entry *types.RegistryEntry, change *types.PendingRoleChange, approver string) bool {
+	roleAuths := types.RoleAuthorizationMap()
+	for _, update := range change.RoleUpdates {
+		roleAuth, ok := roleAuths[update.Role]
+		if !ok {
+			// Non-policy role: only the NFT owner can satisfy the fallback.
+			if k.ValidateNFTOwner(ctx, &change.Key.AssetClassId, &change.Key.NftId, approver) == nil {
+				return true
+			}
+			continue
+		}
+
+		newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
+		if k.CollectPolicyApprovers(ctx, roleAuth, entry, newAddrs)[approver] {
+			return true
+		}
+	}
+	return false
 }
 
 // pendingChangeSatisfied reports whether the accumulated approvals satisfy every affected role's

@@ -259,6 +259,14 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerSet_WithSecure
 		applied := s.approve(changeID, s.stranger)
 		s.Require().False(applied, "an unrelated approval does not satisfy the policy")
 		s.Require().NotContains(s.roleAddresses(key, controllerRole), s.newController)
+
+		// The stranger is not referenced by the controller policy, so its approval must be
+		// ignored entirely rather than accumulating in the pending change's approval set.
+		pending, err := s.registryKeeper.GetPendingRoleChange(s.ctx, changeID)
+		s.Require().NoError(err)
+		s.Require().NotNil(pending)
+		s.Require().NotContains(pending.Approvals, s.stranger, "ineligible approvals are not recorded")
+		s.Require().Equal([]string{s.currentController}, pending.Approvals)
 	})
 
 	s.Run("incomplete: only current controller approves", func() {

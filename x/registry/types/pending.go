@@ -21,6 +21,7 @@ func NewPendingRoleChangeID(key *RegistryKey, roleUpdates []RoleUpdate) string {
 	for i, update := range roleUpdates {
 		sorted := slices.Clone(update.Addresses)
 		slices.Sort(sorted)
+		sorted = slices.Compact(sorted)
 		lines[i] = strconv.Itoa(int(update.Role)) + "|" + strings.Join(sorted, ",")
 	}
 	slices.Sort(lines)
