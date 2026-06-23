@@ -30,7 +30,8 @@ enum SignatureType {
 enum NftRole {
   // NFT_ROLE_UNSPECIFIED is the default/unset value.
   NFT_ROLE_UNSPECIFIED = 0;
-  // NFT_ROLE_NFT_OWNER is the owner of the NFT (value owner from the metadata module Scope).
+  // NFT_ROLE_NFT_OWNER is the owner of the NFT.
+  // For metadata-scope NFTs, this is the scope value owner; otherwise it's the owner from the x/nft module.
   NFT_ROLE_NFT_OWNER = 1;
 }
 
