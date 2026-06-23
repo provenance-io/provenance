@@ -42,7 +42,11 @@ func (k Keeper) resolveRegistryRoleAddresses(entry *types.RegistryEntry, role ty
 		}
 		return newAddrs, len(newAddrs) > 0, nil
 	default:
-		return nil, false, nil
+		// Fail closed: an unspecified/unknown assignment is a policy misconfiguration and must not
+		// silently skip a required signature check.
+		return nil, false, types.NewErrCodeUnauthorized(
+			fmt.Sprintf("unsupported assignment %s for role %s", assignment.String(), role.ShortString()),
+		)
 	}
 }
 
@@ -116,7 +120,9 @@ func (k Keeper) resolveRoleAssignmentAddresses(ctx context.Context, entry *types
 	case *types.RoleAssignment_RolePriority:
 		return k.resolveRolePriorityAddresses(ctx, entry, r.RolePriority, ra.Assignment, newAddrs)
 	default:
-		return nil, false, nil
+		// Fail closed: an unset/unknown role selector is a policy misconfiguration and must not
+		// silently skip a required signature check.
+		return nil, false, types.NewErrCodeUnauthorized("role assignment has no role selector set")
 	}
 }
 
@@ -210,6 +216,12 @@ func (k Keeper) evaluateSignatureRequirement(ctx context.Context, entry *types.R
 		if hasAnyRole && !found {
 			return types.NewErrCodeUnauthorized("no required signature found in any role")
 		}
+
+	default:
+		// Fail closed: an unspecified/unknown signature type must not be treated as satisfied.
+		return types.NewErrCodeUnauthorized(
+			fmt.Sprintf("unsupported signature requirement type %s", req.Type.String()),
+		)
 	}
 	return nil
 }

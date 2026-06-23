@@ -96,20 +96,7 @@ func (m MsgSetRoles) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
 	}
 
-	if len(m.RoleUpdates) == 0 {
-		errs = append(errs, NewErrCodeInvalidField("role_updates", "at least one role update is required"))
-	} else {
-		for i, update := range m.RoleUpdates {
-			if err := update.Role.Validate(); err != nil {
-				errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: role %s", i, err))
-			}
-			for _, addr := range update.Addresses {
-				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-					errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: invalid address: %s", i, err))
-				}
-			}
-		}
-	}
+	errs = append(errs, validateRoleUpdates(m.RoleUpdates)...)
 
 	return errors.Join(errs...)
 }
@@ -125,22 +112,45 @@ func (m MsgProposeRoleChange) ValidateBasic() error {
 		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
 	}
 
-	if len(m.RoleUpdates) == 0 {
-		errs = append(errs, NewErrCodeInvalidField("role_updates", "at least one role update is required"))
-	} else {
-		for i, update := range m.RoleUpdates {
-			if err := update.Role.Validate(); err != nil {
-				errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: role %s", i, err))
-			}
-			for _, addr := range update.Addresses {
-				if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-					errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: invalid address: %s", i, err))
-				}
-			}
-		}
-	}
+	errs = append(errs, validateRoleUpdates(m.RoleUpdates)...)
 
 	return errors.Join(errs...)
+}
+
+// validateRoleUpdates validates a batch of desired-state role updates. Each role must be a known,
+// specified enum value and may appear at most once across the batch (the batch is a desired-state
+// map, so a repeated role is ambiguous). Addresses within an update must be valid and free of
+// duplicates, matching the invariants enforced by RolesEntry.Validate once the batch is applied.
+func validateRoleUpdates(updates []RoleUpdate) []error {
+	if len(updates) == 0 {
+		return []error{NewErrCodeInvalidField("role_updates", "at least one role update is required")}
+	}
+
+	var errs []error
+	seenRoles := make(map[RegistryRole]bool, len(updates))
+	for i, update := range updates {
+		if err := update.Role.Validate(); err != nil {
+			errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: role %s", i, err))
+		} else if seenRoles[update.Role] {
+			errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: duplicate role %s", i, update.Role.ShortString()))
+		} else {
+			seenRoles[update.Role] = true
+		}
+
+		seenAddrs := make(map[string]bool, len(update.Addresses))
+		for _, addr := range update.Addresses {
+			if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+				errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: invalid address: %s", i, err))
+				continue
+			}
+			if seenAddrs[addr] {
+				errs = append(errs, NewErrCodeInvalidField("role_updates", "%d: duplicate address: %s", i, addr))
+				continue
+			}
+			seenAddrs[addr] = true
+		}
+	}
+	return errs
 }
 
 // ValidateBasic validates the MsgApproveRoleChange message

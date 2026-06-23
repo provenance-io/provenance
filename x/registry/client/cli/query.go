@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -177,7 +178,12 @@ func GetCmdQueryPendingRoleChanges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pending-role-changes [asset_class_id] [nft_id]",
 		Short: "Query pending role changes, optionally filtered by registry key",
-		Args:  cobra.RangeArgs(0, 2),
+		Args: func(_ *cobra.Command, args []string) error {
+			if len(args) != 0 && len(args) != 2 {
+				return fmt.Errorf("accepts either 0 args (all pending changes) or 2 args (asset_class_id and nft_id), received %d", len(args))
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

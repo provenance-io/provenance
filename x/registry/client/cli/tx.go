@@ -236,7 +236,7 @@ every affected role's authorization policy is satisfied, then applies atomically
 Each role update is "role=address[,address...]". An empty address list clears the role.
 
 Example:
-  propose-role-change myclass nft1 controller=cosmos1new secured_party_enote=`,
+  propose-role-change myclass nft1 controller=cosmos1new secured_party_for_enote=`,
 		Args: cobra.MinimumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
